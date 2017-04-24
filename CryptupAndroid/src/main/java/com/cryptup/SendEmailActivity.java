@@ -33,6 +33,7 @@ import java.io.IOException;
 public class SendEmailActivity extends AppCompatActivity implements LoaderManager
         .LoaderCallbacks<BaseResponse> {
 
+    private static final String MESSAGE_TOKEN_ACCOUNT = "denbond7@gmail.com";
     private static final String MESSAGE_TOKEN = "MT_68FPujdE34";
 
     private static final String KEY_ENCRYPTED_MESSAGE = BuildConfig.APPLICATION_ID + "" +
@@ -116,8 +117,7 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
                     postMessagePrototypeModel.setMessage(args.getString(KEY_ENCRYPTED_MESSAGE));
                     if (lookUpEmailResponse != null) {
                         postMessagePrototypeModel.setTo(mEditTextRecipient.getText().toString());
-                        postMessagePrototypeModel.setMessageTokenAccount(
-                                lookUpEmailResponse.getEmail());
+                        postMessagePrototypeModel.setMessageTokenAccount(MESSAGE_TOKEN_ACCOUNT);
                         postMessagePrototypeModel.setMessageToken(MESSAGE_TOKEN);
                     }
 
