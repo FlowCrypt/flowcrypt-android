@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Cryptup</string>
+
+    <!-- Strings related to login -->
+    <string name="secure_compose">Secure Compose</string>
+    <string name="prompt_recipient">Add recipient</string>
+    <string name="prompt_subject">Subject</string>
+    <string name="prompt_compose_security_email">Compose secure message</string>
+    <string name="text_must_not_be_empty">Error! \"%1$s\" must not be empty!</string>
+    <string name="send">Send</string>
+    <string name="error_email_is_not_valid">Error, an email is not valid!</string>
+    <string name="internet_connection_is_not_available">Internet connection is not available!</string>
+    <string name="unknown_error">Unknown error!</string>
+    <string name="error_have_not_public_key">Sorry, you have not any public key registered!</string>
+    <string name="message_was_sent">Your message was sent!</string>
+    <string name="error_load_js">Error load js scripts.\nException message: \"%1$s\"</string>
+</resources>

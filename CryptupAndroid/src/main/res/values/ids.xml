@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="loader_id_post_lookup_email" type="id"/>
+    <item name="loader_id_post_prototype_message" type="id"/>
+</resources>

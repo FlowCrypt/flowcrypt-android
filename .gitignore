@@ -1,13 +1,3 @@
-# Built application files
-*.apk
-*.ap_
-
-# Files for the ART/Dalvik VM
-*.dex
-
-# Java class files
-*.class
-
 # Generated files
 bin/
 gen/
@@ -32,9 +22,14 @@ proguard/
 # Android Studio captures folder
 captures/
 
+# Android Studio files
+.DS_Store
+.externalNativeBuild
+
 # Intellij
 *.iml
 .idea/workspace.xml
+.idea/libraries
 
 # Keystore files
 *.jks
