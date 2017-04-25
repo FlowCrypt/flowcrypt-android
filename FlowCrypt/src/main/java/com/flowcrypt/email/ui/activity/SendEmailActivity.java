@@ -1,4 +1,4 @@
-package com.flowcrypt.email;
+package com.flowcrypt.email.ui.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +17,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.LookUpEmailRequest;
 import com.flowcrypt.email.api.retrofit.request.MessagePrototypeRequest;
