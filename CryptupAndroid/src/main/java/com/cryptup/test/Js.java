@@ -64,6 +64,16 @@ public class Js {
                 V8Array(v8).push(email));
     }
 
+    public String str_base64url_encode(String str) {
+        return (String) this.call(Boolean.class, new String[]{"str", "base64url_encode"}, new
+                V8Array(v8).push(str));
+    }
+
+    public String str_base64url_decode(String str) {
+        return (String) this.call(Boolean.class, new String[]{"str", "base64url_decode"}, new
+                V8Array(v8).push(str));
+    }
+
     public String crypto_key_normalize(String armored_key) {
         return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new
                 V8Array(v8).push(armored_key));

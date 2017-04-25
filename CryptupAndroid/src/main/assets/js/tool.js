@@ -8,6 +8,8 @@
   window.tool = {
     str: {
       is_email_valid: str_is_email_valid,
+      base64url_encode: str_base64url_encode,
+      base64url_decode: str_base64url_decode,
     },
     crypto: {
       key: {
@@ -53,6 +55,20 @@
       mapped[k] = f(v);
     });
     return mapped;
+  }
+
+  function str_base64url_encode(str) {
+    if(typeof str === 'undefined') {
+      return str;
+    }
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function str_base64url_decode(str) {
+    if(typeof str === 'undefined') {
+      return str;
+    }
+    return atob(str.replace(/-/g, '+').replace(/_/g, '/'));
   }
 
   /* tool.crypto.armor */
