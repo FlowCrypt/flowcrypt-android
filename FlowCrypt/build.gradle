@@ -59,6 +59,7 @@ dependencies {
     compile "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
     compile "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
     compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+    compile 'ch.acra:acra:4.9.2'
 
     testCompile "junit:junit:${JUNIT_VERSION}"
 }

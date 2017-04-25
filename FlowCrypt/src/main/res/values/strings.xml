@@ -14,4 +14,5 @@
     <string name="error_have_not_public_key">Sorry, you have not any public key registered!</string>
     <string name="message_was_sent">Your message was sent!</string>
     <string name="error_load_js">Error load js scripts.\nException message: \"%1$s\"</string>
+    <string name="application_crashed">Application has crashed. You can send a report to the developer.</string>
 </resources>
