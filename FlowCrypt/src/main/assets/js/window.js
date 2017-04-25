@@ -3,11 +3,20 @@
 'use strict';
 
 var window = {
+    is_bare_engine: true,
     crypto: {
         getRandomValues: function (buf) { // NOT SECURE - for testing only
             for(var i=0; i<buf.length; i++) {
                 buf[i] = Math.round(Math.random() * 255);
             }
         },
+    },
+    catcher: {
+      try: function(code) {
+        return code;
+      },
+      version: function() {
+        return 'Android 0.1';
+      },
     },
 };

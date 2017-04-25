@@ -37,6 +37,7 @@ public class Js {
         this.v8 = V8.createV8Runtime();
         this.v8.executeScript(read(context.getAssets().open("js/window.js")));
         this.v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
+        this.v8.executeScript(read(context.getAssets().open("js/global.js")));
         this.v8.executeScript(read(context.getAssets().open("js/tool.js")));
         this.tool = this.v8.getObject("window").getObject("tool");
         cb_catcher = new V8Function(this.v8, new JavaCallback() {
@@ -80,8 +81,8 @@ public class Js {
     }
 
     public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
-        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(text).push(V8Value.NULL)
-                .push(armor).push(cb_catcher);
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(V8Value.NULL)
+                .push(V8Value.NULL).push(text).push(V8Value.NULL).push(armor).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value).get("data").toString();
     }
