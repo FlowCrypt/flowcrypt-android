@@ -1,6 +1,18 @@
 import java.text.SimpleDateFormat
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.gfx.ribbonizer:plugin:1.0.0'
+    }
+}
+
+
 apply plugin: 'com.android.application'
+apply plugin: 'com.github.gfx.ribbonizer'
 
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('dd_MM_yyyy_HH_mm');
 
