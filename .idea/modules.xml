@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/CryptupAndroid/CryptupAndroid.iml" filepath="$PROJECT_DIR$/CryptupAndroid/CryptupAndroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/FlowCrypt/FlowCrypt.iml" filepath="$PROJECT_DIR$/FlowCrypt/FlowCrypt.iml" />
       <module fileurl="file://$PROJECT_DIR$/cryptup-android-prototype.iml" filepath="$PROJECT_DIR$/cryptup-android-prototype.iml" />
     </modules>
   </component>
