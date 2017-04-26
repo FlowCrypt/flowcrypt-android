@@ -126,6 +126,7 @@
         challenge_answer: crypto_hash_challenge_answer,
       },
       key: {
+        read: crypto_key_read,
         decrypt: crypto_key_decrypt,
         expired_for_encryption: crypto_key_expired_for_encryption,
         normalize: crypto_key_normalize,
@@ -1498,6 +1499,10 @@
   }
 
   /* tool.crypto.key */
+
+  function crypto_key_read(armored_key) {
+    return openpgp.key.readArmored(armored_key).keys[0];
+  }
 
   function crypto_key_ids(armored_pubkey) {
     return openpgp.key.readArmored(armored_pubkey).keys[0].getKeyIds();

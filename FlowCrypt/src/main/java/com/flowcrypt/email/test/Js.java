@@ -85,6 +85,16 @@ public class Js {
                 V8Array(v8).push(armored_key));
     }
 
+    public Key crypto_key_read(String armored_key) {
+        return new Key((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new
+                V8Array(v8).push(armored_key)));
+    }
+
+    public V8Object crypto_key_decrypt(Key private_key, String passphrase) {
+        return (V8Object) this.call(Object.class, new String[]{"crypto", "key", "decrypt"}, new
+                V8Array(v8).push(private_key.getV8Object()).push(passphrase));
+    }
+
     public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
         V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(V8Value.NULL)
                 .push(V8Value.NULL).push(text).push(V8Value.NULL).push(armor).push(cb_catcher);
@@ -120,5 +130,33 @@ public class Js {
             v8arr.push(v);
         }
         return v8arr;
+    }
+}
+
+class MeaningfulV8ObjectContainer {
+
+    protected V8Object v8object;
+
+    MeaningfulV8ObjectContainer(V8Object o) {
+        v8object = o;
+    }
+
+    V8Object getV8Object() {
+        return v8object;
+    }
+}
+
+class Key extends MeaningfulV8ObjectContainer {
+
+    public Key(V8Object o) {
+        super(o);
+    }
+
+    public Boolean isPrivate() {
+        return this.v8object.executeBooleanFunction("isPrivate", null);
+    }
+
+    public String armor() {
+        return this.v8object.executeStringFunction("armor", null);
     }
 }
