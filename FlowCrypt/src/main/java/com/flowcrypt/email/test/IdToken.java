@@ -20,6 +20,10 @@ public class IdToken extends MeaningfulV8ObjectContainer {
         return this.v8object.getBoolean("email_verified");
     }
 
+    public String getName() {
+        return this.v8object.getString("name");
+    }
+
     public String getGivenName() {
         return this.v8object.getString("given_name");
     }
