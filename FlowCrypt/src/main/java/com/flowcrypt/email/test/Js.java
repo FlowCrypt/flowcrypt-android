@@ -52,16 +52,21 @@ public class Js {
         });
     }
 
-    public static String read(File file) throws IOException {
+    private static String read(File file) throws IOException {
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
-    public static String read(InputStream inputStream) throws IOException {
+    private static String read(InputStream inputStream) throws IOException {
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
 
     public Boolean str_is_email_valid(String email) {
         return (Boolean) this.call(Boolean.class, new String[]{"str", "is_email_valid"}, new
+                V8Array(v8).push(email));
+    }
+
+    public V8Object str_parse_email(String email) { // {email: str, name: str}
+        return (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new
                 V8Array(v8).push(email));
     }
 
@@ -101,9 +106,11 @@ public class Js {
             return obj.executeBooleanFunction(path[path.length - 1], args);
         } else if (return_type == Integer.class) {
             return obj.executeIntegerFunction(path[path.length - 1], args);
-        } else {
+        } else if (return_type == Void.class) {
             obj.executeVoidFunction(path[path.length - 1], args);
             return null;
+        } else {
+            return obj.executeObjectFunction(path[path.length - 1], args);
         }
     }
 
