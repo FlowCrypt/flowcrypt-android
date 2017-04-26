@@ -15,4 +15,14 @@
     <string name="message_was_sent">Your message was sent!</string>
     <string name="error_load_js">Error load js scripts.\nException message: \"%1$s\"</string>
     <string name="application_crashed">Application has crashed. You can send a report to the developer.</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="signed_in_fmt">We received access for %1$s</string>
+    <string name="access_denied">Access denied!</string>
+    <string name="privacy">Privacy</string>
+    <string name="terms">Terms</string>
+    <string name="security">Security</string>
+    <string name="crypt">crypt</string>
+    <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to start sending encrypted messages</string>
+    <string name="continue_with_gmail">Continue with Gmail</string>
 </resources>

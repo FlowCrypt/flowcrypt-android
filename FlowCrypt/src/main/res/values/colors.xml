@@ -3,4 +3,7 @@
     <color name="colorPrimary">#51b53f</color>
     <color name="colorPrimaryDark">#2f733c</color>
     <color name="colorAccent">#63a2e1</color>
+    <color name="transparent">@android:color/transparent</color>
+    <color name="light_grey">#f2f2f2</color>
+    <color name="silver_chalice">#aaaaaa</color>
 </resources>

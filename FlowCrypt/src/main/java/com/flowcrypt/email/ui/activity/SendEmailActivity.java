@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
@@ -29,6 +28,7 @@ import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
 
 import java.io.IOException;
 
@@ -72,17 +72,18 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
         switch (item.getItemId()) {
             case R.id.menuIdSend:
                 if (TextUtils.isEmpty(mEditTextRecipient.getText().toString())) {
-                    showInfoSnackbar(mEditTextRecipient, getString(R.string.text_must_not_be_empty,
+                    UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string
+                                    .text_must_not_be_empty,
                             getString(R.string.prompt_recipient)));
                 } else if (!isEmailValid()) {
-                    showInfoSnackbar(mEditTextRecipient, getString(R.string
+                    UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string
                             .error_email_is_not_valid));
                 } else if (TextUtils.isEmpty(mEditTextEmailSubject.getText().toString())) {
-                    showInfoSnackbar(mEditTextEmailSubject, getString(R.string
+                    UIUtil.showInfoSnackbar(mEditTextEmailSubject, getString(R.string
                                     .text_must_not_be_empty,
                             getString(R.string.prompt_subject)));
                 } else if (TextUtils.isEmpty(mEditTextEmailMessage.getText().toString())) {
-                    showInfoSnackbar(mEditTextEmailMessage, getString(R.string
+                    UIUtil.showInfoSnackbar(mEditTextEmailMessage, getString(R.string
                                     .text_must_not_be_empty,
                             getString(R.string.prompt_compose_security_email)));
                 } else if (GeneralUtil.isInternetConnectionAvailable(getApplicationContext())) {
@@ -90,7 +91,7 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
                     getSupportLoaderManager().restartLoader(R.id.loader_id_post_lookup_email,
                             null, this);
                 } else {
-                    showInfoSnackbar(mEditTextRecipient, getString(R.string
+                    UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string
                             .internet_connection_is_not_available));
                 }
                 break;
@@ -168,15 +169,15 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
                     (MessagePrototypeResponse) baseResponse.getResponseModel();
 
             if (messagePrototypeResponse.isSent()) {
-                showInfoSnackbar(mEditTextRecipient, getString(R.string.message_was_sent));
+                UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string.message_was_sent));
             } else if (!TextUtils.isEmpty(messagePrototypeResponse.getError())) {
-                showInfoSnackbar(mEditTextRecipient, messagePrototypeResponse.getError());
+                UIUtil.showInfoSnackbar(mEditTextRecipient, messagePrototypeResponse.getError());
             } else if (messagePrototypeResponse.getMessagePrototypeError() != null) {
-                showInfoSnackbar(mEditTextRecipient,
+                UIUtil.showInfoSnackbar(mEditTextRecipient,
                         messagePrototypeResponse.getMessagePrototypeError().getPublicMsg());
             }
         } else {
-            showInfoSnackbar(mEditTextRecipient, getString(R.string.unknown_error));
+            UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string.unknown_error));
         }
     }
 
@@ -194,7 +195,8 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
 
             if (TextUtils.isEmpty(lookUpEmailResponse.getPubkey())) {
                 showProgress(false);
-                showInfoSnackbar(mEditTextRecipient, getString(R.string.error_have_not_public_key));
+                UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string
+                        .error_have_not_public_key));
             } else {
                 String encryptedMessage = js.crypto_message_encrypt(
                         new String[]{lookUpEmailResponse.getPubkey()},
@@ -208,7 +210,7 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
             }
         } else {
             showProgress(false);
-            showInfoSnackbar(mEditTextRecipient, getString(R.string.unknown_error));
+            UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string.unknown_error));
         }
     }
 
@@ -249,22 +251,6 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
             inputMethodManager.hideSoftInputFromWindow(mLayoutForm.getWindowToken(), 0);
         }
     }
-
-    /**
-     * Show some information as Snackbar.
-     *
-     * @param view        he view to find a parent from.
-     * @param messageText The text to show.  Can be formatted text..
-     */
-    private void showInfoSnackbar(View view, String messageText) {
-        Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
-                .setAction(android.R.string.ok, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                    }
-                }).show();
-    }
-
 
     /**
      * Check is an email valid.
