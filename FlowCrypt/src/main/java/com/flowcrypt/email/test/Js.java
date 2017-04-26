@@ -99,6 +99,11 @@ public class Js {
                 new V8Array(v8).push(account_email));
     }
 
+    public IdToken api_auth_parse_id_token(String id_token) {
+        return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth",
+                "parse_id_token"}, new V8Array(v8).push(id_token)));
+    }
+
     private Object call(Class<?> return_type, String path[], V8Array args) {
         V8Object obj = null;
         for (Integer i = 0; i < path.length - 1; i++) {
@@ -152,17 +157,3 @@ class MeaningfulV8ObjectContainer {
     }
 }
 
-class Key extends MeaningfulV8ObjectContainer {
-
-    public Key(V8Object o) {
-        super(o);
-    }
-
-    public Boolean isPrivate() {
-        return this.v8object.executeBooleanFunction("isPrivate", null);
-    }
-
-    public String armor() {
-        return this.v8object.executeStringFunction("armor", null);
-    }
-}
