@@ -163,6 +163,7 @@
       gmail: {
         query: {
           or: api_gmail_query_or,
+          backups: api_gmail_query_backups,
         },
         scope: api_gmail_scope,
         has_scope: api_gmail_has_scope,
@@ -240,6 +241,9 @@
           }
         }
       }
+    },
+    enums: {
+      recovery_email_subjects: ['Your CryptUp Backup', 'Your CryptUP Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'],
     },
   };
 
@@ -2764,12 +2768,23 @@
     });
   }
 
+  /* tool.api.gmail.query */
+
   function api_gmail_query_or(arr, quoted) {
     if(quoted) {
       return '("' + arr.join('") OR ("') + '")';
     } else {
       return '(' + arr.join(') OR (') + ')';
     }
+  }
+
+  function api_gmail_query_backups(account_email) {
+    return [
+      'from:' + account_email,
+      'to:' + account_email,
+      '(subject:"' + tool.enums.recovery_email_subjects.join('" OR subject: "') + '")',
+      '-is:spam',
+    ].join(' ');
   }
 
   /* tool.api.outlook */

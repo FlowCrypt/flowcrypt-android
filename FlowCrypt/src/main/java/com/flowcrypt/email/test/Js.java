@@ -52,14 +52,6 @@ public class Js {
         });
     }
 
-    private static String read(File file) throws IOException {
-        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    }
-
-    private static String read(InputStream inputStream) throws IOException {
-        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-    }
-
     public Boolean str_is_email_valid(String email) {
         return (Boolean) this.call(Boolean.class, new String[]{"str", "is_email_valid"}, new
                 V8Array(v8).push(email));
@@ -71,12 +63,12 @@ public class Js {
     }
 
     public String str_base64url_encode(String str) {
-        return (String) this.call(Boolean.class, new String[]{"str", "base64url_encode"}, new
+        return (String) this.call(String.class, new String[]{"str", "base64url_encode"}, new
                 V8Array(v8).push(str));
     }
 
     public String str_base64url_decode(String str) {
-        return (String) this.call(Boolean.class, new String[]{"str", "base64url_decode"}, new
+        return (String) this.call(String.class, new String[]{"str", "base64url_decode"}, new
                 V8Array(v8).push(str));
     }
 
@@ -100,6 +92,11 @@ public class Js {
                 .push(V8Value.NULL).push(text).push(V8Value.NULL).push(armor).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value).get("data").toString();
+    }
+
+    public String api_gmail_query_backups(String account_email) {
+        return (String) this.call(String.class, new String[]{"api", "gmail", "query", "backups"},
+                new V8Array(v8).push(account_email));
     }
 
     private Object call(Class<?> return_type, String path[], V8Array args) {
@@ -131,6 +128,15 @@ public class Js {
         }
         return v8arr;
     }
+
+    private static String read(File file) throws IOException {
+        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    }
+
+    private static String read(InputStream inputStream) throws IOException {
+        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    }
+
 }
 
 class MeaningfulV8ObjectContainer {
