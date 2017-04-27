@@ -1,8 +1,7 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,41 +9,25 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 /**
- * This fragment containing a splash view.
+ * This fragment containing a splash view. Also in this fragment, the implementation of Sign In
+ * functions.
  */
-public class SplashActivityFragment extends Fragment implements GoogleApiClient
-        .OnConnectionFailedListener, View.OnClickListener {
+public class SplashActivityFragment extends Fragment implements View.OnClickListener {
 
-    private static final int REQUEST_CODE_SIGN_IN = 100;
-
-    private GoogleApiClient mGoogleApiClient;
-
-    public SplashActivityFragment() {
-    }
+    private OnSignInButtonClickListener onSignInButtonClickListener;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder
-                (GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-                .enableAutoManage(getActivity(), this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
-                .build();
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnSignInButtonClickListener) {
+            onSignInButtonClickListener = (OnSignInButtonClickListener) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                OnSignInButtonClickListener.class.getSimpleName());
     }
 
     @Override
@@ -56,29 +39,7 @@ public class SplashActivityFragment extends Fragment implements GoogleApiClient
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (view.findViewById(R.id.buttonSignInWithGmail) != null) {
-            view.findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE_SIGN_IN:
-                GoogleSignInResult googleSignInResult =
-                        Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-                handleSignInResult(googleSignInResult);
-                break;
-
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-        }
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        UIUtil.showInfoSnackbar(getView(), connectionResult.getErrorMessage());
+        initViews(view);
     }
 
     @Override
@@ -86,7 +47,7 @@ public class SplashActivityFragment extends Fragment implements GoogleApiClient
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
                 if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
-                    signIn();
+                    signInButtonWasClicked(SignInType.GMAIL);
                 } else {
                     UIUtil.showInfoSnackbar(getView(),
                             getString(R.string.internet_connection_is_not_available));
@@ -96,24 +57,27 @@ public class SplashActivityFragment extends Fragment implements GoogleApiClient
     }
 
     /**
-     * Handle a Google sign result. In this method, we check the result received from Google.
-     *
-     * @param googleSignInResult
+     * In this method we init all used views.
      */
-    private void handleSignInResult(GoogleSignInResult googleSignInResult) {
-        if (googleSignInResult.isSuccess()) {
-            // Todo-DenBond7 Need to handle a complete authentication.
-            // Signed in successfully, show authenticated UI.
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-            }
-        } else {
-            // Signed out, show unauthenticated UI.
+    private void initViews(View view) {
+        if (view.findViewById(R.id.buttonSignInWithGmail) != null) {
+            view.findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
         }
     }
 
-    private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+    /**
+     * Handle a sign in button click.
+     */
+    private void signInButtonWasClicked(SignInType signInType) {
+        if (onSignInButtonClickListener != null) {
+            onSignInButtonClickListener.onSignInButtonClick(signInType);
+        }
+    }
+
+    /**
+     * Listener for sign in buttons.
+     */
+    public interface OnSignInButtonClickListener {
+        void onSignInButtonClick(SignInType signInType);
     }
 }
