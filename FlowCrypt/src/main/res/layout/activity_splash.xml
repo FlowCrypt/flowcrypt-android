@@ -5,6 +5,8 @@
     android:layout_height="match_parent"
     tools:context="com.flowcrypt.email.ui.activity.SplashActivity">
 
-    <include layout="@layout/content_splash" />
+    <include
+        android:id="@+id/splashView"
+        layout="@layout/content_splash" />
 
 </android.support.design.widget.CoordinatorLayout>
