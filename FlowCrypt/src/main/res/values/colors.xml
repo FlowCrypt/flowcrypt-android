@@ -6,4 +6,7 @@
     <color name="transparent">@android:color/transparent</color>
     <color name="light_grey">#f2f2f2</color>
     <color name="silver_chalice">#aaaaaa</color>
+    <color name="fruit_salad">#4CAF50</color>
+    <color name="sea_green">#2E7D32</color>
+    <color name="de_york">#81C784</color>
 </resources>

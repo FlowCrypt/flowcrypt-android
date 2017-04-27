@@ -25,4 +25,8 @@
     <string name="crypt">crypt</string>
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to start sending encrypted messages</string>
     <string name="continue_with_gmail">Continue with Gmail</string>
+    <string name="title_activity_email_manager">Inbox</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 </resources>
