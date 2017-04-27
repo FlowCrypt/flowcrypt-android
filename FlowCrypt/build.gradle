@@ -54,6 +54,10 @@ android {
         sourceCompatibility "${JAVA_SOURCE_COMPATIBILITY}"
         targetCompatibility "${JAVA_SOURCE_COMPATIBILITY}"
     }
+
+    packagingOptions {
+        pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
+    }
 }
 
 dependencies {
@@ -78,6 +82,9 @@ dependencies {
     compile 'commons-io:commons-io:2.5'
     compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     compile 'ch.acra:acra:4.9.2'
+
+    compile "com.sun.mail:android-mail:${JAVA_MAIL_VERSION}"
+    compile "com.sun.mail:android-activation:${JAVA_MAIL_VERSION}"
 
     testCompile "junit:junit:${JUNIT_VERSION}"
 
