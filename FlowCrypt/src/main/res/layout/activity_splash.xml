@@ -6,7 +6,12 @@
     tools:context="com.flowcrypt.email.ui.activity.SplashActivity">
 
     <include
+        android:id="@+id/signInView"
+        layout="@layout/content_splash"
+        android:visibility="gone" />
+
+    <include
         android:id="@+id/splashView"
-        layout="@layout/content_splash" />
+        layout="@layout/splash_after_auth" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -8,6 +8,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +17,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
+import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
@@ -42,13 +44,17 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult) {
+    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
         if (googleSignInResult.isSuccess()) {
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 updateAccountInEmailListFragment(googleSignInAccount.getAccount());
             }
+        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
+            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
+                    .getStatusMessage());
         }
+
     }
 
     @Override
@@ -94,7 +100,7 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
                 signOut(SignInType.GMAIL);

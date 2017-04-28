@@ -47,8 +47,10 @@ public abstract class BaseAuthenticationActivity extends AppCompatActivity imple
      * Handle a Google sign result. In this method, we check the result received from Google.
      *
      * @param googleSignInResult Object which contain information about sign in.
+     * @param isOnStartCall      true if is onStart() method call, false otherwise.
      */
-    public abstract void handleSignInResult(GoogleSignInResult googleSignInResult);
+    public abstract void handleSignInResult(GoogleSignInResult googleSignInResult, boolean
+            isOnStartCall);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -144,12 +146,12 @@ public abstract class BaseAuthenticationActivity extends AppCompatActivity imple
                 = Auth.GoogleSignInApi.silentSignIn(googleApiClient);
         if (optionalPendingResult.isDone()) {
             GoogleSignInResult googleSignInResult = optionalPendingResult.get();
-            handleSignInResult(googleSignInResult);
+            handleSignInResult(googleSignInResult, true);
         } else {
             optionalPendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
                 @Override
                 public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
-                    handleSignInResult(googleSignInResult);
+                    handleSignInResult(googleSignInResult, true);
                 }
             });
         }
