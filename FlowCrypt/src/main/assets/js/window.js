@@ -18,6 +18,9 @@ var window = {
       version: function() {
         return 'Android 0.1';
       },
+      handle_exception(e) {
+        throw e;
+      },
     },
 };
 

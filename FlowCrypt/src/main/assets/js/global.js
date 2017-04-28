@@ -6,3 +6,4 @@ var openpgp = window.openpgp;
 var catcher = window.catcher;
 var btoa = window.btoa;
 var atob = window.atob;
+var MimeParser = this['emailjs-mime-parser'];
