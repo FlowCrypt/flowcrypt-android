@@ -46,6 +46,7 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     public void handleSignInResult(GoogleSignInResult googleSignInResult) {
         if (googleSignInResult.isSuccess()) {
             startActivity(new Intent(this, EmailManagerActivity.class));
+            finish();
         }
     }
 

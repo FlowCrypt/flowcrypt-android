@@ -1,5 +1,6 @@
 package com.flowcrypt.email.ui.activity;
 
+import android.accounts.Account;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -14,6 +15,8 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 
@@ -40,7 +43,12 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
     @Override
     public void handleSignInResult(GoogleSignInResult googleSignInResult) {
-
+        if (googleSignInResult.isSuccess()) {
+            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
+            if (googleSignInAccount != null) {
+                updateAccountInEmailListFragment(googleSignInAccount.getAccount());
+            }
+        }
     }
 
     @Override
@@ -91,6 +99,10 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
             case R.id.navigationMenuLogOut:
                 signOut(SignInType.GMAIL);
                 break;
+
+            case R.id.navigationMenuRevokeAccess:
+                revokeAccess(SignInType.GMAIL);
+                break;
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -100,6 +112,15 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    private void updateAccountInEmailListFragment(Account account) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.updateAccount(account);
+        }
     }
 
     private void initViews() {
