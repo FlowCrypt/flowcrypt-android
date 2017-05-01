@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.flowcrypt.email.ui.activity.fragment.RestoreAccountActivityFragment"
+    tools:showIn="@layout/activity_restore_account">
+
+    <TextView
+        android:id="@+id/textViewSetupFlowCrypt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
+        android:text="@string/set_up_flow_crypt"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/text_size_setup_flow_crypt"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewFoundBackup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_found_backup"
+        android:text="@string/found_backup_of_your_account_key"
+        android:textColor="@android:color/black"
+        android:textSize="@dimen/default_text_size_medium"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
+
+    <EditText
+        android:id="@+id/editTextKeyPassword"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_key_password"
+        android:ems="10"
+        android:hint="@string/enter_your_pass_phrase"
+        android:inputType="textPassword"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup" />
+
+    <Button
+        android:id="@+id/buttonLoadAccount"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_top_load_account"
+        android:text="@string/load_account"
+        android:textAllCaps="false"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/editTextKeyPassword" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+</android.support.constraint.ConstraintLayout>

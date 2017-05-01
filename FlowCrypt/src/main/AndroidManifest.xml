@@ -14,7 +14,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-
         <activity
             android:name=".ui.activity.SplashActivity"
             android:screenOrientation="portrait">
@@ -24,14 +23,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.activity.SendEmailActivity"
             android:screenOrientation="portrait" />
-
         <activity
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/title_activity_email_manager"
+            android:parentActivityName=".ui.activity.SplashActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
+        </activity>
+        <activity
+            android:name=".ui.activity.RestoreAccountActivity"
             android:parentActivityName=".ui.activity.SplashActivity"
             android:screenOrientation="portrait">
             <meta-data

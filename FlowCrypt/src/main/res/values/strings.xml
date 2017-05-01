@@ -32,4 +32,11 @@
     <string name="log_out">Log out</string>
     <string name="authentication">Authentication</string>
     <string name="no_results">No results</string>
+    <string name="set_up_flow_crypt">Set up FlowCrypt</string>
+    <string name="found_backup_of_your_account_key">Found backup of your account key</string>
+    <string name="enter_your_pass_phrase">Enter your pass phrase</string>
+    <string name="load_account">Load Account</string>
+    <string name="loading_account">Loading account</string>
+    <string name="no_backups_found">No backups found on this account</string>
+    <string name="refresh">Refresh</string>
 </resources>

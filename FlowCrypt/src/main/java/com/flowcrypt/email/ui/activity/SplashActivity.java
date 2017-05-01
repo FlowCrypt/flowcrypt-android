@@ -70,7 +70,7 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     }
 
     private void runEmailManagerActivity() {
-        startActivity(new Intent(this, EmailManagerActivity.class));
+        startActivity(new Intent(this, RestoreAccountActivity.class));
         finish();
     }
 

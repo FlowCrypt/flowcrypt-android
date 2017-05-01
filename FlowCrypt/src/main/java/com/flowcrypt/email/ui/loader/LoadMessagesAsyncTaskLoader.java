@@ -42,8 +42,9 @@ public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<SimpleMess
 
     @Override
     public void onStartLoading() {
-        if (takeContentChanged())
+        if (takeContentChanged()) {
             forceLoad();
+        }
     }
 
     @Override
@@ -73,7 +74,7 @@ public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<SimpleMess
             }
 
             folder.close(false);
-
+            store.close();
             return simpleMessageModels;
         } catch (Exception e) {
             e.printStackTrace();

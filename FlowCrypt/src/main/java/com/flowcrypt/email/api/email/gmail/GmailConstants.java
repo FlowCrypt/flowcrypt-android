@@ -12,4 +12,7 @@ package com.flowcrypt.email.api.email.gmail;
 public class GmailConstants {
     public static final String FOLDER_NAME_INBOX = "INBOX";
     public static final String SCOPE_MAIL_GOOGLE_COM = "https://mail.google.com/";
+    public static final String PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable";
+    public static final String PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth" +
+            ".mechanisms";
 }

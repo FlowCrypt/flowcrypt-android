@@ -24,4 +24,11 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="margin_top_message_subject">16dp</dimen>
     <dimen name="margin_top_bottom_message">12dp</dimen>
+    <dimen name="margin_top_setup_flow_crypt">80dp</dimen>
+    <dimen name="text_size_setup_flow_crypt">32sp</dimen>
+    <dimen name="margin_top_found_backup">60dp</dimen>
+    <dimen name="padding_guideline_setup_screen">32dp</dimen>
+    <dimen name="margin_top_key_password">80dp</dimen>
+    <dimen name="margin_top_load_account">32dp</dimen>
+    <dimen name="margin_top_loading_account">32dp</dimen>
 </resources>
