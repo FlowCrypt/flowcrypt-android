@@ -8,6 +8,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.test.SampleStorageConnector;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.gimap.GmailRawSearchTerm;
@@ -74,8 +75,9 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
             gmailFolder.open(Folder.READ_ONLY);
 
             Message[] foundMessages = gmailFolder.search(
-                    new GmailRawSearchTerm(
-                            new Js(getContext()).api_gmail_query_backups(account.name)));
+                    new GmailRawSearchTerm(new Js(getContext(),
+                            new SampleStorageConnector(getContext()))
+                            .api_gmail_query_backups(account.name)));
 
             for (Message message : foundMessages) {
                 if (message.getContentType().contains(JavaEmailConstants.CONTENT_TYPE_MULTIPART)) {
