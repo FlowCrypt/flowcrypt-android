@@ -25,49 +25,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 
-public class Js {
+public class Js { // Create one object per thread and use them separately. Not thread-safe.
 
-    // Create one object per thread and use them separately. Not thread-safe.
-
-    private Context context;
-    private V8 v8;
-    private V8Object tool;
+    private final StorageConnectorInterface storage;
+    private final Context context;
+    private final V8 v8;
+    private final V8Object tool;
     private V8Function cb_catcher;
     private Object[] cb_last_value = new Object[3];
 
-    public Js(Context context) throws IOException {
-        v8 = V8.createV8Runtime();
-
-        // forward console.log and console.error to System.out.println
-        JavascriptConsoleForwarder console = new JavascriptConsoleForwarder();
-        V8Object v8Console = new V8Object(v8);
-        v8.add("console", v8Console);
-        v8Console.registerJavaMethod(console, "log", "log", new Class[]{String.class});
-        v8Console.registerJavaMethod(console, "error", "error", new Class[]{String.class});
-        v8Console.release();
-
-        v8.executeScript(read(context.getAssets().open("js/window.js")));
-        v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
-        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-stringencoding.js")));
-        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-addressparser.js")));
-        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-codec.js")));
-        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-parser.js")));
-        v8.executeScript(read(context.getAssets().open("js/global.js")));
-        v8.executeScript(read(context.getAssets().open("js/tool.js")));
-        tool = v8.getObject("window").getObject("tool");
-        cb_catcher = new V8Function(v8, new JavaCallback() {
-            @Override
-            public Object invoke(V8Object receiver, V8Array parameters) {
-                Arrays.fill(cb_last_value, null);
-                for(Integer i = 0; i < parameters.length(); i++) {
-                    cb_last_value[i] = parameters.get(i);
-                    if (parameters.get(i) instanceof Releasable) {
-                        ((Releasable) parameters.get(i)).release();
-                    }
-                }
-                return null;
-            }
-        });
+    public Js(Context context, StorageConnectorInterface storage) throws IOException {
+        this.context = context;
+        this.storage = storage;
+        this.v8 = V8.createV8Runtime();
+        bindJavaMethods();
+        tool = loadJavascriptCode();
+        bindCallbackCatcher();
     }
 
     public Boolean str_is_email_valid(String email) {
@@ -105,14 +78,34 @@ public class Js {
                 V8Array(v8).push(armored_key));
     }
 
-    public Key crypto_key_read(String armored_key) {
-        return new Key((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new
-                V8Array(v8).push(armored_key)));
+    public PgpKey crypto_key_read(String armored_key) {
+        return new PgpKey((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new
+                V8Array(v8).push(armored_key)), this);
     }
 
-    public V8Object crypto_key_decrypt(Key private_key, String passphrase) {
+    public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
         return (V8Object) this.call(Object.class, new String[]{"crypto", "key", "decrypt"}, new
                 V8Array(v8).push(private_key.getV8Object()).push(passphrase));
+    }
+
+    public String crypto_key_fingerprint(PgpKey key) {
+        return (String) this.call(String.class, new String[]{"crypto", "key", "fingerprint"}, new
+                V8Array(v8).push(key.getV8Object()));
+    }
+
+    public String crypto_key_longid(PgpKey key) {
+        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new
+                V8Array(v8).push(key.getV8Object()));
+    }
+
+    public String crypto_key_longid(String fingerprint) {
+        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new
+                V8Array(v8).push(fingerprint));
+    }
+
+    public String mnemonic(String longid) {
+        return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new
+                V8Array(v8).push(longid));
     }
 
     public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
@@ -120,6 +113,18 @@ public class Js {
                 .push(V8Value.NULL).push(text).push(V8Value.NULL).push(armor).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value[0]).get("data").toString();
+    }
+
+    public PgpDecrypted crypto_message_decrypt(String data, String password) {
+        // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
+        V8Array params = new V8Array(v8).push(V8Value.NULL).push("").push(data)
+                .push(password).push(cb_catcher).push(V8Value.NULL);
+        this.call(void.class, new String[]{"crypto", "message", "decrypt"}, params);
+        return new PgpDecrypted((V8Object) cb_last_value[0]);
+    }
+
+    public PgpDecrypted crypto_message_decrypt(String data) {
+        return crypto_message_decrypt(data, "");
     }
 
     public String api_gmail_query_backups(String account_email) {
@@ -133,12 +138,16 @@ public class Js {
     }
 
     private Object call(Class<?> return_type, String path[], V8Array args) {
+        return this.call(return_type, this.tool, path, args);
+    }
+
+    private Object call(Class<?> return_type, V8Object base, String path[], V8Array args) {
         V8Object obj = null;
         for (Integer i = 0; i < path.length - 1; i++) {
-            obj = (obj == null) ? this.tool.getObject(path[i]) : obj.getObject(path[i]);
+            obj = (obj == null) ? base.getObject(path[i]) : obj.getObject(path[i]);
         }
         if (obj == null) {
-            obj = this.tool;
+            obj = base;
         }
         if (return_type == String.class) {
             return obj.executeStringFunction(path[path.length - 1], args);
@@ -168,6 +177,49 @@ public class Js {
 
     private static String read(InputStream inputStream) throws IOException {
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    }
+
+    private void bindJavaMethods() {
+        JavaMethodsForJavascript methods = new JavaMethodsForJavascript(v8, storage);
+        v8.registerJavaMethod(methods, "alert", "alert", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, V8Array.class});
+        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, String.class});
+        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "get_passphrase", "get_passphrase", new Class[]{String.class, String.class});
+        V8Object v8Console = new V8Object(v8);
+        v8.add("console", v8Console);
+        v8Console.registerJavaMethod(methods, "console_log", "log", new Class[]{String.class});
+        v8Console.registerJavaMethod(methods, "console_error", "error", new Class[]{String.class});
+        v8Console.release();
+    }
+
+    private V8Object loadJavascriptCode() throws IOException {
+        v8.executeScript(read(context.getAssets().open("js/window.js")));
+        v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-stringencoding.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-addressparser.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-codec.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-parser.js")));
+        v8.executeScript(read(context.getAssets().open("js/mnemonic.js")));
+        v8.executeScript(read(context.getAssets().open("js/global.js")));
+        v8.executeScript(read(context.getAssets().open("js/tool.js")));
+        return v8.getObject("window").getObject("tool");
+    }
+
+    private void bindCallbackCatcher() {
+        cb_catcher = new V8Function(v8, new JavaCallback() {
+            @Override
+            public Object invoke(V8Object receiver, V8Array parameters) {
+                Arrays.fill(cb_last_value, null);
+                for(Integer i = 0; i < parameters.length(); i++) {
+                    cb_last_value[i] = parameters.get(i);
+                    if (parameters.get(i) instanceof Releasable) {
+                        ((Releasable) parameters.get(i)).release();
+                    }
+                }
+                return null;
+            }
+        });
     }
 
 }
@@ -219,16 +271,79 @@ class MeaningfulV8ObjectContainer {
             return null;
         }
     }
+
+    public Boolean getAttributeAsBoolean(String name) {
+        return getAttributeAsBoolean(v8object, name);
+    }
+
+    public Boolean getAttributeAsBoolean(V8Object obj, String k) {
+        try {
+            return obj.getBoolean(k);
+        } catch (V8ResultUndefined e) {
+            return null;
+        }
+    }
+
+    public Integer getAttributeAsInteger(String name) {
+        return getAttributeAsInteger(v8object, name);
+    }
+
+    public Integer getAttributeAsInteger(V8Object obj, String k) {
+        try {
+            return obj.getInteger(k);
+        } catch (V8ResultUndefined e) {
+            return null;
+        }
+    }
 }
 
-class JavascriptConsoleForwarder {
+class JavaMethodsForJavascript {
 
-    public void log(final String message) {
+    private final StorageConnectorInterface storage;
+    private final V8 v8;
+
+    JavaMethodsForJavascript(V8 v8, StorageConnectorInterface storage) {
+        this.storage = storage;
+        this.v8 = v8;
+    }
+
+    public V8Object private_keys_get(String account_email, String longid) {
+        PgpKeyInfo ki = this.storage.getPgpPrivateKey(longid);
+        if(ki == null) {
+            return null;
+        }
+        return new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki.getLongid());
+    }
+
+    public V8Array private_keys_get(String account_email) {
+        V8Array result = new V8Array(v8);
+        for(PgpKeyInfo ki: this.storage.getAllPgpPrivateKeys()) {
+            result.push(new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki.getLongid()));
+        }
+        return result;
+    }
+
+    public V8Array private_keys_get(String account_email, V8Array longid) {
+        V8Array result = new V8Array(v8);
+        for(PgpKeyInfo ki: this.storage.getFilteredPgpPrivateKeys(longid.getStrings(0, longid.length()))) {
+            result.push(new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki.getLongid()));
+        }
+        return result;
+    }
+
+    public String get_passphrase(String account_email, String longid) {
+        return this.storage.getPassphrase(longid);
+    }
+
+    public void console_log(final String message) {
         System.out.println("[JAVASCRIPT.CONSOLE.LOG] " + message);
     }
 
-    public void error(final String message) {
-        System.out.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
+    public void console_error(final String message) {
+        System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
     }
 
+    public void alert(final String message) {
+        System.out.println("[JAVASCRIPT.ALERT] " + message);
+    }
 }

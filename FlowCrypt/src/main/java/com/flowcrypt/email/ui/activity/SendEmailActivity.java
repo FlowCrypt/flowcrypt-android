@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.retrofit.request.model.PostMessagePrototypeModel;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
 import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.test.SampleStorageConnector;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -219,7 +220,8 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
      */
     private void initJS() {
         try {
-            js = new Js(this);
+            SampleStorageConnector storage = new SampleStorageConnector(this);
+            js = new Js(this, storage);
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, getString(R.string.error_load_js, e.getMessage()), Toast
