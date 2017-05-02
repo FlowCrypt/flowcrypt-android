@@ -39,4 +39,6 @@
     <string name="loading_account">Loading account</string>
     <string name="no_backups_found">No backups found on this account</string>
     <string name="refresh">Refresh</string>
+    <string name="passphrase_must_be_non_empty">Passphrase must be non empty!</string>
+    <string name="password_is_incorrect">Password is incorrect, try again!</string>
 </resources>

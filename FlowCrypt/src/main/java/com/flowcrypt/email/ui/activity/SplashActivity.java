@@ -15,6 +15,7 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.io.File;
+import java.io.FilenameFilter;
 
 public class SplashActivity extends BaseAuthenticationActivity implements SplashActivityFragment
         .OnSignInButtonClickListener {
@@ -77,9 +78,19 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
         }
     }
 
+    /**
+     * Check is decrypted backups exist in the application directory.
+     *
+     * @return <tt>Boolean</tt> true if exists one or more decrypted keys, false otherwise;
+     */
     private boolean isBackupKeysExist() {
         File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
-        return keysFolder.exists() && keysFolder.list().length > 0;
+        File[] correctKeysArray = keysFolder.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(Constants.PREFIX_PRIVATE_KEY);
+            }
+        });
+        return keysFolder.exists() && correctKeysArray.length > 0;
     }
 
     private void initViews() {

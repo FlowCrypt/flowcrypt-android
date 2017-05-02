@@ -5,17 +5,20 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
-import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class described restore an account functionality.
@@ -44,7 +47,13 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 account = googleSignInAccount.getAccount();
-                getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
+                File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
+                if (keysFolder.exists() && keysFolder.list().length > 0) {
+                    showContentImmediately(keysFolder);
+                } else {
+                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
+                            this);
+                }
             }
         }
     }
@@ -75,9 +84,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
                     if (!data.isEmpty()) {
                         this.keys = data;
                         showContent();
-                        Toast.makeText(this, "Path to keys:\n" + Arrays.toString(data.toArray()),
-                                Toast.LENGTH_LONG)
-                                .show();
+                        updateKeysOnRestoreAccountFragment();
                     } else {
                         showNoBackupsSnackbar();
                     }
@@ -91,6 +98,37 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     @Override
     public void onLoaderReset(Loader<List<String>> loader) {
 
+    }
+
+    /**
+     * If we already have private keys we can show content immediately.
+     * In this method we create a list of private keys from the "key" folder.
+     */
+    private void showContentImmediately(File keysFolder) {
+        keys = Arrays.asList(keysFolder.list());
+
+        ListIterator<String> listIterator = keys.listIterator();
+
+        while (listIterator.hasNext()) {
+            String path = listIterator.next();
+            listIterator.set(keysFolder.getPath() + File.separator + path);
+        }
+
+        showContent();
+        updateKeysOnRestoreAccountFragment();
+    }
+
+    /**
+     * Update keys list in RestoreAccountFragment.
+     */
+    private void updateKeysOnRestoreAccountFragment() {
+        RestoreAccountFragment restoreAccountFragment = (RestoreAccountFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.restoreAccountFragment);
+
+        if (restoreAccountFragment != null) {
+            restoreAccountFragment.updateKeysPathList(keys);
+        }
     }
 
     /**
