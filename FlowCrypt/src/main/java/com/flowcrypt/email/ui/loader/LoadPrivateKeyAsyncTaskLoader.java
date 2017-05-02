@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.test.Js;
@@ -15,6 +16,7 @@ import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -79,6 +81,7 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
                             new SampleStorageConnector(getContext()))
                             .api_gmail_query_backups(account.name)));
 
+            int keysCount = 1;
             for (Message message : foundMessages) {
                 if (message.getContentType().contains(JavaEmailConstants.CONTENT_TYPE_MULTIPART)) {
                     Multipart multiPart = (Multipart) message.getContent();
@@ -88,8 +91,20 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
                         if (bodyPart instanceof MimeBodyPart) {
                             MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
                             if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
-                                String filePath = getContext().getFilesDir().getPath()
-                                        + File.separator + mimeBodyPart.getFileName();
+                                File keysFolder = new File(getContext().getFilesDir(), Constants
+                                        .FOLDER_NAME_KEYS);
+
+                                if (!keysFolder.exists()) {
+                                    if (!keysFolder.mkdir()) {
+                                        throw new IOException("Can not create directory " +
+                                                Constants.FOLDER_NAME_KEYS + " for save keys here" +
+                                                ".");
+                                    }
+                                }
+
+                                String filePath = keysFolder.getPath() + File.separator +
+                                        keysCount + "_" + mimeBodyPart.getFileName();
+                                keysCount++;
                                 mimeBodyPart.saveFile(filePath);
                                 filesPaths.add(filePath);
                             }
