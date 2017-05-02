@@ -20,6 +20,11 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+
 /**
  * This activity is a base activity for a work with GoogleApiClient.
  *
@@ -108,7 +113,12 @@ public abstract class BaseAuthenticationActivity extends BaseActivity implements
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
-                        runSplashActivity();
+                        try {
+                            runSplashActivity();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
+                        }
                     }
                 });
     }
@@ -121,16 +131,21 @@ public abstract class BaseAuthenticationActivity extends BaseActivity implements
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
-                        runSplashActivity();
+                        try {
+                            runSplashActivity();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
+                        }
                     }
                 });
     }
 
-    private void runSplashActivity() {
+    private void runSplashActivity() throws IOException {
+        File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
+        FileUtils.deleteDirectory(keysFolder);
+        startActivity(new Intent(BaseAuthenticationActivity.this, SplashActivity.class));
         finish();
-        startActivity(new Intent(BaseAuthenticationActivity.this,
-                SplashActivity
-                        .class));
     }
 
     /**

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
@@ -12,6 +13,8 @@ import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+
+import java.io.File;
 
 public class SplashActivity extends BaseAuthenticationActivity implements SplashActivityFragment
         .OnSignInButtonClickListener {
@@ -48,7 +51,12 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     @Override
     public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
         if (googleSignInResult.isSuccess()) {
-            runEmailManagerActivity();
+            finish();
+            if (isBackupKeysExist()) {
+                startActivity(new Intent(this, EmailManagerActivity.class));
+            } else {
+                startActivity(new Intent(this, RestoreAccountActivity.class));
+            }
         } else {
             if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
                 UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus()
@@ -69,9 +77,9 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
         }
     }
 
-    private void runEmailManagerActivity() {
-        startActivity(new Intent(this, RestoreAccountActivity.class));
-        finish();
+    private boolean isBackupKeysExist() {
+        File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
+        return keysFolder.exists() && keysFolder.list().length > 0;
     }
 
     private void initViews() {

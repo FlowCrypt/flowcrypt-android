@@ -20,9 +20,9 @@ import com.flowcrypt.email.ui.activity.EmailManagerActivity;
  *         Time: 01:40
  *         E-mail: DenBond7@gmail.com
  */
-public class RestoreAccountActivityFragment extends Fragment {
+public class RestoreAccountFragment extends Fragment {
 
-    public RestoreAccountActivityFragment() {
+    public RestoreAccountFragment() {
     }
 
     @Override
@@ -38,6 +38,7 @@ public class RestoreAccountActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(getContext(), EmailManagerActivity.class));
+                getActivity().finish();
             }
         });
     }
