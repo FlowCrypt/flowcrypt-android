@@ -13,7 +13,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.model.Message;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.ui.loader.LoadMessagesAsyncTaskLoader;
 
@@ -30,7 +30,7 @@ import java.util.List;
  */
 
 public class EmailListFragment extends BaseFragment implements LoaderManager
-        .LoaderCallbacks<List<Message>> {
+        .LoaderCallbacks<List<GeneralMessageDetails>> {
     private ListView listViewMessages;
     private View emptyView;
     private ProgressBar progressBar;
@@ -58,7 +58,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public Loader<List<Message>> onCreateLoader(int id, Bundle args) {
+    public Loader<List<GeneralMessageDetails>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
                 showProgress();
@@ -70,15 +70,17 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Message>> loader, List<Message>
-            messages) {
+    public void onLoadFinished(Loader<List<GeneralMessageDetails>> loader,
+                               List<GeneralMessageDetails>
+
+                                       generalMessageDetailses) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_messages:
-                if (messages != null) {
-                    if (!messages.isEmpty()) {
-                        messageListAdapter = new MessageListAdapter(getActivity(), messages);
+                if (generalMessageDetailses != null) {
+                    if (!generalMessageDetailses.isEmpty()) {
+                        messageListAdapter = new MessageListAdapter(getActivity(), generalMessageDetailses);
                         listViewMessages.setAdapter(messageListAdapter);
-                        Toast.makeText(getActivity(), "Loaded for test no more 10 messages!",
+                        Toast.makeText(getActivity(), "Loaded for test no more 10 generalMessageDetailses!",
                                 Toast.LENGTH_SHORT).show();
                         showContent();
                     } else {
@@ -93,7 +95,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Message>> loader) {
+    public void onLoaderReset(Loader<List<GeneralMessageDetails>> loader) {
 
     }
 

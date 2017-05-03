@@ -14,33 +14,38 @@ import java.util.Date;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class Message implements Parcelable {
-    public static final Creator<Message> CREATOR = new Creator<Message>() {
+public class GeneralMessageDetails implements Parcelable {
+    public static final Creator<GeneralMessageDetails> CREATOR = new
+            Creator<GeneralMessageDetails>() {
         @Override
-        public Message createFromParcel(Parcel source) {
-            return new Message(source);
+        public GeneralMessageDetails createFromParcel(Parcel source) {
+            return new GeneralMessageDetails(source);
         }
 
         @Override
-        public Message[] newArray(int size) {
-            return new Message[size];
+        public GeneralMessageDetails[] newArray(int size) {
+            return new GeneralMessageDetails[size];
         }
     };
+
     private String from;
     private String subject;
     private Date receiveDate;
+    private long uid;
 
-    public Message(String from, String subject, Date receiveDate) {
+    public GeneralMessageDetails(String from, String subject, Date receiveDate, long uid) {
         this.from = from;
         this.subject = subject;
         this.receiveDate = receiveDate;
+        this.uid = uid;
     }
 
-    protected Message(Parcel in) {
+    protected GeneralMessageDetails(Parcel in) {
         this.from = in.readString();
         this.subject = in.readString();
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
+        this.uid = in.readLong();
     }
 
     @Override
@@ -53,6 +58,7 @@ public class Message implements Parcelable {
         dest.writeString(this.from);
         dest.writeString(this.subject);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
+        dest.writeLong(this.uid);
     }
 
     public String getFrom() {
@@ -77,5 +83,13 @@ public class Message implements Parcelable {
 
     public void setReceiveDate(Date receiveDate) {
         this.receiveDate = receiveDate;
+    }
+
+    public long getUid() {
+        return uid;
+    }
+
+    public void setUid(long uid) {
+        this.uid = uid;
     }
 }
