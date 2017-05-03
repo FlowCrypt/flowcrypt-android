@@ -4,10 +4,10 @@ import android.accounts.Account;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.SampleStorageConnector;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -19,14 +19,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Part;
-import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 
 /**
@@ -60,18 +58,11 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
     @Override
     public List<String> loadInBackground() {
         List<String> filesPaths = new ArrayList<>();
-        Properties properties = new Properties();
-        properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE, "true");
-        properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS, JavaEmailConstants
-                .MECHANISMS_TYPE_XOAUTH2);
-        Session session = Session.getInstance(properties);
-        session.setDebug(BuildConfig.DEBUG);
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-            GmailSSLStore gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants
-                    .PROTOCOL_GIMAPS);
-            gmailSSLStore.connect(JavaEmailConstants.GMAIL_IMAP_SERVER, account.name, token);
+            GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
+                    account.name);
             GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(
                     GmailConstants.FOLDER_NAME_INBOX);
             gmailFolder.open(Folder.READ_ONLY);
