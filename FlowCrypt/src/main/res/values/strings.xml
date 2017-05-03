@@ -41,4 +41,5 @@
     <string name="refresh">Refresh</string>
     <string name="passphrase_must_be_non_empty">Passphrase must be non empty!</string>
     <string name="password_is_incorrect">Password is incorrect, try again!</string>
+    <string name="select_another_account">Select another Account</string>
 </resources>

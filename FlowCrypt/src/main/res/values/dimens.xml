@@ -31,4 +31,5 @@
     <dimen name="margin_top_key_password">80dp</dimen>
     <dimen name="margin_top_load_account">32dp</dimen>
     <dimen name="margin_top_loading_account">32dp</dimen>
+    <dimen name="margin_top_button_select_another_account">24dp</dimen>
 </resources>

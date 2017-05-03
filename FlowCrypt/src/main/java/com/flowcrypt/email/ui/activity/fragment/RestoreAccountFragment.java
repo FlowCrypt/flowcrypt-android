@@ -12,10 +12,12 @@ import android.widget.EditText;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.PgpKey;
 import com.flowcrypt.email.test.SampleStorageConnector;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
+import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.util.UIUtil;
 
 import org.apache.commons.io.FileUtils;
@@ -68,8 +70,6 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
                                 startActivity(new Intent(getContext(), EmailManagerActivity.class));
                                 getActivity().finish();
                             } else {
-                                //Todo-DenBond7 Better to show this notification in some layout.
-                                // We can show 2 buttons: 1)"Select another account" 2)"Refresh"
                                 UIUtil.showInfoSnackbar(getView(), getString(R.string
                                         .password_is_incorrect));
                             }
@@ -77,6 +77,14 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
                             e.printStackTrace();
                         }
                     }
+                }
+                break;
+
+            case R.id.buttonSelectAnotherAccount:
+                if (getActivity() instanceof BaseAuthenticationActivity) {
+                    BaseAuthenticationActivity baseAuthenticationActivity =
+                            (BaseAuthenticationActivity) getActivity();
+                    baseAuthenticationActivity.signOut(SignInType.GMAIL);
                 }
                 break;
         }
@@ -146,6 +154,10 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     private void initViews(View view) {
         if (view.findViewById(R.id.buttonLoadAccount) != null) {
             view.findViewById(R.id.buttonLoadAccount).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonSelectAnotherAccount) != null) {
+            view.findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
         }
 
         editTextKeyPassword = (EditText) view.findViewById(R.id.editTextKeyPassword);

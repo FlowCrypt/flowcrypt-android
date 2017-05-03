@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment"
-    tools:showIn="@layout/activity_restore_account">
+    tools:context="com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment">
 
     <TextView
         android:id="@+id/textViewSetupFlowCrypt"
@@ -51,12 +50,23 @@
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_load_account"
         android:text="@string/load_account"
-        android:textAllCaps="false"
         android:theme="@style/AppWidget.Button.Raised.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
         app:layout_constraintTop_toBottomOf="@+id/editTextKeyPassword" />
+
+    <Button
+        android:id="@+id/buttonSelectAnotherAccount"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_top_button_select_another_account"
+        android:text="@string/select_another_account"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/buttonLoadAccount" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineLeft"
