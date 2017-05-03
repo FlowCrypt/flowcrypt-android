@@ -27,9 +27,23 @@
         android:text="@string/found_backup_of_your_account_key"
         android:textColor="@android:color/black"
         android:textSize="@dimen/default_text_size_medium"
+        app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
         app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/editTextKeyPassword"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup" />
 
     <EditText
         android:id="@+id/editTextKeyPassword"
@@ -81,4 +95,5 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+
 </android.support.constraint.ConstraintLayout>

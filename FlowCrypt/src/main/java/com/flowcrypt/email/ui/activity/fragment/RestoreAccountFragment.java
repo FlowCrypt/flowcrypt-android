@@ -3,28 +3,21 @@ package com.flowcrypt.email.ui.activity.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.eclipsesource.v8.V8Object;
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
-import com.flowcrypt.email.test.Js;
-import com.flowcrypt.email.test.PgpKey;
-import com.flowcrypt.email.test.SampleStorageConnector;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.loader.DecryptPrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -36,10 +29,11 @@ import java.util.List;
  *         Time: 01:40
  *         E-mail: DenBond7@gmail.com
  */
-public class RestoreAccountFragment extends BaseFragment implements View.OnClickListener {
-    private static final String KEY_SUCCESS = "success";
+public class RestoreAccountFragment extends BaseFragment implements View.OnClickListener,
+        LoaderManager.LoaderCallbacks<Boolean> {
     private List<String> keysPathList;
     private EditText editTextKeyPassword;
+    private View progressBar;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,25 +51,13 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonLoadAccount:
-                //Todo-DenBond7 Better use loader for this code.
                 if (keysPathList != null && !keysPathList.isEmpty()) {
                     if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
                         UIUtil.showInfoSnackbar(editTextKeyPassword,
                                 getString(R.string.passphrase_must_be_non_empty));
                     } else {
-                        try {
-                            boolean isOneOrMoreKeyDecrypted = isOneOrMoreKeyDecrypted();
-
-                            if (isOneOrMoreKeyDecrypted) {
-                                startActivity(new Intent(getContext(), EmailManagerActivity.class));
-                                getActivity().finish();
-                            } else {
-                                UIUtil.showInfoSnackbar(getView(), getString(R.string
-                                        .password_is_incorrect));
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        getLoaderManager().restartLoader(R.id.loader_id_decrypt_private_keys,
+                                null, this);
                     }
                 }
                 break;
@@ -90,65 +72,45 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
         }
     }
 
+    @Override
+    public Loader<Boolean> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_decrypt_private_keys:
+                progressBar.setVisibility(View.VISIBLE);
+                return new DecryptPrivateKeyAsyncTaskLoader(getContext(), keysPathList,
+                        editTextKeyPassword.getText().toString());
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Boolean> loader, Boolean data) {
+        switch (loader.getId()) {
+            case R.id.loader_id_decrypt_private_keys:
+                progressBar.setVisibility(View.GONE);
+                if (data != null && data) {
+                    startActivity(new Intent(getContext(), EmailManagerActivity.class));
+                    getActivity().finish();
+                } else {
+                    UIUtil.showInfoSnackbar(getView(), getString(R.string
+                            .password_is_incorrect));
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Boolean> loader) {
+
+    }
+
     /**
      * Update current list of private keys paths.
      */
     public void updateKeysPathList(List<String> keysPathList) {
         this.keysPathList = keysPathList;
-    }
-
-    /**
-     * Try to decrypt some key with entered password.
-     *
-     * @return <tt>Boolean</tt> true if one or more key accepted, false otherwise;
-     * @throws IOException
-     */
-    private boolean isOneOrMoreKeyDecrypted() throws IOException {
-        Js js = new Js(getContext(), new SampleStorageConnector(getContext()));
-        String passphrase = editTextKeyPassword.getText().toString();
-        boolean isOneOrMoreKeySaved = false;
-        for (String filePath : keysPathList) {
-            File file = new File(filePath);
-            try {
-                String rawArmoredKey = FileUtils.readFileToString(file,
-                        StandardCharsets.UTF_8);
-
-                String normalizedArmoredKey = js.crypto_key_normalize
-                        (rawArmoredKey);
-
-                PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-                V8Object v8Object = js.crypto_key_decrypt(
-                        pgpKey, passphrase);
-
-                if (pgpKey.isPrivate() && v8Object != null
-                        && v8Object.getBoolean(KEY_SUCCESS)) {
-                    saveKeyToStorage(file.getParent(), normalizedArmoredKey, passphrase);
-                    isOneOrMoreKeySaved = true;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return isOneOrMoreKeySaved;
-    }
-
-    /**
-     * Try to decrypt some key with entered password.
-     *
-     * @param directory            Directory where file will be save;
-     * @param normalizedArmoredKey A normalized key;
-     * @param passphrase           A passphrase which user entered;
-     */
-    private void saveKeyToStorage(String directory, String normalizedArmoredKey, String
-            passphrase) {
-        try {
-            String fileName = Constants.PREFIX_PRIVATE_KEY + passphrase;
-            FileUtils.writeStringToFile(new File(directory, fileName),
-                    normalizedArmoredKey,
-                    StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void initViews(View view) {
@@ -161,5 +123,6 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
         }
 
         editTextKeyPassword = (EditText) view.findViewById(R.id.editTextKeyPassword);
+        progressBar = view.findViewById(R.id.progressBar);
     }
 }
