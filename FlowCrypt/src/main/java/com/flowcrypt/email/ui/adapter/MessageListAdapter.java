@@ -10,7 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.SimpleMessageModel;
+import com.flowcrypt.email.api.email.model.Message;
 
 import java.util.List;
 
@@ -24,24 +24,24 @@ import java.util.List;
  */
 
 public class MessageListAdapter extends BaseAdapter {
-    private List<SimpleMessageModel> simpleMessageModels;
+    private List<Message> messages;
     private Context context;
     private java.text.DateFormat dateFormat;
 
-    public MessageListAdapter(Context context, List<SimpleMessageModel> simpleMessageModels) {
+    public MessageListAdapter(Context context, List<Message> messages) {
         this.context = context;
-        this.simpleMessageModels = simpleMessageModels;
+        this.messages = messages;
         dateFormat = DateFormat.getTimeFormat(context);
     }
 
     @Override
     public int getCount() {
-        return simpleMessageModels.size();
+        return messages.size();
     }
 
     @Override
-    public SimpleMessageModel getItem(int position) {
-        return position < getCount() ? simpleMessageModels.get(position) : null;
+    public Message getItem(int position) {
+        return position < getCount() ? messages.get(position) : null;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class MessageListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        SimpleMessageModel simpleMessageModel = getItem(position);
+        Message message = getItem(position);
         ViewHolder viewHolder;
 
         if (convertView == null) {
@@ -68,7 +68,7 @@ public class MessageListAdapter extends BaseAdapter {
         }
 
         if (viewHolder != null) {
-            updateItem(simpleMessageModel, viewHolder);
+            updateItem(message, viewHolder);
         }
 
         return convertView;
@@ -77,14 +77,14 @@ public class MessageListAdapter extends BaseAdapter {
     /**
      * Update an information of some item.
      *
-     * @param simpleMessageModel A model which consist information about the message.
+     * @param message A model which consist information about the message.
      * @param viewHolder         A View holder object which consist links to views.
      */
-    private void updateItem(SimpleMessageModel simpleMessageModel, @NonNull ViewHolder viewHolder) {
-        if (simpleMessageModel != null) {
-            viewHolder.senderAddressTextView.setText(simpleMessageModel.getFrom());
-            viewHolder.messageTextView.setText(simpleMessageModel.getSubject());
-            viewHolder.dateTextView.setText(dateFormat.format(simpleMessageModel.getReceiveDate()));
+    private void updateItem(Message message, @NonNull ViewHolder viewHolder) {
+        if (message != null) {
+            viewHolder.senderAddressTextView.setText(message.getFrom());
+            viewHolder.messageTextView.setText(message.getSubject());
+            viewHolder.dateTextView.setText(dateFormat.format(message.getReceiveDate()));
         } else {
             clearItem(viewHolder);
         }

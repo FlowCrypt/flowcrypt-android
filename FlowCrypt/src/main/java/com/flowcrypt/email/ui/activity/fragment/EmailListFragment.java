@@ -13,7 +13,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.SimpleMessageModel;
+import com.flowcrypt.email.api.email.model.Message;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.ui.loader.LoadMessagesAsyncTaskLoader;
 
@@ -30,7 +30,7 @@ import java.util.List;
  */
 
 public class EmailListFragment extends BaseFragment implements LoaderManager
-        .LoaderCallbacks<List<SimpleMessageModel>> {
+        .LoaderCallbacks<List<Message>> {
     private ListView listViewMessages;
     private View emptyView;
     private ProgressBar progressBar;
@@ -58,7 +58,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public Loader<List<SimpleMessageModel>> onCreateLoader(int id, Bundle args) {
+    public Loader<List<Message>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
                 showProgress();
@@ -70,7 +70,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public void onLoadFinished(Loader<List<SimpleMessageModel>> loader, List<SimpleMessageModel>
+    public void onLoadFinished(Loader<List<Message>> loader, List<Message>
             messages) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_messages:
@@ -93,7 +93,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     }
 
     @Override
-    public void onLoaderReset(Loader<List<SimpleMessageModel>> loader) {
+    public void onLoaderReset(Loader<List<Message>> loader) {
 
     }
 

@@ -7,7 +7,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
-import com.flowcrypt.email.model.SimpleMessageModel;
+import com.flowcrypt.email.api.email.model.Message;
 import com.google.android.gms.auth.GoogleAuthUtil;
 
 import java.util.ArrayList;
@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Folder;
-import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
@@ -31,7 +30,7 @@ import javax.mail.internet.InternetAddress;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<SimpleMessageModel>> {
+public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<Message>> {
     private Account account;
 
     public LoadMessagesAsyncTaskLoader(Context context, Account account) {
@@ -48,7 +47,7 @@ public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<SimpleMess
     }
 
     @Override
-    public List<SimpleMessageModel> loadInBackground() {
+    public List<Message> loadInBackground() {
         Properties props = new Properties();
         props.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE, "true");
         props.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS,
@@ -63,12 +62,13 @@ public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<SimpleMess
             store.connect(JavaEmailConstants.GMAIL_IMAP_SERVER, account.name, token);
             Folder folder = store.getFolder(GmailConstants.FOLDER_NAME_INBOX);
             folder.open(Folder.READ_ONLY);
-            List<Message> messages = new ArrayList<>(Arrays.asList(folder.getMessages(1, folder
+            List<javax.mail.Message> messages = new ArrayList<>(Arrays.asList(folder.getMessages
+                    (1, folder
                     .getMessageCount() > 10 ? 10 : folder.getMessageCount())));
-            List<SimpleMessageModel> simpleMessageModels = new LinkedList<>();
+            List<Message> simpleMessageModels = new LinkedList<>();
 
-            for (Message message : messages) {
-                simpleMessageModels.add(new SimpleMessageModel(
+            for (javax.mail.Message message : messages) {
+                simpleMessageModels.add(new Message(
                         ((InternetAddress) message.getFrom()[0]).getAddress(),
                         message.getSubject(), message.getReceivedDate()));
             }
