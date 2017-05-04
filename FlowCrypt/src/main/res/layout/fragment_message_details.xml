@@ -1,10 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
-    tools:showIn="@layout/activity_message_details">
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/layoutContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:context="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/textViewSenderAddress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/mine_shaft"
+                android:textSize="@dimen/default_text_size_big"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+                app:layout_constraintRight_toLeftOf="@+id/textViewDate"
+                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+                tools:text="tom@cryptup.org" />
+
+            <ImageButton
+                android:id="@+id/imageViewReplyAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="@string/reply_all"
+                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+                app:srcCompat="@mipmap/ic_action_name" />
+
+            <TextView
+                android:id="@+id/textViewSubject"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/default_margin_medium"
+                android:layout_marginTop="@dimen/margin_top_message_subject"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="@color/mine_shaft"
+                android:textSize="@dimen/default_text_size_medium"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+                app:layout_constraintRight_toLeftOf="@+id/textViewDate"
+                app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
+                tools:text="What up man? How are you doing? Tell me please" />
+
+            <TextView
+                android:id="@+id/textViewDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/mine_shaft"
+                android:textSize="@dimen/default_text_size_medium"
+                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintTop_toTopOf="@+id/textViewSubject"
+                tools:text="1:05 PM" />
+
+            <LinearLayout
+                android:id="@+id/layoutFooterOfHeader"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_medium"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textViewSubject">
+
+                <View
+                    android:layout_width="@dimen/default_margin_medium"
+                    android:layout_height="@dimen/height_silver_line"
+                    android:layout_gravity="center"
+                    android:background="@color/silver" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="@dimen/default_margin_medium"
+                    android:layout_marginRight="@dimen/default_margin_medium"
+                    android:contentDescription="@string/lock"
+                    android:src="@mipmap/ic_lock" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/height_silver_line"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:background="@color/silver" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:textColor="@color/mine_shaft"
+                android:textSize="@dimen/default_text_size_medium"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintTop_toBottomOf="@+id/layoutFooterOfHeader"
+                tools:text="This email contains a key backup. It will help you access your encrypted messages from other computers (along with your pass phrase). You can safely leave it in your inbox or archive it.
+
+The key below is protected with pass phrase that only you know. You should make sure to note your pass phrase down.
+
+DO NOT DELETE THIS EMAIL. Write me at tom@cryptup.org so that I can help. I respond very promptly." />
+
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_begin="@dimen/margin_top_bottom_message" />
+
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
 
 
-</android.support.constraint.ConstraintLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+</FrameLayout>
+

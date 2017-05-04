@@ -42,4 +42,7 @@
     <string name="passphrase_must_be_non_empty">Passphrase must be non empty!</string>
     <string name="password_is_incorrect">Password is incorrect, try again!</string>
     <string name="select_another_account">Select another Account</string>
+    <string name="reply_all">Reply all</string>
+    <string name="lock">Lock</string>
+    <string name="something_wrong_with_receiving_message">Something wrong with receiving a message!</string>
 </resources>
