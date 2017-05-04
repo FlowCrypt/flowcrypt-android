@@ -30,7 +30,10 @@ public abstract class BaseGmailFragment extends BaseFragment {
      * @param account A new current account.
      */
     public void updateAccount(Account account) {
+        boolean isNeedCallAccountUpdate = !account.equals(this.account);
         this.account = account;
-        onAccountUpdated();
+        if (isNeedCallAccountUpdate) {
+            onAccountUpdated();
+        }
     }
 }
