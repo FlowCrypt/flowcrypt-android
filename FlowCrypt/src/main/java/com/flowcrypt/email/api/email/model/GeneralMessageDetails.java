@@ -6,7 +6,7 @@ import android.os.Parcelable;
 import java.util.Date;
 
 /**
- * Simple POJO class which describe a message model.
+ * Simple POJO class which describe a general message details.
  *
  * @author DenBond7
  *         Date: 28.04.2017
@@ -17,16 +17,16 @@ import java.util.Date;
 public class GeneralMessageDetails implements Parcelable {
     public static final Creator<GeneralMessageDetails> CREATOR = new
             Creator<GeneralMessageDetails>() {
-        @Override
-        public GeneralMessageDetails createFromParcel(Parcel source) {
-            return new GeneralMessageDetails(source);
-        }
+                @Override
+                public GeneralMessageDetails createFromParcel(Parcel source) {
+                    return new GeneralMessageDetails(source);
+                }
 
-        @Override
-        public GeneralMessageDetails[] newArray(int size) {
-            return new GeneralMessageDetails[size];
-        }
-    };
+                @Override
+                public GeneralMessageDetails[] newArray(int size) {
+                    return new GeneralMessageDetails[size];
+                }
+            };
 
     private String from;
     private String subject;
@@ -38,6 +38,9 @@ public class GeneralMessageDetails implements Parcelable {
         this.subject = subject;
         this.receiveDate = receiveDate;
         this.uid = uid;
+    }
+
+    public GeneralMessageDetails() {
     }
 
     protected GeneralMessageDetails(Parcel in) {

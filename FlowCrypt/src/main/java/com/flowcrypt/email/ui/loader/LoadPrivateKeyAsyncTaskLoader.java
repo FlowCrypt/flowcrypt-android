@@ -74,7 +74,7 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
 
             int keysCount = 1;
             for (Message message : foundMessages) {
-                if (message.getContentType().contains(JavaEmailConstants.CONTENT_TYPE_MULTIPART)) {
+                if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
                     Multipart multiPart = (Multipart) message.getContent();
                     int numberOfParts = multiPart.getCount();
                     for (int partCount = 0; partCount < numberOfParts; partCount++) {

@@ -1,6 +1,5 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
-import android.accounts.Account;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -8,14 +7,17 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
+import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
-import com.flowcrypt.email.ui.loader.LoadMessagesAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
 
 import java.util.List;
 
@@ -29,12 +31,11 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailListFragment extends BaseFragment implements LoaderManager
-        .LoaderCallbacks<List<GeneralMessageDetails>> {
+public class EmailListFragment extends BaseGmailFragment implements LoaderManager
+        .LoaderCallbacks<List<GeneralMessageDetails>>, AdapterView.OnItemClickListener {
     private ListView listViewMessages;
     private View emptyView;
     private ProgressBar progressBar;
-    private Account account;
     private MessageListAdapter messageListAdapter;
 
     @Override
@@ -52,9 +53,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
-        emptyView = view.findViewById(R.id.emptyView);
-        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        initViews(view);
     }
 
     @Override
@@ -62,7 +61,7 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
                 showProgress();
-                return new LoadMessagesAsyncTaskLoader(getActivity(), account);
+                return new LoadGeneralMessagesDetailsAsyncTaskLoader(getActivity(), getAccount());
 
             default:
                 return null;
@@ -78,10 +77,9 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
             case R.id.loader_id_load_gmail_messages:
                 if (generalMessageDetailses != null) {
                     if (!generalMessageDetailses.isEmpty()) {
-                        messageListAdapter = new MessageListAdapter(getActivity(), generalMessageDetailses);
+                        messageListAdapter = new MessageListAdapter(getActivity(),
+                                generalMessageDetailses);
                         listViewMessages.setAdapter(messageListAdapter);
-                        Toast.makeText(getActivity(), "Loaded for test no more 10 generalMessageDetailses!",
-                                Toast.LENGTH_SHORT).show();
                         showContent();
                     } else {
                         showEmptyView();
@@ -99,14 +97,23 @@ public class EmailListFragment extends BaseFragment implements LoaderManager
 
     }
 
-    /**
-     * Update current account and reload messages list.
-     *
-     * @param account A new current account.
-     */
-    public void updateAccount(Account account) {
-        this.account = account;
-        getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null, this);
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        startActivity(MessageDetailsActivity.getIntent(getContext(),
+                (GeneralMessageDetails) parent.getItemAtPosition(position)));
+    }
+
+    @Override
+    public void onAccountUpdated() {
+        getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages, null, this);
+    }
+
+    private void initViews(View view) {
+        listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
+        listViewMessages.setOnItemClickListener(this);
+
+        emptyView = view.findViewById(R.id.emptyView);
+        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
     }
 
     /**

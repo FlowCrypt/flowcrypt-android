@@ -54,7 +54,6 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
             UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
                     .getStatusMessage());
         }
-
     }
 
     @Override

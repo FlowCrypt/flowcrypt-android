@@ -18,5 +18,7 @@ public class JavaEmailConstants {
     public static final String PROTOCOL_IMAP = "imap";
     public static final String PROTOCOL_GIMAPS = "gimaps";
     public static final String OAUTH2 = "oauth2:";
-    public static final String CONTENT_TYPE_MULTIPART = "multipart";
+    public static final String MIME_TYPE_MULTIPART = "multipart/*";
+    public static final String MIME_TYPE_TEXT_PLAIN = "text/plain";
+    public static final String MIME_TYPE_TEXT_HTML = "text/html";
 }

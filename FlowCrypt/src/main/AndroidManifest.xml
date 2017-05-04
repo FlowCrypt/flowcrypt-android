@@ -43,6 +43,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
         </activity>
+        <activity
+            android:name=".ui.activity.MessageDetailsActivity"
+            android:parentActivityName=".ui.activity.EmailManagerActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.flowcrypt.email.ui.activity.EmailManagerActivity" />
+        </activity>
     </application>
 
 </manifest>

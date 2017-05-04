@@ -69,13 +69,15 @@ dependencies {
     compile "com.android.support:support-v4:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:appcompat-v7:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:design:${ANDROID_SUPPORT_VERSION}"
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 
     compile "com.google.android.gms:play-services-base:${PLAY_SERVICES_VERSION}"
     compile "com.google.android.gms:play-services-auth:${PLAY_SERVICES_VERSION}"
+    compile 'com.google.code.gson:gson:2.7'
 
     compile "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
     compile "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
-
+    compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
 
     compile "com.sun.mail:android-mail:${JAVA_MAIL_VERSION}"
     compile "com.sun.mail:android-activation:${JAVA_MAIL_VERSION}"
@@ -83,12 +85,9 @@ dependencies {
         exclude group: 'com.sun.mail'
     }
 
-
     testCompile "junit:junit:${JUNIT_VERSION}"
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.google.code.gson:gson:2.7'
     compile 'com.eclipsesource.j2v8:j2v8:4.6.0@aar'
     compile 'commons-io:commons-io:2.5'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     compile 'ch.acra:acra:4.9.2'
+    compile 'org.jsoup:jsoup:1.10.2'
 }

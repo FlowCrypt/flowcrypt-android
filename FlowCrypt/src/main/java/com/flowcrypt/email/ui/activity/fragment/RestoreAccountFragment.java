@@ -15,6 +15,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.loader.DecryptPrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 

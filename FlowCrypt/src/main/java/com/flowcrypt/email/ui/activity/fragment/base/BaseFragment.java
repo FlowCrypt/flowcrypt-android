@@ -1,4 +1,4 @@
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.support.v4.app.Fragment;
 

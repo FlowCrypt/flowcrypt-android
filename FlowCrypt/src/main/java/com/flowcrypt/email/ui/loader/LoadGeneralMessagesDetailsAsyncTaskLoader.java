@@ -30,10 +30,11 @@ import javax.mail.internet.InternetAddress;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesAsyncTaskLoader extends AsyncTaskLoader<List<GeneralMessageDetails>> {
+public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
+        AsyncTaskLoader<List<GeneralMessageDetails>> {
     private Account account;
 
-    public LoadMessagesAsyncTaskLoader(Context context, Account account) {
+    public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account) {
         super(context);
         this.account = account;
         onContentChanged();
