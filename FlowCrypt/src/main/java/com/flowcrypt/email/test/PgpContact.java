@@ -1,9 +1,6 @@
 package com.flowcrypt.email.test;
 
-import com.eclipsesource.v8.V8Object;
-
-
-class PgpContact {
+public class PgpContact {
 
     private String email;
     private String name;

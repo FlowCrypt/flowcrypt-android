@@ -5,9 +5,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
 import com.flowcrypt.email.util.UIUtil;
@@ -15,7 +15,6 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.io.File;
-import java.io.FilenameFilter;
 
 public class SplashActivity extends BaseAuthenticationActivity implements SplashActivityFragment
         .OnSignInButtonClickListener {
@@ -84,12 +83,8 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
      * @return <tt>Boolean</tt> true if exists one or more decrypted keys, false otherwise;
      */
     private boolean isBackupKeysExist() {
-        File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
-        File[] correctKeysArray = keysFolder.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.startsWith(Constants.PREFIX_PRIVATE_KEY);
-            }
-        });
+        File keysFolder = SecurityUtils.getSecurityFolder(this);
+        File[] correctKeysArray = SecurityUtils.getCorrectPrivateKeys(this);
         return keysFolder.exists() && correctKeysArray.length > 0;
     }
 

@@ -8,6 +8,7 @@ import android.view.View;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -22,7 +23,6 @@ import com.google.android.gms.common.api.Status;
 
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -142,8 +142,7 @@ public abstract class BaseAuthenticationActivity extends BaseActivity implements
     }
 
     private void runSplashActivity() throws IOException {
-        File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
-        FileUtils.deleteDirectory(keysFolder);
+        FileUtils.deleteDirectory(SecurityUtils.getSecurityFolder(this));
         startActivity(new Intent(BaseAuthenticationActivity.this, SplashActivity.class));
         finish();
     }

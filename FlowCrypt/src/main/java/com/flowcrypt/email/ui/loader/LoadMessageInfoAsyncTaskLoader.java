@@ -2,16 +2,21 @@ package com.flowcrypt.email.ui.loader;
 
 import android.accounts.Account;
 import android.content.Context;
+import android.os.Build;
 import android.support.v4.content.AsyncTaskLoader;
+import android.text.Html;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.MimeAddress;
 import com.flowcrypt.email.test.MimeMessage;
+import com.flowcrypt.email.test.PgpDecrypted;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
@@ -106,7 +111,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
         }
 
         if (rawMIMEMessage != null) {
-            Js js = new Js(getContext(), null);
+            Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
             MimeMessage mimeMessage = js.mime_decode(rawMIMEMessage);
             ArrayList<String> addresses = new ArrayList<>();
 
@@ -117,7 +122,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
             messageInfo.setFrom(addresses);
             messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
             messageInfo.setReceiveDate(message.getReceivedDate());
-            messageInfo.setMessage(mimeMessage.getText());
+            messageInfo.setMessage(decryptMessageIfNeed(js, mimeMessage));
         } else {
             return null;
         }
@@ -173,5 +178,31 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
             }
         }
         return result;
+    }
+
+    /**
+     * Decrypt a message if it decrypted;
+     *
+     * @param js          The Js object which used to decrypt a message text.
+     * @param mimeMessage The MimeMessage object.
+     * @return <tt>String</tt> Return a decrypted or original text.
+     */
+    @SuppressWarnings("deprecation")
+    private String decryptMessageIfNeed(Js js, MimeMessage mimeMessage) {
+        if (TextUtils.isEmpty(mimeMessage.getText())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return Html.fromHtml(mimeMessage.getHtml(), Html.FROM_HTML_MODE_LEGACY).toString();
+            } else {
+                return Html.fromHtml(mimeMessage.getHtml()).toString();
+            }
+        } else {
+            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(mimeMessage.getText());
+            try {
+                return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
+            } catch (Exception e) {
+                e.printStackTrace();
+                return mimeMessage.getText();
+            }
+        }
     }
 }

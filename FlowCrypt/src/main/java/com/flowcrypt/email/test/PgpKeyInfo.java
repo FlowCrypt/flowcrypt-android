@@ -5,7 +5,7 @@ public class PgpKeyInfo {
     private final String longid;
     private final String armored;
 
-    PgpKeyInfo(String armored, String longid) {
+    public PgpKeyInfo(String armored, String longid) {
         this.armored = armored;
         this.longid = longid;
     }

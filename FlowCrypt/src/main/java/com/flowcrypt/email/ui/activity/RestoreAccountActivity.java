@@ -6,8 +6,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeyAsyncTaskLoader;
@@ -47,7 +47,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 account = googleSignInAccount.getAccount();
-                File keysFolder = new File(getFilesDir(), Constants.FOLDER_NAME_KEYS);
+                File keysFolder = SecurityUtils.getSecurityFolder(this);
                 if (keysFolder.exists() && keysFolder.list().length > 0) {
                     showContentImmediately(keysFolder);
                 } else {

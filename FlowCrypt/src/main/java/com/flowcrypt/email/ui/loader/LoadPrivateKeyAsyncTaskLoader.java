@@ -8,6 +8,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.SampleStorageConnector;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -82,8 +83,7 @@ public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>>
                         if (bodyPart instanceof MimeBodyPart) {
                             MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
                             if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
-                                File keysFolder = new File(getContext().getFilesDir(), Constants
-                                        .FOLDER_NAME_KEYS);
+                                File keysFolder = SecurityUtils.getSecurityFolder(getContext());
 
                                 if (!keysFolder.exists()) {
                                     if (!keysFolder.mkdir()) {
