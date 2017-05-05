@@ -9,21 +9,23 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.test.MimeAddress;
+import com.flowcrypt.email.test.MimeMessage;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.jsoup.Jsoup;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.internet.InternetAddress;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
 /**
@@ -94,18 +96,31 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
      */
     private MessageInfo parseMessage(Message message) throws Exception {
         MessageInfo messageInfo = new MessageInfo();
-        List<Address> addressList = Arrays.asList(message.getFrom());
-        ArrayList<String> addresses = new ArrayList<>();
-        for (Address address : addressList) {
-            if (address instanceof InternetAddress) {
-                addresses.add(((InternetAddress) address).getAddress());
-            }
+        String rawMIMEMessage = null;
+
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            message.writeTo(output);
+            rawMIMEMessage = output.toString();
+        } catch (IOException | MessagingException e) {
+            e.printStackTrace();
         }
 
-        messageInfo.setFrom(addresses);
-        messageInfo.setSubject(message.getSubject());
-        messageInfo.setReceiveDate(message.getReceivedDate());
-        messageInfo.setMessage(parseSimpleText(message));
+        if (rawMIMEMessage != null) {
+            Js js = new Js(getContext(), null);
+            MimeMessage mimeMessage = js.mime_decode(rawMIMEMessage);
+            ArrayList<String> addresses = new ArrayList<>();
+
+            for (MimeAddress mimeAddress : mimeMessage.getAddressHeader("from")) {
+                addresses.add(mimeAddress.getAddress());
+            }
+
+            messageInfo.setFrom(addresses);
+            messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
+            messageInfo.setReceiveDate(message.getReceivedDate());
+            messageInfo.setMessage(mimeMessage.getText());
+        } else {
+            return null;
+        }
         return messageInfo;
     }
 
