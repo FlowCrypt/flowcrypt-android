@@ -59,9 +59,26 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
                     .FOLDER_NAME_INBOX);
             imapFolder.open(Folder.READ_ONLY);
 
-            List<javax.mail.Message> messages = new ArrayList<>(Arrays.asList(imapFolder.getMessages
-                    (1, imapFolder
-                            .getMessageCount() > 10 ? 10 : imapFolder.getMessageCount())));
+            int[] messagesId;
+
+            int countOfMessages = imapFolder.getMessageCount();
+            int maxCountOfLoadMessage = 10;
+            if (countOfMessages <= maxCountOfLoadMessage) {
+                messagesId = new int[countOfMessages];
+                for (int i = countOfMessages; i >= 1; i--) {
+                    messagesId[countOfMessages - i] = i;
+                }
+            } else {
+                messagesId = new int[maxCountOfLoadMessage];
+                for (int i = countOfMessages; i > countOfMessages -
+                        maxCountOfLoadMessage; i--) {
+                    messagesId[countOfMessages - i] = i;
+                }
+            }
+
+
+            List<javax.mail.Message> messages = new ArrayList<>(Arrays.asList(imapFolder
+                    .getMessages(messagesId)));
             List<GeneralMessageDetails> generalMessageDetailsLinkedList = new LinkedList<>();
 
             for (Message message : messages) {
