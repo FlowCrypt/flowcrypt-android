@@ -71,6 +71,7 @@
       get_future_timestamp_in_months: time_get_future_timestamp_in_months,
       hours: time_hours,
       expiration_format: time_expiration_format,
+      to_utc_timestamp: time_to_utc_timestamp,
     },
     file: {
       download_as_uint8: file_download_as_uint8,
@@ -765,6 +766,14 @@
 
   function time_expiration_format(date) {
     return str_html_escape(date.substr(0, 10));
+  }
+
+  function time_to_utc_timestamp(datetime_string, as_string) {
+    if(!as_string) {
+      return Date.parse(datetime_string);
+    } else {
+      return String(Date.parse(datetime_string));
+    }
   }
 
   /* tools.file */

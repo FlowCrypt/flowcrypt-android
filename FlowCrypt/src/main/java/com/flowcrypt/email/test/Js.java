@@ -63,11 +63,16 @@ public class Js { // Create one object per thread and use them separately. Not t
                 V8Array(v8).push(str));
     }
 
+    public long time_to_utc_timestamp(String str) {
+        return Long.parseLong((String) this.call(String.class, new String[]{"time", "to_utc_timestamp"}, new
+                V8Array(v8).push(str).push(true)));
+    }
+
     public MimeMessage mime_decode(String mime_message) {
         this.call(Object.class, new String[]{"mime", "decode"}, new V8Array(v8).push(mime_message)
                 .push(cb_catcher));
         if((Boolean) cb_last_value[0]) {
-            return new MimeMessage((V8Object) cb_last_value[1]);
+            return new MimeMessage((V8Object) cb_last_value[1], this);
         } else {
             return null;
         }

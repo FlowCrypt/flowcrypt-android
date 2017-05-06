@@ -5,8 +5,11 @@ import com.eclipsesource.v8.V8Object;
 
 public class MimeMessage extends MeaningfulV8ObjectContainer {
 
-    public MimeMessage(V8Object o) {
+    private Js js;
+
+    public MimeMessage(V8Object o, Js js) {
         super(o);
+        this.js = js;
     }
 
     public String getText() {
@@ -27,6 +30,10 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
 
     public String getStringHeader(String header_name) {
         return this.getAttributeAsString(getHeaders(), header_name);
+    }
+
+    public long getTimeHeader(String name) {
+        return js.time_to_utc_timestamp(getStringHeader(name));
     }
 
     public MimeAddress[] getAddressHeader(String header_name) {
