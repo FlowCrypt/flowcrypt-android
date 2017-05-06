@@ -7,3 +7,4 @@ var catcher = window.catcher;
 var btoa = window.btoa;
 var atob = window.atob;
 var MimeParser = this['emailjs-mime-parser'];
+var MimeBuilder = this['emailjs-mime-builder'];

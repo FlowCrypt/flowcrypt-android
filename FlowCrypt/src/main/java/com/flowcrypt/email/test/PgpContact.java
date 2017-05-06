@@ -39,6 +39,19 @@ public class PgpContact {
         this.last_use = 0;
     }
 
+    public PgpContact(String email, String name) {
+        this.email = email;
+        this.name = name;
+        this.pubkey = null;
+        this.has_pgp = false;
+        this.client = null;
+        this.attested = false;
+        this.fingerprint = null;
+        this.longid = null;
+        this.keywords = null;
+        this.last_use = 0;
+    }
+
     public String getEmail() {
         return this.email;
     }
@@ -77,5 +90,17 @@ public class PgpContact {
 
     public Integer getLastUse() {
         return last_use;
+    }
+
+    public String getMime() {
+        return MimeAddress.stringify(name, email);
+    }
+
+    public static String arrayAsMime(PgpContact[] contacts) {
+        String stringified = "";
+        for(Integer i = 0; i < contacts.length; i++) {
+            stringified += contacts[i].getMime() + (i < contacts.length - 1 ? "," : "");
+        }
+        return stringified;
     }
 }

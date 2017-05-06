@@ -78,6 +78,17 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
+    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments) {
+        if(attachments != null && attachments.length > 0) {
+            System.err.println("Js.mime_encode: ignoring attachments (not implemented)");
+        }
+        V8Object headers = new V8Object(v8).add("to", PgpContact.arrayAsMime(to))
+                .add("from", from.getMime()).add("subject", subject);
+        this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body)
+                .push(headers).push(V8Value.NULL).push(cb_catcher));
+        return (String) cb_last_value[0];
+    }
+
     public String crypto_key_normalize(String armored_key) {
         return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new
                 V8Array(v8).push(armored_key));
@@ -206,10 +217,13 @@ public class Js { // Create one object per thread and use them separately. Not t
     private V8Object loadJavascriptCode() throws IOException {
         v8.executeScript(read(context.getAssets().open("js/window.js")));
         v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/punycode.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-stringencoding.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-addressparser.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-codec.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-parser.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-types.js")));
+        v8.executeScript(read(context.getAssets().open("js/emailjs/emailjs-mime-builder.js")));
         v8.executeScript(read(context.getAssets().open("js/mnemonic.js")));
         v8.executeScript(read(context.getAssets().open("js/global.js")));
         v8.executeScript(read(context.getAssets().open("js/tool.js")));

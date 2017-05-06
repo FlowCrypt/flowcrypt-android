@@ -890,18 +890,27 @@
     return text;
   }
 
-  function mime_require(callback) {
-    if(typeof MimeParser !== 'undefined') {
-      callback(MimeParser);
+  function mime_require(group, callback) {
+    if(group === 'parser') {
+      if(typeof MimeParser !== 'undefined') {
+        callback(MimeParser);
+      } else {
+        tool.env.set_up_require();
+        require(['emailjs-mime-parser'], callback);
+      }
     } else {
-      tool.env.set_up_require();
-      require(['emailjs-mime-parser'], callback);
+      if(typeof MimeBuilder !== 'undefined') {
+        callback(MimeBuilder);
+      } else {
+        tool.env.set_up_require();
+        require(['emailjs-mime-builder'], callback);
+      }
     }
   }
 
   function mime_decode(mime_message, callback) {
     var mime_message_contents = {attachments: [], headers: {}, text: undefined, html: undefined, signature: undefined};
-    mime_require(function (emailjs_mime_parser) {
+    mime_require('parser', function (emailjs_mime_parser) {
       try {
         var parser = new emailjs_mime_parser();
         var parsed = {};
@@ -2437,8 +2446,7 @@
    attachments: [{name: 'some.txt', type: 'text/plain', content: uint8}]
    */
   function mime_encode(body, headers, attachments, mime_message_callback) {
-    tool.env.set_up_require();
-    require(['emailjs-mime-builder'], function (MimeBuilder) {
+    mime_require('builder', function (MimeBuilder) {
       var root_node = new MimeBuilder('multipart/mixed');
       tool.each(headers, function (key, header) {
         root_node.addHeader(key, header);

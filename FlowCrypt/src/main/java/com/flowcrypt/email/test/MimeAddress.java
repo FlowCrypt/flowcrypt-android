@@ -16,4 +16,16 @@ public class MimeAddress extends MeaningfulV8ObjectContainer {
         return this.getAttributeAsString("name");
     }
 
+    public static String stringify(MimeAddress[] addresses) {
+        String stringified = "";
+        for(Integer i = 0; i < addresses.length; i++) {
+            stringified += stringify(addresses[i].getName(), addresses[i].getAddress()) + (i < addresses.length - 1 ? "," : "");
+        }
+        return stringified;
+    }
+
+    public static String stringify(String name, String address) {
+        return name != null && !name.isEmpty() ? name + " <" + address + ">" : address;
+    }
+
 }
