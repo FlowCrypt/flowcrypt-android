@@ -103,6 +103,11 @@ public class Js { // Create one object per thread and use them separately. Not t
                 V8Array(v8).push(fingerprint));
     }
 
+    public String crypto_armor_clip(String text) {
+        return (String) this.call(String.class, new String[]{"crypto", "armor", "clip"}, new
+                V8Array(v8).push(text));
+    }
+
     public String mnemonic(String longid) {
         return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new
                 V8Array(v8).push(longid));

@@ -70,6 +70,7 @@
       wait: time_wait,
       get_future_timestamp_in_months: time_get_future_timestamp_in_months,
       hours: time_hours,
+      expiration_format: time_expiration_format,
     },
     file: {
       download_as_uint8: file_download_as_uint8,
@@ -224,7 +225,6 @@
         message_contact: api_cryptup_message_contact,
         link_message: api_cryptup_link_message,
         link_me: api_cryptup_link_me,
-
       },
       aws: {
         s3_upload: api_aws_s3_upload, // ([{base_url, fields, attachment}, ...], cb)
@@ -761,6 +761,10 @@
 
   function time_hours(h) {
     return h * 1000 * 60 * 60; // hours in miliseconds
+  }
+
+  function time_expiration_format(date) {
+    return str_html_escape(date.substr(0, 10));
   }
 
   /* tools.file */
@@ -1408,6 +1412,7 @@
       var match = text.match(/(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE)-----[^]+-----END PGP (MESSAGE|SIGNATURE)-----)/gm);
       return(match !== null && match.length) ? match[0] : null;
     }
+    return null;
   }
 
   var password_sentence_present_test = /https:\/\/cryptup\.(org|io)\/[a-zA-Z0-9]{10}/;
@@ -2581,8 +2586,10 @@
   }
 
   function attachment_get_treat_as(attachment) {
-    if(tool.value(attachment.name).in(['', 'PGPexch.htm.pgp', 'PGPMIME version identification'])) {
+    if(tool.value(attachment.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification'])) {
       return 'hidden';  // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
+    } else if(attachment.name === '') {
+      return attachment.size < 100 ? 'hidden' :  'message';
     } else if(attachment.name.match(/(\.pgp$)|(\.gpg$)/g)) {
       return 'encrypted';
     } else if(attachment.name === 'signature.asc') {
@@ -2734,7 +2741,7 @@
           } else if(attachments.length) {
             var found = false;
             tool.each(attachments, function (i, attachment_meta) {
-              if(attachment_meta.name.match(/\.asc$/) || attachment_meta.name === 'message') {
+              if(attachment_meta.treat_as === 'message') {
                 found = true;
                 api_gmail_fetch_attachments(account_email, [attachment_meta], function (fetch_attachments_success, attachment) {
                   if(fetch_attachments_success) {
