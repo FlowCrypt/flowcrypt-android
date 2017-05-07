@@ -196,11 +196,16 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
                 return Html.fromHtml(mimeMessage.getHtml()).toString();
             }
         } else {
-            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(mimeMessage.getText());
-            try {
-                return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
-            } catch (Exception e) {
-                e.printStackTrace();
+            String decryptedText = js.crypto_armor_clip(mimeMessage.getText());
+            if (decryptedText != null) {
+                PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(decryptedText);
+                try {
+                    return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return mimeMessage.getText();
+                }
+            } else {
                 return mimeMessage.getText();
             }
         }

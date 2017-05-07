@@ -46,7 +46,7 @@
         <activity
             android:name=".ui.activity.MessageDetailsActivity"
             android:parentActivityName=".ui.activity.EmailManagerActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.EmailManagerActivity" />
