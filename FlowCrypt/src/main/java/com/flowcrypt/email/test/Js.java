@@ -31,6 +31,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     private final Context context;
     private final V8 v8;
     private final V8Object tool;
+    private final int NULL = V8Value.NULL;
     private V8Function cb_catcher;
     private Object[] cb_last_value = new Object[3];
 
@@ -44,33 +45,27 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public Boolean str_is_email_valid(String email) {
-        return (Boolean) this.call(Boolean.class, new String[]{"str", "is_email_valid"}, new
-                V8Array(v8).push(email));
+        return (Boolean) this.call(Boolean.class, new String[]{"str", "is_email_valid"}, new V8Array(v8).push(email));
     }
 
     public V8Object str_parse_email(String email) { // {email: str, name: str}
-        return (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new
-                V8Array(v8).push(email));
+        return (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new V8Array(v8).push(email));
     }
 
     public String str_base64url_encode(String str) {
-        return (String) this.call(String.class, new String[]{"str", "base64url_encode"}, new
-                V8Array(v8).push(str));
+        return (String) this.call(String.class, new String[]{"str", "base64url_encode"}, new V8Array(v8).push(str));
     }
 
     public String str_base64url_decode(String str) {
-        return (String) this.call(String.class, new String[]{"str", "base64url_decode"}, new
-                V8Array(v8).push(str));
+        return (String) this.call(String.class, new String[]{"str", "base64url_decode"}, new V8Array(v8).push(str));
     }
 
     public long time_to_utc_timestamp(String str) {
-        return Long.parseLong((String) this.call(String.class, new String[]{"time", "to_utc_timestamp"}, new
-                V8Array(v8).push(str).push(true)));
+        return Long.parseLong((String) this.call(String.class, new String[]{"time", "to_utc_timestamp"}, new V8Array(v8).push(str).push(true)));
     }
 
     public MimeMessage mime_decode(String mime_message) {
-        this.call(Object.class, new String[]{"mime", "decode"}, new V8Array(v8).push(mime_message)
-                .push(cb_catcher));
+        this.call(Object.class, new String[]{"mime", "decode"}, new V8Array(v8).push(mime_message).push(cb_catcher));
         if((Boolean) cb_last_value[0]) {
             return new MimeMessage((V8Object) cb_last_value[1], this);
         } else {
@@ -82,64 +77,52 @@ public class Js { // Create one object per thread and use them separately. Not t
         if(attachments != null && attachments.length > 0) {
             System.err.println("Js.mime_encode: ignoring attachments (not implemented)");
         }
-        V8Object headers = new V8Object(v8).add("to", PgpContact.arrayAsMime(to))
-                .add("from", from.getMime()).add("subject", subject);
-        this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body)
-                .push(headers).push(V8Value.NULL).push(cb_catcher));
+        V8Object headers = new V8Object(v8).add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
+        this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body).push(headers).push(NULL).push(cb_catcher));
         return (String) cb_last_value[0];
     }
 
     public String crypto_key_normalize(String armored_key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new
-                V8Array(v8).push(armored_key));
+        return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new V8Array(v8).push(armored_key));
     }
 
     public PgpKey crypto_key_read(String armored_key) {
-        return new PgpKey((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new
-                V8Array(v8).push(armored_key)), this);
+        return new PgpKey((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new V8Array(v8).push(armored_key)), this);
     }
 
     public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
-        return (V8Object) this.call(Object.class, new String[]{"crypto", "key", "decrypt"}, new
-                V8Array(v8).push(private_key.getV8Object()).push(passphrase));
+        return (V8Object) this.call(Object.class, new String[]{"crypto", "key", "decrypt"}, new V8Array(v8).push(private_key.getV8Object()).push(passphrase));
     }
 
     public String crypto_key_fingerprint(PgpKey key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "fingerprint"}, new
-                V8Array(v8).push(key.getV8Object()));
+        return (String) this.call(String.class, new String[]{"crypto", "key", "fingerprint"}, new V8Array(v8).push(key.getV8Object()));
     }
 
     public String crypto_key_longid(PgpKey key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new
-                V8Array(v8).push(key.getV8Object()));
+        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new V8Array(v8).push(key.getV8Object()));
     }
 
     public String crypto_key_longid(String fingerprint) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new
-                V8Array(v8).push(fingerprint));
+        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new V8Array(v8).push(fingerprint));
     }
 
     public String crypto_armor_clip(String text) {
-        return (String) this.call(String.class, new String[]{"crypto", "armor", "clip"}, new
-                V8Array(v8).push(text));
+        return (String) this.call(String.class, new String[]{"crypto", "armor", "clip"}, new V8Array(v8).push(text));
     }
 
     public String mnemonic(String longid) {
-        return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new
-                V8Array(v8).push(longid));
+        return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new V8Array(v8).push(longid));
     }
 
     public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
-        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(V8Value.NULL)
-                .push(V8Value.NULL).push(text).push(V8Value.NULL).push(armor).push(cb_catcher);
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL).push(armor).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value[0]).get("data").toString();
     }
 
     public PgpDecrypted crypto_message_decrypt(String data, String password) {
         // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
-        V8Array params = new V8Array(v8).push(V8Value.NULL).push("").push(data)
-                .push(password).push(cb_catcher).push(V8Value.NULL);
+        V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push(cb_catcher).push(NULL);
         this.call(void.class, new String[]{"crypto", "message", "decrypt"}, params);
         return new PgpDecrypted((V8Object) cb_last_value[0]);
     }
@@ -149,13 +132,11 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public String api_gmail_query_backups(String account_email) {
-        return (String) this.call(String.class, new String[]{"api", "gmail", "query", "backups"},
-                new V8Array(v8).push(account_email));
+        return (String) this.call(String.class, new String[]{"api", "gmail", "query", "backups"}, new V8Array(v8).push(account_email));
     }
 
     public IdToken api_auth_parse_id_token(String id_token) {
-        return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth",
-                "parse_id_token"}, new V8Array(v8).push(id_token)));
+        return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth", "parse_id_token"}, new V8Array(v8).push(id_token)));
     }
 
     private Object call(Class<?> return_type, String path[], V8Array args) {
@@ -202,19 +183,17 @@ public class Js { // Create one object per thread and use them separately. Not t
 
     private void bindJavaMethods() {
         JavaMethodsForJavascript methods = new JavaMethodsForJavascript(v8, storage);
-        v8.registerJavaMethod(methods, "alert", "alert", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "console_log", "engine_host_console_log", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "console_error", "engine_host_console_error", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "alert", "engine_host_alert", new Class[]{String.class});
         v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, V8Array.class});
         v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, String.class});
         v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class});
         v8.registerJavaMethod(methods, "get_passphrase", "get_passphrase", new Class[]{String.class, String.class});
-        V8Object v8Console = new V8Object(v8);
-        v8.add("console", v8Console);
-        v8Console.registerJavaMethod(methods, "console_log", "log", new Class[]{String.class});
-        v8Console.registerJavaMethod(methods, "console_error", "error", new Class[]{String.class});
-        v8Console.release();
     }
 
     private V8Object loadJavascriptCode() throws IOException {
+        v8.executeScript("var engine_host_version = 'Android 0.1';");
         v8.executeScript(read(context.getAssets().open("js/window.js")));
         v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/punycode.js")));

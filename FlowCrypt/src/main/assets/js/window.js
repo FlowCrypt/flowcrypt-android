@@ -3,25 +3,49 @@
 'use strict';
 
 var window = {
-    is_bare_engine: true,
-    crypto: {
-        getRandomValues: function (buf) { // NOT SECURE - for testing only
-            for(var i=0; i<buf.length; i++) {
-                buf[i] = Math.round(Math.random() * 255);
-            }
-        },
+  is_bare_engine: true,
+  crypto: {
+    getRandomValues: function (buf) { // NOT SECURE - for testing only
+      for(var i=0; i<buf.length; i++) {
+        buf[i] = Math.round(Math.random() * 255);
+      }
     },
-    catcher: {
-      try: function(code) {
-        return code;
-      },
-      version: function() {
-        return 'Android 0.1';
-      },
-      handle_exception(e) {
-        throw e;
-      },
+  },
+  catcher: {
+    try: function(code) {
+      return code;
     },
+    version: function() {
+      return engine_host_version;
+    },
+    handle_exception(e) {
+      throw e;
+    },
+  },
+};
+
+var console = {
+  log: function(x) {
+    engine_host_console_log('Js.console.log: ' + console.formatter(x));
+  },
+  error: function(x) {
+    engine_host_console_error('Js.console.error: ' + console.formatter(x));
+  },
+  formatter: function(x) {
+    if(typeof x === 'object') {
+      return JSON.stringify(x, null, 2);
+    } else {
+      return String(x);
+    }
+  },
+};
+
+var alert = function(m) {
+  engine_host_alert(String(m));
+};
+
+var engine_host_cb_value_formatter = function(v1, v2, v3, v4, v5) {
+  engine_host_cb_catcher([v1, v2, v3, v4, v5]);
 };
 
 
