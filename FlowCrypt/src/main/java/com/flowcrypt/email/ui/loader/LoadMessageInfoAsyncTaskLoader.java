@@ -26,6 +26,7 @@ import org.jsoup.Jsoup;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
@@ -121,7 +122,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
 
             messageInfo.setFrom(addresses);
             messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
-            messageInfo.setReceiveDate(message.getReceivedDate());
+            messageInfo.setReceiveDate(new Date(mimeMessage.getTimeHeader("date")));
             messageInfo.setMessage(decryptMessageIfNeed(js, mimeMessage));
         } else {
             return null;
