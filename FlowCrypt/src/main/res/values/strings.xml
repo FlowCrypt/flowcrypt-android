@@ -45,4 +45,5 @@
     <string name="reply_all">Reply all</string>
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Something wrong with receiving a message!</string>
+    <string name="title_activity_test">TestActivity</string>
 </resources>

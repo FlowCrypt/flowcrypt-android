@@ -26,6 +26,7 @@ import org.jsoup.Jsoup;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
@@ -121,7 +122,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
 
             messageInfo.setFrom(addresses);
             messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
-            messageInfo.setReceiveDate(message.getReceivedDate());
+            messageInfo.setReceiveDate(new Date(mimeMessage.getTimeHeader("date")));
             messageInfo.setMessage(decryptMessageIfNeed(js, mimeMessage));
         } else {
             return null;
@@ -196,11 +197,16 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
                 return Html.fromHtml(mimeMessage.getHtml()).toString();
             }
         } else {
-            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(mimeMessage.getText());
-            try {
-                return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
-            } catch (Exception e) {
-                e.printStackTrace();
+            String decryptedText = js.crypto_armor_clip(mimeMessage.getText());
+            if (decryptedText != null) {
+                PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(decryptedText);
+                try {
+                    return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return mimeMessage.getText();
+                }
+            } else {
                 return mimeMessage.getText();
             }
         }
