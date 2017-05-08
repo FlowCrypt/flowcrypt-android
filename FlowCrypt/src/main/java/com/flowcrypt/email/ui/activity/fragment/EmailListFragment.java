@@ -32,9 +32,11 @@ import java.util.List;
  */
 
 public class EmailListFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<List<GeneralMessageDetails>>, AdapterView.OnItemClickListener {
+        .LoaderCallbacks<List<GeneralMessageDetails>>, AdapterView.OnItemClickListener,
+        View.OnClickListener {
     private ListView listViewMessages;
     private View emptyView;
+    private View layoutContent;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
 
@@ -52,7 +54,6 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         initViews(view);
     }
 
@@ -108,20 +109,33 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
         getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages, null, this);
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.floatActionButtonCompose:
+                break;
+        }
+    }
+
     private void initViews(View view) {
+        layoutContent = view.findViewById(R.id.layoutContent);
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
         emptyView = view.findViewById(R.id.emptyView);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+
+        if (view.findViewById(R.id.floatActionButtonCompose) != null) {
+            view.findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);
+        }
     }
 
     /**
      * Make visible the main content. Hide the progress bar and the empty view.
      */
     private void showContent() {
-        if (listViewMessages != null) {
-            listViewMessages.setVisibility(View.VISIBLE);
+        if (layoutContent != null) {
+            layoutContent.setVisibility(View.VISIBLE);
         }
 
         if (progressBar != null) {
@@ -137,8 +151,8 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
      * Make visible the progress bar. Hide the main content and the empty view.
      */
     private void showProgress() {
-        if (listViewMessages != null) {
-            listViewMessages.setVisibility(View.GONE);
+        if (layoutContent != null) {
+            layoutContent.setVisibility(View.GONE);
         }
 
         if (progressBar != null) {
@@ -154,8 +168,8 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
      * Make visible the empty view. Hide the main content and the progress bar.
      */
     private void showEmptyView() {
-        if (listViewMessages != null) {
-            listViewMessages.setVisibility(View.GONE);
+        if (layoutContent != null) {
+            layoutContent.setVisibility(View.GONE);
         }
 
         if (progressBar != null) {
