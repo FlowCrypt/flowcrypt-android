@@ -1,5 +1,6 @@
 package com.flowcrypt.email.test;
 
+import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 
 public class PgpKey extends MeaningfulV8ObjectContainer {
@@ -25,5 +26,9 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
 
     public String getFingerprint() {
         return this.js.crypto_key_fingerprint(this);
+    }
+
+    public PgpKey toPublic() {
+        return new PgpKey(this.v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())), this.js);
     }
 }
