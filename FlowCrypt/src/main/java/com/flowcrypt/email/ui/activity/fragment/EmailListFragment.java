@@ -1,5 +1,6 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
+import com.flowcrypt.email.ui.activity.SecureComposeActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
@@ -113,6 +115,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
+                startActivity(new Intent(getContext(), SecureComposeActivity.class));
                 break;
         }
     }

@@ -15,4 +15,13 @@ public class GmailConstants {
     public static final String PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth" +
             ".mechanisms";
+
+    public static final String PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth";
+    public static final String PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";
+    public static final String PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth" +
+            ".mechanisms";
+
+
+    public static final String HOST_SMTP_GMAIL_COM = "smtp.gmail.com";
+    public static final int PORT_SMTP_GMAIL_COM = 465;
 }

@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.api.email.model.MessageInfo;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.LoadMessageInfoAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
@@ -27,7 +27,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<MessageInfo> {
+        .LoaderCallbacks<IncomingMessageInfo> {
     public static final String KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".KEY_GENERAL_MESSAGE_DETAILS";
 
@@ -85,7 +85,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public Loader<MessageInfo> onCreateLoader(int id, Bundle args) {
+    public Loader<IncomingMessageInfo> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info:
                 showProgress();
@@ -98,11 +98,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public void onLoadFinished(Loader<MessageInfo> loader, MessageInfo messageInfo) {
+    public void onLoadFinished(Loader<IncomingMessageInfo> loader, IncomingMessageInfo
+            incomingMessageInfo) {
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info:
-                if (messageInfo != null) {
-                    updateViews(messageInfo);
+                if (incomingMessageInfo != null) {
+                    updateViews(incomingMessageInfo);
                     showContent();
                 } else {
                     UIUtil.showSnackbar(getView(),
@@ -119,7 +120,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public void onLoaderReset(Loader<MessageInfo> loader) {
+    public void onLoaderReset(Loader<IncomingMessageInfo> loader) {
 
     }
 
@@ -168,14 +169,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
         progressBar = view.findViewById(R.id.progressBar);
     }
 
-    private void updateViews(MessageInfo messageInfo) {
-        if (messageInfo != null) {
-            textViewSenderAddress.setText(messageInfo.getFrom().get(0));
-            textViewSubject.setText(messageInfo.getSubject());
-            textViewMessage.setText(messageInfo.getMessage());
+    private void updateViews(IncomingMessageInfo incomingMessageInfo) {
+        if (incomingMessageInfo != null) {
+            textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
+            textViewSubject.setText(incomingMessageInfo.getSubject());
+            textViewMessage.setText(incomingMessageInfo.getMessage());
 
-            if (messageInfo.getReceiveDate() != null) {
-                textViewDate.setText(dateFormat.format(messageInfo.getReceiveDate()));
+            if (incomingMessageInfo.getReceiveDate() != null) {
+                textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
             }
         }
     }

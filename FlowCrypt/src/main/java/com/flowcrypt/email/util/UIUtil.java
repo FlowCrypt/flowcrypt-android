@@ -1,8 +1,11 @@
 package com.flowcrypt.email.util;
 
+import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 /**
  * User interface util methods.
@@ -41,5 +44,17 @@ public class UIUtil {
                                     @NonNull View.OnClickListener onClickListener) {
         Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
                 .setAction(buttonName, onClickListener).show();
+    }
+
+    /**
+     * Request to hide the soft input window from the
+     * context of the window that is currently accepting input.
+     */
+    public static void hideSoftInput(Context context, View view) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        if (view != null) {
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 }

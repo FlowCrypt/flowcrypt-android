@@ -4,8 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menuIdSend"
-        android:icon="@android:drawable/ic_menu_send"
+        android:id="@+id/menuActionSend"
+        android:icon="@mipmap/ic_action_send"
         android:title="@string/send"
         app:showAsAction="always"/>
 </menu>

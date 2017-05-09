@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">FlowCrypt</string>
 
-    <!-- Strings related to login -->
     <string name="secure_compose">Secure Compose</string>
     <string name="prompt_recipient">Add recipient</string>
     <string name="prompt_subject">Subject</string>
@@ -26,7 +25,6 @@
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to start sending encrypted messages</string>
     <string name="continue_with_gmail">Continue with Gmail</string>
     <string name="title_activity_email_manager">Inbox</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="log_out">Log out</string>
@@ -46,4 +44,7 @@
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Something wrong with receiving a message!</string>
     <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_secure_compose">Secure Compose</string>
+    <string name="title_activity_login">Sign in</string>
+    <string name="please_wait_while_message_will_be_sent">Please wait while a message will be sent!</string>
 </resources>

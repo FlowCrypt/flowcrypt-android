@@ -17,6 +17,16 @@ import javax.mail.Session;
  */
 
 public class OpenStoreHelper {
+
+    /**
+     * Open and connect to the store using gimaps protocol.
+     *
+     * @param token       An OAuth2 access token;
+     * @param accountName An account name which use to create connection;
+     * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
+     * gimaps.
+     */
+
     public static GmailSSLStore openAndConnectToGimapsStore(String token, String accountName) throws
             MessagingException {
 
@@ -27,5 +37,16 @@ public class OpenStoreHelper {
                 .PROTOCOL_GIMAPS);
         gmailSSLStore.connect(JavaEmailConstants.GMAIL_IMAP_SERVER, accountName, token);
         return gmailSSLStore;
+    }
+
+    /**
+     * Generate a session for gimaps protocol.
+     *
+     * @return <tt>Session</tt> A new session for gimaps protocol based on properties for gimaps.
+     */
+    public static Session getGmailSession() {
+        Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGimaps());
+        session.setDebug(BuildConfig.DEBUG);
+        return session;
     }
 }

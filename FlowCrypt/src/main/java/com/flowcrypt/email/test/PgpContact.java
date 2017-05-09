@@ -1,19 +1,36 @@
 package com.flowcrypt.email.test;
 
-public class PgpContact {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class PgpContact implements Parcelable {
+
+    public static final Creator<PgpContact> CREATOR = new Creator<PgpContact>() {
+        @Override
+        public PgpContact createFromParcel(Parcel source) {
+            return new PgpContact(source);
+        }
+
+        @Override
+        public PgpContact[] newArray(int size) {
+            return new PgpContact[size];
+        }
+    };
 
     private String email;
     private String name;
     private String pubkey;
-    private Boolean has_pgp;
+    private boolean has_pgp;
     private String client;
-    private Boolean attested;
+    private boolean attested;
     private String fingerprint;
     private String longid;
     private String keywords;
-    private Integer last_use;
+    private int last_use;
 
-    public PgpContact(String email, String name, String pubkey, Boolean has_pgp, String client, Boolean attested, String fingerprint, String longid, String keywords, Integer last_use) {
+    public PgpContact(String email, String name, String pubkey, Boolean has_pgp, String client,
+                      Boolean attested, String fingerprint, String longid, String keywords,
+                      Integer last_use) {
         this.email = email;
         this.name = name;
         this.pubkey = pubkey;
@@ -26,7 +43,8 @@ public class PgpContact {
         this.last_use = last_use;
     }
 
-    public PgpContact(Js js, String email, String name, String pubkey, String client, Boolean attested) {
+    public PgpContact(Js js, String email, String name, String pubkey, String client, Boolean
+            attested) {
         this.email = email;
         this.name = name;
         this.pubkey = pubkey;
@@ -50,6 +68,46 @@ public class PgpContact {
         this.longid = null;
         this.keywords = null;
         this.last_use = 0;
+    }
+
+    protected PgpContact(Parcel in) {
+        this.email = in.readString();
+        this.name = in.readString();
+        this.pubkey = in.readString();
+        this.has_pgp = in.readByte() != 0;
+        this.client = in.readString();
+        this.attested = in.readByte() != 0;
+        this.fingerprint = in.readString();
+        this.longid = in.readString();
+        this.keywords = in.readString();
+        this.last_use = in.readInt();
+    }
+
+    public static String arrayAsMime(PgpContact[] contacts) {
+        String stringified = "";
+        for (Integer i = 0; i < contacts.length; i++) {
+            stringified += contacts[i].getMime() + (i < contacts.length - 1 ? "," : "");
+        }
+        return stringified;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.email);
+        dest.writeString(this.name);
+        dest.writeString(this.pubkey);
+        dest.writeByte(this.has_pgp ? (byte) 1 : (byte) 0);
+        dest.writeString(this.client);
+        dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
+        dest.writeString(this.fingerprint);
+        dest.writeString(this.longid);
+        dest.writeString(this.keywords);
+        dest.writeInt(this.last_use);
     }
 
     public String getEmail() {
@@ -94,13 +152,5 @@ public class PgpContact {
 
     public String getMime() {
         return MimeAddress.stringify(name, email);
-    }
-
-    public static String arrayAsMime(PgpContact[] contacts) {
-        String stringified = "";
-        for(Integer i = 0; i < contacts.length; i++) {
-            stringified += contacts[i].getMime() + (i < contacts.length - 1 ? "," : "");
-        }
-        return stringified;
     }
 }

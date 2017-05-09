@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -44,7 +45,7 @@ import javax.mail.internet.MimeMultipart;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo> {
+public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMessageInfo> {
 
     private Account account;
     private GeneralMessageDetails generalMessageDetails;
@@ -65,7 +66,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
     }
 
     @Override
-    public MessageInfo loadInBackground() {
+    public IncomingMessageInfo loadInBackground() {
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -77,7 +78,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
             imapFolder.open(Folder.READ_ONLY);
 
             Message message = imapFolder.getMessageByUID(generalMessageDetails.getUid());
-            MessageInfo messageInfo = parseMessage(message);
+            IncomingMessageInfo messageInfo = parseMessage(message);
 
             imapFolder.close(false);
             gmailSSLStore.close();
@@ -100,8 +101,8 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<MessageInfo>
      * @return <tt>MessageInfo</tt> Return a MessageInfo object.
      * @throws Exception The parsing process can be throws different exceptions.
      */
-    private MessageInfo parseMessage(Message message) throws Exception {
-        MessageInfo messageInfo = new MessageInfo();
+    private IncomingMessageInfo parseMessage(Message message) throws Exception {
+        IncomingMessageInfo messageInfo = new IncomingMessageInfo();
         String rawMIMEMessage = null;
 
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {

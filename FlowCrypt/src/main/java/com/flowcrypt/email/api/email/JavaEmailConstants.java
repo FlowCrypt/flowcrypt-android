@@ -16,6 +16,7 @@ public class JavaEmailConstants {
     public static final String MECHANISMS_TYPE_XOAUTH2 = "XOAUTH2";
     public static final String GMAIL_IMAP_SERVER = "imap.gmail.com";
     public static final String PROTOCOL_IMAP = "imap";
+    public static final String PROTOCOL_SMTP = "smtp";
     public static final String PROTOCOL_GIMAPS = "gimaps";
     public static final String OAUTH2 = "oauth2:";
     public static final String MIME_TYPE_MULTIPART = "multipart/*";

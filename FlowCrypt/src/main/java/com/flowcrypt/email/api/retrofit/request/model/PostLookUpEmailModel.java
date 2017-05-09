@@ -36,6 +36,10 @@ public class PostLookUpEmailModel extends BaseRequestModel {
     public PostLookUpEmailModel() {
     }
 
+    public PostLookUpEmailModel(String email) {
+        this.email = email;
+    }
+
     public PostLookUpEmailModel(Parcel in) {
         this.email = in.readString();
     }

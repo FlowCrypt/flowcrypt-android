@@ -64,14 +64,14 @@ public class SendEmailActivity extends AppCompatActivity implements LoaderManage
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
+        inflater.inflate(R.menu.fragment_secure_compose, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menuIdSend:
+            case R.id.menuActionSend:
                 if (TextUtils.isEmpty(mEditTextRecipient.getText().toString())) {
                     UIUtil.showInfoSnackbar(mEditTextRecipient, getString(R.string
                                     .text_must_not_be_empty,

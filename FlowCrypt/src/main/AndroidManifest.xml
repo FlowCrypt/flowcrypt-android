@@ -51,6 +51,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.EmailManagerActivity" />
         </activity>
+        <activity
+            android:name=".ui.activity.SecureComposeActivity"
+            android:label="@string/title_activity_secure_compose"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>
