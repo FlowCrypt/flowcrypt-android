@@ -28,12 +28,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 public class MessageDetailsActivity extends BaseAuthenticationActivity {
     public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".EXTRA_KEY_GENERAL_MESSAGE_DETAILS";
+    public static final String EXTRA_KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
+            ".EXTRA_KEY_CURRENT_FOLDER";
 
     private GeneralMessageDetails generalMessageDetails;
+    private String currentFolder;
 
-    public static Intent getIntent(Context context, GeneralMessageDetails generalMessageDetails) {
+    public static Intent getIntent(Context context, GeneralMessageDetails generalMessageDetails,
+                                   String currentFolder) {
         Intent intent = new Intent(context, MessageDetailsActivity.class);
         intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
+        intent.putExtra(EXTRA_KEY_CURRENT_FOLDER, currentFolder);
         return intent;
     }
 
@@ -58,11 +63,15 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initViews();
-        if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS)) {
+        if (getIntent() != null) {
             this.generalMessageDetails = getIntent().getParcelableExtra
                     (EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+
+            this.currentFolder = getIntent().getStringExtra(
+                    (EXTRA_KEY_CURRENT_FOLDER));
         }
+
+        initViews();
     }
 
     private void updateMessageDetailsFragment(Account account) {
@@ -76,6 +85,16 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
         }
     }
 
+    private void updateFolderInMessageDetailsFragment(String folderName) {
+        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.messageDetailsFragment);
+
+        if (messageDetailsFragment != null) {
+            messageDetailsFragment.setFolder(folderName);
+        }
+    }
+
     private void initViews() {
         setContentView(R.layout.activity_message_details);
 
@@ -85,6 +104,8 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        updateFolderInMessageDetailsFragment(currentFolder);
     }
 
 }

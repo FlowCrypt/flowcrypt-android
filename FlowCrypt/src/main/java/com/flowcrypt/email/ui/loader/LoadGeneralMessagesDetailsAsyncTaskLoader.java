@@ -33,10 +33,13 @@ import javax.mail.internet.InternetAddress;
 public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
         AsyncTaskLoader<List<GeneralMessageDetails>> {
     private Account account;
+    private String folder;
 
-    public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account) {
+    public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account, String
+            folder) {
         super(context);
         this.account = account;
+        this.folder = folder;
         onContentChanged();
     }
 
@@ -55,8 +58,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
             GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
                     account.name);
 
-            IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(GmailConstants
-                    .FOLDER_NAME_INBOX);
+            IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folder);
             imapFolder.open(Folder.READ_ONLY);
 
             int[] messagesId;

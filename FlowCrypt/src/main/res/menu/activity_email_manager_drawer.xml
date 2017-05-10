@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@mipmap/ic_gmail"
-            android:title="Sample" />
-    </group>
+    <item
+        android:id="@+id/mailLabels"
+        android:title="@string/all_labels">
+        <menu>
+
+        </menu>
+    </item>
 
     <item android:title="@string/authentication">
         <menu>

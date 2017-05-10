@@ -13,7 +13,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureComposeActivity;
@@ -36,15 +38,23 @@ import java.util.List;
 public class EmailListFragment extends BaseGmailFragment implements LoaderManager
         .LoaderCallbacks<List<GeneralMessageDetails>>, AdapterView.OnItemClickListener,
         View.OnClickListener {
+    private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
+            ".KEY_CURRENT_FOLDER";
+
     private ListView listViewMessages;
     private View emptyView;
     private View layoutContent;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
+    private String currentFolder = GmailConstants.FOLDER_NAME_INBOX;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            this.currentFolder = savedInstanceState.getString(KEY_CURRENT_FOLDER);
+        }
     }
 
     @Override
@@ -60,11 +70,21 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_CURRENT_FOLDER, currentFolder);
+    }
+
+    @Override
     public Loader<List<GeneralMessageDetails>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
                 showProgress();
-                return new LoadGeneralMessagesDetailsAsyncTaskLoader(getActivity(), getAccount());
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle(currentFolder);
+                }
+                return new LoadGeneralMessagesDetailsAsyncTaskLoader(getActivity(), getAccount(),
+                        currentFolder);
 
             default:
                 return null;
@@ -103,7 +123,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         startActivity(MessageDetailsActivity.getIntent(getContext(),
-                (GeneralMessageDetails) parent.getItemAtPosition(position)));
+                (GeneralMessageDetails) parent.getItemAtPosition(position), currentFolder));
     }
 
     @Override
@@ -118,6 +138,16 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                 startActivity(new Intent(getContext(), SecureComposeActivity.class));
                 break;
         }
+    }
+
+    /**
+     * Change a current IMAP folder.
+     *
+     * @param folderName The name of a new folder.
+     */
+    public void setFolder(String folderName) {
+        this.currentFolder = folderName;
+        getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null, this);
     }
 
     private void initViews(View view) {

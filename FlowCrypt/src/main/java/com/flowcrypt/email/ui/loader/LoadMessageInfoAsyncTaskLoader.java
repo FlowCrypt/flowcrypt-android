@@ -49,12 +49,14 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMess
 
     private Account account;
     private GeneralMessageDetails generalMessageDetails;
+    private String folderName;
 
     public LoadMessageInfoAsyncTaskLoader(Context context, Account account, GeneralMessageDetails
-            generalMessageDetails) {
+            generalMessageDetails, String folderName) {
         super(context);
         this.account = account;
         this.generalMessageDetails = generalMessageDetails;
+        this.folderName = folderName;
         onContentChanged();
     }
 
@@ -73,8 +75,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMess
             GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
                     account.name);
 
-            IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(GmailConstants
-                    .FOLDER_NAME_INBOX);
+            IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
             imapFolder.open(Folder.READ_ONLY);
 
             Message message = imapFolder.getMessageByUID(generalMessageDetails.getUid());

@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
@@ -43,6 +44,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
+    private String folderName = GmailConstants.FOLDER_NAME_INBOX;
 
     public MessageDetailsFragment() {
     }
@@ -93,7 +95,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
             case R.id.loader_id_load_message_info:
                 showProgress();
                 return new LoadMessageInfoAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails);
+                        generalMessageDetails, folderName);
 
             default:
                 return null;
@@ -144,6 +146,10 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
 
     public void setGeneralMessageDetails(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
+    }
+
+    public void setFolder(String folderName) {
+        this.folderName = folderName;
     }
 
     /**
