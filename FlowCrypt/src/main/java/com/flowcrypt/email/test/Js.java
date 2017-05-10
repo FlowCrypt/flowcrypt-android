@@ -73,13 +73,18 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments) {
+    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments, MimeMessage reply_to) {
+        V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
+        headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
         if(attachments != null && attachments.length > 0) {
             System.err.println("Js.mime_encode: ignoring attachments (not implemented)");
         }
-        V8Object headers = new V8Object(v8).add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
         this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body).push(headers).push(NULL).push(cb_catcher));
         return (String) cb_last_value[0];
+    }
+
+    private V8Object mime_reply_headers(MimeMessage original) {
+        return (V8Object) this.call(Object.class, new String[]{"mime", "reply_headers"}, new V8Array(v8).push(original.getV8Object()));
     }
 
     public String crypto_key_normalize(String armored_key) {

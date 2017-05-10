@@ -87,6 +87,7 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionR
                         outgoingMessageInfo.getToPgpContacts(),
                         outgoingMessageInfo.getFromPgpContact(),
                         outgoingMessageInfo.getSubject(),
+                        null,
                         null);
 
                 MimeMessage mimeMessage = new MimeMessage(session,
