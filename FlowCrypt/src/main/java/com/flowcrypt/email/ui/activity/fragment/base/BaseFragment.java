@@ -1,6 +1,8 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 
 /**
  * @author DenBond7
@@ -10,4 +12,9 @@ import android.support.v4.app.Fragment;
  */
 
 public class BaseFragment extends Fragment {
+    public ActionBar getSupportActionBar() {
+        if (getActivity() instanceof AppCompatActivity) {
+            return ((AppCompatActivity) getActivity()).getSupportActionBar();
+        } else return null;
+    }
 }
