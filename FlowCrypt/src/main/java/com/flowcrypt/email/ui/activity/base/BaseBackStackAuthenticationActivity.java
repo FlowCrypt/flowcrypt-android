@@ -1,9 +1,6 @@
 package com.flowcrypt.email.ui.activity.base;
 
 import android.view.MenuItem;
-import android.view.View;
-
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 /**
  * The base back stack authentication activity.
@@ -25,15 +22,5 @@ public abstract class BaseBackStackAuthenticationActivity extends BaseAuthentica
 
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public View getRootView() {
-        return null;
-    }
-
-    @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-
     }
 }

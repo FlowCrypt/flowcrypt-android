@@ -55,6 +55,10 @@
             android:name=".ui.activity.SecureComposeActivity"
             android:label="@string/title_activity_secure_compose"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.activity.SecureReplyActivity"
+            android:label="@string/title_activity_security_reply"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

@@ -1,5 +1,6 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -14,6 +15,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.LoadMessageInfoAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
@@ -27,7 +29,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<IncomingMessageInfo> {
+        .LoaderCallbacks<IncomingMessageInfo>, View.OnClickListener {
     public static final String KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".KEY_GENERAL_MESSAGE_DETAILS";
 
@@ -40,6 +42,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     private View progressBar;
 
     private java.text.DateFormat dateFormat;
+    private IncomingMessageInfo incomingMessageInfo;
 
     public MessageDetailsFragment() {
     }
@@ -103,7 +106,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info:
                 if (incomingMessageInfo != null) {
-                    updateViews(incomingMessageInfo);
+                    this.incomingMessageInfo = incomingMessageInfo;
+                    updateViews();
                     showContent();
                 } else {
                     UIUtil.showSnackbar(getView(),
@@ -129,8 +133,27 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
         reloadMessageInfo();
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.imageViewReplyAll:
+                runSecurityReplyActivity();
+                break;
+        }
+    }
+
     public void setGeneralMessageDetails(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
+    }
+
+    /**
+     * Run a screen where the user can start write a reply.
+     */
+    private void runSecurityReplyActivity() {
+        Intent intent = new Intent(getContext(), SecureReplyActivity.class);
+        intent.putExtra(SecureReplyActivity.KEY_INCOMING_MESSAGE_INFO,
+                incomingMessageInfo);
+        startActivity(intent);
     }
 
     /**
@@ -167,9 +190,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
 
         layoutContent = view.findViewById(R.id.layoutContent);
         progressBar = view.findViewById(R.id.progressBar);
+
+        if (view.findViewById(R.id.imageViewReplyAll) != null) {
+            view.findViewById(R.id.imageViewReplyAll).setOnClickListener(this);
+        }
     }
 
-    private void updateViews(IncomingMessageInfo incomingMessageInfo) {
+    private void updateViews() {
         if (incomingMessageInfo != null) {
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
             textViewSubject.setText(incomingMessageInfo.getSubject());
