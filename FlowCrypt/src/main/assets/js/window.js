@@ -18,7 +18,7 @@ var window = {
     version: function() {
       return engine_host_version;
     },
-    handle_exception(e) {
+    handle_exception: function (e) {
       throw e;
     },
   },
