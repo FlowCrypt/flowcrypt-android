@@ -58,7 +58,13 @@
         <activity
             android:name=".ui.activity.SecureReplyActivity"
             android:label="@string/title_activity_security_reply"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <provider
+            android:name=".database.provider.SecurityContentProvider"
+            android:authorities="${applicationId}.SecurityContentProvider"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>
