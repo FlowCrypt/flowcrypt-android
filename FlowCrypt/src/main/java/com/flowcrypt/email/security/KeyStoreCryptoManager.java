@@ -76,9 +76,16 @@ public class KeyStoreCryptoManager {
 
     /**
      * This method do encrypt of the input text and return an encrypted data.
+     * <p>
+     * For encrypt will be created a Cipher object with transformation
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING
+     * } and initialized as {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData
+     * which will be as
+     * input will be convert to byte[] and encrypt via cipher.doFinal. After this we will return
+     * a base64 encoded encrypted result.
      *
      * @param plainData The input text which will be encrypted.
-     * @return <tt>String</tt> Return an encrypted data.
+     * @return <tt>String</tt> A base64 encoded encrypted result.
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
@@ -103,8 +110,15 @@ public class KeyStoreCryptoManager {
 
     /**
      * This method do decrypt of the input encrypted text and return a decrypted data.
+     * <p>
+     * For decrypt will be created a Cipher object with transformation
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING
+     * } and initialized as {@link Cipher#DECRYPT_MODE} with a private key. Then the
+     * encryptedData which will be as input will be decode to byte[] and decrypt via cipher
+     * .doFinal. After this we will return a decrypted result.
      *
-     * @param encryptedData - The input encrypted text.
+     * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
+     *                      base64.
      * @return <tt>String</tt> Return a decrypted data.
      * @throws InvalidKeyException
      * @throws NoSuchPaddingException
