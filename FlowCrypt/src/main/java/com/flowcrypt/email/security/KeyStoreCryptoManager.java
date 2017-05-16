@@ -204,12 +204,14 @@ public class KeyStoreCryptoManager {
     private void initAesSecretKeySpec() throws Exception {
         String encryptedSecretKey = getSecretKeyFromSharedPreferences();
         if (getSecretKeyFromSharedPreferences() == null) {
-            encryptedSecretKey = generateSecretKey();
+            encryptedSecretKey = generateEncodedSecretKey();
             saveSecretKeyToSharedPrefernces(encryptedSecretKey);
         }
 
-        secretKeySpec = new SecretKeySpec(decryptWithRSA(encryptedSecretKey)
-                .getBytes(StandardCharsets.UTF_8), ALGORITHM_AES);
+        String decryptedSecretKey = decryptWithRSA(encryptedSecretKey);
+
+        secretKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT),
+                ALGORITHM_AES);
     }
 
     /**
@@ -411,7 +413,8 @@ public class KeyStoreCryptoManager {
      * @throws NoSuchPaddingException
      * @throws IOException
      */
-    private String generateSecretKey() throws NoSuchProviderException, NoSuchAlgorithmException,
+    private String generateEncodedSecretKey() throws NoSuchProviderException,
+            NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchPaddingException, IOException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
@@ -419,7 +422,7 @@ public class KeyStoreCryptoManager {
         keyGenerator.init(KEY_SIZE_128, secureRandom);
         SecretKey secretKey = keyGenerator.generateKey();
 
-        String originalSecretKey = new String(secretKey.getEncoded());
+        String originalSecretKey = Base64.encodeToString(secretKey.getEncoded(), Base64.DEFAULT);
         return encryptWithRSA(originalSecretKey);
     }
 }
