@@ -28,7 +28,7 @@ import java.util.UUID;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class DecryptPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
+public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
     private static final String KEY_SUCCESS = "success";
 
     private List<String> privateKeys;
@@ -36,8 +36,8 @@ public class DecryptPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
 
     private KeysDaoSource keysDaoSource;
 
-    public DecryptPrivateKeyAsyncTaskLoader(Context context,
-                                            List<String> privateKeys, String passphrase) {
+    public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
+                                                    List<String> privateKeys, String passphrase) {
         super(context);
         this.privateKeys = privateKeys;
         this.passphrase = passphrase;

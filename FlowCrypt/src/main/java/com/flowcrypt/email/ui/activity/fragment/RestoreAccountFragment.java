@@ -17,7 +17,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
-import com.flowcrypt.email.ui.loader.DecryptPrivateKeyAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.List;
@@ -79,7 +79,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
         switch (id) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
-                return new DecryptPrivateKeyAsyncTaskLoader(getContext(), privateKeys,
+                return new EncryptAndSavePrivateKeysAsyncTaskLoader(getContext(), privateKeys,
                         editTextKeyPassword.getText().toString());
 
             default:
