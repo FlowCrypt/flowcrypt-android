@@ -18,4 +18,7 @@ public class FlowcryptContract {
             SecurityContentProvider.class.getSimpleName();
 
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
+
+    public static final String CLEAN_DATABASE = "/clean";
+
 }

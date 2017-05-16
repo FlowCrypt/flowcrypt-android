@@ -21,8 +21,6 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.IOException;
 
 /**
@@ -142,7 +140,7 @@ public abstract class BaseAuthenticationActivity extends BaseActivity implements
     }
 
     private void runSplashActivity() throws IOException {
-        FileUtils.deleteDirectory(SecurityUtils.getSecurityFolder(this));
+        SecurityUtils.cleanSecurityInfo(this);
         startActivity(new Intent(BaseAuthenticationActivity.this, SplashActivity.class));
         finish();
     }

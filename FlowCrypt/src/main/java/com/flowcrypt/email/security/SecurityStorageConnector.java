@@ -1,19 +1,12 @@
 package com.flowcrypt.email.security;
 
 import android.content.Context;
-import android.text.TextUtils;
 
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.test.PgpContact;
 import com.flowcrypt.email.test.PgpKeyInfo;
 import com.flowcrypt.email.test.StorageConnectorInterface;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,22 +29,13 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
     public SecurityStorageConnector(Context context) {
         this.pgpKeyInfoList = new LinkedList<>();
         this.passphraseList = new LinkedList<>();
-
         try {
-            Js js = new Js(context, null);
-            File[] files = SecurityUtils.getCorrectPrivateKeys(context);
-            for (File file : files) {
-                try {
-                    String armoredKey = FileUtils.readFileToString(file,
-                            StandardCharsets.UTF_8);
-                    pgpKeyInfoList.add(new PgpKeyInfo(armoredKey, js.crypto_key_longid
-                            (armoredKey)));
-                    passphraseList.add(parsePassphraseFromFileName(file.getName()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(context);
+            for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
+                pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
+                passphraseList.add(privateKeyInfo.getPassphrase());
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -105,15 +89,5 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
         }
 
         return null;
-    }
-
-    /**
-     * Decrypt a message if it decrypted;
-     *
-     * @param name The name of a private key file.
-     * @return <tt>String</tt> Return a parse passphrase.
-     */
-    private String parsePassphraseFromFileName(String name) {
-        return !TextUtils.isEmpty(name) ? name.replace(Constants.PREFIX_PRIVATE_KEY, "") : "";
     }
 }

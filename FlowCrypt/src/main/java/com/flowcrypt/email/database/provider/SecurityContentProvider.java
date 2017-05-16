@@ -27,6 +27,7 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_KEYS_TABLE = 1;
     private static final int MATCHED_CODE_KEYS_TABLE_SINGLE_ROW = 2;
+    private static final int MATCHED_CODE_KEY_CLEN_DATABASE = 3;
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -35,6 +36,8 @@ public class SecurityContentProvider extends ContentProvider {
                 MATCHED_CODE_KEYS_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, KeysDaoSource.TABLE_NAME_KEYS +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_KEYS_TABLE_SINGLE_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.CLEAN_DATABASE,
+                MATCHED_CODE_KEY_CLEN_DATABASE);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -159,8 +162,29 @@ public class SecurityContentProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-        // TODO: Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        int rowsCount = -1;
+        if (hotelDBHelper != null) {
+            SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
+            int match = URI_MATCHER.match(uri);
+
+            if (sqLiteDatabase != null) {
+                switch (match) {
+                    case MATCHED_CODE_KEY_CLEN_DATABASE:
+                        rowsCount = sqLiteDatabase.delete(
+                                new KeysDaoSource().getTableName(), null, null);
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException("Unknown uri: " + uri);
+                }
+
+                if (getContext() != null) {
+                    getContext().getContentResolver().notifyChange(uri, null, false);
+                }
+            }
+        }
+
+        return rowsCount;
     }
 
     @Override

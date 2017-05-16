@@ -22,14 +22,4 @@ public class Constants {
      * performed with less permissive scopes.
      */
     public static final String SCOPE_MAIL_GOOGLE_COM = "https://mail.google.com/";
-
-    /**
-     * The folder where load backups keys.
-     */
-    public static final String FOLDER_NAME_KEYS = "keys";
-
-    /**
-     * The prefix for a decrypted key.
-     */
-    public static final String PREFIX_PRIVATE_KEY = "private_key_";
 }

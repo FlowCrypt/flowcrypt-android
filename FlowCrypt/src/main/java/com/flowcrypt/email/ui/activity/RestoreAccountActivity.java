@@ -7,7 +7,6 @@ import android.support.v4.content.Loader;
 import android.view.View;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -15,10 +14,7 @@ import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
-import java.io.File;
-import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * This class described restore an account functionality.
@@ -47,13 +43,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 account = googleSignInAccount.getAccount();
-                File keysFolder = SecurityUtils.getSecurityFolder(this);
-                if (keysFolder.exists() && keysFolder.list().length > 0) {
-                    showContentImmediately(keysFolder);
-                } else {
-                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
-                            this);
-                }
+                getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
             }
         }
     }
@@ -98,24 +88,6 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     @Override
     public void onLoaderReset(Loader<List<String>> loader) {
 
-    }
-
-    /**
-     * If we already have private privateKeys we can show content immediately.
-     * In this method we create a list of private privateKeys from the "key" folder.
-     */
-    private void showContentImmediately(File keysFolder) {
-        privateKeys = Arrays.asList(keysFolder.list());
-
-        ListIterator<String> listIterator = privateKeys.listIterator();
-
-        while (listIterator.hasNext()) {
-            String path = listIterator.next();
-            listIterator.set(keysFolder.getPath() + File.separator + path);
-        }
-
-        showContent();
-        updateKeysOnRestoreAccountFragment();
     }
 
     /**

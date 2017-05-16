@@ -14,8 +14,14 @@ import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
-import java.io.File;
-
+/**
+ * The launcher Activity.
+ *
+ * @author DenBond7
+ *         Date: 26.14.2017
+ *         Time: 14:50
+ *         E-mail: DenBond7@gmail.com
+ */
 public class SplashActivity extends BaseAuthenticationActivity implements SplashActivityFragment
         .OnSignInButtonClickListener {
     private static final int REQUEST_CODE_SIGN_IN = 100;
@@ -52,7 +58,7 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
         if (googleSignInResult.isSuccess()) {
             finish();
-            if (isBackupKeysExist()) {
+            if (SecurityUtils.isBackupKeysExist(this)) {
                 startActivity(new Intent(this, EmailManagerActivity.class));
             } else {
                 startActivity(new Intent(this, RestoreAccountActivity.class));
@@ -75,17 +81,6 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
                 startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
                 break;
         }
-    }
-
-    /**
-     * Check is decrypted backups exist in the application directory.
-     *
-     * @return <tt>Boolean</tt> true if exists one or more decrypted keys, false otherwise;
-     */
-    private boolean isBackupKeysExist() {
-        File keysFolder = SecurityUtils.getSecurityFolder(this);
-        File[] correctKeysArray = SecurityUtils.getCorrectPrivateKeys(this);
-        return keysFolder.exists() && correctKeysArray.length > 0;
     }
 
     private void initViews() {

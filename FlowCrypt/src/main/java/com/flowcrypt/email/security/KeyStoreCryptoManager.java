@@ -67,6 +67,7 @@ import javax.security.auth.x500.X500Principal;
 
 public class KeyStoreCryptoManager {
     public static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
+    public static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
     private static final String TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING =
             "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
     private static final String TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding";
@@ -75,7 +76,6 @@ public class KeyStoreCryptoManager {
     private static final String ALGORITHM_AES = "AES";
     private static final String PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore";
     private static final String ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main";
-    private static final String PREFERENCE_KEY = "preference_key_secter";
     private static final int KEY_SIZE_128 = 128;
 
     private Context context;
@@ -382,7 +382,7 @@ public class KeyStoreCryptoManager {
     private String getSecretKeyFromSharedPreferences() {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getString(PREFERENCE_KEY, null);
+        return sharedPreferences.getString(PREFERENCE_KEY_SECRET, null);
     }
 
     /**
@@ -395,7 +395,7 @@ public class KeyStoreCryptoManager {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor edit = sharedPreferences.edit();
-        edit.putString(PREFERENCE_KEY, newSecretKey);
+        edit.putString(PREFERENCE_KEY_SECRET, newSecretKey);
         return edit.commit();
     }
 
