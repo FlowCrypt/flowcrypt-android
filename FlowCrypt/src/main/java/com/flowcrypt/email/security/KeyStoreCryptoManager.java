@@ -115,7 +115,7 @@ public class KeyStoreCryptoManager {
     public static String normalizeAlgorithmParameterSpecString(String rawString) {
         if (!TextUtils.isEmpty(rawString) && rawString.length() >=
                 SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
-            return UUID.randomUUID().toString().substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
+            return rawString.substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
         } else
             throw new IllegalArgumentException("The rawString must be equals or longer then " +
                     SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes");
