@@ -68,8 +68,8 @@ import javax.security.auth.x500.X500Principal;
 public class KeyStoreCryptoManager {
     public static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
     public static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
-    private static final String TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING =
-            "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+    private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding =
+            "RSA/ECB/PKCS1Padding";
     private static final String TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding";
     private static final String ALGORITHM_RSA = "RSA";
     private static final String ALGORITHM_SHA1PRNG = "SHA1PRNG";
@@ -236,7 +236,7 @@ public class KeyStoreCryptoManager {
      * This method does encrypt of the input text and returns an encrypted data.
      * <p>
      * For encrypt will be created a Cipher object with transformation
-     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding
      * } and initialized as {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData
      * which will be as input will be convert to byte[] and encryptWithRSA via cipher.doFinal.
      * After this we will return a base64 encoded encrypted result.
@@ -255,7 +255,7 @@ public class KeyStoreCryptoManager {
             IllegalBlockSizeException, IOException {
         if (!TextUtils.isEmpty(plainData)) {
             Cipher cipher = Cipher.getInstance
-                    (TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING);
+                    (TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
@@ -269,7 +269,7 @@ public class KeyStoreCryptoManager {
      * This method does decrypt of the input encrypted text and return a decrypted data.
      * <p>
      * For decrypt will be created a Cipher object with transformation
-     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding
      * } and initialized as {@link Cipher#DECRYPT_MODE} with a private key. Then the
      * encryptedData which will be as input will be decode to byte[] and decrypt via cipher
      * .doFinal. After this we will return a decrypted result.
@@ -289,7 +289,7 @@ public class KeyStoreCryptoManager {
             IllegalBlockSizeException, IOException {
         if (!TextUtils.isEmpty(encryptedData)) {
             Cipher cipher = Cipher.getInstance
-                    (TRANSFORMATION_TYPE_RSA_ECB_OAEPWITH_SHA_256_AND_MGF1_PADDING);
+                    (TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
             byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
@@ -335,7 +335,7 @@ public class KeyStoreCryptoManager {
                 new KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_RSA_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                         .build());
 
         return keyPairGenerator.generateKeyPair();
