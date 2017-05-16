@@ -27,6 +27,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Calendar;
+import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -97,6 +98,31 @@ public class KeyStoreCryptoManager {
     }
 
     /**
+     * Generate a random 16 byte size String for algorithm parameter spec.
+     *
+     * @return <tt>String</tt> Return a generated String.
+     */
+    public static String generateAlgorithmParameterSpecString() {
+        return UUID.randomUUID().toString().substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
+    }
+
+    /**
+     * Normalize an input String to return only 16 bytes for algorithm parameter spec.
+     *
+     * @param rawString The input String which must be equals or longer then {@link
+     *                  KeyStoreCryptoManager#SIZE_OF_ALGORITHM_PARAMETER_SPEC}
+     * @return <tt>String</tt> Return a normalized String.
+     */
+    public static String normalizeAlgorithmParameterSpecString(String rawString) {
+        if (!TextUtils.isEmpty(rawString) && rawString.length() >=
+                SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
+            return UUID.randomUUID().toString().substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
+        } else
+            throw new IllegalArgumentException("The rawString must be equals or longer then " +
+                    SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes");
+    }
+
+    /**
      * This method does encrypt via AES symmetric algorithm the input text and returns an
      * encrypted data.
      * <p>
@@ -119,8 +145,8 @@ public class KeyStoreCryptoManager {
         }
 
         if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
-            throw new IllegalArgumentException("The algorithm parameter spec size must be equal " +
-                    "16 byte!");
+            throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
+                    + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
         }
 
         if (!TextUtils.isEmpty(plainData)) {
@@ -157,8 +183,8 @@ public class KeyStoreCryptoManager {
         }
 
         if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
-            throw new IllegalArgumentException("The algorithm parameter spec size must be equal " +
-                    "16 byte!");
+            throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
+                    + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
         }
 
         if (!TextUtils.isEmpty(encryptedData)) {
