@@ -1,23 +1,26 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
+import android.text.TextUtils;
 
 import com.eclipsesource.v8.V8Object;
-import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.database.dao.KeysDao;
+import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.PgpKey;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * This loader try to decrypt and save keys with entered password.
- * Return true if one or more key accepted, false otherwise;
+ * This loader try to encrypt and save encrypted key with entered password by
+ * {@link KeyStoreCryptoManager} to the database.
+ * <p>
+ * Return true if one or more key saved, false otherwise;
  *
  * @author DenBond7
  *         Date: 03.05.2017
@@ -28,14 +31,17 @@ import java.util.List;
 public class DecryptPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
     private static final String KEY_SUCCESS = "success";
 
-    private List<String> keysPathList;
+    private List<String> privateKeys;
     private String passphrase;
 
-    public DecryptPrivateKeyAsyncTaskLoader(Context context, List<String> keysPathLis, String
-            passphrase) {
+    private KeysDaoSource keysDaoSource;
+
+    public DecryptPrivateKeyAsyncTaskLoader(Context context,
+                                            List<String> privateKeys, String passphrase) {
         super(context);
-        this.keysPathList = keysPathLis;
+        this.privateKeys = privateKeys;
         this.passphrase = passphrase;
+        this.keysDaoSource = new KeysDaoSource();
         onContentChanged();
     }
 
@@ -43,27 +49,21 @@ public class DecryptPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
     public Boolean loadInBackground() {
         boolean isOneOrMoreKeySaved = false;
         try {
+            KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
-            for (String filePath : keysPathList) {
-                File file = new File(filePath);
-                try {
-                    String rawArmoredKey = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            for (String rawArmoredKey : privateKeys) {
+                String normalizedArmoredKey = js.crypto_key_normalize(rawArmoredKey);
 
-                    String normalizedArmoredKey = js.crypto_key_normalize(rawArmoredKey);
+                PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+                V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
-                    PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-                    V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
-
-                    if (pgpKey.isPrivate() && v8Object != null
-                            && v8Object.getBoolean(KEY_SUCCESS)) {
-                        saveKeyToStorage(file.getParent(), normalizedArmoredKey, passphrase);
-                        isOneOrMoreKeySaved = true;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (pgpKey.isPrivate() && v8Object != null
+                        && v8Object.getBoolean(KEY_SUCCESS)) {
+                    Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
+                    isOneOrMoreKeySaved = uri != null;
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return isOneOrMoreKeySaved;
@@ -82,21 +82,40 @@ public class DecryptPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
     }
 
     /**
-     * Try to decrypt some key with entered password.
+     * Try to decrypt some key with entered password and save it encrypted version by
+     * {@link KeyStoreCryptoManager} to the database. This method use {@link PgpKey#getLongid()}
+     * for generate an algorithm parameter spec String.
      *
-     * @param directory            Directory where file will be save;
-     * @param normalizedArmoredKey A normalized key;
-     * @param passphrase           A passphrase which user entered;
+     * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
+     *                              an information about a key;
+     * @param pgpKey                A normalized key;
+     * @param passphrase            A passphrase which user entered;
      */
-    private void saveKeyToStorage(String directory, String normalizedArmoredKey, String
-            passphrase) {
-        try {
-            String fileName = Constants.PREFIX_PRIVATE_KEY + passphrase;
-            FileUtils.writeStringToFile(new File(directory, fileName),
-                    normalizedArmoredKey,
-                    StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private Uri saveKeyToDatabase(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey,
+                                  String passphrase) throws Exception {
+        KeysDao keysDao = new KeysDao();
+        keysDao.setLongId(pgpKey.getLongid());
+
+        String randomVector;
+
+        if (TextUtils.isEmpty(pgpKey.getLongid())) {
+            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
+                    UUID.randomUUID().toString().substring(0,
+                            KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+        } else {
+            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
+                    (pgpKey.getLongid());
         }
+
+        keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
+
+        String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(),
+                randomVector);
+        keysDao.setPrivateKey(encryptedPrivateKey);
+        keysDao.setPublicKey(pgpKey.toPublic().armor());
+
+        String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
+        keysDao.setPassphrase(encryptedPassphrase);
+        return keysDaoSource.addRow(getContext(), keysDao);
     }
 }

@@ -13,6 +13,7 @@ import android.widget.EditText;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
@@ -22,8 +23,8 @@ import com.flowcrypt.email.util.UIUtil;
 import java.util.List;
 
 /**
- * This class described restore an account functionality. There we can activate and save to the
- * security storage downloaded keys.
+ * This class described restore an account functionality. Here we validate and save downloaded
+ * and encrypted via {@link KeyStoreCryptoManager} keys to the database.
  *
  * @author DenBond7
  *         Date: 05.01.2017
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public class RestoreAccountFragment extends BaseFragment implements View.OnClickListener,
         LoaderManager.LoaderCallbacks<Boolean> {
-    private List<String> keysPathList;
+    private List<String> privateKeys;
     private EditText editTextKeyPassword;
     private View progressBar;
 
@@ -52,13 +53,13 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonLoadAccount:
-                if (keysPathList != null && !keysPathList.isEmpty()) {
+                if (privateKeys != null && !privateKeys.isEmpty()) {
                     if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
                         UIUtil.showInfoSnackbar(editTextKeyPassword,
                                 getString(R.string.passphrase_must_be_non_empty));
                     } else {
-                        getLoaderManager().restartLoader(R.id.loader_id_decrypt_private_keys,
-                                null, this);
+                        getLoaderManager().restartLoader(R.id
+                                .loader_id_encrypt_and_save_private_keys_infos, null, this);
                     }
                 }
                 break;
@@ -76,9 +77,9 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     @Override
     public Loader<Boolean> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_decrypt_private_keys:
+            case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
-                return new DecryptPrivateKeyAsyncTaskLoader(getContext(), keysPathList,
+                return new DecryptPrivateKeyAsyncTaskLoader(getContext(), privateKeys,
                         editTextKeyPassword.getText().toString());
 
             default:
@@ -89,7 +90,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     @Override
     public void onLoadFinished(Loader<Boolean> loader, Boolean data) {
         switch (loader.getId()) {
-            case R.id.loader_id_decrypt_private_keys:
+            case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
                 if (data != null && data) {
                     startActivity(new Intent(getContext(), EmailManagerActivity.class));
@@ -111,7 +112,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
      * Update current list of private keys paths.
      */
     public void updateKeysPathList(List<String> keysPathList) {
-        this.keysPathList = keysPathList;
+        this.privateKeys = keysPathList;
     }
 
     private void initViews(View view) {

@@ -34,7 +34,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     private View restoreAccountView;
     private View layoutProgress;
     private Account account;
-    private List<String> keys;
+    private List<String> privateKeys;
 
     @Override
     public View getRootView() {
@@ -77,12 +77,12 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     @Override
-    public void onLoadFinished(Loader<List<String>> loader, List<String> data) {
+    public void onLoadFinished(Loader<List<String>> loader, List<String> stringList) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
-                if (data != null) {
-                    if (!data.isEmpty()) {
-                        this.keys = data;
+                if (stringList != null) {
+                    if (!stringList.isEmpty()) {
+                        this.privateKeys = stringList;
                         showContent();
                         updateKeysOnRestoreAccountFragment();
                     } else {
@@ -101,13 +101,13 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     /**
-     * If we already have private keys we can show content immediately.
-     * In this method we create a list of private keys from the "key" folder.
+     * If we already have private privateKeys we can show content immediately.
+     * In this method we create a list of private privateKeys from the "key" folder.
      */
     private void showContentImmediately(File keysFolder) {
-        keys = Arrays.asList(keysFolder.list());
+        privateKeys = Arrays.asList(keysFolder.list());
 
-        ListIterator<String> listIterator = keys.listIterator();
+        ListIterator<String> listIterator = privateKeys.listIterator();
 
         while (listIterator.hasNext()) {
             String path = listIterator.next();
@@ -119,7 +119,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     /**
-     * Update keys list in RestoreAccountFragment.
+     * Update privateKeys list in RestoreAccountFragment.
      */
     private void updateKeysOnRestoreAccountFragment() {
         RestoreAccountFragment restoreAccountFragment = (RestoreAccountFragment)
@@ -127,7 +127,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
                         .findFragmentById(R.id.restoreAccountFragment);
 
         if (restoreAccountFragment != null) {
-            restoreAccountFragment.updateKeysPathList(keys);
+            restoreAccountFragment.updateKeysPathList(privateKeys);
         }
     }
 

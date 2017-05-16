@@ -4,7 +4,7 @@
     <item name="loader_id_post_prototype_message" type="id" />
     <item name="loader_id_load_gmail_messages" type="id" />
     <item name="loader_id_load_gmail_backups" type="id" />
-    <item name="loader_id_decrypt_private_keys" type="id" />
+    <item name="loader_id_encrypt_and_save_private_keys_infos" type="id" />
     <item name="loader_id_load_message_info" type="id" />
     <item name="loader_id_send_encrypted_message" type="id" />
     <item name="loader_id_load_gmail_labels" type="id" />
