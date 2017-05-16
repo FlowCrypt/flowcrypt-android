@@ -10,7 +10,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
-import com.flowcrypt.email.ui.loader.LoadPrivateKeyAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -69,7 +69,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
         switch (id) {
             case R.id.loader_id_load_gmail_backups:
                 showProgress();
-                return new LoadPrivateKeyAsyncTaskLoader(this, account);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
             default:
                 return null;

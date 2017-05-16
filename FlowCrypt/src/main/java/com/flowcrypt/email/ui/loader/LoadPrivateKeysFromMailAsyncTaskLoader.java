@@ -31,21 +31,21 @@ import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 
 /**
- * This loader find and return a user backup of private keys.
+ * This loader finds and returns a user backup of private keys from the mail.
  *
  * @author DenBond7
  *         Date: 30.04.2017.
  *         Time: 22:28.
  *         E-mail: DenBond7@gmail.com
  */
-public class LoadPrivateKeyAsyncTaskLoader extends AsyncTaskLoader<List<String>> {
+public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<List<String>> {
 
     /**
      * An user account.
      */
     private Account account;
 
-    public LoadPrivateKeyAsyncTaskLoader(Context context, Account account) {
+    public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, Account account) {
         super(context);
         this.account = account;
         onContentChanged();
