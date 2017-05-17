@@ -1,6 +1,12 @@
 package com.flowcrypt.email.database.dao.source;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.net.Uri;
 import android.provider.BaseColumns;
+
+import com.flowcrypt.email.test.PgpContact;
 
 /**
  * This class describe creating of table which has name
@@ -63,5 +69,23 @@ public class ContactsDaoSource extends BaseDaoSource {
     @Override
     public String getTableName() {
         return TABLE_NAME_CONTACTS;
+    }
+
+    public Uri addRow(Context context, PgpContact pgpContact) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (pgpContact != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_EMAIL, pgpContact.getEmail());
+            contentValues.put(COL_NAME, pgpContact.getName());
+            contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
+            contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
+            contentValues.put(COL_CLIENT, pgpContact.getClient());
+            contentValues.put(COL_ATTESTED, pgpContact.getAttested());
+            contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
+            contentValues.put(COL_LONG_ID, pgpContact.getLongid());
+            contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
+
+            return contentResolver.insert(getBaseContentUri(), contentValues);
+        } else return null;
     }
 }

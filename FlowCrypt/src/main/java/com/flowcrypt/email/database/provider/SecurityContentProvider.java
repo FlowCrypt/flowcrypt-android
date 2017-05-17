@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 
 
@@ -27,7 +28,10 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_KEYS_TABLE = 1;
     private static final int MATCHED_CODE_KEYS_TABLE_SINGLE_ROW = 2;
-    private static final int MATCHED_CODE_KEY_CLEN_DATABASE = 3;
+    private static final int MATCHED_CODE_KEY_CLEAN_DATABASE = 3;
+    private static final int MATCHED_CODE_CONTACTS_TABLE = 4;
+    private static final int MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW = 5;
+
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -37,7 +41,11 @@ public class SecurityContentProvider extends ContentProvider {
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, KeysDaoSource.TABLE_NAME_KEYS +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_KEYS_TABLE_SINGLE_ROW);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.CLEAN_DATABASE,
-                MATCHED_CODE_KEY_CLEN_DATABASE);
+                MATCHED_CODE_KEY_CLEAN_DATABASE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS,
+                MATCHED_CODE_CONTACTS_TABLE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -65,11 +73,18 @@ public class SecurityContentProvider extends ContentProvider {
             int match = URI_MATCHER.match(uri);
 
             if (sqLiteDatabase != null) {
+                long id;
                 switch (match) {
                     case MATCHED_CODE_KEYS_TABLE:
-                        long id = sqLiteDatabase.insert(new KeysDaoSource().getTableName(), null,
+                        id = sqLiteDatabase.insert(new KeysDaoSource().getTableName(), null,
                                 values);
                         result = Uri.parse(new KeysDaoSource().getBaseContentUri() + "/" + id);
+                        break;
+
+                    case MATCHED_CODE_CONTACTS_TABLE:
+                        id = sqLiteDatabase.insert(new ContactsDaoSource().getTableName(), null,
+                                values);
+                        result = Uri.parse(new ContactsDaoSource().getBaseContentUri() + "/" + id);
                         break;
 
                     default:
@@ -102,6 +117,17 @@ public class SecurityContentProvider extends ContentProvider {
                             for (ContentValues contentValues : values) {
                                 long id = sqLiteDatabase.insert(
                                         new KeysDaoSource().getTableName(), null, contentValues);
+                                if (id <= 0) {
+                                    throw new SQLException("Failed to insert row into " + uri);
+                                }
+                            }
+                            break;
+
+                        case MATCHED_CODE_CONTACTS_TABLE:
+                            for (ContentValues contentValues : values) {
+                                long id = sqLiteDatabase.insert(
+                                        new ContactsDaoSource().getTableName(), null,
+                                        contentValues);
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
                                 }
@@ -147,6 +173,14 @@ public class SecurityContentProvider extends ContentProvider {
                                 selectionArgs);
                         break;
 
+                    case MATCHED_CODE_CONTACTS_TABLE:
+                        rowsCount = sqLiteDatabase.update(
+                                new ContactsDaoSource().getTableName(),
+                                values,
+                                selection,
+                                selectionArgs);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -169,7 +203,7 @@ public class SecurityContentProvider extends ContentProvider {
 
             if (sqLiteDatabase != null) {
                 switch (match) {
-                    case MATCHED_CODE_KEY_CLEN_DATABASE:
+                    case MATCHED_CODE_KEY_CLEAN_DATABASE:
                         rowsCount = sqLiteDatabase.delete(
                                 new KeysDaoSource().getTableName(), null, null);
                         break;
@@ -203,6 +237,10 @@ public class SecurityContentProvider extends ContentProvider {
                 table = KeysDaoSource.TABLE_NAME_KEYS;
                 break;
 
+            case MATCHED_CODE_CONTACTS_TABLE:
+                table = ContactsDaoSource.TABLE_NAME_CONTACTS;
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -230,6 +268,13 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_KEYS_TABLE_SINGLE_ROW:
                 return new KeysDaoSource().getSingleRowContentType();
+
+            case MATCHED_CODE_CONTACTS_TABLE:
+                return new ContactsDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW:
+                return new ContactsDaoSource().getSingleRowContentType();
+
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
