@@ -9,7 +9,7 @@ import android.provider.BaseColumns;
 import com.flowcrypt.email.database.dao.KeysDao;
 
 /**
- * This class describe creating of table which has name {@link KeysDaoSource#TABLE_NAME_KEYS};
+ * This class describe creating of table which has name {@link KeysDaoSource#TABLE_NAME_KEYS},
  * add, delete and update rows.
  *
  * @author DenBond7
@@ -27,7 +27,7 @@ public class KeysDaoSource extends BaseDaoSource {
     public static final String COL_PRIVATE_KEY = "private_key";
     public static final String COL_PASSPHRASE = "passphrase";
 
-    public static final String BOOKING_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
+    public static final String KEYS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_KEYS + " (" +
             BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
@@ -35,6 +35,10 @@ public class KeysDaoSource extends BaseDaoSource {
             COL_PUBLIC_KEY + " BLOB NOT NULL, " +
             COL_PRIVATE_KEY + " BLOB NOT NULL, " +
             COL_PASSPHRASE + " varchar(100) DEFAULT NULL " + ");";
+
+    public static final String CREATE_INDEX_LONG_ID_IN_KEYS =
+            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LONG_ID + "_in_" + TABLE_NAME_KEYS +
+                    " ON " + TABLE_NAME_KEYS + " (" + COL_LONG_ID + ")";
 
     @Override
     public String getTableName() {
