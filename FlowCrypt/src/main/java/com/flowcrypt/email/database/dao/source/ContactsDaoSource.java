@@ -51,19 +51,19 @@ public class ContactsDaoSource extends BaseDaoSource {
                     " ON " + TABLE_NAME_CONTACTS + " (" + COL_EMAIL + ")";
 
     public static final String CREATE_INDEX_NAME_IN_CONTACT =
-            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_NAME + "_in_" + TABLE_NAME_CONTACTS +
+            "CREATE INDEX IF NOT EXISTS " + COL_NAME + "_in_" + TABLE_NAME_CONTACTS +
                     " ON " + TABLE_NAME_CONTACTS + " (" + COL_NAME + ")";
 
     public static final String CREATE_INDEX_HAS_PGP_IN_CONTACT =
-            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_HAS_PGP + "_in_" + TABLE_NAME_CONTACTS +
+            "CREATE INDEX IF NOT EXISTS " + COL_HAS_PGP + "_in_" + TABLE_NAME_CONTACTS +
                     " ON " + TABLE_NAME_CONTACTS + " (" + COL_HAS_PGP + ")";
 
     public static final String CREATE_INDEX_LONG_ID_IN_CONTACT =
-            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LONG_ID + "_in_" + TABLE_NAME_CONTACTS +
+            "CREATE INDEX IF NOT EXISTS " + COL_LONG_ID + "_in_" + TABLE_NAME_CONTACTS +
                     " ON " + TABLE_NAME_CONTACTS + " (" + COL_LONG_ID + ")";
 
     public static final String CREATE_INDEX_LAST_USE_IN_CONTACT =
-            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LAST_USE + "_in_" + TABLE_NAME_CONTACTS +
+            "CREATE INDEX IF NOT EXISTS " + COL_LAST_USE + "_in_" + TABLE_NAME_CONTACTS +
                     " ON " + TABLE_NAME_CONTACTS + " (" + COL_LAST_USE + ")";
 
     @Override
@@ -84,6 +84,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
             contentValues.put(COL_LONG_ID, pgpContact.getLongid());
             contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
+            contentValues.put(COL_LAST_USE, pgpContact.getLastUse());
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
