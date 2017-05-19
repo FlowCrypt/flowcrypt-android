@@ -16,9 +16,9 @@ import com.hootsuite.nachos.NachoTextView;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CustomNachoTextView extends NachoTextView {
+public class PgpContactsNachoTextView extends NachoTextView {
 
-    public CustomNachoTextView(Context context, AttributeSet attrs) {
+    public PgpContactsNachoTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 

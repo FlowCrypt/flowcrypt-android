@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.flowcrypt.email.ui.widget.CustomNachoTextView
+                <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                     android:id="@+id/editTextRecipient"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
