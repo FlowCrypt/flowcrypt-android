@@ -29,19 +29,34 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <android.support.design.widget.TextInputLayout
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-                    android:id="@+id/editTextRecipient"
+                <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:completionThreshold="2"
-                    android:hint="@string/prompt_recipient"
-                    android:shrinkColumns="0, true" />
+                    android:layout_height="wrap_content">
 
-            </android.support.design.widget.TextInputLayout>
+                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
+                        android:id="@+id/editTextRecipient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:completionThreshold="2"
+                        android:hint="@string/prompt_recipient"
+                        android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:shrinkColumns="0, true" />
+
+                </android.support.design.widget.TextInputLayout>
+
+                <ProgressBar
+                    android:id="@+id/progressBarCheckContactsDetails"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="@dimen/size_of_small_progressbar"
+                    android:layout_height="@dimen/size_of_small_progressbar"
+                    android:layout_gravity="center_vertical|end" />
+
+            </FrameLayout>
+
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"

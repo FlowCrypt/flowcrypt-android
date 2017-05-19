@@ -10,10 +10,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
-import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.model.results.ActionResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
@@ -24,15 +21,12 @@ import com.google.android.gms.auth.GoogleAuthUtil;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.MimeMessage;
-
-import retrofit2.Response;
 
 /**
  * This loader do a job of sending encrypted message. When we sending a message, we do next steps:
@@ -68,6 +62,12 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionR
 
     @Override
     public ActionResult<Boolean> loadInBackground() {
+        ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+
+        for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
+            contactsDaoSource.updateLastUseOfPgpContact(getContext(), pgpContact);
+        }
+
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -127,17 +127,9 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionR
      */
     private String[] getPubKeys(Js js) {
         ArrayList<String> publicKeys = new ArrayList<>();
-        ApiService apiService = ApiHelper.getInstance().getRetrofit().create(ApiService.class);
         for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
-            try {
-                Response<LookUpEmailResponse> response = apiService.postLookUpEmail(
-                        new PostLookUpEmailModel(pgpContact.getEmail())).execute();
-                String pubKey = response.body().getPubkey();
-                if (!TextUtils.isEmpty(pubKey)) {
-                    publicKeys.add(pubKey);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
+                publicKeys.add(pgpContact.getPubkey());
             }
         }
 

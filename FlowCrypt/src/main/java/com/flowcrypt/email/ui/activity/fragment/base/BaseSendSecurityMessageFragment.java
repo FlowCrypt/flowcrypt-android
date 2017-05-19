@@ -33,8 +33,7 @@ import java.io.IOException;
  */
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment implements
-        LoaderManager
-                .LoaderCallbacks<ActionResult<Boolean>> {
+        LoaderManager.LoaderCallbacks<ActionResult<Boolean>> {
 
     private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID +
             ".KEY_IS_MESSAGE_SENT";

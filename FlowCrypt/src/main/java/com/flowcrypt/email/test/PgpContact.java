@@ -43,7 +43,7 @@ public class PgpContact implements Parcelable {
         this.last_use = last_use;
     }
 
-    public PgpContact(Js js, String email, String name, String pubkey, String client, Boolean
+    public PgpContact(Js js, String email, String name, String pubkey, String client, boolean
             attested) {
         this.email = email;
         this.name = name;
@@ -122,7 +122,7 @@ public class PgpContact implements Parcelable {
         return pubkey;
     }
 
-    public Boolean getHasPgp() {
+    public boolean getHasPgp() {
         return has_pgp;
     }
 
@@ -130,7 +130,7 @@ public class PgpContact implements Parcelable {
         return client;
     }
 
-    public Boolean getAttested() {
+    public boolean getAttested() {
         return attested;
     }
 
@@ -146,7 +146,7 @@ public class PgpContact implements Parcelable {
         return fingerprint;
     }
 
-    public Integer getLastUse() {
+    public int getLastUse() {
         return last_use;
     }
 

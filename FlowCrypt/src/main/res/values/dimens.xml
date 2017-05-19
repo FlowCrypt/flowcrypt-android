@@ -34,4 +34,5 @@
     <dimen name="margin_top_loading_account">32dp</dimen>
     <dimen name="margin_top_button_select_another_account">24dp</dimen>
     <dimen name="height_silver_line">1dp</dimen>
+    <dimen name="size_of_small_progressbar">16dp</dimen>
 </resources>
