@@ -36,4 +36,15 @@ public class PgpContactsNachoTextView extends NachoTextView {
         }
 
     }
+
+    @Override
+    public String toString() {
+        //Todo In this code I received a crash. Need to fix it.
+        try {
+            return super.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getText().toString();
+    }
 }
