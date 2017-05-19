@@ -3,10 +3,14 @@ package com.flowcrypt.email.database.dao.source;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.flowcrypt.email.test.PgpContact;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class describe creating of table which has name
@@ -19,6 +23,9 @@ import com.flowcrypt.email.test.PgpContact;
  */
 
 public class ContactsDaoSource extends BaseDaoSource {
+    public static final String CLIENT_FLOWCRYPT = "flowcrypt";
+    public static final String CLIENT_PGP = "pgp";
+
     public static final String TABLE_NAME_CONTACTS = "contacts";
 
     public static final String COL_EMAIL = "email";
@@ -36,8 +43,8 @@ public class ContactsDaoSource extends BaseDaoSource {
             TABLE_NAME_CONTACTS + " (" +
             BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-            COL_NAME + " VARCHAR(50) NOT NULL, " +
-            COL_PUBLIC_KEY + " BLOB NOT NULL, " +
+            COL_NAME + " VARCHAR(50) DEFAULT NULL, " +
+            COL_PUBLIC_KEY + " BLOB DEFAULT NULL, " +
             COL_HAS_PGP + " BOOLEAN NOT NULL, " +
             COL_CLIENT + " VARCHAR(20) DEFAULT NULL, " +
             COL_ATTESTED + " BOOLEAN DEFAULT NULL, " +
@@ -75,7 +82,7 @@ public class ContactsDaoSource extends BaseDaoSource {
         ContentResolver contentResolver = context.getContentResolver();
         if (pgpContact != null && contentResolver != null) {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(COL_EMAIL, pgpContact.getEmail());
+            contentValues.put(COL_EMAIL, pgpContact.getEmail().toLowerCase());
             contentValues.put(COL_NAME, pgpContact.getName());
             contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
             contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
@@ -88,5 +95,126 @@ public class ContactsDaoSource extends BaseDaoSource {
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
+    }
+
+    /**
+     * Generate a {@link PgpContact} object from the current cursor position.
+     *
+     * @param cursor The {@link Cursor} which contains information about {@link PgpContact}.
+     * @return A generated {@link PgpContact}.
+     */
+    public PgpContact getCurrentPgpContact(Cursor cursor) {
+        return new PgpContact(
+                cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
+                cursor.getString(cursor.getColumnIndex(COL_NAME)),
+                cursor.getString(cursor.getColumnIndex(COL_PUBLIC_KEY)),
+                cursor.getInt(cursor.getColumnIndex(COL_HAS_PGP)) == 1,
+                cursor.getString(cursor.getColumnIndex(COL_CLIENT)),
+                cursor.getInt(cursor.getColumnIndex(COL_ATTESTED)) == 1,
+                cursor.getString(cursor.getColumnIndex(COL_FINGERPRINT)),
+                cursor.getString(cursor.getColumnIndex(COL_LONG_ID)),
+                cursor.getString(cursor.getColumnIndex(COL_KEYWORDS)),
+                cursor.getInt(cursor.getColumnIndex(COL_LAST_USE))
+        );
+    }
+
+    /**
+     * Get a {@link PgpContact} object from the database by an email.
+     *
+     * @param email The email of the {@link PgpContact}.
+     * @return A {@link PgpContact} object.
+     */
+    public PgpContact getPgpContact(Context context, String email) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, COL_EMAIL + " = ?", new String[]{email}, null);
+
+        PgpContact pgpContact = null;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                pgpContact = getCurrentPgpContact(cursor);
+            }
+            cursor.close();
+        }
+
+        return pgpContact;
+    }
+
+    /**
+     * Get a list of {@link PgpContact} objects from the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param emails  A list of emails.
+     * @return <tt>List<PgpContact></tt> Return a list of existed(created) {@link PgpContact}
+     * objects from the search by emails.
+     */
+    public List<PgpContact> getPgpContactsListFromDatabase(Context context, List<String> emails) {
+        Cursor cursor = context.getContentResolver().query(
+                getBaseContentUri(), null, ContactsDaoSource.COL_EMAIL +
+                        " IN " + prepareSelection(emails), emails.toArray(new String[0]), null);
+
+        List<PgpContact> pgpContacts = new ArrayList<>();
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                pgpContacts.add(getCurrentPgpContact(cursor));
+            }
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return pgpContacts;
+    }
+
+    /**
+     * Update an information about some {@link PgpContact}.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param pgpContact A new information of {@link PgpContact} in the database.
+     * @return The count of updated rows. Will be 1 if information about {@link PgpContact} was
+     * updated or -1 otherwise.
+     */
+    public int updatePgpContact(Context context, PgpContact pgpContact) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (pgpContact != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_NAME, pgpContact.getName());
+            contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
+            contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
+            contentValues.put(COL_CLIENT, pgpContact.getClient());
+            contentValues.put(COL_ATTESTED, pgpContact.getAttested());
+            contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
+            contentValues.put(COL_LONG_ID, pgpContact.getLongid());
+            contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
+
+            return contentResolver.update(getBaseContentUri(),
+                    contentValues,
+                    COL_EMAIL + " = ?",
+                    new String[]{pgpContact.getEmail()});
+        } else return -1;
+    }
+
+    /**
+     * Update a last use entry of {@link PgpContact}.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param pgpContact A new information of {@link PgpContact} in the database.
+     * @return The count of updated rows. Will be 1 if information about {@link PgpContact} was
+     * updated or -1 otherwise.
+     */
+    public int updateLastUseOfPgpContact(Context context, PgpContact pgpContact) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (pgpContact != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_LAST_USE, System.currentTimeMillis());
+
+            return contentResolver.update(getBaseContentUri(),
+                    contentValues,
+                    COL_EMAIL + " = ?",
+                    new String[]{pgpContact.getEmail()});
+        } else return -1;
     }
 }
