@@ -1,6 +1,7 @@
 package com.flowcrypt.email.api.retrofit.request.model;
 
 import android.os.Parcel;
+import android.text.TextUtils;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -37,7 +38,9 @@ public class PostLookUpEmailModel extends BaseRequestModel {
     }
 
     public PostLookUpEmailModel(String email) {
-        this.email = email;
+        if (!TextUtils.isEmpty(email)) {
+            this.email = email.toLowerCase();
+        }
     }
 
     public PostLookUpEmailModel(Parcel in) {
