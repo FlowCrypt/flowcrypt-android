@@ -33,13 +33,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <EditText
+                <com.flowcrypt.email.ui.widget.CustomNachoTextView
                     android:id="@+id/editTextRecipient"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:completionThreshold="2"
                     android:hint="@string/prompt_recipient"
-                    android:inputType="textEmailAddress"
-                    android:maxLines="1" />
+                    android:shrinkColumns="0, true" />
 
             </android.support.design.widget.TextInputLayout>
 

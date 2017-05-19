@@ -90,4 +90,5 @@ dependencies {
     compile 'commons-io:commons-io:2.5'
     compile 'ch.acra:acra:4.9.2'
     compile 'org.jsoup:jsoup:1.10.2'
+    compile "com.hootsuite.android:nachos:1.1.1"
 }
