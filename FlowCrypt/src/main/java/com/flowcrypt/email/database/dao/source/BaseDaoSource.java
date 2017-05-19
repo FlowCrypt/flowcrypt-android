@@ -5,6 +5,8 @@ import android.provider.BaseColumns;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 
+import java.util.List;
+
 /**
  * The base data source class.
  *
@@ -29,5 +31,26 @@ public abstract class BaseDaoSource implements BaseColumns {
 
     public Uri getBaseContentUri() {
         return Uri.parse(FlowcryptContract.AUTHORITY_URI + "/" + getTableName());
+    }
+
+    /**
+     * Generate a selection {@link String} for a database query.
+     *
+     * @param strings The list of {@link String} objects for which need to generate a selection.
+     * @return <tt>{@link String}</tt> A generated selection.
+     */
+    public String prepareSelection(List<String> strings) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("( ?");
+
+
+        if (strings.size() > 1) {
+            for (int i = 1; i < strings.size(); i++) {
+                stringBuilder.append(", ?");
+            }
+        }
+
+        stringBuilder.append(")");
+        return stringBuilder.toString();
     }
 }
