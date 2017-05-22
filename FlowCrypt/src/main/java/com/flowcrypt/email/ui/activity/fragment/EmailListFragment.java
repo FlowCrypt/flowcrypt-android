@@ -11,19 +11,19 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoadEmailsResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureComposeActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
-
-import java.util.List;
+import com.flowcrypt.email.util.UIUtil;
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -36,7 +36,7 @@ import java.util.List;
  */
 
 public class EmailListFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<List<GeneralMessageDetails>>, AdapterView.OnItemClickListener,
+        .LoaderCallbacks<ActionResult<LoadEmailsResult>>, AdapterView.OnItemClickListener,
         View.OnClickListener {
     private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
             ".KEY_CURRENT_FOLDER";
@@ -76,7 +76,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     }
 
     @Override
-    public Loader<List<GeneralMessageDetails>> onCreateLoader(int id, Bundle args) {
+    public Loader<ActionResult<LoadEmailsResult>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
                 showProgress();
@@ -92,31 +92,36 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     }
 
     @Override
-    public void onLoadFinished(Loader<List<GeneralMessageDetails>> loader,
-                               List<GeneralMessageDetails>
-
-                                       generalMessageDetailses) {
+    public void onLoadFinished(Loader<ActionResult<LoadEmailsResult>> loader,
+                               ActionResult<LoadEmailsResult> loadEmailsResultActionResult) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_messages:
-                if (generalMessageDetailses != null) {
-                    if (!generalMessageDetailses.isEmpty()) {
-                        messageListAdapter = new MessageListAdapter(getActivity(),
-                                generalMessageDetailses);
-                        listViewMessages.setAdapter(messageListAdapter);
-                        showContent();
+                if (loadEmailsResultActionResult != null) {
+                    if (loadEmailsResultActionResult.getResult() != null) {
+                        LoadEmailsResult loadEmailsResult =
+                                loadEmailsResultActionResult.getResult();
+                        if (loadEmailsResult.getGeneralMessageDetailsList() != null
+                                && !loadEmailsResult.getGeneralMessageDetailsList().isEmpty()) {
+                            messageListAdapter = new MessageListAdapter(getActivity(),
+                                    loadEmailsResult.getGeneralMessageDetailsList());
+                            listViewMessages.setAdapter(messageListAdapter);
+                            showContent();
+                        } else {
+                            showEmptyView();
+                        }
                     } else {
-                        showEmptyView();
+                        UIUtil.showInfoSnackbar(getView(), loadEmailsResultActionResult
+                                .getException().getMessage());
                     }
                 } else {
-                    Toast.makeText(getActivity(), "ERROR!!!", Toast.LENGTH_SHORT)
-                            .show();
+                    UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
                 }
                 break;
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<List<GeneralMessageDetails>> loader) {
+    public void onLoaderReset(Loader<ActionResult<LoadEmailsResult>> loader) {
 
     }
 

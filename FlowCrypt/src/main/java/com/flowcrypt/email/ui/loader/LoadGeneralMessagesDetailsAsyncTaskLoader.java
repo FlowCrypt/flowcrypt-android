@@ -8,6 +8,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoadEmailsResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
@@ -31,15 +33,24 @@ import javax.mail.internet.InternetAddress;
  */
 
 public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
-        AsyncTaskLoader<List<GeneralMessageDetails>> {
+        AsyncTaskLoader<ActionResult<LoadEmailsResult>> {
+    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
+
     private Account account;
     private String folder;
+    private int beginLoadPosition;
+
+    public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account,
+                                                     String folder) {
+        this(context, account, folder, 1);
+    }
 
     public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account, String
-            folder) {
+            folder, int beginLoadPosition) {
         super(context);
         this.account = account;
         this.folder = folder;
+        this.beginLoadPosition = beginLoadPosition;
         onContentChanged();
     }
 
@@ -51,7 +62,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
     }
 
     @Override
-    public List<GeneralMessageDetails> loadInBackground() {
+    public ActionResult<LoadEmailsResult> loadInBackground() {
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -61,26 +72,20 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
             IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folder);
             imapFolder.open(Folder.READ_ONLY);
 
-            int[] messagesId;
-
             int countOfMessages = imapFolder.getMessageCount();
-            int maxCountOfLoadMessage = 10;
-            if (countOfMessages <= maxCountOfLoadMessage) {
-                messagesId = new int[countOfMessages];
-                for (int i = countOfMessages; i >= 1; i--) {
-                    messagesId[countOfMessages - i] = i;
-                }
-            } else {
-                messagesId = new int[maxCountOfLoadMessage];
-                for (int i = countOfMessages; i > countOfMessages -
-                        maxCountOfLoadMessage; i--) {
-                    messagesId[countOfMessages - i] = i;
-                }
+
+            List<javax.mail.Message> messages;
+
+            int endLoadPosition = beginLoadPosition + COUNT_OF_LOADED_EMAILS_BY_STEP;
+
+            if (endLoadPosition > countOfMessages) {
+                endLoadPosition = countOfMessages;
             }
 
+            messages = new ArrayList<>(Arrays.asList(imapFolder.getMessages
+                    (beginLoadPosition, endLoadPosition)));
 
-            List<javax.mail.Message> messages = new ArrayList<>(Arrays.asList(imapFolder
-                    .getMessages(messagesId)));
+
             List<GeneralMessageDetails> generalMessageDetailsLinkedList = new LinkedList<>();
 
             for (Message message : messages) {
@@ -93,10 +98,12 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
 
             imapFolder.close(false);
             gmailSSLStore.close();
-            return generalMessageDetailsLinkedList;
+
+            return new ActionResult<>(new LoadEmailsResult(endLoadPosition,
+                    generalMessageDetailsLinkedList), null);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new ActionResult<>(null, e);
         }
     }
 
