@@ -217,4 +217,25 @@ public class ContactsDaoSource extends BaseDaoSource {
                     new String[]{pgpContact.getEmail()});
         } else return -1;
     }
+
+    /**
+     * Update a name of the email entry in the database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   An email in the database.
+     * @param name    A new information about name of the email.
+     * @return The count of updated rows. Will be 1 if an information was updated or -1 otherwise.
+     */
+    public int updateNameOfPgpContact(Context context, String email, String name) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_NAME, name);
+
+            return contentResolver.update(getBaseContentUri(),
+                    contentValues,
+                    COL_EMAIL + " = ?",
+                    new String[]{email});
+        } else return -1;
+    }
 }

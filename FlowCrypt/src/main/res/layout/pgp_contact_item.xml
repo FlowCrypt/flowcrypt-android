@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:textSize="@dimen/default_text_size_big"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/textViewEmail"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Den Bondarenko" />
+
+    <TextView
+        android:id="@+id/textViewEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewName"
+        tools:text="denbond7@gmail.com" />
+
+    <TextView
+        android:id="@+id/textViewOnlyEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textSize="@dimen/default_text_size_big"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="denbond7@gmail.com" />
+</android.support.constraint.ConstraintLayout>
