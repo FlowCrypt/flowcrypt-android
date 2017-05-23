@@ -1,0 +1,52 @@
+package com.flowcrypt.email.ui.activity;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+
+import com.flowcrypt.email.R;
+import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.fragment.CreateOrImportKeyFragment;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+
+import java.util.ArrayList;
+
+/**
+ * This activity describes a logic for create ot import private keys.
+ *
+ * @author DenBond7
+ *         Date: 23.05.2017.
+ *         Time: 16:15.
+ *         E-mail: DenBond7@gmail.com
+ */
+public class CreateOrImportKeyActivity extends BaseAuthenticationActivity implements
+        CreateOrImportKeyFragment
+                .OnPrivateKeysSelectedListener {
+
+    @Override
+    public View getRootView() {
+        return findViewById(R.id.layoutContent);
+    }
+
+    @Override
+    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
+
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_create_or_import_key);
+    }
+
+    @Override
+    public void onPrivateKeySelected(ArrayList<String> privateKeys) {
+        if (privateKeys != null && !privateKeys.isEmpty()) {
+            finish();
+            Intent intent = new Intent(this, RestoreAccountActivity.class);
+            intent.putStringArrayListExtra(RestoreAccountActivity.KEY_EXTRA_PRIVATE_KEYS,
+                    privateKeys);
+            startActivity(intent);
+        }
+    }
+}

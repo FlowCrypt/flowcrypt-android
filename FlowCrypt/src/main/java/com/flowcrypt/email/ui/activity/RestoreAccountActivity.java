@@ -1,11 +1,13 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
@@ -27,6 +29,9 @@ import java.util.List;
 public class RestoreAccountActivity extends BaseAuthenticationActivity implements LoaderManager
         .LoaderCallbacks<List<String>> {
 
+    public static final String KEY_EXTRA_PRIVATE_KEYS = BuildConfig.APPLICATION_ID
+            + ".KEY_EXTRA_PRIVATE_KEYS";
+
     private View restoreAccountView;
     private View layoutProgress;
     private Account account;
@@ -43,7 +48,13 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 account = googleSignInAccount.getAccount();
-                getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
+                if (privateKeys == null) {
+                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
+                            this);
+                } else {
+                    showContent();
+                    updateKeysOnRestoreAccountFragment();
+                }
             }
         }
     }
@@ -51,6 +62,10 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
+            this.privateKeys = getIntent().getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+        }
+
         initViews();
     }
 
@@ -76,7 +91,8 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
                         showContent();
                         updateKeysOnRestoreAccountFragment();
                     } else {
-                        showNoBackupsSnackbar();
+                        finish();
+                        startActivity(new Intent(this, CreateOrImportKeyActivity.class));
                     }
                 } else {
                     showNoBackupsSnackbar();

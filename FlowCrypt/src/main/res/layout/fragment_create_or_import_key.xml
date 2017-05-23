@@ -19,68 +19,42 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/textViewFoundBackup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_found_backup"
-        android:text="@string/found_backup_of_your_account_key"
-        android:textColor="@android:color/black"
-        android:textSize="@dimen/default_text_size_medium"
-        app:layout_constraintHorizontal_bias="0.509"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/editTextKeyPassword"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup" />
-
-    <EditText
-        android:id="@+id/editTextKeyPassword"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_key_password"
-        android:ems="10"
-        android:hint="@string/enter_your_pass_phrase"
-        android:inputType="textPassword"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup" />
-
     <Button
-        android:id="@+id/buttonLoadAccount"
+        android:id="@+id/buttonCreateNewKey"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
-        android:layout_marginTop="@dimen/margin_top_load_account"
-        android:text="@string/load_account"
+        android:layout_marginTop="@dimen/margin_top_fisrt_button"
+        android:enabled="false"
+        android:text="@string/create_a_new_key"
         android:theme="@style/AppWidget.Button.Raised.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/editTextKeyPassword" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
+
+    <Button
+        android:id="@+id/buttonImportMyKey"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_between_buttons"
+        android:text="@string/import_my_key"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/buttonCreateNewKey" />
 
     <Button
         android:id="@+id/buttonSelectAnotherAccount"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
-        android:layout_marginTop="@dimen/margin_top_button_select_another_account"
+        android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/use_another_account"
         android:theme="@style/AppWidget.Button.Raised.Grey"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/buttonLoadAccount" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonImportMyKey" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineLeft"

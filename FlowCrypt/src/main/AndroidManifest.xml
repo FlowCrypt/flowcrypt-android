@@ -67,6 +67,8 @@
             android:exported="false" />
 
         <service android:name=".service.EmailAndNameUpdaterService" />
+
+        <activity android:name=".ui.activity.CreateOrImportKeyActivity" />
     </application>
 
 </manifest>

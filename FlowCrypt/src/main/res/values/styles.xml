@@ -45,7 +45,11 @@
     </style>
 
     <style name="AppWidget.Button.Raised.Green" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">#31a217</item>
+        <item name="colorButtonNormal">@color/la_palma</item>
+    </style>
+
+    <style name="AppWidget.Button.Raised.Grey" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/silver</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

@@ -41,7 +41,7 @@
     <string name="refresh">Refresh</string>
     <string name="passphrase_must_be_non_empty">Passphrase must be non empty!</string>
     <string name="password_is_incorrect">Password is incorrect, try again!</string>
-    <string name="select_another_account">Select another Account</string>
+    <string name="use_another_account">Use another Account</string>
     <string name="reply_all">Reply all</string>
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Something wrong with receiving a message!</string>
@@ -51,4 +51,6 @@
     <string name="please_wait_while_message_will_be_sent">Please wait while a message will be sent!</string>
     <string name="title_activity_security_reply">Secure Reply</string>
     <string name="please_wait_while_information_about_contacts_will_be_updated">Please, wait while an information about contacts will be updated!</string>
+    <string name="create_a_new_key">Create a new key</string>
+    <string name="import_my_key">Import my key</string>
 </resources>
