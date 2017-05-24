@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- android.permission.ACCESS_NETWORK_STATE used to check is internet connection available -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:name=".FlowCryptApplication"
@@ -23,9 +25,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.activity.SendEmailActivity"
             android:screenOrientation="portrait" />
+
         <activity
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/title_activity_email_manager"
@@ -35,6 +39,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
         </activity>
+
         <activity
             android:name=".ui.activity.RestoreAccountActivity"
             android:parentActivityName=".ui.activity.SplashActivity"
@@ -43,6 +48,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
         </activity>
+
         <activity
             android:name=".ui.activity.MessageDetailsActivity"
             android:parentActivityName=".ui.activity.EmailManagerActivity"
@@ -51,14 +57,22 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.flowcrypt.email.ui.activity.EmailManagerActivity" />
         </activity>
+
         <activity
             android:name=".ui.activity.SecureComposeActivity"
             android:label="@string/title_activity_secure_compose"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name=".ui.activity.SecureReplyActivity"
             android:label="@string/title_activity_security_reply"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".ui.activity.CreateOrImportKeyActivity"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name=".database.provider.SecurityContentProvider"
@@ -67,8 +81,6 @@
             android:exported="false" />
 
         <service android:name=".service.EmailAndNameUpdaterService" />
-
-        <activity android:name=".ui.activity.CreateOrImportKeyActivity" />
     </application>
 
 </manifest>

@@ -53,4 +53,9 @@
     <string name="please_wait_while_information_about_contacts_will_be_updated">Please, wait while an information about contacts will be updated!</string>
     <string name="create_a_new_key">Create a new key</string>
     <string name="import_my_key">Import my key</string>
+    <string name="access_to_read_the_sdcard_id_denied">The access to read the sd card is denied!</string>
+    <string name="change">Change</string>
+    <string name="do_request">Do request</string>
+    <string name="read_sdcard_permission_explanation_text">We need a read access to the sd card to import private keys</string>
+    <string name="select_key_or_keys">Select a key(s) which will be imported</string>
 </resources>

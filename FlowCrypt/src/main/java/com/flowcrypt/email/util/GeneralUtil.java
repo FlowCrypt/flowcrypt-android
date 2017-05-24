@@ -1,8 +1,11 @@
 package com.flowcrypt.email.util;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
+import android.provider.Settings;
 
 /**
  * General util methods.
@@ -26,5 +29,18 @@ public class GeneralUtil {
 
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    /**
+     * Show the application system settings screen.
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public static void showAppSettingScreen(Context context) {
+        Intent intent = new Intent();
+        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+        intent.setData(uri);
+        context.startActivity(intent);
     }
 }
