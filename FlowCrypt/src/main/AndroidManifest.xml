@@ -74,6 +74,11 @@
             android:name=".ui.activity.CreateOrImportKeyActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait" />
+
         <provider
             android:name=".database.provider.SecurityContentProvider"
             android:authorities="${applicationId}.SecurityContentProvider"

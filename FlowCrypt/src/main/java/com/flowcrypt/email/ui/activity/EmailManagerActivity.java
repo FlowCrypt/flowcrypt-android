@@ -1,6 +1,7 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -120,6 +121,10 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
             case R.id.navigationMenuRevokeAccess:
                 revokeAccess(SignInType.GMAIL);
+                break;
+
+            case R.id.navigationMenuActionSettings:
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
 
             case Menu.NONE:

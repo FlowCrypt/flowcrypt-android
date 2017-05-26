@@ -42,11 +42,13 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId
         }
 
         debug {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
             applicationIdSuffix '.debug'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
         }
     }
 
@@ -69,6 +71,7 @@ dependencies {
     compile "com.android.support:support-v4:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:appcompat-v7:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:design:${ANDROID_SUPPORT_VERSION}"
+    compile "com.android.support:preference-v14:${ANDROID_SUPPORT_VERSION}"
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
 
     compile "com.google.android.gms:play-services-base:${PLAY_SERVICES_VERSION}"

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:layout="@layout/preference_item"
+        android:title="@string/backup">
+        <!--<intent
+            android:targetClass="com.flowcrypt.email.ui.activity.SettingsActivity"
+            android:targetPackage="@string/application_id" />-->
+    </Preference>
+
+    <Preference android:title="@string/security"></Preference>
+
+    <Preference android:title="@string/contacts"></Preference>
+
+    <Preference android:title="@string/keys"></Preference>
+
+    <Preference android:title="@string/servers"></Preference>
+
+    <Preference android:title="@string/legal"></Preference>
+</PreferenceScreen>
