@@ -205,7 +205,12 @@ public class SecurityContentProvider extends ContentProvider {
                 switch (match) {
                     case MATCHED_CODE_KEY_CLEAN_DATABASE:
                         rowsCount = sqLiteDatabase.delete(
-                                new KeysDaoSource().getTableName(), null, null);
+                                new KeysDaoSource().getTableName(), selection, selectionArgs);
+                        break;
+
+                    case MATCHED_CODE_CONTACTS_TABLE:
+                        rowsCount = sqLiteDatabase.delete(new ContactsDaoSource().getTableName(),
+                                selection, selectionArgs);
                         break;
 
                     default:

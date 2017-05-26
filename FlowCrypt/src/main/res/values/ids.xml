@@ -9,4 +9,5 @@
     <item name="loader_id_send_encrypted_message" type="id" />
     <item name="loader_id_load_gmail_labels" type="id" />
     <item name="loader_id_update_info_about_pgp_contacts" type="id" />
+    <item name="loader_id_load_contacts_with_has_pgp_true" type="id" />
 </resources>

@@ -67,4 +67,5 @@
     <string name="help">Help</string>
     <string name="licence">Licence</string>
     <string name="sources">Sources</string>
+    <string name="the_contact_was_deleted">The contact \"%1$s\" was deleted!</string>
 </resources>

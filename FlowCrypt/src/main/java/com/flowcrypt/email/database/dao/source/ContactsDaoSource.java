@@ -238,4 +238,19 @@ public class ContactsDaoSource extends BaseDaoSource {
                     new String[]{email});
         } else return -1;
     }
+
+    /**
+     * Delete a {@link PgpContact} object from the database by an email.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email of the {@link PgpContact}.
+     * @return The count of deleted rows. Will be 1 if a contact was deleted or -1 otherwise.
+     */
+    public int deletePgpContact(Context context, String email) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver != null) {
+            return contentResolver.delete(getBaseContentUri(),
+                    COL_EMAIL + " = ?", new String[]{email});
+        } else return -1;
+    }
 }
