@@ -73,19 +73,19 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.SettingsActivity"
+            android:name=".ui.activity.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.LegalSettingsActivity"
+            android:name=".ui.activity.settings.LegalSettingsActivity"
             android:label="@string/legal"
-            android:parentActivityName=".ui.activity.SettingsActivity"
+            android:parentActivityName=".ui.activity.settings.SettingsActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.NoElevation">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.SettingsActivity" />
+                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
         </activity>
 
         <provider

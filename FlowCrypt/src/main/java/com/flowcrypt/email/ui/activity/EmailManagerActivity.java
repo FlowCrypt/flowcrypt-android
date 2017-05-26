@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
+import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.ui.loader.LoadGmailLabelsAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;

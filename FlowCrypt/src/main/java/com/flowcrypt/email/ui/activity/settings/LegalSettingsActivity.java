@@ -1,4 +1,4 @@
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity.settings;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
