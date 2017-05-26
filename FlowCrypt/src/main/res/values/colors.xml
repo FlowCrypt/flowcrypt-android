@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#51b53f</color>
-    <color name="colorPrimaryDark">#2f733c</color>
-    <color name="colorAccent">#63a2e1</color>
+    <color name="colorPrimary">#51B53F</color>
+    <color name="colorPrimaryDark">#2F733C</color>
+    <color name="colorAccent">#63A2E1</color>
     <color name="transparent">@android:color/transparent</color>
-    <color name="light_grey">#f2f2f2</color>
-    <color name="silver_chalice">#aaaaaa</color>
+    <color name="light_grey">#F2F2F2</color>
+    <color name="silver_chalice">#AAAAAA</color>
     <color name="fruit_salad">#4CAF50</color>
     <color name="sea_green">#2E7D32</color>
     <color name="de_york">#81C784</color>
-    <color name="scorpion">#5b5b5b</color>
+    <color name="scorpion">#5B5B5B</color>
     <color name="gray">#898989</color>
     <color name="mine_shaft">#333333</color>
     <color name="silver">#C6C6C6</color>
     <color name="la_palma">#31A217</color>
     <color name="dove_gray">#666666</color>
+    <color name="white_transparent">#A0FFFFFF</color>
 </resources>

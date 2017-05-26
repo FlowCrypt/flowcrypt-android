@@ -16,5 +16,9 @@
 
     <Preference android:title="@string/servers"></Preference>
 
-    <Preference android:title="@string/legal"></Preference>
+    <Preference android:title="@string/legal">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.LegalActivity"
+            android:targetPackage="@string/application_id" />
+    </Preference>
 </PreferenceScreen>

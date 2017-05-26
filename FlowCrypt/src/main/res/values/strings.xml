@@ -65,4 +65,6 @@
     <string name="servers">Servers</string>
     <string name="legal">Legal</string>
     <string name="help">Help</string>
+    <string name="licence">Licence</string>
+    <string name="sources">Sources</string>
 </resources>
