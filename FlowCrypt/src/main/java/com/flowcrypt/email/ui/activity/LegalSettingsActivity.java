@@ -26,7 +26,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LegalActivity extends BaseBackStackActivity {
+public class LegalSettingsActivity extends BaseBackStackActivity {
     private static final int TAB_POSITION_PRIVACY = 0;
     private static final int TAB_POSITION_TERMS = 1;
     private static final int TAB_POSITION_LICENCE = 2;

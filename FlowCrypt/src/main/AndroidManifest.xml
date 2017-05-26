@@ -78,7 +78,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.LegalActivity"
+            android:name=".ui.activity.LegalSettingsActivity"
             android:label="@string/legal"
             android:parentActivityName=".ui.activity.SettingsActivity"
             android:screenOrientation="portrait"
