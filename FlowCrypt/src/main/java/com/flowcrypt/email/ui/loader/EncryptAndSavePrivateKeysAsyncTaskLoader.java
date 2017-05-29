@@ -6,8 +6,10 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.model.results.ActionResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import com.flowcrypt.email.test.Js;
@@ -28,7 +30,8 @@ import java.util.UUID;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Boolean> {
+public class EncryptAndSavePrivateKeysAsyncTaskLoader extends
+        AsyncTaskLoader<ActionResult<Boolean>> {
     private static final String KEY_SUCCESS = "success";
 
     private List<String> privateKeys;
@@ -46,7 +49,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Bo
     }
 
     @Override
-    public Boolean loadInBackground() {
+    public ActionResult<Boolean> loadInBackground() {
         boolean isOneOrMoreKeySaved = false;
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
@@ -57,16 +60,21 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Bo
                 PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
                 V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
-                if (pgpKey.isPrivate() && v8Object != null
-                        && v8Object.getBoolean(KEY_SUCCESS)) {
-                    Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
-                    isOneOrMoreKeySaved = uri != null;
+                if (pgpKey.isPrivate() && v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
+                    if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
+                        Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
+                        isOneOrMoreKeySaved = uri != null;
+                    } else {
+                        return new ActionResult<>(null, new Exception(getContext().getString(R
+                                .string.the_key_already_added)));
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return new ActionResult<>(null, e);
         }
-        return isOneOrMoreKeySaved;
+        return new ActionResult<>(isOneOrMoreKeySaved, null);
     }
 
     @Override

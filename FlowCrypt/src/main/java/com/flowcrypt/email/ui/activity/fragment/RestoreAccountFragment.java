@@ -13,6 +13,7 @@ import android.widget.EditText;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.model.results.ActionResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
@@ -32,7 +33,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 public class RestoreAccountFragment extends BaseFragment implements View.OnClickListener,
-        LoaderManager.LoaderCallbacks<Boolean> {
+        LoaderManager.LoaderCallbacks<ActionResult<Boolean>> {
     private List<String> privateKeys;
     private EditText editTextKeyPassword;
     private View progressBar;
@@ -75,7 +76,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     }
 
     @Override
-    public Loader<Boolean> onCreateLoader(int id, Bundle args) {
+    public Loader<ActionResult<Boolean>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
@@ -88,23 +89,31 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     }
 
     @Override
-    public void onLoadFinished(Loader<Boolean> loader, Boolean data) {
+    public void onLoadFinished(Loader<ActionResult<Boolean>> loader, ActionResult<Boolean> data) {
         switch (loader.getId()) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
-                if (data != null && data) {
-                    startActivity(new Intent(getContext(), EmailManagerActivity.class));
-                    getActivity().finish();
+                if (data != null) {
+                    if (data.getResult() != null) {
+                        if (data.getResult()) {
+                            startActivity(new Intent(getContext(), EmailManagerActivity.class));
+                            getActivity().finish();
+                        } else {
+                            UIUtil.showInfoSnackbar(getView(), getString(R.string
+                                    .password_is_incorrect));
+                        }
+                    } else if (data.getException() != null) {
+                        UIUtil.showInfoSnackbar(getView(), data.getException().getMessage());
+                    }
                 } else {
-                    UIUtil.showInfoSnackbar(getView(), getString(R.string
-                            .password_is_incorrect));
+                    UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
                 }
                 break;
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<Boolean> loader) {
+    public void onLoaderReset(Loader<ActionResult<Boolean>> loader) {
 
     }
 

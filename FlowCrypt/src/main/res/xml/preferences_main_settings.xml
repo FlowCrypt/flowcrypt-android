@@ -16,7 +16,11 @@
             android:targetPackage="@string/application_id" />
     </Preference>
 
-    <Preference android:title="@string/keys"></Preference>
+    <Preference android:title="@string/keys">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity"
+            android:targetPackage="@string/application_id" />
+    </Preference>
 
     <Preference android:title="@string/servers"></Preference>
 

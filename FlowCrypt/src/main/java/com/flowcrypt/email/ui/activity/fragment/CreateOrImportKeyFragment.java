@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -45,6 +46,8 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
     private ArrayList<String> privateKeys;
     private OnPrivateKeysSelectedListener onPrivateKeysSelectedListener;
 
+    private boolean isShowAnotherAccountButton = true;
+
     public CreateOrImportKeyFragment() {
         this.privateKeys = new ArrayList<>();
     }
@@ -55,6 +58,16 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
 
         if (context instanceof OnPrivateKeysSelectedListener) {
             this.onPrivateKeysSelectedListener = (OnPrivateKeysSelectedListener) context;
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getActivity().getIntent() != null && getActivity().getIntent().hasExtra
+                (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON)) {
+            this.isShowAnotherAccountButton = getActivity().getIntent().getBooleanExtra
+                    (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
         }
     }
 
@@ -160,6 +173,16 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
     }
 
     /**
+     * Change visibility of the Select Another Account button.
+     *
+     * @param showAnotherAccountButton if true the button will be visible, otherwise the button
+     *                                 will be invisible.
+     */
+    public void setShowAnotherAccountButton(boolean showAnotherAccountButton) {
+        isShowAnotherAccountButton = showAnotherAccountButton;
+    }
+
+    /**
      * Show an explanation to the user for read the sdcard.
      * After the user sees the explanation, we try again to request the permission.
      */
@@ -200,7 +223,12 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
         }
 
         if (view.findViewById(R.id.buttonSelectAnotherAccount) != null) {
-            view.findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
+            if (isShowAnotherAccountButton) {
+                view.findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
+            } else {
+                view.findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.GONE);
+            }
         }
     }
 

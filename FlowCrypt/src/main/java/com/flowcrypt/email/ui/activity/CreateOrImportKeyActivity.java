@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportKeyFragment;
@@ -20,8 +21,9 @@ import java.util.ArrayList;
  *         E-mail: DenBond7@gmail.com
  */
 public class CreateOrImportKeyActivity extends BaseAuthenticationActivity implements
-        CreateOrImportKeyFragment
-                .OnPrivateKeysSelectedListener {
+        CreateOrImportKeyFragment.OnPrivateKeysSelectedListener {
+    public static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON = BuildConfig
+            .APPLICATION_ID + ".KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON";
 
     @Override
     public View getRootView() {

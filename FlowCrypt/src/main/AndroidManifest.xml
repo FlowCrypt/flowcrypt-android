@@ -98,6 +98,16 @@
                 android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
         </activity>
 
+        <activity
+            android:name=".ui.activity.settings.KeysSettingsActivity"
+            android:label="@string/keys"
+            android:parentActivityName=".ui.activity.settings.SettingsActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
+        </activity>
+
         <provider
             android:name=".database.provider.SecurityContentProvider"
             android:authorities="${applicationId}.SecurityContentProvider"

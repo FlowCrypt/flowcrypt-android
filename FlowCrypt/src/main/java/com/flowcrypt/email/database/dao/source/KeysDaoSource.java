@@ -3,6 +3,7 @@ package com.flowcrypt.email.database.dao.source;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -45,6 +46,14 @@ public class KeysDaoSource extends BaseDaoSource {
         return TABLE_NAME_KEYS;
     }
 
+    /**
+     * Add information about a key to the database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param keysDao The {@link KeysDao} object which contain information about a key.
+     * @return <tt>{@link Uri}</tt> which contain information about an inserted row or null if the
+     * row not inserted.
+     */
     public Uri addRow(Context context, KeysDao keysDao) {
         ContentResolver contentResolver = context.getContentResolver();
         if (keysDao != null && contentResolver != null) {
@@ -57,5 +66,30 @@ public class KeysDaoSource extends BaseDaoSource {
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
+    }
+
+    /**
+     * Check if the key already exists in the database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param longId  The key longid parameter.
+     * @return <tt>{@link Boolean}</tt> true - if the key already exists in the database, false -
+     * otherwise.
+     */
+    public boolean isKeyExist(Context context, String longId) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, COL_LONG_ID + " = ?", new String[]{longId}, null);
+
+        boolean result = false;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                result = true;
+            }
+            cursor.close();
+        }
+
+        return result;
     }
 }
