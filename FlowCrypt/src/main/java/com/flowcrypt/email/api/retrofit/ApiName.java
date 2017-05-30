@@ -10,5 +10,6 @@ package com.flowcrypt.email.api.retrofit;
  */
 public enum ApiName {
     POST_LOOKUP_EMAIL,
-    POST_MESSAGE_PROTOTYPE
+    POST_MESSAGE_PROTOTYPE,
+    POST_HELP_FEEDBACK
 }

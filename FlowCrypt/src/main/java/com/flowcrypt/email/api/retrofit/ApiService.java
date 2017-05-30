@@ -1,9 +1,11 @@
 package com.flowcrypt.email.api.retrofit;
 
+import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostMessagePrototypeModel;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
+import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -32,9 +34,19 @@ public interface ApiService {
      * This method create a Call object for the API "https://api.cryptup.io/message/prototype"
      *
      * @param PostMessagePrototypeModel POJO model for requests
-     * @return <tt>Call<LookUpEmailResponse></tt>
+     * @return <tt>Call<MessagePrototypeResponse></tt>
      */
     @POST("https://api.cryptup.io/message/prototype")
     Call<MessagePrototypeResponse> postMessagePrototype(@Body PostMessagePrototypeModel
                                                                 PostMessagePrototypeModel);
+
+    /**
+     * This method create a Call object for the API "https://api.cryptup.io/help/feedback"
+     *
+     * @param postHelpFeedbackModel POJO model for requests
+     * @return <tt>Call<PostHelpFeedbackResponse></tt>
+     */
+    @POST("https://api.cryptup.io/help/feedback")
+    Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel
+                                                                    postHelpFeedbackModel);
 }

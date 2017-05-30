@@ -9,8 +9,10 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.LookUpEmailRequest;
 import com.flowcrypt.email.api.retrofit.request.MessagePrototypeRequest;
+import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
+import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
 
 /**
  * A basic AsyncTaskLoader who make API calls.
@@ -82,6 +84,26 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             }
                         }
                         return messagePrototypeResponse;
+
+                    case POST_HELP_FEEDBACK:
+                        BaseResponse<PostHelpFeedbackResponse> postHelpFeedbackResponse =
+                                new BaseResponse<>();
+                        postHelpFeedbackResponse.setApiName(baseRequest.getApiName());
+
+                        PostHelpFeedbackRequest postHelpFeedbackRequest =
+                                (PostHelpFeedbackRequest) baseRequest;
+
+                        if (apiService != null) {
+                            try {
+                                postHelpFeedbackResponse.setResponse(apiService
+                                        .postHelpFeedbackResponse(postHelpFeedbackRequest
+                                                .getPostHelpFeedbackModel()).execute());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                postHelpFeedbackResponse.setException(e);
+                            }
+                        }
+                        return postHelpFeedbackResponse;
                 }
             }
         }
