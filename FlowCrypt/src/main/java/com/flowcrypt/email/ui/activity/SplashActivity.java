@@ -35,6 +35,11 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_splash;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();
@@ -84,7 +89,6 @@ public class SplashActivity extends BaseAuthenticationActivity implements Splash
     }
 
     private void initViews() {
-        setContentView(R.layout.activity_splash);
         signInView = findViewById(R.id.signInView);
         splashView = findViewById(R.id.splashView);
     }

@@ -1,7 +1,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -49,15 +48,13 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_secure_compose;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_secure_compose);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
         layoutContent = findViewById(R.id.layoutContent);
     }
 

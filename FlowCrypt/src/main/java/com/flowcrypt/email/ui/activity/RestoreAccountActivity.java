@@ -60,6 +60,11 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_restore_account;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
@@ -161,7 +166,6 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     private void initViews() {
-        setContentView(R.layout.activity_restore_account);
         restoreAccountView = findViewById(R.id.restoreAccountView);
         layoutProgress = findViewById(R.id.layoutProgress);
     }

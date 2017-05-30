@@ -14,7 +14,6 @@ import android.webkit.WebView;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 
 /**
@@ -26,7 +25,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LegalSettingsActivity extends BaseBackStackActivity {
+public class LegalSettingsActivity extends BaseSettingsActivity {
     private static final int TAB_POSITION_PRIVACY = 0;
     private static final int TAB_POSITION_TERMS = 1;
     private static final int TAB_POSITION_LICENCE = 2;

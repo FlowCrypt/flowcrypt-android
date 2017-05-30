@@ -108,6 +108,11 @@
                 android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
         </activity>
 
+        <activity
+            android:name=".ui.activity.settings.FeedbackActivity"
+            android:label="@string/help_feedback_or_question"
+            android:screenOrientation="portrait" />
+
         <provider
             android:name=".database.provider.SecurityContentProvider"
             android:authorities="${applicationId}.SecurityContentProvider"

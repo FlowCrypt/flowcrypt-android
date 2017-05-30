@@ -55,6 +55,11 @@ public abstract class BaseAuthenticationActivity extends BaseActivity implements
             isOnStartCall);
 
     @Override
+    public boolean isDisplayHomeAsUpEnabled() {
+        return false;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

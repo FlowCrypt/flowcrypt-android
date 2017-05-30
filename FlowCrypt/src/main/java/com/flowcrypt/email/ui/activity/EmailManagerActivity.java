@@ -72,9 +72,13 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_email_manager;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_email_manager);
         initViews();
     }
 

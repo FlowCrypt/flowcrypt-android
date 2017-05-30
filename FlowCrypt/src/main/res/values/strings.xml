@@ -69,4 +69,7 @@
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">The contact \"%1$s\" was deleted!</string>
     <string name="the_key_already_added">Key already added, skipping</string>
+    <string name="help_feedback_or_question">Help, feedback or question</string>
+    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">I will usually reply within an hour. Except when I sleep. (Tom)</string>
+    <string name="your_message">Your message</string>
 </resources>

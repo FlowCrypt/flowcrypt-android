@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -28,7 +27,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ContactsSettingsActivity extends BaseBackStackActivity implements LoaderManager
+public class ContactsSettingsActivity extends BaseSettingsActivity implements LoaderManager
         .LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactButtonClickListener {
     private View progressBar;
     private ListView listViewContacts;

@@ -1,7 +1,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
 
 import com.flowcrypt.email.BuildConfig;
@@ -36,9 +35,8 @@ public class CreateOrImportKeyActivity extends BaseAuthenticationActivity implem
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_or_import_key);
+    public int getContentViewResourceId() {
+        return R.layout.activity_create_or_import_key;
     }
 
     @Override

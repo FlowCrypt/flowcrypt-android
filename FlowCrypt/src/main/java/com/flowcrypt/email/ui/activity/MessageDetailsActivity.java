@@ -61,6 +61,11 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_message_details;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
@@ -96,8 +101,6 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
     }
 
     private void initViews() {
-        setContentView(R.layout.activity_message_details);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 

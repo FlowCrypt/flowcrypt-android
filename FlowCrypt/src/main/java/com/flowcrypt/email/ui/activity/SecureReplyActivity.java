@@ -1,7 +1,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -53,16 +52,13 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_security_reply;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_security_reply);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
         layoutContent = findViewById(R.id.layoutContent);
 
         if (getIntent() != null && getIntent().hasExtra(KEY_INCOMING_MESSAGE_INFO)) {

@@ -15,7 +15,6 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -32,7 +31,7 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager
+public class KeysSettingsActivity extends BaseSettingsActivity implements LoaderManager
         .LoaderCallbacks<Cursor>, View.OnClickListener {
     private View progressBar;
     private View emptyView;
