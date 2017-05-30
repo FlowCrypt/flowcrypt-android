@@ -39,7 +39,8 @@
     <string name="loading_account">Loading account</string>
     <string name="no_backups_found">No backups found on this account</string>
     <string name="refresh">Refresh</string>
-    <string name="passphrase_must_be_non_empty">Passphrase must be non empty!</string>
+    <string name="passphrase_must_be_non_empty">Passphrase must be non-empty!</string>
+    <string name="your_message_must_be_non_empty">Your message must be non-empty!</string>
     <string name="password_is_incorrect">Password is incorrect, try again!</string>
     <string name="use_another_account">Use another Account</string>
     <string name="reply_all">Reply all</string>
@@ -72,4 +73,6 @@
     <string name="help_feedback_or_question">Help, feedback or question</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">I will usually reply within an hour. Except when I sleep. (Tom)</string>
     <string name="your_message">Your message</string>
+    <string name="back">Back</string>
+    <string name="you_already_sent_this_message">You already sent this message</string>
 </resources>
