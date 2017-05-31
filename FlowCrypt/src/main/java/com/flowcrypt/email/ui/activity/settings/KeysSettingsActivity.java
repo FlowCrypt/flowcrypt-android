@@ -65,12 +65,12 @@ public class KeysSettingsActivity extends BaseSettingsActivity implements Loader
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case R.id.loader_id_load_contacts_with_has_pgp_true:
-                UIUtil.showProgress(this, false, progressBar, layoutContent);
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
 
                 if (data != null && data.getCount() > 0) {
                     privateKeysListCursorAdapter.swapCursor(data);
                 } else {
-                    UIUtil.showProgress(this, true, emptyView, layoutContent);
+                    UIUtil.exchangeViewVisibility(this, true, emptyView, layoutContent);
                 }
                 break;
         }

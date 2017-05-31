@@ -109,6 +109,16 @@
         </activity>
 
         <activity
+            android:name=".ui.activity.settings.BackupSettingsActivity"
+            android:label="@string/backup"
+            android:parentActivityName=".ui.activity.settings.SettingsActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
+        </activity>
+
+        <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait" />

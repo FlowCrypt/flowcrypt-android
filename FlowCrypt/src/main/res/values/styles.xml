@@ -7,6 +7,11 @@
         <item name="android:textAllCaps">false</item>
     </style>
 
+    <style name="AppWidget.Button.WhiteText">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
     <style name="AppWidget.Button.Transparent">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
@@ -36,6 +41,10 @@
 
     <style name="AppWidget.Button.Raised.Grey" parent="Widget.AppCompat.Button.Colored">
         <item name="colorButtonNormal">@color/silver</item>
+    </style>
+
+    <style name="AppWidget.RadioButton" parent="AppTheme">
+        <item name="colorAccent">@color/la_palma</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

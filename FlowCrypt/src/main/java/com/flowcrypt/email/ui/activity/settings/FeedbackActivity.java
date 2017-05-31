@@ -128,7 +128,7 @@ public class FeedbackActivity extends BaseBackStackAuthenticationActivity implem
     public Loader<BaseResponse> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_post_help_feedback:
-                UIUtil.showProgress(this, true, progressBar, layoutInput);
+                UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
 
                 return new ApiServiceAsyncTaskLoader(getApplicationContext(),
                         new PostHelpFeedbackRequest(new PostHelpFeedbackModel(email,
@@ -143,7 +143,7 @@ public class FeedbackActivity extends BaseBackStackAuthenticationActivity implem
     public void onLoadFinished(Loader<BaseResponse> loader, BaseResponse data) {
         switch (loader.getId()) {
             case R.id.loader_id_post_help_feedback:
-                UIUtil.showProgress(this, false, progressBar, layoutInput);
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
 
                 if (data != null) {
                     if (data.getResponseModel() != null) {

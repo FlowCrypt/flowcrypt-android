@@ -64,33 +64,33 @@ public class UIUtil {
     }
 
     /**
-     * This method can be used to hide or show progress for some interactions.
+     * This method can be used to exchange views visibility for some interactions.
      *
-     * @param context      Interface to global information about an application environment.
-     * @param show         When true we show the progress, when false we show content;
-     * @param progressView The progress view;
-     * @param contentView  The content view.
+     * @param context    Interface to global information about an application environment.
+     * @param show       When true we show the firstView, when false we show the secondView;
+     * @param firstView  The first view;
+     * @param secondView The second view.
      */
-    public static void showProgress(Context context, final boolean show,
-                                    final View progressView, final View contentView) {
+    public static void exchangeViewVisibility(Context context, final boolean show,
+                                              final View firstView, final View secondView) {
         int shortAnimTime = context.getResources().getInteger(android.R.integer
                 .config_shortAnimTime);
 
-        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
-        contentView.animate().setDuration(shortAnimTime).alpha(
+        secondView.setVisibility(show ? View.GONE : View.VISIBLE);
+        secondView.animate().setDuration(shortAnimTime).alpha(
                 show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                contentView.setVisibility(show ? View.GONE : View.VISIBLE);
+                secondView.setVisibility(show ? View.GONE : View.VISIBLE);
             }
         });
 
-        progressView.setVisibility(show ? View.VISIBLE : View.GONE);
-        progressView.animate().setDuration(shortAnimTime).alpha(
+        firstView.setVisibility(show ? View.VISIBLE : View.GONE);
+        firstView.animate().setDuration(shortAnimTime).alpha(
                 show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                progressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                firstView.setVisibility(show ? View.VISIBLE : View.GONE);
             }
         });
     }

@@ -71,12 +71,12 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case R.id.loader_id_load_contacts_with_has_pgp_true:
-                UIUtil.showProgress(this, false, progressBar, listViewContacts);
+                UIUtil.exchangeViewVisibility(this, false, progressBar, listViewContacts);
 
                 if (data != null && data.getCount() > 0) {
                     contactsListCursorAdapter.swapCursor(data);
                 } else {
-                    UIUtil.showProgress(this, true, emptyView, listViewContacts);
+                    UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
                 }
                 break;
         }
