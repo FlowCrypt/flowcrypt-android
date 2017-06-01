@@ -6,7 +6,6 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,10 +23,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 /**
@@ -146,11 +142,13 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                             try {
                                 ClipData clipData = data.getClipData();
                                 if (clipData == null) {
-                                    privateKeys.add(readFileFromUriToString(data.getData()));
+                                    privateKeys.add(GeneralUtil.readFileFromUriToString
+                                            (getContext(), data.getData()));
                                 } else {
                                     for (int i = 0; i < clipData.getItemCount(); i++) {
                                         ClipData.Item item = clipData.getItemAt(i);
-                                        privateKeys.add(readFileFromUriToString(item.getUri()));
+                                        privateKeys.add(GeneralUtil.readFileFromUriToString
+                                                (getContext(), item.getUri()));
                                     }
                                 }
                             } catch (IOException e) {
@@ -192,8 +190,7 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                 getString(R.string.do_request), new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ActivityCompat.requestPermissions(getActivity(),
-                                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                                 REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
                     }
                 });
@@ -230,18 +227,6 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                 view.findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.GONE);
             }
         }
-    }
-
-    /**
-     * Read a file by his Uri and return him as {@link String}.
-     *
-     * @param uri The {@link Uri} of the file.
-     * @return <tt>{@link String}</tt> which contains a file.
-     * @throws IOException will thrown for example if the file not found
-     */
-    private String readFileFromUriToString(Uri uri) throws IOException {
-        return IOUtils.toString(getContext().getContentResolver().openInputStream(uri),
-                StandardCharsets.UTF_8);
     }
 
     /**

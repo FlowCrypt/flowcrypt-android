@@ -7,6 +7,11 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.Settings;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 /**
  * General util methods.
  *
@@ -42,5 +47,33 @@ public class GeneralUtil {
         Uri uri = Uri.fromParts("package", context.getPackageName(), null);
         intent.setData(uri);
         context.startActivity(intent);
+    }
+
+    /**
+     * Read a file by his Uri and return him as {@link String}.
+     *
+     * @param uri The {@link Uri} of the file.
+     * @return <tt>{@link String}</tt> which contains a file.
+     * @throws IOException will thrown for example if the file not found
+     */
+    public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
+        return IOUtils.toString(context.getContentResolver().openInputStream(uri),
+                StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Write to the file some data by his Uri and return him as {@link String}.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param data    The data which will be written.
+     * @param uri     The {@link Uri} of the file.
+     * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
+     * @throws IOException if an I/O error occurs
+     */
+    public static int writeFileFromStringToUri(Context context, Uri uri, String data)
+            throws IOException {
+        return IOUtils.copy(
+                IOUtils.toInputStream(data, StandardCharsets.UTF_8),
+                context.getContentResolver().openOutputStream(uri));
     }
 }

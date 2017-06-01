@@ -1,6 +1,7 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.accounts.Account;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -13,10 +14,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -39,6 +43,8 @@ import java.util.List;
 public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity implements
         LoaderManager.LoaderCallbacks<List<String>>, View.OnClickListener, RadioGroup
         .OnCheckedChangeListener {
+
+    private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
 
     private View progressBar;
     private View layoutContent;
@@ -75,7 +81,6 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     @Override
@@ -158,7 +163,7 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
                         break;
 
                     case R.id.radioButtonDownload:
-
+                        runActivityToChooseDestinationForExportedKey();
                         break;
                 }
                 break;
@@ -181,6 +186,32 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
                         if (textViewOptionsHint != null) {
                             textViewOptionsHint.setText(R.string.backup_as_download_hint);
                             buttonBackupAction.setText(R.string.backup_as_a_file);
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (data != null && data.getData() != null) {
+                            try {
+                                GeneralUtil.writeFileFromStringToUri(this, data.getData(),
+                                        SecurityUtils
+                                                .getPrivateKeysInfo(this).get(0).getPgpKeyInfo()
+                                                .getArmored());
+                                Toast.makeText(this, R.string.key_successfully_saved, Toast
+                                        .LENGTH_SHORT).show();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
+                            }
                         }
                         break;
                 }
@@ -223,5 +254,16 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
             textViewBackupFound.setText(getString(R.string.backups_found_message,
                     privateKeys.size()));
         }
+    }
+
+    /**
+     * Start a new Activity with return results to choose a destination for an exported key.
+     */
+    private void runActivityToChooseDestinationForExportedKey() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("plain/text");
+        intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account.name));
+        startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
     }
 }

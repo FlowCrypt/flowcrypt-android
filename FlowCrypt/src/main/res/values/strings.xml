@@ -85,4 +85,5 @@
     <string name="backup_as_download_hint">This will download your key as a file. Very secure option if your device is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place. Regular emails will not be affected.</string>
     <string name="backup_as_email_hint">This will back up private key in your Gmail Inbox. The security depends on the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your email inbox.</string>
+    <string name="key_successfully_saved">The private key successfully saved</string>
 </resources>

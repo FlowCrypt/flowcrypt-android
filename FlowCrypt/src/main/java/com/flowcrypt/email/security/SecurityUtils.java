@@ -98,4 +98,15 @@ public class SecurityUtils {
         edit.remove(KeyStoreCryptoManager.PREFERENCE_KEY_SECRET);
         edit.apply();
     }
+
+    /**
+     * Generate a new name for the private key which will be exported.
+     *
+     * @param email The user email.
+     * @return A generated name for a new file.
+     */
+    public static String generateNameForPrivateKey(String email) {
+        String sanitizedEmail = email.replaceAll("[^a-z0-9]", "");
+        return "flowcrypt-backup-" + sanitizedEmail + ".key";
+    }
 }
