@@ -76,13 +76,13 @@
     <string name="back">Back</string>
     <string name="you_already_sent_this_message">You already sent this message</string>
     <string name="see_more_backup_options">See more backup options</string>
-    <string name="warning_if_you_lose_your_device_and_have_not_backup">If you lose your device, or it stops working your encrypted email will be unreadable</string>
+    <string name="warning_if_you_lose_your_device_and_have_not_backup">If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="there_are_no_backups_on_this_account">There are no backups on this account</string>
     <string name="email">Email</string>
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
     <string name="backup_as_email">backup as email</string>
-    <string name="backup_as_download_hint">This will download your key as a file. Very secure option if your device is encrypted, or if you can keep a file stored securely. If you lose both your laptop and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place. Regular emails will not be affected.</string>
+    <string name="backup_as_download_hint">This will download your key as a file. Very secure option if your device is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place. Regular emails will not be affected.</string>
     <string name="backup_as_email_hint">This will back up private key in your Gmail Inbox. The security depends on the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your email inbox.</string>
 </resources>
