@@ -11,4 +11,5 @@
     <item name="loader_id_update_info_about_pgp_contacts" type="id" />
     <item name="loader_id_load_contacts_with_has_pgp_true" type="id" />
     <item name="loader_id_post_help_feedback" type="id" />
+    <item name="loader_send_backup_with_private_key_to_myself" type="id" />
 </resources>

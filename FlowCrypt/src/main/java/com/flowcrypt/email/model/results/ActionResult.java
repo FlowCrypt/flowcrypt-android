@@ -28,6 +28,14 @@ public class ActionResult<T> {
         this.exception = exception;
     }
 
+    @Override
+    public String toString() {
+        return "ActionResult{" +
+                "result=" + result +
+                ", exception=" + exception +
+                '}';
+    }
+
     /**
      * Return a result after a loader will be executed.
      *

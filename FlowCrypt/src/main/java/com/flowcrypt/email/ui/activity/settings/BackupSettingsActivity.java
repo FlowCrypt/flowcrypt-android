@@ -17,9 +17,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.results.ActionResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.SendMyselfMessageWithBackup;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -58,11 +60,66 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
 
     private List<String> privateKeys;
     private Account account;
+    private boolean isBackEnable;
+
+    /**
+     * This {@link LoaderManager.LoaderCallbacks} describe a logic to handle sending an email to
+     * myself with a private key as an attachment.
+     */
+    private LoaderManager.LoaderCallbacks<ActionResult<Boolean>> actionResultLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<ActionResult<Boolean>>() {
+                @Override
+                public Loader<ActionResult<Boolean>> onCreateLoader(int id, Bundle args) {
+                    isBackEnable = false;
+                    UIUtil.exchangeViewVisibility(BackupSettingsActivity.this, true, progressBar,
+                            layoutContent);
+                    return new SendMyselfMessageWithBackup(getApplicationContext(), account);
+                }
+
+                @Override
+                public void onLoadFinished(Loader<ActionResult<Boolean>> loader,
+                                           ActionResult<Boolean> data) {
+                    isBackEnable = true;
+                    UIUtil.exchangeViewVisibility(
+                            BackupSettingsActivity.this, false, progressBar, layoutContent);
+
+                    if (data != null) {
+                        if (data.getResult() != null) {
+                            if (data.getResult()) {
+                                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                        .backup_was_sent_successfully));
+                            } else {
+                                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                        .backup_was_not_sent));
+                            }
+                        } else if (data.getException() != null) {
+                            UIUtil.showInfoSnackbar(getRootView(), data.getException().getMessage
+                                    ());
+                        }
+                    } else {
+                        UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+                    }
+                }
+
+                @Override
+                public void onLoaderReset(Loader<ActionResult<Boolean>> loader) {
+                }
+            };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isBackEnable) {
+            super.onBackPressed();
+        } else {
+            Toast.makeText(this, R.string.please_wait_while_message_will_be_sent, Toast
+                    .LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -126,7 +183,7 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
 
     @Override
     public View getRootView() {
-        return null;
+        return layoutContent;
     }
 
     @Override
@@ -159,7 +216,15 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
             case R.id.buttonBackupAction:
                 switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                     case R.id.radioButtonEmail:
+                        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+                            getSupportLoaderManager().restartLoader(
+                                    R.id.loader_send_backup_with_private_key_to_myself, null,
+                                    actionResultLoaderCallbacks);
 
+                        } else {
+                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                    .internet_connection_is_not_available));
+                        }
                         break;
 
                     case R.id.radioButtonDownload:

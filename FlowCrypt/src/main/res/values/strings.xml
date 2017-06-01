@@ -86,4 +86,7 @@
     <string name="backup_as_email_hint">This will back up private key in your Gmail Inbox. The security depends on the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your email inbox.</string>
     <string name="key_successfully_saved">The private key successfully saved</string>
+    <string name="your_key_backup">Your %1$s Backup</string>
+    <string name="backup_was_sent_successfully">The backup was successfully sent!</string>
+    <string name="backup_was_not_sent">The backup was not sent!</string>
 </resources>
