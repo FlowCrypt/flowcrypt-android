@@ -58,9 +58,9 @@ public class Js { // Create one object per thread and use them separately. Not t
                 V8Array(v8).push(email));
     }
 
-    public V8Object str_parse_email(String email) { // {email: str, name: str}
-        return (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new V8Array
-                (v8).push(email));
+    public PgpContact str_parse_email(String email) {
+        V8Object e = (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new V8Array(v8).push(email));
+        return new PgpContact(e.getString("email"), e.getString("name"));
     }
 
     public String str_base64url_encode(String str) {
@@ -139,39 +139,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     public String mnemonic(String longid) {
         return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new V8Array(v8)
                 .push(longid));
-    }
-
-    /**
-     * Get information about the key owner by using the key long_id.
-     *
-     * @param longId The longid paramater of the key.
-     * @return The email of the key owner.
-     */
-    public String key_owner(String longId) {
-        //TODO-tomholub need to add implementation
-        return "tom@cryptup.org";
-    }
-
-    /**
-     * Get the timestamp of a creation date of the key by using the key long_id.
-     *
-     * @param longId The longid paramater of the key.
-     * @return The timestamp of the key.
-     */
-    public long key_creation_date(String longId) {
-        //TODO-tomholub need to add implementation
-        return new Date().getTime();
-    }
-
-    /**
-     * Get information about an additional words of the key by using the key long_id.
-     *
-     * @param longId The longid paramater of the key.
-     * @return Keywords of the key.
-     */
-    public String key_keywords(String longId) {
-        //TODO-tomholub need to add implementation
-        return "ask reform depend tower";
     }
 
     public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {

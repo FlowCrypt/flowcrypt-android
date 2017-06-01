@@ -11,7 +11,10 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.test.PgpKey;
+import com.flowcrypt.email.test.PgpKeyInfo;
 
 import java.util.Date;
 
@@ -47,10 +50,12 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
         TextView textViewKeywords = (TextView) view.findViewById(R.id.textViewKeywords);
         TextView textViewCreationDate = (TextView) view.findViewById(R.id.textViewCreationDate);
 
-        String long_id = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+        String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+        PgpKeyInfo keyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longId);
+        PgpKey pgpKey = js.crypto_key_read(keyInfo.getArmored());
 
-        textViewKeyOwner.setText(js.key_owner(long_id));
-        textViewKeywords.setText(js.key_keywords(long_id));
-        textViewCreationDate.setText(dateFormat.format(new Date(js.key_creation_date(long_id))));
+        textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
+        textViewKeywords.setText(js.mnemonic(longId));
+        textViewCreationDate.setText(dateFormat.format(new Date(pgpKey.getCreated())));
     }
 }
