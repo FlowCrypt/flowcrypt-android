@@ -1,4 +1,4 @@
-/* Business Source License 1.0 © 2016 Tom James Holub (tom@cryptup.org). Use limitations apply. This version will change to GPLv3 on 2020-01-01. See https://github.com/tomholub/cryptup-chrome/tree/master/src/LICENCE */
+/* Business Source License 1.0 © 2016 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. This version will change to GPLv3 on 2020-01-01. See https://github.com/CryptUp/cryptup-browser/tree/master/src/LICENCE */
 
 'use strict';
 
@@ -45,8 +45,7 @@
       key_codes: env_key_codes,
       set_up_require: env_set_up_require,
       increment: env_increment,
-      webmails: ['gmail', 'inbox'],
-      // webmails: ['gmail', 'inbox', 'outlook'],
+      webmails: env_webmails,
     },
     arr: {
       unique: arr_unique,
@@ -251,7 +250,7 @@
       }
     },
     enums: {
-      recovery_email_subjects: ['Your CryptUp Backup', 'Your CryptUP Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'],
+      recovery_email_subjects: ['Your CryptUp Backup', 'Your FlowCrypt Backup', 'Your CryptUP Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'],
     },
   };
 
@@ -654,6 +653,12 @@
     } else if (typeof callback === 'function') {
       callback();
     }
+  }
+
+  function env_webmails(cb) {
+    account_storage_get(null, ['dev_outlook_allow'], function(storage) {
+      cb(storage.dev_outlook_allow ? ['gmail', 'inbox', 'outlook'] : ['gmail', 'inbox']);
+    });
   }
 
   /* tool.arr */
@@ -1350,7 +1355,7 @@
   function giagnose_message_pubkeys(account_email, message) {
     var message_key_ids = message.getEncryptionKeyIds();
     var local_key_ids = crypto_key_ids(private_storage_get('local', account_email, 'master_public_key'));
-    var diagnosis = { found_match: false, receivers: message_key_ids.length, };
+    var diagnosis = { found_match: false, receivers: message_key_ids.length };
     tool.each(message_key_ids, function (i, msg_k_id) {
       tool.each(local_key_ids, function (j, local_k_id) {
         if(msg_k_id === local_k_id) {
@@ -1363,22 +1368,21 @@
   }
 
   function diagnose_keyserver_pubkeys(account_email, callback) {
-    var diagnosis = { has_pubkey_missing: false, has_pubkey_mismatch: false, results: {}, };
+    var diagnosis = { has_pubkey_missing: false, has_pubkey_mismatch: false, results: {} };
     account_storage_get(account_email, ['addresses'], function (storage) {
       api_attester_lookup_email(tool.arr.unique([account_email].concat(storage.addresses || [])), function (success, pubkey_search_results) {
         if(success) {
           tool.each(pubkey_search_results.results, function (i, pubkey_search_result) {
             if(!pubkey_search_result.pubkey) {
               diagnosis.has_pubkey_missing = true;
-              diagnosis.results[pubkey_search_result.email] = { attested: false, pubkey: null, match: false, };
+              diagnosis.results[pubkey_search_result.email] = { attested: false, pubkey: null, match: false };
             } else {
               var match = true;
-              var local_fingerprint = crypto_key_fingerprint(private_storage_get('local', account_email, 'master_public_key'));
-              if(crypto_key_fingerprint(pubkey_search_result.pubkey) !== local_fingerprint) {
+              if(!tool.value(crypto_key_longid(pubkey_search_result.pubkey)).in(arr_select(private_keys_get(account_email), 'longid'))) {
                 diagnosis.has_pubkey_mismatch = true;
                 match = false;
               }
-              diagnosis.results[pubkey_search_result.email] = { pubkey: pubkey_search_result.pubkey, attested: pubkey_search_result.attested, match: match, };
+              diagnosis.results[pubkey_search_result.email] = { pubkey: pubkey_search_result.pubkey, attested: pubkey_search_result.attested, match: match };
             }
           });
           callback(diagnosis);
@@ -1629,7 +1633,7 @@
     } catch(primary_e) {
       if(!tool.value(primary_e.message).in(['Unknown s2k type.', 'Invalid enum value.'])) {
         return {success: false, error: 'primary decrypt error: "' + primary_e.message + '"'}; // unknown exception for master key
-      } else if(prv.subKeys.length) {
+      } else if(prv.subKeys !== null && prv.subKeys.length) {
         var subkes_succeeded = 0;
         var subkeys_unusable = 0;
         var unknown_exception;
@@ -2618,14 +2622,14 @@
     if(tool.value(attachment.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification'])) {
       return 'hidden';  // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
     } else if(attachment.name === '') {
-      return attachment.size < 100 ? 'hidden' :  'message';
-    } else if(attachment.name.match(/(\.pgp$)|(\.gpg$)/g)) {
+      return attachment.size < 100 ? 'hidden' : 'message';
+    } else if(attachment.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) { // ends with one of .gpg, .pgp, .???.asc, .????.asc
       return 'encrypted';
     } else if(attachment.name === 'signature.asc') {
       return  'signature';
     } else if(attachment.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?\.asc$/g)) { // name starts with a key id
       return 'public_key';
-    } else if((attachment.name.match(/\.asc$/) && attachment.size < 100000 && !attachment.inline) || tool.value(attachment.name).in(['message', 'message.asc'])) {
+    } else if((attachment.name.match(/\.asc$/) && attachment.size < 100000 && !attachment.inline) || tool.value(attachment.name).in(['message', 'message.asc', 'encrypted.asc'])) {
       return 'message';
     } else {
       return 'standard';
