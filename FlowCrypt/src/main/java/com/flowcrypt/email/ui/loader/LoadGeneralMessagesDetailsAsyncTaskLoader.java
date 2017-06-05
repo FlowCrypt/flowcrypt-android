@@ -44,7 +44,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
      * This attribute exists in the sent folder;
      */
     private static final String ATTRIBUTE_VALUE_SENT = "\\Sent";
-    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
+    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 9;
 
     private Account account;
     private String folder;
@@ -105,7 +105,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
             List<GeneralMessageDetails> generalMessageDetailsLinkedList = new LinkedList<>();
             ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
 
-            for (int i = messages.size() - 1; i > 0; i--) {
+            for (int i = messages.size() - 1; i >= 0; i--) {
                 Message message = messages.get(i);
                 generalMessageDetailsLinkedList.add(new GeneralMessageDetails(
                         ((InternetAddress) message.getFrom()[0]).getAddress(),
