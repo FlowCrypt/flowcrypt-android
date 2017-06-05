@@ -3,6 +3,7 @@ package com.flowcrypt.email.ui.adapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.format.DateFormat;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,13 +27,13 @@ import java.util.List;
 public class MessageListAdapter extends BaseAdapter {
     private List<GeneralMessageDetails> generalMessageDetailses;
     private Context context;
-    private java.text.DateFormat dateFormat;
+    private java.text.DateFormat timeFormat;
 
     public MessageListAdapter(Context context, List<GeneralMessageDetails>
             generalMessageDetailses) {
         this.context = context;
         this.generalMessageDetailses = generalMessageDetailses;
-        dateFormat = DateFormat.getTimeFormat(context);
+        this.timeFormat = DateFormat.getTimeFormat(context);
     }
 
     @Override
@@ -59,10 +60,11 @@ public class MessageListAdapter extends BaseAdapter {
             viewHolder = new ViewHolder();
             convertView = LayoutInflater.from(context).inflate(R.layout.messages_list_item,
                     parent, false);
-            viewHolder.senderAddressTextView =
-                    (TextView) convertView.findViewById(R.id.senderAddressTextView);
-            viewHolder.dateTextView = (TextView) convertView.findViewById(R.id.dateTextView);
-            viewHolder.messageTextView = (TextView) convertView.findViewById(R.id.subjectTextView);
+            viewHolder.textViewSenderAddress =
+                    (TextView) convertView.findViewById(R.id.textViewSenderAddress);
+            viewHolder.textViewDate = (TextView) convertView.findViewById(R.id.textViewDate);
+            viewHolder.textViewTime = (TextView) convertView.findViewById(R.id.textViewTime);
+            viewHolder.textViewSubject = (TextView) convertView.findViewById(R.id.textViewSubject);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
@@ -108,9 +110,12 @@ public class MessageListAdapter extends BaseAdapter {
     private void updateItem(GeneralMessageDetails generalMessageDetails, @NonNull ViewHolder
             viewHolder) {
         if (generalMessageDetails != null) {
-            viewHolder.senderAddressTextView.setText(generalMessageDetails.getFrom());
-            viewHolder.messageTextView.setText(generalMessageDetails.getSubject());
-            viewHolder.dateTextView.setText(dateFormat.format(generalMessageDetails
+            viewHolder.textViewSenderAddress.setText(generalMessageDetails.getFrom());
+            viewHolder.textViewSubject.setText(generalMessageDetails.getSubject());
+            viewHolder.textViewDate.setText(DateUtils.formatDateTime(context, generalMessageDetails
+                            .getReceiveDate().getTime(),
+                    DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_YEAR));
+            viewHolder.textViewTime.setText(timeFormat.format(generalMessageDetails
                     .getReceiveDate()));
         } else {
             clearItem(viewHolder);
@@ -123,17 +128,18 @@ public class MessageListAdapter extends BaseAdapter {
      * @param viewHolder A View holder object which consist links to views.
      */
     private void clearItem(@NonNull ViewHolder viewHolder) {
-        viewHolder.senderAddressTextView.setText(null);
-        viewHolder.messageTextView.setText(null);
-        viewHolder.dateTextView.setText(null);
+        viewHolder.textViewSenderAddress.setText(null);
+        viewHolder.textViewSubject.setText(null);
+        viewHolder.textViewTime.setText(null);
     }
 
     /**
      * A view holder class which describes an information about item views.
      */
     private static class ViewHolder {
-        TextView senderAddressTextView;
-        TextView dateTextView;
-        TextView messageTextView;
+        TextView textViewSenderAddress;
+        TextView textViewTime;
+        TextView textViewDate;
+        TextView textViewSubject;
     }
 }

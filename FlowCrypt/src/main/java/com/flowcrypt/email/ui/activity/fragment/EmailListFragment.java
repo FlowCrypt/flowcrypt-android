@@ -106,7 +106,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                     getSupportActionBar().setTitle(currentFolder);
                 }
                 return new LoadGeneralMessagesDetailsAsyncTaskLoader(getActivity(), getAccount(),
-                        currentFolder, 1);
+                        currentFolder);
 
             default:
                 return null;

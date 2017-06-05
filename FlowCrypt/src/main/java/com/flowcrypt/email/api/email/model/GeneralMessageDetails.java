@@ -2,6 +2,7 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class GeneralMessageDetails implements Parcelable {
+public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMessageDetails> {
     public static final Creator<GeneralMessageDetails> CREATOR = new
             Creator<GeneralMessageDetails>() {
                 @Override
@@ -62,6 +63,21 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeString(this.subject);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeLong(this.uid);
+    }
+
+    @Override
+    public int compareTo(@NonNull GeneralMessageDetails o) {
+        Date dateToCompare = o.getReceiveDate();
+
+        if (receiveDate == null && dateToCompare == null) {
+            return 0;
+        } else if (receiveDate == null) {
+            return -1;
+        } else if (dateToCompare == null) {
+            return 0;
+        }
+
+        return receiveDate.compareTo(dateToCompare);
     }
 
     public String getFrom() {

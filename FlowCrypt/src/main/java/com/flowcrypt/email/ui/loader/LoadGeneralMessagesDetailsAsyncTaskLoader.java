@@ -48,19 +48,19 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
 
     private Account account;
     private String folder;
-    private int beginLoadPosition;
+    private int endLoadPosition;
 
     public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account,
                                                      String folder) {
-        this(context, account, folder, 1);
+        this(context, account, folder, Integer.MAX_VALUE);
     }
 
     public LoadGeneralMessagesDetailsAsyncTaskLoader(Context context, Account account, String
-            folder, int beginLoadPosition) {
+            folder, int endLoadPosition) {
         super(context);
         this.account = account;
         this.folder = folder;
-        this.beginLoadPosition = beginLoadPosition;
+        this.endLoadPosition = endLoadPosition;
         onContentChanged();
     }
 
@@ -89,10 +89,14 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
 
             List<javax.mail.Message> messages;
 
-            int endLoadPosition = beginLoadPosition + COUNT_OF_LOADED_EMAILS_BY_STEP;
-
-            if (endLoadPosition > countOfMessages) {
+            if (this.endLoadPosition == Integer.MAX_VALUE) {
                 endLoadPosition = countOfMessages;
+            }
+
+            int beginLoadPosition = this.endLoadPosition - COUNT_OF_LOADED_EMAILS_BY_STEP;
+
+            if (beginLoadPosition < 1) {
+                beginLoadPosition = 1;
             }
 
             messages = new ArrayList<>(Arrays.asList(imapFolder.getMessages
@@ -101,7 +105,8 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
             List<GeneralMessageDetails> generalMessageDetailsLinkedList = new LinkedList<>();
             ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
 
-            for (Message message : messages) {
+            for (int i = messages.size() - 1; i > 0; i--) {
+                Message message = messages.get(i);
                 generalMessageDetailsLinkedList.add(new GeneralMessageDetails(
                         ((InternetAddress) message.getFrom()[0]).getAddress(),
                         message.getSubject(),
@@ -121,7 +126,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
                         emailAndNamePairs));
             }
 
-            return new LoaderResult(new LoadEmailsResult(endLoadPosition,
+            return new LoaderResult(new LoadEmailsResult(beginLoadPosition,
                     generalMessageDetailsLinkedList), null);
         } catch (Exception e) {
             e.printStackTrace();
