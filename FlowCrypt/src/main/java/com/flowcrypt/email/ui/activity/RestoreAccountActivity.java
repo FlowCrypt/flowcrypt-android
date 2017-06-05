@@ -9,6 +9,7 @@ import android.view.View;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -26,8 +27,8 @@ import java.util.List;
  *         Time: 01:37
  *         E-mail: DenBond7@gmail.com
  */
-public class RestoreAccountActivity extends BaseAuthenticationActivity implements LoaderManager
-        .LoaderCallbacks<List<String>> {
+public class RestoreAccountActivity extends BaseAuthenticationActivity
+        implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
     public static final String KEY_EXTRA_PRIVATE_KEYS = BuildConfig.APPLICATION_ID
             + ".KEY_EXTRA_PRIVATE_KEYS";
@@ -75,7 +76,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     @Override
-    public Loader<List<String>> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_backups:
                 showProgress();
@@ -86,18 +87,28 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void onLoadFinished(Loader<List<String>> loader, List<String> stringList) {
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
-                if (stringList != null) {
-                    if (!stringList.isEmpty()) {
-                        this.privateKeys = stringList;
-                        showContent();
-                        updateKeysOnRestoreAccountFragment();
+                if (loaderResult != null) {
+                    if (loaderResult.getResult() != null) {
+                        List<String> stringList = (List<String>) loaderResult.getResult();
+                        if (stringList != null) {
+                            if (!stringList.isEmpty()) {
+                                this.privateKeys = stringList;
+                                showContent();
+                                updateKeysOnRestoreAccountFragment();
+                            } else {
+                                finish();
+                                startActivity(new Intent(this, CreateOrImportKeyActivity.class));
+                            }
+                        } else {
+                            showNoBackupsSnackbar();
+                        }
                     } else {
-                        finish();
-                        startActivity(new Intent(this, CreateOrImportKeyActivity.class));
+                        showNoBackupsSnackbar();
                     }
                 } else {
                     showNoBackupsSnackbar();
@@ -107,7 +118,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity implement
     }
 
     @Override
-    public void onLoaderReset(Loader<List<String>> loader) {
+    public void onLoaderReset(Loader<LoaderResult> loader) {
 
     }
 

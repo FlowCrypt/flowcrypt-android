@@ -17,7 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -43,8 +43,8 @@ import java.util.List;
  */
 
 public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity implements
-        LoaderManager.LoaderCallbacks<List<String>>, View.OnClickListener, RadioGroup
-        .OnCheckedChangeListener {
+        LoaderManager.LoaderCallbacks<LoaderResult>, View.OnClickListener,
+        RadioGroup.OnCheckedChangeListener {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
 
@@ -61,50 +61,6 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
     private List<String> privateKeys;
     private Account account;
     private boolean isBackEnable;
-
-    /**
-     * This {@link LoaderManager.LoaderCallbacks} describe a logic to handle sending an email to
-     * myself with a private key as an attachment.
-     */
-    private LoaderManager.LoaderCallbacks<ActionResult<Boolean>> actionResultLoaderCallbacks =
-            new LoaderManager.LoaderCallbacks<ActionResult<Boolean>>() {
-                @Override
-                public Loader<ActionResult<Boolean>> onCreateLoader(int id, Bundle args) {
-                    isBackEnable = false;
-                    UIUtil.exchangeViewVisibility(BackupSettingsActivity.this, true, progressBar,
-                            layoutContent);
-                    return new SendMyselfMessageWithBackup(getApplicationContext(), account);
-                }
-
-                @Override
-                public void onLoadFinished(Loader<ActionResult<Boolean>> loader,
-                                           ActionResult<Boolean> data) {
-                    isBackEnable = true;
-                    UIUtil.exchangeViewVisibility(
-                            BackupSettingsActivity.this, false, progressBar, layoutContent);
-
-                    if (data != null) {
-                        if (data.getResult() != null) {
-                            if (data.getResult()) {
-                                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                                        .backup_was_sent_successfully));
-                            } else {
-                                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                                        .backup_was_not_sent));
-                            }
-                        } else if (data.getException() != null) {
-                            UIUtil.showInfoSnackbar(getRootView(), data.getException().getMessage
-                                    ());
-                        }
-                    } else {
-                        UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
-                    }
-                }
-
-                @Override
-                public void onLoaderReset(Loader<ActionResult<Boolean>> loader) {
-                }
-            };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -146,38 +102,79 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
     }
 
     @Override
-    public Loader<List<String>> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_backups:
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
+
+            case R.id.loader_send_backup_with_private_key_to_myself:
+                isBackEnable = false;
+                UIUtil.exchangeViewVisibility(BackupSettingsActivity.this, true, progressBar,
+                        layoutContent);
+                return new SendMyselfMessageWithBackup(getApplicationContext(), account);
 
             default:
                 return null;
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void onLoadFinished(Loader<List<String>> loader, List<String> stringList) {
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                if (stringList != null) {
-                    if (stringList.isEmpty()) {
-                        showNoBackupFoundView();
+                if (loaderResult != null) {
+                    if (loaderResult.getResult() != null) {
+                        List<String> stringList = (List<String>) loaderResult.getResult();
+                        if (stringList != null) {
+                            if (stringList.isEmpty()) {
+                                showNoBackupFoundView();
+                            } else {
+                                this.privateKeys = stringList;
+                                showBackupFoundView();
+                            }
+                        } else {
+                            showNoBackupFoundView();
+                        }
                     } else {
-                        this.privateKeys = stringList;
-                        showBackupFoundView();
+                        showNoBackupFoundView();
                     }
                 } else {
                     showNoBackupFoundView();
+                }
+                break;
+
+            case R.id.loader_send_backup_with_private_key_to_myself:
+                isBackEnable = true;
+                UIUtil.exchangeViewVisibility(
+                        BackupSettingsActivity.this, false, progressBar, layoutContent);
+
+                if (loaderResult != null) {
+                    if (loaderResult.getResult() != null) {
+                        boolean result = (boolean) loaderResult.getResult();
+                        if (result) {
+                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                    .backup_was_sent_successfully));
+                        } else {
+                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                    .backup_was_not_sent));
+                        }
+                    } else if (loaderResult.getException() != null) {
+                        UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException()
+                                .getMessage
+                                        ());
+                    }
+                } else {
+                    UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
                 }
                 break;
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<List<String>> loader) {
+    public void onLoaderReset(Loader<LoaderResult> loader) {
 
     }
 
@@ -218,8 +215,7 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
                     case R.id.radioButtonEmail:
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
                             getSupportLoaderManager().restartLoader(
-                                    R.id.loader_send_backup_with_private_key_to_myself, null,
-                                    actionResultLoaderCallbacks);
+                                    R.id.loader_send_backup_with_private_key_to_myself, null, this);
 
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string

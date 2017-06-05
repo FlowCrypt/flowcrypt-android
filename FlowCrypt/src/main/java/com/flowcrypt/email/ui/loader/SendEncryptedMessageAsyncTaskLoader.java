@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.PgpContact;
@@ -46,7 +46,7 @@ import javax.mail.internet.MimeMessage;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionResult<Boolean>> {
+public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private Account account;
     private OutgoingMessageInfo outgoingMessageInfo;
 
@@ -61,7 +61,7 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionR
     }
 
     @Override
-    public ActionResult<Boolean> loadInBackground() {
+    public LoaderResult loadInBackground() {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
         for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
@@ -99,11 +99,11 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<ActionR
 
                 transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
 
-                return new ActionResult<>(true, null);
-            } else return new ActionResult<>(false, null);
+                return new LoaderResult(true, null);
+            } else return new LoaderResult(false, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ActionResult<>(false, e);
+            return new LoaderResult(null, e);
         }
     }
 

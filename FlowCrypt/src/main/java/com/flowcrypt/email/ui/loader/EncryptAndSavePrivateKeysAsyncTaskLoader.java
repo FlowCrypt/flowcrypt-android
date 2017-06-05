@@ -9,7 +9,7 @@ import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import com.flowcrypt.email.test.Js;
@@ -30,8 +30,7 @@ import java.util.UUID;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EncryptAndSavePrivateKeysAsyncTaskLoader extends
-        AsyncTaskLoader<ActionResult<Boolean>> {
+public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private static final String KEY_SUCCESS = "success";
 
     private List<String> privateKeys;
@@ -49,7 +48,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends
     }
 
     @Override
-    public ActionResult<Boolean> loadInBackground() {
+    public LoaderResult loadInBackground() {
         boolean isOneOrMoreKeySaved = false;
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
@@ -65,16 +64,16 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends
                         Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
                         isOneOrMoreKeySaved = uri != null;
                     } else {
-                        return new ActionResult<>(null, new Exception(getContext().getString(R
+                        return new LoaderResult(null, new Exception(getContext().getString(R
                                 .string.the_key_already_added)));
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new ActionResult<>(null, e);
+            return new LoaderResult(null, e);
         }
-        return new ActionResult<>(isOneOrMoreKeySaved, null);
+        return new LoaderResult(isOneOrMoreKeySaved, null);
     }
 
     @Override

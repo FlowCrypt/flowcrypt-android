@@ -10,7 +10,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -43,7 +43,7 @@ import javax.mail.util.ByteArrayDataSource;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class SendMyselfMessageWithBackup extends AsyncTaskLoader<ActionResult<Boolean>> {
+public class SendMyselfMessageWithBackup extends AsyncTaskLoader<LoaderResult> {
     private static final String HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm";
     private Account account;
 
@@ -54,7 +54,7 @@ public class SendMyselfMessageWithBackup extends AsyncTaskLoader<ActionResult<Bo
     }
 
     @Override
-    public ActionResult<Boolean> loadInBackground() {
+    public LoaderResult loadInBackground() {
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -71,10 +71,10 @@ public class SendMyselfMessageWithBackup extends AsyncTaskLoader<ActionResult<Bo
 
             transport.sendMessage(message, message.getAllRecipients());
 
-            return new ActionResult<>(true, null);
+            return new LoaderResult(true, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ActionResult<>(false, e);
+            return new LoaderResult(null, e);
         }
     }
 

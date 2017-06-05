@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.PgpContact;
 
@@ -47,7 +47,7 @@ import retrofit2.Response;
  */
 
 public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
-        AsyncTaskLoader<ActionResult<Boolean>> {
+        AsyncTaskLoader<LoaderResult> {
     private List<String> emails;
 
     public UpdateInfoAboutPgpContactsAsyncTaskLoader(Context context, List<String> emails) {
@@ -57,7 +57,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
     }
 
     @Override
-    public ActionResult<Boolean> loadInBackground() {
+    public LoaderResult loadInBackground() {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
         try {
             Js js = new Js(getContext(), null);
@@ -79,10 +79,10 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                 }
             }
 
-            return new ActionResult<>(true, null);
+            return new LoaderResult(true, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ActionResult<>(null, e);
+            return new LoaderResult(null, e);
         }
     }
 

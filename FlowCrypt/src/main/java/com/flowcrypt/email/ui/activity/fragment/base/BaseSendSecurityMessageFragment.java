@@ -1,10 +1,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,7 +12,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.ui.loader.SendEncryptedMessageAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -32,8 +29,7 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment implements
-        LoaderManager.LoaderCallbacks<ActionResult<Boolean>> {
+public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
 
     private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID +
             ".KEY_IS_MESSAGE_SENT";
@@ -121,12 +117,13 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public Loader<ActionResult<Boolean>> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_send_encrypted_message:
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
-                showProgress(true);
+                UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(),
+                        getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return getAccount() != null && !isMessageSent ?
                         new SendEncryptedMessageAsyncTaskLoader(getContext(),
@@ -138,30 +135,24 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onLoadFinished(Loader<ActionResult<Boolean>> loader, ActionResult<Boolean>
-            actionResult) {
-        switch (loader.getId()) {
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
             case R.id.loader_id_send_encrypted_message:
-                isMessageSendingNow = false;
-                isMessageSent = actionResult.getResult();
+                isMessageSent = (boolean) result;
                 if (isMessageSent) {
                     Toast.makeText(getContext(), R.string.message_was_sent,
                             Toast.LENGTH_SHORT).show();
                     getActivity().finish();
                 } else {
                     getActivity().invalidateOptionsMenu();
-                    showProgress(false);
-                    UIUtil.showInfoSnackbar(getView(), actionResult.getException() != null ?
-                            actionResult.getException().getMessage() : getString(R.string
-                            .unknown_error));
+                    UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(),
+                            getContentView());
                 }
                 break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
         }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<ActionResult<Boolean>> loader) {
-
     }
 
     /**
@@ -171,36 +162,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
-    }
-
-    /**
-     * Shows the progress UI and hides the send email form.
-     *
-     * @param show set true if want to show the progress, set false if otherwise.
-     */
-    protected void showProgress(final boolean show) {
-
-        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-        if (getContentView() != null && getProgressView() != null) {
-            getContentView().setVisibility(show ? View.GONE : View.VISIBLE);
-            getContentView().animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    getContentView().setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            getProgressView().setVisibility(show ? View.VISIBLE : View.GONE);
-            getProgressView().animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    getProgressView().setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        }
     }
 
     /**

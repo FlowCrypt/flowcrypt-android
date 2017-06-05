@@ -9,28 +9,28 @@ package com.flowcrypt.email.model.results;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ActionResult<T> {
+public class LoaderResult {
     /**
      * Some result which will be returned by loader.
      */
-    private T result;
+    private Object result;
 
     /**
      * Some exception which will be returned if it happened.
      */
     private Exception exception;
 
-    public ActionResult() {
+    public LoaderResult() {
     }
 
-    public ActionResult(T result, Exception exception) {
+    public LoaderResult(Object result, Exception exception) {
         this.result = result;
         this.exception = exception;
     }
 
     @Override
     public String toString() {
-        return "ActionResult{" +
+        return "LoaderResult{" +
                 "result=" + result +
                 ", exception=" + exception +
                 '}';
@@ -39,13 +39,13 @@ public class ActionResult<T> {
     /**
      * Return a result after a loader will be executed.
      *
-     * @return <tt>T</tt> A result object.
+     * @return <tt>LoaderResult</tt> A result object.
      */
-    public T getResult() {
+    public Object getResult() {
         return result;
     }
 
-    public void setResult(T result) {
+    public void setResult(Object result) {
         this.result = result;
     }
 

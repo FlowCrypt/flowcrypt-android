@@ -16,7 +16,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.ActionResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.PgpContact;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
@@ -156,7 +156,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     }
 
     @Override
-    public Loader<ActionResult<Boolean>> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_update_info_about_pgp_contacts:
                 progressBarCheckContactsDetails.setVisibility(View.VISIBLE);
@@ -170,16 +170,15 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     }
 
     @Override
-    public void onLoadFinished(Loader<ActionResult<Boolean>> loader, ActionResult<Boolean>
-            actionResult) {
-        switch (loader.getId()) {
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
             case R.id.loader_id_update_info_about_pgp_contacts:
                 isUpdatedInfoAboutContactCompleted = true;
                 progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
                 break;
 
             default:
-                super.onLoadFinished(loader, actionResult);
+                super.handleSuccessLoaderResult(loaderId, result);
         }
     }
 

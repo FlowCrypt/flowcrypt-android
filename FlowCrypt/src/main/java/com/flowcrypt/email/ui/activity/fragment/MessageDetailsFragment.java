@@ -16,6 +16,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.LoadMessageInfoAsyncTaskLoader;
@@ -30,7 +31,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<IncomingMessageInfo>, View.OnClickListener {
+        .LoaderCallbacks<LoaderResult>, View.OnClickListener {
     public static final String KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".KEY_GENERAL_MESSAGE_DETAILS";
 
@@ -90,7 +91,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public Loader<IncomingMessageInfo> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info:
                 showProgress();
@@ -103,31 +104,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public void onLoadFinished(Loader<IncomingMessageInfo> loader, IncomingMessageInfo
-            incomingMessageInfo) {
-        switch (loader.getId()) {
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
             case R.id.loader_id_load_message_info:
-                if (incomingMessageInfo != null) {
-                    this.incomingMessageInfo = incomingMessageInfo;
-                    updateViews();
-                    showContent();
-                } else {
-                    UIUtil.showSnackbar(getView(),
-                            getString(R.string.something_wrong_with_receiving_message),
-                            getString(R.string.refresh), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    reloadMessageInfo();
-                                }
-                            });
-                }
+                this.incomingMessageInfo = (IncomingMessageInfo) result;
+                updateViews();
+                UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
                 break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<IncomingMessageInfo> loader) {
-
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        super.handleFailureLoaderResult(loaderId, e);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
     }
 
     @Override

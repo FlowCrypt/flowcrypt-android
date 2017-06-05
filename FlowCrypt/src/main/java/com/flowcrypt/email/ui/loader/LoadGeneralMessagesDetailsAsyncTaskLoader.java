@@ -9,8 +9,8 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.model.EmailAndNamePair;
-import com.flowcrypt.email.model.results.ActionResult;
 import com.flowcrypt.email.model.results.LoadEmailsResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.EmailAndNameUpdaterService;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
@@ -39,7 +39,7 @@ import javax.mail.internet.InternetAddress;
  */
 
 public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
-        AsyncTaskLoader<ActionResult<LoadEmailsResult>> {
+        AsyncTaskLoader<LoaderResult> {
     /**
      * This attribute exists in the sent folder;
      */
@@ -72,7 +72,7 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
     }
 
     @Override
-    public ActionResult<LoadEmailsResult> loadInBackground() {
+    public LoaderResult loadInBackground() {
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -121,11 +121,11 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
                         emailAndNamePairs));
             }
 
-            return new ActionResult<>(new LoadEmailsResult(endLoadPosition,
+            return new LoaderResult(new LoadEmailsResult(endLoadPosition,
                     generalMessageDetailsLinkedList), null);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ActionResult<>(null, e);
+            return new LoaderResult(null, e);
         }
     }
 

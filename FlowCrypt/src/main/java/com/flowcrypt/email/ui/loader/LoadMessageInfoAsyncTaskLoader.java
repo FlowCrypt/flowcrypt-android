@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.MimeAddress;
@@ -45,7 +46,7 @@ import javax.mail.internet.MimeMultipart;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMessageInfo> {
+public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     private Account account;
     private GeneralMessageDetails generalMessageDetails;
@@ -68,7 +69,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMess
     }
 
     @Override
-    public IncomingMessageInfo loadInBackground() {
+    public LoaderResult loadInBackground() {
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -83,10 +84,11 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<IncomingMess
 
             imapFolder.close(false);
             gmailSSLStore.close();
-            return messageInfo;
+
+            return new LoaderResult(messageInfo, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new LoaderResult(null, e);
         }
     }
 

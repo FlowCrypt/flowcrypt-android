@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.SampleStorageConnector;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -38,7 +39,7 @@ import javax.mail.internet.MimeBodyPart;
  *         Time: 22:28.
  *         E-mail: DenBond7@gmail.com
  */
-public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<List<String>> {
+public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     /**
      * An user account.
@@ -59,7 +60,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<List
     }
 
     @Override
-    public List<String> loadInBackground() {
+    public LoaderResult loadInBackground() {
         List<String> keys = new ArrayList<>();
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
@@ -84,10 +85,10 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<List
 
             gmailFolder.close(false);
             gmailSSLStore.close();
-            return keys;
+            return new LoaderResult(keys, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new LoaderResult(null, e);
         }
     }
 
