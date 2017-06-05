@@ -35,8 +35,8 @@ import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
  */
 
 public class EmailListFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<LoaderResult>, AdapterView.OnItemClickListener,
-        View.OnClickListener {
+        .LoaderCallbacks<LoaderResult>, AdapterView.OnItemClickListener, View.OnClickListener {
+    private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
             ".KEY_CURRENT_FOLDER";
     private ListView listViewMessages;
@@ -71,6 +71,30 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_CURRENT_FOLDER, currentFolder);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
+                switch (resultCode) {
+                    case MessageDetailsActivity.RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST:
+                        if (data != null) {
+                            GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
+                                    (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+
+                            if (generalMessageDetails != null) {
+                                messageListAdapter.removeItem(generalMessageDetails);
+                            }
+                        }
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
     }
 
     @Override
@@ -112,8 +136,9 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        startActivity(MessageDetailsActivity.getIntent(getContext(),
-                (GeneralMessageDetails) parent.getItemAtPosition(position), currentFolder));
+        startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+                (GeneralMessageDetails) parent.getItemAtPosition(position), currentFolder),
+                REQUEST_CODE_SHOW_MESSAGE_DETAILS);
     }
 
     @Override

@@ -23,6 +23,8 @@ import com.flowcrypt.email.util.UIUtil;
 public abstract class BaseFragment extends Fragment implements LoaderManager
         .LoaderCallbacks<LoaderResult> {
 
+    private boolean isBackPressedEnable = true;
+
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         return null;
@@ -73,5 +75,19 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
         if (getActivity() instanceof AppCompatActivity) {
             return ((AppCompatActivity) getActivity()).getSupportActionBar();
         } else return null;
+    }
+
+    /**
+     * This method returns an information about an availability of a "back press action" at the
+     * current moment.
+     *
+     * @return true if a back press action enable at current moment, false otherwise.
+     */
+    public boolean isBackPressedEnable() {
+        return isBackPressedEnable;
+    }
+
+    public void setBackPressedEnable(boolean backPressedEnable) {
+        isBackPressedEnable = backPressedEnable;
     }
 }

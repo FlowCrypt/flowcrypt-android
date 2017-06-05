@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -26,6 +27,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivity extends BaseAuthenticationActivity {
+    public static final int RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST = 100;
+
     public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".EXTRA_KEY_GENERAL_MESSAGE_DETAILS";
     public static final String EXTRA_KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
@@ -77,6 +80,20 @@ public class MessageDetailsActivity extends BaseAuthenticationActivity {
         }
 
         initViews();
+    }
+
+    @Override
+    public void onBackPressed() {
+        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.messageDetailsFragment);
+
+        if (messageDetailsFragment == null || messageDetailsFragment.isBackPressedEnable()) {
+            super.onBackPressed();
+        } else {
+            Toast.makeText(this, R.string.please_wait_while_action_will_be_completed,
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateMessageDetailsFragment(Account account) {

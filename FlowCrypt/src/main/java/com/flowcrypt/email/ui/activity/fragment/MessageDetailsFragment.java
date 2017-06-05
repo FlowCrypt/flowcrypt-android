@@ -7,9 +7,13 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -17,9 +21,11 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.LoadMessageInfoAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.MoveMessageToAnotherFolderAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -46,6 +52,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
     private String folderName = GmailConstants.FOLDER_NAME_INBOX;
+    private boolean isAdditionalActionEnable;
 
     public MessageDetailsFragment() {
     }
@@ -62,6 +69,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 
         dateFormat = DateFormat.getTimeFormat(getContext());
 
@@ -91,12 +99,62 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_message_details, menu);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.findItem(R.id.menuActionArchiveMessage).setVisible(isAdditionalActionEnable);
+        menu.findItem(R.id.menuActionDeleteMessage).setVisible(isAdditionalActionEnable);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuActionArchiveMessage:
+                getLoaderManager().restartLoader(R.id.loader_id_archive_message,
+                        null, this);
+                return true;
+
+            case R.id.menuActionDeleteMessage:
+                getLoaderManager().restartLoader(R.id.loader_id_delete_message,
+                        null, this);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info:
-                showProgress();
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                        layoutContent);
                 return new LoadMessageInfoAsyncTaskLoader(getContext(), getAccount(),
                         generalMessageDetails, folderName);
+
+            case R.id.loader_id_archive_message:
+                isAdditionalActionEnable = false;
+                setBackPressedEnable(false);
+                getActivity().invalidateOptionsMenu();
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                        layoutContent);
+                return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
+                        generalMessageDetails, folderName, folderName);
+
+            case R.id.loader_id_delete_message:
+                isAdditionalActionEnable = false;
+                setBackPressedEnable(false);
+                getActivity().invalidateOptionsMenu();
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                        layoutContent);
+                return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
+                        generalMessageDetails, folderName, "[Gmail]/Trash");
 
             default:
                 return null;
@@ -107,9 +165,38 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_load_message_info:
+                isAdditionalActionEnable = true;
+                getActivity().invalidateOptionsMenu();
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
                 updateViews();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
+                break;
+
+            case R.id.loader_id_delete_message:
+                setBackPressedEnable(true);
+                isAdditionalActionEnable = true;
+                getActivity().invalidateOptionsMenu();
+
+                boolean isMessageDeleted = (boolean) result;
+                if (isMessageDeleted) {
+                    Intent updateIntent = new Intent();
+                    updateIntent.putExtra(MessageDetailsActivity
+                            .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
+
+                    getActivity().setResult(MessageDetailsActivity
+                            .RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST, updateIntent);
+                    getActivity().finish();
+                    Toast.makeText(getContext(), R.string.message_was_deleted, Toast
+                            .LENGTH_SHORT).show();
+                } else {
+                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                            layoutContent);
+                    UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
+                }
+                break;
+
+            case R.id.loader_id_archive_message:
+                setBackPressedEnable(true);
                 break;
 
             default:
@@ -120,6 +207,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
+        setBackPressedEnable(true);
+        isAdditionalActionEnable = true;
+        getActivity().invalidateOptionsMenu();
         UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
     }
 
@@ -153,32 +243,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
         intent.putExtra(SecureReplyActivity.KEY_INCOMING_MESSAGE_INFO,
                 incomingMessageInfo);
         startActivity(intent);
-    }
-
-    /**
-     * Make visible the main content. Hide the progress bar.
-     */
-    private void showContent() {
-        if (layoutContent != null) {
-            layoutContent.setVisibility(View.VISIBLE);
-        }
-
-        if (progressBar != null) {
-            progressBar.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Make visible the progress bar. Hide the main content.
-     */
-    private void showProgress() {
-        if (layoutContent != null) {
-            layoutContent.setVisibility(View.GONE);
-        }
-
-        if (progressBar != null) {
-            progressBar.setVisibility(View.VISIBLE);
-        }
     }
 
     private void initViews(View view) {

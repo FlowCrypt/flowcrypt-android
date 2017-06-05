@@ -76,18 +76,42 @@ public class MessageListAdapter extends BaseAdapter {
     }
 
     /**
+     * Remove an exists item from the emails list.
+     *
+     * @param generalMessageDetails The item which will be removed.
+     */
+    public void removeItem(GeneralMessageDetails generalMessageDetails) {
+        if (generalMessageDetails != null) {
+            int idOfDeleteCandidate = -1;
+
+            for (GeneralMessageDetails messageDetails :
+                    generalMessageDetailses) {
+                if (messageDetails.getUid() == generalMessageDetails.getUid()) {
+                    idOfDeleteCandidate = generalMessageDetailses.indexOf(messageDetails);
+                }
+            }
+
+            if (idOfDeleteCandidate != -1) {
+                generalMessageDetailses.remove(idOfDeleteCandidate);
+                notifyDataSetChanged();
+            }
+        }
+    }
+
+    /**
      * Update an information of some item.
      *
      * @param generalMessageDetails A model which consist information about the
      *                              generalMessageDetails.
-     * @param viewHolder         A View holder object which consist links to views.
+     * @param viewHolder            A View holder object which consist links to views.
      */
     private void updateItem(GeneralMessageDetails generalMessageDetails, @NonNull ViewHolder
             viewHolder) {
         if (generalMessageDetails != null) {
             viewHolder.senderAddressTextView.setText(generalMessageDetails.getFrom());
             viewHolder.messageTextView.setText(generalMessageDetails.getSubject());
-            viewHolder.dateTextView.setText(dateFormat.format(generalMessageDetails.getReceiveDate()));
+            viewHolder.dateTextView.setText(dateFormat.format(generalMessageDetails
+                    .getReceiveDate()));
         } else {
             clearItem(viewHolder);
         }
