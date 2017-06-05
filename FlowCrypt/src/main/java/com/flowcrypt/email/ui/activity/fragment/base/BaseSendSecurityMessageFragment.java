@@ -122,7 +122,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             case R.id.loader_id_send_encrypted_message:
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(),
+                UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
                         getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return getAccount() != null && !isMessageSent ?
@@ -138,6 +138,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_send_encrypted_message:
+                isMessageSendingNow = false;
                 isMessageSent = (boolean) result;
                 if (isMessageSent) {
                     Toast.makeText(getContext(), R.string.message_was_sent,

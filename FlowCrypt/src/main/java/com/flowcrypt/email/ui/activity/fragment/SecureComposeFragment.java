@@ -46,7 +46,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private View progressBar;
-    private View layoutForm;
+    private View layoutContent;
     private View progressBarCheckContactsDetails;
 
     private ContactsDaoSource contactsDaoSource;
@@ -94,7 +94,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
 
     @Override
     public View getContentView() {
-        return layoutForm;
+        return layoutContent;
     }
 
     @Override
@@ -199,7 +199,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
 
-        layoutForm = view.findViewById(R.id.layoutForm);
+        layoutContent = view.findViewById(R.id.scrollView);
         progressBar = view.findViewById(R.id.progressBar);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
     }
