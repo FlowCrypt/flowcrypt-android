@@ -3,24 +3,19 @@ package com.flowcrypt.email.ui.activity.fragment;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
-import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.PgpContact;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -50,7 +45,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     private View progressBarCheckContactsDetails;
 
     private ContactsDaoSource contactsDaoSource;
-    private boolean isUpdatedInfoAboutContactCompleted;
 
     public SecureComposeFragment() {
         contactsDaoSource = new ContactsDaoSource();
@@ -66,25 +60,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuActionSend:
-                if (isUpdatedInfoAboutContactCompleted) {
-                    return super.onOptionsItemSelected(item);
-                } else {
-                    Toast.makeText(getContext(), R.string
-                                    .please_wait_while_information_about_contacts_will_be_updated,
-                            Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-
     }
 
     @Override
@@ -109,6 +84,16 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
         return outgoingMessageInfo;
+    }
+
+    @Override
+    public View getUpdateInfoAboutContactsProgressBar() {
+        return progressBarCheckContactsDetails;
+    }
+
+    @Override
+    public List<String> getContactsEmails() {
+        return recipientEditTextView.getChipAndTokenValues();
     }
 
     @Override
@@ -152,33 +137,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                     }
                 }
                 break;
-        }
-    }
-
-    @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_update_info_about_pgp_contacts:
-                progressBarCheckContactsDetails.setVisibility(View.VISIBLE);
-                isUpdatedInfoAboutContactCompleted = false;
-                return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
-                        recipientEditTextView.getChipAndTokenValues());
-
-            default:
-                return super.onCreateLoader(id, args);
-        }
-    }
-
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_update_info_about_pgp_contacts:
-                isUpdatedInfoAboutContactCompleted = true;
-                progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
-                break;
-
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
         }
     }
 

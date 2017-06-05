@@ -12,9 +12,13 @@ import android.widget.TextView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.test.PgpContact;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import java.util.List;
 
 /**
  * This fragment describe a logic of sent an encrypted message as a reply.
@@ -37,6 +41,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     private IncomingMessageInfo incomingMessageInfo;
     private View layoutContent;
     private View progressBar;
+    private View progressBarCheckContactsDetails;
 
     public SecureReplyFragment() {
     }
@@ -54,14 +59,35 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            getLoaderManager().restartLoader(R.id
+                    .loader_id_update_info_about_pgp_contacts, null, this);
+        }
+    }
+
+    @Override
     public OutgoingMessageInfo getOutgoingMessageInfo() {
         OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
         outgoingMessageInfo.setMessage(editTextReplyEmailMessage.getText().toString());
         outgoingMessageInfo.setSubject(SUBJECT_PREFIX_RE + incomingMessageInfo.getSubject());
-        outgoingMessageInfo.setToPgpContacts(
-                new PgpContact[]{new PgpContact(incomingMessageInfo.getFrom().get(0), null)});
+        List<PgpContact> pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
+                (getContext(), incomingMessageInfo.getFrom());
+
+        outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
         return outgoingMessageInfo;
+    }
+
+    @Override
+    public View getUpdateInfoAboutContactsProgressBar() {
+        return progressBarCheckContactsDetails;
+    }
+
+    @Override
+    public List<String> getContactsEmails() {
+        return incomingMessageInfo.getFrom();
     }
 
     @Override
@@ -111,5 +137,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
                 .editTextReplyEmailMessage);
         this.layoutContent = view.findViewById(R.id.layoutForm);
         this.progressBar = view.findViewById(R.id.progressBar);
+        this.progressBarCheckContactsDetails = view.findViewById(R.id
+                .progressBarCheckContactsDetails);
     }
 }

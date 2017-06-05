@@ -1,13 +1,10 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ui.activity.SendEmailActivity">
 
     <ProgressBar
@@ -23,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:id="@+id/layoutForm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,26 +28,59 @@
 
             <TextView
                 android:id="@+id/textViewReplyRecipient"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:padding="@dimen/default_margin_small"
                 android:textSize="@dimen/default_text_size_big"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+                app:layout_constraintRight_toLeftOf="@+id/progressBarCheckContactsDetails"
+                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
                 tools:text="tom@cryptup.org" />
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <ProgressBar
+                android:id="@+id/progressBarCheckContactsDetails"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewReplyRecipient"
+                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintTop_toTopOf="@+id/textViewReplyRecipient" />
 
-                <EditText
-                    android:id="@+id/editTextReplyEmailMessage"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/prompt_compose_security_email" />
+            <EditText
+                android:id="@+id/editTextReplyEmailMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:hint="@string/prompt_compose_security_email"
+                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintTop_toBottomOf="@+id/textViewReplyRecipient" />
 
-            </android.support.design.widget.TextInputLayout>
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_begin="@dimen/default_margin_content" />
 
-        </LinearLayout>
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_begin="@dimen/margin_top_bottom_message" />
+
+            <android.support.constraint.Guideline
+                android:id="@+id/guidelineRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+        </android.support.constraint.ConstraintLayout>
     </ScrollView>
 </FrameLayout>

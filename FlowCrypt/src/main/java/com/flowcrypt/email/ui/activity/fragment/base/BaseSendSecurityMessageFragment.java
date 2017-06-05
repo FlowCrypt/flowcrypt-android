@@ -15,10 +15,12 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.ui.loader.SendEncryptedMessageAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The base fragment for sending an encrypted message;
@@ -35,7 +37,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             ".KEY_IS_MESSAGE_SENT";
 
     protected Js js;
-
+    private boolean isUpdatedInfoAboutContactCompleted;
     private boolean isMessageSent;
     private boolean isMessageSendingNow;
 
@@ -46,6 +48,20 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      * contains information about an outgoing message.
      */
     public abstract OutgoingMessageInfo getOutgoingMessageInfo();
+
+    /**
+     * Get an update information about contacts progress view.
+     *
+     * @return {@link View}
+     */
+    public abstract View getUpdateInfoAboutContactsProgressBar();
+
+    /**
+     * Get a list of emails, that will be checked to find an information about public keys.
+     *
+     * @return A list of emails.
+     */
+    public abstract List<String> getContactsEmails();
 
     /**
      * Get a progress view which will be shown when we do send a message.
@@ -91,10 +107,19 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
-                sendEncryptMessage();
+                if (isUpdatedInfoAboutContactCompleted) {
+                    sendEncryptMessage();
+                } else {
+                    Toast.makeText(getContext(), R.string
+                                    .please_wait_while_information_about_contacts_will_be_updated,
+                            Toast.LENGTH_SHORT).show();
+                }
                 return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
+
     }
 
     @Override
@@ -129,6 +154,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                         new SendEncryptedMessageAsyncTaskLoader(getContext(),
                                 getAccount(), outgoingMessageInfo) : null;
 
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);
+                isUpdatedInfoAboutContactCompleted = false;
+                return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
+                        getContactsEmails());
+
             default:
                 return null;
         }
@@ -151,9 +182,21 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 }
                 break;
 
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                isUpdatedInfoAboutContactCompleted = true;
+                getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+                break;
+
             default:
                 super.handleSuccessLoaderResult(loaderId, result);
         }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        super.handleFailureLoaderResult(loaderId, e);
+        isMessageSendingNow = false;
+        UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(), getContentView());
     }
 
     /**
