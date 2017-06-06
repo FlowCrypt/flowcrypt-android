@@ -145,7 +145,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                 UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
                         layoutContent);
                 return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails, folderName, folderName);
+                        generalMessageDetails, folderName, "[Gmail]/All Mail");
 
             case R.id.loader_id_delete_message:
                 isAdditionalActionEnable = false;
@@ -173,30 +173,36 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                 break;
 
             case R.id.loader_id_delete_message:
+            case R.id.loader_id_archive_message:
                 setBackPressedEnable(true);
                 isAdditionalActionEnable = true;
                 getActivity().invalidateOptionsMenu();
 
-                boolean isMessageDeleted = (boolean) result;
-                if (isMessageDeleted) {
+                boolean isMessageMoved = (boolean) result;
+                if (isMessageMoved) {
                     Intent updateIntent = new Intent();
                     updateIntent.putExtra(MessageDetailsActivity
                             .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
 
                     getActivity().setResult(MessageDetailsActivity
                             .RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST, updateIntent);
+                    switch (loaderId) {
+                        case R.id.loader_id_delete_message:
+                            Toast.makeText(getContext(), R.string.message_was_deleted, Toast
+                                    .LENGTH_SHORT).show();
+                            break;
+
+                        case R.id.loader_id_archive_message:
+                            Toast.makeText(getContext(), R.string.message_was_archived, Toast
+                                    .LENGTH_SHORT).show();
+                            break;
+                    }
                     getActivity().finish();
-                    Toast.makeText(getContext(), R.string.message_was_deleted, Toast
-                            .LENGTH_SHORT).show();
                 } else {
                     UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
                             layoutContent);
                     UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
                 }
-                break;
-
-            case R.id.loader_id_archive_message:
-                setBackPressedEnable(true);
                 break;
 
             default:

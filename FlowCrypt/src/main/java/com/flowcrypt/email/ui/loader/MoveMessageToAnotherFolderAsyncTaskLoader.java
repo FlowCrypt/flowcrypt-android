@@ -87,7 +87,7 @@ public class MoveMessageToAnotherFolderAsyncTaskLoader extends
                 message.setFlag(Flags.Flag.SEEN, true);
                 Message[] messages = new Message[]{message};
 
-                sourceImapFolder.copyMessages(messages, destinationImapFolder);
+                sourceImapFolder.moveMessages(messages, destinationImapFolder);
             } else {
                 return new LoaderResult(null, new IllegalArgumentException("The message with " +
                         "UID " + generalMessageDetails.getUid() + " not found on the server"));
@@ -119,15 +119,15 @@ public class MoveMessageToAnotherFolderAsyncTaskLoader extends
     private void releaseResources(GmailSSLStore gmailSSLStore, IMAPFolder sourceImapFolder,
                                   IMAPFolder destinationImapFolder) {
         try {
-            if (sourceImapFolder != null) {
+            if (sourceImapFolder != null && sourceImapFolder.isOpen()) {
                 sourceImapFolder.close(false);
             }
 
-            if (destinationImapFolder != null) {
+            if (destinationImapFolder != null && destinationImapFolder.isOpen()) {
                 destinationImapFolder.close(false);
             }
 
-            if (gmailSSLStore != null) {
+            if (gmailSSLStore != null && gmailSSLStore.isConnected()) {
                 gmailSSLStore.close();
             }
         } catch (MessagingException e) {

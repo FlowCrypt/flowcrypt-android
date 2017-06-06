@@ -91,4 +91,5 @@
     <string name="backup_was_not_sent">The backup was not sent!</string>
     <string name="message_was_deleted">The message was deleted</string>
     <string name="please_wait_while_action_will_be_completed">Please wait while an action will be completed</string>
+    <string name="message_was_archived">The message was archived</string>
 </resources>
