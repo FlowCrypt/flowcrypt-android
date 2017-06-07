@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class EmailManagerActivity extends BaseAuthenticationActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager
-        .LoaderCallbacks<List<String>> {
+        .LoaderCallbacks<List<String>>, View.OnClickListener {
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -177,6 +177,15 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.floatActionButtonCompose:
+                startActivity(new Intent(this, SecureComposeActivity.class));
+                break;
+        }
+    }
+
     private void setFolderInInEmailListFragment(CharSequence folderName) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
@@ -208,5 +217,9 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
         navigationView = (NavigationView) findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(this);
+
+        if (findViewById(R.id.floatActionButtonCompose) != null) {
+            findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);
+        }
     }
 }

@@ -19,10 +19,10 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.model.results.LoadEmailsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
-import com.flowcrypt.email.ui.activity.SecureComposeActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
+import com.flowcrypt.email.util.UIUtil;
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -35,13 +35,14 @@ import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
  */
 
 public class EmailListFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<LoaderResult>, AdapterView.OnItemClickListener, View.OnClickListener {
+        .LoaderCallbacks<LoaderResult>, AdapterView.OnItemClickListener {
+
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
             ".KEY_CURRENT_FOLDER";
+
     private ListView listViewMessages;
     private View emptyView;
-    private View layoutContent;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
     private String currentFolder = GmailConstants.FOLDER_NAME_INBOX;
@@ -101,7 +102,8 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_messages:
-                showProgress();
+                emptyView.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBar, listViewMessages);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().setTitle(currentFolder);
                 }
@@ -123,9 +125,10 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                     messageListAdapter = new MessageListAdapter(getActivity(),
                             loadEmailsResult.getGeneralMessageDetailsList());
                     listViewMessages.setAdapter(messageListAdapter);
-                    showContent();
+                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                            listViewMessages);
                 } else {
-                    showEmptyView();
+                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar, emptyView);
                 }
                 break;
 
@@ -145,16 +148,6 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     public void onAccountUpdated() {
         getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages, null, this);
     }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.floatActionButtonCompose:
-                startActivity(new Intent(getContext(), SecureComposeActivity.class));
-                break;
-        }
-    }
-
     /**
      * Change a current IMAP folder.
      *
@@ -166,66 +159,10 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     }
 
     private void initViews(View view) {
-        layoutContent = view.findViewById(R.id.layoutContent);
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
         emptyView = view.findViewById(R.id.emptyView);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
-
-        if (view.findViewById(R.id.floatActionButtonCompose) != null) {
-            view.findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);
-        }
-    }
-
-    /**
-     * Make visible the main content. Hide the progress bar and the empty view.
-     */
-    private void showContent() {
-        if (layoutContent != null) {
-            layoutContent.setVisibility(View.VISIBLE);
-        }
-
-        if (progressBar != null) {
-            progressBar.setVisibility(View.GONE);
-        }
-
-        if (emptyView != null) {
-            emptyView.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Make visible the progress bar. Hide the main content and the empty view.
-     */
-    private void showProgress() {
-        if (layoutContent != null) {
-            layoutContent.setVisibility(View.GONE);
-        }
-
-        if (progressBar != null) {
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        if (emptyView != null) {
-            emptyView.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Make visible the empty view. Hide the main content and the progress bar.
-     */
-    private void showEmptyView() {
-        if (layoutContent != null) {
-            layoutContent.setVisibility(View.GONE);
-        }
-
-        if (progressBar != null) {
-            progressBar.setVisibility(View.GONE);
-        }
-
-        if (emptyView != null) {
-            emptyView.setVisibility(View.VISIBLE);
-        }
     }
 }
