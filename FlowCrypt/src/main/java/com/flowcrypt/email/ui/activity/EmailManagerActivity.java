@@ -17,7 +17,10 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -26,8 +29,6 @@ import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-
-import java.util.List;
 
 /**
  * This activity used to show messages list.
@@ -39,7 +40,7 @@ import java.util.List;
  */
 public class EmailManagerActivity extends BaseAuthenticationActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager
-        .LoaderCallbacks<List<String>>, View.OnClickListener {
+        .LoaderCallbacks<LoaderResult>, View.OnClickListener {
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -47,6 +48,7 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     private Toolbar toolbar;
     private Account account;
     private boolean isLabelsLoaded;
+    private FoldersManager foldersManager;
 
     @Override
     public View getRootView() {
@@ -133,7 +135,10 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
                 break;
 
             case Menu.NONE:
-                setFolderInInEmailListFragment(item.getTitle());
+                Folder folder = foldersManager.getFolderByAlias(item.getTitle().toString());
+                if (folder != null) {
+                    setFolderInInEmailListFragment(folder);
+                }
                 break;
         }
 
@@ -147,7 +152,7 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public Loader<List<String>> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_labels:
                 return new LoadGmailLabelsAsyncTaskLoader(getApplicationContext(), account);
@@ -158,14 +163,22 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void onLoadFinished(Loader<List<String>> loader, List<String> data) {
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult data) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_labels:
                 this.isLabelsLoaded = true;
-                if (data != null && !data.isEmpty()) {
-                    MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
-                    for (String s : data) {
-                        mailLabels.getSubMenu().add(s);
+                if (data != null) {
+                    foldersManager = (FoldersManager) data.getResult();
+                    if (!foldersManager.getAllFolders().isEmpty()) {
+
+                        MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
+                        for (Folder s : foldersManager.getServerFolders()) {
+                            mailLabels.getSubMenu().add(s.getFolderAlias());
+                        }
+
+                        for (Folder s : foldersManager.getCustomLabels()) {
+                            mailLabels.getSubMenu().add(s.getFolderAlias());
+                        }
                     }
                 }
                 break;
@@ -173,7 +186,7 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void onLoaderReset(Loader<List<String>> loader) {
+    public void onLoaderReset(Loader<LoaderResult> loader) {
 
     }
 
@@ -186,12 +199,12 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
         }
     }
 
-    private void setFolderInInEmailListFragment(CharSequence folderName) {
+    private void setFolderInInEmailListFragment(Folder folder) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.setFolder(folderName.toString());
+            emailListFragment.setFolder(folder);
         }
     }
 

@@ -4,16 +4,20 @@ import android.accounts.Account;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
+import com.sun.mail.imap.IMAPFolder;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.mail.Folder;
+import javax.mail.MessagingException;
 
 /**
  * This loader load and return available Gmail labels.
@@ -24,7 +28,7 @@ import javax.mail.Folder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadGmailLabelsAsyncTaskLoader extends AsyncTaskLoader<List<String>> {
+public class LoadGmailLabelsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     private Account account;
 
@@ -42,10 +46,9 @@ public class LoadGmailLabelsAsyncTaskLoader extends AsyncTaskLoader<List<String>
     }
 
     @Override
-    public List<String> loadInBackground() {
+    public LoaderResult loadInBackground() {
         try {
-            List<String> labels = new ArrayList<>();
-
+            FoldersManager foldersManager = new FoldersManager();
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
             GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
@@ -54,18 +57,35 @@ public class LoadGmailLabelsAsyncTaskLoader extends AsyncTaskLoader<List<String>
             Folder[] folders = gmailSSLStore.getDefaultFolder().list("*");
 
             for (Folder folder : folders) {
-                labels.add(folder.getFullName());
+                IMAPFolder imapFolder = (IMAPFolder) folder;
+                if (!isFolderHasNoSelectAttribute(imapFolder)) {
+                    foldersManager.addFolder(imapFolder, folder.getName());
+                }
             }
             gmailSSLStore.close();
-            return labels;
+            return new LoaderResult(foldersManager, null);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new LoaderResult(null, e);
         }
     }
 
     @Override
     public void onStopLoading() {
         cancelLoad();
+    }
+
+    /**
+     * Check if current folder has {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}. If the
+     * folder contains it attribute we will not show this folder in the list.
+     *
+     * @param imapFolder The {@link IMAPFolder} object.
+     * @return true if current folder contains attribute
+     * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
+     * @throws MessagingException
+     */
+    private boolean isFolderHasNoSelectAttribute(IMAPFolder imapFolder) throws MessagingException {
+        List<String> attributes = Arrays.asList(imapFolder.getAttributes());
+        return attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
     }
 }
