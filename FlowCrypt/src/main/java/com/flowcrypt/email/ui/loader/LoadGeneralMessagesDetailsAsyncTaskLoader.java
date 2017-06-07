@@ -107,11 +107,12 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
 
             for (int i = messages.size() - 1; i >= 0; i--) {
                 Message message = messages.get(i);
-                generalMessageDetailsLinkedList.add(new GeneralMessageDetails(
-                        ((InternetAddress) message.getFrom()[0]).getAddress(),
-                        message.getSubject(),
-                        message.getReceivedDate(),
-                        imapFolder.getUID(message)));
+                generalMessageDetailsLinkedList.add(
+                        new GeneralMessageDetails(message.getFrom().length > 0 ?
+                                ((InternetAddress) message.getFrom()[0]).getAddress() : "",
+                                message.getSubject(),
+                                message.getReceivedDate(),
+                                imapFolder.getUID(message)));
 
                 if (isSentFolder) {
                     emailAndNamePairs.addAll(getEmailAndNamePairsFromMessage(message));
