@@ -8,10 +8,8 @@ import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.LookUpEmailRequest;
-import com.flowcrypt.email.api.retrofit.request.MessagePrototypeRequest;
 import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
-import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
 import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
 
 /**
@@ -64,26 +62,6 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             }
                         }
                         return lookUpEmailResponse;
-
-                    case POST_MESSAGE_PROTOTYPE:
-                        BaseResponse<MessagePrototypeResponse> messagePrototypeResponse =
-                                new BaseResponse<>();
-                        messagePrototypeResponse.setApiName(baseRequest.getApiName());
-
-                        MessagePrototypeRequest messagePrototypeRequest =
-                                (MessagePrototypeRequest) baseRequest;
-
-                        if (apiService != null) {
-                            try {
-                                messagePrototypeResponse.setResponse(apiService
-                                        .postMessagePrototype(messagePrototypeRequest
-                                                .getPostMessagePrototypeModel()).execute());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                messagePrototypeResponse.setException(e);
-                            }
-                        }
-                        return messagePrototypeResponse;
 
                     case POST_HELP_FEEDBACK:
                         BaseResponse<PostHelpFeedbackResponse> postHelpFeedbackResponse =

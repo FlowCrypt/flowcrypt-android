@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
-    android:orientation="vertical"
-    tools:context=".ui.activity.SendEmailActivity">
+    android:orientation="vertical">
 
     <ProgressBar
         android:id="@+id/progressBar"
