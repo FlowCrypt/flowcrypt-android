@@ -2,8 +2,6 @@ package com.flowcrypt.email.ui.adapter;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.text.format.DateFormat;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +10,7 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.util.DateTimeUtil;
 
 import java.util.List;
 
@@ -27,13 +26,11 @@ import java.util.List;
 public class MessageListAdapter extends BaseAdapter {
     private List<GeneralMessageDetails> generalMessageDetailses;
     private Context context;
-    private java.text.DateFormat timeFormat;
 
     public MessageListAdapter(Context context, List<GeneralMessageDetails>
             generalMessageDetailses) {
         this.context = context;
         this.generalMessageDetailses = generalMessageDetailses;
-        this.timeFormat = DateFormat.getTimeFormat(context);
     }
 
     @Override
@@ -63,7 +60,6 @@ public class MessageListAdapter extends BaseAdapter {
             viewHolder.textViewSenderAddress =
                     (TextView) convertView.findViewById(R.id.textViewSenderAddress);
             viewHolder.textViewDate = (TextView) convertView.findViewById(R.id.textViewDate);
-            viewHolder.textViewTime = (TextView) convertView.findViewById(R.id.textViewTime);
             viewHolder.textViewSubject = (TextView) convertView.findViewById(R.id.textViewSubject);
             convertView.setTag(viewHolder);
         } else {
@@ -112,11 +108,9 @@ public class MessageListAdapter extends BaseAdapter {
         if (generalMessageDetails != null) {
             viewHolder.textViewSenderAddress.setText(generalMessageDetails.getFrom());
             viewHolder.textViewSubject.setText(generalMessageDetails.getSubject());
-            viewHolder.textViewDate.setText(DateUtils.formatDateTime(context, generalMessageDetails
-                            .getReceiveDate().getTime(),
-                    DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_YEAR));
-            viewHolder.textViewTime.setText(timeFormat.format(generalMessageDetails
-                    .getReceiveDate()));
+            viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
+                    generalMessageDetails.getReceiveDate().getTime()));
+
         } else {
             clearItem(viewHolder);
         }
@@ -130,7 +124,7 @@ public class MessageListAdapter extends BaseAdapter {
     private void clearItem(@NonNull ViewHolder viewHolder) {
         viewHolder.textViewSenderAddress.setText(null);
         viewHolder.textViewSubject.setText(null);
-        viewHolder.textViewTime.setText(null);
+        viewHolder.textViewDate.setText(null);
     }
 
     /**
@@ -138,7 +132,6 @@ public class MessageListAdapter extends BaseAdapter {
      */
     private static class ViewHolder {
         TextView textViewSenderAddress;
-        TextView textViewTime;
         TextView textViewDate;
         TextView textViewSubject;
     }
