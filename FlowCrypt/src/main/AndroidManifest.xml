@@ -16,6 +16,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
+
+        <!-- Activities -->
+
         <activity
             android:name=".ui.activity.SplashActivity"
             android:screenOrientation="portrait">
@@ -29,30 +32,15 @@
         <activity
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/title_activity_email_manager"
-            android:parentActivityName=".ui.activity.SplashActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.RestoreAccountActivity"
-            android:parentActivityName=".ui.activity.SplashActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.SplashActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.MessageDetailsActivity"
-            android:parentActivityName=".ui.activity.EmailManagerActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.EmailManagerActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.SecureComposeActivity"
@@ -76,55 +64,37 @@
         <activity
             android:name=".ui.activity.settings.LegalSettingsActivity"
             android:label="@string/legal"
-            android:parentActivityName=".ui.activity.settings.SettingsActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar.NoElevation">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar.NoElevation" />
 
         <activity
             android:name=".ui.activity.settings.ContactsSettingsActivity"
             android:label="@string/contacts"
-            android:parentActivityName=".ui.activity.settings.SettingsActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.settings.KeysSettingsActivity"
             android:label="@string/keys"
-            android:parentActivityName=".ui.activity.settings.SettingsActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.settings.BackupSettingsActivity"
             android:label="@string/backup"
-            android:parentActivityName=".ui.activity.settings.SettingsActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.flowcrypt.email.ui.activity.settings.SettingsActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait" />
 
+        <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
             android:authorities="${applicationId}.SecurityContentProvider"
             android:enabled="true"
             android:exported="false" />
 
+        <!-- Services -->
         <service android:name=".service.EmailAndNameUpdaterService" />
     </application>
 

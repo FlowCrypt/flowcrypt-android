@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
 import com.flowcrypt.email.R;
 
@@ -37,6 +38,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(getContentViewResourceId());
         setupToolbarIfItExists();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                if (isDisplayHomeAsUpEnabled()) {
+                    finish();
+                    return true;
+                } else return super.onOptionsItemSelected(item);
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setupToolbarIfItExists() {

@@ -12,7 +12,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -26,7 +26,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
  *         Time: 16:29
  *         E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsActivity extends BaseAuthenticationActivity {
+public class MessageDetailsActivity extends BaseBackStackAuthenticationActivity {
     public static final int RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST = 100;
 
     public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
