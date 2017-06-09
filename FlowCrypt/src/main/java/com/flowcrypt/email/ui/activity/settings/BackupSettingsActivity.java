@@ -60,7 +60,7 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
 
     private List<String> privateKeys;
     private Account account;
-    private boolean isBackEnable;
+    private boolean isBackEnable = true;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
