@@ -21,19 +21,28 @@ import com.flowcrypt.email.test.MimeMessage;
 import com.flowcrypt.email.test.PgpDecrypted;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
+import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.protocol.BODY;
+import com.sun.mail.imap.protocol.FetchResponse;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.Item;
 
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 /**
@@ -80,7 +89,10 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
             imapFolder.open(Folder.READ_ONLY);
 
             Message message = imapFolder.getMessageByUID(generalMessageDetails.getUid());
-            IncomingMessageInfo messageInfo = parseMessage(message);
+
+            String rawMessage = getRawMessageWithoutAttachments(imapFolder, message);
+
+            IncomingMessageInfo messageInfo = parseMessage(rawMessage);
 
             imapFolder.close(false);
             gmailSSLStore.close();
@@ -98,26 +110,96 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
     }
 
     /**
+     * Get the raw MIME message without attachments from the IMAP server for some {@link Message}.
+     *
+     * @param imapFolder The folder where a current message exists.
+     * @param message    The original message for what will be received the raw MIME message.
+     * @return The string which contains the raw MIME message.
+     * @throws Exception
+     */
+    private String getRawMessageWithoutAttachments(IMAPFolder imapFolder, Message message)
+            throws Exception {
+
+        List<Integer> positions = prepareListOfBodyPositionsWithoutAttachments(message);
+
+        String bodySelect = "";
+
+        for (Integer bodyPosition : positions) {
+            bodySelect += " " + "BODY[" + bodyPosition + "]";
+        }
+
+        final String finalBodySelect = bodySelect;
+        Response[] responsesArray = (Response[]) imapFolder.doCommand(
+                new IMAPFolder.ProtocolCommand() {
+                    @Override
+                    public Response[] doCommand(IMAPProtocol protocol) throws ProtocolException {
+                        return protocol.command("UID FETCH " + generalMessageDetails.getUid()
+                                + " (BODY[HEADER]" + finalBodySelect + ")", null);
+                    }
+                });
+
+        String rawMessage = "";
+
+        for (Response response : responsesArray) {
+            if (response instanceof FetchResponse) {
+                FetchResponse fetchResponse = (FetchResponse) response;
+                for (int i = 0; i < fetchResponse.getItemCount(); i++) {
+                    Item item = fetchResponse.getItem(i);
+                    if (item instanceof BODY) {
+                        BODY body = (BODY) item;
+                        rawMessage += IOUtils.toString(body.getByteArrayInputStream(),
+                                StandardCharsets.UTF_8) + "\n";
+                    }
+
+                }
+                break;
+            }
+        }
+        return rawMessage;
+    }
+
+    /**
+     * Prepare the list of body positions where excluded a body with an attachment.
+     *
+     * @param message The original {@link Message}
+     * @return The list of body positions
+     * @throws Exception
+     */
+    private List<Integer> prepareListOfBodyPositionsWithoutAttachments(Message message)
+            throws Exception {
+        List<Integer> positions = new ArrayList<>();
+
+        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart multiPart = (Multipart) message.getContent();
+            int numberOfParts = multiPart.getCount();
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                if (bodyPart instanceof MimeBodyPart) {
+                    MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
+                    if (!Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
+                        positions.add(partCount + 1);
+                    }
+                }
+            }
+        } else {
+            positions.add(1);
+        }
+
+        return positions;
+    }
+
+    /**
      * Parse an original message and return {@link MessageInfo} object.
      *
      * @param message Original message which will be parsed.
      * @return <tt>MessageInfo</tt> Return a MessageInfo object.
      * @throws Exception The parsing process can be throws different exceptions.
      */
-    private IncomingMessageInfo parseMessage(Message message) throws Exception {
+    private IncomingMessageInfo parseMessage(String message) throws Exception {
         IncomingMessageInfo messageInfo = new IncomingMessageInfo();
-        String rawMIMEMessage = null;
-
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            message.writeTo(output);
-            rawMIMEMessage = output.toString();
-        } catch (IOException | MessagingException e) {
-            e.printStackTrace();
-        }
-
-        if (rawMIMEMessage != null) {
+        if (message != null) {
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            MimeMessage mimeMessage = js.mime_decode(rawMIMEMessage);
+            MimeMessage mimeMessage = js.mime_decode(message);
             ArrayList<String> addresses = new ArrayList<>();
 
             for (MimeAddress mimeAddress : mimeMessage.getAddressHeader("from")) {
@@ -186,7 +268,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
     }
 
     /**
-     * Decrypt a message if it decrypted;
+     * Decrypt a message if it encrypted. At now will be decrypted only a simple text.
      *
      * @param js          The Js object which used to decrypt a message text.
      * @param mimeMessage The MimeMessage object.
