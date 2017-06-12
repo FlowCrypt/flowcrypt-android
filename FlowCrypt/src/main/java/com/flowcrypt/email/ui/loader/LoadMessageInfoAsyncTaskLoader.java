@@ -122,7 +122,8 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
 
         String rawMessage = "";
 
-        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        if (isMessageHasAttachment(message)
+                && message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
             ArrayList headers = Collections.list(message.getAllHeaderLines());
             Multipart multiPart = (Multipart) message.getContent();
             rawMessage += TextUtils.join("\n", headers) + "\n\n";
@@ -141,6 +142,23 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
         }
 
         return rawMessage;
+    }
+
+    /**
+     * Check is message has attachments.
+     *
+     * @param message The original {@link Message}
+     * @return true if the message has attachments, false otherwise.
+     * @throws MessagingException
+     * @throws IOException
+     */
+    private boolean isMessageHasAttachment(Message message) throws MessagingException, IOException {
+        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart mp = (Multipart) message.getContent();
+            if (mp.getCount() > 1)
+                return true;
+        }
+        return false;
     }
 
     /**
