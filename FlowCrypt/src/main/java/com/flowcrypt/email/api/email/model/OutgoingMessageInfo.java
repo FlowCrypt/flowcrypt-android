@@ -25,8 +25,10 @@ public class OutgoingMessageInfo extends MessageInfo {
             return new OutgoingMessageInfo[size];
         }
     };
+
     private PgpContact[] toPgpContacts;
     private PgpContact fromPgpContact;
+    private String rawReplyMessage;
 
     public OutgoingMessageInfo() {
     }
@@ -35,6 +37,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         super(in);
         this.toPgpContacts = in.createTypedArray(PgpContact.CREATOR);
         this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
+        this.rawReplyMessage = in.readString();
     }
 
     @Override
@@ -47,6 +50,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         super.writeToParcel(dest, flags);
         dest.writeTypedArray(this.toPgpContacts, flags);
         dest.writeParcelable(this.fromPgpContact, flags);
+        dest.writeString(this.rawReplyMessage);
     }
 
     public PgpContact[] getToPgpContacts() {
@@ -63,5 +67,13 @@ public class OutgoingMessageInfo extends MessageInfo {
 
     public void setFromPgpContact(PgpContact fromPgpContact) {
         this.fromPgpContact = fromPgpContact;
+    }
+
+    public String getRawReplyMessage() {
+        return rawReplyMessage;
+    }
+
+    public void setRawReplyMessage(String rawReplyMessage) {
+        this.rawReplyMessage = rawReplyMessage;
     }
 }

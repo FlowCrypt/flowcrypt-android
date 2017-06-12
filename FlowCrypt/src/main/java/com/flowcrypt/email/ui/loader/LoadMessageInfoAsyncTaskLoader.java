@@ -92,7 +92,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
             String rawMessage =
                     getRawMessageWithoutAttachments((javax.mail.internet.MimeMessage) message);
 
-            IncomingMessageInfo messageInfo = parseMessage(rawMessage);
+            IncomingMessageInfo messageInfo = parseRawMessage(rawMessage);
 
             imapFolder.close(false);
             gmailSSLStore.close();
@@ -184,15 +184,15 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
     /**
      * Parse an original message and return {@link MessageInfo} object.
      *
-     * @param message Original message which will be parsed.
+     * @param rawMessage Original message which will be parsed.
      * @return <tt>MessageInfo</tt> Return a MessageInfo object.
      * @throws Exception The parsing process can be throws different exceptions.
      */
-    private IncomingMessageInfo parseMessage(String message) throws Exception {
+    private IncomingMessageInfo parseRawMessage(String rawMessage) throws Exception {
         IncomingMessageInfo messageInfo = new IncomingMessageInfo();
-        if (message != null) {
+        if (rawMessage != null) {
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            MimeMessage mimeMessage = js.mime_decode(message);
+            MimeMessage mimeMessage = js.mime_decode(rawMessage);
             ArrayList<String> addresses = new ArrayList<>();
 
             for (MimeAddress mimeAddress : mimeMessage.getAddressHeader("from")) {
@@ -203,6 +203,7 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
             messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
             messageInfo.setReceiveDate(new Date(mimeMessage.getTimeHeader("date")));
             messageInfo.setMessage(decryptMessageIfNeed(js, mimeMessage));
+            messageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
         } else {
             return null;
         }

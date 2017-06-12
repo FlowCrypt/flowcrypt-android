@@ -30,6 +30,7 @@ public class IncomingMessageInfo extends MessageInfo {
 
     private ArrayList<String> from;
     private Date receiveDate;
+    private String originalRawMessageWithoutAttachments;
 
     public IncomingMessageInfo() {
     }
@@ -39,6 +40,7 @@ public class IncomingMessageInfo extends MessageInfo {
         this.from = in.createStringArrayList();
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
+        this.originalRawMessageWithoutAttachments = in.readString();
     }
 
     @Override
@@ -51,6 +53,7 @@ public class IncomingMessageInfo extends MessageInfo {
         super.writeToParcel(dest, flags);
         dest.writeStringList(this.from);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
+        dest.writeString(this.originalRawMessageWithoutAttachments);
     }
 
     /**
@@ -73,5 +76,13 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setReceiveDate(Date receiveDate) {
         this.receiveDate = receiveDate;
+    }
+
+    public String getOriginalRawMessageWithoutAttachments() {
+        return originalRawMessageWithoutAttachments;
+    }
+
+    public void setOriginalRawMessageWithoutAttachments(String originalRawMessageWithoutAttachments) {
+        this.originalRawMessageWithoutAttachments = originalRawMessageWithoutAttachments;
     }
 }

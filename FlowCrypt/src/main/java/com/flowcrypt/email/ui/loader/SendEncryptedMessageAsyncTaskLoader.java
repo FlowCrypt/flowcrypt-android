@@ -88,7 +88,7 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderR
                         outgoingMessageInfo.getFromPgpContact(),
                         outgoingMessageInfo.getSubject(),
                         null,
-                        null);
+                        js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
 
                 MimeMessage mimeMessage = new MimeMessage(session,
                         IOUtils.toInputStream(encryptedMessage, StandardCharsets.UTF_8));

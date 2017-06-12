@@ -72,6 +72,8 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
         outgoingMessageInfo.setMessage(editTextReplyEmailMessage.getText().toString());
         outgoingMessageInfo.setSubject(SUBJECT_PREFIX_RE + incomingMessageInfo.getSubject());
+        outgoingMessageInfo.setRawReplyMessage(
+                incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
         List<PgpContact> pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
                 (getContext(), incomingMessageInfo.getFrom());
 
