@@ -78,7 +78,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
             for (Message message : foundMessages) {
                 String key = getKeyFromMessageIfItExists(message);
-                if (!TextUtils.isEmpty(key)) {
+                if (!TextUtils.isEmpty(key) && !keys.contains(key)) {
                     keys.add(key);
                 }
             }

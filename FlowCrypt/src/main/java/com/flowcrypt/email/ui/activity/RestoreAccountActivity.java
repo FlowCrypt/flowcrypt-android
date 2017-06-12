@@ -37,6 +37,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
     private View layoutProgress;
     private Account account;
     private List<String> privateKeys;
+    private boolean isThrowErrorIfDuplicateFound;
 
     @Override
     public View getRootView() {
@@ -70,6 +71,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
         super.onCreate(savedInstanceState);
         if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
             this.privateKeys = getIntent().getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+            this.isThrowErrorIfDuplicateFound = true;
         }
 
         initViews();
@@ -131,7 +133,7 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
                         .findFragmentById(R.id.restoreAccountFragment);
 
         if (restoreAccountFragment != null) {
-            restoreAccountFragment.updateKeysPathList(privateKeys);
+            restoreAccountFragment.setPrivateKeys(privateKeys, isThrowErrorIfDuplicateFound);
         }
     }
 

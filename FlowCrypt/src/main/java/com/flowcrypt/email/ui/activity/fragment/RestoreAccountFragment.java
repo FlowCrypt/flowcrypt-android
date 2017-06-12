@@ -37,6 +37,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     private List<String> privateKeys;
     private EditText editTextKeyPassword;
     private View progressBar;
+    private boolean isThrowErrorIfDuplicateFound;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -81,7 +82,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
                 return new EncryptAndSavePrivateKeysAsyncTaskLoader(getContext(), privateKeys,
-                        editTextKeyPassword.getText().toString());
+                        editTextKeyPassword.getText().toString(), isThrowErrorIfDuplicateFound);
 
             default:
                 return null;
@@ -108,11 +109,21 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
         }
     }
 
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        super.handleFailureLoaderResult(loaderId, e);
+        switch (loaderId) {
+            case R.id.loader_id_encrypt_and_save_private_keys_infos:
+                progressBar.setVisibility(View.GONE);
+        }
+    }
+
     /**
      * Update current list of private keys paths.
      */
-    public void updateKeysPathList(List<String> keysPathList) {
+    public void setPrivateKeys(List<String> keysPathList, boolean isThrowErrorIfDuplicateFound) {
         this.privateKeys = keysPathList;
+        this.isThrowErrorIfDuplicateFound = isThrowErrorIfDuplicateFound;
     }
 
     private void initViews(View view) {

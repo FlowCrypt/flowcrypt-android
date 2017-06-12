@@ -33,17 +33,20 @@ import java.util.UUID;
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private static final String KEY_SUCCESS = "success";
 
+    private boolean isThrowErrorIfDuplicateFound;
     private List<String> privateKeys;
     private String passphrase;
 
     private KeysDaoSource keysDaoSource;
 
     public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
-                                                    List<String> privateKeys, String passphrase) {
+                                                    List<String> privateKeys, String passphrase,
+                                                    boolean isThrowErrorIfDuplicateFound) {
         super(context);
         this.privateKeys = privateKeys;
         this.passphrase = passphrase;
         this.keysDaoSource = new KeysDaoSource();
+        this.isThrowErrorIfDuplicateFound = isThrowErrorIfDuplicateFound;
         onContentChanged();
     }
 
@@ -63,7 +66,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                     if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
                         Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
                         isOneOrMoreKeySaved = uri != null;
-                    } else {
+                    } else if (isThrowErrorIfDuplicateFound) {
                         return new LoaderResult(null, new Exception(getContext().getString(R
                                 .string.the_key_already_added)));
                     }
