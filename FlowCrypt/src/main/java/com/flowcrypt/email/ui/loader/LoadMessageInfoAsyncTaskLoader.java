@@ -21,29 +21,26 @@ import com.flowcrypt.email.test.MimeMessage;
 import com.flowcrypt.email.test.PgpDecrypted;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailSSLStore;
-import com.sun.mail.iap.ProtocolException;
-import com.sun.mail.iap.Response;
+import com.sun.mail.imap.IMAPBodyPart;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.protocol.BODY;
-import com.sun.mail.imap.protocol.FetchResponse;
-import com.sun.mail.imap.protocol.IMAPProtocol;
-import com.sun.mail.imap.protocol.Item;
 
 import org.apache.commons.io.IOUtils;
-import org.jsoup.Jsoup;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
 
 /**
  * This loader download some information about a message and return
@@ -56,6 +53,8 @@ import javax.mail.internet.MimeMultipart;
  */
 
 public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
+
+    private static final String PARAMETER_NAME_BOUNDARY = "boundary";
 
     private Account account;
     private GeneralMessageDetails generalMessageDetails;
@@ -90,7 +89,8 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
 
             Message message = imapFolder.getMessageByUID(generalMessageDetails.getUid());
 
-            String rawMessage = getRawMessageWithoutAttachments(imapFolder, message);
+            String rawMessage =
+                    getRawMessageWithoutAttachments((javax.mail.internet.MimeMessage) message);
 
             IncomingMessageInfo messageInfo = parseMessage(rawMessage);
 
@@ -110,82 +110,75 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
     }
 
     /**
-     * Get the raw MIME message without attachments from the IMAP server for some {@link Message}.
+     * Get the raw MIME message without attachments from the IMAP server for some
+     * {@link MimeMessage}.
      *
-     * @param imapFolder The folder where a current message exists.
-     * @param message    The original message for what will be received the raw MIME message.
+     * @param message The original message for what will be received the raw MIME message.
      * @return The string which contains the raw MIME message.
      * @throws Exception
      */
-    private String getRawMessageWithoutAttachments(IMAPFolder imapFolder, Message message)
+    private String getRawMessageWithoutAttachments(javax.mail.internet.MimeMessage message)
             throws Exception {
-
-        List<Integer> positions = prepareListOfBodyPositionsWithoutAttachments(message);
-
-        String bodySelect = "";
-
-        for (Integer bodyPosition : positions) {
-            bodySelect += " " + "BODY[" + bodyPosition + "]";
-        }
-
-        final String finalBodySelect = bodySelect;
-        Response[] responsesArray = (Response[]) imapFolder.doCommand(
-                new IMAPFolder.ProtocolCommand() {
-                    @Override
-                    public Response[] doCommand(IMAPProtocol protocol) throws ProtocolException {
-                        return protocol.command("UID FETCH " + generalMessageDetails.getUid()
-                                + " (BODY[HEADER]" + finalBodySelect + ")", null);
-                    }
-                });
 
         String rawMessage = "";
 
-        for (Response response : responsesArray) {
-            if (response instanceof FetchResponse) {
-                FetchResponse fetchResponse = (FetchResponse) response;
-                for (int i = 0; i < fetchResponse.getItemCount(); i++) {
-                    Item item = fetchResponse.getItem(i);
-                    if (item instanceof BODY) {
-                        BODY body = (BODY) item;
-                        rawMessage += IOUtils.toString(body.getByteArrayInputStream(),
-                                StandardCharsets.UTF_8) + "\n";
-                    }
-
-                }
-                break;
+        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            ArrayList headers = Collections.list(message.getAllHeaderLines());
+            Multipart multiPart = (Multipart) message.getContent();
+            rawMessage += TextUtils.join("\n", headers) + "\n\n";
+            rawMessage += "--" + new ContentType(message.getContentType())
+                    .getParameter(PARAMETER_NAME_BOUNDARY) + "\n";
+            rawMessage += getRawMultipart(multiPart);
+            rawMessage += "--" + new ContentType(message.getContentType())
+                    .getParameter(PARAMETER_NAME_BOUNDARY) + "--";
+        } else {
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                message.writeTo(output);
+                rawMessage = output.toString();
+            } catch (IOException | MessagingException e) {
+                e.printStackTrace();
             }
         }
+
         return rawMessage;
     }
 
     /**
-     * Prepare the list of body positions where excluded a body with an attachment.
+     * Generate a raw multipart information for the {@link Multipart} object.
      *
-     * @param message The original {@link Message}
-     * @return The list of body positions
-     * @throws Exception
+     * @param multipart The input {@link Multipart} object
+     * @return A string which contains the raw information about the {@link Multipart} object.
+     * @throws IOException
+     * @throws MessagingException
      */
-    private List<Integer> prepareListOfBodyPositionsWithoutAttachments(Message message)
-            throws Exception {
-        List<Integer> positions = new ArrayList<>();
+    private String getRawMultipart(Multipart multipart) throws IOException,
+            MessagingException {
+        String rawMultipart = "";
 
-        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            Multipart multiPart = (Multipart) message.getContent();
-            int numberOfParts = multiPart.getCount();
-            for (int partCount = 0; partCount < numberOfParts; partCount++) {
-                BodyPart bodyPart = multiPart.getBodyPart(partCount);
-                if (bodyPart instanceof MimeBodyPart) {
-                    MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
+        int numberOfParts = multipart.getCount();
+        for (int partCount = 0; partCount < numberOfParts; partCount++) {
+            BodyPart bodyPart = multipart.getBodyPart(partCount);
+            if (bodyPart instanceof MimeBodyPart) {
+                MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
+                if (mimeBodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                    rawMultipart += "Content-Type: " + bodyPart.getContentType() + "\n\n";
+                    rawMultipart += getRawMultipart((Multipart) mimeBodyPart.getContent());
+                    rawMultipart += "--" + new ContentType(bodyPart.getContentType())
+                            .getParameter(PARAMETER_NAME_BOUNDARY) + "--" + "\n\n";
+                } else {
                     if (!Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
-                        positions.add(partCount + 1);
+                        rawMultipart += "--" + new ContentType(multipart.getContentType())
+                                .getParameter(PARAMETER_NAME_BOUNDARY) + "\n";
+                        rawMultipart += IOUtils.toString(((IMAPBodyPart) bodyPart).getMimeStream(),
+                                StandardCharsets.UTF_8);
                     }
                 }
             }
-        } else {
-            positions.add(1);
         }
 
-        return positions;
+        rawMultipart += "\n";
+
+        return rawMultipart;
     }
 
     /**
@@ -214,57 +207,6 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
             return null;
         }
         return messageInfo;
-    }
-
-    /**
-     * Parse and return a simple not formatted text from the message.
-     *
-     * @param message Original message which will be parsed.
-     * @return <tt>String</tt> Return a simple not formatted text.
-     * @throws Exception The parsing process can be throws different exceptions.
-     */
-    private String parseSimpleText(Message message) throws Exception {
-        String result = null;
-        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)) {
-            result = message.getContent().toString();
-        } else if (message.isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_HTML)) {
-            String html = (String) message.getContent();
-            result = Jsoup.parse(html).text();
-        } else if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
-            result = getTextFromMimeMultipart(mimeMultipart);
-        }
-        return result;
-    }
-
-    /**
-     * Parse and return a simple not formatted text from the MimeMultipart object.
-     *
-     * @param mimeMultipart Original MimeMultipart object which will be parsed.
-     * @return <tt>String</tt> Return a simple not formatted text.
-     * @throws Exception The parsing process can be throws different exceptions.
-     */
-    private String getTextFromMimeMultipart(MimeMultipart mimeMultipart) throws Exception {
-        String result = "";
-        if (mimeMultipart != null) {
-            for (int i = 0; i < mimeMultipart.getCount(); i++) {
-                BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-                if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)) {
-                    result += bodyPart.getContent() + "\n";
-                    break;
-
-                } else if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_HTML)) {
-                    String html = (String) bodyPart.getContent();
-                    result += Jsoup.parse(html).text() + "\n";
-                    break;
-
-                } else if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                    result += getTextFromMimeMultipart((MimeMultipart) bodyPart
-                            .getContent());
-                }
-            }
-        }
-        return result;
     }
 
     /**
