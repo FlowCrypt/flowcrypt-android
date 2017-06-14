@@ -65,7 +65,8 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             contentValues.put(COL_FOLDER_NAME, folder.getServerFullFolderName());
             contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
             contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
-            contentValues.put(COL_FOLDER_ATTRIBUTES, Arrays.toString(folder.getAttributes()));
+//            contentValues.put(COL_FOLDER_ATTRIBUTES, Arrays.toString(folder.getAttributes()));
+            contentValues.put(COL_FOLDER_ATTRIBUTES, "");
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
@@ -81,7 +82,6 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
         return new Folder(
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
-                null,
                 cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
         );
     }
