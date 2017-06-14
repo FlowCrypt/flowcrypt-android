@@ -14,6 +14,7 @@ import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 
 
 /**
@@ -31,6 +32,8 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_KEY_CLEAN_DATABASE = 3;
     private static final int MATCHED_CODE_CONTACTS_TABLE = 4;
     private static final int MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW = 5;
+    private static final int MATCHED_CODE_IMAP_LABELS_TABLE = 6;
+    private static final int MATCHED_CODE_IMAP_LABELS_SINGLE_ROW = 7;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -46,6 +49,10 @@ public class SecurityContentProvider extends ContentProvider {
                 MATCHED_CODE_CONTACTS_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS,
+                MATCHED_CODE_IMAP_LABELS_TABLE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_LABELS_SINGLE_ROW);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -85,6 +92,13 @@ public class SecurityContentProvider extends ContentProvider {
                         id = sqLiteDatabase.insert(new ContactsDaoSource().getTableName(), null,
                                 values);
                         result = Uri.parse(new ContactsDaoSource().getBaseContentUri() + "/" + id);
+                        break;
+
+                    case MATCHED_CODE_IMAP_LABELS_TABLE:
+                        id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null,
+                                values);
+                        result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri() + "/" +
+                                id);
                         break;
 
                     default:
@@ -127,6 +141,17 @@ public class SecurityContentProvider extends ContentProvider {
                             for (ContentValues contentValues : values) {
                                 long id = sqLiteDatabase.insert(
                                         new ContactsDaoSource().getTableName(), null,
+                                        contentValues);
+                                if (id <= 0) {
+                                    throw new SQLException("Failed to insert row into " + uri);
+                                }
+                            }
+                            break;
+
+                        case MATCHED_CODE_IMAP_LABELS_TABLE:
+                            for (ContentValues contentValues : values) {
+                                long id = sqLiteDatabase.insert(
+                                        new ImapLabelsDaoSource().getTableName(), null,
                                         contentValues);
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
@@ -181,6 +206,14 @@ public class SecurityContentProvider extends ContentProvider {
                                 selectionArgs);
                         break;
 
+                    case MATCHED_CODE_IMAP_LABELS_TABLE:
+                        rowsCount = sqLiteDatabase.update(
+                                new ImapLabelsDaoSource().getTableName(),
+                                values,
+                                selection,
+                                selectionArgs);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -210,6 +243,11 @@ public class SecurityContentProvider extends ContentProvider {
 
                     case MATCHED_CODE_CONTACTS_TABLE:
                         rowsCount = sqLiteDatabase.delete(new ContactsDaoSource().getTableName(),
+                                selection, selectionArgs);
+                        break;
+
+                    case MATCHED_CODE_IMAP_LABELS_TABLE:
+                        rowsCount = sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
                                 selection, selectionArgs);
                         break;
 
@@ -246,6 +284,10 @@ public class SecurityContentProvider extends ContentProvider {
                 table = ContactsDaoSource.TABLE_NAME_CONTACTS;
                 break;
 
+            case MATCHED_CODE_IMAP_LABELS_TABLE:
+                table = ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS;
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -279,6 +321,12 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW:
                 return new ContactsDaoSource().getSingleRowContentType();
+
+            case MATCHED_CODE_IMAP_LABELS_TABLE:
+                return new ImapLabelsDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_IMAP_LABELS_SINGLE_ROW:
+                return new ImapLabelsDaoSource().getSingleRowContentType();
 
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
