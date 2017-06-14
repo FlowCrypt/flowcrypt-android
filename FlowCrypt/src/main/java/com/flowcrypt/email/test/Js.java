@@ -1,6 +1,7 @@
-/* Business Source License 1.0 © 2016 Tom James Holub (tom@cryptup.org). Use limitations apply.
-This version will change to GPLv3 on 2021-01-01. See https://github
-.com/tomholub/cryptup-chrome/tree/master/src/LICENCE */
+/*
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/tree/master/src/LICENSE
+ * Contributors: Tom James Holub
+ */
 
 package com.flowcrypt.email.test;
 
