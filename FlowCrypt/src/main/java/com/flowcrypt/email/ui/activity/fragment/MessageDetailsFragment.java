@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+  * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -175,6 +176,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
                 updateViews();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
+
+                Intent intentMessageSeen = new Intent();
+                intentMessageSeen.putExtra(MessageDetailsActivity
+                        .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
+
+                getActivity().setResult(MessageDetailsActivity
+                        .RESULT_CODE_MESSAGE_SEEN, intentMessageSeen);
                 break;
 
             case R.id.loader_id_delete_message:
@@ -190,7 +198,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                             .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
 
                     getActivity().setResult(MessageDetailsActivity
-                            .RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST, updateIntent);
+                            .RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER, updateIntent);
                     switch (loaderId) {
                         case R.id.loader_id_delete_message:
                             Toast.makeText(getContext(), R.string.message_was_deleted, Toast

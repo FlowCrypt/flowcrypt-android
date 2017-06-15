@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -27,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.mail.Address;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -117,7 +119,8 @@ public class LoadGeneralMessagesDetailsAsyncTaskLoader extends
                                 ((InternetAddress) message.getFrom()[0]).getAddress() : "",
                                 message.getSubject(),
                                 message.getReceivedDate(),
-                                imapFolder.getUID(message)));
+                                imapFolder.getUID(message),
+                                message.getFlags().contains(Flags.Flag.SEEN)));
 
                 if (isSentFolder) {
                     emailAndNamePairs.addAll(getEmailAndNamePairsFromMessage(message));

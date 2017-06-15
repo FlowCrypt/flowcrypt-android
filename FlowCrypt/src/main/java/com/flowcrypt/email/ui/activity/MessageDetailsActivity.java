@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -32,7 +33,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivity extends BaseBackStackAuthenticationActivity {
-    public static final int RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST = 100;
+    public static final int RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER = 100;
+    public static final int RESULT_CODE_MESSAGE_SEEN = 101;
 
     public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".EXTRA_KEY_GENERAL_MESSAGE_DETAILS";

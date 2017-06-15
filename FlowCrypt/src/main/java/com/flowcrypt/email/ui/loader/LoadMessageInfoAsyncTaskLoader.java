@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import javax.mail.BodyPart;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -90,9 +92,10 @@ public class LoadMessageInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult
                     account.name);
 
             IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
-            imapFolder.open(Folder.READ_ONLY);
+            imapFolder.open(Folder.READ_WRITE);
 
             Message message = imapFolder.getMessageByUID(generalMessageDetails.getUid());
+            message.setFlag(Flags.Flag.SEEN, true);
 
             String rawMessage =
                     getRawMessageWithoutAttachments((javax.mail.internet.MimeMessage) message);

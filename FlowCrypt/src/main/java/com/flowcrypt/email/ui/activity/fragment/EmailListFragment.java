@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -88,13 +89,25 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
         switch (requestCode) {
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
                 switch (resultCode) {
-                    case MessageDetailsActivity.RESULT_CODE_NEED_TO_UPDATE_EMAILS_LIST:
+                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER:
                         if (data != null) {
                             GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
                             if (generalMessageDetails != null) {
                                 messageListAdapter.removeItem(generalMessageDetails);
+                            }
+                        }
+                        break;
+
+                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_SEEN:
+                        if (data != null) {
+                            GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
+                                    (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+
+                            if (generalMessageDetails != null) {
+                                messageListAdapter.changeMessageSeenState(generalMessageDetails,
+                                        true);
                             }
                         }
                         break;

@@ -14,7 +14,6 @@
         android:maxLines="1"
         android:textColor="@color/scorpion"
         android:textSize="@dimen/default_text_size_big"
-        android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/textViewDate"

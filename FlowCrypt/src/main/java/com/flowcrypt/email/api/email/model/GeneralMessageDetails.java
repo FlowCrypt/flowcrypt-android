@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -21,6 +22,7 @@ import java.util.Date;
  */
 
 public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMessageDetails> {
+
     public static final Creator<GeneralMessageDetails> CREATOR = new
             Creator<GeneralMessageDetails>() {
                 @Override
@@ -38,12 +40,15 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
     private String subject;
     private Date receiveDate;
     private long uid;
+    private boolean isSeen;
 
-    public GeneralMessageDetails(String from, String subject, Date receiveDate, long uid) {
+    public GeneralMessageDetails(String from, String subject, Date receiveDate, long uid, boolean
+            isSeen) {
         this.from = from;
         this.subject = subject;
         this.receiveDate = receiveDate;
         this.uid = uid;
+        this.isSeen = isSeen;
     }
 
     public GeneralMessageDetails() {
@@ -55,19 +60,7 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.uid = in.readLong();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.from);
-        dest.writeString(this.subject);
-        dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
-        dest.writeLong(this.uid);
+        this.isSeen = in.readByte() != 0;
     }
 
     @Override
@@ -83,6 +76,20 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
         }
 
         return receiveDate.compareTo(dateToCompare);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.from);
+        dest.writeString(this.subject);
+        dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
+        dest.writeLong(this.uid);
+        dest.writeByte(this.isSeen ? (byte) 1 : (byte) 0);
     }
 
     public String getFrom() {
@@ -115,5 +122,13 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
 
     public void setUid(long uid) {
         this.uid = uid;
+    }
+
+    public boolean isSeen() {
+        return isSeen;
+    }
+
+    public void setSeen(boolean seen) {
+        isSeen = seen;
     }
 }

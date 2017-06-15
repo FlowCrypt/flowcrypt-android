@@ -1,11 +1,14 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+  * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.adapter;
 
 import android.content.Context;
+import android.graphics.Typeface;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -87,8 +90,7 @@ public class MessageListAdapter extends BaseAdapter {
         if (generalMessageDetails != null) {
             int idOfDeleteCandidate = -1;
 
-            for (GeneralMessageDetails messageDetails :
-                    generalMessageDetailses) {
+            for (GeneralMessageDetails messageDetails : generalMessageDetailses) {
                 if (messageDetails.getUid() == generalMessageDetails.getUid()) {
                     idOfDeleteCandidate = generalMessageDetailses.indexOf(messageDetails);
                 }
@@ -97,6 +99,25 @@ public class MessageListAdapter extends BaseAdapter {
             if (idOfDeleteCandidate != -1) {
                 generalMessageDetailses.remove(idOfDeleteCandidate);
                 notifyDataSetChanged();
+            }
+        }
+    }
+
+    /**
+     * Change the seen status of an exist item in the emails list.
+     *
+     * @param generalMessageDetails The item which the seen status will be changed.
+     * @param isMessageSeen         true - if the message status already is seen, false otherwise.
+     */
+    public void changeMessageSeenState(GeneralMessageDetails generalMessageDetails, boolean
+            isMessageSeen) {
+        if (generalMessageDetails != null) {
+            for (GeneralMessageDetails messageDetails : generalMessageDetailses) {
+                if (messageDetails.getUid() == generalMessageDetails.getUid()) {
+                    messageDetails.setSeen(isMessageSeen);
+                    notifyDataSetChanged();
+                    break;
+                }
             }
         }
     }
@@ -116,8 +137,37 @@ public class MessageListAdapter extends BaseAdapter {
             viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
                     generalMessageDetails.getReceiveDate().getTime()));
 
+            if (generalMessageDetails.isSeen()) {
+                changeViewsTypeface(viewHolder, Typeface.NORMAL);
+
+                viewHolder.textViewSenderAddress.setTextColor(getColor(R.color.scorpion));
+                viewHolder.textViewSubject.setTextColor(getColor(R.color.gray));
+                viewHolder.textViewDate.setTextColor(getColor(R.color.gray));
+            } else {
+                changeViewsTypeface(viewHolder, Typeface.BOLD);
+
+                viewHolder.textViewSenderAddress.setTextColor(getColor(android.R.color.black));
+                viewHolder.textViewSubject.setTextColor(getColor(android.R.color.black));
+                viewHolder.textViewDate.setTextColor(getColor(android.R.color.black));
+            }
         } else {
             clearItem(viewHolder);
+        }
+    }
+
+    private void changeViewsTypeface(@NonNull ViewHolder viewHolder, int typeface) {
+        viewHolder.textViewSenderAddress.setTypeface(null, typeface);
+        viewHolder.textViewSubject.setTypeface(null, typeface);
+        viewHolder.textViewDate.setTypeface(null, typeface);
+    }
+
+    @SuppressWarnings("deprecation")
+    private int getColor(int colorResourcesId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return context.getResources().getColor
+                    (colorResourcesId, context.getTheme());
+        } else {
+            return context.getResources().getColor(colorResourcesId);
         }
     }
 
@@ -130,6 +180,8 @@ public class MessageListAdapter extends BaseAdapter {
         viewHolder.textViewSenderAddress.setText(null);
         viewHolder.textViewSubject.setText(null);
         viewHolder.textViewDate.setText(null);
+
+        changeViewsTypeface(viewHolder, Typeface.NORMAL);
     }
 
     /**
