@@ -95,7 +95,13 @@
             android:exported="false" />
 
         <!-- Services -->
-        <service android:name=".service.EmailAndNameUpdaterService" />
+        <service
+            android:name=".service.EmailAndNameUpdaterService"
+            android:exported="false" />
+
+        <service
+            android:name=".service.EmailSyncService"
+            android:exported="false" />
     </application>
 
 </manifest>

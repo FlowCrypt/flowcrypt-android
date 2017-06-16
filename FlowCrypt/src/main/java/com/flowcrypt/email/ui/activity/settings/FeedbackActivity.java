@@ -22,12 +22,10 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 /**
  * The feedback activity. Anywhere there is a question mark, it should take the user to this
@@ -39,7 +37,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class FeedbackActivity extends BaseBackStackAuthenticationActivity implements
+public class FeedbackActivity extends BaseBackStackActivity implements
         LoaderManager.LoaderCallbacks<BaseResponse> {
     private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + "" +
             ".KEY_IS_MESSAGE_SENT";
@@ -55,24 +53,6 @@ public class FeedbackActivity extends BaseBackStackAuthenticationActivity implem
     @Override
     public View getRootView() {
         return layoutContent;
-    }
-
-    @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult != null) {
-            if (googleSignInResult.isSuccess()) {
-                GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-                if (googleSignInAccount != null) {
-                    this.email = googleSignInAccount.getEmail();
-                } else {
-                    finish();
-                }
-            } else {
-                finish();
-            }
-        } else {
-            finish();
-        }
     }
 
     @Override

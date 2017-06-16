@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 
 import com.flowcrypt.email.BuildConfig;
@@ -14,9 +13,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.SecureReplyFragment;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 /**
  * This activity describes a logic of send encrypted message as a reply.
@@ -35,25 +31,6 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     @Override
     public View getRootView() {
         return layoutContent;
-    }
-
-    @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                        getSupportFragmentManager()
-                                .findFragmentById(R.id.secureReplyFragment);
-
-                if (secureReplyFragment != null) {
-                    secureReplyFragment.updateAccount(googleSignInAccount.getAccount());
-                }
-            }
-        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
-        }
     }
 
     @Override

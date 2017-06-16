@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -10,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.flowcrypt.email.R;
 
@@ -37,6 +39,11 @@ public abstract class BaseActivity extends AppCompatActivity {
      * @return The content view resources id.
      */
     public abstract int getContentViewResourceId();
+
+    /**
+     * Get root view which will be used for show Snackbar.
+     */
+    public abstract View getRootView();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {

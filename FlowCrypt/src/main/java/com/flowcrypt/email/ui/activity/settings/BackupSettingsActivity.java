@@ -24,13 +24,11 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.SendMyselfMessageWithBackup;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.util.List;
 
@@ -47,7 +45,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity implements
+public class BackupSettingsActivity extends BaseBackStackActivity implements
         LoaderManager.LoaderCallbacks<LoaderResult>, View.OnClickListener,
         RadioGroup.OnCheckedChangeListener {
 
@@ -186,25 +184,6 @@ public class BackupSettingsActivity extends BaseBackStackAuthenticationActivity 
     @Override
     public View getRootView() {
         return layoutContent;
-    }
-
-    @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                account = googleSignInAccount.getAccount();
-                if (privateKeys == null) {
-                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
-                            this);
-                } else {
-                    if (layoutContent.getVisibility() == View.GONE) {
-                        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                        showBackupFoundView();
-                    }
-                }
-            }
-        }
     }
 
     @Override

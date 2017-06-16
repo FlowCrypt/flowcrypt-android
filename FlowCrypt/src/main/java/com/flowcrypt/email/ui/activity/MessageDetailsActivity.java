@@ -11,18 +11,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 /**
  * This activity describe details of some message.
@@ -32,7 +28,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
  *         Time: 16:29
  *         E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsActivity extends BaseBackStackAuthenticationActivity {
+public class MessageDetailsActivity extends BaseBackStackActivity {
     public static final int RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER = 100;
     public static final int RESULT_CODE_MESSAGE_SEEN = 101;
 
@@ -55,19 +51,6 @@ public class MessageDetailsActivity extends BaseBackStackAuthenticationActivity 
     @Override
     public View getRootView() {
         return null;
-    }
-
-    @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                updateMessageDetailsFragment(googleSignInAccount.getAccount());
-            }
-        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
-        }
     }
 
     @Override

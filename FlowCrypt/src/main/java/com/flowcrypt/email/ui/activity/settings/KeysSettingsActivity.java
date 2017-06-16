@@ -49,6 +49,11 @@ public class KeysSettingsActivity extends BaseSettingsActivity implements Loader
     }
 
     @Override
+    public View getRootView() {
+        return null;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();

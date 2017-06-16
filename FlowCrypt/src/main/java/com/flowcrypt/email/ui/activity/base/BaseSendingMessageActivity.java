@@ -18,7 +18,7 @@ import com.flowcrypt.email.R;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSendingMessageActivity extends BaseBackStackAuthenticationActivity {
+public abstract class BaseSendingMessageActivity extends BaseBackStackActivity {
     /**
      * Check the message sending status.
      *

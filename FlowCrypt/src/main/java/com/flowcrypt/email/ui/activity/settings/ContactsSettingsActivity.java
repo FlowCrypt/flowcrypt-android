@@ -45,6 +45,11 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     }
 
     @Override
+    public View getRootView() {
+        return null;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.progressBar = findViewById(R.id.progressBar);

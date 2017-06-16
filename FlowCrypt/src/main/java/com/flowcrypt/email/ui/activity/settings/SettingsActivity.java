@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
+import android.view.View;
+
 import com.flowcrypt.email.R;
 
 /**
@@ -21,5 +23,10 @@ public class SettingsActivity extends BaseSettingsActivity {
     @Override
     public int getContentViewResourceId() {
         return R.layout.activity_settings;
+    }
+
+    @Override
+    public View getRootView() {
+        return null;
     }
 }

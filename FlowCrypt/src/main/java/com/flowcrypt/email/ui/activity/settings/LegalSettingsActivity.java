@@ -46,6 +46,11 @@ public class LegalSettingsActivity extends BaseSettingsActivity {
     }
 
     @Override
+    public View getRootView() {
+        return null;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();

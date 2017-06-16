@@ -21,7 +21,7 @@ import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
@@ -72,9 +72,9 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
                 break;
 
             case R.id.buttonSelectAnotherAccount:
-                if (getActivity() instanceof BaseAuthenticationActivity) {
-                    BaseAuthenticationActivity baseAuthenticationActivity =
-                            (BaseAuthenticationActivity) getActivity();
+                if (getActivity() instanceof SplashActivity) {
+                    SplashActivity baseAuthenticationActivity =
+                            (SplashActivity) getActivity();
                     baseAuthenticationActivity.signOut(SignInType.GMAIL);
                 }
                 break;

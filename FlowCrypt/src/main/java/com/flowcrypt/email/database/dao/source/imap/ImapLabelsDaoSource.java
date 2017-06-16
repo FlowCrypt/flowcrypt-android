@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -17,7 +18,6 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,7 +38,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     public static final String COL_FOLDER_ALIAS = "folder_alias";
     public static final String COL_IS_CUSTOM_LABEL = "is_custom_label";
     public static final String COL_FOLDER_ATTRIBUTES = "folder_attributes";
-    public static final String COД_FOLDER_MESSAGE_COUNT = "folder_message_count";
+    public static final String COL_FOLDER_MESSAGE_COUNT = "folder_message_count";
 
     public static final String IMAP_LABELS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_IMAP_LABELS + " (" +
@@ -48,7 +48,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             COL_IS_CUSTOM_LABEL + " INTEGER DEFAULT 0, " +
             COL_FOLDER_ALIAS + " VARCHAR(100) DEFAULT NULL, " +
             COL_FOLDER_ATTRIBUTES + " TEXT NOT NULL, " +
-            COД_FOLDER_MESSAGE_COUNT + " INTEGER DEFAULT 0 " + ");";
+            COL_FOLDER_MESSAGE_COUNT + " INTEGER DEFAULT 0 " + ");";
 
     @Override
     public String getTableName() {
@@ -70,8 +70,8 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             contentValues.put(COL_FOLDER_NAME, folder.getServerFullFolderName());
             contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
             contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
-//            contentValues.put(COL_FOLDER_ATTRIBUTES, Arrays.toString(folder.getAttributes()));
-            contentValues.put(COL_FOLDER_ATTRIBUTES, "");
+            contentValues.put(COL_FOLDER_ATTRIBUTES,
+                    prepareAttributesToSaving(folder.getAttributes()));
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
@@ -87,6 +87,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
         return new Folder(
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
+                parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
                 cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
         );
     }
@@ -124,8 +125,29 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     public int deleteFolders(Context context, String email) {
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
-            return contentResolver.delete(getBaseContentUri(),
-                    COL_EMAIL + " = ?", new String[]{email});
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ?",
+                    new String[]{email});
         } else return -1;
+    }
+
+    private String prepareAttributesToSaving(String[] attributes) {
+        if (attributes != null && attributes.length > 0) {
+            String result = "";
+            for (String attribute : attributes) {
+                result += attribute + "\t";
+            }
+
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    private String[] parseAttributes(String attributesAsString) {
+        if (attributesAsString != null && attributesAsString.length() > 0) {
+            return attributesAsString.split("\t");
+        } else {
+            return null;
+        }
     }
 }

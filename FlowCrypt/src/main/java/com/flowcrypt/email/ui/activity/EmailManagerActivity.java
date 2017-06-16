@@ -1,22 +1,27 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+  * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,16 +29,11 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.model.SignInType;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
-import com.flowcrypt.email.ui.loader.LoadGmailLabelsAsyncTaskLoader;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
+import com.flowcrypt.email.util.GeneralUtil;
 
 /**
  * This activity used to show messages list.
@@ -43,17 +43,22 @@ import com.google.android.gms.common.ConnectionResult;
  *         Time: 16:12
  *         E-mail: DenBond7@gmail.com
  */
-public class EmailManagerActivity extends BaseAuthenticationActivity
+public class EmailManagerActivity extends BaseSyncActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager
-        .LoaderCallbacks<LoaderResult>, View.OnClickListener {
+        .LoaderCallbacks<Cursor>, View.OnClickListener {
+
+    public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+            "EXTRA_KEY_ACCOUNT", EmailManagerActivity.class);
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private NavigationView navigationView;
-    private Toolbar toolbar;
     private Account account;
-    private boolean isLabelsLoaded;
     private FoldersManager foldersManager;
+
+    public EmailManagerActivity() {
+        this.foldersManager = new FoldersManager();
+    }
 
     @Override
     public View getRootView() {
@@ -61,21 +66,8 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                this.account = googleSignInAccount.getAccount();
-                updateAccountInEmailListFragment(account);
-                if (!isLabelsLoaded) {
-                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null,
-                            this);
-                }
-            }
-        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
-        }
+    public boolean isDisplayHomeAsUpEnabled() {
+        return false;
     }
 
     @Override
@@ -86,6 +78,18 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (getIntent() != null) {
+            account = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT);
+            if (account == null) {
+                throw new IllegalArgumentException("You must pass an Account to this activity.");
+            }
+
+            getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
+        } else {
+            finish();
+        }
+
         initViews();
     }
 
@@ -128,11 +132,11 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
-                signOut(SignInType.GMAIL);
+                //signOut(SignInType.GMAIL);
                 break;
 
             case R.id.navigationMenuRevokeAccess:
-                revokeAccess(SignInType.GMAIL);
+                //revokeAccess(SignInType.GMAIL);
                 break;
 
             case R.id.navigationMenuActionSettings:
@@ -152,31 +156,35 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_labels:
-                return new LoadGmailLabelsAsyncTaskLoader(getApplicationContext(), account);
-
+                return new CursorLoader(this, new ImapLabelsDaoSource().
+                        getBaseContentUri(), null, ImapLabelsDaoSource.COL_EMAIL +
+                        " = ?", new String[]{account.name}, null);
             default:
                 return null;
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult data) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_labels:
-                this.isLabelsLoaded = true;
                 if (data != null) {
-                    foldersManager = (FoldersManager) data.getResult();
+                    Log.d("onLoadFinished", "R.id.loader_id_load_gmail_labels");
+                    ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+                    foldersManager.clear();
+
+                    while (data.moveToNext()) {
+                        foldersManager.addFolder(imapLabelsDaoSource.getFolder(data));
+                    }
+
+                    MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
+                    mailLabels.getSubMenu().clear();
+
                     if (!foldersManager.getAllFolders().isEmpty()) {
 
-                        MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
                         for (Folder s : foldersManager.getServerFolders()) {
                             mailLabels.getSubMenu().add(s.getFolderAlias());
                         }
@@ -191,7 +199,7 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(Loader<Cursor> loader) {
 
     }
 
@@ -223,13 +231,13 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
     }
 
     private void initViews() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        actionBarDrawerToggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string
-                .navigation_drawer_close);
+        actionBarDrawerToggle = new CustomDrawerToggle(this, drawerLayout, toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
 
@@ -238,6 +246,22 @@ public class EmailManagerActivity extends BaseAuthenticationActivity
 
         if (findViewById(R.id.floatActionButtonCompose) != null) {
             findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);
+        }
+    }
+
+    private class CustomDrawerToggle extends ActionBarDrawerToggle {
+
+        CustomDrawerToggle(Activity activity, DrawerLayout drawerLayout, Toolbar toolbar,
+                           @StringRes int openDrawerContentDescRes, @StringRes int
+                                   closeDrawerContentDescRes) {
+            super(activity, drawerLayout, toolbar, openDrawerContentDescRes,
+                    closeDrawerContentDescRes);
+        }
+
+        @Override
+        public void onDrawerOpened(View drawerView) {
+            super.onDrawerOpened(drawerView);
+            updateLabels();
         }
     }
 }
