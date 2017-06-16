@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -67,6 +68,10 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
         try {
             Js js = new Js(getContext(), null);
             for (String email : emails) {
+                if (email != null) {
+                    email = email.toLowerCase();
+                }
+
                 PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
                 if (localPgpContact != null) {
                     if (!localPgpContact.getHasPgp()) {

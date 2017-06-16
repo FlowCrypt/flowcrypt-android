@@ -37,7 +37,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             ".KEY_IS_MESSAGE_SENT";
 
     protected Js js;
-    private boolean isUpdatedInfoAboutContactCompleted;
+    protected boolean isUpdatedInfoAboutContactCompleted;
     private boolean isMessageSent;
     private boolean isMessageSendingNow;
 
@@ -147,8 +147,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             case R.id.loader_id_send_encrypted_message:
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
-                        getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return getAccount() != null && !isMessageSent ?
                         new SendEncryptedMessageAsyncTaskLoader(getContext(),
@@ -166,10 +164,22 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+        super.onLoaderReset(loader);
+        switch (loader.getId()) {
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                isUpdatedInfoAboutContactCompleted = true;
+                getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+                break;
+        }
+    }
+
+    @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_send_encrypted_message:
                 isMessageSendingNow = false;
+                getActivity().invalidateOptionsMenu();
                 isMessageSent = (boolean) result;
                 if (isMessageSent) {
                     Toast.makeText(getContext(), R.string.message_was_sent,
@@ -195,7 +205,19 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
-        isMessageSendingNow = false;
+
+        switch (loaderId) {
+            case R.id.loader_id_send_encrypted_message:
+                isMessageSendingNow = false;
+                getActivity().invalidateOptionsMenu();
+                break;
+
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                isUpdatedInfoAboutContactCompleted = true;
+                getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+                break;
+        }
+
         UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(), getContentView());
     }
 
@@ -216,6 +238,8 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
         if (isAllInformationCorrect()) {
             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                 UIUtil.hideSoftInput(getContext(), getView());
+                UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
+                        getContentView());
                 getLoaderManager().restartLoader(R.id.loader_id_send_encrypted_message, null, this);
             } else {
                 UIUtil.showInfoSnackbar(getView(), getString(R.string

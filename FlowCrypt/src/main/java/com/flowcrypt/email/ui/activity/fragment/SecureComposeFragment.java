@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -134,11 +135,12 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 progressBarCheckContactsDetails.setVisibility(
                         hasFocus ? View.INVISIBLE : View.VISIBLE);
                 if (hasFocus) {
+                    isUpdatedInfoAboutContactCompleted = true;
                     getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                 } else {
                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                        getLoaderManager().restartLoader(R.id
-                                .loader_id_update_info_about_pgp_contacts, null, this);
+                        getLoaderManager().restartLoader(
+                                R.id.loader_id_update_info_about_pgp_contacts, null, this);
                     }
                 }
                 break;

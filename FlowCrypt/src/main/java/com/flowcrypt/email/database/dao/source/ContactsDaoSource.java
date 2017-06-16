@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
+ * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -130,6 +131,10 @@ public class ContactsDaoSource extends BaseDaoSource {
      * @return A {@link PgpContact} object.
      */
     public PgpContact getPgpContact(Context context, String email) {
+        if (email != null) {
+            email = email.toLowerCase();
+        }
+
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
                 null, COL_EMAIL + " = ?", new String[]{email}, null);
@@ -155,9 +160,16 @@ public class ContactsDaoSource extends BaseDaoSource {
      * objects from the search by emails.
      */
     public List<PgpContact> getPgpContactsListFromDatabase(Context context, List<String> emails) {
+        String[] emailsArray = emails.toArray(new String[0]);
+        for (int i = 0; i < emailsArray.length; ++i) {
+            if (emailsArray[i] != null) {
+                emailsArray[i] = emailsArray[i].toLowerCase();
+            }
+        }
+
         Cursor cursor = context.getContentResolver().query(
                 getBaseContentUri(), null, ContactsDaoSource.COL_EMAIL +
-                        " IN " + prepareSelection(emails), emails.toArray(new String[0]), null);
+                        " IN " + prepareSelection(emails), emailsArray, null);
 
         List<PgpContact> pgpContacts = new ArrayList<>();
 
@@ -234,6 +246,10 @@ public class ContactsDaoSource extends BaseDaoSource {
     public int updateNameOfPgpContact(Context context, String email, String name) {
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
+            if (email != null) {
+                email = email.toLowerCase();
+            }
+
             ContentValues contentValues = new ContentValues();
             contentValues.put(COL_NAME, name);
 
@@ -252,6 +268,10 @@ public class ContactsDaoSource extends BaseDaoSource {
      * @return The count of deleted rows. Will be 1 if a contact was deleted or -1 otherwise.
      */
     public int deletePgpContact(Context context, String email) {
+        if (email != null) {
+            email = email.toLowerCase();
+        }
+
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
             return contentResolver.delete(getBaseContentUri(),
