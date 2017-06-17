@@ -102,6 +102,11 @@ public class Js { // Create one object per thread and use them separately. Not t
         return (String) cb_last_value[0];
     }
 
+    public ProcessedMime mime_process(String mime_message) {
+        this.call(Object.class, new String[]{"mime", "process"}, new V8Array(v8).push(mime_message).push(cb_catcher));
+        return new ProcessedMime((V8Object) cb_last_value[0], this);
+    }
+
     public String crypto_key_normalize(String armored_key) {
         return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new
                 V8Array(v8).push(armored_key));
