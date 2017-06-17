@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.test.PgpContact;
+import com.flowcrypt.email.js.PgpContact;
 
 /**
  * Simple POJO class which describe an outgoing message model.

@@ -17,8 +17,8 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
-import com.flowcrypt.email.test.Js;
-import com.flowcrypt.email.test.PgpKey;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpKey;
 
 import java.util.List;
 import java.util.UUID;

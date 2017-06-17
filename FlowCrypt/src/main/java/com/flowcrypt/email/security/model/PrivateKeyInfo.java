@@ -8,7 +8,7 @@ package com.flowcrypt.email.security.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.test.PgpKeyInfo;
+import com.flowcrypt.email.js.PgpKeyInfo;
 
 /**
  * A simple private key information object which contais a {@link PgpKeyInfo} object and the

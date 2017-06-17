@@ -3,7 +3,7 @@
  * Contributors: Tom James Holub
  */
 
-package com.flowcrypt.email.test;
+package com.flowcrypt.email.js;
 
 import android.os.Parcel;
 import android.os.Parcelable;

@@ -13,7 +13,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.ui.loader.SendEncryptedMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;

@@ -14,7 +14,7 @@ import android.preference.PreferenceManager;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
-import com.flowcrypt.email.test.PgpKeyInfo;
+import com.flowcrypt.email.js.PgpKeyInfo;
 
 import java.util.ArrayList;
 import java.util.List;

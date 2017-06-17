@@ -3,7 +3,7 @@
  * Contributors: Tom James Holub
  */
 
-package com.flowcrypt.email.test;
+package com.flowcrypt.email.js;
 
 import android.content.Context;
 
@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Date;
 
 
 public class Js { // Create one object per thread and use them separately. Not thread-safe.

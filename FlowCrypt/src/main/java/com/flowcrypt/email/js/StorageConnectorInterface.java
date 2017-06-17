@@ -3,11 +3,7 @@
  * Contributors: Tom James Holub
  */
 
-package com.flowcrypt.email.test;
-
-import android.content.Context;
-import java.io.IOException;
-import java.util.ArrayList;
+package com.flowcrypt.email.js;
 
 public interface StorageConnectorInterface {
 

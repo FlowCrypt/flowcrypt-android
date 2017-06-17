@@ -3,12 +3,10 @@
  * Contributors: Tom James Holub
  */
 
-package com.flowcrypt.email.test;
+package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
-
-import java.util.Date;
 
 public class PgpKey extends MeaningfulV8ObjectContainer {
 

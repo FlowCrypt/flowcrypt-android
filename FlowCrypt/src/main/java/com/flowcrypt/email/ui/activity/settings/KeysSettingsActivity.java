@@ -18,7 +18,7 @@ import android.widget.ListView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.test.Js;
+import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;

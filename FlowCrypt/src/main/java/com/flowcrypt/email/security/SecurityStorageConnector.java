@@ -8,9 +8,9 @@ package com.flowcrypt.email.security;
 import android.content.Context;
 
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
-import com.flowcrypt.email.test.PgpContact;
-import com.flowcrypt.email.test.PgpKeyInfo;
-import com.flowcrypt.email.test.StorageConnectorInterface;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.StorageConnectorInterface;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

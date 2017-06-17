@@ -13,7 +13,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
-import com.flowcrypt.email.test.PgpContact;
+import com.flowcrypt.email.js.PgpContact;
 
 import java.util.ArrayList;
 import java.util.List;

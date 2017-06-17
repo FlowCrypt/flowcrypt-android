@@ -19,10 +19,10 @@ import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.test.Js;
-import com.flowcrypt.email.test.PgpContact;
-import com.flowcrypt.email.test.PgpKey;
-import com.flowcrypt.email.test.PgpKeyInfo;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.PgpKeyInfo;
 import com.google.android.gms.auth.GoogleAuthUtil;
 
 import org.apache.commons.io.IOUtils;

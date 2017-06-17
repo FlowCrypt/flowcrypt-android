@@ -4,7 +4,7 @@
  * Contributors: Tom James Holub
  */
 
-package com.flowcrypt.email.test;
+package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Object;
 
