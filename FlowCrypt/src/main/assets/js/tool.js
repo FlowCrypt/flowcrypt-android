@@ -31,6 +31,7 @@
       extract_cryptup_attachments: str_extract_cryptup_attachments,
       extract_cryptup_reply_token: str_extract_cryptup_reply_token,
       strip_cryptup_reply_token: str_strip_cryptup_reply_token,
+      strip_public_keys: str_strip_public_keys,
       int_to_hex: str_int_to_hex,
       message_difference: str_message_difference,
       capitalize: str_capitalize,
@@ -78,8 +79,11 @@
       save_to_downloads: file_save_to_downloads,
       attachment: file_attachment,
       pgp_name_patterns: file_pgp_name_patterns,
+      keyinfo_as_pubkey_attachment: file_keyinfo_as_pubkey_attachment,
+      treat_as: file_treat_as,
     },
     mime: {
+      process: mime_process,
       headers_to_from: mime_headers_to_from,
       reply_headers: mime_reply_headers,
       resembles_message: mime_resembles_message,
@@ -95,6 +99,7 @@
       build_jquery_selectors: ui_build_jquery_selectors,
       scroll: ui_scroll,
       event: {
+        stop: ui_event_stop,
         protect: ui_event_stop_propagation_to_parent_frame,
         double: ui_event_double,
         parallel: ui_event_parallel,
@@ -223,6 +228,7 @@
         message_confirm_files: api_cryptup_message_confirm_files,
         message_upload: api_cryptup_message_upload,  // todo - DEPRECATE THIS. Send as JSON to message/store
         message_token: api_cryptup_message_token,
+        message_expiration: api_cryptup_message_expiration,
         message_reply: api_cryptup_message_reply,
         message_contact: api_cryptup_message_contact,
         link_message: api_cryptup_link_message,
@@ -413,15 +419,17 @@
     var binary_char = '';
     for(var i = 0; i < length; i++) {
       if(a[i] < 128) {
-        if(bytes_left_in_char) {
-          console.log('uint8_to_utf_str: utf-8 continuation byte missing, multi-byte character cut short and omitted');
+        if(bytes_left_in_char) { // utf-8 continuation byte missing, assuming the last character was an 8-bit ASCII character
+          utf8_string += String.fromCharCode(a[i-1]);
         }
         bytes_left_in_char = 0;
         binary_char = '';
         utf8_string += String.fromCharCode(a[i]);
       } else {
         if(!bytes_left_in_char) { // beginning of new multi-byte character
-          if(a[i] >= 192 && a[i] < 224) { //110x xxxx
+          if(a[i] >= 128 && a[i] < 192) { //10xx xxxx
+            utf8_string += String.fromCharCode(a[i]); // extended 8-bit ASCII compatibility, european ASCII characters
+          } else if(a[i] >= 192 && a[i] < 224) { //110x xxxx
             bytes_left_in_char = 1;
             binary_char = a[i].toString(2).substr(3);
           } else if(a[i] >= 224 && a[i] < 240) { //1110 xxxx
@@ -437,7 +445,7 @@
             bytes_left_in_char = 5;
             binary_char = a[i].toString(2).substr(7);
           } else {
-            console.log('uint8_to_utf_str: invalid utf-8 character beginning byte: ' + a[i]);
+            console.log('str_uint8_as_utf: invalid utf-8 character beginning byte: ' + a[i]);
           }
         } else { // continuation of a multi-byte character
           binary_char += a[i].toString(2).substr(2);
@@ -480,6 +488,13 @@
 
   function str_strip_cryptup_reply_token(decrypted_content) {
     return decrypted_content.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
+  }
+
+  function str_strip_public_keys(decrypted_content, found_public_keys) {
+    return replace_armored_block_type(decrypted_content, crypto_armor_headers('public_key'), true, function (armored_public_key) {
+      found_public_keys.push(armored_public_key);
+      return '';
+    });
   }
 
   function str_extract_cryptup_reply_token(decrypted_content) {
@@ -846,6 +861,11 @@
     return ['*.pgp', '*.gpg', '*.asc', 'noname', 'message', 'PGPMIME version identification'];
   }
 
+  function file_keyinfo_as_pubkey_attachment(keyinfo) {
+    var k = openpgp.key.readArmored(keyinfo.armored).keys[0];
+    return file_attachment('0x' + keyinfo.longid + '.asc', 'application/pgp-keys', k.toPublic().armor());
+  }
+
   /* tool.mime */
 
   function mime_node_type(node) {
@@ -967,6 +987,35 @@
     }
   }
 
+  function mime_process(mime_message, callback) {
+    mime_decode(mime_message, function (success, decoded) {
+      var blocks = crypto_armor_detect_blocks(decoded.text);
+      tool.each(decoded.attachments, function(i, file) {
+        var treat_as = file_treat_as(file);
+        if(treat_as === 'message') {
+          var armored = crypto_armor_clip(file.content);
+          if(armored) {
+            blocks.push(crypto_armor_block_object('message', armored));
+          }
+        } else if(treat_as === 'signature') {
+          decoded.signature = decoded.signature || file.content;
+        } else if(treat_as === 'public_key') {
+          blocks = blocks.concat(crypto_armor_detect_blocks(file.content));
+        }
+      });
+      if(decoded.signature) {
+        tool.each(blocks, function(i, block) {
+          if(block.type === 'text') {
+            block.type = 'signed_message';
+            block.signature = decoded.signature;
+            return false;
+          }
+        });
+      }
+      callback({headers: decoded.headers, blocks: blocks});
+    });
+  }
+
   function mime_decode(mime_message, callback) {
     var mime_message_contents = {attachments: [], headers: {}, text: undefined, html: undefined, signature: undefined};
     mime_require('parser', function (emailjs_mime_parser) {
@@ -996,7 +1045,7 @@
               mime_message_contents.text = tool.str.uint8_as_utf(node.content);
             } else {
               var node_content = tool.str.from_uint8(node.content);
-              mime_message_contents.attachments.push(file_attachment(mime_node_filename(node), mime_node_type(node), node_content)); //data: ,
+              mime_message_contents.attachments.push(file_attachment(mime_node_filename(node), mime_node_type(node), node_content));
             }
           });
           catcher.try(function () {
@@ -1149,6 +1198,14 @@
         delete events_fired[id];
       }
     }
+  }
+
+  function ui_event_stop() {
+    return function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
   }
 
   function ui_spinner(color, placeholder_class) {
@@ -1457,16 +1514,18 @@
     return pgp_block_text;
   }
 
+  var crypto_armor_header_max_length = 50;
+
   var crypto_armor_headers_dict = {
     null: { begin: '-----BEGIN', end: '-----END' },
-    public_key: { begin: '-----BEGIN PGP PUBLIC KEY BLOCK-----', end: '-----END PGP PUBLIC KEY BLOCK-----' },
+    public_key: { begin: '-----BEGIN PGP PUBLIC KEY BLOCK-----', end: '-----END PGP PUBLIC KEY BLOCK-----', replace: true },
     private_key: { begin: '-----BEGIN PGP PRIVATE KEY BLOCK-----', end: '-----END PGP PRIVATE KEY BLOCK-----' },
-    attest_packet: { begin: '-----BEGIN ATTEST PACKET-----', end: '-----END ATTEST PACKET-----' },
-    cryptup_verification: { begin: '-----BEGIN CRYPTUP VERIFICATION-----', end: '-----END CRYPTUP VERIFICATION-----' },
-    signed_message: { begin: '-----BEGIN PGP SIGNED MESSAGE-----', middle: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----' },
+    attest_packet: { begin: '-----BEGIN ATTEST PACKET-----', end: '-----END ATTEST PACKET-----', replace: true },
+    cryptup_verification: { begin: '-----BEGIN CRYPTUP VERIFICATION-----', end: '-----END CRYPTUP VERIFICATION-----', replace: true },
+    signed_message: { begin: '-----BEGIN PGP SIGNED MESSAGE-----', middle: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----', replace: true },
     signature: { begin: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----' },
-    message: { begin: '-----BEGIN PGP MESSAGE-----', end: '-----END PGP MESSAGE-----' },
-    password_message: { begin: 'This message is encrypted: Open Message', end: /https:(\/|&#x2F;){2}(cryptup\.org|flowcrypt\.com)(\/|&#x2F;)[a-zA-Z0-9]{10}/},
+    message: { begin: '-----BEGIN PGP MESSAGE-----', end: '-----END PGP MESSAGE-----', replace: true },
+    password_message: { begin: 'This message is encrypted: Open Message', end: /https:(\/|&#x2F;){2}(cryptup\.org|flowcrypt\.com)(\/|&#x2F;)[a-zA-Z0-9]{10}(\n|$)/, replace: true},
   };
 
   function crypto_armor_headers(block_type, format) {
@@ -1476,7 +1535,11 @@
         return h;
       }
       return obj_map(h, function (header_value) {
-        return header_value.replace(/ /g, '\\\s'); // regexp match friendly
+        if(typeof h === 'string') {
+          return header_value.replace(/ /g, '\\\s'); // regexp match friendly
+        } else {
+          return header_value;
+        }
       });
     } else {
       return crypto_armor_headers_dict[block_type || null];
@@ -1485,7 +1548,7 @@
 
   function crypto_armor_clip(text) {
     if(text && tool.value(crypto_armor_headers_dict[null].begin).in(text) && tool.value(crypto_armor_headers_dict[null].end).in(text)) {
-      var match = text.match(/(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE)-----[^]+-----END PGP (MESSAGE|SIGNATURE)-----)/gm);
+      var match = text.match(/(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----[^]+-----END PGP (MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----)/gm);
       return(match !== null && match.length) ? match[0] : null;
     }
     return null;
@@ -1512,6 +1575,82 @@
       return armored;
     } else {
       return armored;
+    }
+  }
+
+  function crypto_armor_block_object(type, content, missing_end) {
+    return {type: type, content: content, complete: !missing_end};
+  }
+
+  function crypto_armor_detect_block_next(original_text, start_at) {
+    var result = {found: [], continue_at: null};
+    var begin = original_text.indexOf(crypto_armor_headers(null).begin, start_at);
+    if(begin !== -1) { // found
+      var potential_begin_header = original_text.substr(begin, crypto_armor_header_max_length);
+      tool.each(crypto_armor_headers_dict, function(type, block_header) {
+        if(block_header.replace) {
+          var index_of_confirmed_begin = potential_begin_header.indexOf(block_header.begin);
+          if(index_of_confirmed_begin === 0 || (type === 'password_message' && index_of_confirmed_begin < 15)) { // identified beginning of a specific block
+            if(begin > start_at) {
+              var potential_text_before_block_begun = original_text.substring(start_at, begin).trim();
+              if(potential_text_before_block_begun) {
+                result.found.push(crypto_armor_block_object('text', potential_text_before_block_begun));
+              }
+            }
+            if(typeof block_header.end === 'string') {
+              var end = original_text.indexOf(block_header.end, begin + block_header.begin.length);
+            } else { // regexp
+              var end = original_text.match(block_header.end);
+              end = end || -1; // useful below to mimic indexOf
+              if(end !== -1) {
+                block_header.end.length = end[0].length; // another hack to mimic results of indexOf
+                end = end.index; // one more
+              }
+            }
+            if(end !== -1) { // identified end of the same block
+              if(type !== 'password_message') {
+                result.found.push(crypto_armor_block_object(type, original_text.substring(begin, end + block_header.end.length).trim()));
+              } else {
+                var pm_full_text = original_text.substring(begin, end + block_header.end.length).trim();
+                var pm_short_id_match = pm_full_text.match(/[a-zA-Z0-9]{10}$/);
+                if(pm_short_id_match) {
+                  result.found.push(crypto_armor_block_object(type, pm_short_id_match[0]));
+                } else {
+                  result.found.push(crypto_armor_block_object('text', pm_full_text));
+                }
+              }
+              result.continue_at = end + block_header.end.length;
+            } else { // corresponding end not found
+              result.found.push(crypto_armor_block_object(type, original_text.substr(begin), true));
+            }
+            return false;
+          }
+        }
+      });
+    } else {
+      var potential_text = original_text.substr(start_at).trim();
+      if(potential_text) {
+        result.found.push(crypto_armor_block_object('text', potential_text));
+      }
+    }
+    return result;
+  }
+
+  function crypto_armor_detect_blocks(original_text) {
+    var structure = [];
+    original_text = str_normalize_spaces(original_text);
+    original_text = str_html_escape(original_text);
+    var start_at = 0;
+    while(true) {
+      var r = crypto_armor_detect_block_next(original_text, start_at);
+      if(r.found) {
+        structure = structure.concat(r.found);
+      }
+      if(!r.continue_at) {
+        return structure;
+      } else {
+        start_at = r.continue_at;
+      }
     }
   }
 
@@ -1544,6 +1683,7 @@
       return factory.embedded.message(has_end ? crypto_armor_normalize(str_html_unescape(armored), 'message') : '', message_id, is_outgoing, sender_email, has_password || false);
     });
     replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('password_message'), true, function (armored) {
+      armored = armored.trim();
       var short = armored.substr(armored.length - 10);
       if(!has_pgp_message && short.match(/^[a-zA-Z0-9]{10}$/) !== null) {
         return '</div>' + factory.embedded.message('', message_id, is_outgoing, sender_email, true, null, short);
@@ -2604,7 +2744,7 @@
       });
     }
     if(typeof gmail_email_object.body !== 'undefined' && typeof gmail_email_object.body.attachmentId !== 'undefined') {
-      var attachemnt = {
+      var attachment = {
         message_id: internal_message_id,
         id: gmail_email_object.body.attachmentId,
         size: gmail_email_object.body.size,
@@ -2612,13 +2752,13 @@
         type: gmail_email_object.mimeType,
         inline: (api_gmail_find_header(gmail_email_object, 'content-disposition') || '').toLowerCase().indexOf('inline') === 0,
       };
-      attachemnt.treat_as = attachment_get_treat_as(attachemnt);
-      internal_results.push(attachemnt);
+      attachment.treat_as = file_treat_as(attachment);
+      internal_results.push(attachment);
     }
     return internal_results;
   }
 
-  function attachment_get_treat_as(attachment) {
+  function file_treat_as(attachment) {
     if(tool.value(attachment.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification'])) {
       return 'hidden';  // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
     } else if(attachment.name === '') {
@@ -3200,7 +3340,7 @@
     return {
       'api': 'https://api.cryptup.io/',
       'me': 'https://cryptup.org/me/' + variable,
-      'pubkey': 'https://cryptup.org/me/' + variable + '/pub',
+      'pubkey': 'https://cryptup.org/pub/' + variable,
       'decrypt': 'https://cryptup.org/' + variable,
       'web': 'https://cryptup.org/',
     }[type];
@@ -3384,6 +3524,21 @@
         });
       }
     }
+  }
+
+  function api_cryptup_message_expiration(admin_codes, add_days, callback) {
+    storage_cryptup_auth_info(function (email, uuid, verified) {
+      if(verified) {
+        api_cryptup_call('message/expiration', {
+          account: email,
+          uuid: uuid,
+          admin_codes: admin_codes,
+          add_days: add_days || null,
+        }, api_cryptup_response_formatter(callback));
+      } else {
+        callback(api_cryptup_auth_error);
+      }
+    });
   }
 
   function api_cryptup_message_token(callback) {
@@ -3749,6 +3904,12 @@
   RegExp.escape = function (s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   };
+
+  if(typeof $ === 'function') {
+    $.fn.reverse = [].reverse;
+  } else if(typeof jQuery === 'function') {
+    jQuery.fn.reverse = [].reverse;
+  }
 
   String.prototype.repeat = String.prototype.repeat || function(count) {
       if (this == null) {
