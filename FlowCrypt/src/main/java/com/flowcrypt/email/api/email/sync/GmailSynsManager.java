@@ -9,16 +9,18 @@ package com.flowcrypt.email.api.email.sync;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.mail.Folder;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.event.ConnectionEvent;
 import javax.mail.event.ConnectionListener;
@@ -35,234 +37,191 @@ import javax.mail.event.ConnectionListener;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class GmailSynsManager implements ConnectionListener {
+public class GmailSynsManager {
     private static final String TAG = GmailSynsManager.class.getSimpleName();
 
     private static final GmailSynsManager ourInstance = new GmailSynsManager();
-    private static final int MAX_ACTION_THREADS = 3;
 
-    private ExecutorService singleThreadExecutorService;
-    private ExecutorService actionsExecutorService;
-    private Future<?> connectionTaskFuture;
-    private Future<?> disconnectionTaskFuture;
-    private GmailSyncListener gmailSyncListener;
+    private BlockingQueue<SyncTask> syncTaskBlockingQueue;
+    private ExecutorService executorService;
+    private Future<?> syncTaskFuture;
 
     /**
-     * This field created as volatile because will be used in different threads.
+     * This fields created as volatile because will be used in different threads.
      */
+    private volatile SyncListener syncListener;
     private volatile GmailSSLStore gmailSSLStore;
 
     private GmailSynsManager() {
-        this.singleThreadExecutorService = Executors.newSingleThreadExecutor();
-        this.actionsExecutorService = Executors.newFixedThreadPool(MAX_ACTION_THREADS);
+        this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
+        this.executorService = Executors.newSingleThreadExecutor();
     }
 
     /**
      * Get the single instance of {@link GmailSynsManager}.
      *
-     * @return
+     * @return The instance of {@link GmailSynsManager}.
      */
     public static GmailSynsManager getInstance() {
         return ourInstance;
     }
 
-    @Override
-    public void opened(ConnectionEvent e) {
-        Log.d(TAG, "opened" + e);
-    }
+    /**
+     * Start a synchronization.
+     *
+     * @param isNeedReset true if need a reconnect, false otherwise.
+     */
+    public void beginSync(boolean isNeedReset) {
+        Log.d(TAG, "beginSync | isNeedReset = " + isNeedReset);
+        if (isNeedReset) {
+            cancelAllJobs();
+            disconnect();
+        }
 
-    @Override
-    public void disconnected(ConnectionEvent e) {
-        Log.d(TAG, "disconnected" + e);
-    }
-
-    @Override
-    public void closed(ConnectionEvent e) {
-        Log.d(TAG, "closed" + e);
+        if (!isSyncThreadAlreadyWork()) {
+            syncTaskFuture = executorService.submit(new SyncTaskRunnable());
+        }
     }
 
     /**
-     * Start a synchronization.
+     * Check a sync thread state.
+     *
+     * @return true if already work, otherwise false.
      */
-    public void beginSync() {
-        connect(true);
+    public boolean isSyncThreadAlreadyWork() {
+        return syncTaskFuture != null && !syncTaskFuture.isCancelled() &&
+                !syncTaskFuture.isDone();
     }
 
     /**
      * Stop a synchronization.
      */
     public void disconnect() {
-        if (!singleThreadExecutorService.isShutdown()) {
-            singleThreadExecutorService.execute(new DisconnectTask());
+        if (syncTaskFuture != null) {
+            syncTaskFuture.cancel(true);
         }
     }
 
     /**
-     * Check a connecting state.
-     *
-     * @return true if connecting, otherwise false.
-     */
-    public boolean isConnecting() {
-        return connectionTaskFuture != null && !connectionTaskFuture.isCancelled() &&
-                !connectionTaskFuture.isDone();
-    }
-
-    /**
-     * Stop all running jobs.
+     * Clear the queue of sync tasks.
      */
     public void cancelAllJobs() {
-        if (connectionTaskFuture != null) {
-            connectionTaskFuture.cancel(true);
-        }
-
-        if (disconnectionTaskFuture != null) {
-            disconnectionTaskFuture.cancel(true);
-        }
+        syncTaskBlockingQueue.clear();
     }
 
     /**
-     * Set the {@link GmailSyncListener} for current {@link GmailSynsManager}
+     * Set the {@link SyncListener} for current {@link GmailSynsManager}
      *
-     * @param gmailSyncListener A new listener.
+     * @param syncListener A new listener.
      */
-    public void setGmailSyncListener(GmailSyncListener gmailSyncListener) {
-        this.gmailSyncListener = gmailSyncListener;
+    public void setSyncListener(SyncListener syncListener) {
+        this.syncListener = syncListener;
     }
 
     /**
      * Run update a folders list.
      */
     public void updateLabels() {
-        actionsExecutorService.submit(new UpdateLabelsTask());
-    }
-
-    private void connect(boolean isNeedReset) {
-        if (isNeedReset) {
-            cancelAllJobs();
-            connectionTaskFuture = singleThreadExecutorService.submit(new ConnectionTask());
-        } else {
-            connectionTaskFuture = singleThreadExecutorService.submit(new ConnectionTask());
+        try {
+            syncTaskBlockingQueue.put(new UpdateLabelsSyncTask());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    /**
-     * Check available connection to the gmail store.
-     * Must be called from non-main thread.
-     *
-     * @return trus if connected, false otherwise.
-     */
-    private boolean isConnected() {
-        return gmailSSLStore != null && gmailSSLStore.isConnected();
-    }
+    private class SyncTaskRunnable implements Runnable, ConnectionListener {
+        private final String TAG = SyncTaskRunnable.class.getSimpleName();
 
-    /**
-     * Check available connection to the gmail store. If connection does not exists try to
-     * reconnect.
-     * Must be called from non-main thread.
-     *
-     * @return trus if connection available, false otherwise.
-     */
-    private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
-        if (!isConnected()) {
-            openConnectionToGmailStore();
-        }
-    }
-
-    private void handleException(int exceptionType, Exception e) {
-        if (gmailSyncListener != null) {
-            gmailSyncListener.onError(exceptionType, e);
-        }
-    }
-
-    private String getValidToken() throws IOException, GoogleAuthException {
-        if (gmailSyncListener != null) {
-            return gmailSyncListener.getValidToken();
-        } else
-            throw new IllegalArgumentException("You must specify" + GmailSyncListener.class
-                    .getSimpleName
-                            () + " to use this method");
-    }
-
-    private String getEmail() throws IOException, GoogleAuthException {
-        if (gmailSyncListener != null) {
-            return gmailSyncListener.getEmail();
-        } else
-            throw new IllegalArgumentException("You must specify" + GmailSyncListener.class
-                    .getSimpleName
-                            () + " to use this method");
-    }
-
-    private void openConnectionToGmailStore() throws IOException,
-            GoogleAuthException, MessagingException {
-        gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(getValidToken(), getEmail());
-        gmailSSLStore.addConnectionListener(GmailSynsManager.this);
-    }
-
-    /**
-     * This class can bu used for communication with {@link GmailSynsManager}
-     */
-    public interface GmailSyncListener {
-        void onMessageReceived(Message[] messages);
-
-        void onFolderInfoReceived(Folder[] folders);
-
-        void onError(int errorType, Exception e);
-
-        String getValidToken() throws IOException, GoogleAuthException;
-
-        String getEmail();
-    }
-
-    private class ConnectionTask implements Runnable {
         @Override
         public void run() {
-            Thread.currentThread().setName(ConnectionTask.class.getCanonicalName());
+            Thread.currentThread().setName(SyncTaskRunnable.class.getCanonicalName());
             try {
-                if (!isConnected()) {
-                    openConnectionToGmailStore();
-                }
-
-                updateLabels();
-
                 while (!Thread.interrupted()) {
-                    //keep this thread active
-                }
+                    Log.d(TAG, "SyncTaskBlockingQueue size = " + syncTaskBlockingQueue.size());
+                    SyncTask syncTask = syncTaskBlockingQueue.take();
 
+                    if (syncTask != null) {
+                        if (!isConnected()) {
+                            openConnectionToGmailStore();
+                            Log.d(TAG, "Reconnection done");
+                        }
+
+                        Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
+                        syncTask.run(gmailSSLStore, syncListener);
+                        Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
+                                + " completed");
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
 
-    private class UpdateLabelsTask implements Runnable {
         @Override
-        public void run() {
-            Thread.currentThread().setName(UpdateLabelsTask.class.getCanonicalName());
-            try {
-                checkConnection();
-                Folder[] folders = gmailSSLStore.getDefaultFolder().list("*");
-                if (gmailSyncListener != null) {
-                    gmailSyncListener.onFolderInfoReceived(folders);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                handleException(SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST, e);
+        public void opened(ConnectionEvent e) {
+            Log.d(TAG, "Connection to IMAP opened" + e);
+        }
+
+        @Override
+        public void disconnected(ConnectionEvent e) {
+            Log.d(TAG, "Connection to IMAP disconnected" + e);
+        }
+
+        @Override
+        public void closed(ConnectionEvent e) {
+            Log.d(TAG, "Connection to IMAP closed" + e);
+        }
+
+        private void openConnectionToGmailStore() throws IOException,
+                GoogleAuthException, MessagingException {
+            gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(getValidToken(),
+                    getEmail());
+            gmailSSLStore.addConnectionListener(this);
+        }
+
+        /**
+         * Check available connection to the gmail store.
+         * Must be called from non-main thread.
+         *
+         * @return trus if connected, false otherwise.
+         */
+        private boolean isConnected() {
+            return gmailSSLStore != null && gmailSSLStore.isConnected();
+        }
+
+        /**
+         * Check available connection to the gmail store. If connection does not exists try to
+         * reconnect.
+         * Must be called from non-main thread.
+         *
+         * @return true if connection available, false otherwise.
+         */
+        private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
+            if (!isConnected()) {
+                openConnectionToGmailStore();
             }
         }
-    }
 
-    private class DisconnectTask implements Runnable {
-        @Override
-        public void run() {
-            Thread.currentThread().setName(DisconnectTask.class.getCanonicalName());
-            try {
-                if (gmailSSLStore != null && gmailSSLStore.isConnected()) {
-                    gmailSSLStore.close();
-                }
-            } catch (MessagingException e) {
-                e.printStackTrace();
-                handleException(-1, e);
+        private void handleException(int exceptionType, Exception e) {
+            if (syncListener != null) {
+                syncListener.onError(exceptionType, e);
             }
+        }
+
+        private String getValidToken() throws IOException, GoogleAuthException {
+            if (syncListener != null) {
+                return syncListener.getValidToken();
+            } else
+                throw new IllegalArgumentException("You must specify"
+                        + SyncListener.class.getSimpleName() + " to use this method");
+        }
+
+        private String getEmail() throws IOException, GoogleAuthException {
+            if (syncListener != null) {
+                return syncListener.getEmail();
+            } else
+                throw new IllegalArgumentException("You must specify"
+                        + SyncListener.class.getSimpleName() + " to use this method");
         }
     }
 }

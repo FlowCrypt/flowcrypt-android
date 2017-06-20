@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
+import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -42,7 +43,7 @@ import javax.mail.MessagingException;
  *         Time: 12:18
  *         E-mail: DenBond7@gmail.com
  */
-public class EmailSyncService extends Service implements GmailSynsManager.GmailSyncListener {
+public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 1;
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -69,7 +70,7 @@ public class EmailSyncService extends Service implements GmailSynsManager.GmailS
         super.onCreate();
         Log.d(TAG, "onCreate");
         gmailSynsManager = GmailSynsManager.getInstance();
-        gmailSynsManager.setGmailSyncListener(this);
+        gmailSynsManager.setSyncListener(this);
 
         messenger = new Messenger(new IncomingHandler(gmailSynsManager));
     }
@@ -81,7 +82,7 @@ public class EmailSyncService extends Service implements GmailSynsManager.GmailS
         if (intent != null) {
             account = intent.getParcelableExtra(EXTRA_KEY_GMAIL_ACCOUNT);
             if (account != null) {
-                gmailSynsManager.beginSync();
+                gmailSynsManager.beginSync(false);
             } else {
                 //todo-denbond7 handle this error;
             }
@@ -115,8 +116,9 @@ public class EmailSyncService extends Service implements GmailSynsManager.GmailS
     }
 
     @Override
-    public void onMessageReceived(javax.mail.Message[] msgs) {
-        Log.d(TAG, "onMessageReceived:" + msgs.length);
+    public void onMessageReceived(Folder folder, javax.mail.Message[] messages) {
+        Log.d(TAG, "onMessageReceived: folder = " + folder.getFullName() + " message count: " +
+                messages.length);
     }
 
     @Override
@@ -157,7 +159,8 @@ public class EmailSyncService extends Service implements GmailSynsManager.GmailS
     }
 
     /**
-     * The incoming handler realization.
+     * The incoming handler realization. This handler will be used to communicate with current
+     * service and other Android components.
      */
     private static class IncomingHandler extends Handler {
         private final WeakReference<GmailSynsManager> gmailSynsManagerWeakReference;
