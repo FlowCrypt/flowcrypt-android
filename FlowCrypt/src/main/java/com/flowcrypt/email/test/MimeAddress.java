@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: Tom James Holub
  */
 
@@ -13,14 +14,6 @@ public class MimeAddress extends MeaningfulV8ObjectContainer {
         super(o);
     }
 
-    public String getAddress() {
-        return this.getAttributeAsString("address");
-    }
-
-    public String getName() {
-        return this.getAttributeAsString("name");
-    }
-
     public static String stringify(MimeAddress[] addresses) {
         String stringified = "";
         for(Integer i = 0; i < addresses.length; i++) {
@@ -31,6 +24,14 @@ public class MimeAddress extends MeaningfulV8ObjectContainer {
 
     public static String stringify(String name, String address) {
         return name != null && !name.isEmpty() ? name + " <" + address + ">" : address;
+    }
+
+    public String getAddress() {
+        return this.getAttributeAsString("address");
+    }
+
+    public String getName() {
+        return this.getAttributeAsString("name");
     }
 
 }
