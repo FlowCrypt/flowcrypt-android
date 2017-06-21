@@ -40,11 +40,10 @@ import javax.mail.internet.InternetAddress;
  */
 
 public class MessageDaoSource extends BaseDaoSource {
-    public static final String LABEL_MARKER = "  ";
     public static final String TABLE_NAME_MESSAGES = "messages";
 
     public static final String COL_EMAIL = "email";
-    public static final String COL_LABELS = "labels";
+    public static final String COL_FOLDER = "folder";
     public static final String COL_UID = "uid";
     public static final String COL_RECEIVED_DATE = "received_date";
     public static final String COL_SENT_DATE = "sent_date";
@@ -57,7 +56,7 @@ public class MessageDaoSource extends BaseDaoSource {
             TABLE_NAME_MESSAGES + " (" +
             BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-            COL_LABELS + " TEXT NOT NULL, " +
+            COL_FOLDER + " TEXT NOT NULL, " +
             COL_UID + " INTEGER NOT NULL, " +
             COL_RECEIVED_DATE + " INTEGER DEFAULT NULL, " +
             COL_SENT_DATE + " INTEGER DEFAULT NULL, " +
@@ -138,9 +137,8 @@ public class MessageDaoSource extends BaseDaoSource {
     public GeneralMessageDetails getMessageInfo(Cursor cursor) {
         GeneralMessageDetails generalMessageDetails = new GeneralMessageDetails();
 
-        generalMessageDetails.setEmail(cursor.getString(cursor.getColumnIndex(COL_LABELS)));
-        generalMessageDetails.setLabels(
-                parseLabels(cursor.getString(cursor.getColumnIndex(COL_LABELS))));
+        generalMessageDetails.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+        generalMessageDetails.setLabel(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
         generalMessageDetails.setUid(cursor.getLong(cursor.getColumnIndex(COL_UID)));
         generalMessageDetails.setReceivedDateInMillisecond(
                 cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
@@ -216,8 +214,8 @@ public class MessageDaoSource extends BaseDaoSource {
                 getBaseContentUri(),
                 new String[]{"min(" + COL_UID + ")"},
                 MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
-                        .COL_LABELS + " LIKE ?",
-                new String[]{email, "%" + label + MessageDaoSource.LABEL_MARKER + "%"},
+                        .COL_FOLDER + " = ?",
+                new String[]{email, label},
                 null);
 
         if (cursor != null && cursor.moveToFirst()) {
@@ -244,8 +242,8 @@ public class MessageDaoSource extends BaseDaoSource {
                 getBaseContentUri(),
                 new String[]{FlowCryptSQLiteOpenHelper.COLUMN_NAME_COUNT},
                 MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
-                        .COL_LABELS + " LIKE ?",
-                new String[]{email, "%" + label + MessageDaoSource.LABEL_MARKER + "%"},
+                        .COL_FOLDER + " = ?",
+                new String[]{email, label},
                 null);
 
         if (cursor != null && cursor.moveToFirst()) {
@@ -327,7 +325,7 @@ public class MessageDaoSource extends BaseDaoSource {
             uid) throws MessagingException {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, email);
-        contentValues.put(COL_LABELS, label + LABEL_MARKER);
+        contentValues.put(COL_FOLDER, label);
         contentValues.put(COL_UID, uid);
         contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
         contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
@@ -374,9 +372,5 @@ public class MessageDaoSource extends BaseDaoSource {
 
     private String[] parseEmails(String string) {
         return parseArray(string);
-    }
-
-    private String[] parseLabels(String string) {
-        return parseArray(string, LABEL_MARKER);
     }
 }

@@ -77,12 +77,10 @@ public class EmailListFragment extends BaseGmailFragment
                             new MessageDaoSource().getBaseContentUri(),
                             null,
                             MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
-                                    .COL_LABELS + " LIKE ?",
+                                    .COL_FOLDER + " = ?",
                             new String[]{
                                     onManageEmailsListener.getCurrentAccount().name,
-                                    "%" + onManageEmailsListener.getCurrentFolder()
-                                            .getFolderAlias()
-                                            + MessageDaoSource.LABEL_MARKER + "%"},
+                                    onManageEmailsListener.getCurrentFolder().getFolderAlias()},
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
                 default:

@@ -35,7 +35,7 @@ public class GeneralMessageDetails implements Parcelable {
                 }
             };
     private String email;
-    private String[] labels;
+    private String label;
     private long uid;
     private long receivedDateInMillisecond;
     private long sentDateInMillisecond;
@@ -49,7 +49,7 @@ public class GeneralMessageDetails implements Parcelable {
 
     protected GeneralMessageDetails(Parcel in) {
         this.email = in.readString();
-        this.labels = in.createStringArray();
+        this.label = in.readString();
         this.uid = in.readLong();
         this.receivedDateInMillisecond = in.readLong();
         this.sentDateInMillisecond = in.readLong();
@@ -67,7 +67,7 @@ public class GeneralMessageDetails implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.email);
-        dest.writeStringArray(this.labels);
+        dest.writeString(this.label);
         dest.writeLong(this.uid);
         dest.writeLong(this.receivedDateInMillisecond);
         dest.writeLong(this.sentDateInMillisecond);
@@ -75,6 +75,21 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeStringArray(this.to);
         dest.writeString(this.subject);
         dest.writeStringArray(this.flags);
+    }
+
+    @Override
+    public String toString() {
+        return "GeneralMessageDetails{" +
+                "email='" + email + '\'' +
+                ", label='" + label + '\'' +
+                ", uid=" + uid +
+                ", receivedDateInMillisecond=" + receivedDateInMillisecond +
+                ", sentDateInMillisecond=" + sentDateInMillisecond +
+                ", from=" + Arrays.toString(from) +
+                ", to=" + Arrays.toString(to) +
+                ", subject='" + subject + '\'' +
+                ", flags=" + Arrays.toString(flags) +
+                '}';
     }
 
     public String getEmail() {
@@ -85,12 +100,12 @@ public class GeneralMessageDetails implements Parcelable {
         this.email = email;
     }
 
-    public String[] getLabels() {
-        return labels;
+    public String getLabel() {
+        return label;
     }
 
-    public void setLabels(String[] labels) {
-        this.labels = labels;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public long getUid() {
