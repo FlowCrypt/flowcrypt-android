@@ -132,6 +132,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
+                //only for testing
+                loadMessage();
                 //signOut(SignInType.GMAIL);
                 break;
 

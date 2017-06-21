@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.email.sync;
 
 import com.google.android.gms.auth.GoogleAuthException;
+import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
 
@@ -29,7 +30,7 @@ public interface SyncListener {
      * @param folder   The folder where the new messages exist.
      * @param messages The new messages.
      */
-    void onMessageReceived(Folder folder, Message[] messages);
+    void onMessageReceived(IMAPFolder folder, Message[] messages);
 
     /**
      * This method called when new folders list received.

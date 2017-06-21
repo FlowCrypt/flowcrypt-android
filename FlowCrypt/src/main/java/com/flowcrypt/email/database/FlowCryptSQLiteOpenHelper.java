@@ -14,6 +14,7 @@ import android.util.Log;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 
 
 /**
@@ -53,6 +54,10 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_INDEX_LAST_USE_IN_CONTACT);
 
         sqLiteDatabase.execSQL(ImapLabelsDaoSource.IMAP_LABELS_TABLE_SQL_CREATE);
+
+        sqLiteDatabase.execSQL(MessageDaoSource.IMAP_MESSAGES_INFO_TABLE_SQL_CREATE);
+        sqLiteDatabase.execSQL(MessageDaoSource.CREATE_INDEX_EMAIL_IN_MESSAGES);
+        sqLiteDatabase.execSQL(MessageDaoSource.CREATE_INDEX_UID_IN_MESSAGES);
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.imap.IMAPFolder;
@@ -45,6 +46,8 @@ import javax.mail.MessagingException;
  */
 public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 1;
+    public static final int MESSAGE_LOAD_MESSAGES = 2;
+
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
 
@@ -116,9 +119,24 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageReceived(Folder folder, javax.mail.Message[] messages) {
-        Log.d(TAG, "onMessageReceived: folder = " + folder.getFullName() + " message count: " +
+    public void onMessageReceived(IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Log.d(TAG, "onMessageReceived: imapFolder = " + imapFolder.getFullName() + " message " +
+                "count: " +
                 messages.length);
+
+        MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+        for (javax.mail.Message message : messages) {
+            try {
+                messageDaoSource.addRow(getApplicationContext(),
+                        account.name,
+                        "INBOX",
+                        imapFolder.getUID(message),
+                        message);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -177,6 +195,13 @@ public class EmailSyncService extends Service implements SyncListener {
                     case MESSAGE_UPDATE_LABELS:
                         if (gmailSynsManager != null) {
                             gmailSynsManager.updateLabels();
+                        }
+                        break;
+
+                    case MESSAGE_LOAD_MESSAGES:
+                        //todo-denbond7 only for testing
+                        if (gmailSynsManager != null) {
+                            gmailSynsManager.loadMessages("INBOX", 1, 10);
                         }
                         break;
                     default:

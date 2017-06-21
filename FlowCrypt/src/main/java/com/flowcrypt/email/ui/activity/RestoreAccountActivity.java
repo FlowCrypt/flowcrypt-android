@@ -32,7 +32,8 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 public class RestoreAccountActivity extends BaseActivity
-        implements LoaderManager.LoaderCallbacks<LoaderResult> {
+        implements LoaderManager.LoaderCallbacks<LoaderResult>,
+        RestoreAccountFragment.OnRunEmailManagerActivityListener {
 
     public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
             "KEY_EXTRA_PRIVATE_KEYS", RestoreAccountActivity.class);
@@ -131,6 +132,15 @@ public class RestoreAccountActivity extends BaseActivity
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
 
+    }
+
+    @Override
+    public void onRunEmailManageActivity() {
+        Intent intentRunEmailManagerActivity = new Intent(this, EmailManagerActivity.class);
+        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
+                account);
+        startActivity(intentRunEmailManagerActivity);
+        finish();
     }
 
     /**

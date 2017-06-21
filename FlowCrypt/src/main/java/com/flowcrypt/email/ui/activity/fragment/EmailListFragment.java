@@ -7,9 +7,11 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,12 +25,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.model.results.LoadEmailsResult;
-import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
-import com.flowcrypt.email.ui.loader.LoadGeneralMessagesDetailsAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -41,8 +41,8 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailListFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<LoaderResult>, AdapterView.OnItemClickListener {
+public class EmailListFragment extends BaseGmailFragment
+        implements AdapterView.OnItemClickListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
@@ -54,6 +54,60 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     private MessageListAdapter messageListAdapter;
     private Folder currentFolder;
 
+    private LoaderManager.LoaderCallbacks<Cursor> cursorLoaderCallbacks = new LoaderManager
+            .LoaderCallbacks<Cursor>() {
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            switch (id) {
+                case R.id.loader_id_load_gmail_messages:
+                    emptyView.setVisibility(View.GONE);
+                    UIUtil.exchangeViewVisibility(
+                            getContext(),
+                            true,
+                            progressBar,
+                            listViewMessages);
+                    if (getSupportActionBar() != null) {
+                        getSupportActionBar().setTitle(currentFolder.getFolderAlias());
+                    }
+
+                    return new CursorLoader(getContext(),
+                            new MessageDaoSource().getBaseContentUri(),
+                            null,
+                            MessageDaoSource.COL_EMAIL + " = ?",
+                            new String[]{"denbond7test@gmail.com"},
+                            MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            switch (loader.getId()) {
+                case R.id.loader_id_load_gmail_messages:
+                    if (data != null && data.getCount() != 0) {
+                        messageListAdapter.swapCursor(data);
+                        UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                                listViewMessages);
+                    } else {
+                        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, emptyView);
+                    }
+                    break;
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            switch (loader.getId()) {
+                case R.id.loader_id_load_gmail_messages:
+                    messageListAdapter.swapCursor(null);
+                    break;
+            }
+        }
+    };
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +118,8 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
             this.currentFolder = new Folder(GmailConstants.FOLDER_NAME_INBOX, GmailConstants
                     .FOLDER_NAME_INBOX, false);
         }
+
+        this.messageListAdapter = new MessageListAdapter(getContext(), null);
     }
 
     @Override
@@ -76,6 +132,13 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages,
+                null, cursorLoaderCallbacks);
     }
 
     @Override
@@ -95,7 +158,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
                             if (generalMessageDetails != null) {
-                                messageListAdapter.removeItem(generalMessageDetails);
+                                //messageListAdapter.removeItem(generalMessageDetails);
                             }
                         }
                         break;
@@ -106,8 +169,8 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
                             if (generalMessageDetails != null) {
-                                messageListAdapter.changeMessageSeenState(generalMessageDetails,
-                                        true);
+                                // messageListAdapter.changeMessageSeenState(generalMessageDetails,
+                                //        true);
                             }
                         }
                         break;
@@ -121,45 +184,6 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     }
 
     @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_load_gmail_messages:
-                emptyView.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(getContext(), true, progressBar, listViewMessages);
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setTitle(currentFolder.getFolderAlias());
-                }
-                return new LoadGeneralMessagesDetailsAsyncTaskLoader(getActivity(), getAccount(),
-                        currentFolder.getServerFullFolderName());
-
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_load_gmail_messages:
-                LoadEmailsResult loadEmailsResult = (LoadEmailsResult) result;
-                if (loadEmailsResult.getGeneralMessageDetailsList() != null
-                        && !loadEmailsResult.getGeneralMessageDetailsList().isEmpty()) {
-                    messageListAdapter = new MessageListAdapter(getActivity(),
-                            loadEmailsResult.getGeneralMessageDetailsList());
-                    listViewMessages.setAdapter(messageListAdapter);
-                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
-                            listViewMessages);
-                } else {
-                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar, emptyView);
-                }
-                break;
-
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
-        }
-    }
-
-    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
                 (GeneralMessageDetails) parent.getItemAtPosition(position), currentFolder
@@ -169,7 +193,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
 
     @Override
     public void onAccountUpdated() {
-        getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages, null, this);
+
     }
 
     /**
@@ -185,6 +209,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
     private void initViews(View view) {
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
+        listViewMessages.setAdapter(messageListAdapter);
 
         emptyView = view.findViewById(R.id.emptyView);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);

@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.email.sync;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -124,6 +125,14 @@ public class GmailSynsManager {
     public void updateLabels() {
         try {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadMessages(String folderName, int from, int to) {
+        try {
+            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, from, to));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -7,20 +7,20 @@
 package com.flowcrypt.email.ui.adapter;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.DateTimeUtil;
-
-import java.util.List;
 
 /**
  * The MessageListAdapter responsible for displaying the message in the list.
@@ -31,95 +31,30 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class MessageListAdapter extends BaseAdapter {
-    private List<GeneralMessageDetails> generalMessageDetailses;
-    private Context context;
+public class MessageListAdapter extends CursorAdapter {
+    private MessageDaoSource messageDaoSource;
 
-    public MessageListAdapter(Context context, List<GeneralMessageDetails>
-            generalMessageDetailses) {
-        this.context = context;
-        this.generalMessageDetailses = generalMessageDetailses;
+    public MessageListAdapter(Context context, Cursor c) {
+        super(context, c, true);
+        this.messageDaoSource = new MessageDaoSource();
     }
 
     @Override
-    public int getCount() {
-        return generalMessageDetailses.size();
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        return LayoutInflater.from(context).inflate(R.layout.messages_list_item, parent, false);
     }
 
     @Override
-    public GeneralMessageDetails getItem(int position) {
-        return position < getCount() ? generalMessageDetailses.get(position) : null;
-    }
+    public void bindView(View view, Context context, Cursor cursor) {
+        GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
 
-    @Override
-    public long getItemId(int position) {
-        return 0;
-    }
+        ViewHolder viewHolder = new ViewHolder();
+        viewHolder.textViewSenderAddress = (TextView) view.findViewById(R.id
+                .textViewSenderAddress);
+        viewHolder.textViewDate = (TextView) view.findViewById(R.id.textViewDate);
+        viewHolder.textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        GeneralMessageDetails generalMessageDetails = getItem(position);
-        ViewHolder viewHolder;
-
-        if (convertView == null) {
-            viewHolder = new ViewHolder();
-            convertView = LayoutInflater.from(context).inflate(R.layout.messages_list_item,
-                    parent, false);
-            viewHolder.textViewSenderAddress =
-                    (TextView) convertView.findViewById(R.id.textViewSenderAddress);
-            viewHolder.textViewDate = (TextView) convertView.findViewById(R.id.textViewDate);
-            viewHolder.textViewSubject = (TextView) convertView.findViewById(R.id.textViewSubject);
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
-        }
-
-        if (viewHolder != null) {
-            updateItem(generalMessageDetails, viewHolder);
-        }
-
-        return convertView;
-    }
-
-    /**
-     * Remove an exists item from the emails list.
-     *
-     * @param generalMessageDetails The item which will be removed.
-     */
-    public void removeItem(GeneralMessageDetails generalMessageDetails) {
-        if (generalMessageDetails != null) {
-            int idOfDeleteCandidate = -1;
-
-            for (GeneralMessageDetails messageDetails : generalMessageDetailses) {
-                if (messageDetails.getUid() == generalMessageDetails.getUid()) {
-                    idOfDeleteCandidate = generalMessageDetailses.indexOf(messageDetails);
-                }
-            }
-
-            if (idOfDeleteCandidate != -1) {
-                generalMessageDetailses.remove(idOfDeleteCandidate);
-                notifyDataSetChanged();
-            }
-        }
-    }
-
-    /**
-     * Change the seen status of an exist item in the emails list.
-     *
-     * @param generalMessageDetails The item which the seen status will be changed.
-     * @param isMessageSeen         true - if the message status already is seen, false otherwise.
-     */
-    public void changeMessageSeenState(GeneralMessageDetails generalMessageDetails, boolean
-            isMessageSeen) {
-        if (generalMessageDetails != null) {
-            for (GeneralMessageDetails messageDetails : generalMessageDetailses) {
-                if (messageDetails.getUid() == generalMessageDetails.getUid()) {
-                    messageDetails.setSeen(isMessageSeen);
-                    notifyDataSetChanged();
-                    break;
-                }
-            }
-        }
+        updateItem(context, generalMessageDetails, viewHolder);
     }
 
     /**
@@ -129,26 +64,29 @@ public class MessageListAdapter extends BaseAdapter {
      *                              generalMessageDetails.
      * @param viewHolder            A View holder object which consist links to views.
      */
-    private void updateItem(GeneralMessageDetails generalMessageDetails, @NonNull ViewHolder
+    private void updateItem(Context context, GeneralMessageDetails generalMessageDetails, @NonNull
+            ViewHolder
             viewHolder) {
         if (generalMessageDetails != null) {
-            viewHolder.textViewSenderAddress.setText(generalMessageDetails.getFrom());
+            viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails
+                    .getFrom()));
             viewHolder.textViewSubject.setText(generalMessageDetails.getSubject());
             viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
-                    generalMessageDetails.getReceiveDate().getTime()));
+                    generalMessageDetails.getReceivedDateInMillisecond()));
 
             if (generalMessageDetails.isSeen()) {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
 
-                viewHolder.textViewSenderAddress.setTextColor(getColor(R.color.scorpion));
-                viewHolder.textViewSubject.setTextColor(getColor(R.color.gray));
-                viewHolder.textViewDate.setTextColor(getColor(R.color.gray));
+                viewHolder.textViewSenderAddress.setTextColor(getColor(context, R.color.scorpion));
+                viewHolder.textViewSubject.setTextColor(getColor(context, R.color.gray));
+                viewHolder.textViewDate.setTextColor(getColor(context, R.color.gray));
             } else {
                 changeViewsTypeface(viewHolder, Typeface.BOLD);
 
-                viewHolder.textViewSenderAddress.setTextColor(getColor(android.R.color.black));
-                viewHolder.textViewSubject.setTextColor(getColor(android.R.color.black));
-                viewHolder.textViewDate.setTextColor(getColor(android.R.color.black));
+                viewHolder.textViewSenderAddress.setTextColor(
+                        getColor(context, android.R.color.black));
+                viewHolder.textViewSubject.setTextColor(getColor(context, android.R.color.black));
+                viewHolder.textViewDate.setTextColor(getColor(context, android.R.color.black));
             }
         } else {
             clearItem(viewHolder);
@@ -162,7 +100,7 @@ public class MessageListAdapter extends BaseAdapter {
     }
 
     @SuppressWarnings("deprecation")
-    private int getColor(int colorResourcesId) {
+    private int getColor(Context context, int colorResourcesId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return context.getResources().getColor
                     (colorResourcesId, context.getTheme());
@@ -182,6 +120,23 @@ public class MessageListAdapter extends BaseAdapter {
         viewHolder.textViewDate.setText(null);
 
         changeViewsTypeface(viewHolder, Typeface.NORMAL);
+    }
+
+    private String generateAddresses(String[] strings) {
+        if (strings == null)
+            return "null";
+
+        int iMax = strings.length - 1;
+        if (iMax == -1)
+            return "";
+
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; ; i++) {
+            b.append(String.valueOf(strings[i]));
+            if (i == iMax)
+                return b.toString();
+            b.append(", ");
+        }
     }
 
     /**

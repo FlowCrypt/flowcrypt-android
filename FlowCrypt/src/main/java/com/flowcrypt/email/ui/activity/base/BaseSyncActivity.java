@@ -68,13 +68,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     public void updateLabels() {
-        if (!isBound) {
-            if (BuildConfig.DEBUG) {
-                Toast.makeText(this, "Activity not connected to the service.", Toast.LENGTH_SHORT)
-                        .show();
-            }
-            return;
-        }
+        if (checkBound()) return;
 
         Message msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0);
         try {
@@ -82,5 +76,27 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
+
+    public void loadMessage() {
+        if (checkBound()) return;
+
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, 0, 0);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean checkBound() {
+        if (!isBound) {
+            if (BuildConfig.DEBUG) {
+                Toast.makeText(this, "Activity not connected to the service.", Toast.LENGTH_SHORT)
+                        .show();
+            }
+            return true;
+        }
+        return false;
     }
 }

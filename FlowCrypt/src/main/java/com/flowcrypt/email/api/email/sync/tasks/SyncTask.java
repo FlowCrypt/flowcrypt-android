@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 
 /**
- * The sync task which will be runned by {@link GmailSynsManager}
+ * The sync task which will be run by {@link GmailSynsManager}
  *
  * @author DenBond7
  *         Date: 16.06.2017

@@ -6,7 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -21,7 +21,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
@@ -40,10 +39,21 @@ import java.util.List;
  */
 public class RestoreAccountFragment extends BaseFragment implements View.OnClickListener,
         LoaderManager.LoaderCallbacks<LoaderResult> {
+    private OnRunEmailManagerActivityListener onRunEmailManagerActivityListener;
     private List<String> privateKeys;
     private EditText editTextKeyPassword;
     private View progressBar;
     private boolean isThrowErrorIfDuplicateFound;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof OnRunEmailManagerActivityListener) {
+            onRunEmailManagerActivityListener = (OnRunEmailManagerActivityListener) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                RestoreAccountFragment.OnRunEmailManagerActivityListener.class.getSimpleName());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -102,8 +112,9 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
                 progressBar.setVisibility(View.GONE);
                 boolean booleanResult = (boolean) result;
                 if (booleanResult) {
-                    startActivity(new Intent(getContext(), EmailManagerActivity.class));
-                    getActivity().finish();
+                    if (onRunEmailManagerActivityListener != null) {
+                        onRunEmailManagerActivityListener.onRunEmailManageActivity();
+                    }
                 } else {
                     UIUtil.showInfoSnackbar(getView(), getString(R.string
                             .password_is_incorrect));
@@ -143,5 +154,9 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
 
         editTextKeyPassword = (EditText) view.findViewById(R.id.editTextKeyPassword);
         progressBar = view.findViewById(R.id.progressBar);
+    }
+
+    public interface OnRunEmailManagerActivityListener {
+        void onRunEmailManageActivity();
     }
 }
