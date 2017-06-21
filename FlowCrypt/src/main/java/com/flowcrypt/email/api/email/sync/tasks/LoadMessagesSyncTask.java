@@ -10,8 +10,10 @@ import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
 
+import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.UIDFolder;
 
 /**
  * This task does job to load messages.
@@ -47,9 +49,11 @@ public class LoadMessagesSyncTask implements SyncTask {
                 messages = imapFolder.getMessages(from, to);
             }
 
-            for (Message message : messages) {
-                imapFolder.getUID(message);
-            }
+            FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(FetchProfile.Item.ENVELOPE);
+            fetchProfile.add(FetchProfile.Item.FLAGS);
+            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+            imapFolder.fetch(messages, fetchProfile);
 
             syncListener.onMessageReceived(imapFolder, messages);
         }
