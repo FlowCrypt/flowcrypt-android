@@ -130,9 +130,34 @@ public class GmailSynsManager {
         }
     }
 
-    public void loadMessages(String folderName, int from, int to) {
+    /**
+     * Add load a messages information task. This method create a new
+     * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param folderName A server folder name.
+     * @param start      The position of the start.
+     * @param end        The position of the end.
+     */
+    public void loadMessages(String folderName, int start, int end) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, from, to));
+            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, start, end));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Add load messages information task ot the next messages. This method create a new
+     * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param folderName A server folder name.
+     * @param end        The position of the end.
+     */
+    public void loadNextMessages(String folderName, int end) {
+        try {
+            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, end, false));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

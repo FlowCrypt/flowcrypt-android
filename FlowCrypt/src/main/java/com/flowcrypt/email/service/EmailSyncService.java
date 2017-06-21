@@ -47,6 +47,7 @@ import javax.mail.MessagingException;
 public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 1;
     public static final int MESSAGE_LOAD_MESSAGES = 2;
+    public static final int MESSAGE_LOAD_NEXT_MESSAGES = 3;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -127,15 +128,12 @@ public class EmailSyncService extends Service implements SyncListener {
                     imapFolder.getName());
 
             MessageDaoSource messageDaoSource = new MessageDaoSource();
-            for (javax.mail.Message message : messages) {
-                messageDaoSource.addRow(
-                        getApplicationContext(),
-                        account.name,
-                        folder.getFolderAlias(),
-                        imapFolder.getUID(message),
-                        message);
+            messageDaoSource.addRows(getApplicationContext(),
+                    account.name,
+                    folder.getFolderAlias(),
+                    imapFolder,
+                    messages);
 
-            }
         } catch (MessagingException e) {
             e.printStackTrace();
         }
@@ -190,10 +188,10 @@ public class EmailSyncService extends Service implements SyncListener {
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(Message message) {
             if (gmailSynsManagerWeakReference.get() != null) {
                 GmailSynsManager gmailSynsManager = gmailSynsManagerWeakReference.get();
-                switch (msg.what) {
+                switch (message.what) {
                     case MESSAGE_UPDATE_LABELS:
                         if (gmailSynsManager != null) {
                             gmailSynsManager.updateLabels();
@@ -201,15 +199,25 @@ public class EmailSyncService extends Service implements SyncListener {
                         break;
 
                     case MESSAGE_LOAD_MESSAGES:
-                        //todo-denbond7 only for testing
                         com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
-                                .email.Folder) msg.obj;
+                                .email.Folder) message.obj;
                         if (gmailSynsManager != null) {
-                            gmailSynsManager.loadMessages(folder.getServerFullFolderName(), 1, 10);
+                            gmailSynsManager.loadMessages(folder.getServerFullFolderName(),
+                                    message.arg1, message.arg2);
+                        }
+                        break;
+
+                    case MESSAGE_LOAD_NEXT_MESSAGES:
+                        com.flowcrypt.email.api.email.Folder folderOfMessages = (com.flowcrypt
+                                .email.api
+                                .email.Folder) message.obj;
+                        if (gmailSynsManager != null) {
+                            gmailSynsManager.loadNextMessages(folderOfMessages
+                                    .getServerFullFolderName(), message.arg1);
                         }
                         break;
                     default:
-                        super.handleMessage(msg);
+                        super.handleMessage(message);
                 }
             }
         }

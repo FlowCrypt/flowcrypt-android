@@ -95,7 +95,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (drawerLayout != null) {
             drawerLayout.removeDrawerListener(actionBarDrawerToggle);
@@ -133,8 +133,6 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
-                //only for testing
-                loadMessage(folder);
                 //signOut(SignInType.GMAIL);
                 break;
 
@@ -197,7 +195,9 @@ public class EmailManagerActivity extends BaseSyncActivity
 
                     if (folder == null) {
                         folder = foldersManager.getFolderInbox();
-                        updateEmailListFragment();
+                        if (folder != null) {
+                            updateEmailListFragment();
+                        }
                     }
                 }
                 break;

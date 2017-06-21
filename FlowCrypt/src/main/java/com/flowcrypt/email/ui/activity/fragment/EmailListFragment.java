@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.UIUtil;
@@ -50,6 +51,8 @@ public class EmailListFragment extends BaseGmailFragment
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
+    private MessageDaoSource messageDaoSource;
+    private BaseSyncActivity baseSyncActivity;
 
     private LoaderManager.LoaderCallbacks<Cursor> cursorLoaderCallbacks = new LoaderManager
             .LoaderCallbacks<Cursor>() {
@@ -112,14 +115,23 @@ public class EmailListFragment extends BaseGmailFragment
         }
     };
 
+    public EmailListFragment() {
+        this.messageDaoSource = new MessageDaoSource();
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
         if (context instanceof OnManageEmailsListener) {
-            onManageEmailsListener = (OnManageEmailsListener) context;
+            this.onManageEmailsListener = (OnManageEmailsListener) context;
         } else throw new IllegalArgumentException(context.toString() + " must implement " +
                 OnManageEmailsListener.class.getSimpleName());
+
+        if (context instanceof BaseSyncActivity) {
+            this.baseSyncActivity = (BaseSyncActivity) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                BaseSyncActivity.class.getSimpleName());
     }
 
     @Override
@@ -148,6 +160,25 @@ public class EmailListFragment extends BaseGmailFragment
                     null, cursorLoaderCallbacks);
         }
     }
+
+    /*@Override
+    public void onResume() {
+        super.onResume();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (onManageEmailsListener.getCurrentFolder() != null) {
+                    if (baseSyncActivity != null) {
+                        baseSyncActivity.loadNextMessages(onManageEmailsListener.getCurrentFolder(),
+                                messageDaoSource.getCountOfMessagesForLabel(getContext(),
+                                        onManageEmailsListener.getCurrentAccount().name,
+                                        onManageEmailsListener
+                                                .getCurrentFolder().getFolderAlias()));
+                    }
+                }
+            }
+        }, 2000);
+    }*/
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -199,8 +230,10 @@ public class EmailListFragment extends BaseGmailFragment
     }
 
     public void showMessageForCurrentFolder() {
-        getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
-                cursorLoaderCallbacks);
+        if (onManageEmailsListener.getCurrentFolder() != null) {
+            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
+                    cursorLoaderCallbacks);
+        }
     }
 
     private void initViews(View view) {

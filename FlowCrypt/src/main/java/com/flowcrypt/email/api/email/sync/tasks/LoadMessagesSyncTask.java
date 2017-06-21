@@ -25,14 +25,21 @@ import javax.mail.UIDFolder;
  */
 
 public class LoadMessagesSyncTask implements SyncTask {
+    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
     private String folderName;
-    private int from;
-    private int to;
+    private int start;
+    private int end;
+    private boolean isSingleLoad;
 
-    public LoadMessagesSyncTask(String folderName, int from, int to) {
+    public LoadMessagesSyncTask(String folderName, int start, int end) {
         this.folderName = folderName;
-        this.from = from;
-        this.to = to;
+        this.start = start;
+        this.end = end;
+    }
+
+    public LoadMessagesSyncTask(String folderName, int end, boolean isSingleLoad) {
+        this(folderName, -1, end);
+        this.isSingleLoad = isSingleLoad;
     }
 
     @Override
@@ -40,13 +47,27 @@ public class LoadMessagesSyncTask implements SyncTask {
         IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
         imapFolder.open(Folder.READ_ONLY);
 
+        int messagesCount = imapFolder.getMessageCount();
+
+        if (this.end < 1 || this.end > messagesCount) {
+            this.end = messagesCount;
+        }
+
+        if (this.start == -1) {
+            this.start = this.end - COUNT_OF_LOADED_EMAILS_BY_STEP;
+        }
+
+        if (this.start < 1) {
+            this.start = 1;
+        }
+
         if (syncListener != null) {
             Message[] messages;
 
-            if (from == to) {
-                messages = new Message[]{imapFolder.getMessage(from)};
+            if (this.isSingleLoad) {
+                messages = new Message[]{imapFolder.getMessage(end)};
             } else {
-                messages = imapFolder.getMessages(from, to);
+                messages = imapFolder.getMessages(start, end);
             }
 
             FetchProfile fetchProfile = new FetchProfile();

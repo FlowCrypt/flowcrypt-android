@@ -68,6 +68,30 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         isBound = false;
     }
 
+    public void loadMessages(Folder folder, int start, int end) {
+        if (checkBound()) return;
+
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
+                folder);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadNextMessages(Folder folder, int end) {
+        if (checkBound()) return;
+
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES, end, 0,
+                folder);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void updateLabels() {
         if (checkBound()) return;
 
@@ -79,18 +103,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
-    public void loadMessage(Folder folder) {
-        if (checkBound()) return;
-
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, 0, 0, folder);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean checkBound() {
+    protected boolean checkBound() {
         if (!isBound) {
             if (BuildConfig.DEBUG) {
                 Toast.makeText(this, "Activity not connected to the service.", Toast.LENGTH_SHORT)

@@ -12,11 +12,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
+import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
+import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +80,7 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Add a new message details to the database. Must be called on non-UI thread.
+     * Add a new message details to the database. This method must be called in the non-UI thread.
      *
      * @param context Interface to global information about an application environment.
      * @param email   The email that the message linked.
@@ -90,18 +93,40 @@ public class MessageDaoSource extends BaseDaoSource {
             throws MessagingException {
         ContentResolver contentResolver = context.getContentResolver();
         if (message != null && label != null && contentResolver != null) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(COL_EMAIL, email);
-            contentValues.put(COL_LABELS, label + LABEL_MARKER);
-            contentValues.put(COL_UID, uid);
-            contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
-            contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
-            contentValues.put(COL_FROM_ADDRESSES, prepareAddressesForSaving(message.getFrom()));
-            contentValues.put(COL_TO_ADDRESSES, prepareAddressesForSaving(message.getReplyTo()));
-            contentValues.put(COL_SUBJECT, message.getSubject());
-            contentValues.put(COL_FLAGS, prepareFlagsToSave(message.getFlags()));
+            ContentValues contentValues = prepareContentValues(email, label, message, uid);
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
+    }
+
+    /**
+     * This method add rows per single transaction. This method must be called in the non-UI thread.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param email      The email that the message linked.
+     * @param label      The folder label.
+     * @param imapFolder The {@link IMAPFolder} object which contains an information about a
+     *                   remote folder.
+     * @param messages   The messages array.
+     * @return the number of newly created rows.
+     * @throws MessagingException This exception may be occured when we call <code>mapFolder
+     *                            .getUID(message)</code>
+     */
+    public int addRows(Context context, String email, String label,
+                       IMAPFolder imapFolder, Message[] messages) throws MessagingException {
+        if (messages != null) {
+            ContentResolver contentResolver = context.getContentResolver();
+            ContentValues[] contentValuesArray = new ContentValues[messages.length];
+
+            for (int i = 0; i < messages.length; i++) {
+                Message message = messages[i];
+                ContentValues contentValues = prepareContentValues(email, label,
+                        message, imapFolder.getUID(message));
+
+                contentValuesArray[i] = contentValues;
+            }
+
+            return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+        } else return 0;
     }
 
     /**
@@ -176,6 +201,63 @@ public class MessageDaoSource extends BaseDaoSource {
         return false;
     }
 
+    /**
+     * Get the minimum UID in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The minimum UID for the current label or -1 if it not exists.
+     */
+    public int getMinUIDforLabel(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{"min(" + COL_UID + ")"},
+                MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
+                        .COL_LABELS + " LIKE ?",
+                new String[]{email, "%" + label + MessageDaoSource.LABEL_MARKER + "%"},
+                null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int uid = cursor.getInt(0);
+            cursor.close();
+            return uid;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Get the count of messages in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The count of messages for the current label.
+     */
+    public int getCountOfMessagesForLabel(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{FlowCryptSQLiteOpenHelper.COLUMN_NAME_COUNT},
+                MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
+                        .COL_LABELS + " LIKE ?",
+                new String[]{email, "%" + label + MessageDaoSource.LABEL_MARKER + "%"},
+                null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int uid = cursor.getInt(cursor.getColumnIndex(FlowCryptSQLiteOpenHelper
+                    .COLUMN_NAME_COUNT));
+            cursor.close();
+            return uid;
+        }
+
+        return 0;
+    }
+
     private static String prepareArrayToSaving(String[] attributes) {
         if (attributes != null && attributes.length > 0) {
             String result = "";
@@ -226,6 +308,35 @@ public class MessageDaoSource extends BaseDaoSource {
             return MessageFlag.SEEN;
         }
         return null;
+    }
+
+    /**
+     * Prepare the content values for insert to the database. This method must be called in the
+     * non-UI thread.
+     *
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param message The message which will be added to the database.
+     * @param uid     The message UID.
+     * @return generated {@link ContentValues}
+     * @throws MessagingException This exception may be occured when we call methods of thr
+     *                            {@link Message} object</code>
+     */
+    @NonNull
+    private ContentValues prepareContentValues(String email, String label, Message message, long
+            uid) throws MessagingException {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, email);
+        contentValues.put(COL_LABELS, label + LABEL_MARKER);
+        contentValues.put(COL_UID, uid);
+        contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
+        contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
+        contentValues.put(COL_FROM_ADDRESSES, prepareAddressesForSaving(message.getFrom()));
+        contentValues.put(COL_TO_ADDRESSES,
+                prepareAddressesForSaving(message.getReplyTo()));
+        contentValues.put(COL_SUBJECT, message.getSubject());
+        contentValues.put(COL_FLAGS, prepareFlagsToSave(message.getFlags()));
+        return contentValues;
     }
 
     private String prepareFlagsToSave(Flags flags) {
