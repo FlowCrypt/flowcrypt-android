@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.accounts.Account;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -20,10 +22,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -45,14 +45,11 @@ public class EmailListFragment extends BaseGmailFragment
         implements AdapterView.OnItemClickListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
-    private static final String KEY_CURRENT_FOLDER = BuildConfig.APPLICATION_ID + "" +
-            ".KEY_CURRENT_FOLDER";
-
     private ListView listViewMessages;
     private View emptyView;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
-    private Folder currentFolder;
+    private OnManageEmailsListener onManageEmailsListener;
 
     private LoaderManager.LoaderCallbacks<Cursor> cursorLoaderCallbacks = new LoaderManager
             .LoaderCallbacks<Cursor>() {
@@ -67,15 +64,22 @@ public class EmailListFragment extends BaseGmailFragment
                             true,
                             progressBar,
                             listViewMessages);
+
                     if (getSupportActionBar() != null) {
-                        getSupportActionBar().setTitle(currentFolder.getFolderAlias());
+                        getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder()
+                                .getUserFriendlyName());
                     }
 
                     return new CursorLoader(getContext(),
                             new MessageDaoSource().getBaseContentUri(),
                             null,
-                            MessageDaoSource.COL_EMAIL + " = ?",
-                            new String[]{"denbond7test@gmail.com"},
+                            MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
+                                    .COL_LABELS + " LIKE ?",
+                            new String[]{
+                                    onManageEmailsListener.getCurrentAccount().name,
+                                    "%" + onManageEmailsListener.getCurrentFolder()
+                                            .getFolderAlias()
+                                            + MessageDaoSource.LABEL_MARKER + "%"},
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
                 default:
@@ -109,16 +113,18 @@ public class EmailListFragment extends BaseGmailFragment
     };
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof OnManageEmailsListener) {
+            onManageEmailsListener = (OnManageEmailsListener) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                OnManageEmailsListener.class.getSimpleName());
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (savedInstanceState != null) {
-            this.currentFolder = savedInstanceState.getParcelable(KEY_CURRENT_FOLDER);
-        } else {
-            this.currentFolder = new Folder(GmailConstants.FOLDER_NAME_INBOX, GmailConstants
-                    .FOLDER_NAME_INBOX, false);
-        }
-
         this.messageListAdapter = new MessageListAdapter(getContext(), null);
     }
 
@@ -137,14 +143,10 @@ public class EmailListFragment extends BaseGmailFragment
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages,
-                null, cursorLoaderCallbacks);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(KEY_CURRENT_FOLDER, currentFolder);
+        if (onManageEmailsListener.getCurrentFolder() != null) {
+            getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages,
+                    null, cursorLoaderCallbacks);
+        }
     }
 
     @Override
@@ -186,8 +188,8 @@ public class EmailListFragment extends BaseGmailFragment
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                (GeneralMessageDetails) parent.getItemAtPosition(position), currentFolder
-                        .getServerFullFolderName()),
+                (GeneralMessageDetails) parent.getItemAtPosition(position),
+                onManageEmailsListener.getCurrentFolder().getServerFullFolderName()),
                 REQUEST_CODE_SHOW_MESSAGE_DETAILS);
     }
 
@@ -196,14 +198,9 @@ public class EmailListFragment extends BaseGmailFragment
 
     }
 
-    /**
-     * Change a current IMAP folder.
-     *
-     * @param folder The name of a new folder.
-     */
-    public void setFolder(Folder folder) {
-        this.currentFolder = folder;
-        getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null, this);
+    public void showMessageForCurrentFolder() {
+        getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
+                cursorLoaderCallbacks);
     }
 
     private void initViews(View view) {
@@ -213,5 +210,11 @@ public class EmailListFragment extends BaseGmailFragment
 
         emptyView = view.findViewById(R.id.emptyView);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+    }
+
+    public interface OnManageEmailsListener {
+        Account getCurrentAccount();
+
+        Folder getCurrentFolder();
     }
 }

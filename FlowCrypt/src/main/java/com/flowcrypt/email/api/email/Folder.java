@@ -35,6 +35,7 @@ public class Folder implements Parcelable {
     };
     private String serverFullFolderName;
     private String folderAlias;
+    private String userFriendlyName;
     private String[] attributes;
     private boolean isCustomLabel;
 
@@ -42,12 +43,14 @@ public class Folder implements Parcelable {
             isCustomLabel) {
         this.serverFullFolderName = serverFullFolderName;
         this.folderAlias = folderAlias;
+        this.userFriendlyName = folderAlias;
         this.attributes = attributes;
         this.isCustomLabel = isCustomLabel;
     }
 
     public Folder(String folderAlias, String serverFullFolderName, boolean isCustomLabel) {
         this.folderAlias = folderAlias;
+        this.userFriendlyName = folderAlias;
         this.serverFullFolderName = serverFullFolderName;
         this.isCustomLabel = isCustomLabel;
     }
@@ -55,6 +58,7 @@ public class Folder implements Parcelable {
     protected Folder(Parcel in) {
         this.serverFullFolderName = in.readString();
         this.folderAlias = in.readString();
+        this.userFriendlyName = in.readString();
         this.attributes = in.createStringArray();
         this.isCustomLabel = in.readByte() != 0;
     }
@@ -64,6 +68,7 @@ public class Folder implements Parcelable {
         return "Folder{" +
                 "serverFullFolderName='" + serverFullFolderName + '\'' +
                 ", folderAlias='" + folderAlias + '\'' +
+                ", userFriendlyName='" + userFriendlyName + '\'' +
                 ", attributes=" + Arrays.toString(attributes) +
                 ", isCustomLabel=" + isCustomLabel +
                 '}';
@@ -78,6 +83,7 @@ public class Folder implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.serverFullFolderName);
         dest.writeString(this.folderAlias);
+        dest.writeString(this.userFriendlyName);
         dest.writeStringArray(this.attributes);
         dest.writeByte(this.isCustomLabel ? (byte) 1 : (byte) 0);
     }
@@ -104,5 +110,13 @@ public class Folder implements Parcelable {
 
     public void setAttributes(String[] attributes) {
         this.attributes = attributes;
+    }
+
+    public String getUserFriendlyName() {
+        return userFriendlyName;
+    }
+
+    public void setUserFriendlyName(String userFriendlyName) {
+        this.userFriendlyName = userFriendlyName;
     }
 }

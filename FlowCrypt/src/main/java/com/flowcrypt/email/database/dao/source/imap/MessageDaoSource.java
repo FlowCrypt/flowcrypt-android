@@ -37,6 +37,7 @@ import javax.mail.internet.InternetAddress;
  */
 
 public class MessageDaoSource extends BaseDaoSource {
+    public static final String LABEL_MARKER = "  ";
     public static final String TABLE_NAME_MESSAGES = "messages";
 
     public static final String COL_EMAIL = "email";
@@ -60,7 +61,7 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_FROM_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_TO_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_SUBJECT + " TEXT DEFAULT NULL, " +
-            COL_FLAGS + " TEXT NOT NULL " + ");";
+            COL_FLAGS + " TEXT DEFAULT NULL " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -91,7 +92,7 @@ public class MessageDaoSource extends BaseDaoSource {
         if (message != null && label != null && contentResolver != null) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COL_EMAIL, email);
-            contentValues.put(COL_LABELS, label);
+            contentValues.put(COL_LABELS, label + LABEL_MARKER);
             contentValues.put(COL_UID, uid);
             contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
             contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
@@ -189,8 +190,12 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     private static String[] parseArray(String attributesAsString) {
+        return parseArray(attributesAsString, "\t");
+    }
+
+    private static String[] parseArray(String attributesAsString, String regex) {
         if (attributesAsString != null && attributesAsString.length() > 0) {
-            return attributesAsString.split("\t");
+            return attributesAsString.split(regex);
         } else {
             return null;
         }
@@ -261,6 +266,6 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     private String[] parseLabels(String string) {
-        return parseArray(string);
+        return parseArray(string, LABEL_MARKER);
     }
 }

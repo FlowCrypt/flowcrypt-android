@@ -17,6 +17,7 @@ import android.os.RemoteException;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.service.EmailSyncService;
 
 /**
@@ -78,10 +79,10 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
-    public void loadMessage() {
+    public void loadMessage(Folder folder) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, 0, 0);
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, 0, 0, folder);
         try {
             messenger.send(msg);
         } catch (RemoteException e) {

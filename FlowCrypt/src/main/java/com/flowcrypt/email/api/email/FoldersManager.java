@@ -36,6 +36,47 @@ public class FoldersManager {
         this.folders = new LinkedHashMap<>();
     }
 
+    /**
+     * Generate a new {@link Folder}
+     *
+     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     *                    remote folder.
+     * @param folderAlias The folder alias.
+     * @return
+     * @throws MessagingException
+     */
+    public static Folder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
+            MessagingException {
+        return new Folder(imapFolder.getFullName(),
+                folderAlias,
+                imapFolder.getAttributes(),
+                isCustomLabels(imapFolder));
+    }
+
+    /**
+     * Check if current folder is a custom label.
+     *
+     * @param folder The {@link IMAPFolder} object which contains an information about a
+     *               remote folder.
+     * @return true if this label is a custom, false otherwise.
+     * @throws MessagingException
+     */
+    public static boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
+        String[] attr = folder.getAttributes();
+        FolderType[] folderTypes = FolderType.values();
+
+        for (String attribute : attr) {
+            for (FolderType folderType : folderTypes) {
+                if (folderType.getValue().equals(attribute)) {
+                    return false;
+                }
+            }
+        }
+
+        return !FolderType.INBOX.getValue().equals(folder.getFullName());
+
+    }
+
     public Folder getFolderInbox() {
         return folders.get(FolderType.INBOX.getValue());
     }
@@ -94,11 +135,7 @@ public class FoldersManager {
                 && !isFolderHasNoSelectAttribute(imapFolder)
                 && !TextUtils.isEmpty(imapFolder.getFullName())
                 && !folders.containsKey(imapFolder.getFullName())) {
-            this.folders.put(prepareFolderKey(imapFolder),
-                    new Folder(imapFolder.getFullName(),
-                            folderAlias,
-                            imapFolder.getAttributes(),
-                            isCustomLabels(imapFolder)));
+            this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
         }
     }
 
@@ -185,22 +222,6 @@ public class FoldersManager {
         } else {
             return folderType.value;
         }
-    }
-
-    private boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
-        String[] attr = folder.getAttributes();
-        FolderType[] folderTypes = FolderType.values();
-
-        for (String attribute : attr) {
-            for (FolderType folderType : folderTypes) {
-                if (folderType.getValue().equals(attribute)) {
-                    return false;
-                }
-            }
-        }
-
-        return !FolderType.INBOX.getValue().equals(folder.getFullName());
-
     }
 
     private FolderType getFolderTypeForImapFodler(String[] attributes) {

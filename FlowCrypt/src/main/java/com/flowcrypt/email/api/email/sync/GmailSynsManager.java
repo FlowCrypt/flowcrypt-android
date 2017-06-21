@@ -144,8 +144,8 @@ public class GmailSynsManager {
         @Override
         public void run() {
             Thread.currentThread().setName(SyncTaskRunnable.class.getCanonicalName());
-            try {
-                while (!Thread.interrupted()) {
+            while (!Thread.interrupted()) {
+                try {
                     Log.d(TAG, "SyncTaskBlockingQueue size = " + syncTaskBlockingQueue.size());
                     SyncTask syncTask = syncTaskBlockingQueue.take();
 
@@ -160,9 +160,9 @@ public class GmailSynsManager {
                         Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
                                 + " completed");
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
 

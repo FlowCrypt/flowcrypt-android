@@ -45,7 +45,7 @@ import com.flowcrypt.email.util.GeneralUtil;
  */
 public class EmailManagerActivity extends BaseSyncActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager
-        .LoaderCallbacks<Cursor>, View.OnClickListener {
+        .LoaderCallbacks<Cursor>, View.OnClickListener, EmailListFragment.OnManageEmailsListener {
 
     public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_ACCOUNT", EmailManagerActivity.class);
@@ -55,6 +55,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     private NavigationView navigationView;
     private Account account;
     private FoldersManager foldersManager;
+    private Folder folder;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -133,7 +134,7 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
                 //only for testing
-                loadMessage();
+                loadMessage(folder);
                 //signOut(SignInType.GMAIL);
                 break;
 
@@ -146,10 +147,8 @@ public class EmailManagerActivity extends BaseSyncActivity
                 break;
 
             case Menu.NONE:
-                Folder folder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                if (folder != null) {
-                    setFolderInInEmailListFragment(folder);
-                }
+                folder = foldersManager.getFolderByAlias(item.getTitle().toString());
+                updateEmailListFragment();
                 break;
         }
 
@@ -195,6 +194,11 @@ public class EmailManagerActivity extends BaseSyncActivity
                             mailLabels.getSubMenu().add(s.getFolderAlias());
                         }
                     }
+
+                    if (folder == null) {
+                        folder = foldersManager.getFolderInbox();
+                        updateEmailListFragment();
+                    }
                 }
                 break;
         }
@@ -214,21 +218,22 @@ public class EmailManagerActivity extends BaseSyncActivity
         }
     }
 
-    private void setFolderInInEmailListFragment(Folder folder) {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.setFolder(folder);
-        }
+    @Override
+    public Account getCurrentAccount() {
+        return account;
     }
 
-    private void updateAccountInEmailListFragment(Account account) {
+    @Override
+    public Folder getCurrentFolder() {
+        return folder;
+    }
+
+    private void updateEmailListFragment() {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.updateAccount(account);
+            emailListFragment.showMessageForCurrentFolder();
         }
     }
 

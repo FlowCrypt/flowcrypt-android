@@ -121,21 +121,23 @@ public class EmailSyncService extends Service implements SyncListener {
     @Override
     public void onMessageReceived(IMAPFolder imapFolder, javax.mail.Message[] messages) {
         Log.d(TAG, "onMessageReceived: imapFolder = " + imapFolder.getFullName() + " message " +
-                "count: " +
-                messages.length);
+                "count: " + messages.length);
+        try {
+            com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
+                    imapFolder.getName());
 
-        MessageDaoSource messageDaoSource = new MessageDaoSource();
-
-        for (javax.mail.Message message : messages) {
-            try {
-                messageDaoSource.addRow(getApplicationContext(),
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+            for (javax.mail.Message message : messages) {
+                messageDaoSource.addRow(
+                        getApplicationContext(),
                         account.name,
-                        "INBOX",
+                        folder.getFolderAlias(),
                         imapFolder.getUID(message),
                         message);
-            } catch (MessagingException e) {
-                e.printStackTrace();
+
             }
+        } catch (MessagingException e) {
+            e.printStackTrace();
         }
     }
 
@@ -200,8 +202,10 @@ public class EmailSyncService extends Service implements SyncListener {
 
                     case MESSAGE_LOAD_MESSAGES:
                         //todo-denbond7 only for testing
+                        com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
+                                .email.Folder) msg.obj;
                         if (gmailSynsManager != null) {
-                            gmailSynsManager.loadMessages("INBOX", 1, 10);
+                            gmailSynsManager.loadMessages(folder.getServerFullFolderName(), 1, 10);
                         }
                         break;
                     default:
