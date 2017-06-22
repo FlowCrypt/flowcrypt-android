@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.base;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -68,6 +69,13 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         isBound = false;
     }
 
+    /**
+     * Load messages from some folder in some range.
+     *
+     * @param folder {@link Folder} object.
+     * @param start  The position of the start.
+     * @param end    The position of the end.
+     */
     public void loadMessages(Folder folder, int start, int end) {
         if (checkBound()) return;
 
@@ -80,6 +88,12 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
+    /**
+     * Start a job to load message to cache.
+     *
+     * @param folder {@link Folder} object.
+     * @param end    The position of the end.
+     */
     public void loadNextMessages(Folder folder, int end) {
         if (checkBound()) return;
 
@@ -92,6 +106,9 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
+    /**
+     * Run update a folders list.
+     */
     public void updateLabels() {
         if (checkBound()) return;
 
@@ -103,6 +120,29 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
+    /**
+     * Load the last messages which not exist in the database.
+     *
+     * @param currentFolder  {@link Folder} object.
+     * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
+     */
+    public void loadNewMessagesManually(Folder currentFolder, int lastUIDInCache) {
+        if (checkBound()) return;
+
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEW_MESSAGES_MANUALLY,
+                lastUIDInCache, 0, currentFolder);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Check is current {@link Activity} connected to {@link EmailSyncService}
+     *
+     * @return true if current activity connected to the service, otherwise false.
+     */
     protected boolean checkBound() {
         if (!isBound) {
             if (BuildConfig.DEBUG) {

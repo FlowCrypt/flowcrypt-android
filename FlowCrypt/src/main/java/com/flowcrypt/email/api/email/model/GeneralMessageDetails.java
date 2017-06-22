@@ -165,6 +165,6 @@ public class GeneralMessageDetails implements Parcelable {
     }
 
     public boolean isSeen() {
-        return Arrays.asList(flags).contains(MessageFlag.SEEN);
+        return flags != null && Arrays.asList(flags).contains(MessageFlag.SEEN);
     }
 }

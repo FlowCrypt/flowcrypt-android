@@ -48,6 +48,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 1;
     public static final int MESSAGE_LOAD_MESSAGES = 2;
     public static final int MESSAGE_LOAD_NEXT_MESSAGES = 3;
+    public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 4;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -213,6 +214,16 @@ public class EmailSyncService extends Service implements SyncListener {
                                 .email.Folder) message.obj;
                         if (gmailSynsManager != null) {
                             gmailSynsManager.loadNextMessages(folderOfMessages
+                                    .getServerFullFolderName(), message.arg1);
+                        }
+                        break;
+
+                    case MESSAGE_LOAD_NEW_MESSAGES_MANUALLY:
+                        com.flowcrypt.email.api.email.Folder refreshFolder = (com.flowcrypt
+                                .email.api
+                                .email.Folder) message.obj;
+                        if (gmailSynsManager != null) {
+                            gmailSynsManager.loadNewMessagesManually(refreshFolder
                                     .getServerFullFolderName(), message.arg1);
                         }
                         break;

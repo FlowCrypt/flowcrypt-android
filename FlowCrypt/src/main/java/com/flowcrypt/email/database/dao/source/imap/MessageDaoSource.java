@@ -228,6 +228,34 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get the last UID of a message in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The last UID for the current label or -1 if it not exists.
+     */
+    public int getLastUIDOfMessageInLabel(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{"max(" + COL_UID + ")"},
+                MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
+                        .COL_FOLDER + " = ?",
+                new String[]{email, label},
+                null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int uid = cursor.getInt(0);
+            cursor.close();
+            return uid;
+        }
+
+        return -1;
+    }
+
+    /**
      * Get the count of messages in the database for some label.
      *
      * @param context Interface to global information about an application environment.

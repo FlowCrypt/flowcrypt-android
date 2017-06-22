@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -162,6 +163,23 @@ public class GmailSynsManager {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Add load a new messages information task. This method create a new
+     * {@link LoadNewMessagesSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param folderName     A server folder name.
+     * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
+     */
+    public void loadNewMessagesManually(String folderName, int lastUIDInCache) {
+        try {
+            syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(folderName, lastUIDInCache));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private class SyncTaskRunnable implements Runnable, ConnectionListener {
         private final String TAG = SyncTaskRunnable.class.getSimpleName();

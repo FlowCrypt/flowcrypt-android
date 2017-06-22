@@ -15,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,11 +44,12 @@ import com.flowcrypt.email.util.UIUtil;
  */
 
 public class EmailListFragment extends BaseGmailFragment
-        implements AdapterView.OnItemClickListener {
+        implements AdapterView.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private ListView listViewMessages;
     private View emptyView;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
@@ -62,6 +64,7 @@ public class EmailListFragment extends BaseGmailFragment
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch (id) {
                 case R.id.loader_id_load_gmail_messages:
+                    swipeRefreshLayout.setRefreshing(false);
                     emptyView.setVisibility(View.GONE);
                     UIUtil.exchangeViewVisibility(
                             getContext(),
@@ -94,6 +97,9 @@ public class EmailListFragment extends BaseGmailFragment
             switch (loader.getId()) {
                 case R.id.loader_id_load_gmail_messages:
                     if (data != null && data.getCount() != 0) {
+                        //todo-denbond7 fixed it after add a notify logic
+                        swipeRefreshLayout.setRefreshing(false);
+
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
                         UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
@@ -217,9 +223,19 @@ public class EmailListFragment extends BaseGmailFragment
 
     }
 
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        baseSyncActivity.loadNewMessagesManually(onManageEmailsListener.getCurrentFolder(),
+                messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
+                        .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
+                        .getFolderAlias()));
+    }
+
     public void showMessageForCurrentFolder() {
         if (onManageEmailsListener.getCurrentFolder() != null) {
             isMessagesFetchedIfNotExistInCache = false;
+
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
                     loadCachedMessagesCursorLoaderCallbacks);
         }
@@ -231,6 +247,12 @@ public class EmailListFragment extends BaseGmailFragment
         listViewMessages.setAdapter(messageListAdapter);
 
         emptyView = view.findViewById(R.id.emptyView);
+        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.colorPrimary,
+                R.color.colorPrimary,
+                R.color.colorPrimary);
+        swipeRefreshLayout.setOnRefreshListener(this);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
     }
 
