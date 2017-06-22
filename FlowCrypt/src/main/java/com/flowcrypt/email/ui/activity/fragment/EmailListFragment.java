@@ -53,9 +53,10 @@ public class EmailListFragment extends BaseGmailFragment
     private OnManageEmailsListener onManageEmailsListener;
     private MessageDaoSource messageDaoSource;
     private BaseSyncActivity baseSyncActivity;
+    private boolean isMessagesFetchedIfNotExistInCache;
 
-    private LoaderManager.LoaderCallbacks<Cursor> cursorLoaderCallbacks = new LoaderManager
-            .LoaderCallbacks<Cursor>() {
+    private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
+            = new LoaderManager.LoaderCallbacks<Cursor>() {
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -94,10 +95,18 @@ public class EmailListFragment extends BaseGmailFragment
                 case R.id.loader_id_load_gmail_messages:
                     if (data != null && data.getCount() != 0) {
                         messageListAdapter.swapCursor(data);
+                        emptyView.setVisibility(View.GONE);
                         UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
                                 listViewMessages);
                     } else {
-                        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, emptyView);
+                        if (!isMessagesFetchedIfNotExistInCache) {
+                            isMessagesFetchedIfNotExistInCache = true;
+                            baseSyncActivity.loadNextMessages(
+                                    onManageEmailsListener.getCurrentFolder(), -1);
+                        } else {
+                            UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                                    emptyView);
+                        }
                     }
                     break;
             }
@@ -154,29 +163,10 @@ public class EmailListFragment extends BaseGmailFragment
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (onManageEmailsListener.getCurrentFolder() != null) {
-            getLoaderManager().initLoader(R.id.loader_id_load_gmail_messages,
-                    null, cursorLoaderCallbacks);
+            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
+                    null, loadCachedMessagesCursorLoaderCallbacks);
         }
     }
-
-    /*@Override
-    public void onResume() {
-        super.onResume();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (onManageEmailsListener.getCurrentFolder() != null) {
-                    if (baseSyncActivity != null) {
-                        baseSyncActivity.loadNextMessages(onManageEmailsListener.getCurrentFolder(),
-                                messageDaoSource.getCountOfMessagesForLabel(getContext(),
-                                        onManageEmailsListener.getCurrentAccount().name,
-                                        onManageEmailsListener
-                                                .getCurrentFolder().getFolderAlias()));
-                    }
-                }
-            }
-        }, 2000);
-    }*/
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -229,8 +219,9 @@ public class EmailListFragment extends BaseGmailFragment
 
     public void showMessageForCurrentFolder() {
         if (onManageEmailsListener.getCurrentFolder() != null) {
+            isMessagesFetchedIfNotExistInCache = false;
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
-                    cursorLoaderCallbacks);
+                    loadCachedMessagesCursorLoaderCallbacks);
         }
     }
 
