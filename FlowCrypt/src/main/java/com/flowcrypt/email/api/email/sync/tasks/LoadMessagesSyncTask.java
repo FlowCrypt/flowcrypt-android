@@ -78,5 +78,7 @@ public class LoadMessagesSyncTask implements SyncTask {
 
             syncListener.onMessageReceived(imapFolder, messages);
         }
+
+        imapFolder.close(false);
     }
 }

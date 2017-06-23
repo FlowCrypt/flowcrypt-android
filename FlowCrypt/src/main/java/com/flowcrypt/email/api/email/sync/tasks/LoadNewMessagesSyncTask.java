@@ -57,5 +57,7 @@ public class LoadNewMessagesSyncTask implements SyncTask {
                 syncListener.onMessageReceived(imapFolder, new Message[]{});
             }
         }
+
+        imapFolder.close(false);
     }
 }
