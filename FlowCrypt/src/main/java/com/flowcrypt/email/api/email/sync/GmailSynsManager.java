@@ -57,6 +57,7 @@ public class GmailSynsManager {
     private GmailSynsManager() {
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
+        updateLabels();
     }
 
     /**
@@ -186,6 +187,7 @@ public class GmailSynsManager {
 
         @Override
         public void run() {
+            Log.d(TAG, "SyncTaskRunnable run");
             Thread.currentThread().setName(SyncTaskRunnable.class.getCanonicalName());
             while (!Thread.interrupted()) {
                 try {
@@ -194,6 +196,7 @@ public class GmailSynsManager {
 
                     if (syncTask != null) {
                         if (!isConnected()) {
+                            Log.d(TAG, "Not connected. Start a reconnection ...");
                             openConnectionToGmailStore();
                             Log.d(TAG, "Reconnection done");
                         }
@@ -207,6 +210,7 @@ public class GmailSynsManager {
                     e.printStackTrace();
                 }
             }
+            Log.d(TAG, "SyncTaskRunnable stop");
         }
 
         @Override

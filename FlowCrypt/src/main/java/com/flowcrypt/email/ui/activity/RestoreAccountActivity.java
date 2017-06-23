@@ -15,6 +15,7 @@ import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -136,6 +137,11 @@ public class RestoreAccountActivity extends BaseActivity
 
     @Override
     public void onRunEmailManageActivity() {
+        Intent startEmailServiceIntent = new Intent(this, EmailSyncService.class);
+        startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
+                account);
+        startService(startEmailServiceIntent);
+
         Intent intentRunEmailManagerActivity = new Intent(this, EmailManagerActivity.class);
         intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
                 account);
