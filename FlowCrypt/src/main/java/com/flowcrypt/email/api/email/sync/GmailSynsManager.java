@@ -58,7 +58,7 @@ public class GmailSynsManager {
     private GmailSynsManager() {
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
-        updateLabels();
+        updateLabels(null, 0);
     }
 
     /**
@@ -124,10 +124,13 @@ public class GmailSynsManager {
 
     /**
      * Run update a folders list.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    public void updateLabels() {
+    public void updateLabels(String ownerKey, int requestCode) {
         try {
-            syncTaskBlockingQueue.put(new UpdateLabelsSyncTask());
+            syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -138,13 +141,17 @@ public class GmailSynsManager {
      * {@link LoadMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
-     * @param folderName A server folder name.
-     * @param start      The position of the start.
-     * @param end        The position of the end.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folderName  A server folder name.
+     * @param start       The position of the start.
+     * @param end         The position of the end.
      */
-    public void loadMessages(String folderName, int start, int end) {
+    public void loadMessages(String ownerKey, int requestCode, String folderName, int start, int
+            end) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, start, end));
+            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folderName,
+                    start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -155,13 +162,17 @@ public class GmailSynsManager {
      * {@link LoadMessagesToCacheSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
+     * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode                  The unique request code for the reply to
+     *                                     {@link android.os.Messenger}.
      * @param folderName                   A server folder name.
      * @param countOfAlreadyLoadedMessages The count of already cached messages in the folder.
      */
-    public void loadNextMessages(String folderName, int countOfAlreadyLoadedMessages) {
+    public void loadNextMessages(String ownerKey, int requestCode, String folderName, int
+            countOfAlreadyLoadedMessages) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(folderName,
-                    countOfAlreadyLoadedMessages));
+            syncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
+                    folderName, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -172,12 +183,16 @@ public class GmailSynsManager {
      * {@link LoadNewMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
+     * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode    The unique request code for the reply to {@link android.os.Messenger}.
      * @param folderName     A server folder name.
      * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
      */
-    public void loadNewMessagesManually(String folderName, int lastUIDInCache) {
+    public void loadNewMessagesManually(String ownerKey, int requestCode, String folderName, int
+            lastUIDInCache) {
         try {
-            syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(folderName, lastUIDInCache));
+            syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode,
+                    folderName, lastUIDInCache));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -257,12 +272,6 @@ public class GmailSynsManager {
         private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
             if (!isConnected()) {
                 openConnectionToGmailStore();
-            }
-        }
-
-        private void handleException(int exceptionType, Exception e) {
-            if (syncListener != null) {
-                syncListener.onError(exceptionType, e);
             }
         }
 

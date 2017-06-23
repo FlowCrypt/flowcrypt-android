@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
@@ -30,6 +31,8 @@ import com.sun.mail.imap.IMAPFolder;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
@@ -45,20 +48,29 @@ import javax.mail.MessagingException;
  *         E-mail: DenBond7@gmail.com
  */
 public class EmailSyncService extends Service implements SyncListener {
-    public static final int MESSAGE_UPDATE_LABELS = 1;
-    public static final int MESSAGE_LOAD_MESSAGES = 2;
-    public static final int MESSAGE_LOAD_NEXT_MESSAGES = 3;
-    public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 4;
+    public static final int REPLY_RESULT_CODE_OK = 1;
+    public static final int REPLY_RESULT_CODE_ERROR = 0;
+    public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
+
+    public static final int REPLY_WHAT = 0;
+
+    public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
+    public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
+    public static final int MESSAGE_UPDATE_LABELS = 3;
+    public static final int MESSAGE_LOAD_MESSAGES = 4;
+    public static final int MESSAGE_LOAD_NEXT_MESSAGES = 5;
+    public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
-
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
      * This {@link Messenger} is responsible for the receive intents from other client and
      * handles them.
      */
     private Messenger messenger;
+
+    private Map<String, Messenger> replyToMessengers;
 
     private GmailSynsManager gmailSynsManager;
 
@@ -68,6 +80,7 @@ public class EmailSyncService extends Service implements SyncListener {
     private Account account;
 
     public EmailSyncService() {
+        this.replyToMessengers = new HashMap<>();
     }
 
     @Override
@@ -77,7 +90,7 @@ public class EmailSyncService extends Service implements SyncListener {
         gmailSynsManager = GmailSynsManager.getInstance();
         gmailSynsManager.setSyncListener(this);
 
-        messenger = new Messenger(new IncomingHandler(gmailSynsManager));
+        messenger = new Messenger(new IncomingHandler(gmailSynsManager, replyToMessengers));
     }
 
     @Override
@@ -121,7 +134,8 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageReceived(IMAPFolder imapFolder, javax.mail.Message[] messages) {
+    public void onMessageReceived(IMAPFolder imapFolder, javax.mail.Message[] messages, String
+            key, int requestCode) {
         Log.d(TAG, "onMessageReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
@@ -135,13 +149,30 @@ public class EmailSyncService extends Service implements SyncListener {
                     imapFolder,
                     messages);
 
-        } catch (MessagingException e) {
+            if (messages.length > 0) {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+            } else {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_OK);
+            }
+
+        } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void onFolderInfoReceived(Folder[] folders) {
+    public String getValidToken() throws IOException, GoogleAuthException {
+        return GoogleAuthUtil.getToken(this, account,
+                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+    }
+
+    @Override
+    public String getEmail() {
+        return account.name;
+    }
+
+    @Override
+    public void onFolderInfoReceived(Folder[] folders, String key, int requestCode) {
         Log.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
         ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
         imapLabelsDaoSource.deleteFolders(getApplicationContext(), account.name);
@@ -156,25 +187,46 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         }
 
+        //// TODO-denbond7: 23.06.2017 Better use insert per one transaction
         for (com.flowcrypt.email.api.email.Folder folder : foldersManager.getAllFolders()) {
             imapLabelsDaoSource.addRow(getApplicationContext(), account.name, folder);
+        }
+
+        try {
+            sendReply(key, requestCode, REPLY_RESULT_CODE_OK);
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
-    public void onError(int errorType, Exception e) {
+    public void onError(int errorType, Exception e, String key, int requestCode) {
         Log.e(TAG, "onError: errorType" + errorType + "| e =" + e);
+        try {
+            sendReply(key, requestCode, REPLY_RESULT_CODE_ERROR);
+        } catch (RemoteException remoteException) {
+            remoteException.printStackTrace();
+        }
     }
 
-    @Override
-    public String getValidToken() throws IOException, GoogleAuthException {
-        return GoogleAuthUtil.getToken(this, account,
-                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-    }
-
-    @Override
-    public String getEmail() {
-        return account.name;
+    /**
+     * Send a reply to the called component.
+     *
+     * @param key         The key which identify the reply to {@link Messenger}
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param resultCode  The result code of the some action. Can take the following values:
+     *                    <ul>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_OK}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ERROR}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
+     *                    </ul>
+     * @throws RemoteException
+     */
+    private void sendReply(String key, int requestCode, int resultCode) throws RemoteException {
+        if (replyToMessengers.containsKey(key)) {
+            Messenger messenger = replyToMessengers.get(key);
+            messenger.send(Message.obtain(null, REPLY_WHAT, requestCode, resultCode));
+        }
     }
 
     /**
@@ -183,54 +235,128 @@ public class EmailSyncService extends Service implements SyncListener {
      */
     private static class IncomingHandler extends Handler {
         private final WeakReference<GmailSynsManager> gmailSynsManagerWeakReference;
+        private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
 
-        IncomingHandler(GmailSynsManager gmailSynsManager) {
+        IncomingHandler(GmailSynsManager gmailSynsManager, Map<String, Messenger>
+                replyToMessengersWeakReference) {
             this.gmailSynsManagerWeakReference = new WeakReference<>(gmailSynsManager);
+            this.replyToMessengersWeakReference = new WeakReference<>
+                    (replyToMessengersWeakReference);
         }
 
         @Override
         public void handleMessage(Message message) {
             if (gmailSynsManagerWeakReference.get() != null) {
                 GmailSynsManager gmailSynsManager = gmailSynsManagerWeakReference.get();
+                Action action = null;
+
+                if (message.obj instanceof Action) {
+                    action = (Action) message.obj;
+                }
+
                 switch (message.what) {
+                    case MESSAGE_ADD_REPLY_MESSENGER:
+                        Map<String, Messenger> replyToMessengersForAdd
+                                = replyToMessengersWeakReference.get();
+
+                        if (replyToMessengersForAdd != null && action != null) {
+                            replyToMessengersForAdd.put(action.getOwnerKey(), message.replyTo);
+                        }
+                        break;
+
+                    case MESSAGE_REMOVE_REPLY_MESSENGER:
+                        Map<String, Messenger> replyToMessengersForRemove
+                                = replyToMessengersWeakReference.get();
+
+                        if (replyToMessengersForRemove != null && action != null) {
+                            replyToMessengersForRemove.remove(action.getOwnerKey());
+                        }
+                        break;
+
                     case MESSAGE_UPDATE_LABELS:
-                        if (gmailSynsManager != null) {
-                            gmailSynsManager.updateLabels();
+                        if (gmailSynsManager != null && action != null) {
+                            gmailSynsManager.updateLabels(action.getOwnerKey(), action.requestCode);
                         }
                         break;
 
                     case MESSAGE_LOAD_MESSAGES:
-                        com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
-                                .email.Folder) message.obj;
-                        if (gmailSynsManager != null) {
-                            gmailSynsManager.loadMessages(folder.getServerFullFolderName(),
+                        if (gmailSynsManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
+                                    .email.Folder) action.getObject();
+                            gmailSynsManager.loadMessages(action.getOwnerKey(),
+                                    action.getRequestCode(), folder.getServerFullFolderName(),
                                     message.arg1, message.arg2);
                         }
                         break;
 
                     case MESSAGE_LOAD_NEXT_MESSAGES:
-                        com.flowcrypt.email.api.email.Folder folderOfMessages = (com.flowcrypt
-                                .email.api
-                                .email.Folder) message.obj;
-                        if (gmailSynsManager != null) {
-                            gmailSynsManager.loadNextMessages(folderOfMessages
-                                    .getServerFullFolderName(), message.arg1);
+                        if (gmailSynsManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder folderOfMessages =
+                                    (com.flowcrypt.email.api.email.Folder) action.getObject();
+
+                            gmailSynsManager.loadNextMessages(action.getOwnerKey(),
+                                    action.getRequestCode(),
+                                    folderOfMessages.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
                     case MESSAGE_LOAD_NEW_MESSAGES_MANUALLY:
-                        com.flowcrypt.email.api.email.Folder refreshFolder = (com.flowcrypt
-                                .email.api
-                                .email.Folder) message.obj;
-                        if (gmailSynsManager != null) {
-                            gmailSynsManager.loadNewMessagesManually(refreshFolder
-                                    .getServerFullFolderName(), message.arg1);
+                        if (gmailSynsManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder refreshFolder =
+                                    (com.flowcrypt.email.api.email.Folder) action.getObject();
+
+                            gmailSynsManager.loadNewMessagesManually(action.getOwnerKey(),
+                                    action.getRequestCode(),
+                                    refreshFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
                     default:
                         super.handleMessage(message);
                 }
             }
+        }
+    }
+
+    /**
+     * This class can be used to create a new action for {@link EmailSyncService}
+     */
+    public static class Action {
+        private String ownerKey;
+        private int requestCode;
+        private Object object;
+
+        /**
+         * The constructor.
+         *
+         * @param ownerKey    The name of reply to {@link Messenger}
+         * @param requestCode The unique request code which identify some action
+         * @param object      The object which will be passed to {@link EmailSyncService}.
+         */
+        public Action(String ownerKey, int requestCode, Object object) {
+            this.ownerKey = ownerKey;
+            this.requestCode = requestCode;
+            this.object = object;
+        }
+
+        @Override
+        public String toString() {
+            return "Action{" +
+                    "ownerKey='" + ownerKey + '\'' +
+                    ", requestCode=" + requestCode +
+                    ", object=" + object +
+                    '}';
+        }
+
+        public String getOwnerKey() {
+            return ownerKey;
+        }
+
+        public int getRequestCode() {
+            return requestCode;
+        }
+
+        public Object getObject() {
+            return object;
         }
     }
 }

@@ -1,0 +1,40 @@
+/*
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.api.email.sync.tasks;
+
+/**
+ * The base realization of {@link SyncTask}.
+ *
+ * @author DenBond7
+ *         Date: 23.06.2017
+ *         Time: 15:59
+ *         E-mail: DenBond7@gmail.com
+ */
+
+abstract class BaseSyncTask implements SyncTask {
+    String ownerKey;
+    int requestCode;
+
+    /**
+     * The base constructor.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     */
+    BaseSyncTask(String ownerKey, int requestCode) {
+        this.ownerKey = ownerKey;
+        this.requestCode = requestCode;
+    }
+
+    public String getOwnerKey() {
+        return ownerKey;
+    }
+
+    public int getRequestCode() {
+        return requestCode;
+    }
+}

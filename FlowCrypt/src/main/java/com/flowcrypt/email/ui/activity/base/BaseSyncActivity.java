@@ -11,6 +11,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -20,6 +21,8 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.service.EmailSyncService;
+
+import java.lang.ref.WeakReference;
 
 /**
  * This class describes a bind to the email sync service logic.
@@ -34,11 +37,27 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     /**
      * Messenger for communicating with the service.
      */
-    protected Messenger messenger;
+    protected Messenger syncServiceMessenger;
+
+    protected Messenger replyMessenger;
+
     /**
      * Flag indicating whether we have called bind on the service.
      */
     protected boolean isBound;
+
+    public BaseSyncActivity() {
+        replyMessenger = new Messenger(new ReplyHandler(this));
+    }
+
+    /**
+     * In this method we can handle response after run some action via {@link EmailSyncService}
+     *
+     * @param requestCode The unique request code for identifies the some action. Must be unique
+     *                    over all project.
+     * @param resultCode  The result code of a run action.
+     */
+    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode);
 
     @Override
     protected void onStart() {
@@ -51,38 +70,46 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     protected void onStop() {
         super.onStop();
         // Unbind from the service
-        if (isBound) {
-            unbindService(this);
-            isBound = false;
-        }
+        unbindFromService();
     }
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        messenger = new Messenger(service);
+        syncServiceMessenger = new Messenger(service);
         isBound = true;
+
+        registerReplyMessenger();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        messenger = null;
+        syncServiceMessenger = null;
         isBound = false;
+    }
+
+    public String getReplyMessengerName() {
+        return getClass().getSimpleName();
     }
 
     /**
      * Load messages from some folder in some range.
      *
-     * @param folder {@link Folder} object.
-     * @param start  The position of the start.
-     * @param end    The position of the end.
+     * @param requestCode The unique request code for identify the current action.
+     * @param folder      {@link Folder} object.
+     * @param start       The position of the start.
+     * @param end         The position of the end.
      */
-    public void loadMessages(Folder folder, int start, int end) {
+    public void loadMessages(int requestCode, Folder folder, int start, int end) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
-                folder);
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, folder);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
+                action);
+        message.replyTo = replyMessenger;
         try {
-            messenger.send(msg);
+            syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -91,17 +118,23 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     /**
      * Start a job to load message to cache.
      *
+     * @param requestCode                  The unique request code for identify the current action.
      * @param folder                       {@link Folder} object.
      * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
      */
-    public void loadNextMessages(Folder folder, int countOfAlreadyLoadedMessages) {
+    public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, folder);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
                 countOfAlreadyLoadedMessages, 0,
-                folder);
+                action);
+
+        message.replyTo = replyMessenger;
         try {
-            messenger.send(msg);
+            syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -109,13 +142,20 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
     /**
      * Run update a folders list.
+     *
+     * @param requestCode The unique request code for identify the current action.
      */
-    public void updateLabels() {
+    public void updateLabels(int requestCode) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0);
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, null);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0,
+                action);
+        message.replyTo = replyMessenger;
         try {
-            messenger.send(msg);
+            syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -124,16 +164,21 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     /**
      * Load the last messages which not exist in the database.
      *
+     * @param requestCode    The unique request code for identify the current action.
      * @param currentFolder  {@link Folder} object.
      * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
      */
-    public void loadNewMessagesManually(Folder currentFolder, int lastUIDInCache) {
+    public void loadNewMessagesManually(int requestCode, Folder currentFolder, int lastUIDInCache) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEW_MESSAGES_MANUALLY,
-                lastUIDInCache, 0, currentFolder);
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, currentFolder);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEW_MESSAGES_MANUALLY,
+                lastUIDInCache, 0, action);
+        message.replyTo = replyMessenger;
         try {
-            messenger.send(msg);
+            syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -153,5 +198,69 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             return true;
         }
         return false;
+    }
+
+    private void unbindFromService() {
+        if (isBound) {
+
+            if (syncServiceMessenger != null) {
+                unregisterReplyMessenger();
+            }
+
+            unbindService(this);
+            isBound = false;
+        }
+    }
+
+    private void registerReplyMessenger() {
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                -1, null);
+
+        Message message = Message.obtain(null,
+                EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, action);
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void unregisterReplyMessenger() {
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                -1, null);
+
+        Message message = Message.obtain(null,
+                EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, action);
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * The incoming handler realization. This handler will be used to communicate with current
+     * service and other Android components.
+     */
+    private static class ReplyHandler extends Handler {
+        private final WeakReference<BaseSyncActivity> baseSyncActivityWeakReference;
+
+        ReplyHandler(BaseSyncActivity baseSyncActivity) {
+            this.baseSyncActivityWeakReference = new WeakReference<>(baseSyncActivity);
+        }
+
+        @Override
+        public void handleMessage(Message message) {
+            if (baseSyncActivityWeakReference.get() != null) {
+                BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
+                switch (message.what) {
+                    case EmailSyncService.REPLY_WHAT:
+                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2);
+                        break;
+                }
+            }
+        }
     }
 }

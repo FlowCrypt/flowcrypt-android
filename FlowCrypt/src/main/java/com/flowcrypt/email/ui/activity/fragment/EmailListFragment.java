@@ -51,6 +51,7 @@ public class EmailListFragment extends BaseGmailFragment
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private ListView listViewMessages;
     private View emptyView;
+    private View footerProgressView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
@@ -66,13 +67,15 @@ public class EmailListFragment extends BaseGmailFragment
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch (id) {
                 case R.id.loader_id_load_gmail_messages:
-                    swipeRefreshLayout.setRefreshing(false);
                     emptyView.setVisibility(View.GONE);
-                    UIUtil.exchangeViewVisibility(
-                            getContext(),
-                            true,
-                            progressBar,
-                            listViewMessages);
+
+                    if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
+                        UIUtil.exchangeViewVisibility(
+                                getContext(),
+                                true,
+                                progressBar,
+                                listViewMessages);
+                    }
 
                     if (getSupportActionBar() != null) {
                         getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder()
@@ -99,9 +102,6 @@ public class EmailListFragment extends BaseGmailFragment
             switch (loader.getId()) {
                 case R.id.loader_id_load_gmail_messages:
                     if (data != null && data.getCount() != 0) {
-                        //todo-denbond7 fixed it after add a notify logic
-                        swipeRefreshLayout.setRefreshing(false);
-
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
                         UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
@@ -110,6 +110,7 @@ public class EmailListFragment extends BaseGmailFragment
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
                             baseSyncActivity.loadNextMessages(
+                                    R.id.syns_request_code_load_next_messages,
                                     onManageEmailsListener.getCurrentFolder(), -1);
                         } else {
                             UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
@@ -228,33 +229,51 @@ public class EmailListFragment extends BaseGmailFragment
     @Override
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
-        baseSyncActivity.loadNewMessagesManually(onManageEmailsListener.getCurrentFolder(),
+        baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
+                onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
                         .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
                         .getFolderAlias()));
     }
 
-    public void showMessageForCurrentFolder() {
+    public void updateList(boolean isFolderChanged) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
-            isMessagesFetchedIfNotExistInCache = false;
+            isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
                     loadCachedMessagesCursorLoaderCallbacks);
         }
     }
 
+    public void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
+        swipeRefreshLayout.setRefreshing(false);
+        if (needToRefreshList) {
+            updateList(false);
+        }
+    }
+
+    public void onNextMessagesLoaded() {
+        //listViewMessages.removeFooterView(footerProgressView);
+        updateList(false);
+    }
+
     private void initViews(View view) {
+        footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout
+                .list_view_progress_footer, null);
+
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
         listViewMessages.setAdapter(messageListAdapter);
         listViewMessages.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
-                //todo-denbond7 need to show loading footer here
-                baseSyncActivity.loadNextMessages(onManageEmailsListener.getCurrentFolder(),
+                //listViewMessages.addFooterView(footerProgressView, null, false);
+                baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
+                        onManageEmailsListener.getCurrentFolder(),
                         totalItemsCount);
-                Log.d("EmailListFragment", "onLoadMore | page = " + page + " | totalItemsCount = " +
-                        "" + totalItemsCount);
+                Log.d("EmailListFragment",
+                        "onLoadMore | page = " + page + " | totalItemsCount = " + "" +
+                                totalItemsCount);
                 return true;
             }
         });

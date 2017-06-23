@@ -24,21 +24,17 @@ import javax.mail.UIDFolder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesSyncTask implements SyncTask {
+public class LoadMessagesSyncTask extends BaseSyncTask {
     private String folderName;
     private int start;
     private int end;
-    private boolean isSingleLoad;
 
-    public LoadMessagesSyncTask(String folderName, int start, int end) {
+    public LoadMessagesSyncTask(String ownerKey, int requestCode,
+                                String folderName, int start, int end) {
+        super(ownerKey, requestCode);
         this.folderName = folderName;
         this.start = start;
         this.end = end;
-    }
-
-    public LoadMessagesSyncTask(String folderName, int end, boolean isSingleLoad) {
-        this(folderName, -1, end);
-        this.isSingleLoad = isSingleLoad;
     }
 
     @Override
@@ -50,11 +46,11 @@ public class LoadMessagesSyncTask implements SyncTask {
 
         if (syncListener != null) {
             if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-                syncListener.onMessageReceived(imapFolder, new Message[]{});
+                syncListener.onMessageReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 Message[] messages;
 
-                if (this.isSingleLoad) {
+                if (this.end == this.start) {
                     messages = new Message[]{imapFolder.getMessage(end)};
                 } else {
                     messages = imapFolder.getMessages(start, end);
@@ -66,7 +62,7 @@ public class LoadMessagesSyncTask implements SyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessageReceived(imapFolder, messages);
+                syncListener.onMessageReceived(imapFolder, messages, ownerKey, requestCode);
             }
         }
 

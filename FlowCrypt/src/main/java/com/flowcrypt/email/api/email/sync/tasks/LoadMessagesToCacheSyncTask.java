@@ -26,13 +26,15 @@ import javax.mail.UIDFolder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesToCacheSyncTask implements SyncTask {
+public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
     private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
     private String folderName;
     private int countOfAlreadyLoadedMessages;
 
-    public LoadMessagesToCacheSyncTask(String folderName, int countOfAlreadyLoadedMessages) {
+    public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode, String folderName,
+                                       int countOfAlreadyLoadedMessages) {
+        super(ownerKey, requestCode);
         this.folderName = folderName;
         this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
     }
@@ -59,7 +61,7 @@ public class LoadMessagesToCacheSyncTask implements SyncTask {
 
         if (syncListener != null) {
             if (end < 1) {
-                syncListener.onMessageReceived(imapFolder, new Message[]{});
+                syncListener.onMessageReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -73,7 +75,7 @@ public class LoadMessagesToCacheSyncTask implements SyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessageReceived(imapFolder, messages);
+                syncListener.onMessageReceived(imapFolder, messages, ownerKey, requestCode);
             }
         }
 

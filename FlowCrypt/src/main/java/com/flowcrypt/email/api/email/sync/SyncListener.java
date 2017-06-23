@@ -27,25 +27,31 @@ public interface SyncListener {
     /**
      * This method called when a new messages received from the some folder.
      *
-     * @param folder   The folder where the new messages exist.
-     * @param messages The new messages.
+     * @param folder      The folder where the new messages exist.
+     * @param messages    The new messages.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onMessageReceived(IMAPFolder folder, Message[] messages);
+    void onMessageReceived(IMAPFolder folder, Message[] messages, String ownerKey, int requestCode);
 
     /**
      * This method called when new folders list received.
      *
-     * @param folders The new folders list.
+     * @param folders     The new folders list.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onFolderInfoReceived(Folder[] folders);
+    void onFolderInfoReceived(Folder[] folders, String ownerKey, int requestCode);
 
     /**
      * Handle an error of synchronization.
      *
-     * @param errorType The error type code.
-     * @param e         The exception that occurred during synchronization.
+     * @param errorType   The error type code.
+     * @param e           The exception that occurred during synchronization.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onError(int errorType, Exception e);
+    void onError(int errorType, Exception e, String ownerKey, int requestCode);
 
     /**
      * Get a valid OAuth2 token for current user. Must be called on the non-UI thread.

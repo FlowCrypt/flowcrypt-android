@@ -24,11 +24,13 @@ import javax.mail.UIDFolder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadNewMessagesSyncTask implements SyncTask {
+public class LoadNewMessagesSyncTask extends BaseSyncTask {
     private String folderName;
     private int lastUID;
 
-    public LoadNewMessagesSyncTask(String folderName, int lastUID) {
+    public LoadNewMessagesSyncTask(String ownerKey, int requestCode, String folderName, int
+            lastUID) {
+        super(ownerKey, requestCode);
         this.folderName = folderName;
         this.lastUID = lastUID;
     }
@@ -52,9 +54,9 @@ public class LoadNewMessagesSyncTask implements SyncTask {
                     imapFolder.fetch(messages, fetchProfile);
                 }
 
-                syncListener.onMessageReceived(imapFolder, messages);
+                syncListener.onMessageReceived(imapFolder, messages, ownerKey, requestCode);
             } else {
-                syncListener.onMessageReceived(imapFolder, new Message[]{});
+                syncListener.onMessageReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
             }
         }
 

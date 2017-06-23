@@ -82,6 +82,16 @@ public class UIUtil {
         int shortAnimTime = context.getResources().getInteger(android.R.integer
                 .config_shortAnimTime);
 
+        if (show && firstView.getVisibility() == View.VISIBLE
+                && secondView.getVisibility() == View.GONE) {
+            return;
+        }
+
+        if (!show && secondView.getVisibility() == View.VISIBLE
+                && firstView.getVisibility() == View.GONE) {
+            return;
+        }
+
         secondView.setVisibility(show ? View.GONE : View.VISIBLE);
         secondView.animate().setDuration(shortAnimTime).alpha(
                 show ? 0 : 1).setListener(new AnimatorListenerAdapter() {

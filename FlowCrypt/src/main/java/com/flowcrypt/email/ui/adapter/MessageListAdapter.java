@@ -35,7 +35,7 @@ public class MessageListAdapter extends CursorAdapter {
     private MessageDaoSource messageDaoSource;
 
     public MessageListAdapter(Context context, Cursor c) {
-        super(context, c, true);
+        super(context, c, false);
         this.messageDaoSource = new MessageDaoSource();
     }
 

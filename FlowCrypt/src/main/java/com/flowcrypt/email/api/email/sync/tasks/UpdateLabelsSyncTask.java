@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.os.Messenger;
+
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 
@@ -21,13 +23,24 @@ import javax.mail.MessagingException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class UpdateLabelsSyncTask implements SyncTask {
+public class UpdateLabelsSyncTask extends BaseSyncTask {
+
+    /**
+     * The base constructor.
+     *
+     * @param ownerKey    The name of the reply to {@link Messenger}.
+     * @param requestCode The unique request code for the reply to {@link Messenger}.
+     */
+    public UpdateLabelsSyncTask(String ownerKey, int requestCode) {
+        super(ownerKey, requestCode);
+    }
+
     @Override
     public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws
             MessagingException {
         Folder[] folders = gmailSSLStore.getDefaultFolder().list("*");
         if (syncListener != null) {
-            syncListener.onFolderInfoReceived(folders);
+            syncListener.onFolderInfoReceived(folders, ownerKey, requestCode);
         }
     }
 }

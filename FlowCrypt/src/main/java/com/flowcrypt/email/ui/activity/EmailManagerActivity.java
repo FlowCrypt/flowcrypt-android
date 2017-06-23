@@ -30,6 +30,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -59,6 +60,29 @@ public class EmailManagerActivity extends BaseSyncActivity
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
+    }
+
+    @Override
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode) {
+        switch (requestCode) {
+            case R.id.syns_request_code_update_label:
+                getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
+                        EmailManagerActivity.this);
+                break;
+
+            case R.id.syns_request_code_load_next_messages:
+                switch (resultCode) {
+                    case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
+                        onNextMessagesLoaded();
+                        break;
+                }
+                break;
+
+            case R.id.syns_request_code_force_load_new_messages:
+                onForceLoadNewMessagesCompleted(resultCode == EmailSyncService
+                        .REPLY_RESULT_CODE_NEED_UPDATE);
+                break;
+        }
     }
 
     @Override
@@ -146,7 +170,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             case Menu.NONE:
                 folder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                updateEmailListFragment();
+                updateEmailListFragmentAfterFolderChange();
                 break;
         }
 
@@ -196,7 +220,7 @@ public class EmailManagerActivity extends BaseSyncActivity
                     if (folder == null) {
                         folder = foldersManager.getFolderInbox();
                         if (folder != null) {
-                            updateEmailListFragment();
+                            updateEmailListFragmentAfterFolderChange();
                         }
                     }
                 }
@@ -228,12 +252,30 @@ public class EmailManagerActivity extends BaseSyncActivity
         return folder;
     }
 
-    private void updateEmailListFragment() {
+    private void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.showMessageForCurrentFolder();
+            emailListFragment.onForceLoadNewMessagesCompleted(needToRefreshList);
+        }
+    }
+
+    private void onNextMessagesLoaded() {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.onNextMessagesLoaded();
+        }
+    }
+
+    private void updateEmailListFragmentAfterFolderChange() {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.updateList(true);
         }
     }
 
@@ -268,7 +310,7 @@ public class EmailManagerActivity extends BaseSyncActivity
         @Override
         public void onDrawerOpened(View drawerView) {
             super.onDrawerOpened(drawerView);
-            updateLabels();
+            updateLabels(R.id.syns_request_code_update_label);
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
                     EmailManagerActivity.this);
         }
