@@ -41,17 +41,21 @@ public class LoadNewMessagesSyncTask implements SyncTask {
         long nextUID = imapFolder.getUIDNext();
 
         if (syncListener != null) {
-            Message[] messages = imapFolder.getMessagesByUID(lastUID, nextUID);
+            if (lastUID < nextUID - 1) {
+                Message[] messages = imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1);
 
-            if (messages.length > 0) {
-                FetchProfile fetchProfile = new FetchProfile();
-                fetchProfile.add(FetchProfile.Item.ENVELOPE);
-                fetchProfile.add(FetchProfile.Item.FLAGS);
-                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-                imapFolder.fetch(messages, fetchProfile);
+                if (messages.length > 0) {
+                    FetchProfile fetchProfile = new FetchProfile();
+                    fetchProfile.add(FetchProfile.Item.ENVELOPE);
+                    fetchProfile.add(FetchProfile.Item.FLAGS);
+                    fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+                    imapFolder.fetch(messages, fetchProfile);
+                }
+
+                syncListener.onMessageReceived(imapFolder, messages);
+            } else {
+                syncListener.onMessageReceived(imapFolder, new Message[]{});
             }
-
-            syncListener.onMessageReceived(imapFolder, messages);
         }
     }
 }

@@ -117,9 +117,8 @@ public class SecurityContentProvider extends ContentProvider {
                         break;
 
                     case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-                        id = sqLiteDatabase.insert(new MessageDaoSource().getTableName
-                                        (), null,
-                                values);
+                        id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(),
+                                null, values);
                         result = Uri.parse(new MessageDaoSource().getBaseContentUri()
                                 + "/" +
                                 id);
@@ -188,6 +187,12 @@ public class SecurityContentProvider extends ContentProvider {
                                 long id = sqLiteDatabase.insert(
                                         new MessageDaoSource().getTableName(), null,
                                         contentValues);
+
+                                //if message not inserted, try to update message with some UID
+                                if (id <= 0) {
+                                    id = updateMessageInfo(sqLiteDatabase, contentValues);
+                                }
+
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
                                 }
@@ -389,6 +394,32 @@ public class SecurityContentProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
+    }
+
+    /**
+     * Try to update some message.
+     *
+     * @param sqLiteDatabase The {@link SQLiteDatabase} which will be used to update a message.
+     * @param contentValues  The new information about some message.
+     * @return the number of rows affected
+     */
+    private long updateMessageInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
+        long id;
+        String email = contentValues.getAsString(MessageDaoSource
+                .COL_EMAIL);
+        String folder = contentValues.getAsString(MessageDaoSource
+                .COL_FOLDER);
+        String uid = contentValues.getAsString(MessageDaoSource
+                .COL_UID);
+
+        id = sqLiteDatabase.update(
+                new MessageDaoSource().getTableName(),
+                contentValues,
+                MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_UID + " = ? ",
+                new String[]{email, folder, uid});
+        return id;
     }
 
 
