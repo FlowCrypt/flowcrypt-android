@@ -269,6 +269,8 @@ public class EmailManagerActivity extends BaseSyncActivity
         public void onDrawerOpened(View drawerView) {
             super.onDrawerOpened(drawerView);
             updateLabels();
+            getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
+                    EmailManagerActivity.this);
         }
     }
 }
