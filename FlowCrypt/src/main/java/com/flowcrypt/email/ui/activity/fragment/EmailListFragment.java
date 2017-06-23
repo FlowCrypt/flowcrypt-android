@@ -16,6 +16,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
+import com.flowcrypt.email.ui.adapter.EndlessScrollListener;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -245,6 +247,17 @@ public class EmailListFragment extends BaseGmailFragment
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
         listViewMessages.setAdapter(messageListAdapter);
+        listViewMessages.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                //todo-denbond7 need to show loading footer here
+                baseSyncActivity.loadNextMessages(onManageEmailsListener.getCurrentFolder(),
+                        totalItemsCount);
+                Log.d("EmailListFragment", "onLoadMore | page = " + page + " | totalItemsCount = " +
+                        "" + totalItemsCount);
+                return true;
+            }
+        });
 
         emptyView = view.findViewById(R.id.emptyView);
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);

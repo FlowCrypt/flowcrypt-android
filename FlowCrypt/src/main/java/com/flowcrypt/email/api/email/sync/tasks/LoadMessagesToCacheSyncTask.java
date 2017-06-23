@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.util.Log;
+
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
@@ -16,29 +18,23 @@ import javax.mail.Message;
 import javax.mail.UIDFolder;
 
 /**
- * This task does job to load messages.
+ * This task loads the older messages via some step.
  *
  * @author DenBond7
- *         Date: 20.06.2017
- *         Time: 15:06
+ *         Date: 23.06.2017
+ *         Time: 11:26
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesSyncTask implements SyncTask {
+public class LoadMessagesToCacheSyncTask implements SyncTask {
+    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
+    private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
     private String folderName;
-    private int start;
-    private int end;
-    private boolean isSingleLoad;
+    private int countOfAlreadyLoadedMessages;
 
-    public LoadMessagesSyncTask(String folderName, int start, int end) {
+    public LoadMessagesToCacheSyncTask(String folderName, int countOfAlreadyLoadedMessages) {
         this.folderName = folderName;
-        this.start = start;
-        this.end = end;
-    }
-
-    public LoadMessagesSyncTask(String folderName, int end, boolean isSingleLoad) {
-        this(folderName, -1, end);
-        this.isSingleLoad = isSingleLoad;
+        this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
     }
 
     @Override
@@ -46,19 +42,30 @@ public class LoadMessagesSyncTask implements SyncTask {
         IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
         imapFolder.open(Folder.READ_ONLY);
 
+        if (countOfAlreadyLoadedMessages < 0) {
+            countOfAlreadyLoadedMessages = 0;
+        }
+
         int messagesCount = imapFolder.getMessageCount();
+        int end = messagesCount - countOfAlreadyLoadedMessages;
+        int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP;
+
+        Log.d(TAG, "Run LoadMessagesToCacheSyncTask with parameters:"
+                + " folderName = " + folderName
+                + " | countOfAlreadyLoadedMessages = " + countOfAlreadyLoadedMessages
+                + " | messagesCount = " + messagesCount
+                + " | start = " + start
+                + " | end = " + end);
 
         if (syncListener != null) {
-            if (this.end < 1 || this.end > messagesCount || this.start < 1) {
+            if (end < 1) {
                 syncListener.onMessageReceived(imapFolder, new Message[]{});
             } else {
-                Message[] messages;
-
-                if (this.isSingleLoad) {
-                    messages = new Message[]{imapFolder.getMessage(end)};
-                } else {
-                    messages = imapFolder.getMessages(start, end);
+                if (start < 1) {
+                    start = 1;
                 }
+
+                Message[] messages = imapFolder.getMessages(start, end);
 
                 FetchProfile fetchProfile = new FetchProfile();
                 fetchProfile.add(FetchProfile.Item.ENVELOPE);

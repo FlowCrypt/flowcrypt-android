@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
@@ -150,16 +151,17 @@ public class GmailSynsManager {
     }
 
     /**
-     * Add load messages information task ot the next messages. This method create a new
-     * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+     * Add the task of load information of the next messages. This method create a new
+     * {@link LoadMessagesToCacheSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
-     * @param folderName A server folder name.
-     * @param end        The position of the end.
+     * @param folderName                   A server folder name.
+     * @param countOfAlreadyLoadedMessages The count of already cached messages in the folder.
      */
-    public void loadNextMessages(String folderName, int end) {
+    public void loadNextMessages(String folderName, int countOfAlreadyLoadedMessages) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(folderName, end, false));
+            syncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(folderName,
+                    countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -91,13 +91,14 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     /**
      * Start a job to load message to cache.
      *
-     * @param folder {@link Folder} object.
-     * @param end    The position of the end.
+     * @param folder                       {@link Folder} object.
+     * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
      */
-    public void loadNextMessages(Folder folder, int end) {
+    public void loadNextMessages(Folder folder, int countOfAlreadyLoadedMessages) {
         if (checkBound()) return;
 
-        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES, end, 0,
+        Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
+                countOfAlreadyLoadedMessages, 0,
                 folder);
         try {
             messenger.send(msg);
