@@ -16,7 +16,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.widget.Toast;
+import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
@@ -34,6 +34,7 @@ import java.lang.ref.WeakReference;
  */
 
 public abstract class BaseSyncActivity extends BaseActivity implements ServiceConnection {
+    private static final String TAG = BaseSyncActivity.class.getSimpleName();
     /**
      * Messenger for communicating with the service.
      */
@@ -192,14 +193,16 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     protected boolean checkBound() {
         if (!isBound) {
             if (BuildConfig.DEBUG) {
-                Toast.makeText(this, "Activity not connected to the service.", Toast.LENGTH_SHORT)
-                        .show();
+                Log.d(TAG, "Activity not connected to the service");
             }
             return true;
         }
         return false;
     }
 
+    /**
+     * Disconnect from the {@link EmailSyncService}
+     */
     private void unbindFromService() {
         if (isBound) {
 
@@ -212,6 +215,10 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
+    /**
+     * Register a reply {@link Messenger} to receive notifications from the
+     * {@link EmailSyncService}.
+     */
     private void registerReplyMessenger() {
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 -1, null);
@@ -226,6 +233,9 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
+    /**
+     * Unregister a reply {@link Messenger} from the {@link EmailSyncService}.
+     */
     private void unregisterReplyMessenger() {
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 -1, null);

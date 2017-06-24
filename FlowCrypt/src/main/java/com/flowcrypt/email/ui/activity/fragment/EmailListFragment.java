@@ -215,10 +215,10 @@ public class EmailListFragment extends BaseGmailFragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+        /*startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
                 (GeneralMessageDetails) parent.getItemAtPosition(position),
                 onManageEmailsListener.getCurrentFolder().getServerFullFolderName()),
-                REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+                REQUEST_CODE_SHOW_MESSAGE_DETAILS);*/
     }
 
     @Override
@@ -240,6 +240,10 @@ public class EmailListFragment extends BaseGmailFragment
         if (onManageEmailsListener.getCurrentFolder() != null) {
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
+            if (isFolderChanged) {
+                getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+            }
+
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
                     loadCachedMessagesCursorLoaderCallbacks);
         }
@@ -252,9 +256,11 @@ public class EmailListFragment extends BaseGmailFragment
         }
     }
 
-    public void onNextMessagesLoaded() {
-        //listViewMessages.removeFooterView(footerProgressView);
-        updateList(false);
+    public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
+        footerProgressView.setVisibility(View.GONE);
+        if (isNeedToUpdateList) {
+            updateList(false);
+        }
     }
 
     private void initViews(View view) {
@@ -263,11 +269,12 @@ public class EmailListFragment extends BaseGmailFragment
 
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
+        listViewMessages.addFooterView(footerProgressView);
         listViewMessages.setAdapter(messageListAdapter);
         listViewMessages.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
-                //listViewMessages.addFooterView(footerProgressView, null, false);
+                footerProgressView.setVisibility(View.VISIBLE);
                 baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
                         onManageEmailsListener.getCurrentFolder(),
                         totalItemsCount);

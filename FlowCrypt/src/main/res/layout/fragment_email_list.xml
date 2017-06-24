@@ -26,6 +26,7 @@
             android:id="@+id/listViewMessages"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:overScrollFooter="@android:color/transparent"
             android:visibility="gone" />
 
     </android.support.v4.widget.SwipeRefreshLayout>

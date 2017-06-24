@@ -8,9 +8,11 @@ package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
@@ -71,11 +73,8 @@ public class EmailManagerActivity extends BaseSyncActivity
                 break;
 
             case R.id.syns_request_code_load_next_messages:
-                switch (resultCode) {
-                    case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
-                        onNextMessagesLoaded();
-                        break;
-                }
+                onNextMessagesLoaded(resultCode == EmailSyncService
+                        .REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
@@ -83,6 +82,12 @@ public class EmailManagerActivity extends BaseSyncActivity
                         .REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
         }
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        super.onServiceConnected(name, service);
+        updateLabels(R.id.syns_request_code_update_label);
     }
 
     @Override
@@ -170,7 +175,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             case Menu.NONE:
                 folder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                updateEmailListFragmentAfterFolderChange();
+                updateEmailsListFragmentAfterFolderChange();
                 break;
         }
 
@@ -220,7 +225,7 @@ public class EmailManagerActivity extends BaseSyncActivity
                     if (folder == null) {
                         folder = foldersManager.getFolderInbox();
                         if (folder != null) {
-                            updateEmailListFragmentAfterFolderChange();
+                            updateEmailsListFragmentAfterFolderChange();
                         }
                     }
                 }
@@ -252,6 +257,11 @@ public class EmailManagerActivity extends BaseSyncActivity
         return folder;
     }
 
+    /**
+     * Handle a result from the load new messages action.
+     *
+     * @param needToRefreshList true if we must reload the emails list.
+     */
     private void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
@@ -261,16 +271,24 @@ public class EmailManagerActivity extends BaseSyncActivity
         }
     }
 
-    private void onNextMessagesLoaded() {
+    /**
+     * Handle a result from the load next messages action.
+     *
+     * @param needToRefreshList true if we must reload the emails list.
+     */
+    private void onNextMessagesLoaded(boolean needToRefreshList) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.onNextMessagesLoaded();
+            emailListFragment.onNextMessagesLoaded(needToRefreshList);
         }
     }
 
-    private void updateEmailListFragmentAfterFolderChange() {
+    /**
+     * Update the list of emails after changing the folder.
+     */
+    private void updateEmailsListFragmentAfterFolderChange() {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
@@ -298,6 +316,10 @@ public class EmailManagerActivity extends BaseSyncActivity
         }
     }
 
+    /**
+     * The custom realization of {@link ActionBarDrawerToggle}. Will be used to start a labels
+     * update task when the drawer will be opened.
+     */
     private class CustomDrawerToggle extends ActionBarDrawerToggle {
 
         CustomDrawerToggle(Activity activity, DrawerLayout drawerLayout, Toolbar toolbar,
