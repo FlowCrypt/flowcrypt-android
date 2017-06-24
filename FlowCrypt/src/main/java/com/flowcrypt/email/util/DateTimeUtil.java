@@ -44,14 +44,18 @@ public class DateTimeUtil {
 
         Calendar currentCalendar = Calendar.getInstance();
 
-        if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
-                && calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
-                && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar
-                .DAY_OF_MONTH)) {
-            return DateFormat.getTimeFormat(context).format(calendarOfDate.getTime());
+        if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
+            if (calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
+                    && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar
+                    .DAY_OF_MONTH)) {
+                return DateFormat.getTimeFormat(context).format(calendarOfDate.getTime());
+            } else {
+                int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_YEAR | DateUtils
+                        .FORMAT_ABBREV_MONTH;
+                return DateUtils.formatDateTime(context, calendarOfDate.getTime().getTime(), flags);
+            }
         } else {
-            int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_YEAR | DateUtils
-                    .FORMAT_ABBREV_MONTH;
+            int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH;
             return DateUtils.formatDateTime(context, calendarOfDate.getTime().getTime(), flags);
         }
     }
