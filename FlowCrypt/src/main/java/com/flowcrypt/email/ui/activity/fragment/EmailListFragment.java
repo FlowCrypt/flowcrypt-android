@@ -33,6 +33,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.EndlessScrollListener;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -228,12 +229,18 @@ public class EmailListFragment extends BaseGmailFragment
 
     @Override
     public void onRefresh() {
-        swipeRefreshLayout.setRefreshing(true);
-        baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
-                onManageEmailsListener.getCurrentFolder(),
-                messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
-                        .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
-                        .getFolderAlias()));
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            swipeRefreshLayout.setRefreshing(true);
+            baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
+                    onManageEmailsListener.getCurrentFolder(),
+                    messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
+                            .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
+                            .getFolderAlias()));
+        } else {
+            swipeRefreshLayout.setRefreshing(false);
+            UIUtil.showInfoSnackbar(getView(),
+                    getString(R.string.internet_connection_is_not_available));
+        }
     }
 
     public void updateList(boolean isFolderChanged) {
@@ -264,20 +271,25 @@ public class EmailListFragment extends BaseGmailFragment
     }
 
     private void initViews(View view) {
-        footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout
-                .list_view_progress_footer, null);
-
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
+
+        footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout
+                .list_view_progress_footer, listViewMessages, false);
+        footerProgressView.setVisibility(View.GONE);
+
         listViewMessages.addFooterView(footerProgressView);
         listViewMessages.setAdapter(messageListAdapter);
         listViewMessages.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
-                footerProgressView.setVisibility(View.VISIBLE);
-                baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
-                        onManageEmailsListener.getCurrentFolder(),
-                        totalItemsCount);
+                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    footerProgressView.setVisibility(View.VISIBLE);
+                    baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
+                            onManageEmailsListener.getCurrentFolder(),
+                            totalItemsCount);
+                }
+
                 Log.d("EmailListFragment",
                         "onLoadMore | page = " + page + " | totalItemsCount = " + "" +
                                 totalItemsCount);

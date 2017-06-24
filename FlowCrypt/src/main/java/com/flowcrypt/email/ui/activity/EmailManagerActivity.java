@@ -332,7 +332,11 @@ public class EmailManagerActivity extends BaseSyncActivity
         @Override
         public void onDrawerOpened(View drawerView) {
             super.onDrawerOpened(drawerView);
-            updateLabels(R.id.syns_request_code_update_label);
+
+            if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
+                updateLabels(R.id.syns_request_code_update_label);
+            }
+
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
                     EmailManagerActivity.this);
         }
