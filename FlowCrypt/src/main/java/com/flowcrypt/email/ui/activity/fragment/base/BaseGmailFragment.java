@@ -7,6 +7,9 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.accounts.Account;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.view.View;
 
 /**
  * The base fragment which must used when we will work with Gmail email.
@@ -20,6 +23,7 @@ import android.accounts.Account;
 public abstract class BaseGmailFragment extends BaseFragment {
 
     private Account account;
+    private Snackbar snackbar;
 
     /**
      * An abstract method which will be called when current Account will be updated.
@@ -45,5 +49,40 @@ public abstract class BaseGmailFragment extends BaseFragment {
         if (isNeedCallAccountUpdate) {
             onAccountUpdated();
         }
+    }
+
+    /**
+     * Show an information as Snackbar.
+     *
+     * @param view        The view to find a parent from.
+     * @param messageText The text to show.  Can be formatted text.
+     */
+    public void showInfoSnackbar(View view, String messageText) {
+        snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+                .setAction(android.R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                    }
+                });
+        snackbar.show();
+    }
+
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener.
+     *
+     * @param view            he view to find a parent from
+     * @param messageText     The text to show.  Can be formatted text
+     * @param buttonName      The text of the Snackbar button
+     * @param onClickListener The Snackbar button click listener.
+     */
+    public void showSnackbar(View view, String messageText, String buttonName,
+                             @NonNull View.OnClickListener onClickListener) {
+        snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+                .setAction(buttonName, onClickListener);
+        snackbar.show();
+    }
+
+    public Snackbar getSnackBar() {
+        return snackbar;
     }
 }

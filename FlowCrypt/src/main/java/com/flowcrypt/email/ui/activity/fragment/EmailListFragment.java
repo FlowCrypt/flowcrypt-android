@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -53,6 +54,8 @@ public class EmailListFragment extends BaseGmailFragment
     private ListView listViewMessages;
     private View emptyView;
     private View footerProgressView;
+    private View layoutStatus;
+    private TextView textViewStatus;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
@@ -69,6 +72,7 @@ public class EmailListFragment extends BaseGmailFragment
             switch (id) {
                 case R.id.loader_id_load_gmail_messages:
                     emptyView.setVisibility(View.GONE);
+                    layoutStatus.setVisibility(View.GONE);
 
                     if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
                         UIUtil.exchangeViewVisibility(
@@ -105,17 +109,23 @@ public class EmailListFragment extends BaseGmailFragment
                     if (data != null && data.getCount() != 0) {
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
+                        layoutStatus.setVisibility(View.GONE);
                         UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
                                 listViewMessages);
                     } else {
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
-                            baseSyncActivity.loadNextMessages(
-                                    R.id.syns_request_code_load_next_messages,
-                                    onManageEmailsListener.getCurrentFolder(), -1);
+                            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                                loadNextMessages(-1);
+                            } else {
+                                textViewStatus.setText(R.string.no_connection);
+                                UIUtil.exchangeViewVisibility(getContext(),
+                                        false, progressBar, layoutStatus);
+                            }
+
                         } else {
-                            UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
-                                    emptyView);
+                            UIUtil.exchangeViewVisibility(getContext(),
+                                    false, progressBar, emptyView);
                         }
                     }
                     break;
@@ -179,6 +189,14 @@ public class EmailListFragment extends BaseGmailFragment
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        if (getSnackBar() != null) {
+            getSnackBar().dismiss();
+        }
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
@@ -229,26 +247,57 @@ public class EmailListFragment extends BaseGmailFragment
 
     @Override
     public void onRefresh() {
+        if (getSnackBar() != null) {
+            getSnackBar().dismiss();
+        }
+
+        emptyView.setVisibility(View.GONE);
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            swipeRefreshLayout.setRefreshing(true);
-            baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
-                    onManageEmailsListener.getCurrentFolder(),
-                    messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
-                            .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
-                            .getFolderAlias()));
+            if (messageListAdapter.getCount() > 0) {
+                swipeRefreshLayout.setRefreshing(true);
+                loadNewMessages();
+            } else {
+                swipeRefreshLayout.setRefreshing(false);
+
+                if (messageListAdapter.getCount() == 0) {
+                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar, layoutStatus);
+                }
+
+                loadNextMessages(-1);
+            }
         } else {
             swipeRefreshLayout.setRefreshing(false);
-            UIUtil.showInfoSnackbar(getView(),
+
+            if (messageListAdapter.getCount() == 0) {
+                textViewStatus.setText(R.string.no_connection);
+                UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutStatus);
+            }
+
+            showInfoSnackbar(getView(),
                     getString(R.string.internet_connection_is_not_available));
         }
     }
 
+    /**
+     * Update a current messages list.
+     *
+     * @param isFolderChanged if true we destroy a previous loader to reset position, if false we
+     *                        try to load a new messages.
+     */
     public void updateList(boolean isFolderChanged) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
             if (isFolderChanged) {
+                if (getSnackBar() != null) {
+                    getSnackBar().dismiss();
+                }
+
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    //todo-denbond7 need to refetch new messages
+                    //loadNewMessages();
+                }
             }
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
@@ -258,19 +307,57 @@ public class EmailListFragment extends BaseGmailFragment
 
     public void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         swipeRefreshLayout.setRefreshing(false);
-        if (needToRefreshList) {
+        if (needToRefreshList || messageListAdapter.getCount() == 0) {
             updateList(false);
         }
     }
 
     public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
         footerProgressView.setVisibility(View.GONE);
-        if (isNeedToUpdateList) {
+        if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
             updateList(false);
         }
     }
 
+    /**
+     * Try to load a new messages from IMAP server.
+     */
+    private void loadNewMessages() {
+        baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
+                onManageEmailsListener.getCurrentFolder(),
+                messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
+                        .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
+                        .getFolderAlias()));
+    }
+
+    /**
+     * Try to load a next messages from IMAP server.
+     *
+     * @param totalItemsCount The count of already loaded messages.
+     */
+    private void loadNextMessages(final int totalItemsCount) {
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            footerProgressView.setVisibility(View.VISIBLE);
+            baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
+                    onManageEmailsListener.getCurrentFolder(),
+                    totalItemsCount);
+        } else {
+            footerProgressView.setVisibility(View.GONE);
+            showSnackbar(getView(),
+                    getString(R.string.internet_connection_is_not_available),
+                    getString(R.string.retry), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            loadNextMessages(totalItemsCount);
+                        }
+                    });
+        }
+    }
+
     private void initViews(View view) {
+        layoutStatus = view.findViewById(R.id.layoutStatus);
+        textViewStatus = (TextView) view.findViewById(R.id.textViewStatus);
+
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
@@ -282,14 +369,8 @@ public class EmailListFragment extends BaseGmailFragment
         listViewMessages.setAdapter(messageListAdapter);
         listViewMessages.setOnScrollListener(new EndlessScrollListener() {
             @Override
-            public boolean onLoadMore(int page, int totalItemsCount) {
-                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                    footerProgressView.setVisibility(View.VISIBLE);
-                    baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
-                            onManageEmailsListener.getCurrentFolder(),
-                            totalItemsCount);
-                }
-
+            public boolean onLoadMore(int page, final int totalItemsCount) {
+                loadNextMessages(totalItemsCount);
                 Log.d("EmailListFragment",
                         "onLoadMore | page = " + page + " | totalItemsCount = " + "" +
                                 totalItemsCount);
