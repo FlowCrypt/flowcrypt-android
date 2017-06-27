@@ -36,6 +36,7 @@
 
         <activity
             android:name=".ui.activity.EmailManagerActivity"
+            android:label="@string/loading"
             android:screenOrientation="portrait" />
 
         <activity
