@@ -153,8 +153,7 @@ DO NOT DELETE THIS EMAIL. Write me at tom@cryptup.org so that I can help. I resp
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+        android:layout_gravity="center" />
 
 </FrameLayout>
 

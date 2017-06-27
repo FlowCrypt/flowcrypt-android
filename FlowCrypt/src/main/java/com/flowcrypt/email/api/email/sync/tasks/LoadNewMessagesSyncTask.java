@@ -54,9 +54,9 @@ public class LoadNewMessagesSyncTask extends BaseSyncTask {
                     imapFolder.fetch(messages, fetchProfile);
                 }
 
-                syncListener.onMessageReceived(imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(imapFolder, messages, ownerKey, requestCode);
             } else {
-                syncListener.onMessageReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
             }
         }
 

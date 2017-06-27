@@ -27,7 +27,6 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -203,24 +202,24 @@ public class EmailListFragment extends BaseGmailFragment
                 switch (resultCode) {
                     case MessageDetailsActivity.RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER:
                         if (data != null) {
-                            GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
+                            /*GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
                             if (generalMessageDetails != null) {
                                 //messageListAdapter.removeItem(generalMessageDetails);
-                            }
+                            }*/
                         }
                         break;
 
                     case MessageDetailsActivity.RESULT_CODE_MESSAGE_SEEN:
                         if (data != null) {
-                            GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
+                            /*GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
                             if (generalMessageDetails != null) {
                                 // messageListAdapter.changeMessageSeenState(generalMessageDetails,
                                 //        true);
-                            }
+                            }*/
                         }
                         break;
                 }
@@ -234,15 +233,16 @@ public class EmailListFragment extends BaseGmailFragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        /*startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                (GeneralMessageDetails) parent.getItemAtPosition(position),
-                onManageEmailsListener.getCurrentFolder().getServerFullFolderName()),
-                REQUEST_CODE_SHOW_MESSAGE_DETAILS);*/
-    }
+        Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
+        cursor.moveToPosition(position);
 
-    @Override
-    public void onAccountUpdated() {
-
+        startActivityForResult(
+                MessageDetailsActivity.getIntent(
+                        getContext(),
+                        cursor.getString(cursor.getColumnIndex(MessageDaoSource.COL_EMAIL)),
+                        onManageEmailsListener.getCurrentFolder(),
+                        cursor.getInt(cursor.getColumnIndex(MessageDaoSource.COL_UID))),
+                REQUEST_CODE_SHOW_MESSAGE_DETAILS);
     }
 
     @Override

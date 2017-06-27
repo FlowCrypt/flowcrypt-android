@@ -9,7 +9,6 @@ package com.flowcrypt.email.ui.activity.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
@@ -19,19 +18,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
-import com.flowcrypt.email.ui.loader.LoadMessageInfoAsyncTaskLoader;
-import com.flowcrypt.email.ui.loader.MoveMessageToAnotherFolderAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -42,8 +37,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         Time: 16:29
  *         E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsFragment extends BaseGmailFragment implements LoaderManager
-        .LoaderCallbacks<LoaderResult>, View.OnClickListener {
+public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
     public static final String KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
             ".KEY_GENERAL_MESSAGE_DETAILS";
 
@@ -57,19 +51,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
-    private String folderName = GmailConstants.FOLDER_NAME_INBOX;
     private boolean isAdditionalActionEnable;
 
     public MessageDetailsFragment() {
-    }
-
-    public static MessageDetailsFragment newInstance(GeneralMessageDetails generalMessageDetails) {
-
-        Bundle args = new Bundle();
-        args.putParcelable(KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
-        MessageDetailsFragment fragment = new MessageDetailsFragment();
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
@@ -96,12 +80,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        reloadMessageInfo();
+        updateViews();
     }
 
     @Override
@@ -138,13 +117,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_load_message_info:
+            case R.id.loader_id_load_message_info_from_database:
                 UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
                         layoutContent);
-                return new LoadMessageInfoAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails, folderName);
+                return new DecryptMessageAsyncTaskLoader(getContext(), generalMessageDetails
+                        .getRawMessageWithoutAttachments());
 
-            case R.id.loader_id_archive_message:
+            /*case R.id.loader_id_archive_message:
                 isAdditionalActionEnable = false;
                 setBackPressedEnable(false);
                 getActivity().invalidateOptionsMenu();
@@ -160,7 +139,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                 UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
                         layoutContent);
                 return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails, folderName, "[Gmail]/Trash");
+                        generalMessageDetails, folderName, "[Gmail]/Trash");*/
 
             default:
                 return null;
@@ -170,19 +149,19 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
-            case R.id.loader_id_load_message_info:
+            case R.id.loader_id_load_message_info_from_database:
                 isAdditionalActionEnable = true;
                 getActivity().invalidateOptionsMenu();
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
                 updateViews();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
 
-                Intent intentMessageSeen = new Intent();
+                /*Intent intentMessageSeen = new Intent();
                 intentMessageSeen.putExtra(MessageDetailsActivity
                         .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
 
                 getActivity().setResult(MessageDetailsActivity
-                        .RESULT_CODE_MESSAGE_SEEN, intentMessageSeen);
+                        .RESULT_CODE_MESSAGE_SEEN, intentMessageSeen);*/
                 break;
 
             case R.id.loader_id_delete_message:
@@ -191,7 +170,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                 isAdditionalActionEnable = true;
                 getActivity().invalidateOptionsMenu();
 
-                boolean isMessageMoved = (boolean) result;
+                /*boolean isMessageMoved = (boolean) result;
                 if (isMessageMoved) {
                     Intent updateIntent = new Intent();
                     updateIntent.putExtra(MessageDetailsActivity
@@ -215,7 +194,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
                     UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
                             layoutContent);
                     UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
-                }
+                }*/
                 break;
 
             default:
@@ -233,11 +212,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
     }
 
     @Override
-    public void onAccountUpdated() {
-        reloadMessageInfo();
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.imageViewReplyAll:
@@ -246,12 +220,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
         }
     }
 
-    public void setGeneralMessageDetails(GeneralMessageDetails generalMessageDetails) {
+    public void showMessageDetails(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
-    }
-
-    public void setFolder(String folderName) {
-        this.folderName = folderName;
+        getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
     /**
@@ -287,15 +258,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements LoaderM
             if (incomingMessageInfo.getReceiveDate() != null) {
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
             }
-        }
-    }
-
-    /**
-     * Load an information about current general message details.
-     */
-    private void reloadMessageInfo() {
-        if (generalMessageDetails != null && getAccount() != null) {
-            getLoaderManager().initLoader(R.id.loader_id_load_message_info, null, this);
         }
     }
 }

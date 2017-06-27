@@ -36,7 +36,6 @@
 
         <activity
             android:name=".ui.activity.EmailManagerActivity"
-            android:label="@string/title_activity_email_manager"
             android:screenOrientation="portrait" />
 
         <activity

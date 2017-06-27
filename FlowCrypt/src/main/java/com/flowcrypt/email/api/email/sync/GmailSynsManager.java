@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.email.sync;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.event.ConnectionEvent;
 import javax.mail.event.ConnectionListener;
@@ -152,6 +154,25 @@ public class GmailSynsManager {
         try {
             syncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folderName,
                     start, end));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Add load a messages information task. This method create a new
+     * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folderName  A server folder name.
+     * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
+     */
+    public void loadMessageDetails(String ownerKey, int requestCode, String folderName, int uid) {
+        try {
+            syncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
+                    folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -51,6 +51,8 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_TO_ADDRESSES = "to_address";
     public static final String COL_SUBJECT = "subject";
     public static final String COL_FLAGS = "flags";
+    public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS =
+            "raw_message_without_attachments";
 
     public static final String IMAP_MESSAGES_INFO_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_MESSAGES + " (" +
@@ -63,7 +65,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_FROM_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_TO_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_SUBJECT + " TEXT DEFAULT NULL, " +
-            COL_FLAGS + " TEXT DEFAULT NULL " + ");";
+            COL_FLAGS + " TEXT DEFAULT NULL, " +
+            COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -131,6 +134,50 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Add a new message details to the database. This method must be called in the non-UI thread.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @param raw     The raw message text which will be added to the database.
+     * @return The count of the updated row or -1 up.
+     */
+    public int updateMessageRawText(Context context, String email, String label, long uid,
+                                    String raw) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, raw);
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
+
+    /**
+     * Mark message as seen in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @return The count of the updated row or -1 up.
+     */
+    public int setSeenStatusForLocalMessage(Context context, String email, String label, long uid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_FLAGS, MessageFlag.SEEN);
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
+
+    /**
      * Generate a {@link Folder} object from the current cursor position.
      *
      * @param cursor The {@link Cursor} which contains information about {@link Folder}.
@@ -153,6 +200,8 @@ public class MessageDaoSource extends BaseDaoSource {
         generalMessageDetails.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
         generalMessageDetails.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex
                 (COL_FLAGS))));
+        generalMessageDetails.setRawMessageWithoutAttachments(
+                cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
 
         return generalMessageDetails;
     }

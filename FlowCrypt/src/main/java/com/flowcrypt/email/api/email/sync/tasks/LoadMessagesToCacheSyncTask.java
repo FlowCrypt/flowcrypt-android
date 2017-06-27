@@ -61,7 +61,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
         if (syncListener != null) {
             if (end < 1) {
-                syncListener.onMessageReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -75,7 +75,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessageReceived(imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(imapFolder, messages, ownerKey, requestCode);
             }
         }
 

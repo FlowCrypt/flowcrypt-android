@@ -20,7 +20,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.test.Js;
-import com.flowcrypt.email.ui.loader.SendEncryptedMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -143,14 +142,9 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onAccountUpdated() {
-
-    }
-
-    @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_send_encrypted_message:
+            /*case R.id.loader_id_send_encrypted_message:
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
                 UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
@@ -158,7 +152,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return getAccount() != null && !isMessageSent ?
                         new SendEncryptedMessageAsyncTaskLoader(getContext(),
-                                getAccount(), outgoingMessageInfo) : null;
+                                getAccount(), outgoingMessageInfo) : null;*/
 
             case R.id.loader_id_update_info_about_pgp_contacts:
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);

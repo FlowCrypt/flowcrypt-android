@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
@@ -60,6 +61,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_LOAD_MESSAGES = 4;
     public static final int MESSAGE_LOAD_NEXT_MESSAGES = 5;
     public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
+    public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -134,9 +136,33 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageReceived(IMAPFolder imapFolder, javax.mail.Message[] messages, String
+    public void onMessageDetailsReceived(IMAPFolder imapFolder, javax.mail.Message message, String
+            rawMessageWithOutAttachments, String ownerKey, int requestCode) {
+        try {
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+            com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
+                    imapFolder.getName());
+
+            messageDaoSource.updateMessageRawText(getApplicationContext(),
+                    account.name,
+                    folder.getFolderAlias(),
+                    imapFolder.getUID(message),
+                    rawMessageWithOutAttachments);
+
+            if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+            }
+        } catch (MessagingException | RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onMessagesReceived(IMAPFolder imapFolder, javax.mail.Message[] messages, String
             key, int requestCode) {
-        Log.d(TAG, "onMessageReceived: imapFolder = " + imapFolder.getFullName() + " message " +
+        Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
             com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
@@ -308,6 +334,17 @@ public class EmailSyncService extends Service implements SyncListener {
                             gmailSynsManager.loadNewMessagesManually(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     refreshFolder.getServerFullFolderName(), message.arg1);
+                        }
+                        break;
+
+                    case MESSAGE_LOAD_MESSAGE_DETAILS:
+                        if (gmailSynsManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder messageFolder =
+                                    (com.flowcrypt.email.api.email.Folder) action.getObject();
+
+                            gmailSynsManager.loadMessageDetails(action.getOwnerKey(),
+                                    action.getRequestCode(),
+                                    messageFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
                     default:

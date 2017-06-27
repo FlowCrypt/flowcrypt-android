@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import java.util.Arrays;
 
@@ -43,6 +44,7 @@ public class GeneralMessageDetails implements Parcelable {
     private String[] to;
     private String subject;
     private String[] flags;
+    private String rawMessageWithoutAttachments;
 
     public GeneralMessageDetails() {
     }
@@ -57,6 +59,7 @@ public class GeneralMessageDetails implements Parcelable {
         this.to = in.createStringArray();
         this.subject = in.readString();
         this.flags = in.createStringArray();
+        this.rawMessageWithoutAttachments = in.readString();
     }
 
     @Override
@@ -75,6 +78,7 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeStringArray(this.to);
         dest.writeString(this.subject);
         dest.writeStringArray(this.flags);
+        dest.writeString(this.rawMessageWithoutAttachments);
     }
 
     @Override
@@ -89,6 +93,8 @@ public class GeneralMessageDetails implements Parcelable {
                 ", to=" + Arrays.toString(to) +
                 ", subject='" + subject + '\'' +
                 ", flags=" + Arrays.toString(flags) +
+                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
+                (rawMessageWithoutAttachments) +
                 '}';
     }
 
@@ -166,5 +172,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public boolean isSeen() {
         return flags != null && Arrays.asList(flags).contains(MessageFlag.SEEN);
+    }
+
+    public String getRawMessageWithoutAttachments() {
+        return rawMessageWithoutAttachments;
+    }
+
+    public void setRawMessageWithoutAttachments(String rawMessageWithoutAttachments) {
+        this.rawMessageWithoutAttachments = rawMessageWithoutAttachments;
     }
 }

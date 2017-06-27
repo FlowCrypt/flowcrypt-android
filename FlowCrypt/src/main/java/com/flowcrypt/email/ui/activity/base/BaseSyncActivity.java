@@ -186,6 +186,30 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     /**
+     * Start a job to load message details.
+     *
+     * @param requestCode The unique request code for identify the current action.
+     * @param folder      {@link Folder} object.
+     * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
+     */
+    public void loadMessageDetails(int requestCode, Folder folder, int uid) {
+        if (checkBound()) return;
+
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, folder);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
+                uid, 0, action);
+
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Check is current {@link Activity} connected to {@link EmailSyncService}
      *
      * @return true if current activity connected to the service, otherwise false.
