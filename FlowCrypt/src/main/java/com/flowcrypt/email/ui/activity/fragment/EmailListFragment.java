@@ -105,7 +105,7 @@ public class EmailListFragment extends BaseGmailFragment implements LoaderManage
                             GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
                                     (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
 
-                            if (generalMessageDetails != null) {
+                            if (generalMessageDetails != null && messageListAdapter != null) {
                                 messageListAdapter.changeMessageSeenState(generalMessageDetails,
                                         true);
                             }
