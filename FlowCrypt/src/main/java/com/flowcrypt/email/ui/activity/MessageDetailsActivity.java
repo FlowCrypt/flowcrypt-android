@@ -38,8 +38,7 @@ import com.flowcrypt.email.util.GeneralUtil;
  */
 public class MessageDetailsActivity extends BaseBackStackSyncActivity implements LoaderManager
         .LoaderCallbacks<Cursor> {
-    public static final int RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER = 100;
-    public static final int RESULT_CODE_MESSAGE_SEEN = 101;
+    public static final int RESULT_CODE_MESSAGE_CHANGED = 100;
 
     public static final String EXTRA_KEY_EMAIL =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_EMAIL", MessageDetailsActivity.class);
@@ -136,6 +135,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         isNeedToReceiveMessageDetails = false;
                         generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
                         showMessageDetails(generalMessageDetails);
+                        setResult(MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED, null);
                         cursor.close();
                     }
                 } else throw new IllegalArgumentException("The message not exists in the database");
@@ -168,6 +168,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                     case EmailSyncService.REPLY_RESULT_CODE_OK:
                         new MessageDaoSource().setSeenStatusForLocalMessage(this, email, folder
                                 .getFolderAlias(), uid);
+                        setResult(MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED, null);
                         getSupportLoaderManager().restartLoader(R.id
                                         .loader_id_load_message_info_from_database,
                                 null, this);

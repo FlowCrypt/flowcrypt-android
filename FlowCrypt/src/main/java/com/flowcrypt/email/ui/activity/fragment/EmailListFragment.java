@@ -50,6 +50,7 @@ public class EmailListFragment extends BaseGmailFragment
         implements AdapterView.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
+
     private ListView listViewMessages;
     private View emptyView;
     private View footerProgressView;
@@ -200,27 +201,8 @@ public class EmailListFragment extends BaseGmailFragment
         switch (requestCode) {
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
                 switch (resultCode) {
-                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER:
-                        if (data != null) {
-                            /*GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
-                                    (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
-
-                            if (generalMessageDetails != null) {
-                                //messageListAdapter.removeItem(generalMessageDetails);
-                            }*/
-                        }
-                        break;
-
-                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_SEEN:
-                        if (data != null) {
-                            /*GeneralMessageDetails generalMessageDetails = data.getParcelableExtra
-                                    (MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
-
-                            if (generalMessageDetails != null) {
-                                // messageListAdapter.changeMessageSeenState(generalMessageDetails,
-                                //        true);
-                            }*/
-                        }
+                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED:
+                        updateList(false);
                         break;
                 }
                 break;

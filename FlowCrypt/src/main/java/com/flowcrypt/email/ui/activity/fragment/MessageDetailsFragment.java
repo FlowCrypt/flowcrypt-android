@@ -155,13 +155,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
                 updateViews();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
-
-                /*Intent intentMessageSeen = new Intent();
-                intentMessageSeen.putExtra(MessageDetailsActivity
-                        .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
-
-                getActivity().setResult(MessageDetailsActivity
-                        .RESULT_CODE_MESSAGE_SEEN, intentMessageSeen);*/
                 break;
 
             case R.id.loader_id_delete_message:
