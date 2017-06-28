@@ -62,6 +62,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_LOAD_NEXT_MESSAGES = 5;
     public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
+    public static final int MESSAGE_MOVE_MESSAGE = 8;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -133,6 +134,20 @@ public class EmailSyncService extends Service implements SyncListener {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind:" + intent);
         return messenger.getBinder();
+    }
+
+    @Override
+    public void onMessagesMoved(IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+                                javax.mail.Message[] messages, String ownerKey, int requestCode) {
+        try {
+            if (messages != null && messages.length > 0) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -345,6 +360,19 @@ public class EmailSyncService extends Service implements SyncListener {
                             gmailSynsManager.loadMessageDetails(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     messageFolder.getServerFullFolderName(), message.arg1);
+                        }
+                        break;
+
+                    case MESSAGE_MOVE_MESSAGE:
+                        if (gmailSynsManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder[] folders = (com.flowcrypt.email
+                                    .api.email.Folder[]) action.getObject();
+
+                            gmailSynsManager.moveMessage(action.getOwnerKey(),
+                                    action.getRequestCode(),
+                                    folders[0].getServerFullFolderName(),
+                                    folders[1].getServerFullFolderName(),
+                                    message.arg1);
                         }
                         break;
                     default:

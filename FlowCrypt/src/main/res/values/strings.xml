@@ -101,4 +101,6 @@
     <string name="no_connection">No connection</string>
     <string name="archive">Archive</string>
     <string name="delete">Delete</string>
+    <string name="error_occurred_while_deleting_message">An error occurred while deleting the message</string>
+    <string name="error_occurred_while_archiving_message">An error occurred while archiving the message</string>
 </resources>

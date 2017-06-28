@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -214,6 +215,26 @@ public class GmailSynsManager {
         try {
             syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode,
                     folderName, lastUIDInCache));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Move the message to an another folder.
+     *
+     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode           The unique request code for identify the current action.
+     * @param sourceFolderName      The source folder name.
+     * @param destinationFolderName The destination folder name.
+     * @param uid                   The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
+     *                              .Message ).
+     */
+    public void moveMessage(String ownerKey, int requestCode, String sourceFolderName, String
+            destinationFolderName, int uid) {
+        try {
+            syncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode,
+                    sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

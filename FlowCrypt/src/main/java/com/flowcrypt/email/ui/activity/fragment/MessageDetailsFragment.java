@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,8 +26,10 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -52,8 +55,18 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
     private boolean isAdditionalActionEnable;
+    private OnActionListener onActionListener;
 
     public MessageDetailsFragment() {
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof BaseSyncActivity) {
+            this.onActionListener = (OnActionListener) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                OnActionListener.class.getSimpleName());
     }
 
     @Override
@@ -100,13 +113,41 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionArchiveMessage:
-                getLoaderManager().restartLoader(R.id.loader_id_archive_message,
-                        null, this);
+                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    isAdditionalActionEnable = false;
+                    getActivity().invalidateOptionsMenu();
+                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                            layoutContent);
+                    onActionListener.onArchiveMessageClicked();
+                } else {
+                    showSnackbar(getView(),
+                            getString(R.string.internet_connection_is_not_available),
+                            getString(R.string.retry), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onActionListener.onArchiveMessageClicked();
+                                }
+                            });
+                }
                 return true;
 
             case R.id.menuActionDeleteMessage:
-                getLoaderManager().restartLoader(R.id.loader_id_delete_message,
-                        null, this);
+                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    isAdditionalActionEnable = false;
+                    getActivity().invalidateOptionsMenu();
+                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                            layoutContent);
+                    onActionListener.onDeleteMessageClicked();
+                } else {
+                    showSnackbar(getView(),
+                            getString(R.string.internet_connection_is_not_available),
+                            getString(R.string.retry), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onActionListener.onDeleteMessageClicked();
+                                }
+                            });
+                }
                 return true;
 
             default:
@@ -122,25 +163,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         layoutContent);
                 return new DecryptMessageAsyncTaskLoader(getContext(), generalMessageDetails
                         .getRawMessageWithoutAttachments());
-
-            /*case R.id.loader_id_archive_message:
-                isAdditionalActionEnable = false;
-                setBackPressedEnable(false);
-                getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
-                        layoutContent);
-                return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails, folderName, "[Gmail]/All Mail");
-
-            case R.id.loader_id_delete_message:
-                isAdditionalActionEnable = false;
-                setBackPressedEnable(false);
-                getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
-                        layoutContent);
-                return new MoveMessageToAnotherFolderAsyncTaskLoader(getContext(), getAccount(),
-                        generalMessageDetails, folderName, "[Gmail]/Trash");*/
-
             default:
                 return null;
         }
@@ -156,40 +178,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 updateViews();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
                 break;
-
-            case R.id.loader_id_delete_message:
-            case R.id.loader_id_archive_message:
-                setBackPressedEnable(true);
-                isAdditionalActionEnable = true;
-                getActivity().invalidateOptionsMenu();
-
-                /*boolean isMessageMoved = (boolean) result;
-                if (isMessageMoved) {
-                    Intent updateIntent = new Intent();
-                    updateIntent.putExtra(MessageDetailsActivity
-                            .EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
-
-                    getActivity().setResult(MessageDetailsActivity
-                            .RESULT_CODE_MESSAGE_MOVED_TO_ANOTHER_FOLDER, updateIntent);
-                    switch (loaderId) {
-                        case R.id.loader_id_delete_message:
-                            Toast.makeText(getContext(), R.string.message_was_deleted, Toast
-                                    .LENGTH_SHORT).show();
-                            break;
-
-                        case R.id.loader_id_archive_message:
-                            Toast.makeText(getContext(), R.string.message_was_archived, Toast
-                                    .LENGTH_SHORT).show();
-                            break;
-                    }
-                    getActivity().finish();
-                } else {
-                    UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
-                            layoutContent);
-                    UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
-                }*/
-                break;
-
             default:
                 super.handleSuccessLoaderResult(loaderId, result);
         }
@@ -198,7 +186,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
-        setBackPressedEnable(true);
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
         UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
@@ -216,6 +203,26 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public void showMessageDetails(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
         getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+    }
+
+    public void notifyUserAboutActionError(int requestCode) {
+        isAdditionalActionEnable = true;
+        getActivity().invalidateOptionsMenu();
+
+        UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                layoutContent);
+
+        switch (requestCode) {
+            case R.id.syns_request_archive_message:
+                UIUtil.showInfoSnackbar(getView(),
+                        getString(R.string.error_occurred_while_archiving_message));
+                break;
+
+            case R.id.syns_request_delete_message:
+                UIUtil.showInfoSnackbar(getView(),
+                        getString(R.string.error_occurred_while_deleting_message));
+                break;
+        }
     }
 
     /**
@@ -252,5 +259,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
             }
         }
+    }
+
+    public interface OnActionListener {
+        void onArchiveMessageClicked();
+
+        void onDeleteMessageClicked();
     }
 }

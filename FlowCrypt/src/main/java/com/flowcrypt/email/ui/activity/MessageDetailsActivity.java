@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -37,8 +38,8 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivity extends BaseBackStackSyncActivity implements LoaderManager
-        .LoaderCallbacks<Cursor> {
-    public static final int RESULT_CODE_MESSAGE_CHANGED = 100;
+        .LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener {
+    public static final int RESULT_CODE_UPDATE_LIST = 100;
 
     public static final String EXTRA_KEY_EMAIL =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_EMAIL", MessageDetailsActivity.class);
@@ -52,7 +53,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     private Folder folder;
     private int uid;
     private boolean isNeedToReceiveMessageDetails;
-
+    private boolean isBackEnable = true;
 
     public static Intent getIntent(Context context, String email, Folder folder, int uid) {
         Intent intent = new Intent(context, MessageDetailsActivity.class);
@@ -89,11 +90,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public void onBackPressed() {
-        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.messageDetailsFragment);
-
-        if (messageDetailsFragment == null || messageDetailsFragment.isBackPressedEnable()) {
+        if (isBackEnable) {
             super.onBackPressed();
         } else {
             Toast.makeText(this, R.string.please_wait_while_action_will_be_completed,
@@ -135,7 +132,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         isNeedToReceiveMessageDetails = false;
                         generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
                         showMessageDetails(generalMessageDetails);
-                        setResult(MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED, null);
+                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         cursor.close();
                     }
                 } else throw new IllegalArgumentException("The message not exists in the database");
@@ -168,7 +165,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                     case EmailSyncService.REPLY_RESULT_CODE_OK:
                         new MessageDaoSource().setSeenStatusForLocalMessage(this, email, folder
                                 .getFolderAlias(), uid);
-                        setResult(MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED, null);
+                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         getSupportLoaderManager().restartLoader(R.id
                                         .loader_id_load_message_info_from_database,
                                 null, this);
@@ -179,6 +176,53 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         break;
                 }
                 break;
+
+            case R.id.syns_request_archive_message:
+            case R.id.syns_request_delete_message:
+                isBackEnable = true;
+                switch (resultCode) {
+                    case EmailSyncService.REPLY_RESULT_CODE_OK:
+                        Toast.makeText(this, requestCode == R.id.syns_request_archive_message ? R
+                                        .string.message_was_archived : R.string.message_was_deleted,
+                                Toast.LENGTH_SHORT)
+                                .show();
+                        new MessageDaoSource().deleteMessageFromFolder(this, email,
+                                folder.getFolderAlias(), uid);
+                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+                        finish();
+                        break;
+
+                    case EmailSyncService.REPLY_RESULT_CODE_ERROR:
+                        notifyUserAboutError(requestCode);
+                        break;
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onArchiveMessageClicked() {
+        isBackEnable = false;
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        moveMessage(R.id.syns_request_archive_message, folder, foldersManager
+                .getFolderArchive(), uid);
+    }
+
+    @Override
+    public void onDeleteMessageClicked() {
+        isBackEnable = false;
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        moveMessage(R.id.syns_request_delete_message, folder, foldersManager
+                .getFolderTrash(), uid);
+    }
+
+    private void notifyUserAboutError(int requestCode) {
+        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.messageDetailsFragment);
+
+        if (messageDetailsFragment != null) {
+            messageDetailsFragment.notifyUserAboutActionError(requestCode);
         }
     }
 

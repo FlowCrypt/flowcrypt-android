@@ -335,6 +335,24 @@ public class MessageDaoSource extends BaseDaoSource {
         return 0;
     }
 
+    /**
+     * Delete a message from a some folder in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @return The number of rows deleted.
+     */
+    public int deleteMessageFromFolder(Context context, String email, String label, long uid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                    + COL_FOLDER + " = ? AND "
+                    + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
+
     private static String prepareArrayToSaving(String[] attributes) {
         if (attributes != null && attributes.length > 0) {
             String result = "";

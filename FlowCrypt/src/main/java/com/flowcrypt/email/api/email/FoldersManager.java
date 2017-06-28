@@ -6,8 +6,11 @@
 
 package com.flowcrypt.email.api.email;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.Arrays;
@@ -34,6 +37,33 @@ public class FoldersManager {
 
     public FoldersManager() {
         this.folders = new LinkedHashMap<>();
+    }
+
+    /**
+     * Generate a new {@link FoldersManager} using an information from the local database.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param accountName The name of an account.
+     * @return The new {@link FoldersManager}.
+     */
+    public static FoldersManager fromDatabase(Context context, String accountName) {
+        FoldersManager foldersManager = new FoldersManager();
+
+        Cursor cursor = context.getContentResolver().query(new ImapLabelsDaoSource().
+                getBaseContentUri(), null, ImapLabelsDaoSource.COL_EMAIL +
+                " = ?", new String[]{accountName}, null);
+
+        if (cursor != null) {
+            ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+
+            while (cursor.moveToNext()) {
+                foldersManager.addFolder(imapLabelsDaoSource.getFolder(cursor));
+            }
+
+            cursor.close();
+        }
+
+        return foldersManager;
     }
 
     /**

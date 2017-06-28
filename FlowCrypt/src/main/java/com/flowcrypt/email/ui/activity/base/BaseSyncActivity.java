@@ -11,11 +11,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
@@ -61,17 +63,18 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode);
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        // Bind to the service
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         bindService(new Intent(this, EmailSyncService.class), this, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "bind to " + EmailSyncService.class.getSimpleName());
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         // Unbind from the service
         unbindFromService();
+        Log.d(TAG, "unbind from " + EmailSyncService.class.getSimpleName());
     }
 
     @Override
@@ -199,6 +202,34 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
                 requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
+                uid, 0, action);
+
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Move the message to an another folder.
+     *
+     * @param requestCode       The unique request code for identify the current action.
+     * @param sourcesFolder     The message {@link Folder} object.
+     * @param destinationFolder The new destionation {@link Folder} object.
+     * @param uid               The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
+     *                          .Message ).
+     */
+    public void moveMessage(int requestCode, Folder sourcesFolder,
+                            Folder destinationFolder, int uid) {
+        if (checkBound()) return;
+
+        Folder[] folders = new Folder[]{sourcesFolder, destinationFolder};
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, folders);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
                 uid, 0, action);
 
         message.replyTo = replyMessenger;

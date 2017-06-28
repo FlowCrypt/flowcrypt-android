@@ -201,7 +201,7 @@ public class EmailListFragment extends BaseGmailFragment
         switch (requestCode) {
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
                 switch (resultCode) {
-                    case MessageDetailsActivity.RESULT_CODE_MESSAGE_CHANGED:
+                    case MessageDetailsActivity.RESULT_CODE_UPDATE_LIST:
                         updateList(false);
                         break;
                 }

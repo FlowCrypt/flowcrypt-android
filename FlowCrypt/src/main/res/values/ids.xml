@@ -15,11 +15,11 @@
     <item name="loader_id_load_contacts_with_has_pgp_true" type="id" />
     <item name="loader_id_post_help_feedback" type="id" />
     <item name="loader_send_backup_with_private_key_to_myself" type="id" />
-    <item name="loader_id_archive_message" type="id" />
-    <item name="loader_id_delete_message" type="id" />
 
     <item name="syns_request_code_update_label" type="id" />
     <item name="syns_request_code_load_next_messages" type="id" />
     <item name="syns_request_code_force_load_new_messages" type="id" />
     <item name="syns_request_code_load_message_details" type="id" />
+    <item name="syns_request_archive_message" type="id" />
+    <item name="syns_request_delete_message" type="id" />
 </resources>
