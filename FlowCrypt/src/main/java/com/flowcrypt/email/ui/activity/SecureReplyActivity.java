@@ -60,11 +60,22 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public boolean isMessageSendingNow() {
+    public void notifyUserAboutErrorWhenSendMessage() {
         SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
                 getSupportFragmentManager()
                         .findFragmentById(R.id.secureReplyFragment);
 
-        return secureReplyFragment != null && secureReplyFragment.isMessageSendingNow();
+        if (secureReplyFragment != null) {
+            secureReplyFragment.notifyUserAboutErrorWhenSendMessage();
+        }
+    }
+
+    @Override
+    public boolean isCanFinishActivity() {
+        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.secureReplyFragment);
+
+        return secureReplyFragment != null && !secureReplyFragment.isMessageSendingNow();
     }
 }

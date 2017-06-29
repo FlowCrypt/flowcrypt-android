@@ -10,6 +10,8 @@ import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 
+import javax.mail.Session;
+
 /**
  * The sync task which will be run by {@link GmailSynsManager}
  *
@@ -21,6 +23,13 @@ import com.sun.mail.gimap.GmailSSLStore;
 
 public interface SyncTask {
     /**
+     * Check is this task use the SMTP protocol to communicate with a server.
+     *
+     * @return true if wiil be used SMTP, false if will be used IMAP.
+     */
+    boolean isUseSMTP();
+
+    /**
      * Run current task in the separate thread.
      *
      * @param gmailSSLStore The connected and opened {@link GmailSSLStore} object.
@@ -28,4 +37,16 @@ public interface SyncTask {
      * @throws Exception
      */
     void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception;
+
+    /**
+     * Run current task in the separate thread.
+     *
+     * @param session      The {@link Session} object.
+     * @param userName     The user name which will be used of connection.
+     * @param password     The password which will be used of connection.
+     * @param syncListener The listener of synchronization.
+     * @throws Exception
+     */
+    void run(Session session, String userName, String password, SyncListener syncListener) throws
+            Exception;
 }

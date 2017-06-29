@@ -25,6 +25,16 @@ import javax.mail.Message;
 
 public interface SyncListener {
     /**
+     * This method called when an encrypted message was sent.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to
+     *                    {@link android.os.Messenger}.
+     * @param isSent      true if the message was sent, false otherwise.
+     */
+    void onEncryptedMessageSent(String ownerKey, int requestCode, boolean isSent);
+
+    /**
      * This method called when a new messages received from the some folder.
      *
      * @param sourceImapFolder      The source folder where the messages exist.

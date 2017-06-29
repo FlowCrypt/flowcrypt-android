@@ -130,7 +130,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         }
                     } else {
                         isNeedToReceiveMessageDetails = false;
-                        generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
+                        MessageDaoSource messageDaoSource = new MessageDaoSource();
+                        messageDaoSource.setSeenStatusForLocalMessage(this, email, folder
+                                .getFolderAlias(), uid);
+                        generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
                         showMessageDetails(generalMessageDetails);
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         cursor.close();
@@ -216,6 +219,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 .getFolderTrash(), uid);
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     private void notifyUserAboutError(int requestCode) {
         MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
                 getSupportFragmentManager()
@@ -241,5 +248,4 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             getSupportActionBar().setTitle(null);
         }
     }
-
 }

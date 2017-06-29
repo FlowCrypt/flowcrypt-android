@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -28,6 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.event.ConnectionEvent;
 import javax.mail.event.ConnectionListener;
 
@@ -56,6 +58,7 @@ public class GmailSynsManager {
      * This fields created as volatile because will be used in different threads.
      */
     private volatile SyncListener syncListener;
+    private volatile Session session;
     private volatile GmailSSLStore gmailSSLStore;
 
     private GmailSynsManager() {
@@ -240,6 +243,22 @@ public class GmailSynsManager {
         }
     }
 
+    /**
+     * Move the message to an another folder.
+     *
+     * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode         The unique request code for identify the current action.
+     * @param rawEncryptedMessage The raw encrypted message.
+     */
+    public void sendEncryptedMessage(String ownerKey, int requestCode, String rawEncryptedMessage) {
+        try {
+            syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode,
+                    rawEncryptedMessage));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private class SyncTaskRunnable implements Runnable, ConnectionListener {
         private final String TAG = SyncTaskRunnable.class.getSimpleName();
@@ -261,7 +280,11 @@ public class GmailSynsManager {
                         }
 
                         Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
-                        syncTask.run(gmailSSLStore, syncListener);
+                        if (syncTask.isUseSMTP()) {
+                            syncTask.run(session, getEmail(), getValidToken(), syncListener);
+                        } else {
+                            syncTask.run(gmailSSLStore, syncListener);
+                        }
                         Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
                                 + " completed");
                     }
@@ -289,7 +312,8 @@ public class GmailSynsManager {
 
         private void openConnectionToGmailStore() throws IOException,
                 GoogleAuthException, MessagingException {
-            gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(getValidToken(),
+            session = OpenStoreHelper.getGmailSession();
+            gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(session, getValidToken(),
                     getEmail());
             gmailSSLStore.addConnectionListener(this);
         }

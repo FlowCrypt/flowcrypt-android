@@ -6,6 +6,11 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.sun.mail.gimap.GmailSSLStore;
+
+import javax.mail.Session;
+
 /**
  * The base realization of {@link SyncTask}.
  *
@@ -28,6 +33,21 @@ abstract class BaseSyncTask implements SyncTask {
     BaseSyncTask(String ownerKey, int requestCode) {
         this.ownerKey = ownerKey;
         this.requestCode = requestCode;
+    }
+
+    @Override
+    public boolean isUseSMTP() {
+        return false;
+    }
+
+    @Override
+    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
+
+    }
+
+    @Override
+    public void run(Session session, String userName, String password, SyncListener syncListener)
+            throws Exception {
     }
 
     public String getOwnerKey() {

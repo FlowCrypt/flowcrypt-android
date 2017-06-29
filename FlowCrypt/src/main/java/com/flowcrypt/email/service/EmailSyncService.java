@@ -63,6 +63,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
+    public static final int MESSAGE_SEND_ENCRYPTED_MESSAGE = 9;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -134,6 +135,19 @@ public class EmailSyncService extends Service implements SyncListener {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind:" + intent);
         return messenger.getBinder();
+    }
+
+    @Override
+    public void onEncryptedMessageSent(String ownerKey, int requestCode, boolean isSent) {
+        try {
+            if (isSent) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -375,6 +389,16 @@ public class EmailSyncService extends Service implements SyncListener {
                                     message.arg1);
                         }
                         break;
+
+                    case MESSAGE_SEND_ENCRYPTED_MESSAGE:
+                        if (gmailSynsManager != null && action != null) {
+                            String rawEncryptedMessage = (String) action.getObject();
+
+                            gmailSynsManager.sendEncryptedMessage(action.getOwnerKey(),
+                                    action.getRequestCode(), rawEncryptedMessage);
+                        }
+                        break;
+
                     default:
                         super.handleMessage(message);
                 }

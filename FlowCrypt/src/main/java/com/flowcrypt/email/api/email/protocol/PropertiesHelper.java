@@ -22,29 +22,18 @@ import java.util.Properties;
 
 public class PropertiesHelper {
 
-    public static final String BOOLEAN_VALUE_TRUE = "true";
+    private static final String BOOLEAN_VALUE_TRUE = "true";
 
     /**
      * Generate properties for gimaps protocol.
      *
      * @return <tt>Properties</tt> New properties with setup gimaps connection;
      */
-    public static Properties generatePropertiesForGimaps() {
+    public static Properties generatePropertiesForGmail() {
         Properties properties = new Properties();
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS, JavaEmailConstants
                 .MECHANISMS_TYPE_XOAUTH2);
-
-        return properties;
-    }
-
-    /**
-     * Generate properties for gmail smtp connection.
-     *
-     * @return <tt>Properties</tt> New properties with setup gmail smtp connection;
-     */
-    public static Properties generatePropertiesForGmailSmtp() {
-        Properties properties = new Properties();
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH, BOOLEAN_VALUE_TRUE);
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS, JavaEmailConstants

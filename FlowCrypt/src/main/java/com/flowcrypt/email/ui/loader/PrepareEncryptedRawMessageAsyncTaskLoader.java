@@ -6,16 +6,12 @@
 
 package com.flowcrypt.email.ui.loader;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -23,27 +19,16 @@ import com.flowcrypt.email.test.Js;
 import com.flowcrypt.email.test.PgpContact;
 import com.flowcrypt.email.test.PgpKey;
 import com.flowcrypt.email.test.PgpKeyInfo;
-import com.google.android.gms.auth.GoogleAuthUtil;
 
-import org.apache.commons.io.IOUtils;
-
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.MimeMessage;
-
 /**
- * This loader do a job of sending encrypted message. When we sending a message, we do next steps:
+ * This loader do a job of prepare encrypted raw message. When we preparing a message, we do next
+ * steps:
  * <ul>
- * <li>1) generate an access token for OAuth2 authentication;</li>
- * <li>2) generate a smtp session;</li>
- * <li>3) get public keys for recipients from the server + keys of the sender(generated locally);
+ * <li>1) get public keys for recipients from the server + keys of the sender(generated locally);
  * </li>
- * <li>4) doing encrypt the text with public keys;</li>
- * <li>5) create an {@link MimeMessage} using {@link Js} object</li>
- * <li>6) Send generated {@link MimeMessage} object</li>
+ * <li>2) doing encrypt the text with public keys;</li>
  * </ul>
  *
  * @author DenBond7
@@ -52,17 +37,14 @@ import javax.mail.internet.MimeMessage;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-    private Account account;
+public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private OutgoingMessageInfo outgoingMessageInfo;
 
-    public SendEncryptedMessageAsyncTaskLoader(Context context, @NonNull Account account,
-                                               @NonNull OutgoingMessageInfo outgoingMessageInfo) {
+    public PrepareEncryptedRawMessageAsyncTaskLoader(Context context,
+                                                     @NonNull OutgoingMessageInfo
+                                                             outgoingMessageInfo) {
         super(context);
-        this.account = account;
         this.outgoingMessageInfo = outgoingMessageInfo;
-
-        this.outgoingMessageInfo.setFromPgpContact(new PgpContact(account.name, null));
         onContentChanged();
     }
 
@@ -75,14 +57,7 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderR
         }
 
         try {
-            String token = GoogleAuthUtil.getToken(getContext(), account,
-                    JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-
-            String username = account.name;
-            Session session = Session.getInstance(
-                    PropertiesHelper.generatePropertiesForGmailSmtp());
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-
             String[] pubKeys = getPubKeys(js);
 
             if (pubKeys.length > 0) {
@@ -96,17 +71,8 @@ public class SendEncryptedMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderR
                         null,
                         js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
 
-                MimeMessage mimeMessage = new MimeMessage(session,
-                        IOUtils.toInputStream(encryptedMessage, StandardCharsets.UTF_8));
-
-                Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-                transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM,
-                        GmailConstants.PORT_SMTP_GMAIL_COM, username, token);
-
-                transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
-
-                return new LoaderResult(true, null);
-            } else return new LoaderResult(false, null);
+                return new LoaderResult(encryptedMessage, null);
+            } else return new LoaderResult(null, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);

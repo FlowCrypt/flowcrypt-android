@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.test.PgpContact;
+import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
@@ -88,6 +89,13 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 (getContext(), recipientEditTextView.getChipValues());
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
+
+        if (getActivity() instanceof BaseSendingMessageActivity) {
+            BaseSendingMessageActivity baseSendingMessageActivity = (BaseSendingMessageActivity)
+                    getActivity();
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(baseSendingMessageActivity
+                    .getSenderEmail(), null));
+        }
 
         return outgoingMessageInfo;
     }

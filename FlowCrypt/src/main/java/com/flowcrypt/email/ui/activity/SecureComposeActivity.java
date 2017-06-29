@@ -42,11 +42,21 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public boolean isMessageSendingNow() {
+    public void notifyUserAboutErrorWhenSendMessage() {
+        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.secureComposeFragment);
+        if (secureComposeFragment != null) {
+            secureComposeFragment.notifyUserAboutErrorWhenSendMessage();
+        }
+    }
+
+    @Override
+    public boolean isCanFinishActivity() {
         SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
                 getSupportFragmentManager()
                         .findFragmentById(R.id.secureComposeFragment);
 
-        return secureComposeFragment != null && secureComposeFragment.isMessageSendingNow();
+        return secureComposeFragment != null && !secureComposeFragment.isMessageSendingNow();
     }
 }

@@ -23,7 +23,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +32,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -200,7 +200,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_labels:
                 if (data != null) {
-                    Log.d("onLoadFinished", "R.id.loader_id_load_gmail_labels");
                     ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
                     foldersManager.clear();
 
@@ -242,7 +241,10 @@ public class EmailManagerActivity extends BaseSyncActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
-                startActivity(new Intent(this, SecureComposeActivity.class));
+                Intent composeActivityIntent = new Intent(this, SecureComposeActivity.class);
+                composeActivityIntent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,
+                        account.name);
+                startActivity(composeActivityIntent);
                 break;
         }
     }

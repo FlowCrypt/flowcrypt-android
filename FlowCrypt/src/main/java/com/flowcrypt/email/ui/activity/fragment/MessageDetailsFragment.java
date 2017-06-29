@@ -26,7 +26,9 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
+import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
@@ -241,6 +243,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         Intent intent = new Intent(getContext(), SecureReplyActivity.class);
         intent.putExtra(SecureReplyActivity.KEY_INCOMING_MESSAGE_INFO,
                 incomingMessageInfo);
+        if (getActivity() instanceof MessageDetailsActivity) {
+            MessageDetailsActivity messageDetailsActivity = (MessageDetailsActivity) getActivity();
+            intent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,
+                    messageDetailsActivity.getEmail());
+        }
         startActivity(intent);
     }
 

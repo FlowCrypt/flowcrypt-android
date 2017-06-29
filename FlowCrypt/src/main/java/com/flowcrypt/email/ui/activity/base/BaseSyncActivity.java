@@ -241,6 +241,29 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     /**
+     * Move the message to an another folder.
+     *
+     * @param requestCode         The unique request code for identify the current action.
+     * @param rawEncryptedMessage The raw encrypted message.
+     */
+    public void sendEncryptedMessage(int requestCode, String rawEncryptedMessage) {
+        if (checkBound()) return;
+
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, rawEncryptedMessage);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_ENCRYPTED_MESSAGE,
+                action);
+
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Check is current {@link Activity} connected to {@link EmailSyncService}
      *
      * @return true if current activity connected to the service, otherwise false.

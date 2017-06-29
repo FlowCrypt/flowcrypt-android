@@ -67,7 +67,7 @@ public class SendMyselfMessageWithBackup extends AsyncTaskLoader<LoaderResult> {
 
             String username = account.name;
             Session session = Session.getInstance(
-                    PropertiesHelper.generatePropertiesForGmailSmtp());
+                    PropertiesHelper.generatePropertiesForGmail());
 
             Message message = generateMessage(session);
 
