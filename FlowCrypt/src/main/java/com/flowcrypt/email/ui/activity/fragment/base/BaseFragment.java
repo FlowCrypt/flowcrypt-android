@@ -108,7 +108,18 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
      * @param messageText The text to show.  Can be formatted text.
      */
     public void showInfoSnackbar(View view, String messageText) {
-        snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+        showInfoSnackbar(view, messageText, Snackbar.LENGTH_INDEFINITE);
+    }
+
+    /**
+     * Show an information as Snackbar.
+     *
+     * @param view        The view to find a parent from.
+     * @param messageText The text to show.  Can be formatted text.
+     * @param duration    How long to display the message.
+     */
+    public void showInfoSnackbar(View view, String messageText, int duration) {
+        snackbar = Snackbar.make(view, messageText, duration)
                 .setAction(android.R.string.ok, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -127,7 +138,21 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
      */
     public void showSnackbar(View view, String messageText, String buttonName,
                              @NonNull View.OnClickListener onClickListener) {
-        snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+        showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener);
+    }
+
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener.
+     *
+     * @param view            he view to find a parent from
+     * @param messageText     The text to show.  Can be formatted text
+     * @param buttonName      The text of the Snackbar button
+     * @param duration        How long to display the message.
+     * @param onClickListener The Snackbar button click listener.
+     */
+    public void showSnackbar(View view, String messageText, String buttonName, int duration,
+                             @NonNull View.OnClickListener onClickListener) {
+        snackbar = Snackbar.make(view, messageText, duration)
                 .setAction(buttonName, onClickListener);
         snackbar.show();
     }

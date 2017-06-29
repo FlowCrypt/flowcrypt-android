@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -215,16 +216,22 @@ public class EmailListFragment extends BaseGmailFragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
-        cursor.moveToPosition(position);
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
+            cursor.moveToPosition(position);
 
-        startActivityForResult(
-                MessageDetailsActivity.getIntent(
-                        getContext(),
-                        cursor.getString(cursor.getColumnIndex(MessageDaoSource.COL_EMAIL)),
-                        onManageEmailsListener.getCurrentFolder(),
-                        cursor.getInt(cursor.getColumnIndex(MessageDaoSource.COL_UID))),
-                REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+            startActivityForResult(
+                    MessageDetailsActivity.getIntent(
+                            getContext(),
+                            cursor.getString(cursor.getColumnIndex(MessageDaoSource.COL_EMAIL)),
+                            onManageEmailsListener.getCurrentFolder(),
+                            cursor.getInt(cursor.getColumnIndex(MessageDaoSource.COL_UID))),
+                    REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+        } else {
+            showInfoSnackbar(getView(),
+                    getString(R.string.internet_connection_is_not_available), Snackbar
+                            .LENGTH_LONG);
+        }
     }
 
     @Override

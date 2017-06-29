@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
@@ -113,41 +114,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionArchiveMessage:
-                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                    isAdditionalActionEnable = false;
-                    getActivity().invalidateOptionsMenu();
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
-                            layoutContent);
-                    onActionListener.onArchiveMessageClicked();
-                } else {
-                    showSnackbar(getView(),
-                            getString(R.string.internet_connection_is_not_available),
-                            getString(R.string.retry), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    onActionListener.onArchiveMessageClicked();
-                                }
-                            });
-                }
+                archiveMessage();
                 return true;
 
             case R.id.menuActionDeleteMessage:
-                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                    isAdditionalActionEnable = false;
-                    getActivity().invalidateOptionsMenu();
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
-                            layoutContent);
-                    onActionListener.onDeleteMessageClicked();
-                } else {
-                    showSnackbar(getView(),
-                            getString(R.string.internet_connection_is_not_available),
-                            getString(R.string.retry), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    onActionListener.onDeleteMessageClicked();
-                                }
-                            });
-                }
+                deleteMessage();
                 return true;
 
             default:
@@ -222,6 +193,44 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 UIUtil.showInfoSnackbar(getView(),
                         getString(R.string.error_occurred_while_deleting_message));
                 break;
+        }
+    }
+
+    private void deleteMessage() {
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            isAdditionalActionEnable = false;
+            getActivity().invalidateOptionsMenu();
+            UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                    layoutContent);
+            onActionListener.onDeleteMessageClicked();
+        } else {
+            showSnackbar(getView(),
+                    getString(R.string.internet_connection_is_not_available),
+                    getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            deleteMessage();
+                        }
+                    });
+        }
+    }
+
+    private void archiveMessage() {
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            isAdditionalActionEnable = false;
+            getActivity().invalidateOptionsMenu();
+            UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                    layoutContent);
+            onActionListener.onArchiveMessageClicked();
+        } else {
+            showSnackbar(getView(),
+                    getString(R.string.internet_connection_is_not_available),
+                    getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            archiveMessage();
+                        }
+                    });
         }
     }
 
