@@ -12,7 +12,6 @@ import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
 
-import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 
@@ -70,9 +69,6 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
             }
 
             destinationImapFolder.open(Folder.READ_WRITE);
-
-            sourceImapFolder.setFlags(messages, new Flags(Flags.Flag.SEEN), true);
-
             sourceImapFolder.moveMessages(messages, destinationImapFolder);
             syncListener.onMessagesMoved(sourceImapFolder, destinationImapFolder, messages,
                     ownerKey, requestCode);
