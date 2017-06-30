@@ -107,6 +107,27 @@ public class FoldersManager {
 
     }
 
+    /**
+     * Get a {@link FolderType} using folder attributes.
+     *
+     * @param attributes The folder attributes.
+     * @return {@link FolderType}.
+     */
+    public static FolderType getFolderTypeForImapFodler(String[] attributes) {
+        FolderType[] folderTypes = FolderType.values();
+
+        if (attributes != null) {
+            for (String attribute : attributes) {
+                for (FolderType folderType : folderTypes) {
+                    if (folderType.getValue().equals(attribute)) {
+                        return folderType;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public Folder getFolderInbox() {
         return folders.get(FolderType.INBOX.getValue());
     }
@@ -252,21 +273,6 @@ public class FoldersManager {
         } else {
             return folderType.value;
         }
-    }
-
-    private FolderType getFolderTypeForImapFodler(String[] attributes) {
-        FolderType[] folderTypes = FolderType.values();
-
-        if (attributes != null) {
-            for (String attribute : attributes) {
-                for (FolderType folderType : folderTypes) {
-                    if (folderType.getValue().equals(attribute)) {
-                        return folderType;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     /**

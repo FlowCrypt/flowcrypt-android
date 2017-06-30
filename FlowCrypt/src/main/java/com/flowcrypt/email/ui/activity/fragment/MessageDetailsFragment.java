@@ -23,6 +23,8 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -58,6 +60,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
     private boolean isAdditionalActionEnable;
+    private boolean isDeleteActionEnable;
+    private boolean isArchiveActionEnable;
     private OnActionListener onActionListener;
 
     public MessageDetailsFragment() {
@@ -108,8 +112,17 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        menu.findItem(R.id.menuActionArchiveMessage).setVisible(isAdditionalActionEnable);
-        menu.findItem(R.id.menuActionDeleteMessage).setVisible(isAdditionalActionEnable);
+
+        MenuItem menuItemArchiveMessage = menu.findItem(R.id.menuActionArchiveMessage);
+        MenuItem menuItemDeleteMessage = menu.findItem(R.id.menuActionDeleteMessage);
+
+        if (menuItemArchiveMessage != null) {
+            menuItemArchiveMessage.setVisible(isArchiveActionEnable && isAdditionalActionEnable);
+        }
+
+        if (menuItemDeleteMessage != null) {
+            menuItemDeleteMessage.setVisible(isDeleteActionEnable && isAdditionalActionEnable);
+        }
     }
 
     @Override
@@ -173,8 +186,15 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         }
     }
 
-    public void showMessageDetails(GeneralMessageDetails generalMessageDetails) {
+    /**
+     * Show message details.
+     *
+     * @param generalMessageDetails This object contains general message details.
+     * @param folder                The folder where the message exists.
+     */
+    public void showMessageDetails(GeneralMessageDetails generalMessageDetails, Folder folder) {
         this.generalMessageDetails = generalMessageDetails;
+        updateActionsVisibility(folder);
         getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
@@ -196,6 +216,46 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         getString(R.string.error_occurred_while_deleting_message));
                 break;
         }
+    }
+
+    /**
+     * Update actions visibility using {@link FoldersManager.FolderType}
+     *
+     * @param folder The folder where current message exists.
+     */
+    private void updateActionsVisibility(Folder folder) {
+        FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFodler(folder
+                .getAttributes());
+
+        if (folderType != null) {
+            switch (folderType) {
+                case All:
+                    isArchiveActionEnable = false;
+                    isDeleteActionEnable = true;
+                    break;
+
+                case TRASH:
+                    isArchiveActionEnable = true;
+                    isDeleteActionEnable = false;
+                    break;
+
+                case DRAFTS:
+                case SPAM:
+                    isArchiveActionEnable = false;
+                    isDeleteActionEnable = false;
+                    break;
+
+                default:
+                    isArchiveActionEnable = true;
+                    isDeleteActionEnable = true;
+                    break;
+            }
+        } else {
+            isArchiveActionEnable = true;
+            isDeleteActionEnable = true;
+        }
+
+        getActivity().invalidateOptionsMenu();
     }
 
     private void deleteMessage() {

@@ -134,7 +134,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         messageDaoSource.setSeenStatusForLocalMessage(this, email, folder
                                 .getFolderAlias(), uid);
                         generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                        showMessageDetails(generalMessageDetails);
+                        showMessageDetails(generalMessageDetails, folder);
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         cursor.close();
                     }
@@ -233,13 +233,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
-    private void showMessageDetails(GeneralMessageDetails generalMessageDetails) {
+    private void showMessageDetails(GeneralMessageDetails generalMessageDetails, Folder folder) {
         MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
                 getSupportFragmentManager()
                         .findFragmentById(R.id.messageDetailsFragment);
 
         if (messageDetailsFragment != null) {
-            messageDetailsFragment.showMessageDetails(generalMessageDetails);
+            messageDetailsFragment.showMessageDetails(generalMessageDetails, folder);
         }
     }
 
