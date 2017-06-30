@@ -353,6 +353,22 @@ public class MessageDaoSource extends BaseDaoSource {
         } else return -1;
     }
 
+    /**
+     * Delete cached messages.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @return The number of rows deleted.
+     */
+    public int deleteCachedMessagesOfFolder(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                    + COL_FOLDER + " = ?", new String[]{email, label});
+        } else return -1;
+    }
+
     private static String prepareArrayToSaving(String[] attributes) {
         if (attributes != null && attributes.length > 0) {
             String result = "";

@@ -283,10 +283,10 @@ public class EmailListFragment extends BaseGmailFragment
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                    //todo-denbond7 need to refetch new messages
-                    //loadNewMessages();
-                }
+                new MessageDaoSource().deleteCachedMessagesOfFolder(
+                        getContext(),
+                        onManageEmailsListener.getCurrentAccount().name,
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
             }
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
