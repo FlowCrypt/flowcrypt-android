@@ -165,7 +165,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 switch (resultCode) {
-                    case EmailSyncService.REPLY_RESULT_CODE_OK:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
                         new MessageDaoSource().setSeenStatusForLocalMessage(this, email, folder
                                 .getFolderAlias(), uid);
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
@@ -174,7 +174,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                                 null, this);
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ERROR:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
                         // TODO-denbond7: 27.06.2017 need to handle error when load message details.
                         break;
                 }
@@ -184,7 +184,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             case R.id.syns_request_delete_message:
                 isBackEnable = true;
                 switch (resultCode) {
-                    case EmailSyncService.REPLY_RESULT_CODE_OK:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
                         Toast.makeText(this, requestCode == R.id.syns_request_archive_message ? R
                                         .string.message_was_archived : R.string.message_was_deleted,
                                 Toast.LENGTH_SHORT)
@@ -195,12 +195,17 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ERROR:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
                         notifyUserAboutError(requestCode);
                         break;
                 }
                 break;
         }
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+
     }
 
     @Override

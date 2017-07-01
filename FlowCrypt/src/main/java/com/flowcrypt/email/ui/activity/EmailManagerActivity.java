@@ -30,6 +30,7 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
@@ -80,6 +81,16 @@ public class EmailManagerActivity extends BaseSyncActivity
             case R.id.syns_request_code_force_load_new_messages:
                 onForceLoadNewMessagesCompleted(resultCode == EmailSyncService
                         .REPLY_RESULT_CODE_NEED_UPDATE);
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+        switch (requestCode) {
+            case R.id.syns_request_code_load_next_messages:
+            case R.id.syns_request_code_force_load_new_messages:
+                notifyEmailListFragmentAboutError(requestCode, errorType);
                 break;
         }
     }
@@ -260,6 +271,21 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public Folder getCurrentFolder() {
         return folder;
+    }
+
+    /**
+     * Handle an error from the sync service.
+     *
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param errorType   The {@link SyncErrorTypes}
+     */
+    private void notifyEmailListFragmentAboutError(int requestCode, int errorType) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.onErrorOccurred(requestCode, errorType);
+        }
     }
 
     /**

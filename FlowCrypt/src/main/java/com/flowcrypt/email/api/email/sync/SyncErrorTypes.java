@@ -16,5 +16,6 @@ package com.flowcrypt.email.api.email.sync;
  */
 
 public class SyncErrorTypes {
+    public static final int TASK_RUNNING_ERROR = 0;
     public static final int CONNECTION_TO_STORE_IS_LOST = 1;
 }

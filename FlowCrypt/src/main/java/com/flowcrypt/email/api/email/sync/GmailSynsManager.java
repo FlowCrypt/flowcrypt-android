@@ -271,22 +271,27 @@ public class GmailSynsManager {
                     SyncTask syncTask = syncTaskBlockingQueue.take();
 
                     if (syncTask != null) {
-                        if (!isConnected()) {
-                            Log.d(TAG, "Not connected. Start a reconnection ...");
-                            openConnectionToGmailStore();
-                            Log.d(TAG, "Reconnection done");
-                        }
+                        try {
+                            if (!isConnected()) {
+                                Log.d(TAG, "Not connected. Start a reconnection ...");
+                                openConnectionToGmailStore();
+                                Log.d(TAG, "Reconnection done");
+                            }
 
-                        Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
-                        if (syncTask.isUseSMTP()) {
-                            syncTask.run(session, getEmail(), getValidToken(), syncListener);
-                        } else {
-                            syncTask.run(gmailSSLStore, syncListener);
+                            Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
+                            if (syncTask.isUseSMTP()) {
+                                syncTask.run(session, getEmail(), getValidToken(), syncListener);
+                            } else {
+                                syncTask.run(gmailSSLStore, syncListener);
+                            }
+                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
+                                    + " completed");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            syncTask.handleException(e, syncListener);
                         }
-                        Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
-                                + " completed");
                     }
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }

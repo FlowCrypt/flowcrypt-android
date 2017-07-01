@@ -49,11 +49,12 @@ import javax.mail.MessagingException;
  *         E-mail: DenBond7@gmail.com
  */
 public class EmailSyncService extends Service implements SyncListener {
-    public static final int REPLY_RESULT_CODE_OK = 1;
-    public static final int REPLY_RESULT_CODE_ERROR = 0;
+    public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR = 1;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
 
-    public static final int REPLY_WHAT = 0;
+    public static final int REPLY_OK = 0;
+    public static final int REPLY_ERROR = 1;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
@@ -141,9 +142,9 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onEncryptedMessageSent(String ownerKey, int requestCode, boolean isSent) {
         try {
             if (isSent) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -155,9 +156,9 @@ public class EmailSyncService extends Service implements SyncListener {
                                 javax.mail.Message[] messages, String ownerKey, int requestCode) {
         try {
             if (messages != null && messages.length > 0) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -179,9 +180,9 @@ public class EmailSyncService extends Service implements SyncListener {
                     rawMessageWithOutAttachments);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_OK);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
@@ -207,7 +208,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (messages.length > 0) {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
             } else {
-                sendReply(key, requestCode, REPLY_RESULT_CODE_OK);
+                sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
         } catch (MessagingException | RemoteException e) {
@@ -246,7 +247,7 @@ public class EmailSyncService extends Service implements SyncListener {
                 foldersManager.getAllFolders());
 
         try {
-            sendReply(key, requestCode, REPLY_RESULT_CODE_OK);
+            sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -256,7 +257,10 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onError(int errorType, Exception e, String key, int requestCode) {
         Log.e(TAG, "onError: errorType" + errorType + "| e =" + e);
         try {
-            sendReply(key, requestCode, REPLY_RESULT_CODE_ERROR);
+            if (replyToMessengers.containsKey(key)) {
+                Messenger messenger = replyToMessengers.get(key);
+                messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
+            }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
         }
@@ -269,8 +273,8 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      * @param resultCode  The result code of the some action. Can take the following values:
      *                    <ul>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_OK}</li>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ERROR}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
      *                    </ul>
      * @throws RemoteException
@@ -278,7 +282,7 @@ public class EmailSyncService extends Service implements SyncListener {
     private void sendReply(String key, int requestCode, int resultCode) throws RemoteException {
         if (replyToMessengers.containsKey(key)) {
             Messenger messenger = replyToMessengers.get(key);
-            messenger.send(Message.obtain(null, REPLY_WHAT, requestCode, resultCode));
+            messenger.send(Message.obtain(null, REPLY_OK, requestCode, resultCode));
         }
     }
 

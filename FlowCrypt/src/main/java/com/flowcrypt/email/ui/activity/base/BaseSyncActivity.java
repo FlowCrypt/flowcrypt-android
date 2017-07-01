@@ -22,6 +22,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.service.EmailSyncService;
 
 import java.lang.ref.WeakReference;
@@ -61,6 +62,17 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param resultCode  The result code of a run action.
      */
     public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode);
+
+    /**
+     * In this method we can handle en error after run some action via {@link EmailSyncService}
+     *
+     * @param requestCode The unique request code for identifies the some action. Must be unique
+     *                    over all project.
+     * @param errorType   The {@link SyncErrorTypes}.
+     * @param e           The exception which occurred.
+     */
+    public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception
+            e);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -344,8 +356,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             if (baseSyncActivityWeakReference.get() != null) {
                 BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
                 switch (message.what) {
-                    case EmailSyncService.REPLY_WHAT:
+                    case EmailSyncService.REPLY_OK:
                         baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2);
+                        break;
+
+                    case EmailSyncService.REPLY_ERROR:
+                        Exception exception = null;
+
+                        if (message.obj instanceof Exception) {
+                            exception = (Exception) message.obj;
+                        }
+
+                        baseSyncActivity.onErrorFromSyncServiceReceived(message.arg1, message
+                                .arg2, exception);
                         break;
                 }
             }

@@ -28,6 +28,7 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -343,6 +344,39 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         } else {
             isNewMessagesLoadingNow = false;
         }
+    }
+
+    /**
+     * Handle an error from the sync service.
+     *
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param errorType   The {@link SyncErrorTypes}
+     */
+    public void onErrorOccurred(int requestCode, int errorType) {
+        switch (requestCode) {
+            case R.id.syns_request_code_load_next_messages:
+                footerProgressView.setVisibility(View.GONE);
+                break;
+
+            case R.id.syns_request_code_force_load_new_messages:
+                swipeRefreshLayout.setRefreshing(false);
+                break;
+        }
+
+        textViewStatus.setText(R.string.there_was_syncing_problem);
+        listViewMessages.setVisibility(View.GONE);
+        emptyView.setVisibility(View.GONE);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutStatus);
+
+        if (getSnackBar() != null) {
+            getSnackBar().dismiss();
+        }
+
+        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+        new MessageDaoSource().deleteCachedMessagesOfFolder(
+                getContext(),
+                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
     /**

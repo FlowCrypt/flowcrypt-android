@@ -55,13 +55,13 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
             case R.id.syns_request_send_encrypted_message:
                 isMessageSendingNow = false;
                 switch (resultCode) {
-                    case EmailSyncService.REPLY_RESULT_CODE_OK:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
                         Toast.makeText(this, R.string.message_was_sent,
                                 Toast.LENGTH_SHORT).show();
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ERROR:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
                         notifyUserAboutErrorWhenSendMessage();
                         break;
                 }

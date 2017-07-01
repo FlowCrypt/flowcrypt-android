@@ -40,6 +40,11 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         layoutContent = findViewById(R.id.layoutContent);

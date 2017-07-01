@@ -49,4 +49,12 @@ public interface SyncTask {
      */
     void run(Session session, String userName, String password, SyncListener syncListener) throws
             Exception;
+
+    /**
+     * This method will be called when an exception occurred while current task running.
+     *
+     * @param e            The occurred exception.
+     * @param syncListener The listener of synchronization.
+     */
+    void handleException(Exception e, SyncListener syncListener);
 }

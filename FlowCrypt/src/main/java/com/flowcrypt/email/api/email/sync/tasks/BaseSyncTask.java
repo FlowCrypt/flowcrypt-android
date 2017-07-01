@@ -6,8 +6,10 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
+import com.sun.mail.util.MailConnectException;
 
 import javax.mail.Session;
 
@@ -48,6 +50,21 @@ abstract class BaseSyncTask implements SyncTask {
     @Override
     public void run(Session session, String userName, String password, SyncListener syncListener)
             throws Exception {
+    }
+
+    @Override
+    public void handleException(Exception e, SyncListener syncListener) {
+        if (syncListener != null) {
+            int errorType;
+
+            if (e instanceof MailConnectException) {
+                errorType = SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST;
+            } else {
+                errorType = SyncErrorTypes.TASK_RUNNING_ERROR;
+            }
+
+            syncListener.onError(errorType, e, ownerKey, requestCode);
+        }
     }
 
     public String getOwnerKey() {
