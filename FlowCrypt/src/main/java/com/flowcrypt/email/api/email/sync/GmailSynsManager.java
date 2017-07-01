@@ -30,8 +30,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.event.ConnectionEvent;
-import javax.mail.event.ConnectionListener;
 
 /**
  * This class describes a logic of work with {@link GmailSSLStore} for the single account. Via
@@ -260,7 +258,7 @@ public class GmailSynsManager {
     }
 
 
-    private class SyncTaskRunnable implements Runnable, ConnectionListener {
+    private class SyncTaskRunnable implements Runnable {
         private final String TAG = SyncTaskRunnable.class.getSimpleName();
 
         @Override
@@ -295,27 +293,11 @@ public class GmailSynsManager {
             Log.d(TAG, "SyncTaskRunnable stop");
         }
 
-        @Override
-        public void opened(ConnectionEvent e) {
-            Log.d(TAG, "Connection to IMAP opened" + e);
-        }
-
-        @Override
-        public void disconnected(ConnectionEvent e) {
-            Log.d(TAG, "Connection to IMAP disconnected" + e);
-        }
-
-        @Override
-        public void closed(ConnectionEvent e) {
-            Log.d(TAG, "Connection to IMAP closed" + e);
-        }
-
         private void openConnectionToGmailStore() throws IOException,
                 GoogleAuthException, MessagingException {
             session = OpenStoreHelper.getGmailSession();
             gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(session, getValidToken(),
                     getEmail());
-            gmailSSLStore.addConnectionListener(this);
         }
 
         /**

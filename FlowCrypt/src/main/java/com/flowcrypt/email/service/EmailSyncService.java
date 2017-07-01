@@ -242,10 +242,8 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         }
 
-        //// TODO-denbond7: 23.06.2017 Better use insert per one transaction
-        for (com.flowcrypt.email.api.email.Folder folder : foldersManager.getAllFolders()) {
-            imapLabelsDaoSource.addRow(getApplicationContext(), account.name, folder);
-        }
+        imapLabelsDaoSource.addRows(getApplicationContext(), account.name,
+                foldersManager.getAllFolders());
 
         try {
             sendReply(key, requestCode, REPLY_RESULT_CODE_OK);

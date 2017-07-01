@@ -12,12 +12,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,6 +38,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     public static final String COL_EMAIL = "email";
     public static final String COL_FOLDER_NAME = "folder_name";
     public static final String COL_FOLDER_ALIAS = "folder_alias";
+    public static final String COL_MESSAGE_COUNT = "message_count";
     public static final String COL_IS_CUSTOM_LABEL = "is_custom_label";
     public static final String COL_FOLDER_ATTRIBUTES = "folder_attributes";
     public static final String COL_FOLDER_MESSAGE_COUNT = "folder_message_count";
@@ -47,6 +50,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             COL_FOLDER_NAME + " VARCHAR(255) NOT NULL, " +
             COL_IS_CUSTOM_LABEL + " INTEGER DEFAULT 0, " +
             COL_FOLDER_ALIAS + " VARCHAR(100) DEFAULT NULL, " +
+            COL_MESSAGE_COUNT + " INTEGER DEFAULT 0, " +
             COL_FOLDER_ATTRIBUTES + " TEXT NOT NULL, " +
             COL_FOLDER_MESSAGE_COUNT + " INTEGER DEFAULT 0 " + ");";
 
@@ -65,16 +69,34 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     public Uri addRow(Context context, String accountName, Folder folder) {
         ContentResolver contentResolver = context.getContentResolver();
         if (!TextUtils.isEmpty(accountName) && folder != null && contentResolver != null) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(COL_EMAIL, accountName);
-            contentValues.put(COL_FOLDER_NAME, folder.getServerFullFolderName());
-            contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
-            contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
-            contentValues.put(COL_FOLDER_ATTRIBUTES,
-                    prepareAttributesToSaving(folder.getAttributes()));
-
+            ContentValues contentValues = prepareContentValues(accountName, folder);
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
+    }
+
+    /**
+     * Add an information about folders to local the database.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param accountName The account name which are an owner of the folder.
+     * @param folders     The folders array.
+     * @return @return the number of newly created rows.
+     */
+    public int addRows(Context context, String accountName, Collection<Folder> folders) {
+        if (folders != null) {
+            ContentResolver contentResolver = context.getContentResolver();
+            ContentValues[] contentValuesArray = new ContentValues[folders.size()];
+
+            Folder[] foldersArray = folders.toArray(new Folder[0]);
+
+            for (int i = 0; i < folders.size(); i++) {
+                Folder folder = foldersArray[i];
+                ContentValues contentValues = prepareContentValues(accountName, folder);
+                contentValuesArray[i] = contentValues;
+            }
+
+            return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+        } else return 0;
     }
 
     /**
@@ -87,6 +109,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
         return new Folder(
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
                 cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
+                cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
                 parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
                 cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
         );
@@ -128,6 +151,19 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ?",
                     new String[]{email});
         } else return -1;
+    }
+
+    @NonNull
+    private ContentValues prepareContentValues(String accountName, Folder folder) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, accountName);
+        contentValues.put(COL_FOLDER_NAME, folder.getServerFullFolderName());
+        contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
+        contentValues.put(COL_MESSAGE_COUNT, folder.getMessageCount());
+        contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
+        contentValues.put(COL_FOLDER_ATTRIBUTES,
+                prepareAttributesToSaving(folder.getAttributes()));
+        return contentValues;
     }
 
     private String prepareAttributesToSaving(String[] attributes) {

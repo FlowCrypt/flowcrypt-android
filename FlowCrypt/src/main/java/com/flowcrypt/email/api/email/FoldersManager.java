@@ -78,7 +78,7 @@ public class FoldersManager {
     public static Folder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
             MessagingException {
         return new Folder(imapFolder.getFullName(),
-                folderAlias,
+                folderAlias, imapFolder.getMessageCount(),
                 imapFolder.getAttributes(),
                 isCustomLabels(imapFolder));
     }
