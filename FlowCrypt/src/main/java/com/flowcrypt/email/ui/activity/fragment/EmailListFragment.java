@@ -17,10 +17,10 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -32,7 +32,6 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
-import com.flowcrypt.email.ui.adapter.EndlessScrollListener;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -47,8 +46,8 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailListFragment extends BaseGmailFragment
-        implements AdapterView.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class EmailListFragment extends BaseGmailFragment implements AdapterView.OnItemClickListener,
+        AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
 
@@ -64,6 +63,9 @@ public class EmailListFragment extends BaseGmailFragment
     private MessageDaoSource messageDaoSource;
     private BaseSyncActivity baseSyncActivity;
     private boolean isMessagesFetchedIfNotExistInCache;
+    private boolean isNewMessagesLoadingNow;
+    private int lastCalledPositionForLoadMore;
+    private int lastPositionOfAlreadyLoaded;
 
     private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
             = new LoaderManager.LoaderCallbacks<Cursor>() {
@@ -107,6 +109,7 @@ public class EmailListFragment extends BaseGmailFragment
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             switch (loader.getId()) {
                 case R.id.loader_id_load_gmail_messages:
+                    isNewMessagesLoadingNow = false;
                     if (data != null && data.getCount() != 0) {
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
@@ -117,7 +120,7 @@ public class EmailListFragment extends BaseGmailFragment
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
                             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                                loadNextMessages(-1);
+                                loadNextMessages(0);
                             } else {
                                 textViewStatus.setText(R.string.no_connection);
                                 UIUtil.exchangeViewVisibility(getContext(),
@@ -267,6 +270,35 @@ public class EmailListFragment extends BaseGmailFragment
         }
     }
 
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+    }
+
+    /**
+     * This method will be used to try to load more messages if it available.
+     *
+     * @param view             The view whose scroll state is being reported
+     * @param firstVisibleItem the index of the first visible cell (ignore if
+     *                         visibleItemCount == 0)
+     * @param visibleItemCount the number of visible cells
+     * @param totalItemCount   the number of items in the list adaptor
+     */
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem,
+                         int visibleItemCount, int totalItemCount) {
+        if (onManageEmailsListener.getCurrentFolder() != null) {
+            boolean isMoreMessageAvailable = messageListAdapter.getCount() <
+                    onManageEmailsListener.getCurrentFolder().getMessageCount();
+            if (!isNewMessagesLoadingNow
+                    && lastPositionOfAlreadyLoaded != messageListAdapter.getCount()
+                    && isMoreMessageAvailable
+                    && firstVisibleItem + visibleItemCount == totalItemCount) {
+                loadNextMessages(messageListAdapter.getCount());
+            }
+        }
+    }
+
     /**
      * Update a current messages list.
      *
@@ -278,6 +310,8 @@ public class EmailListFragment extends BaseGmailFragment
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
             if (isFolderChanged) {
+                isNewMessagesLoadingNow = false;
+                lastPositionOfAlreadyLoaded = 0;
                 if (getSnackBar() != null) {
                     getSnackBar().dismiss();
                 }
@@ -302,9 +336,12 @@ public class EmailListFragment extends BaseGmailFragment
     }
 
     public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
+        lastPositionOfAlreadyLoaded = lastCalledPositionForLoadMore;
         footerProgressView.setVisibility(View.GONE);
         if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
             updateList(false);
+        } else {
+            isNewMessagesLoadingNow = false;
         }
     }
 
@@ -327,6 +364,8 @@ public class EmailListFragment extends BaseGmailFragment
     private void loadNextMessages(final int totalItemsCount) {
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             footerProgressView.setVisibility(View.VISIBLE);
+            isNewMessagesLoadingNow = true;
+            lastCalledPositionForLoadMore = totalItemsCount;
             baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
                     onManageEmailsListener.getCurrentFolder(),
                     totalItemsCount);
@@ -356,16 +395,7 @@ public class EmailListFragment extends BaseGmailFragment
 
         listViewMessages.addFooterView(footerProgressView);
         listViewMessages.setAdapter(messageListAdapter);
-        listViewMessages.setOnScrollListener(new EndlessScrollListener() {
-            @Override
-            public boolean onLoadMore(int page, final int totalItemsCount) {
-                loadNextMessages(totalItemsCount);
-                Log.d("EmailListFragment",
-                        "onLoadMore | page = " + page + " | totalItemsCount = " + "" +
-                                totalItemsCount);
-                return true;
-            }
-        });
+        listViewMessages.setOnScrollListener(this);
 
         emptyView = view.findViewById(R.id.emptyView);
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
