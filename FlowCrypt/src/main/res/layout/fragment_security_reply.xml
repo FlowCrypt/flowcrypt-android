@@ -13,7 +13,7 @@
     android:orientation="vertical">
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@id/viewIdProgressView"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -88,4 +88,12 @@
 
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
+
+    <include
+        android:id="@+id/viewIdStatusView"
+        layout="@layout/sync_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 </FrameLayout>

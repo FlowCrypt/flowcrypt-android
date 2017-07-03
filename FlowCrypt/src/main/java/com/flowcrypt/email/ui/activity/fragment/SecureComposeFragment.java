@@ -47,7 +47,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
-    private View progressBar;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
 
@@ -67,11 +66,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-    }
-
-    @Override
-    public View getProgressView() {
-        return progressBar;
     }
 
     @Override
@@ -145,7 +139,8 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 if (hasFocus) {
                     getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                 } else {
-                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    if (isUpdateInfoAboutContactsEnable &&
+                            GeneralUtil.isInternetConnectionAvailable(getContext())) {
                         getLoaderManager().restartLoader(R.id
                                 .loader_id_update_info_about_pgp_contacts, null, this);
                     }
@@ -172,7 +167,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
-        progressBar = view.findViewById(R.id.progressBar);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
     }
 

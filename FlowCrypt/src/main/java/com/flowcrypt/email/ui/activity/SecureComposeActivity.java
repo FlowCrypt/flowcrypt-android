@@ -36,11 +36,6 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
-
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         layoutContent = findViewById(R.id.layoutContent);
@@ -63,5 +58,15 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
                         .findFragmentById(R.id.secureComposeFragment);
 
         return secureComposeFragment != null && !secureComposeFragment.isMessageSendingNow();
+    }
+
+    @Override
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
+
+        if (secureComposeFragment != null) {
+            secureComposeFragment.onErrorOccurred(requestCode, errorType);
+        }
     }
 }

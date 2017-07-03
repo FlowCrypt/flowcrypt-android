@@ -47,7 +47,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
 
     private IncomingMessageInfo incomingMessageInfo;
     private View layoutContent;
-    private View progressBar;
     private View progressBarCheckContactsDetails;
 
     public SecureReplyFragment() {
@@ -107,11 +106,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     }
 
     @Override
-    public View getProgressView() {
-        return progressBar;
-    }
-
-    @Override
     public View getContentView() {
         return layoutContent;
     }
@@ -151,7 +145,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         this.editTextReplyEmailMessage = (EditText) view.findViewById(R.id
                 .editTextReplyEmailMessage);
         this.layoutContent = view.findViewById(R.id.layoutForm);
-        this.progressBar = view.findViewById(R.id.progressBar);
         this.progressBarCheckContactsDetails = view.findViewById(R.id
                 .progressBarCheckContactsDetails);
     }

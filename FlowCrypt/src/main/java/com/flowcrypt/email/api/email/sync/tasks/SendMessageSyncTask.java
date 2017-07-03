@@ -16,7 +16,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.MimeMessage;
@@ -55,20 +54,15 @@ public class SendMessageSyncTask extends BaseSyncTask {
             throws Exception {
         super.run(session, userName, password, syncListener);
         if (syncListener != null) {
-            try {
-                MimeMessage mimeMessage = new MimeMessage(session,
-                        IOUtils.toInputStream(rawEncryptedMessage, StandardCharsets.UTF_8));
+            MimeMessage mimeMessage = new MimeMessage(session,
+                    IOUtils.toInputStream(rawEncryptedMessage, StandardCharsets.UTF_8));
 
-                Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-                transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM,
-                        GmailConstants.PORT_SMTP_GMAIL_COM, userName, password);
+            Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
+            transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM,
+                    GmailConstants.PORT_SMTP_GMAIL_COM, userName, password);
 
-                transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
-                syncListener.onEncryptedMessageSent(ownerKey, requestCode, true);
-            } catch (MessagingException e) {
-                e.printStackTrace();
-                syncListener.onEncryptedMessageSent(ownerKey, requestCode, false);
-            }
+            transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+            syncListener.onEncryptedMessageSent(ownerKey, requestCode, true);
         }
     }
 }

@@ -106,4 +106,5 @@
     <string name="error_occurred_while_sending_message">An error occurred while sending the message</string>
     <string name="sending_message_must_not_be_empty">The sending message must not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
+    <string name="info_about_some_contacts_not_received">An information about some contacts not received from the server</string>
 </resources>

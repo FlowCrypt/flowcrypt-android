@@ -39,8 +39,9 @@ import java.util.List;
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
     protected Js js;
-    private boolean isUpdatedInfoAboutContactCompleted = true;
-    private OnMessageSendListener onMessageSendListener;
+    protected boolean isUpdateInfoAboutContactsEnable = true;
+    protected boolean isUpdatedInfoAboutContactCompleted = true;
+    protected OnMessageSendListener onMessageSendListener;
     private boolean isMessageSendingNow;
 
     /**
@@ -64,13 +65,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      * @return A list of emails.
      */
     public abstract List<String> getContactsEmails();
-
-    /**
-     * Get a progress view which will be shown when we do send a message.
-     *
-     * @return <tt>View</tt> Return a progress view.
-     */
-    public abstract View getProgressView();
 
     /**
      * Do a lot of checks to validate an outgoing message info.
@@ -110,6 +104,10 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
+                if (getSnackBar() != null) {
+                    getSnackBar().dismiss();
+                }
+
                 if (isUpdatedInfoAboutContactCompleted) {
                     UIUtil.hideSoftInput(getContext(), getView());
                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
@@ -146,10 +144,11 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = false;
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
-                        getContentView());
+                statusView.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
                         outgoingMessageInfo);
@@ -169,6 +168,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = true;
                 if (result != null) {
                     sendEncryptMessage((String) result);
                 } else {
@@ -177,13 +177,47 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts:
+                boolean isAllInfoReceived = (boolean) result;
+
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+
+                if (!isAllInfoReceived) {
+                    Toast.makeText(getContext(),
+                            R.string.info_about_some_contacts_not_received,
+                            Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             default:
                 super.handleSuccessLoaderResult(loaderId, result);
         }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        super.handleFailureLoaderResult(loaderId, e);
+        switch (loaderId) {
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                isUpdatedInfoAboutContactCompleted = true;
+                getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+        super.onLoaderReset(loader);
+        switch (loader.getId()) {
+            case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = true;
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorOccurred(int requestCode, int errorType) {
+        notifyUserAboutErrorWhenSendMessage();
     }
 
     /**
@@ -192,7 +226,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void notifyUserAboutErrorWhenSendMessage() {
         isMessageSendingNow = false;
         getActivity().invalidateOptionsMenu();
-        UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(), getContentView());
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
         showInfoSnackbar(getView(), getString(R.string.error_occurred_while_sending_message));
     }
 
@@ -214,8 +248,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
         if (onMessageSendListener != null) {
             isMessageSendingNow = true;
             getActivity().invalidateOptionsMenu();
-            UIUtil.exchangeViewVisibility(getContext(),
-                    true, getProgressView(), getContentView());
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
             onMessageSendListener.sendMessage(encryptedRawMessage);
         }
     }

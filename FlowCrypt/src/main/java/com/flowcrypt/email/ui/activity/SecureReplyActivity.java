@@ -40,19 +40,13 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
-
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         layoutContent = findViewById(R.id.layoutContent);
 
         if (getIntent() != null && getIntent().hasExtra(KEY_INCOMING_MESSAGE_INFO)) {
             SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                    getSupportFragmentManager()
-                            .findFragmentById(R.id.secureReplyFragment);
+                    getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
             if (secureReplyFragment != null) {
                 IncomingMessageInfo incomingMessageInfo = getIntent().getParcelableExtra
@@ -67,8 +61,7 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     @Override
     public void notifyUserAboutErrorWhenSendMessage() {
         SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.secureReplyFragment);
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
         if (secureReplyFragment != null) {
             secureReplyFragment.notifyUserAboutErrorWhenSendMessage();
@@ -78,9 +71,18 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     @Override
     public boolean isCanFinishActivity() {
         SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.secureReplyFragment);
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
         return secureReplyFragment != null && !secureReplyFragment.isMessageSendingNow();
+    }
+
+    @Override
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+
+        if (secureReplyFragment != null) {
+            secureReplyFragment.onErrorOccurred(requestCode, errorType);
+        }
     }
 }

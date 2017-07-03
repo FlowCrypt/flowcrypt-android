@@ -34,9 +34,11 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     private boolean isMessageSendingNow;
     private String accountEmail;
 
-    public abstract void notifyUserAboutErrorWhenSendMessage();
+    protected abstract void notifyUserAboutErrorWhenSendMessage();
 
-    public abstract boolean isCanFinishActivity();
+    protected abstract boolean isCanFinishActivity();
+
+    protected abstract void notifyFragmentAboutErrorFromService(int requestCode, int errorType);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,6 +67,15 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
                         notifyUserAboutErrorWhenSendMessage();
                         break;
                 }
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+        switch (requestCode) {
+            case R.id.syns_request_send_encrypted_message:
+                notifyFragmentAboutErrorFromService(requestCode, errorType);
                 break;
         }
     }
