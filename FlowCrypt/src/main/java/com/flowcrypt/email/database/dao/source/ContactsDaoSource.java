@@ -17,6 +17,7 @@ import com.flowcrypt.email.test.PgpContact;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class describe creating of table which has name
@@ -133,7 +134,7 @@ public class ContactsDaoSource extends BaseDaoSource {
     public PgpContact getPgpContact(Context context, String email) {
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
-                null, COL_EMAIL + " = ?", new String[]{email}, null);
+                null, COL_EMAIL + " = ?", new String[]{email.toLowerCase()}, null);
 
         PgpContact pgpContact = null;
 
@@ -156,6 +157,11 @@ public class ContactsDaoSource extends BaseDaoSource {
      * objects from the search by emails.
      */
     public List<PgpContact> getPgpContactsListFromDatabase(Context context, List<String> emails) {
+        ListIterator<String> iterator = emails.listIterator();
+        while (iterator.hasNext()) {
+            iterator.set(iterator.next().toLowerCase());
+        }
+
         Cursor cursor = context.getContentResolver().query(
                 getBaseContentUri(), null, ContactsDaoSource.COL_EMAIL +
                         " IN " + prepareSelection(emails), emails.toArray(new String[0]), null);
@@ -199,7 +205,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{pgpContact.getEmail()});
+                    new String[]{pgpContact.getEmail().toLowerCase()});
         } else return -1;
     }
 
@@ -220,7 +226,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{pgpContact.getEmail()});
+                    new String[]{pgpContact.getEmail().toLowerCase()});
         } else return -1;
     }
 
@@ -241,7 +247,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{email});
+                    new String[]{email.toLowerCase()});
         } else return -1;
     }
 
@@ -256,7 +262,7 @@ public class ContactsDaoSource extends BaseDaoSource {
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
             return contentResolver.delete(getBaseContentUri(),
-                    COL_EMAIL + " = ?", new String[]{email});
+                    COL_EMAIL + " = ?", new String[]{email.toLowerCase()});
         } else return -1;
     }
 }
