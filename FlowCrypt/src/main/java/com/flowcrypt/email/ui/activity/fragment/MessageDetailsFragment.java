@@ -55,7 +55,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private TextView textViewSubject;
     private TextView textViewMessage;
     private View layoutContent;
-    private View progressBar;
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
@@ -94,6 +93,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_message_details, container, false);
+    }
+
+    @Override
+    public View getContentView() {
+        return layoutContent;
     }
 
     @Override
@@ -145,7 +149,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info_from_database:
-                UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+                UIUtil.exchangeViewVisibility(getContext(), true, progressView,
                         layoutContent);
                 return new DecryptMessageAsyncTaskLoader(getContext(), generalMessageDetails
                         .getRawMessageWithoutAttachments());
@@ -162,7 +166,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 getActivity().invalidateOptionsMenu();
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
                 updateViews();
-                UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
+                UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutContent);
                 break;
             default:
                 super.handleSuccessLoaderResult(loaderId, result);
@@ -174,7 +178,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         super.handleFailureLoaderResult(loaderId, e);
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
-        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutContent);
     }
 
     @Override
@@ -184,6 +188,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 runSecurityReplyActivity();
                 break;
         }
+    }
+
+    @Override
+    public void onErrorOccurred(int requestCode, int errorType) {
+        super.onErrorOccurred(requestCode, errorType);
+        isAdditionalActionEnable = true;
+        getActivity().invalidateOptionsMenu();
     }
 
     /**
@@ -202,7 +213,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
 
-        UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView,
                 layoutContent);
 
         switch (requestCode) {
@@ -262,7 +273,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             isAdditionalActionEnable = false;
             getActivity().invalidateOptionsMenu();
-            UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+            statusView.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView,
                     layoutContent);
             onActionListener.onDeleteMessageClicked();
         } else {
@@ -281,7 +293,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             isAdditionalActionEnable = false;
             getActivity().invalidateOptionsMenu();
-            UIUtil.exchangeViewVisibility(getContext(), true, progressBar,
+            statusView.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView,
                     layoutContent);
             onActionListener.onArchiveMessageClicked();
         } else {
@@ -318,7 +331,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewMessage = (TextView) view.findViewById(R.id.textViewMessage);
 
         layoutContent = view.findViewById(R.id.layoutContent);
-        progressBar = view.findViewById(R.id.progressBar);
 
         if (view.findViewById(R.id.imageViewReplyAll) != null) {
             view.findViewById(R.id.imageViewReplyAll).setOnClickListener(this);

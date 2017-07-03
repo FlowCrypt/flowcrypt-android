@@ -23,6 +23,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -205,7 +206,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
-
+        switch (requestCode) {
+            case R.id.syns_request_code_load_message_details:
+            case R.id.syns_request_archive_message:
+            case R.id.syns_request_delete_message:
+                notifyMessageDetailsFragmentAboutError(requestCode, errorType);
+                break;
+        }
     }
 
     @Override
@@ -235,6 +242,21 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
         if (messageDetailsFragment != null) {
             messageDetailsFragment.notifyUserAboutActionError(requestCode);
+        }
+    }
+
+    /**
+     * Handle an error from the sync service.
+     *
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param errorType   The {@link SyncErrorTypes}
+     */
+    private void notifyMessageDetailsFragmentAboutError(int requestCode, int errorType) {
+        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
+                getSupportFragmentManager().findFragmentById(R.id.messageDetailsFragment);
+
+        if (messageDetailsFragment != null) {
+            messageDetailsFragment.onErrorOccurred(requestCode, errorType);
         }
     }
 

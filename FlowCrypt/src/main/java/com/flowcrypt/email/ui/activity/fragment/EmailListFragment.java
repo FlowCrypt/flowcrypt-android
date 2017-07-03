@@ -23,12 +23,9 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -55,10 +52,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     private ListView listViewMessages;
     private View emptyView;
     private View footerProgressView;
-    private View layoutStatus;
-    private TextView textViewStatus;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private ProgressBar progressBar;
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
     private MessageDaoSource messageDaoSource;
@@ -76,13 +70,13 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             switch (id) {
                 case R.id.loader_id_load_gmail_messages:
                     emptyView.setVisibility(View.GONE);
-                    layoutStatus.setVisibility(View.GONE);
+                    statusView.setVisibility(View.GONE);
 
                     if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
                         UIUtil.exchangeViewVisibility(
                                 getContext(),
                                 true,
-                                progressBar,
+                                progressView,
                                 listViewMessages);
                     }
 
@@ -114,8 +108,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                     if (data != null && data.getCount() != 0) {
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
-                        layoutStatus.setVisibility(View.GONE);
-                        UIUtil.exchangeViewVisibility(getContext(), false, progressBar,
+                        statusView.setVisibility(View.GONE);
+                        UIUtil.exchangeViewVisibility(getContext(), false, progressView,
                                 listViewMessages);
                     } else {
                         if (!isMessagesFetchedIfNotExistInCache) {
@@ -123,14 +117,14 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                                 loadNextMessages(0);
                             } else {
-                                textViewStatus.setText(R.string.no_connection);
+                                textViewStatusInfo.setText(R.string.no_connection);
                                 UIUtil.exchangeViewVisibility(getContext(),
-                                        false, progressBar, layoutStatus);
+                                        false, progressView, statusView);
                             }
 
                         } else {
                             UIUtil.exchangeViewVisibility(getContext(),
-                                    false, progressBar, emptyView);
+                                    false, progressView, emptyView);
                         }
                     }
                     break;
@@ -176,6 +170,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_email_list, container, false);
+    }
+
+    @Override
+    public View getContentView() {
+        return listViewMessages;
     }
 
     @Override
@@ -253,7 +252,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 swipeRefreshLayout.setRefreshing(false);
 
                 if (messageListAdapter.getCount() == 0) {
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressBar, layoutStatus);
+                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                 }
 
                 loadNextMessages(-1);
@@ -262,8 +261,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             swipeRefreshLayout.setRefreshing(false);
 
             if (messageListAdapter.getCount() == 0) {
-                textViewStatus.setText(R.string.no_connection);
-                UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutStatus);
+                textViewStatusInfo.setText(R.string.no_connection);
+                UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
             }
 
             showInfoSnackbar(getView(),
@@ -298,6 +297,28 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 loadNextMessages(messageListAdapter.getCount());
             }
         }
+    }
+
+    @Override
+    public void onErrorOccurred(int requestCode, int errorType) {
+        super.onErrorOccurred(requestCode, errorType);
+        switch (requestCode) {
+            case R.id.syns_request_code_load_next_messages:
+                footerProgressView.setVisibility(View.GONE);
+                break;
+
+            case R.id.syns_request_code_force_load_new_messages:
+                swipeRefreshLayout.setRefreshing(false);
+                break;
+        }
+
+        emptyView.setVisibility(View.GONE);
+
+        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+        new MessageDaoSource().deleteCachedMessagesOfFolder(
+                getContext(),
+                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
     /**
@@ -347,39 +368,6 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     /**
-     * Handle an error from the sync service.
-     *
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param errorType   The {@link SyncErrorTypes}
-     */
-    public void onErrorOccurred(int requestCode, int errorType) {
-        switch (requestCode) {
-            case R.id.syns_request_code_load_next_messages:
-                footerProgressView.setVisibility(View.GONE);
-                break;
-
-            case R.id.syns_request_code_force_load_new_messages:
-                swipeRefreshLayout.setRefreshing(false);
-                break;
-        }
-
-        textViewStatus.setText(R.string.there_was_syncing_problem);
-        listViewMessages.setVisibility(View.GONE);
-        emptyView.setVisibility(View.GONE);
-        UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutStatus);
-
-        if (getSnackBar() != null) {
-            getSnackBar().dismiss();
-        }
-
-        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        new MessageDaoSource().deleteCachedMessagesOfFolder(
-                getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
-    }
-
-    /**
      * Try to load a new messages from IMAP server.
      */
     private void loadNewMessages() {
@@ -417,9 +405,6 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     private void initViews(View view) {
-        layoutStatus = view.findViewById(R.id.layoutStatus);
-        textViewStatus = (TextView) view.findViewById(R.id.textViewStatus);
-
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
@@ -438,7 +423,6 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 R.color.colorPrimary,
                 R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(this);
-        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
     }
 
     public interface OnManageEmailsListener {

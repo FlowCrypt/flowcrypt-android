@@ -73,13 +73,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public abstract View getProgressView();
 
     /**
-     * Get a content view which contains a UI.
-     *
-     * @return <tt>View</tt> Return a progress view.
-     */
-    public abstract View getContentView();
-
-    /**
      * Do a lot of checks to validate an outgoing message info.
      *
      * @return <tt>Boolean</tt> true if all information is correct, false otherwise.

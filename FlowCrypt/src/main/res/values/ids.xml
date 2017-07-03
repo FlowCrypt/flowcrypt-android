@@ -24,4 +24,8 @@
     <item name="syns_request_delete_message" type="id" />
     <item name="syns_request_send_encrypted_message" type="id" />
 
+    <item name="viewIdProgressView" type="id" />
+    <item name="viewIdStatusView" type="id" />
+    <item name="viewIdTextViewStatusInfo" type="id" />
+
 </resources>
