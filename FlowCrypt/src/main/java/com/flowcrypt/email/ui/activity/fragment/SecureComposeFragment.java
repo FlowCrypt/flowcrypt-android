@@ -24,7 +24,6 @@ import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.ChipSpan;
@@ -139,10 +138,11 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 if (hasFocus) {
                     getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                 } else {
-                    if (isUpdateInfoAboutContactsEnable &&
-                            GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                    if (isUpdateInfoAboutContactsEnable) {
                         getLoaderManager().restartLoader(R.id
                                 .loader_id_update_info_about_pgp_contacts, null, this);
+                    } else {
+                        progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
                     }
                 }
                 break;
