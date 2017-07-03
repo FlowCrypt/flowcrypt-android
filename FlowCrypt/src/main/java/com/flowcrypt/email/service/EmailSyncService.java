@@ -25,18 +25,23 @@ import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.model.EmailAndNamePair;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.mail.Address;
 import javax.mail.Folder;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 
 /**
  * This the email synchronization service. This class is responsible for the logic of
@@ -211,6 +216,8 @@ public class EmailSyncService extends Service implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
+
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
         }
@@ -284,6 +291,70 @@ public class EmailSyncService extends Service implements SyncListener {
             Messenger messenger = replyToMessengers.get(key);
             messenger.send(Message.obtain(null, REPLY_OK, requestCode, resultCode));
         }
+    }
+
+    /**
+     * Update an information about contacts in the local database if current messages from the
+     * Sent folder.
+     *
+     * @param imapFolder The folder where messages exist.
+     * @param messages   The received messages.
+     */
+    private void updateLocalContactsIfMessagesFromSentFolder(IMAPFolder imapFolder, javax.mail
+            .Message[] messages) {
+        try {
+            boolean isSentFolder = Arrays.asList(imapFolder.getAttributes())
+                    .contains("\\Sent");
+
+            if (isSentFolder) {
+                ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
+                for (javax.mail.Message message : messages) {
+                    emailAndNamePairs.addAll(getEmailAndNamePairsFromMessage(message));
+                }
+
+                startService(EmailAndNameUpdaterService.getStartIntent(this, emailAndNamePairs));
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Generate a list of {@link EmailAndNamePair} objects from the input message.
+     * This information will be retrieved from "to" and "cc" headers.
+     *
+     * @param message The input {@link Message}.
+     * @return <tt>{@link List}</tt> of EmailAndNamePair objects, which contains an information
+     * about
+     * emails and names.
+     * @throws MessagingException when retrieve an information about recipients.
+     */
+    private List<EmailAndNamePair> getEmailAndNamePairsFromMessage(javax.mail.Message message)
+            throws
+            MessagingException {
+        List<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
+
+        Address[] addressesTo = message.getRecipients(javax.mail.Message.RecipientType.TO);
+        if (addressesTo != null) {
+            for (Address address : addressesTo) {
+                InternetAddress internetAddress = (InternetAddress) address;
+                emailAndNamePairs.add(new EmailAndNamePair(
+                        internetAddress.getAddress(),
+                        internetAddress.getPersonal()));
+            }
+        }
+
+        Address[] addressesCC = message.getRecipients(javax.mail.Message.RecipientType.CC);
+        if (addressesCC != null) {
+            for (Address address : addressesCC) {
+                InternetAddress internetAddress = (InternetAddress) address;
+                emailAndNamePairs.add(new EmailAndNamePair(
+                        internetAddress.getAddress(),
+                        internetAddress.getPersonal()));
+            }
+        }
+
+        return emailAndNamePairs;
     }
 
     /**
