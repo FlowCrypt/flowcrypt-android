@@ -70,6 +70,7 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonLoadAccount:
+                UIUtil.hideSoftInput(getContext(), editTextKeyPassword);
                 if (privateKeys != null && !privateKeys.isEmpty()) {
                     if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
                         UIUtil.showInfoSnackbar(editTextKeyPassword,
