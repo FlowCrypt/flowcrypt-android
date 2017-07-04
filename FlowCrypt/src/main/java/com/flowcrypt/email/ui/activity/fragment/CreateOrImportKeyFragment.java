@@ -22,7 +22,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
@@ -105,11 +104,8 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                 break;
 
             case R.id.buttonSelectAnotherAccount:
-                if (getActivity() instanceof SplashActivity) {
-                    SplashActivity baseAuthenticationActivity =
-                            (SplashActivity) getActivity();
-                    baseAuthenticationActivity.signOut(SignInType.GMAIL);
-                }
+                getActivity().finish();
+                startActivity(SplashActivity.getSignOutIntent(getContext()));
                 break;
         }
     }

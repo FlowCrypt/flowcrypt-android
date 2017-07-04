@@ -7,11 +7,14 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
@@ -20,6 +23,7 @@ import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -42,14 +46,48 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 public class SplashActivity extends BaseActivity implements SplashActivityFragment
-        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener {
+        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient
+        .ConnectionCallbacks {
+    private static final String ACTION_SIGN_OUT = GeneralUtil.generateUniqueExtraKey
+            ("ACTION_SIGN_OUT", SplashActivity.class);
+    private static final String ACTION_REVOKE_ACCESS = GeneralUtil.generateUniqueExtraKey
+            ("ACTION_REVOKE_ACCESS", SplashActivity.class);
+
     private static final int REQUEST_CODE_SIGN_IN = 100;
     /**
      * The main entry point for Google Play services integration.
      */
-    protected GoogleApiClient googleApiClient;
+    private GoogleApiClient googleApiClient;
+
     private View signInView;
     private View splashView;
+
+    private boolean isSignOutAction;
+    private boolean isRevokeAccessAction;
+
+    /**
+     * Generate the sign out intent.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The sign out intent.
+     */
+    public static Intent getSignOutIntent(Context context) {
+        Intent intent = new Intent(context, SplashActivity.class);
+        intent.setAction(ACTION_SIGN_OUT);
+        return intent;
+    }
+
+    /**
+     * Generate the revoke access intent.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The revoke access intent.
+     */
+    public static Intent getRevokeAccessIntent(Context context) {
+        Intent intent = new Intent(context, SplashActivity.class);
+        intent.setAction(ACTION_REVOKE_ACCESS);
+        return intent;
+    }
 
     @Override
     public boolean isDisplayHomeAsUpEnabled() {
@@ -76,17 +114,29 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 .build();
 
         googleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
+                .enableAutoManage(this, this).addConnectionCallbacks(this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
                 .build();
 
         initViews();
+
+        if (getIntent() != null && getIntent().getAction() != null) {
+            if (ACTION_SIGN_OUT.equals(getIntent().getAction())) {
+                isSignOutAction = true;
+                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
+            } else if (ACTION_REVOKE_ACCESS.equals(getIntent().getAction())) {
+                isRevokeAccessAction = true;
+                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
+            }
+        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        checkGoogleSignResult();
+        if (!isSignOutAction && !isRevokeAccessAction) {
+            checkGoogleSignResult();
+        }
     }
 
     @Override
@@ -118,25 +168,21 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
     }
 
-    /**
-     * Sign out from the account.
-     */
-    public void signOut(SignInType signInType) {
-        switch (signInType) {
-            case GMAIL:
-                signOutFromGoogleAccount();
-                break;
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (isSignOutAction) {
+            signOutFromGoogleAccount();
+        } else if (isRevokeAccessAction) {
+            revokeAccessFomGoogleAccount();
         }
     }
 
-    /**
-     * Revoke access to the mail.
-     */
-    public void revokeAccess(SignInType signInType) {
-        switch (signInType) {
-            case GMAIL:
-                revokeAccessFomGoogleAccount();
-                break;
+    @Override
+    public void onConnectionSuspended(int i) {
+        if (isSignOutAction || isRevokeAccessAction) {
+            finish();
+            Toast.makeText(this, R.string.error_occurred_while_this_action_running, Toast
+                    .LENGTH_SHORT).show();
         }
     }
 
@@ -198,7 +244,17 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                     @Override
                     public void onResult(@NonNull Status status) {
                         try {
-                            runSplashActivity();
+                            if (status.isSuccess()) {
+                                resetAppComponents();
+                                UIUtil.exchangeViewVisibility(SplashActivity.this, false,
+                                        splashView,
+                                        signInView);
+                            } else {
+                                finish();
+                                Toast.makeText(SplashActivity.this, R.string
+                                                .error_occurred_while_this_action_running,
+                                        Toast.LENGTH_SHORT).show();
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                             UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
@@ -216,7 +272,17 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                     @Override
                     public void onResult(@NonNull Status status) {
                         try {
-                            runSplashActivity();
+                            if (status.isSuccess()) {
+                                resetAppComponents();
+                                UIUtil.exchangeViewVisibility(SplashActivity.this, false,
+                                        splashView,
+                                        signInView);
+                            } else {
+                                finish();
+                                Toast.makeText(SplashActivity.this, R.string
+                                                .error_occurred_while_this_action_running,
+                                        Toast.LENGTH_SHORT).show();
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                             UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
@@ -225,11 +291,9 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 });
     }
 
-    private void runSplashActivity() throws IOException {
+    private void resetAppComponents() throws IOException {
         stopService(new Intent(this, EmailSyncService.class));
         SecurityUtils.cleanSecurityInfo(this);
-        startActivity(new Intent(this, SplashActivity.class));
-        finish();
     }
 
     /**
@@ -246,9 +310,12 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             GoogleSignInResult googleSignInResult = optionalPendingResult.get();
             handleSignInResult(googleSignInResult);
         } else {
+            UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
             optionalPendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
                 @Override
                 public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
+                    UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView,
+                            signInView);
                     handleSignInResult(googleSignInResult);
                 }
             });

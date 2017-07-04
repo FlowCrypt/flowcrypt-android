@@ -173,11 +173,13 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
-                //signOut(SignInType.GMAIL);
+                finish();
+                startActivity(SplashActivity.getSignOutIntent(this));
                 break;
 
             case R.id.navigationMenuRevokeAccess:
-                //revokeAccess(SignInType.GMAIL);
+                finish();
+                startActivity(SplashActivity.getRevokeAccessIntent(this));
                 break;
 
             case R.id.navigationMenuActionSettings:

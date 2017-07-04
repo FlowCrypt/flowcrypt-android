@@ -287,6 +287,12 @@ public class SecurityContentProvider extends ContentProvider {
                     case MATCHED_CODE_KEY_CLEAN_DATABASE:
                         rowsCount = sqLiteDatabase.delete(
                                 new KeysDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount = sqLiteDatabase.delete(
+                                new ContactsDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(
+                                new ImapLabelsDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(
+                                new MessageDaoSource().getTableName(), selection, selectionArgs);
                         break;
 
                     case MATCHED_CODE_CONTACTS_TABLE:

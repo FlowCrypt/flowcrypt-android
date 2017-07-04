@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.SplashActivity;
@@ -83,11 +82,8 @@ public class RestoreAccountFragment extends BaseFragment implements View.OnClick
                 break;
 
             case R.id.buttonSelectAnotherAccount:
-                if (getActivity() instanceof SplashActivity) {
-                    SplashActivity baseAuthenticationActivity =
-                            (SplashActivity) getActivity();
-                    baseAuthenticationActivity.signOut(SignInType.GMAIL);
-                }
+                getActivity().finish();
+                startActivity(SplashActivity.getSignOutIntent(getContext()));
                 break;
         }
     }
