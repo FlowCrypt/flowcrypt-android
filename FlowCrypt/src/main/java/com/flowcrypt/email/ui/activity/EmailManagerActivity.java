@@ -151,23 +151,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.email_manager, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -223,10 +206,9 @@ public class EmailManagerActivity extends BaseSyncActivity
                         foldersManager.addFolder(imapLabelsDaoSource.getFolder(data));
                     }
 
-                    MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
-                    mailLabels.getSubMenu().clear();
-
                     if (!foldersManager.getAllFolders().isEmpty()) {
+                        MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
+                        mailLabels.getSubMenu().clear();
 
                         for (Folder s : foldersManager.getServerFolders()) {
                             mailLabels.getSubMenu().add(s.getFolderAlias());
