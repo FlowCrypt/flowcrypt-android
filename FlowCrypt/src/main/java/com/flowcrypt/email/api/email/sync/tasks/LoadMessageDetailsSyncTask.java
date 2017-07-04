@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.test.MimeMessage;
+import com.flowcrypt.email.js.MimeMessage;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPBodyPart;
 import com.sun.mail.imap.IMAPFolder;

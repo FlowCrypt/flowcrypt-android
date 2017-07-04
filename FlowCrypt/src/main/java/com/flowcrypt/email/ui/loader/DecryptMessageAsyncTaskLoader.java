@@ -14,12 +14,12 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.MimeAddress;
+import com.flowcrypt.email.js.MimeMessage;
+import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.test.Js;
-import com.flowcrypt.email.test.MimeAddress;
-import com.flowcrypt.email.test.MimeMessage;
-import com.flowcrypt.email.test.PgpDecrypted;
 
 import java.util.ArrayList;
 import java.util.Date;
