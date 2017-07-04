@@ -1,20 +1,17 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.SecureComposeFragment;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 
 /**
@@ -34,25 +31,6 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
-                        getSupportFragmentManager()
-                                .findFragmentById(R.id.secureComposeFragment);
-
-                if (secureComposeFragment != null) {
-                    secureComposeFragment.updateAccount(googleSignInAccount.getAccount());
-                }
-            }
-        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
-        }
-    }
-
-    @Override
     public int getContentViewResourceId() {
         return R.layout.activity_secure_compose;
     }
@@ -64,11 +42,31 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public boolean isMessageSendingNow() {
+    public void notifyUserAboutErrorWhenSendMessage() {
+        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
+                getSupportFragmentManager()
+                        .findFragmentById(R.id.secureComposeFragment);
+        if (secureComposeFragment != null) {
+            secureComposeFragment.notifyUserAboutErrorWhenSendMessage();
+        }
+    }
+
+    @Override
+    public boolean isCanFinishActivity() {
         SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
                 getSupportFragmentManager()
                         .findFragmentById(R.id.secureComposeFragment);
 
-        return secureComposeFragment != null && secureComposeFragment.isMessageSendingNow();
+        return secureComposeFragment != null && !secureComposeFragment.isMessageSendingNow();
+    }
+
+    @Override
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
+
+        if (secureComposeFragment != null) {
+            secureComposeFragment.onErrorOccurred(requestCode, errorType);
+        }
     }
 }

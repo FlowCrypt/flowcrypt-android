@@ -1,14 +1,19 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.api.email;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -32,6 +37,95 @@ public class FoldersManager {
 
     public FoldersManager() {
         this.folders = new LinkedHashMap<>();
+    }
+
+    /**
+     * Generate a new {@link FoldersManager} using an information from the local database.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param accountName The name of an account.
+     * @return The new {@link FoldersManager}.
+     */
+    public static FoldersManager fromDatabase(Context context, String accountName) {
+        FoldersManager foldersManager = new FoldersManager();
+
+        Cursor cursor = context.getContentResolver().query(new ImapLabelsDaoSource().
+                getBaseContentUri(), null, ImapLabelsDaoSource.COL_EMAIL +
+                " = ?", new String[]{accountName}, null);
+
+        if (cursor != null) {
+            ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+
+            while (cursor.moveToNext()) {
+                foldersManager.addFolder(imapLabelsDaoSource.getFolder(cursor));
+            }
+
+            cursor.close();
+        }
+
+        return foldersManager;
+    }
+
+    /**
+     * Generate a new {@link Folder}
+     *
+     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     *                    remote folder.
+     * @param folderAlias The folder alias.
+     * @return
+     * @throws MessagingException
+     */
+    public static Folder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
+            MessagingException {
+        return new Folder(imapFolder.getFullName(),
+                folderAlias, imapFolder.getMessageCount(),
+                imapFolder.getAttributes(),
+                isCustomLabels(imapFolder));
+    }
+
+    /**
+     * Check if current folder is a custom label.
+     *
+     * @param folder The {@link IMAPFolder} object which contains an information about a
+     *               remote folder.
+     * @return true if this label is a custom, false otherwise.
+     * @throws MessagingException
+     */
+    public static boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
+        String[] attr = folder.getAttributes();
+        FolderType[] folderTypes = FolderType.values();
+
+        for (String attribute : attr) {
+            for (FolderType folderType : folderTypes) {
+                if (folderType.getValue().equals(attribute)) {
+                    return false;
+                }
+            }
+        }
+
+        return !FolderType.INBOX.getValue().equals(folder.getFullName());
+
+    }
+
+    /**
+     * Get a {@link FolderType} using folder attributes.
+     *
+     * @param attributes The folder attributes.
+     * @return {@link FolderType}.
+     */
+    public static FolderType getFolderTypeForImapFodler(String[] attributes) {
+        FolderType[] folderTypes = FolderType.values();
+
+        if (attributes != null) {
+            for (String attribute : attributes) {
+                for (FolderType folderType : folderTypes) {
+                    if (folderType.getValue().equals(attribute)) {
+                        return folderType;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public Folder getFolderInbox() {
@@ -71,6 +165,15 @@ public class FoldersManager {
     }
 
     /**
+     * Clear the folders list.
+     */
+    public void clear() {
+        if (this.folders != null) {
+            this.folders.clear();
+        }
+    }
+
+    /**
      * Add a new folder to {@link FoldersManager} to manage it.
      *
      * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
@@ -79,11 +182,24 @@ public class FoldersManager {
      * @throws MessagingException
      */
     public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
-        if (imapFolder != null && !TextUtils.isEmpty(imapFolder.getFullName())
+        if (imapFolder != null
+                && !isFolderHasNoSelectAttribute(imapFolder)
+                && !TextUtils.isEmpty(imapFolder.getFullName())
                 && !folders.containsKey(imapFolder.getFullName())) {
-            this.folders.put(prepareFolderKey(imapFolder), new Folder(folderAlias, imapFolder
-                    .getFullName(),
-                    isCustomLabels(imapFolder)));
+            this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
+        }
+    }
+
+    /**
+     * Add a new folder to {@link FoldersManager} to manage it.
+     *
+     * @param folder The {@link Folder} object which contains an information about a
+     *               remote folder.
+     */
+    public void addFolder(Folder folder) {
+        if (folder != null && !TextUtils.isEmpty(folder.getServerFullFolderName())
+                && !folders.containsKey(folder.getServerFullFolderName())) {
+            this.folders.put(prepareFolderKey(folder), folder);
         }
     }
 
@@ -142,44 +258,35 @@ public class FoldersManager {
     }
 
     private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
-        FolderType folderType = getFolderTypeForImapFodler(imapFolder);
+        FolderType folderType = getFolderTypeForImapFodler(imapFolder.getAttributes());
         if (folderType == null) {
             return imapFolder.getFullName();
         } else {
             return folderType.value;
         }
-
     }
 
-    private boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
-        String[] attr = folder.getAttributes();
-        FolderType[] folderTypes = FolderType.values();
-
-        for (String attribute : attr) {
-            for (FolderType folderType : folderTypes) {
-                if (folderType.getValue().equals(attribute)) {
-                    return false;
-                }
-            }
+    private String prepareFolderKey(Folder folder) {
+        FolderType folderType = getFolderTypeForImapFodler(folder.getAttributes());
+        if (folderType == null) {
+            return folder.getServerFullFolderName();
+        } else {
+            return folderType.value;
         }
-
-        return !FolderType.INBOX.getValue().equals(folder.getFullName());
-
     }
 
-    private FolderType getFolderTypeForImapFodler(IMAPFolder folder) throws MessagingException {
-        String[] attr = folder.getAttributes();
-        FolderType[] folderTypes = FolderType.values();
-
-        for (String attribute : attr) {
-            for (FolderType folderType : folderTypes) {
-                if (folderType.getValue().equals(attribute)) {
-                    return folderType;
-                }
-            }
-        }
-
-        return null;
+    /**
+     * Check if current folder has {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}. If the
+     * folder contains it attribute we will not show this folder in the list.
+     *
+     * @param imapFolder The {@link IMAPFolder} object.
+     * @return true if current folder contains attribute
+     * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
+     * @throws MessagingException
+     */
+    private boolean isFolderHasNoSelectAttribute(IMAPFolder imapFolder) throws MessagingException {
+        List<String> attributes = Arrays.asList(imapFolder.getAttributes());
+        return attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
     }
 
     /**

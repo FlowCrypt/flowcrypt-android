@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -80,6 +81,16 @@ public class UIUtil {
                                               final View firstView, final View secondView) {
         int shortAnimTime = context.getResources().getInteger(android.R.integer
                 .config_shortAnimTime);
+
+        if (show && firstView.getVisibility() == View.VISIBLE
+                && secondView.getVisibility() == View.GONE) {
+            return;
+        }
+
+        if (!show && secondView.getVisibility() == View.VISIBLE
+                && firstView.getVisibility() == View.GONE) {
+            return;
+        }
 
         secondView.setVisibility(show ? View.GONE : View.VISIBLE);
         secondView.animate().setDuration(shortAnimTime).alpha(

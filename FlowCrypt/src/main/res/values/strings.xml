@@ -1,3 +1,9 @@
+<!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
 <resources>
     <string name="app_name">FlowCrypt</string>
 
@@ -23,7 +29,7 @@
     <string name="crypt">crypt</string>
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to start sending encrypted messages</string>
     <string name="continue_with_gmail">Continue with Gmail</string>
-    <string name="title_activity_email_manager">Inbox</string>
+    <string name="loading">Loading…</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="log_out">Log out</string>
@@ -90,4 +96,16 @@
     <string name="message_was_deleted">The message was deleted</string>
     <string name="please_wait_while_action_will_be_completed">Please wait while an action will be completed</string>
     <string name="message_was_archived">The message was archived</string>
+    <string name="retry">Retry</string>
+    <string name="warning">Warning</string>
+    <string name="no_connection">No connection</string>
+    <string name="archive">Archive</string>
+    <string name="delete">Delete</string>
+    <string name="error_occurred_while_deleting_message">An error occurred while deleting the message</string>
+    <string name="error_occurred_while_archiving_message">An error occurred while archiving the message</string>
+    <string name="error_occurred_while_sending_message">An error occurred while sending the message</string>
+    <string name="sending_message_must_not_be_empty">The sending message must not be empty</string>
+    <string name="there_was_syncing_problem">There was a syncing problem</string>
+    <string name="info_about_some_contacts_not_received">An information about some contacts not received from the server</string>
+    <string name="error_occurred_while_this_action_running">The error occurred while this action running.</string>
 </resources>

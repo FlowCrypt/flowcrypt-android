@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -7,6 +8,8 @@ package com.flowcrypt.email.api.email;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import java.util.Arrays;
 
 /**
  * This is a simple POJO object, which describe an information about the email folder.
@@ -30,29 +33,41 @@ public class Folder implements Parcelable {
             return new Folder[size];
         }
     };
-
-    private String folderAlias;
     private String serverFullFolderName;
+    private String folderAlias;
+    private String userFriendlyName;
+    private String[] attributes;
     private boolean isCustomLabel;
+    private int messageCount;
 
-    public Folder(String folderAlias, String serverFullFolderName, boolean isCustomLabel) {
-        this.folderAlias = folderAlias;
+    public Folder(String serverFullFolderName, String folderAlias, int messageCount,
+                  String[] attributes, boolean isCustomLabel) {
         this.serverFullFolderName = serverFullFolderName;
+        this.folderAlias = folderAlias;
+        this.messageCount = messageCount;
+        this.userFriendlyName = folderAlias;
+        this.attributes = attributes;
         this.isCustomLabel = isCustomLabel;
     }
 
     protected Folder(Parcel in) {
-        this.folderAlias = in.readString();
         this.serverFullFolderName = in.readString();
+        this.folderAlias = in.readString();
+        this.messageCount = in.readInt();
+        this.userFriendlyName = in.readString();
+        this.attributes = in.createStringArray();
         this.isCustomLabel = in.readByte() != 0;
     }
 
     @Override
     public String toString() {
         return "Folder{" +
-                "folderAlias='" + folderAlias + '\'' +
-                ", serverFullFolderName='" + serverFullFolderName + '\'' +
+                "serverFullFolderName='" + serverFullFolderName + '\'' +
+                ", folderAlias='" + folderAlias + '\'' +
+                ", userFriendlyName='" + userFriendlyName + '\'' +
+                ", attributes=" + Arrays.toString(attributes) +
                 ", isCustomLabel=" + isCustomLabel +
+                ", messageCount=" + messageCount +
                 '}';
     }
 
@@ -63,8 +78,11 @@ public class Folder implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.folderAlias);
         dest.writeString(this.serverFullFolderName);
+        dest.writeString(this.folderAlias);
+        dest.writeInt(this.messageCount);
+        dest.writeString(this.userFriendlyName);
+        dest.writeStringArray(this.attributes);
         dest.writeByte(this.isCustomLabel ? (byte) 1 : (byte) 0);
     }
 
@@ -82,5 +100,25 @@ public class Folder implements Parcelable {
 
     public boolean isCustomLabel() {
         return isCustomLabel;
+    }
+
+    public String[] getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(String[] attributes) {
+        this.attributes = attributes;
+    }
+
+    public String getUserFriendlyName() {
+        return userFriendlyName;
+    }
+
+    public void setUserFriendlyName(String userFriendlyName) {
+        this.userFriendlyName = userFriendlyName;
+    }
+
+    public int getMessageCount() {
+        return messageCount;
     }
 }

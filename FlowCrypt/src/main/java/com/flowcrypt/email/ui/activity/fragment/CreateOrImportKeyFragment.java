@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -21,9 +22,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -104,11 +104,8 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                 break;
 
             case R.id.buttonSelectAnotherAccount:
-                if (getActivity() instanceof BaseAuthenticationActivity) {
-                    BaseAuthenticationActivity baseAuthenticationActivity =
-                            (BaseAuthenticationActivity) getActivity();
-                    baseAuthenticationActivity.signOut(SignInType.GMAIL);
-                }
+                getActivity().finish();
+                startActivity(SplashActivity.getSignOutIntent(getContext()));
                 break;
         }
     }

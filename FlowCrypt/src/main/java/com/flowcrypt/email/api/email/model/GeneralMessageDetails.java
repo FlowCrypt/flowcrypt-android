@@ -1,6 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
- * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
-import java.util.Date;
+import java.util.Arrays;
 
 /**
  * Simple POJO class which describe a general message details.
@@ -21,7 +21,7 @@ import java.util.Date;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMessageDetails> {
+public class GeneralMessageDetails implements Parcelable {
 
     public static final Creator<GeneralMessageDetails> CREATOR = new
             Creator<GeneralMessageDetails>() {
@@ -35,47 +35,31 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
                     return new GeneralMessageDetails[size];
                 }
             };
-
-    private String from;
-    private String subject;
-    private Date receiveDate;
+    private String email;
+    private String label;
     private long uid;
-    private boolean isSeen;
-
-    public GeneralMessageDetails(String from, String subject, Date receiveDate, long uid, boolean
-            isSeen) {
-        this.from = from;
-        this.subject = subject;
-        this.receiveDate = receiveDate;
-        this.uid = uid;
-        this.isSeen = isSeen;
-    }
+    private long receivedDateInMillisecond;
+    private long sentDateInMillisecond;
+    private String[] from;
+    private String[] to;
+    private String subject;
+    private String[] flags;
+    private String rawMessageWithoutAttachments;
 
     public GeneralMessageDetails() {
     }
 
     protected GeneralMessageDetails(Parcel in) {
-        this.from = in.readString();
-        this.subject = in.readString();
-        long tmpReceiveDate = in.readLong();
-        this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
+        this.email = in.readString();
+        this.label = in.readString();
         this.uid = in.readLong();
-        this.isSeen = in.readByte() != 0;
-    }
-
-    @Override
-    public int compareTo(@NonNull GeneralMessageDetails o) {
-        Date dateToCompare = o.getReceiveDate();
-
-        if (receiveDate == null && dateToCompare == null) {
-            return 0;
-        } else if (receiveDate == null) {
-            return -1;
-        } else if (dateToCompare == null) {
-            return 0;
-        }
-
-        return receiveDate.compareTo(dateToCompare);
+        this.receivedDateInMillisecond = in.readLong();
+        this.sentDateInMillisecond = in.readLong();
+        this.from = in.createStringArray();
+        this.to = in.createStringArray();
+        this.subject = in.readString();
+        this.flags = in.createStringArray();
+        this.rawMessageWithoutAttachments = in.readString();
     }
 
     @Override
@@ -85,35 +69,49 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.from);
-        dest.writeString(this.subject);
-        dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
+        dest.writeString(this.email);
+        dest.writeString(this.label);
         dest.writeLong(this.uid);
-        dest.writeByte(this.isSeen ? (byte) 1 : (byte) 0);
+        dest.writeLong(this.receivedDateInMillisecond);
+        dest.writeLong(this.sentDateInMillisecond);
+        dest.writeStringArray(this.from);
+        dest.writeStringArray(this.to);
+        dest.writeString(this.subject);
+        dest.writeStringArray(this.flags);
+        dest.writeString(this.rawMessageWithoutAttachments);
     }
 
-    public String getFrom() {
-        return from;
+    @Override
+    public String toString() {
+        return "GeneralMessageDetails{" +
+                "email='" + email + '\'' +
+                ", label='" + label + '\'' +
+                ", uid=" + uid +
+                ", receivedDateInMillisecond=" + receivedDateInMillisecond +
+                ", sentDateInMillisecond=" + sentDateInMillisecond +
+                ", from=" + Arrays.toString(from) +
+                ", to=" + Arrays.toString(to) +
+                ", subject='" + subject + '\'' +
+                ", flags=" + Arrays.toString(flags) +
+                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
+                (rawMessageWithoutAttachments) +
+                '}';
     }
 
-    public void setFrom(String from) {
-        this.from = from;
+    public String getEmail() {
+        return email;
     }
 
-    public String getSubject() {
-        return subject;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public String getLabel() {
+        return label;
     }
 
-    public Date getReceiveDate() {
-        return receiveDate;
-    }
-
-    public void setReceiveDate(Date receiveDate) {
-        this.receiveDate = receiveDate;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public long getUid() {
@@ -124,11 +122,63 @@ public class GeneralMessageDetails implements Parcelable, Comparable<GeneralMess
         this.uid = uid;
     }
 
-    public boolean isSeen() {
-        return isSeen;
+    public long getReceivedDateInMillisecond() {
+        return receivedDateInMillisecond;
     }
 
-    public void setSeen(boolean seen) {
-        isSeen = seen;
+    public void setReceivedDateInMillisecond(long receivedDateInMillisecond) {
+        this.receivedDateInMillisecond = receivedDateInMillisecond;
+    }
+
+    public long getSentDateInMillisecond() {
+        return sentDateInMillisecond;
+    }
+
+    public void setSentDateInMillisecond(long sentDateInMillisecond) {
+        this.sentDateInMillisecond = sentDateInMillisecond;
+    }
+
+    public String[] getFrom() {
+        return from;
+    }
+
+    public void setFrom(String[] from) {
+        this.from = from;
+    }
+
+    public String[] getTo() {
+        return to;
+    }
+
+    public void setTo(String[] to) {
+        this.to = to;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public String[] getFlags() {
+        return flags;
+    }
+
+    public void setFlags(String[] flags) {
+        this.flags = flags;
+    }
+
+    public boolean isSeen() {
+        return flags != null && Arrays.asList(flags).contains(MessageFlag.SEEN);
+    }
+
+    public String getRawMessageWithoutAttachments() {
+        return rawMessageWithoutAttachments;
+    }
+
+    public void setRawMessageWithoutAttachments(String rawMessageWithoutAttachments) {
+        this.rawMessageWithoutAttachments = rawMessageWithoutAttachments;
     }
 }

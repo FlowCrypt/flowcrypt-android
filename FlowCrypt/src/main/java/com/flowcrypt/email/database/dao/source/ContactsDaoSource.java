@@ -1,6 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
- * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -17,6 +17,7 @@ import com.flowcrypt.email.js.PgpContact;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class describe creating of table which has name
@@ -137,7 +138,7 @@ public class ContactsDaoSource extends BaseDaoSource {
 
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
-                null, COL_EMAIL + " = ?", new String[]{email}, null);
+                null, COL_EMAIL + " = ?", new String[]{email.toLowerCase()}, null);
 
         PgpContact pgpContact = null;
 
@@ -160,16 +161,14 @@ public class ContactsDaoSource extends BaseDaoSource {
      * objects from the search by emails.
      */
     public List<PgpContact> getPgpContactsListFromDatabase(Context context, List<String> emails) {
-        String[] emailsArray = emails.toArray(new String[0]);
-        for (int i = 0; i < emailsArray.length; ++i) {
-            if (emailsArray[i] != null) {
-                emailsArray[i] = emailsArray[i].toLowerCase();
-            }
+        ListIterator<String> iterator = emails.listIterator();
+        while (iterator.hasNext()) {
+            iterator.set(iterator.next().toLowerCase());
         }
 
         Cursor cursor = context.getContentResolver().query(
                 getBaseContentUri(), null, ContactsDaoSource.COL_EMAIL +
-                        " IN " + prepareSelection(emails), emailsArray, null);
+                        " IN " + prepareSelection(emails), emails.toArray(new String[0]), null);
 
         List<PgpContact> pgpContacts = new ArrayList<>();
 
@@ -210,7 +209,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{pgpContact.getEmail()});
+                    new String[]{pgpContact.getEmail().toLowerCase()});
         } else return -1;
     }
 
@@ -231,7 +230,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{pgpContact.getEmail()});
+                    new String[]{pgpContact.getEmail().toLowerCase()});
         } else return -1;
     }
 
@@ -256,7 +255,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{email});
+                    new String[]{email.toLowerCase()});
         } else return -1;
     }
 
@@ -275,7 +274,7 @@ public class ContactsDaoSource extends BaseDaoSource {
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
             return contentResolver.delete(getBaseContentUri(),
-                    COL_EMAIL + " = ?", new String[]{email});
+                    COL_EMAIL + " = ?", new String[]{email.toLowerCase()});
         } else return -1;
     }
 }

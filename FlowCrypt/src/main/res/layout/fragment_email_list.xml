@@ -1,4 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,14 +17,31 @@
         android:text="@string/no_results"
         android:visibility="gone" />
 
-    <ListView
-        android:id="@+id/listViewMessages"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/listViewMessages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:overScrollFooter="@android:color/transparent"
+            android:visibility="gone" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@id/viewIdProgressView"
         style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/viewIdStatusView"
+        layout="@layout/sync_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

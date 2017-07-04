@@ -1,3 +1,9 @@
+<!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,7 +15,7 @@
     android:paddingTop="@dimen/activity_vertical_margin">
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@id/viewIdProgressView"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -60,7 +66,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/editTextEmailSubject"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -74,7 +80,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/editTextEmailMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -84,4 +90,12 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <include
+        android:id="@+id/viewIdStatusView"
+        layout="@layout/sync_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 </FrameLayout>

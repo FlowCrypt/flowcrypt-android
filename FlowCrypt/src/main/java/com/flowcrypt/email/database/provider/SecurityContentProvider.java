@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -20,6 +21,7 @@ import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 
 
 /**
@@ -39,6 +41,8 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW = 5;
     private static final int MATCHED_CODE_IMAP_LABELS_TABLE = 6;
     private static final int MATCHED_CODE_IMAP_LABELS_SINGLE_ROW = 7;
+    private static final int MATCHED_CODE_IMAP_MESSAGES_TABLE = 8;
+    private static final int MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW = 9;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -58,6 +62,12 @@ public class SecurityContentProvider extends ContentProvider {
                 MATCHED_CODE_IMAP_LABELS_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_LABELS_SINGLE_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource
+                        .TABLE_NAME_MESSAGES,
+                MATCHED_CODE_IMAP_MESSAGES_TABLE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource
+                .TABLE_NAME_MESSAGES +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -103,6 +113,14 @@ public class SecurityContentProvider extends ContentProvider {
                         id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null,
                                 values);
                         result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri() + "/" +
+                                id);
+                        break;
+
+                    case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                        id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(),
+                                null, values);
+                        result = Uri.parse(new MessageDaoSource().getBaseContentUri()
+                                + "/" +
                                 id);
                         break;
 
@@ -164,6 +182,23 @@ public class SecurityContentProvider extends ContentProvider {
                             }
                             break;
 
+                        case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                            for (ContentValues contentValues : values) {
+                                long id = sqLiteDatabase.insert(
+                                        new MessageDaoSource().getTableName(), null,
+                                        contentValues);
+
+                                //if message not inserted, try to update message with some UID
+                                if (id <= 0) {
+                                    id = updateMessageInfo(sqLiteDatabase, contentValues);
+                                }
+
+                                if (id <= 0) {
+                                    throw new SQLException("Failed to insert row into " + uri);
+                                }
+                            }
+                            break;
+
                         default:
                             throw new UnsupportedOperationException("Unknown uri: " + uri);
                     }
@@ -219,6 +254,14 @@ public class SecurityContentProvider extends ContentProvider {
                                 selectionArgs);
                         break;
 
+                    case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                        rowsCount = sqLiteDatabase.update(
+                                new MessageDaoSource().getTableName(),
+                                values,
+                                selection,
+                                selectionArgs);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -244,6 +287,12 @@ public class SecurityContentProvider extends ContentProvider {
                     case MATCHED_CODE_KEY_CLEAN_DATABASE:
                         rowsCount = sqLiteDatabase.delete(
                                 new KeysDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount = sqLiteDatabase.delete(
+                                new ContactsDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(
+                                new ImapLabelsDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(
+                                new MessageDaoSource().getTableName(), selection, selectionArgs);
                         break;
 
                     case MATCHED_CODE_CONTACTS_TABLE:
@@ -253,6 +302,11 @@ public class SecurityContentProvider extends ContentProvider {
 
                     case MATCHED_CODE_IMAP_LABELS_TABLE:
                         rowsCount = sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
+                                selection, selectionArgs);
+                        break;
+
+                    case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                        rowsCount = sqLiteDatabase.delete(new MessageDaoSource().getTableName(),
                                 selection, selectionArgs);
                         break;
 
@@ -291,6 +345,10 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_IMAP_LABELS_TABLE:
                 table = ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS;
+                break;
+
+            case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                table = MessageDaoSource.TABLE_NAME_MESSAGES;
                 break;
 
             default:
@@ -333,9 +391,41 @@ public class SecurityContentProvider extends ContentProvider {
             case MATCHED_CODE_IMAP_LABELS_SINGLE_ROW:
                 return new ImapLabelsDaoSource().getSingleRowContentType();
 
+            case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                return new MessageDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW:
+                return new MessageDaoSource().getSingleRowContentType();
+
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
+    }
+
+    /**
+     * Try to update some message.
+     *
+     * @param sqLiteDatabase The {@link SQLiteDatabase} which will be used to update a message.
+     * @param contentValues  The new information about some message.
+     * @return the number of rows affected
+     */
+    private long updateMessageInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
+        long id;
+        String email = contentValues.getAsString(MessageDaoSource
+                .COL_EMAIL);
+        String folder = contentValues.getAsString(MessageDaoSource
+                .COL_FOLDER);
+        String uid = contentValues.getAsString(MessageDaoSource
+                .COL_UID);
+
+        id = sqLiteDatabase.update(
+                new MessageDaoSource().getTableName(),
+                contentValues,
+                MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_UID + " = ? ",
+                new String[]{email, folder, uid});
+        return id;
     }
 
 

@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -11,6 +12,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.Settings;
+
+import com.flowcrypt.email.BuildConfig;
 
 import org.apache.commons.io.IOUtils;
 
@@ -80,5 +83,16 @@ public class GeneralUtil {
         return IOUtils.copy(
                 IOUtils.toInputStream(data, StandardCharsets.UTF_8),
                 context.getContentResolver().openOutputStream(uri));
+    }
+
+    /**
+     * Generate an unique extra key using the application id and the class name.
+     *
+     * @param key The key of the new extra key.
+     * @param c   The class where a new extra key will be created.
+     * @return The new extra key.
+     */
+    public static String generateUniqueExtraKey(String key, Class c) {
+        return BuildConfig.APPLICATION_ID + "." + c.getSimpleName() + "." + key;
     }
 }

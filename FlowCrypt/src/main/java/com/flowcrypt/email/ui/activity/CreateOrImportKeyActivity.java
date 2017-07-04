@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -10,9 +11,8 @@ import android.view.View;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportKeyFragment;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.util.ArrayList;
 
@@ -24,7 +24,7 @@ import java.util.ArrayList;
  *         Time: 16:15.
  *         E-mail: DenBond7@gmail.com
  */
-public class CreateOrImportKeyActivity extends BaseAuthenticationActivity implements
+public class CreateOrImportKeyActivity extends BaseActivity implements
         CreateOrImportKeyFragment.OnPrivateKeysSelectedListener {
     public static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON = BuildConfig
             .APPLICATION_ID + ".KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON";
@@ -35,8 +35,8 @@ public class CreateOrImportKeyActivity extends BaseAuthenticationActivity implem
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-
+    public boolean isDisplayHomeAsUpEnabled() {
+        return false;
     }
 
     @Override

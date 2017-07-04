@@ -1,12 +1,12 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 
 import com.flowcrypt.email.BuildConfig;
@@ -14,9 +14,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.SecureReplyFragment;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 /**
  * This activity describes a logic of send encrypted message as a reply.
@@ -38,25 +35,6 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                        getSupportFragmentManager()
-                                .findFragmentById(R.id.secureReplyFragment);
-
-                if (secureReplyFragment != null) {
-                    secureReplyFragment.updateAccount(googleSignInAccount.getAccount());
-                }
-            }
-        } else if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-            UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
-        }
-    }
-
-    @Override
     public int getContentViewResourceId() {
         return R.layout.activity_security_reply;
     }
@@ -68,8 +46,7 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
 
         if (getIntent() != null && getIntent().hasExtra(KEY_INCOMING_MESSAGE_INFO)) {
             SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                    getSupportFragmentManager()
-                            .findFragmentById(R.id.secureReplyFragment);
+                    getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
             if (secureReplyFragment != null) {
                 IncomingMessageInfo incomingMessageInfo = getIntent().getParcelableExtra
@@ -82,11 +59,30 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    public boolean isMessageSendingNow() {
+    public void notifyUserAboutErrorWhenSendMessage() {
         SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.secureReplyFragment);
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
-        return secureReplyFragment != null && secureReplyFragment.isMessageSendingNow();
+        if (secureReplyFragment != null) {
+            secureReplyFragment.notifyUserAboutErrorWhenSendMessage();
+        }
+    }
+
+    @Override
+    public boolean isCanFinishActivity() {
+        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+
+        return secureReplyFragment != null && !secureReplyFragment.isMessageSendingNow();
+    }
+
+    @Override
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+
+        if (secureReplyFragment != null) {
+            secureReplyFragment.onErrorOccurred(requestCode, errorType);
+        }
     }
 }

@@ -1,6 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
- * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -23,7 +23,6 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.ChipSpan;
@@ -46,7 +45,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
-    private View progressBar;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
 
@@ -69,11 +67,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     }
 
     @Override
-    public View getProgressView() {
-        return progressBar;
-    }
-
-    @Override
     public View getContentView() {
         return layoutContent;
     }
@@ -88,6 +81,13 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 (getContext(), recipientEditTextView.getChipValues());
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
+
+        if (getActivity() instanceof BaseSendingMessageActivity) {
+            BaseSendingMessageActivity baseSendingMessageActivity = (BaseSendingMessageActivity)
+                    getActivity();
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(baseSendingMessageActivity
+                    .getSenderEmail(), null));
+        }
 
         return outgoingMessageInfo;
     }
@@ -135,12 +135,13 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 progressBarCheckContactsDetails.setVisibility(
                         hasFocus ? View.INVISIBLE : View.VISIBLE);
                 if (hasFocus) {
-                    isUpdatedInfoAboutContactCompleted = true;
                     getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                 } else {
-                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                        getLoaderManager().restartLoader(
-                                R.id.loader_id_update_info_about_pgp_contacts, null, this);
+                    if (isUpdateInfoAboutContactsEnable) {
+                        getLoaderManager().restartLoader(R.id
+                                .loader_id_update_info_about_pgp_contacts, null, this);
+                    } else {
+                        progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
                     }
                 }
                 break;
@@ -165,7 +166,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
-        progressBar = view.findViewById(R.id.progressBar);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
     }
 

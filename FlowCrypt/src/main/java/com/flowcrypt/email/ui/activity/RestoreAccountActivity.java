@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -12,15 +13,14 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseAuthenticationActivity;
+import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
 import java.util.List;
 
@@ -32,11 +32,15 @@ import java.util.List;
  *         Time: 01:37
  *         E-mail: DenBond7@gmail.com
  */
-public class RestoreAccountActivity extends BaseAuthenticationActivity
-        implements LoaderManager.LoaderCallbacks<LoaderResult> {
+public class RestoreAccountActivity extends BaseActivity
+        implements LoaderManager.LoaderCallbacks<LoaderResult>,
+        RestoreAccountFragment.OnRunEmailManagerActivityListener {
 
-    public static final String KEY_EXTRA_PRIVATE_KEYS = BuildConfig.APPLICATION_ID
-            + ".KEY_EXTRA_PRIVATE_KEYS";
+    public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+            "KEY_EXTRA_PRIVATE_KEYS", RestoreAccountActivity.class);
+
+    public static final String KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
+            "KEY_EXTRA_ACCOUNT", RestoreAccountActivity.class);
 
     private View restoreAccountView;
     private View layoutProgress;
@@ -50,20 +54,8 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
     }
 
     @Override
-    public void handleSignInResult(GoogleSignInResult googleSignInResult, boolean isOnStartCall) {
-        if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                account = googleSignInAccount.getAccount();
-                if (privateKeys == null) {
-                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
-                            this);
-                } else {
-                    showContent();
-                    updateKeysOnRestoreAccountFragment();
-                }
-            }
-        }
+    public boolean isDisplayHomeAsUpEnabled() {
+        return false;
     }
 
     @Override
@@ -74,12 +66,26 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
+        if (getIntent() != null) {
             this.privateKeys = getIntent().getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
-            this.isThrowErrorIfDuplicateFound = true;
+            this.account = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT);
+            if (getIntent().hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
+                this.isThrowErrorIfDuplicateFound = true;
+            }
         }
 
         initViews();
+        if (privateKeys == null) {
+            if (account != null) {
+                getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null,
+                        this);
+            } else {
+                finish();
+            }
+        } else {
+            showContent();
+            updateKeysOnRestoreAccountFragment();
+        }
     }
 
     @Override
@@ -127,6 +133,20 @@ public class RestoreAccountActivity extends BaseAuthenticationActivity
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
 
+    }
+
+    @Override
+    public void onRunEmailManageActivity() {
+        Intent startEmailServiceIntent = new Intent(this, EmailSyncService.class);
+        startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
+                account);
+        startService(startEmailServiceIntent);
+
+        Intent intentRunEmailManagerActivity = new Intent(this, EmailManagerActivity.class);
+        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
+                account);
+        startActivity(intentRunEmailManagerActivity);
+        finish();
     }
 
     /**

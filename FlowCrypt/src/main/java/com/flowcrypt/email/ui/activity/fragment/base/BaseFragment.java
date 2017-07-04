@@ -1,11 +1,20 @@
+/*
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -24,6 +33,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
         .LoaderCallbacks<LoaderResult> {
 
     private boolean isBackPressedEnable = true;
+    private Snackbar snackbar;
 
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
@@ -89,5 +99,65 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
 
     public void setBackPressedEnable(boolean backPressedEnable) {
         isBackPressedEnable = backPressedEnable;
+    }
+
+    /**
+     * Show an information as Snackbar.
+     *
+     * @param view        The view to find a parent from.
+     * @param messageText The text to show.  Can be formatted text.
+     */
+    public void showInfoSnackbar(View view, String messageText) {
+        showInfoSnackbar(view, messageText, Snackbar.LENGTH_INDEFINITE);
+    }
+
+    /**
+     * Show an information as Snackbar.
+     *
+     * @param view        The view to find a parent from.
+     * @param messageText The text to show.  Can be formatted text.
+     * @param duration    How long to display the message.
+     */
+    public void showInfoSnackbar(View view, String messageText, int duration) {
+        snackbar = Snackbar.make(view, messageText, duration)
+                .setAction(android.R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                    }
+                });
+        snackbar.show();
+    }
+
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener.
+     *
+     * @param view            he view to find a parent from
+     * @param messageText     The text to show.  Can be formatted text
+     * @param buttonName      The text of the Snackbar button
+     * @param onClickListener The Snackbar button click listener.
+     */
+    public void showSnackbar(View view, String messageText, String buttonName,
+                             @NonNull View.OnClickListener onClickListener) {
+        showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener);
+    }
+
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener.
+     *
+     * @param view            he view to find a parent from
+     * @param messageText     The text to show.  Can be formatted text
+     * @param buttonName      The text of the Snackbar button
+     * @param duration        How long to display the message.
+     * @param onClickListener The Snackbar button click listener.
+     */
+    public void showSnackbar(View view, String messageText, String buttonName, int duration,
+                             @NonNull View.OnClickListener onClickListener) {
+        snackbar = Snackbar.make(view, messageText, duration)
+                .setAction(buttonName, onClickListener);
+        snackbar.show();
+    }
+
+    public Snackbar getSnackBar() {
+        return snackbar;
     }
 }

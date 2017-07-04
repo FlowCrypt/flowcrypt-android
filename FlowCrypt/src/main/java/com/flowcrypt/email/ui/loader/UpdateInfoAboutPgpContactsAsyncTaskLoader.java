@@ -1,6 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply.
- * See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -65,6 +65,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
     @Override
     public LoaderResult loadInBackground() {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+        boolean isAllInfoReceived = true;
         try {
             Js js = new Js(getContext(), null);
             for (String email : emails) {
@@ -75,21 +76,30 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                 PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
                 if (localPgpContact != null) {
                     if (!localPgpContact.getHasPgp()) {
-                        PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
-                        if (remotePgpContact != null) {
-                            contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                        try {
+                            PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
+                            if (remotePgpContact != null) {
+                                contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                            }
+                        } catch (IOException e) {
+                            isAllInfoReceived = false;
+                            e.printStackTrace();
                         }
                     }
                 } else {
                     contactsDaoSource.addRow(getContext(), new PgpContact(email, null));
-                    PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
-                    if (remotePgpContact != null) {
-                        contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                    try {
+                        PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
+                        if (remotePgpContact != null) {
+                            contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                        }
+                    } catch (IOException e) {
+                        isAllInfoReceived = false;
+                        e.printStackTrace();
                     }
                 }
             }
-
-            return new LoaderResult(true, null);
+            return new LoaderResult(isAllInfoReceived, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);

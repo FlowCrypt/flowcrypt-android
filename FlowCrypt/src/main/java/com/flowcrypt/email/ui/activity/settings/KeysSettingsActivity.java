@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -46,6 +47,11 @@ public class KeysSettingsActivity extends BaseSettingsActivity implements Loader
     @Override
     public int getContentViewResourceId() {
         return R.layout.activity_keys_settings;
+    }
+
+    @Override
+    public View getRootView() {
+        return null;
     }
 
     @Override

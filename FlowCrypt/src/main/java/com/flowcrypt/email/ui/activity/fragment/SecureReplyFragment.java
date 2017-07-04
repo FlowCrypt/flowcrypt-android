@@ -1,5 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
 
@@ -19,6 +20,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -45,7 +47,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
 
     private IncomingMessageInfo incomingMessageInfo;
     private View layoutContent;
-    private View progressBar;
     private View progressBarCheckContactsDetails;
 
     public SecureReplyFragment() {
@@ -84,6 +85,13 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
+        if (getActivity() instanceof BaseSendingMessageActivity) {
+            BaseSendingMessageActivity baseSendingMessageActivity = (BaseSendingMessageActivity)
+                    getActivity();
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(baseSendingMessageActivity
+                    .getSenderEmail(), null));
+        }
+
         return outgoingMessageInfo;
     }
 
@@ -98,11 +106,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     }
 
     @Override
-    public View getProgressView() {
-        return progressBar;
-    }
-
-    @Override
     public View getContentView() {
         return layoutContent;
     }
@@ -111,8 +114,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     public boolean isAllInformationCorrect() {
         if (TextUtils.isEmpty(editTextReplyEmailMessage.getText().toString())) {
             UIUtil.showInfoSnackbar(editTextReplyEmailMessage,
-                    getString(R.string.text_must_not_be_empty,
-                            getString(R.string.prompt_compose_security_email)));
+                    getString(R.string.sending_message_must_not_be_empty));
         } else {
             return true;
         }
@@ -143,7 +145,6 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         this.editTextReplyEmailMessage = (EditText) view.findViewById(R.id
                 .editTextReplyEmailMessage);
         this.layoutContent = view.findViewById(R.id.layoutForm);
-        this.progressBar = view.findViewById(R.id.progressBar);
         this.progressBarCheckContactsDetails = view.findViewById(R.id
                 .progressBarCheckContactsDetails);
     }

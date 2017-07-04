@@ -1,5 +1,12 @@
+/*
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.ui.activity.fragment.base;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
@@ -9,12 +16,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.ui.loader.SendEncryptedMessageAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -32,13 +38,10 @@ import java.util.List;
  */
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
-
-    private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID +
-            ".KEY_IS_MESSAGE_SENT";
-
     protected Js js;
-    protected boolean isUpdatedInfoAboutContactCompleted;
-    private boolean isMessageSent;
+    protected boolean isUpdateInfoAboutContactsEnable = true;
+    protected boolean isUpdatedInfoAboutContactCompleted = true;
+    protected OnMessageSendListener onMessageSendListener;
     private boolean isMessageSendingNow;
 
     /**
@@ -64,20 +67,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public abstract List<String> getContactsEmails();
 
     /**
-     * Get a progress view which will be shown when we do send a message.
-     *
-     * @return <tt>View</tt> Return a progress view.
-     */
-    public abstract View getProgressView();
-
-    /**
-     * Get a content view which contains a UI.
-     *
-     * @return <tt>View</tt> Return a progress view.
-     */
-    public abstract View getContentView();
-
-    /**
      * Do a lot of checks to validate an outgoing message info.
      *
      * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
@@ -85,10 +74,18 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public abstract boolean isAllInformationCorrect();
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnMessageSendListener) {
+            this.onMessageSendListener = (OnMessageSendListener) context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                OnMessageSendListener.class.getSimpleName());
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        restoreInformationIfCan(savedInstanceState);
 
         try {
             js = new Js(getContext(), null);
@@ -107,8 +104,21 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
+                if (getSnackBar() != null) {
+                    getSnackBar().dismiss();
+                }
+
                 if (isUpdatedInfoAboutContactCompleted) {
-                    sendEncryptMessage();
+                    UIUtil.hideSoftInput(getContext(), getView());
+                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                        if (isAllInformationCorrect()) {
+                            getLoaderManager().restartLoader(
+                                    R.id.loader_id_prepare_encrypted_message, null, this);
+                        }
+                    } else {
+                        UIUtil.showInfoSnackbar(getView(), getString(R.string
+                                .internet_connection_is_not_available));
+                    }
                 } else {
                     Toast.makeText(getContext(), R.string
                                     .please_wait_while_information_about_contacts_will_be_updated,
@@ -131,26 +141,17 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(KEY_IS_MESSAGE_SENT, isMessageSent);
-    }
-
-    @Override
-    public void onAccountUpdated() {
-
-    }
-
-    @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_send_encrypted_message:
+            case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = false;
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
+                statusView.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
-                return getAccount() != null && !isMessageSent ?
-                        new SendEncryptedMessageAsyncTaskLoader(getContext(),
-                                getAccount(), outgoingMessageInfo) : null;
+                return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
+                        outgoingMessageInfo);
 
             case R.id.loader_id_update_info_about_pgp_contacts:
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);
@@ -164,37 +165,28 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
-        super.onLoaderReset(loader);
-        switch (loader.getId()) {
-            case R.id.loader_id_update_info_about_pgp_contacts:
-                isUpdatedInfoAboutContactCompleted = true;
-                getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
-                break;
-        }
-    }
-
-    @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
-            case R.id.loader_id_send_encrypted_message:
-                isMessageSendingNow = false;
-                getActivity().invalidateOptionsMenu();
-                isMessageSent = (boolean) result;
-                if (isMessageSent) {
-                    Toast.makeText(getContext(), R.string.message_was_sent,
-                            Toast.LENGTH_SHORT).show();
-                    getActivity().finish();
+            case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = true;
+                if (result != null) {
+                    sendEncryptMessage((String) result);
                 } else {
-                    getActivity().invalidateOptionsMenu();
-                    UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(),
-                            getContentView());
+                    notifyUserAboutErrorWhenSendMessage();
                 }
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts:
+                boolean isAllInfoReceived = (boolean) result;
+
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
+
+                if (!isAllInfoReceived) {
+                    Toast.makeText(getContext(),
+                            R.string.info_about_some_contacts_not_received,
+                            Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             default:
@@ -205,20 +197,37 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
-
         switch (loaderId) {
-            case R.id.loader_id_send_encrypted_message:
-                isMessageSendingNow = false;
-                getActivity().invalidateOptionsMenu();
-                break;
-
             case R.id.loader_id_update_info_about_pgp_contacts:
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
                 break;
         }
+    }
 
-        UIUtil.exchangeViewVisibility(getContext(), false, getProgressView(), getContentView());
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+        super.onLoaderReset(loader);
+        switch (loader.getId()) {
+            case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = true;
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorOccurred(int requestCode, int errorType) {
+        notifyUserAboutErrorWhenSendMessage();
+    }
+
+    /**
+     * Notify the user about an error which occurred when we send a message.
+     */
+    public void notifyUserAboutErrorWhenSendMessage() {
+        isMessageSendingNow = false;
+        getActivity().invalidateOptionsMenu();
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
+        showInfoSnackbar(getView(), getString(R.string.error_occurred_while_sending_message));
     }
 
     /**
@@ -231,29 +240,25 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     /**
+     * /**
      * Send an encrypted message. Before sending, we do some checks(is all information valid, is
      * internet connection available);
      */
-    private void sendEncryptMessage() {
-        if (isAllInformationCorrect()) {
-            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                UIUtil.hideSoftInput(getContext(), getView());
-                UIUtil.exchangeViewVisibility(getContext(), true, getProgressView(),
-                        getContentView());
-                getLoaderManager().restartLoader(R.id.loader_id_send_encrypted_message, null, this);
-            } else {
-                UIUtil.showInfoSnackbar(getView(), getString(R.string
-                        .internet_connection_is_not_available));
-            }
+    private void sendEncryptMessage(String encryptedRawMessage) {
+        if (onMessageSendListener != null) {
+            isMessageSendingNow = true;
+            getActivity().invalidateOptionsMenu();
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
+            onMessageSendListener.sendMessage(encryptedRawMessage);
         }
     }
 
     /**
-     * Restore an information about local fields.
+     * This interface will be used when we send a message.
      */
-    private void restoreInformationIfCan(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            isMessageSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT);
-        }
+    public interface OnMessageSendListener {
+        void sendMessage(String encryptedRawMessage);
+
+        String getSenderEmail();
     }
 }
