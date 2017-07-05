@@ -109,4 +109,5 @@
     <string name="info_about_some_contacts_not_received">An information about some contacts not received from the server</string>
     <string name="error_occurred_while_this_action_running">The error occurred while this action running.</string>
     <string name="error_occurred_while_receiving_private_keys">An error occurred while receiving the private keys from Gmail</string>
+    <string name="no_subject">(no subject)</string>
 </resources>

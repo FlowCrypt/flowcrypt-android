@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,9 +69,13 @@ public class MessageListAdapter extends CursorAdapter {
             ViewHolder
             viewHolder) {
         if (generalMessageDetails != null) {
+            String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ?
+                    context.getString(R.string.no_subject) :
+                    generalMessageDetails.getSubject();
+
             viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails
                     .getFrom()));
-            viewHolder.textViewSubject.setText(generalMessageDetails.getSubject());
+            viewHolder.textViewSubject.setText(subject);
             viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
                     generalMessageDetails.getReceivedDateInMillisecond()));
 

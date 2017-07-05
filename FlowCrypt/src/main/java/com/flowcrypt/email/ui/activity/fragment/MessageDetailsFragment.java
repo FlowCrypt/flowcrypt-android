@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -339,8 +340,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     private void updateViews() {
         if (incomingMessageInfo != null) {
+            String subject = TextUtils.isEmpty(incomingMessageInfo.getSubject())
+                    ? getString(R.string.no_subject)
+                    : incomingMessageInfo.getSubject();
+
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
-            textViewSubject.setText(incomingMessageInfo.getSubject());
+            textViewSubject.setText(subject);
             textViewMessage.setText(incomingMessageInfo.getMessage());
 
             if (incomingMessageInfo.getReceiveDate() != null) {
