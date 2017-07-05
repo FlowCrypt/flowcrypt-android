@@ -8,6 +8,7 @@ package com.flowcrypt.email.service;
 
 import android.accounts.Account;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -70,6 +71,9 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
     public static final int MESSAGE_SEND_ENCRYPTED_MESSAGE = 9;
+    public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
+    public static final int MESSAGE_GET_ACTIVE_ACCOUNT = 11;
+    public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 12;
 
     public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
             + ".EXTRA_KEY_GMAIL_ACCOUNT";
@@ -100,7 +104,7 @@ public class EmailSyncService extends Service implements SyncListener {
         gmailSynsManager = GmailSynsManager.getInstance();
         gmailSynsManager.setSyncListener(this);
 
-        messenger = new Messenger(new IncomingHandler(gmailSynsManager, replyToMessengers));
+        messenger = new Messenger(new IncomingHandler(this, gmailSynsManager, replyToMessengers));
     }
 
     @Override
@@ -141,6 +145,34 @@ public class EmailSyncService extends Service implements SyncListener {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind:" + intent);
         return messenger.getBinder();
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public void onMessageWithBackupToKeyOwnerSent(String ownerKey, int requestCode,
+                                                  boolean isSent) {
+        try {
+            if (isSent) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onPrivateKeyFound(List<String> keys, String ownerKey, int requestCode) {
+        try {
+            sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -287,9 +319,28 @@ public class EmailSyncService extends Service implements SyncListener {
      * @throws RemoteException
      */
     private void sendReply(String key, int requestCode, int resultCode) throws RemoteException {
+        sendReply(key, requestCode, resultCode, null);
+    }
+
+    /**
+     * Send a reply to the called component.
+     *
+     * @param key         The key which identify the reply to {@link Messenger}
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param resultCode  The result code of the some action. Can take the following values:
+     *                    <ul>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
+     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
+     *                    </ul>
+     * @param obj         The object which will be send to the request {@link Messenger}.
+     * @throws RemoteException
+     */
+    private void sendReply(String key, int requestCode, int resultCode, Object obj) throws
+            RemoteException {
         if (replyToMessengers.containsKey(key)) {
             Messenger messenger = replyToMessengers.get(key);
-            messenger.send(Message.obtain(null, REPLY_OK, requestCode, resultCode));
+            messenger.send(Message.obtain(null, REPLY_OK, requestCode, resultCode, obj));
         }
     }
 
@@ -363,10 +414,13 @@ public class EmailSyncService extends Service implements SyncListener {
      */
     private static class IncomingHandler extends Handler {
         private final WeakReference<GmailSynsManager> gmailSynsManagerWeakReference;
+        private final WeakReference<EmailSyncService> syncServiceWeakReference;
         private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
 
-        IncomingHandler(GmailSynsManager gmailSynsManager, Map<String, Messenger>
-                replyToMessengersWeakReference) {
+        IncomingHandler(EmailSyncService emailSyncService,
+                        GmailSynsManager gmailSynsManager,
+                        Map<String, Messenger> replyToMessengersWeakReference) {
+            this.syncServiceWeakReference = new WeakReference<>(emailSyncService);
             this.gmailSynsManagerWeakReference = new WeakReference<>(gmailSynsManager);
             this.replyToMessengersWeakReference = new WeakReference<>
                     (replyToMessengersWeakReference);
@@ -469,6 +523,38 @@ public class EmailSyncService extends Service implements SyncListener {
 
                             gmailSynsManager.sendEncryptedMessage(action.getOwnerKey(),
                                     action.getRequestCode(), rawEncryptedMessage);
+                        }
+                        break;
+
+                    case MESSAGE_LOAD_PRIVATE_KEYS:
+                        if (gmailSynsManager != null && action != null) {
+                            String searchTermString = (String) action.getObject();
+
+                            gmailSynsManager.loadPrivateKeys(action.getOwnerKey(),
+                                    action.getRequestCode(), searchTermString);
+                        }
+                        break;
+
+                    case MESSAGE_GET_ACTIVE_ACCOUNT:
+                        EmailSyncService emailSyncService = syncServiceWeakReference.get();
+
+                        if (emailSyncService != null && action != null) {
+                            try {
+                                emailSyncService.sendReply(action.getOwnerKey(),
+                                        action.getRequestCode(), REPLY_RESULT_CODE_ACTION_OK,
+                                        emailSyncService.getEmail());
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        break;
+
+                    case MESSAGE_SEND_MESSAGE_WITH_BACKUP:
+                        if (gmailSynsManager != null && action != null) {
+                            String account = (String) action.getObject();
+
+                            gmailSynsManager.sendMessageWithBackup(action.getOwnerKey(),
+                                    action.getRequestCode(), account);
                         }
                         break;
 

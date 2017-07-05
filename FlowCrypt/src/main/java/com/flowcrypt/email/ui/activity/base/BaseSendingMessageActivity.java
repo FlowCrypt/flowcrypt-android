@@ -52,7 +52,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode) {
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_send_encrypted_message:
                 isMessageSendingNow = false;

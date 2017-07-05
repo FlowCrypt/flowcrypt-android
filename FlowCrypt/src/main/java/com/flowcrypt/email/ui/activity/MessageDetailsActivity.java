@@ -162,7 +162,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode) {
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 switch (resultCode) {

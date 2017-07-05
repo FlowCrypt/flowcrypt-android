@@ -6,10 +6,13 @@
 
 package com.flowcrypt.email.api.email.sync;
 
+import android.content.Context;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -24,6 +27,34 @@ import javax.mail.Message;
  */
 
 public interface SyncListener {
+
+    /**
+     * Get the service context.
+     *
+     * @return The service context
+     */
+    Context getContext();
+
+    /**
+     * This method called when a message with a backup to the key owner was sent.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to
+     *                    {@link android.os.Messenger}.
+     * @param isSent      true if the message was sent, false otherwise.
+     */
+    void onMessageWithBackupToKeyOwnerSent(String ownerKey, int requestCode, boolean isSent);
+
+    /**
+     * This method called when the private keys found.
+     *
+     * @param keys        The private keys list.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to
+     *                    {@link android.os.Messenger}.
+     */
+    void onPrivateKeyFound(List<String> keys, String ownerKey, int requestCode);
+
     /**
      * This method called when an encrypted message was sent.
      *

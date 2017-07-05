@@ -23,6 +23,9 @@
     <item name="syns_request_archive_message" type="id" />
     <item name="syns_request_delete_message" type="id" />
     <item name="syns_request_send_encrypted_message" type="id" />
+    <item name="syns_get_active_account" type="id" />
+    <item name="syns_load_private_keys" type="id" />
+    <item name="syns_send_backup_with_private_key_to_key_owner" type="id" />
 
     <item name="viewIdProgressView" type="id" />
     <item name="viewIdStatusView" type="id" />

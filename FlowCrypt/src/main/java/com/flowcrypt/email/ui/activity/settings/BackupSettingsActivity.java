@@ -6,14 +6,13 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
-import android.accounts.Account;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +22,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
-import com.flowcrypt.email.ui.loader.SendMyselfMessageWithBackup;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -46,14 +42,15 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class BackupSettingsActivity extends BaseBackStackActivity implements
-        LoaderManager.LoaderCallbacks<LoaderResult>, View.OnClickListener,
+public class BackupSettingsActivity extends BaseBackStackSyncActivity implements View
+        .OnClickListener,
         RadioGroup.OnCheckedChangeListener {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
 
     private View progressBar;
     private View layoutContent;
+    private View layoutSyncStatus;
     private View layoutBackupFound;
     private View layoutBackupNotFound;
     private View layoutBackupOptions;
@@ -63,13 +60,110 @@ public class BackupSettingsActivity extends BaseBackStackActivity implements
     private Button buttonBackupAction;
 
     private List<String> privateKeys;
-    private Account account;
+    private String account;
     private boolean isBackEnable = true;
+    private boolean isLoadPrivateKeysRequestSent;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+        switch (requestCode) {
+            case R.id.syns_get_active_account:
+                account = (String) obj;
+                loadPrivateKeys(R.id.syns_load_private_keys, account);
+                break;
+
+            case R.id.syns_load_private_keys:
+                if (privateKeys == null) {
+                    UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+                    List<String> keys = (List<String>) obj;
+                    if (keys != null) {
+                        if (keys.isEmpty()) {
+                            showNoBackupFoundView();
+                        } else {
+                            this.privateKeys = keys;
+                            showBackupFoundView();
+                        }
+                    } else {
+                        showNoBackupFoundView();
+                    }
+                }
+                break;
+
+            case R.id.syns_send_backup_with_private_key_to_key_owner:
+                isBackEnable = true;
+                layoutSyncStatus.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(
+                        BackupSettingsActivity.this, false, progressBar, layoutContent);
+                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                        .backup_was_sent_successfully));
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+        switch (requestCode) {
+            case R.id.syns_load_private_keys:
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
+                UIUtil.showSnackbar(getRootView(),
+                        getString(R.string.error_occurred_while_receiving_private_keys),
+                        getString(R.string.retry),
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                layoutSyncStatus.setVisibility(View.GONE);
+                                UIUtil.exchangeViewVisibility(
+                                        BackupSettingsActivity.this, true,
+                                        progressBar, layoutContent);
+                                loadPrivateKeys(R.id.syns_load_private_keys, account);
+                            }
+                        });
+                break;
+
+            case R.id.syns_send_backup_with_private_key_to_key_owner:
+                isBackEnable = true;
+                UIUtil.exchangeViewVisibility(
+                        BackupSettingsActivity.this, false, progressBar, layoutSyncStatus);
+
+                UIUtil.showSnackbar(getRootView(),
+                        getString(R.string.backup_was_not_sent),
+                        getString(R.string.retry),
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                layoutSyncStatus.setVisibility(View.GONE);
+                                UIUtil.exchangeViewVisibility(
+                                        BackupSettingsActivity.this, true,
+                                        progressBar, layoutContent);
+                                sendMessageWithPrivateKeyBackup(R.id
+                                        .syns_send_backup_with_private_key_to_key_owner, account);
+                            }
+                        });
+                break;
+        }
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();
+        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+            UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+        } else {
+            finish();
+            Toast.makeText(this, R.string.internet_connection_is_not_available, Toast
+                    .LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        super.onServiceConnected(name, service);
+        if (!isLoadPrivateKeysRequestSent) {
+            isLoadPrivateKeysRequestSent = true;
+            requestActiveAccount(R.id.syns_get_active_account);
+        }
     }
 
     @Override
@@ -106,83 +200,6 @@ public class BackupSettingsActivity extends BaseBackStackActivity implements
     }
 
     @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_load_gmail_backups:
-                UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
-
-            case R.id.loader_send_backup_with_private_key_to_myself:
-                isBackEnable = false;
-                UIUtil.exchangeViewVisibility(BackupSettingsActivity.this, true, progressBar,
-                        layoutContent);
-                return new SendMyselfMessageWithBackup(getApplicationContext(), account);
-
-            default:
-                return null;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
-        switch (loader.getId()) {
-            case R.id.loader_id_load_gmail_backups:
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                if (loaderResult != null) {
-                    if (loaderResult.getResult() != null) {
-                        List<String> stringList = (List<String>) loaderResult.getResult();
-                        if (stringList != null) {
-                            if (stringList.isEmpty()) {
-                                showNoBackupFoundView();
-                            } else {
-                                this.privateKeys = stringList;
-                                showBackupFoundView();
-                            }
-                        } else {
-                            showNoBackupFoundView();
-                        }
-                    } else {
-                        showNoBackupFoundView();
-                    }
-                } else {
-                    showNoBackupFoundView();
-                }
-                break;
-
-            case R.id.loader_send_backup_with_private_key_to_myself:
-                isBackEnable = true;
-                UIUtil.exchangeViewVisibility(
-                        BackupSettingsActivity.this, false, progressBar, layoutContent);
-
-                if (loaderResult != null) {
-                    if (loaderResult.getResult() != null) {
-                        boolean result = (boolean) loaderResult.getResult();
-                        if (result) {
-                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                                    .backup_was_sent_successfully));
-                        } else {
-                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                                    .backup_was_not_sent));
-                        }
-                    } else if (loaderResult.getException() != null) {
-                        UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException()
-                                .getMessage
-                                        ());
-                    }
-                } else {
-                    UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
-
-    }
-
-    @Override
     public View getRootView() {
         return layoutContent;
     }
@@ -199,9 +216,10 @@ public class BackupSettingsActivity extends BaseBackStackActivity implements
                 switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                     case R.id.radioButtonEmail:
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
-                            getSupportLoaderManager().restartLoader(
-                                    R.id.loader_send_backup_with_private_key_to_myself, null, this);
-
+                            isBackEnable = false;
+                            UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+                            sendMessageWithPrivateKeyBackup(R.id
+                                    .syns_send_backup_with_private_key_to_key_owner, account);
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                                     .internet_connection_is_not_available));
@@ -268,6 +286,7 @@ public class BackupSettingsActivity extends BaseBackStackActivity implements
     private void initViews() {
         this.progressBar = findViewById(R.id.progressBar);
         this.layoutContent = findViewById(R.id.layoutContent);
+        this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus);
         this.layoutBackupFound = findViewById(R.id.layoutBackupFound);
         this.layoutBackupNotFound = findViewById(R.id.layoutBackupNotFound);
         this.layoutBackupOptions = findViewById(R.id.layoutBackupOptions);
@@ -309,7 +328,7 @@ public class BackupSettingsActivity extends BaseBackStackActivity implements
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("plain/text");
-        intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account.name));
+        intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account));
         startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
     }
 }

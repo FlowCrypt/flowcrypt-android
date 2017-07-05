@@ -13,8 +13,10 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromGmailSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -252,6 +254,38 @@ public class GmailSynsManager {
         try {
             syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode,
                     rawEncryptedMessage));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load the private keys from the INBOX folder.
+     *
+     * @param ownerKey         The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode      The unique request code for identify the current action.
+     * @param searchTermString The search phrase.
+     */
+    public void loadPrivateKeys(String ownerKey, int requestCode, String searchTermString) {
+        try {
+            syncTaskBlockingQueue.put(new LoadPrivateKeysFromGmailSynsTask(searchTermString,
+                    ownerKey, requestCode));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Send a message with a backup to the key owner.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for identify the current action.
+     * @param accountName The account name.
+     */
+    public void sendMessageWithBackup(String ownerKey, int requestCode, String accountName) {
+        try {
+            syncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey,
+                    requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

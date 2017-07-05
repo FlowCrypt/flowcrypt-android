@@ -23,8 +23,11 @@ import android.util.Log;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.SampleStorageConnector;
 import com.flowcrypt.email.service.EmailSyncService;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -60,8 +63,10 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identifies the some action. Must be unique
      *                    over all project.
      * @param resultCode  The result code of a run action.
+     * @param obj         The object which returned from the service.
      */
-    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode);
+    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object
+            obj);
 
     /**
      * In this method we can handle en error after run some action via {@link EmailSyncService}
@@ -105,6 +110,76 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
     public String getReplyMessengerName() {
         return getClass().getSimpleName();
+    }
+
+    /**
+     * Send a message with a backup to the key owner.
+     *
+     * @param requestCode The unique request code for identify the current action.
+     * @param accountName The account name.
+     */
+    public void sendMessageWithPrivateKeyBackup(int requestCode, String accountName) {
+        if (checkBound()) return;
+
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                requestCode, accountName);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP,
+                action);
+
+        message.replyTo = replyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Request the active account
+     *
+     * @param requestCode The unique request code for identify the current action.
+     */
+    public void requestActiveAccount(int requestCode) {
+        if (checkBound()) return;
+        try {
+            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                    requestCode, null);
+
+            Message message = Message.obtain(null, EmailSyncService.MESSAGE_GET_ACTIVE_ACCOUNT,
+                    action);
+            message.replyTo = replyMessenger;
+
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load the user private keys.
+     *
+     * @param requestCode The unique request code for identify the current action.
+     * @param accountName The account name.
+     */
+    public void loadPrivateKeys(int requestCode, String accountName) {
+        if (checkBound()) return;
+        try {
+            String searchTermString = new Js(this, new SampleStorageConnector(this))
+                    .api_gmail_query_backups(accountName);
+
+            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+                    requestCode, searchTermString);
+
+            Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS,
+                    action);
+            message.replyTo = replyMessenger;
+
+            syncServiceMessenger.send(message);
+        } catch (RemoteException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -357,7 +432,8 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
                 BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
                 switch (message.what) {
                     case EmailSyncService.REPLY_OK:
-                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2);
+                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message
+                                .arg2, message.obj);
                         break;
 
                     case EmailSyncService.REPLY_ERROR:

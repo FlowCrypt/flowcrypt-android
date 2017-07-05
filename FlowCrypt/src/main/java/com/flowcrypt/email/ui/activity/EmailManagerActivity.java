@@ -66,7 +66,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode) {
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_update_label:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
