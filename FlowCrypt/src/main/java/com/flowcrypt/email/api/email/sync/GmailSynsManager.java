@@ -48,11 +48,9 @@ import javax.mail.Session;
 public class GmailSynsManager {
     private static final String TAG = GmailSynsManager.class.getSimpleName();
 
-    private static final GmailSynsManager ourInstance = new GmailSynsManager();
-
     private BlockingQueue<SyncTask> syncTaskBlockingQueue;
     private ExecutorService executorService;
-    private Future<?> syncTaskFuture;
+    private Future<?> syncTaskRunnableFuture;
 
     /**
      * This fields created as volatile because will be used in different threads.
@@ -61,19 +59,10 @@ public class GmailSynsManager {
     private volatile Session session;
     private volatile GmailSSLStore gmailSSLStore;
 
-    private GmailSynsManager() {
+    public GmailSynsManager() {
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
         updateLabels(null, 0);
-    }
-
-    /**
-     * Get the single instance of {@link GmailSynsManager}.
-     *
-     * @return The instance of {@link GmailSynsManager}.
-     */
-    public static GmailSynsManager getInstance() {
-        return ourInstance;
     }
 
     /**
@@ -84,12 +73,11 @@ public class GmailSynsManager {
     public void beginSync(boolean isNeedReset) {
         Log.d(TAG, "beginSync | isNeedReset = " + isNeedReset);
         if (isNeedReset) {
-            cancelAllJobs();
-            disconnect();
+            stopSync();
         }
 
         if (!isSyncThreadAlreadyWork()) {
-            syncTaskFuture = executorService.submit(new SyncTaskRunnable());
+            syncTaskRunnableFuture = executorService.submit(new SyncTaskRunnable());
         }
     }
 
@@ -99,24 +87,32 @@ public class GmailSynsManager {
      * @return true if already work, otherwise false.
      */
     public boolean isSyncThreadAlreadyWork() {
-        return syncTaskFuture != null && !syncTaskFuture.isCancelled() &&
-                !syncTaskFuture.isDone();
+        return syncTaskRunnableFuture != null && !syncTaskRunnableFuture.isCancelled() &&
+                !syncTaskRunnableFuture.isDone();
     }
 
     /**
      * Stop a synchronization.
      */
-    public void disconnect() {
-        if (syncTaskFuture != null) {
-            syncTaskFuture.cancel(true);
+    public void stopSync() {
+        cancelAllSyncTask();
+
+        if (syncTaskRunnableFuture != null) {
+            syncTaskRunnableFuture.cancel(true);
+        }
+
+        if (executorService != null) {
+            executorService.shutdown();
         }
     }
 
     /**
      * Clear the queue of sync tasks.
      */
-    public void cancelAllJobs() {
-        syncTaskBlockingQueue.clear();
+    public void cancelAllSyncTask() {
+        if (syncTaskBlockingQueue != null) {
+            syncTaskBlockingQueue.clear();
+        }
     }
 
     /**
@@ -329,6 +325,14 @@ public class GmailSynsManager {
                     e.printStackTrace();
                 }
             }
+
+            try {
+                gmailSSLStore.close();
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
+            }
+
             Log.d(TAG, "SyncTaskRunnable stop");
         }
 

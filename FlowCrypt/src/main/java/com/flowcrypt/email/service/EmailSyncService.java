@@ -101,7 +101,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        gmailSynsManager = GmailSynsManager.getInstance();
+        gmailSynsManager = new GmailSynsManager();
         gmailSynsManager.setSyncListener(this);
 
         messenger = new Messenger(new IncomingHandler(this, gmailSynsManager, replyToMessengers));
@@ -127,6 +127,10 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+
+        if (gmailSynsManager != null) {
+            gmailSynsManager.stopSync();
+        }
     }
 
     @Override
