@@ -128,7 +128,7 @@ public class SecurityContentProvider extends ContentProvider {
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
 
-                if (getContext() != null) {
+                if (getContext() != null && result != null) {
                     getContext().getContentResolver().notifyChange(uri, null, false);
                 }
             }
@@ -156,6 +156,8 @@ public class SecurityContentProvider extends ContentProvider {
                                         new KeysDaoSource().getTableName(), null, contentValues);
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
+                                } else {
+                                    insertedRowsCount++;
                                 }
                             }
                             break;
@@ -167,6 +169,8 @@ public class SecurityContentProvider extends ContentProvider {
                                         contentValues);
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
+                                } else {
+                                    insertedRowsCount++;
                                 }
                             }
                             break;
@@ -178,6 +182,8 @@ public class SecurityContentProvider extends ContentProvider {
                                         contentValues);
                                 if (id <= 0) {
                                     throw new SQLException("Failed to insert row into " + uri);
+                                } else {
+                                    insertedRowsCount++;
                                 }
                             }
                             break;
@@ -191,6 +197,8 @@ public class SecurityContentProvider extends ContentProvider {
                                 //if message not inserted, try to update message with some UID
                                 if (id <= 0) {
                                     id = updateMessageInfo(sqLiteDatabase, contentValues);
+                                } else {
+                                    insertedRowsCount++;
                                 }
 
                                 if (id <= 0) {
@@ -203,10 +211,9 @@ public class SecurityContentProvider extends ContentProvider {
                             throw new UnsupportedOperationException("Unknown uri: " + uri);
                     }
 
-                    insertedRowsCount = values.length;
                     sqLiteDatabase.setTransactionSuccessful();
 
-                    if (getContext() != null) {
+                    if (getContext() != null && insertedRowsCount != 0) {
                         getContext().getContentResolver().notifyChange(uri, null, false);
                     }
                 } catch (Exception e) {
@@ -266,7 +273,7 @@ public class SecurityContentProvider extends ContentProvider {
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
 
-                if (getContext() != null) {
+                if (getContext() != null && rowsCount != 0) {
                     getContext().getContentResolver().notifyChange(uri, null, false);
                 }
             }
@@ -287,7 +294,7 @@ public class SecurityContentProvider extends ContentProvider {
                     case MATCHED_CODE_KEY_CLEAN_DATABASE:
                         rowsCount = sqLiteDatabase.delete(
                                 new KeysDaoSource().getTableName(), selection, selectionArgs);
-                        rowsCount = sqLiteDatabase.delete(
+                        rowsCount += sqLiteDatabase.delete(
                                 new ContactsDaoSource().getTableName(), selection, selectionArgs);
                         rowsCount += sqLiteDatabase.delete(
                                 new ImapLabelsDaoSource().getTableName(), selection, selectionArgs);
@@ -314,7 +321,7 @@ public class SecurityContentProvider extends ContentProvider {
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
 
-                if (getContext() != null) {
+                if (getContext() != null && rowsCount != 0) {
                     getContext().getContentResolver().notifyChange(uri, null, false);
                 }
             }
@@ -358,12 +365,8 @@ public class SecurityContentProvider extends ContentProvider {
         cursor = sqLiteDatabase.query(table, projection, selection, selectionArgs, groupBy, having,
                 sortOrder, limit);
 
-        if (getContext() != null) {
-            getContext().getContentResolver().notifyChange(uri, null, false);
-
-            if (cursor != null) {
-                cursor.setNotificationUri(getContext().getContentResolver(), uri);
-            }
+        if (getContext() != null && cursor != null) {
+            cursor.setNotificationUri(getContext().getContentResolver(), uri);
         }
 
         return cursor;

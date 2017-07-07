@@ -112,6 +112,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:textColor="@color/mine_shaft"
+                android:textIsSelectable="true"
                 android:textSize="@dimen/default_text_size_medium"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"

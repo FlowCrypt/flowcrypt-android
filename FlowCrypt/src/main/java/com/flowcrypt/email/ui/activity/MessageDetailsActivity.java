@@ -120,26 +120,31 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info_from_database:
-                if (cursor != null && cursor.moveToFirst()) {
-                    if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(MessageDaoSource
-                            .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
-                        if (isBound) {
-                            loadMessageDetails(R.id.syns_request_code_load_message_details, folder,
-                                    uid);
+                if (generalMessageDetails == null) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex
+                                (MessageDaoSource
+                                        .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
+                            if (isBound) {
+                                loadMessageDetails(R.id.syns_request_code_load_message_details,
+                                        folder,
+                                        uid);
+                            } else {
+                                isNeedToReceiveMessageDetails = true;
+                            }
                         } else {
-                            isNeedToReceiveMessageDetails = true;
+                            isNeedToReceiveMessageDetails = false;
+                            MessageDaoSource messageDaoSource = new MessageDaoSource();
+                            messageDaoSource.setSeenStatusForLocalMessage(this, email, folder
+                                    .getFolderAlias(), uid);
+                            generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+                            showMessageDetails(generalMessageDetails, folder);
+                            setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         }
-                    } else {
-                        isNeedToReceiveMessageDetails = false;
-                        MessageDaoSource messageDaoSource = new MessageDaoSource();
-                        messageDaoSource.setSeenStatusForLocalMessage(this, email, folder
-                                .getFolderAlias(), uid);
-                        generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                        showMessageDetails(generalMessageDetails, folder);
-                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-                        cursor.close();
-                    }
-                } else throw new IllegalArgumentException("The message not exists in the database");
+                    } else
+                        throw new IllegalArgumentException("The message not exists in the " +
+                                "database");
+                }
                 break;
         }
     }

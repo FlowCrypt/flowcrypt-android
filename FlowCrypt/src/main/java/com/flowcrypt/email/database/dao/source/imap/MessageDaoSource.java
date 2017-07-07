@@ -230,6 +230,35 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get all {@link Folder} objects from the database by an email.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @param uid     The uid of the message.
+     * @return A  list of {@link Folder} objects.
+     */
+    public GeneralMessageDetails getMessage(Context context, String email, String label, int uid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_UID + " = ? ",
+                new String[]{email, label, String.valueOf(uid)}, null);
+
+        GeneralMessageDetails generalMessageDetails = null;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                generalMessageDetails = getMessageInfo(cursor);
+            }
+            cursor.close();
+        }
+
+        return generalMessageDetails;
+    }
+
+    /**
      * Check is the message exists in the local database.
      *
      * @param context Interface to global information about an application environment.
