@@ -74,6 +74,10 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    debugCompile "com.squareup.leakcanary:leakcanary-android:${LEAKCANARY_VERSION}"
+    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
+    testCompile "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
+
     compile "com.android.support:support-v4:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:appcompat-v7:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:design:${ANDROID_SUPPORT_VERSION}"

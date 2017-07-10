@@ -16,9 +16,9 @@ import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.results.LoaderResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -155,7 +155,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
      * @throws IOException
      */
     private LookUpEmailResponse getLookUpEmailResponse(String email) throws IOException {
-        ApiService apiService = ApiHelper.getInstance().getRetrofit().create(ApiService.class);
+        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create
+                (ApiService.class);
         Response<LookUpEmailResponse> response = apiService.postLookUpEmail(
                 new PostLookUpEmailModel(email)).execute();
         return response.body();

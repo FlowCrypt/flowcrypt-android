@@ -27,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -167,6 +168,10 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             case R.id.navigationMenuActionSettings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                break;
+
+            case R.id.navigationMenuDevSettings:
+                startActivity(new Intent(this, DevSettingsActivity.class));
                 break;
 
             case Menu.NONE:
@@ -325,6 +330,12 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         navigationView = (NavigationView) findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(this);
+
+        MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id
+                .navigationMenuDevSettings);
+        if (navigationMenuDevSettings != null) {
+            navigationMenuDevSettings.setVisible(BuildConfig.DEBUG);
+        }
 
         if (findViewById(R.id.floatActionButtonCompose) != null) {
             findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);

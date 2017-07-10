@@ -33,7 +33,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
 
     public ApiServiceAsyncTaskLoader(Context context, BaseRequest baseRequest) {
         super(context);
-        this.apiHelper = ApiHelper.getInstance();
+        this.apiHelper = ApiHelper.getInstance(context);
         this.baseRequest = baseRequest;
         onContentChanged();
     }

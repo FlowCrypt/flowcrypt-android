@@ -32,4 +32,9 @@
         android:id="@+id/navigationMenuActionSettings"
         android:icon="@mipmap/ic_settings"
         android:title="@string/action_settings" />
+
+    <item
+        android:id="@+id/navigationMenuDevSettings"
+        android:icon="@mipmap/ic_settings"
+        android:title="@string/action_dev_settings" />
 </menu>

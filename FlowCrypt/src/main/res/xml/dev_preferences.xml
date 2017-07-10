@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/preferences_title_debugging">
+        <com.flowcrypt.email.ui.activity.fragment.preferences.BuildConfigInfoPreferencesFragment
+            android:key="@string/preferences_key_build_config_info"
+            android:title="@string/preferences_title_build_config_info" />
+        <CheckBoxPreference
+            android:key="@string/preferences_key_is_write_logs_to_file_enable"
+            android:title="@string/preferences_title_enable_write_api_logs_to_file" />
+        <CheckBoxPreference
+            android:key="@string/preferences_key_is_detect_memory_leak_enable"
+            android:title="@string/preferences_title_enable_detect_memory_leak" />
+    </PreferenceCategory>
+</PreferenceScreen>

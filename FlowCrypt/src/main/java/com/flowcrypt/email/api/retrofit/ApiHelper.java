@@ -6,9 +6,15 @@
 
 package com.flowcrypt.email.api.retrofit;
 
+import android.content.Context;
+import android.support.v7.preference.PreferenceManager;
+
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.gson.deserializer.MessagePrototypeResponseJsonDeserializer;
+import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor;
 import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.gson.GsonBuilder;
 
 import java.util.concurrent.TimeUnit;
@@ -20,7 +26,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 /**
- * This is a singleton in which objects are created to perform network requests.
+ * This class will be used to perform network requests.
  * This class has instance of OkHttpClient and Retrofit.
  *
  * @author Denis Bondarenko
@@ -29,17 +35,23 @@ import retrofit2.converter.gson.GsonConverterFactory;
  *         E-mail: DenBond7@gmail.com
  */
 public class ApiHelper {
-    private static ApiHelper ourInstance = new ApiHelper();
     private OkHttpClient okHttpClient;
     private Retrofit retrofit;
 
-    private ApiHelper() {
+    private ApiHelper(Context context) {
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
                 .connectTimeout(2, TimeUnit.MINUTES)
                 .readTimeout(2, TimeUnit.MINUTES)
                 .writeTimeout(2, TimeUnit.MINUTES);
 
         if (BuildConfig.DEBUG) {
+            if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+                    (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false)) {
+                LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();
+                loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.BODY);
+                okHttpClientBuilder.addInterceptor(loggingInFileInterceptor);
+            }
+
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             okHttpClientBuilder.addInterceptor(loggingInterceptor);
@@ -61,8 +73,8 @@ public class ApiHelper {
         retrofit = retrofitBuilder.build();
     }
 
-    public static ApiHelper getInstance() {
-        return ourInstance;
+    public static ApiHelper getInstance(Context context) {
+        return new ApiHelper(context);
     }
 
     public OkHttpClient getOkHttpClient() {

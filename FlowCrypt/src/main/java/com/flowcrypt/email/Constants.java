@@ -33,4 +33,12 @@ public class Constants {
      * The MIME type of PGP keys.
      */
     public static final String MIME_TYPE_PGP_KEY = "application/pgp-keys";
+
+    /**
+     * The preference keys.
+     */
+    public static final String PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE =
+            "preferences_key_is_write_logs_to_file_enable";
+    public static final String PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE =
+            "preferences_key_is_detect_memory_leak_enable";
 }
