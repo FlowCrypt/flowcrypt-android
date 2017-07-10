@@ -110,4 +110,5 @@
     <string name="error_occurred_while_this_action_running">The error occurred while this action running.</string>
     <string name="error_occurred_while_receiving_private_keys">An error occurred while receiving the private keys from Gmail</string>
     <string name="no_subject">(no subject)</string>
+    <string name="error_occurred_please_try_again">An error occurred. Please try again.</string>
 </resources>

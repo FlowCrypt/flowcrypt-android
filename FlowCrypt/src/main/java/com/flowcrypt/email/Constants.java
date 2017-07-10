@@ -28,4 +28,9 @@ public class Constants {
      * performed with less permissive scopes.
      */
     public static final String SCOPE_MAIL_GOOGLE_COM = "https://mail.google.com/";
+
+    /**
+     * The MIME type of PGP keys.
+     */
+    public static final String MIME_TYPE_PGP_KEY = "application/pgp-keys";
 }

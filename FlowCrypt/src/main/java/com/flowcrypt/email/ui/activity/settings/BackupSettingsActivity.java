@@ -21,6 +21,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -327,7 +328,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     private void runActivityToChooseDestinationForExportedKey() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("plain/text");
+        intent.setType(Constants.MIME_TYPE_PGP_KEY);
         intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account));
         startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
     }

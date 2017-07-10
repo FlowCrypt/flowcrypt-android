@@ -7,11 +7,13 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -41,6 +43,8 @@ public class RestoreAccountActivity extends BaseActivity
 
     public static final String KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
             "KEY_EXTRA_ACCOUNT", RestoreAccountActivity.class);
+
+    private static final int REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY = 10;
 
     private View restoreAccountView;
     private View layoutProgress;
@@ -89,6 +93,41 @@ public class RestoreAccountActivity extends BaseActivity
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (data != null && data.hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
+                            this.privateKeys = data.getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+                            if (privateKeys != null && privateKeys.size() > 0) {
+                                showContent();
+                                updateKeysOnRestoreAccountFragment();
+                            } else {
+                                Toast.makeText(this, R.string.error_occurred_please_try_again,
+                                        Toast.LENGTH_SHORT).show();
+                                startActivityForResult(new Intent(this, CreateOrImportKeyActivity
+                                        .class), REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
+                            }
+                        } else {
+                            Toast.makeText(this, R.string.error_occurred_please_try_again,
+                                    Toast.LENGTH_SHORT).show();
+                            startActivityForResult(new Intent(this, CreateOrImportKeyActivity
+                                    .class), REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
+                        }
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                        finish();
+                        break;
+                }
+                break;
+        }
+    }
+
+    @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_backups:
@@ -114,8 +153,8 @@ public class RestoreAccountActivity extends BaseActivity
                                 showContent();
                                 updateKeysOnRestoreAccountFragment();
                             } else {
-                                finish();
-                                startActivity(new Intent(this, CreateOrImportKeyActivity.class));
+                                startActivityForResult(new Intent(this, CreateOrImportKeyActivity
+                                        .class), REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
                             }
                         } else {
                             showNoBackupsSnackbar();

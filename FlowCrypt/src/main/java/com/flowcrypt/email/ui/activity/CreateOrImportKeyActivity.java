@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.view.View;
 
@@ -45,13 +46,19 @@ public class CreateOrImportKeyActivity extends BaseActivity implements
     }
 
     @Override
-    public void onPrivateKeySelected(ArrayList<String> privateKeys) {
+    public void onPrivateKeysSelected(ArrayList<String> privateKeys) {
         if (privateKeys != null && !privateKeys.isEmpty()) {
-            finish();
-            Intent intent = new Intent(this, RestoreAccountActivity.class);
+            Intent intent = new Intent();
             intent.putStringArrayListExtra(RestoreAccountActivity.KEY_EXTRA_PRIVATE_KEYS,
                     privateKeys);
-            startActivity(intent);
+            setResult(Activity.RESULT_OK, intent);
+            finish();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        setResult(Activity.RESULT_CANCELED);
     }
 }

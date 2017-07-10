@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
 import com.flowcrypt.email.ui.activity.SplashActivity;
@@ -159,7 +160,7 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                             }
 
                             if (!privateKeys.isEmpty() && onPrivateKeysSelectedListener != null) {
-                                onPrivateKeysSelectedListener.onPrivateKeySelected(privateKeys);
+                                onPrivateKeysSelectedListener.onPrivateKeysSelected(privateKeys);
                             }
                         }
                         break;
@@ -206,7 +207,7 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
+        intent.setType(Constants.MIME_TYPE_PGP_KEY);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(Intent.createChooser(intent,
                 getString(R.string.select_key_or_keys)), REQUEST_CODE_IMPORT_KEYS);
@@ -235,6 +236,6 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
      * This listener handles a situation when private keys selected from the file system.
      */
     public interface OnPrivateKeysSelectedListener {
-        void onPrivateKeySelected(ArrayList<String> privateKeys);
+        void onPrivateKeysSelected(ArrayList<String> privateKeys);
     }
 }
