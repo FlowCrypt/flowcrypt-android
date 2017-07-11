@@ -38,20 +38,16 @@ public class Js { // Create one object per thread and use them separately. Not t
     private Object[] cb_last_value = new Object[3];
 
     public Js(Context context, StorageConnectorInterface storage) throws IOException {
-        this.context = context;
+        if (context != null) {
+            this.context = context.getApplicationContext();
+        } else {
+            throw new IllegalArgumentException("The context can not be null!");
+        }
         this.storage = storage;
         this.v8 = V8.createV8Runtime();
         bindJavaMethods();
         tool = loadJavascriptCode();
         bindCallbackCatcher();
-    }
-
-    private static String read(File file) throws IOException {
-        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    }
-
-    private static String read(InputStream inputStream) throws IOException {
-        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
 
     public Boolean str_is_email_valid(String email) {
@@ -60,7 +56,8 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public PgpContact str_parse_email(String email) {
-        V8Object e = (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new V8Array(v8).push(email));
+        V8Object e = (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new
+                V8Array(v8).push(email));
         return new PgpContact(e.getString("email"), e.getString("name"));
     }
 
@@ -103,7 +100,8 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public ProcessedMime mime_process(String mime_message) {
-        this.call(Object.class, new String[]{"mime", "process"}, new V8Array(v8).push(mime_message).push(cb_catcher));
+        this.call(Object.class, new String[]{"mime", "process"}, new V8Array(v8).push
+                (mime_message).push(cb_catcher));
         return new ProcessedMime((V8Object) cb_last_value[0], this);
     }
 
@@ -174,6 +172,14 @@ public class Js { // Create one object per thread and use them separately. Not t
     public IdToken api_auth_parse_id_token(String id_token) {
         return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth",
                 "parse_id_token"}, new V8Array(v8).push(id_token)));
+    }
+
+    private static String read(File file) throws IOException {
+        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    }
+
+    private static String read(InputStream inputStream) throws IOException {
+        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
 
     private V8Object mime_reply_headers(MimeMessage original) {

@@ -24,7 +24,6 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.SampleStorageConnector;
 import com.flowcrypt.email.service.EmailSyncService;
 
 import java.io.IOException;
@@ -166,8 +165,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     public void loadPrivateKeys(int requestCode, String accountName) {
         if (checkBound()) return;
         try {
-            String searchTermString = new Js(this, new SampleStorageConnector(this))
-                    .api_gmail_query_backups(accountName);
+            String searchTermString = new Js(this, null).api_gmail_query_backups(accountName);
 
             EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                     requestCode, searchTermString);

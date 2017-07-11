@@ -153,7 +153,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
     @Override
     public Context getContext() {
-        return this;
+        return this.getApplicationContext();
     }
 
     @Override
@@ -273,8 +273,6 @@ public class EmailSyncService extends Service implements SyncListener {
     @Override
     public void onFolderInfoReceived(Folder[] folders, String key, int requestCode) {
         Log.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
-        ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-        imapLabelsDaoSource.deleteFolders(getApplicationContext(), account.name);
 
         FoldersManager foldersManager = new FoldersManager();
         for (Folder folder : folders) {
@@ -286,6 +284,8 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         }
 
+        ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+        imapLabelsDaoSource.deleteFolders(getApplicationContext(), account.name);
         imapLabelsDaoSource.addRows(getApplicationContext(), account.name,
                 foldersManager.getAllFolders());
 

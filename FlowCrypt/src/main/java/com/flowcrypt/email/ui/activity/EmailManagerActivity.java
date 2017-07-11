@@ -205,7 +205,10 @@ public class EmailManagerActivity extends BaseSyncActivity
             case R.id.loader_id_load_gmail_labels:
                 if (data != null) {
                     ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-                    foldersManager.clear();
+
+                    if (data.getCount() > 0) {
+                        foldersManager.clear();
+                    }
 
                     while (data.moveToNext()) {
                         foldersManager.addFolder(imapLabelsDaoSource.getFolder(data));

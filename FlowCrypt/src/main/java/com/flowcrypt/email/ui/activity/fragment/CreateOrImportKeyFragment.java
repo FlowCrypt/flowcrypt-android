@@ -146,12 +146,13 @@ public class CreateOrImportKeyFragment extends BaseFragment implements View.OnCl
                                 ClipData clipData = data.getClipData();
                                 if (clipData == null) {
                                     privateKeys.add(GeneralUtil.readFileFromUriToString
-                                            (getContext(), data.getData()));
+                                            (getContext().getApplicationContext(), data.getData()));
                                 } else {
                                     for (int i = 0; i < clipData.getItemCount(); i++) {
                                         ClipData.Item item = clipData.getItemAt(i);
                                         privateKeys.add(GeneralUtil.readFileFromUriToString
-                                                (getContext(), item.getUri()));
+                                                (getContext().getApplicationContext(), item
+                                                        .getUri()));
                                     }
                                 }
                             } catch (IOException e) {

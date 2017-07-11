@@ -97,7 +97,11 @@ public class KeyStoreCryptoManager {
      * @throws Exception Initialization can throw exceptions.
      */
     public KeyStoreCryptoManager(Context context) throws Exception {
-        this.context = context;
+        if (context != null) {
+            this.context = context.getApplicationContext();
+        } else {
+            throw new IllegalArgumentException("The context can not be null!");
+        }
         initRsaKeyPair();
         initAesSecretKeySpec();
     }
