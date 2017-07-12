@@ -14,7 +14,7 @@ import android.text.TextUtils;
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
-import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;

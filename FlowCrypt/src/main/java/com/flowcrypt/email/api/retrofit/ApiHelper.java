@@ -11,10 +11,8 @@ import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.api.gson.deserializer.MessagePrototypeResponseJsonDeserializer;
 import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor;
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor;
-import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.gson.GsonBuilder;
 
@@ -68,8 +66,6 @@ public class ApiHelper {
                         .create(new GsonBuilder()
                                 .excludeFieldsWithoutExposeAnnotation()
                                 .serializeNulls()
-                                .registerTypeAdapter(MessagePrototypeResponse.class, new
-                                        MessagePrototypeResponseJsonDeserializer())
                                 .create()))
                 .client(okHttpClient);
 

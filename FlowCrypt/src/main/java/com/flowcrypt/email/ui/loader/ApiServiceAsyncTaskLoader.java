@@ -13,10 +13,10 @@ import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.LookUpEmailRequest;
 import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
-import com.flowcrypt.email.api.retrofit.response.LookUpEmailResponse;
+import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
 import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 
 /**
  * A basic AsyncTaskLoader who make API calls.
