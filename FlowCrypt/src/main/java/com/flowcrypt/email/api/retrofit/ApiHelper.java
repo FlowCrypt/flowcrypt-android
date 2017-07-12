@@ -12,6 +12,7 @@ import android.support.v7.preference.PreferenceManager;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.gson.deserializer.MessagePrototypeResponseJsonDeserializer;
+import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor;
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor;
 import com.flowcrypt.email.api.retrofit.response.MessagePrototypeResponse;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -43,6 +44,8 @@ public class ApiHelper {
                 .connectTimeout(2, TimeUnit.MINUTES)
                 .readTimeout(2, TimeUnit.MINUTES)
                 .writeTimeout(2, TimeUnit.MINUTES);
+
+        okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
         if (BuildConfig.DEBUG) {
             if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
