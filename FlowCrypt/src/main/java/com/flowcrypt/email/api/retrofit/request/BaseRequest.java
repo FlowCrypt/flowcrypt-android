@@ -22,7 +22,7 @@ public abstract class BaseRequest {
     private LinkedHashMap<String, String> queryMap;
     private ApiName apiName;
 
-    BaseRequest(ApiName apiName) {
+    public BaseRequest(ApiName apiName) {
         this.apiName = apiName;
         queryMap = new LinkedHashMap<>();
     }
