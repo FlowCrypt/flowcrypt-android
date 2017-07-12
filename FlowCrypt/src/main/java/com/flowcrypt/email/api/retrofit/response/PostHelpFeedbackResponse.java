@@ -31,7 +31,7 @@ import com.google.gson.annotations.Expose;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackResponse implements BaseApiResponse {
+public class PostHelpFeedbackResponse extends BaseApiResponse {
 
     public static final Creator<PostHelpFeedbackResponse> CREATOR = new
             Creator<PostHelpFeedbackResponse>() {
@@ -55,7 +55,8 @@ public class PostHelpFeedbackResponse implements BaseApiResponse {
     public PostHelpFeedbackResponse() {
     }
 
-    public PostHelpFeedbackResponse(Parcel in) {
+    protected PostHelpFeedbackResponse(Parcel in) {
+        super(in);
         this.sent = in.readByte() != 0;
         this.text = in.readString();
     }
@@ -65,8 +66,9 @@ public class PostHelpFeedbackResponse implements BaseApiResponse {
         return "PostHelpFeedbackResponse{" +
                 "sent=" + sent +
                 ", text='" + text + '\'' +
-                '}';
+                "} " + super.toString();
     }
+
 
     @Override
     public int describeContents() {
@@ -75,6 +77,7 @@ public class PostHelpFeedbackResponse implements BaseApiResponse {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
         dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
         dest.writeString(this.text);
     }

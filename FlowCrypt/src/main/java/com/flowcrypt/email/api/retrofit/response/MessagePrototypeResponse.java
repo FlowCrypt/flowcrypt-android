@@ -23,7 +23,10 @@ import com.google.gson.annotations.SerializedName;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class MessagePrototypeResponse implements BaseApiResponse {
+public class MessagePrototypeResponse extends BaseApiResponse {
+
+    public static final String GSON_KEY_SENT = "sent";
+    public static final String GSON_KEY_ERROR = "error";
 
     public static final Creator<MessagePrototypeResponse> CREATOR = new
             Creator<MessagePrototypeResponse>() {
@@ -37,9 +40,6 @@ public class MessagePrototypeResponse implements BaseApiResponse {
                     return new MessagePrototypeResponse[size];
                 }
             };
-
-    public static final String GSON_KEY_SENT = "sent";
-    public static final String GSON_KEY_ERROR = "error";
 
     @SerializedName(GSON_KEY_SENT)
     @Expose
@@ -57,10 +57,20 @@ public class MessagePrototypeResponse implements BaseApiResponse {
     }
 
     protected MessagePrototypeResponse(Parcel in) {
+        super(in);
         this.sent = in.readByte() != 0;
         this.error = in.readString();
         this.messagePrototypeError = in.readParcelable(MessagePrototypeError.class.getClassLoader
                 ());
+    }
+
+    @Override
+    public String toString() {
+        return "MessagePrototypeResponse{" +
+                "sent=" + sent +
+                ", error='" + error + '\'' +
+                ", messagePrototypeError=" + messagePrototypeError +
+                "} " + super.toString();
     }
 
     @Override
@@ -70,6 +80,7 @@ public class MessagePrototypeResponse implements BaseApiResponse {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
         dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
         dest.writeString(this.error);
         dest.writeParcelable(this.messagePrototypeError, flags);

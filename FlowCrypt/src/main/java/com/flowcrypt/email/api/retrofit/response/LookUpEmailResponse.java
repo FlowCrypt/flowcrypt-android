@@ -22,7 +22,7 @@ import com.google.gson.annotations.SerializedName;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LookUpEmailResponse implements BaseApiResponse {
+public class LookUpEmailResponse extends BaseApiResponse {
 
     public static final Creator<LookUpEmailResponse> CREATOR = new Creator<LookUpEmailResponse>() {
         @Override
@@ -36,7 +36,6 @@ public class LookUpEmailResponse implements BaseApiResponse {
         }
     };
 
-    @SerializedName("attested")
     @Expose
     private boolean attested;
 
@@ -44,11 +43,9 @@ public class LookUpEmailResponse implements BaseApiResponse {
     @Expose
     private boolean hasCryptup;
 
-    @SerializedName("pubkey")
     @Expose
     private String pubkey;
 
-    @SerializedName("email")
     @Expose
     private String email;
 
@@ -56,10 +53,21 @@ public class LookUpEmailResponse implements BaseApiResponse {
     }
 
     protected LookUpEmailResponse(Parcel in) {
+        super(in);
         this.attested = in.readByte() != 0;
         this.hasCryptup = in.readByte() != 0;
         this.pubkey = in.readString();
         this.email = in.readString();
+    }
+
+    @Override
+    public String toString() {
+        return "LookUpEmailResponse{" +
+                "attested=" + attested +
+                ", hasCryptup=" + hasCryptup +
+                ", pubkey='" + pubkey + '\'' +
+                ", email='" + email + '\'' +
+                "} " + super.toString();
     }
 
     @Override
@@ -69,6 +77,7 @@ public class LookUpEmailResponse implements BaseApiResponse {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
         dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
         dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
         dest.writeString(this.pubkey);
@@ -79,31 +88,15 @@ public class LookUpEmailResponse implements BaseApiResponse {
         return attested;
     }
 
-    public void setAttested(boolean attested) {
-        this.attested = attested;
-    }
-
     public boolean isHasCryptup() {
         return hasCryptup;
-    }
-
-    public void setHasCryptup(boolean hasCryptup) {
-        this.hasCryptup = hasCryptup;
     }
 
     public String getPubkey() {
         return pubkey;
     }
 
-    public void setPubkey(String pubkey) {
-        this.pubkey = pubkey;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 }
