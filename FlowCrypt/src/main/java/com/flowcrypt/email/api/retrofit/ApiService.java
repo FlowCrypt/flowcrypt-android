@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit;
 
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
-import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 
 import retrofit2.Call;

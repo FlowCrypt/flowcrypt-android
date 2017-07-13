@@ -13,9 +13,9 @@ import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
+import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
-import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 
 /**

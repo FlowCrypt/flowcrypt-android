@@ -4,7 +4,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response;
+package com.flowcrypt.email.api.retrofit.response.api;
 
 import android.os.Parcel;
 

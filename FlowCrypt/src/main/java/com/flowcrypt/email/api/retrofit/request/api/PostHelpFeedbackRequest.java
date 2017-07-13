@@ -4,9 +4,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request;
+package com.flowcrypt.email.api.retrofit.request.api;
 
 import com.flowcrypt.email.api.retrofit.ApiName;
+import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 
 /**

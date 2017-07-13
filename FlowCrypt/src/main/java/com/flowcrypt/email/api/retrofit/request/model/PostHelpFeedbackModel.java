@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit.request.model;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
+import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.google.gson.annotations.Expose;
 
 /**
