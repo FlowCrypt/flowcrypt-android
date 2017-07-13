@@ -23,15 +23,8 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialConfirmModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class InitialConfirmRequest extends BaseRequest {
-    private InitialConfirmModel initialConfirmModel;
-
+public class InitialConfirmRequest extends BaseRequest<InitialConfirmModel> {
     public InitialConfirmRequest(InitialConfirmModel initialConfirmModel) {
-        super(ApiName.POST_INITIAL_CONFIRM);
-        this.initialConfirmModel = initialConfirmModel;
-    }
-
-    public InitialConfirmModel getInitialConfirmModel() {
-        return initialConfirmModel;
+        super(ApiName.POST_INITIAL_CONFIRM, initialConfirmModel);
     }
 }

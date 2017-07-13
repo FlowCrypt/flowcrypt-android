@@ -18,9 +18,15 @@ import java.util.LinkedHashMap;
  *         Time: 13:41
  *         E-mail: DenBond7@gmail.com
  */
-public abstract class BaseRequest {
+public abstract class BaseRequest<T> {
     private LinkedHashMap<String, String> queryMap;
     private ApiName apiName;
+    private T requestModel;
+
+    public BaseRequest(ApiName apiName, T requestModel) {
+        this(apiName);
+        this.requestModel = requestModel;
+    }
 
     public BaseRequest(ApiName apiName) {
         this.apiName = apiName;
@@ -30,13 +36,15 @@ public abstract class BaseRequest {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BaseRequest)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        BaseRequest that = (BaseRequest) o;
+        BaseRequest<?> that = (BaseRequest<?>) o;
 
         if (queryMap != null ? !queryMap.equals(that.queryMap) : that.queryMap != null)
             return false;
-        return apiName == that.apiName;
+        if (apiName != that.apiName) return false;
+        return requestModel != null ? requestModel.equals(that.requestModel) : that.requestModel
+                == null;
 
     }
 
@@ -44,6 +52,7 @@ public abstract class BaseRequest {
     public int hashCode() {
         int result = queryMap != null ? queryMap.hashCode() : 0;
         result = 31 * result + (apiName != null ? apiName.hashCode() : 0);
+        result = 31 * result + (requestModel != null ? requestModel.hashCode() : 0);
         return result;
     }
 
@@ -52,6 +61,7 @@ public abstract class BaseRequest {
         return "BaseRequest{" +
                 "queryMap=" + queryMap +
                 ", apiName=" + apiName +
+                ", requestModel=" + requestModel +
                 '}';
     }
 
@@ -65,5 +75,14 @@ public abstract class BaseRequest {
 
     public ApiName getApiName() {
         return apiName;
+    }
+
+    /**
+     * Get the request model which contains an information to create the request.
+     *
+     * @return <tt>T</tt>
+     */
+    public T getRequestModel() {
+        return requestModel;
     }
 }

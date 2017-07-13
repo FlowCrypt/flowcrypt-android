@@ -25,15 +25,8 @@ import com.flowcrypt.email.api.retrofit.request.model.ReplaceRequestModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ReplaceRequest extends BaseRequest {
-    private ReplaceRequestModel replaceRequestModel;
-
+public class ReplaceRequest extends BaseRequest<ReplaceRequestModel> {
     public ReplaceRequest(ReplaceRequestModel replaceRequestModel) {
-        super(ApiName.POST_REPLACE_REQUEST);
-        this.replaceRequestModel = replaceRequestModel;
-    }
-
-    public ReplaceRequestModel getReplaceRequestModel() {
-        return replaceRequestModel;
+        super(ApiName.POST_REPLACE_REQUEST, replaceRequestModel);
     }
 }

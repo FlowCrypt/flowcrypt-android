@@ -24,15 +24,8 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class TestWelcomeRequest extends BaseRequest {
-    private TestWelcomeModel testWelcomeModel;
-
+public class TestWelcomeRequest extends BaseRequest<TestWelcomeModel> {
     public TestWelcomeRequest(TestWelcomeModel testWelcomeModel) {
-        super(ApiName.POST_TEST_WELCOME);
-        this.testWelcomeModel = testWelcomeModel;
-    }
-
-    public TestWelcomeModel getTestWelcomeModel() {
-        return testWelcomeModel;
+        super(ApiName.POST_TEST_WELCOME, testWelcomeModel);
     }
 }

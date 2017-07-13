@@ -61,7 +61,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                         if (apiService != null) {
                             try {
                                 lookUpEmailResponse.setResponse(apiService.postLookUpEmail
-                                        (lookUpEmailRequest.getPostLookUpEmailModel()).execute());
+                                        (lookUpEmailRequest.getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 lookUpEmailResponse.setException(e);
@@ -81,7 +81,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             try {
                                 postHelpFeedbackResponse.setResponse(apiService
                                         .postHelpFeedbackResponse(postHelpFeedbackRequest
-                                                .getPostHelpFeedbackModel()).execute());
+                                                .getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 postHelpFeedbackResponse.setException(e);

@@ -23,22 +23,8 @@ import com.flowcrypt.email.api.retrofit.request.model.ReplaceConfirmModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ReplaceConfirmRequest extends BaseRequest {
-    private ReplaceConfirmModel replaceConfirmModel;
-
+public class ReplaceConfirmRequest extends BaseRequest<ReplaceConfirmModel> {
     public ReplaceConfirmRequest(ReplaceConfirmModel replaceConfirmModel) {
-        super(ApiName.POST_REPLACE_CONFIRM);
-        this.replaceConfirmModel = replaceConfirmModel;
-    }
-
-    @Override
-    public String toString() {
-        return "ReplaceConfirmRequest{" +
-                "replaceConfirmModel=" + replaceConfirmModel +
-                "} " + super.toString();
-    }
-
-    public ReplaceConfirmModel getReplaceConfirmModel() {
-        return replaceConfirmModel;
+        super(ApiName.POST_REPLACE_CONFIRM, replaceConfirmModel);
     }
 }

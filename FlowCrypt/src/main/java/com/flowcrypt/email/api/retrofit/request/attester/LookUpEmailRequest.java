@@ -19,16 +19,8 @@ import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LookUpEmailRequest extends BaseRequest {
-
-    private PostLookUpEmailModel postLookUpEmailModel;
-
+public class LookUpEmailRequest extends BaseRequest<PostLookUpEmailModel> {
     public LookUpEmailRequest(PostLookUpEmailModel postLookUpEmailModel) {
-        super(ApiName.POST_LOOKUP_EMAIL);
-        this.postLookUpEmailModel = postLookUpEmailModel;
-    }
-
-    public PostLookUpEmailModel getPostLookUpEmailModel() {
-        return postLookUpEmailModel;
+        super(ApiName.POST_LOOKUP_EMAIL, postLookUpEmailModel);
     }
 }

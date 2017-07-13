@@ -26,15 +26,8 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialRequestModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class InitialRequest extends BaseRequest {
-    private InitialRequestModel initialRequestModel;
-
+public class InitialRequest extends BaseRequest<InitialRequestModel> {
     public InitialRequest(InitialRequestModel initialRequestModel) {
-        super(ApiName.POST_INITIAL_REQUEST);
-        this.initialRequestModel = initialRequestModel;
-    }
-
-    public InitialRequestModel getInitialRequestModel() {
-        return initialRequestModel;
+        super(ApiName.POST_INITIAL_REQUEST, initialRequestModel);
     }
 }

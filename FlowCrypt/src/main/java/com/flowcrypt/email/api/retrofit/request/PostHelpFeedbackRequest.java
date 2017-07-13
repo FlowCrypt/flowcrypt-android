@@ -26,15 +26,8 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackRequest extends BaseRequest {
-    private PostHelpFeedbackModel postHelpFeedbackModel;
-
+public class PostHelpFeedbackRequest extends BaseRequest<PostHelpFeedbackModel> {
     public PostHelpFeedbackRequest(PostHelpFeedbackModel postHelpFeedbackModel) {
-        super(ApiName.POST_HELP_FEEDBACK);
-        this.postHelpFeedbackModel = postHelpFeedbackModel;
-    }
-
-    public PostHelpFeedbackModel getPostHelpFeedbackModel() {
-        return postHelpFeedbackModel;
+        super(ApiName.POST_HELP_FEEDBACK, postHelpFeedbackModel);
     }
 }
