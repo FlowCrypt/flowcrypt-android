@@ -47,6 +47,14 @@ public abstract class BaseRequest {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "BaseRequest{" +
+                "queryMap=" + queryMap +
+                ", apiName=" + apiName +
+                '}';
+    }
+
     public LinkedHashMap<String, String> getQueryMap() {
         return queryMap;
     }
