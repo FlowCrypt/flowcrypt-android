@@ -6,7 +6,9 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
+import android.content.ComponentName;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -23,7 +25,7 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.response.PostHelpFeedbackResponse;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -38,7 +40,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class FeedbackActivity extends BaseBackStackActivity implements
+public class FeedbackActivity extends BaseBackStackSyncActivity implements
         LoaderManager.LoaderCallbacks<BaseResponse> {
     private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + "" +
             ".KEY_IS_MESSAGE_SENT";
@@ -62,6 +64,20 @@ public class FeedbackActivity extends BaseBackStackActivity implements
     }
 
     @Override
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+        switch (requestCode) {
+            case R.id.syns_get_active_account:
+                email = (String) obj;
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
@@ -69,6 +85,12 @@ public class FeedbackActivity extends BaseBackStackActivity implements
         }
 
         initViews();
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        super.onServiceConnected(name, service);
+        requestActiveAccount(R.id.syns_get_active_account);
     }
 
     @Override
@@ -146,11 +168,13 @@ public class FeedbackActivity extends BaseBackStackActivity implements
                                             finish();
                                         }
                                     });
+                        } else if (postHelpFeedbackResponse.getApiError() != null) {
+                            UIUtil.showInfoSnackbar(getRootView(),
+                                    postHelpFeedbackResponse.getApiError().getMessage());
                         } else {
-                            UIUtil.showInfoSnackbar(getRootView(), postHelpFeedbackResponse
-                                    .getText());
+                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                                    .unknown_error));
                         }
-
                     } else if (data.getException() != null) {
                         UIUtil.showInfoSnackbar(getRootView(), data.getException().getMessage());
                     } else {
