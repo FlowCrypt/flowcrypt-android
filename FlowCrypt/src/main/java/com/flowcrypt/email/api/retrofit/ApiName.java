@@ -25,5 +25,6 @@ public enum ApiName {
 
     /*api.cryptup.io*/
     POST_HELP_FEEDBACK,
-    POST_LINK_MESSAGE
+    POST_LINK_MESSAGE,
+    POST_MESSAGE_REPLY
 }
