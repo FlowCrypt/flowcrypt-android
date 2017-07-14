@@ -9,7 +9,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment">
+    tools:context="com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment"
+    tools:showIn="@layout/activity_splash">
 
     <Button
         android:id="@+id/buttonPrivacy"
@@ -53,17 +54,12 @@
         android:layout_height="100dp"
         android:layout_gravity="center"
         android:layout_marginTop="54dp"
-        android:drawableEnd="@mipmap/ic_crypt_up"
         android:drawablePadding="@dimen/default_margin_medium"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:scaleType="center"
-        android:scaleX="7"
-        android:scaleY="7"
-        android:text="@string/crypt"
         android:textAlignment="center"
-        android:textAllCaps="true"
-        android:textColor="@android:color/black"
+        android:textAllCaps="false"
         android:textSize="@dimen/text_size_logo_crypt"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
