@@ -32,6 +32,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
@@ -157,11 +158,13 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
+                new AccountDaoSource().deleteAccountInformation(this, account);
                 finish();
                 startActivity(SplashActivity.getSignOutIntent(this));
                 break;
 
             case R.id.navigationMenuRevokeAccess:
+                new AccountDaoSource().deleteAccountInformation(this, account);
                 finish();
                 startActivity(SplashActivity.getRevokeAccessIntent(this));
                 break;
