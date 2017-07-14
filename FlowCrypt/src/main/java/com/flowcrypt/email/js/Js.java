@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 
@@ -246,6 +247,8 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .class, String.class});
         v8.registerJavaMethod(methods, "java_mod_pow_strings", "java_mod_pow", new Class[]{String
                 .class, String.class, String.class});
+        v8.registerJavaMethod(methods, "secure_random", "engine_host_secure_random", new Class[]{
+                Integer.class});
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -432,6 +435,17 @@ class JavaMethodsForJavascript {
         }
 
         return (b.multiply(java_mod_pow(b,e.subtract(one),m))).mod(m);
+    }
+
+    public V8Array secure_random(Integer byte_length) {
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[byte_length];
+        random.nextBytes(bytes);
+        V8Array array = new V8Array(v8);
+        for(Integer i = 0; i < byte_length; i++) {
+            array.push((int)bytes[i] + 128); // signed to unsigned conversion to get random 0-255
+        }
+        return array;
     }
 
     public void alert(final String message) {

@@ -5,9 +5,10 @@
 var window = {
   is_bare_engine: true,
   crypto: {
-    getRandomValues: function (buf) { // NOT SECURE - for testing only
+    getRandomValues: function (buf) {
+      var ran = engine_host_secure_random(buf.length);
       for(var i=0; i<buf.length; i++) {
-        buf[i] = Math.round(Math.random() * 255);
+        buf[i] = ran[i];
       }
     },
   },
