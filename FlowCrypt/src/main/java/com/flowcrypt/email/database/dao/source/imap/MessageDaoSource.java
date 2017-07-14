@@ -72,7 +72,7 @@ public class MessageDaoSource extends BaseDaoSource {
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
                     " ON " + TABLE_NAME_MESSAGES + " (" + COL_EMAIL + ")";
 
-    public static final String CREATE_INDEX_UID_IN_MESSAGES =
+    public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES =
             "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
                     + "_in_" + TABLE_NAME_MESSAGES +
                     " ON " + TABLE_NAME_MESSAGES +

@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -57,7 +58,10 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
         sqLiteDatabase.execSQL(MessageDaoSource.IMAP_MESSAGES_INFO_TABLE_SQL_CREATE);
         sqLiteDatabase.execSQL(MessageDaoSource.CREATE_INDEX_EMAIL_IN_MESSAGES);
-        sqLiteDatabase.execSQL(MessageDaoSource.CREATE_INDEX_UID_IN_MESSAGES);
+        sqLiteDatabase.execSQL(MessageDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES);
+
+        sqLiteDatabase.execSQL(AccountDaoSource.ACCOUNTS_TABLE_SQL_CREATE);
+        sqLiteDatabase.execSQL(AccountDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS);
     }
 
     @Override

@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -26,6 +27,7 @@ import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
@@ -190,8 +192,10 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         if (googleSignInResult.isSuccess()) {
 
             Account account = null;
-            if (googleSignInResult.getSignInAccount() != null) {
-                account = googleSignInResult.getSignInAccount().getAccount();
+            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
+            if (googleSignInAccount != null) {
+                updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
+                account = googleSignInAccount.getAccount();
             } else {
                 //todo-denbond7 handle this situation
             }
@@ -227,6 +231,18 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             }
             signInView.setVisibility(View.VISIBLE);
             splashView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateInformationAboutAccountInLocalDatabase(GoogleSignInAccount
+                                                                      googleSignInAccount) {
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+
+        boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this,
+                googleSignInAccount) > 0;
+
+        if (!isAccountUpdated) {
+            accountDaoSource.addRow(this, googleSignInAccount);
         }
     }
 
