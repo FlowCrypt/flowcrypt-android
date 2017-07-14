@@ -9,6 +9,7 @@ package com.flowcrypt.email.js;
 import android.content.Context;
 
 import com.eclipsesource.v8.JavaCallback;
+import com.eclipsesource.v8.NodeJS;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
@@ -23,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -77,8 +79,11 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public MimeMessage mime_decode(String mime_message) {
+        Long start = System.currentTimeMillis();
         this.call(Object.class, new String[]{"mime", "decode"}, new V8Array(v8).push
                 (mime_message).push(cb_catcher));
+        Long end = System.currentTimeMillis();
+        System.out.println("duration decode: " + (end - start));
         if ((Boolean) cb_last_value[0]) {
             return new MimeMessage((V8Object) cb_last_value[1], this);
         } else {
@@ -154,9 +159,12 @@ public class Js { // Create one object per thread and use them separately. Not t
 
     public PgpDecrypted crypto_message_decrypt(String data, String password) {
         // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
+        Long start = System.currentTimeMillis();
         V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push
                 (cb_catcher).push(NULL);
         this.call(void.class, new String[]{"crypto", "message", "decrypt"}, params);
+        Long end = System.currentTimeMillis();
+        System.out.println("duration decrypt: " + (end - start));
         return new PgpDecrypted((V8Object) cb_last_value[0]);
     }
 
@@ -236,6 +244,8 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .class});
         v8.registerJavaMethod(methods, "get_passphrase", "get_passphrase", new Class[]{String
                 .class, String.class});
+        v8.registerJavaMethod(methods, "java_mod_pow_strings", "java_mod_pow", new Class[]{String
+                .class, String.class, String.class});
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -393,6 +403,35 @@ class JavaMethodsForJavascript {
 
     public void console_error(final String message) {
         System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
+    }
+
+    public String java_mod_pow_strings(String b, String e, String m) {
+        return java_mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
+    }
+
+    // Do modular exponentiation for the expression b^e mod m
+    // (b to the power e, modulo m).
+    public BigInteger java_mod_pow(BigInteger b, BigInteger e, BigInteger m) {
+        // prints the calculations
+        // System.out.println(b + " " + e + " " + m);
+        BigInteger zero = new BigInteger("0");
+        BigInteger one = new BigInteger("1");
+        BigInteger two = one.add(one);
+
+        // Base Case
+        if (e.equals(zero))
+            return one;
+        if (e.equals(one))
+            return b.mod(m);
+
+        if (e.mod(two).equals(zero)) {
+            // Calculates the square root of the answer
+            BigInteger answer = java_mod_pow(b, e.divide(two), m);
+            // Reuses the result of the square root
+            return (answer.multiply(answer)).mod(m);
+        }
+
+        return (b.multiply(java_mod_pow(b,e.subtract(one),m))).mod(m);
     }
 
     public void alert(final String message) {
