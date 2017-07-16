@@ -74,17 +74,42 @@ android {
     packagingOptions {
         pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
     }
+
+    task renameReleaseBuild << {
+        applicationVariants.all { variant ->
+            if (variant.buildType.buildType == buildTypes.release) {
+                variant.outputs.each { output ->
+                    def file = output.outputFile
+                    def newName = file.name.replace(".apk", "_" +
+                            defaultConfig.versionCode +
+                            "_" + defaultConfig.versionName +
+                            "_" + simpleDateFormat.format(new Date()) + ".apk")
+                    output.outputFile.renameTo(new File(file.parent, newName))
+                }
+            }
+        }
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name == 'assembleRelease') {
+            task.finalizedBy 'renameReleaseBuild'
+        }
+    }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    debugCompile "com.squareup.leakcanary:leakcanary-android:${LEAKCANARY_VERSION}"
+
+    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
+
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    debugCompile "com.squareup.leakcanary:leakcanary-android:${LEAKCANARY_VERSION}"
-    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
     testCompile "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
+    testCompile "junit:junit:${JUNIT_VERSION}"
+
+    compile fileTree(include: ['*.jar'], dir: 'libs')
 
     compile "com.android.support:support-v4:${ANDROID_SUPPORT_VERSION}"
     compile "com.android.support:appcompat-v7:${ANDROID_SUPPORT_VERSION}"
@@ -106,7 +131,6 @@ dependencies {
         exclude group: 'com.sun.mail'
     }
 
-    testCompile "junit:junit:${JUNIT_VERSION}"
     compile 'com.eclipsesource.j2v8:j2v8:4.6.0@aar'
     compile 'commons-io:commons-io:2.5'
     compile 'ch.acra:acra:4.9.2'
