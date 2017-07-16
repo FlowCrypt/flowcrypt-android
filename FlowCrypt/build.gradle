@@ -16,7 +16,6 @@ buildscript {
     }
 }
 
-
 apply plugin: 'com.android.application'
 apply plugin: 'com.github.gfx.ribbonizer'
 
@@ -53,7 +52,9 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
         }
@@ -109,6 +110,5 @@ dependencies {
     compile 'com.eclipsesource.j2v8:j2v8:4.6.0@aar'
     compile 'commons-io:commons-io:2.5'
     compile 'ch.acra:acra:4.9.2'
-    compile 'org.jsoup:jsoup:1.10.2'
     compile 'com.hootsuite.android:nachos:1.1.1'
 }
