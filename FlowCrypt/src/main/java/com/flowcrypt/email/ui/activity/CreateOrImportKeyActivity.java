@@ -14,6 +14,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportKeyFragment;
+import com.flowcrypt.email.util.GeneralUtil;
 
 import java.util.ArrayList;
 
@@ -27,6 +28,9 @@ import java.util.ArrayList;
  */
 public class CreateOrImportKeyActivity extends BaseActivity implements
         CreateOrImportKeyFragment.OnPrivateKeysSelectedListener {
+    public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+            "KEY_EXTRA_PRIVATE_KEYS", CreateOrImportKeyActivity.class);
+
     public static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON = BuildConfig
             .APPLICATION_ID + ".KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON";
 
@@ -49,8 +53,7 @@ public class CreateOrImportKeyActivity extends BaseActivity implements
     public void onPrivateKeysSelected(ArrayList<String> privateKeys) {
         if (privateKeys != null && !privateKeys.isEmpty()) {
             Intent intent = new Intent();
-            intent.putStringArrayListExtra(RestoreAccountActivity.KEY_EXTRA_PRIVATE_KEYS,
-                    privateKeys);
+            intent.putStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
             setResult(Activity.RESULT_OK, intent);
             finish();
         }

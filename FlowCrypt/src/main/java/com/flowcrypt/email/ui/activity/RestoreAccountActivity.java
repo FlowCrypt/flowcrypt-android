@@ -100,8 +100,10 @@ public class RestoreAccountActivity extends BaseActivity
             case REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        if (data != null && data.hasExtra(KEY_EXTRA_PRIVATE_KEYS)) {
-                            this.privateKeys = data.getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+                        if (data != null && data.hasExtra(CreateOrImportKeyActivity
+                                .KEY_EXTRA_PRIVATE_KEYS)) {
+                            this.privateKeys = data.getStringArrayListExtra
+                                    (CreateOrImportKeyActivity.KEY_EXTRA_PRIVATE_KEYS);
                             if (privateKeys != null && privateKeys.size() > 0) {
                                 showContent();
                                 updateKeysOnRestoreAccountFragment();
