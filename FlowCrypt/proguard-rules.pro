@@ -139,3 +139,15 @@
 -keep class com.hootsuite.nachos.** { *; }
 -keep interface com.hootsuite.nachos.** { *; }
 -dontwarn com.hootsuite.nachos.**
+
+########################################## GLIDE ###################################################
+-keep class com.bumptech.glide.** { *; }
+-keep interface com.bumptech.glide.** { *; }
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
+  **[] $VALUES;
+  public *;
+}
+-dontwarn com.bumptech.glide.**
+# for DexGuard only
+-keepresourcexmlelements manifest/application/meta-data@value=GlideModule

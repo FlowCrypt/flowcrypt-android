@@ -23,15 +23,21 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -40,6 +46,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
 
 /**
  * This activity used to show messages list.
@@ -346,6 +353,40 @@ public class EmailManagerActivity extends BaseSyncActivity
         if (findViewById(R.id.floatActionButtonCompose) != null) {
             findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);
         }
+
+        initUserProfileView(navigationView.getHeaderView(0));
+    }
+
+    /**
+     * Init the user profile in the top of the navigation view.
+     *
+     * @param view The view which contains user profile views.
+     */
+    private void initUserProfileView(View view) {
+        ImageView imageViewUserPhoto = (ImageView) view.findViewById(R.id.imageViewUserPhoto);
+        TextView textViewUserDisplayName =
+                (TextView) view.findViewById(R.id.textViewUserDisplayName);
+        TextView textViewUserEmail = (TextView) view.findViewById(R.id.textViewUserEmail);
+
+        AccountDao accountDao = new AccountDaoSource().getAccountInformation(this, account.name);
+
+        if (accountDao != null) {
+            textViewUserDisplayName.setText(accountDao.getDisplayName());
+            textViewUserEmail.setText(accountDao.getEmail());
+
+            if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+                RequestOptions requestOptions = new RequestOptions();
+                requestOptions.centerCrop();
+                requestOptions.transform(new CircleTransformation());
+                requestOptions.error(R.mipmap.ic_account_default_photo);
+
+                Glide.with(this)
+                        .load(accountDao.getPhotoUrl())
+                        .apply(requestOptions)
+                        .into(imageViewUserPhoto);
+            }
+        }
+
     }
 
     /**
