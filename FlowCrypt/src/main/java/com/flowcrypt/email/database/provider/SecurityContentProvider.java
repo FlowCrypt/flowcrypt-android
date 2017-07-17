@@ -295,6 +295,7 @@ public class SecurityContentProvider extends ContentProvider {
                                 values,
                                 selection,
                                 selectionArgs);
+                        break;
 
                     case MATCHED_CODE_ACCOUNTS_TABLE:
                         rowsCount = sqLiteDatabase.update(
