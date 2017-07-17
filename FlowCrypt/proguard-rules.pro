@@ -11,7 +11,7 @@
 # directive in build.gradle.
 #
 # For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
 
@@ -31,13 +31,22 @@
 #-renamesourcefileattribute SourceFile
 
 ####################################### Application config #########################################
--keep class com.flowcrypt.email.api.email.** { *; }
--keep class com.flowcrypt.email.api.retrofit.request.model.** { *; }
--keep class com.flowcrypt.email.api.retrofit.response.base.** { *; }
--keep class com.flowcrypt.email.database.dao.** { *; }
--keep class com.flowcrypt.email.model.** { *; }
--keep class com.flowcrypt.email.js.** { *; }
--keepnames class hotels.car.rentals.flights.ukasoft.util.GlideConfiguration
+-dontobfuscate
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*,!code/allocation/variable
+
+-keep class com.flowcrypt.email.** { *; }
+-keep interface com.flowcrypt.email.** { *; }
+-keep enum com.flowcrypt.email.** { *; }
+-keepclassmembers class com.flowcrypt.email.** { *; }
+-keepclassmembers interface com.flowcrypt.email.** { *; }
+-keepclassmembers enum com.flowcrypt.email.** { *; }
+-keepnames class com.flowcrypt.email.** { *; }
+-keepnames interface com.flowcrypt.email.** { *; }
+-keepnames enum com.flowcrypt.email.** { *; }
+-keepclassmembernames class com.flowcrypt.email.** { *; }
+-keepclassmembernames interface com.flowcrypt.email.** { *; }
+-keepclassmembernames enum com.flowcrypt.email.** { *; }
+-dontwarn com.flowcrypt.email.**
 
 # Remove Logging statements
 -assumenosideeffects class android.util.Log {
@@ -114,6 +123,16 @@
 ##################################### ECLIPSESOURCE ################################################
 -keep class com.eclipsesource.** { *; }
 -keep interface com.eclipsesource.** { *; }
+-keep enum com.eclipsesource.** { *; }
+-keepclassmembers class com.eclipsesource.** { *; }
+-keepclassmembers interface com.eclipsesource.** { *; }
+-keepclassmembers enum com.eclipsesource.** { *; }
+-keepnames class com.eclipsesource.** { *; }
+-keepnames interface com.eclipsesource.** { *; }
+-keepnames enum com.eclipsesource.** { *; }
+-keepclassmembernames class com.eclipsesource.** { *; }
+-keepclassmembernames interface com.eclipsesource.** { *; }
+-keepclassmembernames enum com.eclipsesource.** { *; }
 -dontwarn com.eclipsesource.**
 
 ######################################### NACHOS ###################################################
