@@ -207,7 +207,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageDetailsReceived(IMAPFolder imapFolder, javax.mail.Message message, String
+    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
             rawMessageWithOutAttachments, String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -217,7 +217,7 @@ public class EmailSyncService extends Service implements SyncListener {
             messageDaoSource.updateMessageRawText(getApplicationContext(),
                     account.name,
                     folder.getFolderAlias(),
-                    imapFolder.getUID(message),
+                    uid,
                     rawMessageWithOutAttachments);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
