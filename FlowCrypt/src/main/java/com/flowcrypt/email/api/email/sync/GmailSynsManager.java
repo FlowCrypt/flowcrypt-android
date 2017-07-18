@@ -23,6 +23,7 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -132,6 +133,7 @@ public class GmailSynsManager {
      */
     public void updateLabels(String ownerKey, int requestCode) {
         try {
+            removeOldTasks(UpdateLabelsSyncTask.class);
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -171,6 +173,7 @@ public class GmailSynsManager {
      */
     public void loadMessageDetails(String ownerKey, int requestCode, String folderName, int uid) {
         try {
+            removeOldTasks(LoadMessageDetailsSyncTask.class);
             syncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
                     folderName, uid));
         } catch (InterruptedException e) {
@@ -212,6 +215,7 @@ public class GmailSynsManager {
     public void loadNewMessagesManually(String ownerKey, int requestCode, String folderName, int
             lastUIDInCache) {
         try {
+            removeOldTasks(LoadNewMessagesSyncTask.class);
             syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode,
                     folderName, lastUIDInCache));
         } catch (InterruptedException e) {
@@ -287,6 +291,19 @@ public class GmailSynsManager {
         }
     }
 
+    /**
+     * Remove the old tasks from the queue of synchronization.
+     *
+     * @param cls The task type.
+     */
+    private void removeOldTasks(Class<?> cls) {
+        Iterator<?> syncTaskBlockingQueueIterator = syncTaskBlockingQueue.iterator();
+        while (syncTaskBlockingQueueIterator.hasNext()) {
+            if (cls.isInstance(syncTaskBlockingQueueIterator.next())) {
+                syncTaskBlockingQueueIterator.remove();
+            }
+        }
+    }
 
     private class SyncTaskRunnable implements Runnable {
         private final String TAG = SyncTaskRunnable.class.getSimpleName();
@@ -357,8 +374,6 @@ public class GmailSynsManager {
          * Check available connection to the gmail store. If connection does not exists try to
          * reconnect.
          * Must be called from non-main thread.
-         *
-         * @return true if connection available, false otherwise.
          */
         private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
             if (!isConnected()) {
