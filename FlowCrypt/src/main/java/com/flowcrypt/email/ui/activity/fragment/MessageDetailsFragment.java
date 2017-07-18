@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
@@ -97,15 +98,15 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public View getContentView() {
-        return layoutContent;
-    }
-
-    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         updateViews();
+    }
+
+    @Override
+    public View getContentView() {
+        return layoutContent;
     }
 
     @Override
@@ -346,18 +347,29 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
             textViewSubject.setText(subject);
-            if (!TextUtils.isEmpty(incomingMessageInfo.getMessage())) {
-                String messageWithCapitalFirstLetter =
-                        incomingMessageInfo.getMessage().substring(0, 1).toUpperCase() +
-                                incomingMessageInfo.getMessage().substring(1);
-                textViewMessage.setText(messageWithCapitalFirstLetter);
-            } else {
-                textViewMessage.setText(incomingMessageInfo.getMessage());
-            }
+            updateMessageView();
 
             if (incomingMessageInfo.getReceiveDate() != null) {
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
             }
+        }
+    }
+
+    private void updateMessageView() {
+        if (incomingMessageInfo.getMessageParts() != null
+                && !incomingMessageInfo.getMessageParts().isEmpty()) {
+
+            for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+                if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
+                    String messageWithCapitalFirstLetter =
+                            messagePart.getValue().substring(0, 1).toUpperCase() +
+                                    messagePart.getValue().substring(1);
+                    textViewMessage.append(messageWithCapitalFirstLetter);
+                    textViewMessage.append("\n\n");
+                }
+            }
+        } else {
+            textViewMessage.setText(null);
         }
     }
 

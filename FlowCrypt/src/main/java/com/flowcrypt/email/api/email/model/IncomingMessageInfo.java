@@ -8,11 +8,14 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 
+import com.flowcrypt.email.model.messages.MessagePart;
+
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
- * Simple POJO class which describe an incoming message model.
+ * The class which describe an incoming message model.
  *
  * @author DenBond7
  *         Date: 09.05.2017
@@ -37,6 +40,7 @@ public class IncomingMessageInfo extends MessageInfo {
     private ArrayList<String> from;
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
+    private List<MessagePart> messageParts;
 
     public IncomingMessageInfo() {
     }
@@ -47,6 +51,7 @@ public class IncomingMessageInfo extends MessageInfo {
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.originalRawMessageWithoutAttachments = in.readString();
+        this.messageParts = in.createTypedArrayList(MessagePart.CREATOR);
     }
 
     @Override
@@ -60,6 +65,18 @@ public class IncomingMessageInfo extends MessageInfo {
         dest.writeStringList(this.from);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeString(this.originalRawMessageWithoutAttachments);
+        dest.writeTypedList(this.messageParts);
+    }
+
+    @Override
+    public String toString() {
+        return "IncomingMessageInfo{" +
+                "from=" + from +
+                ", receiveDate=" + receiveDate +
+                ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments
+                + '\'' +
+                ", messageParts=" + messageParts +
+                "} " + super.toString();
     }
 
     /**
@@ -90,5 +107,13 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setOriginalRawMessageWithoutAttachments(String originalRawMessageWithoutAttachments) {
         this.originalRawMessageWithoutAttachments = originalRawMessageWithoutAttachments;
+    }
+
+    public List<MessagePart> getMessageParts() {
+        return messageParts;
+    }
+
+    public void setMessageParts(List<MessagePart> messageParts) {
+        this.messageParts = messageParts;
     }
 }

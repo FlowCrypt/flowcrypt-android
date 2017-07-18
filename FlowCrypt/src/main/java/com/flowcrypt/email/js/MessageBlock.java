@@ -12,13 +12,13 @@ import java.util.Objects;
 
 public class MessageBlock extends MeaningfulV8ObjectContainer {
 
-    public static String TYPE_TEXT = "text";
-    public static String TYPE_PGP_MESSAGE = "message";
-    public static String TYPE_PGP_PUBLIC_KEY = "public_key";
-    public static String TYPE_PGP_SIGNED_MESSAGE = "signed_message";
-    public static String TYPE_PGP_PASSWORD_MESSAGE = "password_message";
-    public static String TYPE_ATTEST_PACKET = "attest_packet";
-    public static String TYPE_VERIFICATION = "cryptup_verification";
+    public static final String TYPE_TEXT = "text";
+    public static final String TYPE_PGP_MESSAGE = "message";
+    public static final String TYPE_PGP_PUBLIC_KEY = "public_key";
+    public static final String TYPE_PGP_SIGNED_MESSAGE = "signed_message";
+    public static final String TYPE_PGP_PASSWORD_MESSAGE = "password_message";
+    public static final String TYPE_ATTEST_PACKET = "attest_packet";
+    public static final String TYPE_VERIFICATION = "cryptup_verification";
 
 
     private String type;

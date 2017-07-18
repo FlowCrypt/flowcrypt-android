@@ -7,22 +7,25 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.v4.content.AsyncTaskLoader;
-import android.text.Html;
-import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.MimeAddress;
-import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.js.ProcessedMime;
+import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
+import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This loader decrypt if need a message and return
@@ -74,55 +77,78 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
      * @throws Exception The parsing process can be throws different exceptions.
      */
     private IncomingMessageInfo parseRawMessage(String rawMessage) throws Exception {
-        IncomingMessageInfo messageInfo = new IncomingMessageInfo();
+        IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
         if (rawMessage != null) {
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            MimeMessage mimeMessage = js.mime_decode(rawMessage);
+            ProcessedMime processedMime = js.mime_process(rawMessage);
             ArrayList<String> addresses = new ArrayList<>();
 
-            for (MimeAddress mimeAddress : mimeMessage.getAddressHeader("from")) {
+            for (MimeAddress mimeAddress : processedMime.getAddressHeader("from")) {
                 addresses.add(mimeAddress.getAddress());
             }
 
-            messageInfo.setFrom(addresses);
-            messageInfo.setSubject(mimeMessage.getStringHeader("subject"));
-            messageInfo.setReceiveDate(new Date(mimeMessage.getTimeHeader("date")));
-            messageInfo.setMessage(decryptMessageIfNeed(js, mimeMessage));
-            messageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
+            incomingMessageInfo.setFrom(addresses);
+            incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
+            incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
+            incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
+            incomingMessageInfo.setMessageParts(getMessagePartsFromProcessedMime(js,
+                    processedMime));
         } else {
             return null;
         }
-        return messageInfo;
+        return incomingMessageInfo;
     }
 
     /**
-     * Decrypt a message if it encrypted. At now will be decrypted only a simple text.
+     * Generate a list of {@link MessagePart} object which contains information about
+     * {@link MessageBlock}
      *
-     * @param js          The Js object which used to decrypt a message text.
-     * @param mimeMessage The MimeMessage object.
-     * @return <tt>String</tt> Return a decrypted or original text.
+     * @param js            The {@link Js} util.
+     * @param processedMime The {@link ProcessedMime} object which contains information about an
+     *                      encrypted message.
+     * @return The list of {@link MessagePart}.
      */
-    @SuppressWarnings("deprecation")
-    private String decryptMessageIfNeed(Js js, MimeMessage mimeMessage) {
-        if (TextUtils.isEmpty(mimeMessage.getText())) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                return Html.fromHtml(mimeMessage.getHtml(), Html.FROM_HTML_MODE_LEGACY).toString();
-            } else {
-                return Html.fromHtml(mimeMessage.getHtml()).toString();
+    private List<MessagePart> getMessagePartsFromProcessedMime(Js js, ProcessedMime processedMime) {
+        MessageBlock[] blocks = processedMime.getBlocks();
+
+        LinkedList<MessagePart> messageParts = new LinkedList<>();
+
+        for (MessageBlock messageBlock : blocks) {
+            if (messageBlock != null && messageBlock.getType() != null) {
+                switch (messageBlock.getType()) {
+                    case MessageBlock.TYPE_TEXT:
+                        messageParts.add(new MessagePartText(messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_PGP_MESSAGE:
+                        messageParts.add(new MessagePartPgpMessage(decryptText(js,
+                                messageBlock.getContent())));
+                        break;
+                    //Todo-DenBond7 need to describe other types of MessageBlock
+                }
+            }
+        }
+        return messageParts;
+    }
+
+    /**
+     * Decrypt an encrypted text.
+     *
+     * @param js            The {@link Js} util.
+     * @param encryptedText The encrypted text which will be decrypted.
+     * @return The decrypted text.
+     */
+    private String decryptText(Js js, String encryptedText) {
+        if (encryptedText != null) {
+            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(encryptedText);
+            try {
+                return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
+            } catch (Exception e) {
+                e.printStackTrace();
+                return encryptedText;
             }
         } else {
-            String decryptedText = js.crypto_armor_clip(mimeMessage.getText());
-            if (decryptedText != null) {
-                PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(decryptedText);
-                try {
-                    return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return mimeMessage.getText();
-                }
-            } else {
-                return mimeMessage.getText();
-            }
+            return null;
         }
     }
 }
