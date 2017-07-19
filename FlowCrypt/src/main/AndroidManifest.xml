@@ -92,6 +92,11 @@
             android:label="@string/help_feedback_or_question"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.HtmlViewFromAssetsRawActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" />
+
         <activity android:name=".ui.activity.DevSettingsActivity" />
 
         <!-- Providers -->

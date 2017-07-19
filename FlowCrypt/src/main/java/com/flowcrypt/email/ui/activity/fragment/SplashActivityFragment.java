@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -59,6 +60,21 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
                             getString(R.string.internet_connection_is_not_available));
                 }
                 break;
+
+            case R.id.buttonPrivacy:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(getContext(),
+                        getString(R.string.privacy), "html/privacy.htm"));
+                break;
+
+            case R.id.buttonTerms:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(getContext(),
+                        getString(R.string.terms), "html/terms.htm"));
+                break;
+
+            case R.id.buttonSecurity:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(getContext(),
+                        getString(R.string.security), "html/security.htm"));
+                break;
         }
     }
 
@@ -68,6 +84,18 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
     private void initViews(View view) {
         if (view.findViewById(R.id.buttonSignInWithGmail) != null) {
             view.findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonPrivacy) != null) {
+            view.findViewById(R.id.buttonPrivacy).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonTerms) != null) {
+            view.findViewById(R.id.buttonTerms).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonSecurity) != null) {
+            view.findViewById(R.id.buttonSecurity).setOnClickListener(this);
         }
     }
 
