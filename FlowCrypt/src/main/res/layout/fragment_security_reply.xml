@@ -55,15 +55,22 @@
                 app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
                 app:layout_constraintTop_toTopOf="@+id/textViewReplyRecipient" />
 
-            <EditText
-                android:id="@+id/editTextReplyEmailMessage"
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
-                android:hint="@string/prompt_compose_security_email"
                 app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                 app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toBottomOf="@+id/textViewReplyRecipient" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewReplyRecipient">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/editTextReplyEmailMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/prompt_compose_security_email"
+                    android:inputType="textCapSentences|textMultiLine" />
+
+            </android.support.design.widget.TextInputLayout>
 
             <android.support.constraint.Guideline
                 android:id="@+id/guidelineLeft"

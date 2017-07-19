@@ -346,14 +346,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
             textViewSubject.setText(subject);
-            if (!TextUtils.isEmpty(incomingMessageInfo.getMessage())) {
-                String messageWithCapitalFirstLetter =
-                        incomingMessageInfo.getMessage().substring(0, 1).toUpperCase() +
-                                incomingMessageInfo.getMessage().substring(1);
-                textViewMessage.setText(messageWithCapitalFirstLetter);
-            } else {
-                textViewMessage.setText(incomingMessageInfo.getMessage());
-            }
+            textViewMessage.setText(incomingMessageInfo.getMessage());
 
             if (incomingMessageInfo.getReceiveDate() != null) {
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
