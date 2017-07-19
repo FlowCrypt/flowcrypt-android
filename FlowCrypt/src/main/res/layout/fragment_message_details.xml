@@ -106,23 +106,16 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/textViewMessage"
+            <LinearLayout
+                android:id="@+id/layoutMessageParts"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content"
-                android:textColor="@color/mine_shaft"
-                android:textIsSelectable="true"
-                android:textSize="@dimen/default_text_size_medium"
+                android:orientation="vertical"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                 app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toBottomOf="@+id/layoutFooterOfHeader"
-                tools:text="This email contains a key backup. It will help you access your encrypted messages from other computers (along with your pass phrase). You can safely leave it in your inbox or archive it.
-
-The key below is protected with pass phrase that only you know. You should make sure to note your pass phrase down.
-
-DO NOT DELETE THIS EMAIL. Write me at tom@cryptup.org so that I can help. I respond very promptly." />
+                app:layout_constraintTop_toBottomOf="@+id/layoutFooterOfHeader" />
 
             <android.support.constraint.Guideline
                 android:id="@+id/guidelineLeft"

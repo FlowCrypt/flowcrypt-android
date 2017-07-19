@@ -29,6 +29,8 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
+import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
@@ -55,7 +57,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
-    private TextView textViewMessage;
+    private ViewGroup layoutMessageParts;
     private View layoutContent;
 
     private java.text.DateFormat dateFormat;
@@ -330,7 +332,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewSenderAddress = (TextView) view.findViewById(R.id.textViewSenderAddress);
         textViewDate = (TextView) view.findViewById(R.id.textViewDate);
         textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
-        textViewMessage = (TextView) view.findViewById(R.id.textViewMessage);
+        layoutMessageParts = (ViewGroup) view.findViewById(R.id.layoutMessageParts);
 
         layoutContent = view.findViewById(R.id.layoutContent);
 
@@ -360,16 +362,29 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 && !incomingMessageInfo.getMessageParts().isEmpty()) {
 
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+                LayoutInflater layoutInflater = LayoutInflater.from(getContext());
                 if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
-                    String messageWithCapitalFirstLetter =
-                            messagePart.getValue().substring(0, 1).toUpperCase() +
-                                    messagePart.getValue().substring(1);
-                    textViewMessage.append(messageWithCapitalFirstLetter);
-                    textViewMessage.append("\n\n");
+                    if (messagePart instanceof MessagePartPgpMessage) {
+                        TextView textViewMessagePartPgpMessage = (TextView) layoutInflater.inflate(
+                                R.layout.message_part_pgp_message, layoutMessageParts, false);
+
+                        textViewMessagePartPgpMessage.setText(messagePart.getValue());
+                        layoutMessageParts.addView(textViewMessagePartPgpMessage);
+
+                        continue;
+                    }
+
+                    if (messagePart instanceof MessagePartText) {
+                        TextView textViewMessagePartText = (TextView) layoutInflater.inflate(
+                                R.layout.message_part_text, layoutMessageParts, false);
+
+                        textViewMessagePartText.setText(messagePart.getValue());
+                        layoutMessageParts.addView(textViewMessagePartText);
+                    }
                 }
             }
         } else {
-            textViewMessage.setText(null);
+            layoutMessageParts.removeAllViews();
         }
     }
 
