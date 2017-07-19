@@ -29,8 +29,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.messages.MessagePart;
-import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
-import com.flowcrypt.email.model.messages.MessagePartText;
+import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
@@ -364,22 +363,64 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
                 if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
-                    if (messagePart instanceof MessagePartPgpMessage) {
-                        TextView textViewMessagePartPgpMessage = (TextView) layoutInflater.inflate(
-                                R.layout.message_part_pgp_message, layoutMessageParts, false);
+                    switch (messagePart.getMessagePartType()) {
+                        case PGP_MESSAGE:
+                            TextView textViewMessagePartPgpMessage = (TextView) layoutInflater
+                                    .inflate(R.layout.message_part_pgp_message,
+                                            layoutMessageParts, false);
 
-                        textViewMessagePartPgpMessage.setText(messagePart.getValue());
-                        layoutMessageParts.addView(textViewMessagePartPgpMessage);
+                            textViewMessagePartPgpMessage.setText(messagePart.getValue());
+                            layoutMessageParts.addView(textViewMessagePartPgpMessage);
+                            break;
 
-                        continue;
-                    }
+                        case TEXT:
+                            TextView textViewMessagePartText = (TextView) layoutInflater.inflate(
+                                    R.layout.message_part_text, layoutMessageParts, false);
 
-                    if (messagePart instanceof MessagePartText) {
-                        TextView textViewMessagePartText = (TextView) layoutInflater.inflate(
-                                R.layout.message_part_text, layoutMessageParts, false);
+                            textViewMessagePartText.setText(messagePart.getValue());
+                            layoutMessageParts.addView(textViewMessagePartText);
+                            break;
 
-                        textViewMessagePartText.setText(messagePart.getValue());
-                        layoutMessageParts.addView(textViewMessagePartText);
+                        case PGP_PUBLIC_KEY:
+                            MessagePartPgpPublicKey messagePartPgpPublicKey =
+                                    (MessagePartPgpPublicKey) messagePart;
+
+                            View messagePartPublicKey = layoutInflater.inflate(R.layout
+                                    .message_part_public_key, layoutMessageParts, false);
+
+                            TextView textViewKeyOwnerTemplate = (TextView) messagePartPublicKey
+                                    .findViewById(R.id.textViewKeyOwnerTemplate);
+                            TextView textViewKeyWordsTemplate = (TextView) messagePartPublicKey
+                                    .findViewById(R.id.textViewKeyWordsTemplate);
+                            TextView textViewFingerprintTemplate = (TextView) messagePartPublicKey
+                                    .findViewById(R.id.textViewFingerprintTemplate);
+
+                            if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
+                                textViewKeyOwnerTemplate.setText(
+                                        getString(R.string.template_message_part_public_key_owner,
+                                                messagePartPgpPublicKey.getKeyOwner()));
+                            }
+
+                            UIUtil.setHtmlTextToTextView(
+                                    getString(R.string.template_message_part_public_key_key_words,
+                                            messagePartPgpPublicKey.getKeyWords()),
+                                    textViewKeyWordsTemplate);
+
+                            UIUtil.setHtmlTextToTextView(
+                                    getString(R.string.template_message_part_public_key_fingerprint,
+                                            GeneralUtil.doSectionsInText(" ",
+                                                    messagePartPgpPublicKey.getFingerprint(), 4)),
+                                    textViewFingerprintTemplate);
+                            layoutMessageParts.addView(messagePartPublicKey);
+                            break;
+
+                        default:
+                            TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
+                                    R.layout.message_part_other, layoutMessageParts, false);
+
+                            textViewMessagePartOther.setText(messagePart.getValue());
+                            layoutMessageParts.addView(textViewMessagePartOther);
+                            break;
                     }
                 }
             }

@@ -18,6 +18,7 @@ import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
+import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -123,6 +124,20 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                     case MessageBlock.TYPE_PGP_MESSAGE:
                         messageParts.add(new MessagePartPgpMessage(decryptText(js,
                                 messageBlock.getContent())));
+                        break;
+
+                    case MessageBlock.TYPE_PGP_PUBLIC_KEY:
+                        String publicKey = messageBlock.getContent();
+                        String fingerprint =
+                                js.crypto_key_fingerprint(js.crypto_key_read(publicKey));
+                        String longId = js.crypto_key_longid(fingerprint);
+                        String keywords = js.mnemonic(longId);
+                        MessagePartPgpPublicKey messagePartPgpPublicKey
+                                = new MessagePartPgpPublicKey(publicKey, keywords,
+                                fingerprint, "TODO-DenBond7");
+                        //Todo-DenBond7 It is necessary to get the owner of a public key
+
+                        messageParts.add(messagePartPgpPublicKey);
                         break;
                     //Todo-DenBond7 need to describe other types of MessageBlock
                 }

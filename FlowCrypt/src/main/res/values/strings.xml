@@ -112,4 +112,7 @@
     <string name="no_subject">(no subject)</string>
     <string name="error_occurred_please_try_again">An error occurred. Please try again.</string>
     <string name="user_photo">The user photo</string>
+    <string name="template_message_part_public_key_owner">This message includes a Public Key for %1$s</string>
+    <string name="template_message_part_public_key_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
+    <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
 </resources>
