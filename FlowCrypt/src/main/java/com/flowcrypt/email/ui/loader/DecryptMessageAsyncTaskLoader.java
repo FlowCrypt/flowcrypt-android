@@ -11,10 +11,13 @@ import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.MimeAddress;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
@@ -132,13 +135,19 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                                 js.crypto_key_fingerprint(js.crypto_key_read(publicKey));
                         String longId = js.crypto_key_longid(fingerprint);
                         String keywords = js.mnemonic(longId);
+                        PgpKey pgpKey = js.crypto_key_read(publicKey);
+                        String keyOwner = pgpKey.getPrimaryUserId().getEmail();
+
+                        PgpContact pgpContact =
+                                new ContactsDaoSource().getPgpContact(getContext(), keyOwner);
+
                         MessagePartPgpPublicKey messagePartPgpPublicKey
-                                = new MessagePartPgpPublicKey(publicKey, keywords,
-                                fingerprint, "TODO-DenBond7");
-                        //Todo-DenBond7 It is necessary to get the owner of a public key
+                                = new MessagePartPgpPublicKey(publicKey, longId, keywords,
+                                fingerprint, keyOwner, pgpContact);
 
                         messageParts.add(messagePartPgpPublicKey);
                         break;
+
                     //Todo-DenBond7 need to describe other types of MessageBlock
                 }
             }

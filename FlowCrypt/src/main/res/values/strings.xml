@@ -115,4 +115,12 @@
     <string name="template_message_part_public_key_owner">This message includes a Public Key for %1$s</string>
     <string name="template_message_part_public_key_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
     <string name="template_message_part_public_key_fingerprint" formatted="false"><![CDATA[(Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>)]]></string>
+    <string name="show_the_public_key">Show the Public Key</string>
+    <string name="hide_the_public_key">Hide the Public Key</string>
+    <string name="save_contact">Save contact</string>
+    <string name="update_contact">Update contact</string>
+    <string name="contact_successfully_saved">The contact successfully saved!</string>
+    <string name="error_occurred_while_saving_contact">An error occurred while saving the contact.</string>
+    <string name="contact_successfully_updated">The contact successfully updated!</string>
+    <string name="error_occurred_while_updating_contact">An error occurred while updating the contact.</string>
 </resources>
