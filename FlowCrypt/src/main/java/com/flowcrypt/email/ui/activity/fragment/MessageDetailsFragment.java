@@ -8,7 +8,9 @@ package com.flowcrypt.email.ui.activity.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
@@ -20,7 +22,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -28,6 +34,10 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
@@ -54,7 +64,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
-    private TextView textViewMessage;
+    private ViewGroup layoutMessageParts;
     private View layoutContent;
 
     private java.text.DateFormat dateFormat;
@@ -97,15 +107,15 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public View getContentView() {
-        return layoutContent;
-    }
-
-    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         updateViews();
+    }
+
+    @Override
+    public View getContentView() {
+        return layoutContent;
     }
 
     @Override
@@ -329,7 +339,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewSenderAddress = (TextView) view.findViewById(R.id.textViewSenderAddress);
         textViewDate = (TextView) view.findViewById(R.id.textViewDate);
         textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
-        textViewMessage = (TextView) view.findViewById(R.id.textViewMessage);
+        layoutMessageParts = (ViewGroup) view.findViewById(R.id.layoutMessageParts);
 
         layoutContent = view.findViewById(R.id.layoutContent);
 
@@ -346,12 +356,222 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
             textViewSubject.setText(subject);
-            textViewMessage.setText(incomingMessageInfo.getMessage());
+            updateMessageView();
 
             if (incomingMessageInfo.getReceiveDate() != null) {
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
             }
         }
+    }
+
+    private void updateMessageView() {
+        if (incomingMessageInfo.getMessageParts() != null
+                && !incomingMessageInfo.getMessageParts().isEmpty()) {
+
+            for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+                LayoutInflater layoutInflater = LayoutInflater.from(getContext());
+                if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
+                    switch (messagePart.getMessagePartType()) {
+                        case PGP_MESSAGE:
+                            layoutMessageParts.addView(generatePgpMessagePart(messagePart,
+                                    layoutInflater));
+                            break;
+
+                        case TEXT:
+                            layoutMessageParts.addView(generateTextPart(messagePart,
+                                    layoutInflater));
+                            break;
+
+                        case PGP_PUBLIC_KEY:
+                            layoutMessageParts.addView(generatePublicKeyPart(
+                                    (MessagePartPgpPublicKey) messagePart, layoutInflater));
+                            break;
+
+                        default:
+                            layoutMessageParts.addView(generateMessagePart(messagePart,
+                                    layoutInflater, R.layout.message_part_other,
+                                    layoutMessageParts));
+                            break;
+                    }
+                }
+            }
+        } else {
+            layoutMessageParts.removeAllViews();
+        }
+    }
+
+    /**
+     * Generate the public key part. There we can see the public key details and save/update the
+     * key owner information to the local database.
+     *
+     * @param messagePartPgpPublicKey The {@link MessagePartPgpPublicKey} object which contains
+     *                                information about a public key and his owner.
+     * @param layoutInflater          The {@link LayoutInflater} instance.
+     * @return The generated view.
+     */
+    @NonNull
+    private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey,
+                                       LayoutInflater layoutInflater) {
+
+        View messagePartPublicKeyView = layoutInflater.inflate(
+                R.layout.message_part_public_key, layoutMessageParts, false);
+
+        TextView textViewKeyOwnerTemplate = (TextView) messagePartPublicKeyView
+                .findViewById(R.id.textViewKeyOwnerTemplate);
+        TextView textViewKeyWordsTemplate = (TextView) messagePartPublicKeyView
+                .findViewById(R.id.textViewKeyWordsTemplate);
+        TextView textViewFingerprintTemplate = (TextView) messagePartPublicKeyView
+                .findViewById(R.id.textViewFingerprintTemplate);
+        final TextView textViewPgpPublicKey = (TextView) messagePartPublicKeyView
+                .findViewById(R.id.textViewPgpPublicKey);
+        Switch switchShowPublicKey = (Switch) messagePartPublicKeyView
+                .findViewById(R.id.switchShowPublicKey);
+
+        switchShowPublicKey.setOnCheckedChangeListener(new CompoundButton
+                .OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean
+                    isChecked) {
+                textViewPgpPublicKey.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+
+                buttonView.setText(isChecked ? R.string.hide_the_public_key :
+                        R.string.show_the_public_key);
+            }
+        });
+
+        if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
+            textViewKeyOwnerTemplate.setText(
+                    getString(R.string.template_message_part_public_key_owner,
+                            messagePartPgpPublicKey.getKeyOwner()));
+        }
+
+        UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
+                messagePartPgpPublicKey.getKeyWords()), textViewKeyWordsTemplate);
+
+        UIUtil.setHtmlTextToTextView(
+                getString(R.string.template_message_part_public_key_fingerprint,
+                        GeneralUtil.doSectionsInText(" ",
+                                messagePartPgpPublicKey.getFingerprint(), 4)),
+                textViewFingerprintTemplate);
+
+        textViewPgpPublicKey.setText(messagePartPgpPublicKey.getValue());
+
+        if (messagePartPgpPublicKey.isPgpContactExists()) {
+            if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
+                initUpdateContactButton(messagePartPgpPublicKey, messagePartPublicKeyView);
+            }
+        } else {
+            initSaveContactButton(messagePartPgpPublicKey, messagePartPublicKeyView);
+        }
+
+        return messagePartPublicKeyView;
+    }
+
+    /**
+     * Init the save contact button. When we press this button a new contact will be saved to the
+     * local database.
+     *
+     * @param messagePartPgpPublicKey  The {@link MessagePartPgpPublicKey} object which contains
+     *                                 information about a public key and his owner.
+     * @param messagePartPublicKeyView The public key view container.
+     */
+    private void initSaveContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
+                                       View messagePartPublicKeyView) {
+        Button buttonSaveContact = (Button) messagePartPublicKeyView
+                .findViewById(R.id.buttonSaveContact);
+        if (buttonSaveContact != null) {
+            buttonSaveContact.setVisibility(View.VISIBLE);
+            buttonSaveContact.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Uri uri = new ContactsDaoSource().addRow(getContext(),
+                            new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
+                                    null,
+                                    messagePartPgpPublicKey.getValue(),
+                                    false,
+                                    null,
+                                    false,
+                                    messagePartPgpPublicKey.getFingerprint(),
+                                    messagePartPgpPublicKey.getLongId(),
+                                    messagePartPgpPublicKey.getKeyWords(), 0));
+                    if (uri != null) {
+                        Toast.makeText(getContext(),
+                                R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
+                        v.setVisibility(View.GONE);
+                    } else {
+                        Toast.makeText(getContext(),
+                                R.string.error_occurred_while_saving_contact,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Init the update contact button. When we press this button the contact will be updated in the
+     * local database.
+     *
+     * @param messagePartPgpPublicKey  The {@link MessagePartPgpPublicKey} object which contains
+     *                                 information about a public key and his owner.
+     * @param messagePartPublicKeyView The public key view container.
+     */
+    private void initUpdateContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
+                                         View messagePartPublicKeyView) {
+        Button buttonUpdateContact = (Button) messagePartPublicKeyView
+                .findViewById(R.id.buttonUpdateContact);
+        if (buttonUpdateContact != null) {
+            buttonUpdateContact.setVisibility(View.VISIBLE);
+            buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    boolean isUpdated = new ContactsDaoSource().updatePgpContact
+                            (getContext(),
+                                    new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
+                                            null,
+                                            messagePartPgpPublicKey.getValue(),
+                                            false,
+                                            null,
+                                            false,
+                                            messagePartPgpPublicKey.getFingerprint(),
+                                            messagePartPgpPublicKey.getLongId(),
+                                            messagePartPgpPublicKey.getKeyWords(), 0)) > 0;
+                    if (isUpdated) {
+                        Toast.makeText(getContext(),
+                                R.string.contact_successfully_updated,
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(),
+                                R.string.error_occurred_while_updating_contact,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    }
+
+    @NonNull
+    private TextView generateMessagePart(MessagePart messagePart, LayoutInflater layoutInflater,
+                                         int message_part_other, ViewGroup layoutMessageParts) {
+        TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
+                message_part_other, layoutMessageParts, false);
+
+        textViewMessagePartOther.setText(messagePart.getValue());
+        return textViewMessagePartOther;
+    }
+
+    @NonNull
+    private TextView generateTextPart(MessagePart messagePart, LayoutInflater layoutInflater) {
+        return generateMessagePart(messagePart, layoutInflater, R
+                .layout.message_part_text, layoutMessageParts);
+    }
+
+    @NonNull
+    private TextView generatePgpMessagePart(MessagePart messagePart,
+                                            LayoutInflater layoutInflater) {
+        return generateMessagePart(messagePart, layoutInflater,
+                R.layout.message_part_pgp_message, layoutMessageParts);
     }
 
     public interface OnActionListener {

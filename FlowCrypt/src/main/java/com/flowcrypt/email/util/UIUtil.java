@@ -10,10 +10,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.text.Html;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 /**
  * User interface util methods.
@@ -109,6 +113,23 @@ public class UIUtil {
                 firstView.setVisibility(show ? View.VISIBLE : View.GONE);
             }
         });
+    }
+
+    /**
+     * Set a HTML text to some TextView.
+     *
+     * @param text     The text which will be set to the current textView.
+     * @param textView The textView where we will set the HTML text.
+     */
+    @SuppressWarnings("deprecation")
+    public static void setHtmlTextToTextView(String text, TextView textView) {
+        if (textView != null && !TextUtils.isEmpty(text)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                textView.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                textView.setText(Html.fromHtml(text));
+            }
+        }
     }
 
 }

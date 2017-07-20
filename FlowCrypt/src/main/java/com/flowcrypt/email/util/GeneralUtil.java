@@ -95,4 +95,29 @@ public class GeneralUtil {
     public static String generateUniqueExtraKey(String key, Class c) {
         return BuildConfig.APPLICATION_ID + "." + c.getSimpleName() + "." + key;
     }
+
+    /**
+     * Insert arbitrary string at regular interval into another string
+     *
+     * @param template       String template which will be inserted to the original string.
+     * @param originalString The original string which will be formatted.
+     * @param groupSize      Group size
+     * @return The formatted string.
+     */
+    public static String doSectionsInText(String template, String originalString, int groupSize) {
+
+        if (template == null
+                || originalString == null
+                || groupSize <= 0
+                || originalString.length() <= groupSize) {
+            return originalString;
+        }
+
+        StringBuilder stringBuilder = new StringBuilder(originalString);
+
+        for (int i = stringBuilder.length(); i > 0; i -= groupSize) {
+            stringBuilder.insert(i, template);
+        }
+        return stringBuilder.toString();
+    }
 }

@@ -7,6 +7,8 @@
 package com.flowcrypt.email.js;
 
 import android.content.Context;
+import android.os.Build;
+import android.text.Html;
 
 import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.NodeJS;
@@ -249,6 +251,7 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .class, String.class, String.class});
         v8.registerJavaMethod(methods, "secure_random", "engine_host_secure_random", new Class[]{
                 Integer.class});
+        v8.registerJavaMethod(methods, "html_to_text", "html_to_text", new Class[]{String.class});
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -410,6 +413,14 @@ class JavaMethodsForJavascript {
 
     public String java_mod_pow_strings(String b, String e, String m) {
         return java_mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
+    }
+
+    public String html_to_text(String html) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString();
+        } else {
+            return Html.fromHtml(html).toString();
+        }
     }
 
     // Do modular exponentiation for the expression b^e mod m

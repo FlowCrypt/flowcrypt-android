@@ -82,15 +82,14 @@ public interface SyncListener {
      * This method called when a new messages received from the some folder.
      *
      * @param imapFolder                   The folder where the new messages exist.
-     * @param message                      The received messages.
+     * @param uid                          The UID of the message.
      * @param rawMessageWithOutAttachments The raw message without attachments.
      * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
      * @param requestCode                  The unique request code for the reply to
      *                                     {@link android.os.Messenger}.
      */
-    void onMessageDetailsReceived(IMAPFolder imapFolder, Message message, String
-            rawMessageWithOutAttachments, String ownerKey, int
-                                          requestCode);
+    void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
+            rawMessageWithOutAttachments, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.

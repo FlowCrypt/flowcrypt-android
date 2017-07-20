@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/default_margin_medium"
+    android:background="@drawable/bg_message_part_other"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewKeyOwnerTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textIsSelectable="true"
+        tools:text="This message includes a Public Key for tom@bitoasis.net." />
+
+    <TextView
+        android:id="@+id/textViewKeyWordsTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:textIsSelectable="true"
+        tools:text="KeyWords: ASK REFORM DEPEND TOWER ACTOR DIAGRAM " />
+
+    <TextView
+        android:id="@+id/textViewFingerprintTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textIsSelectable="true"
+        tools:text="(Fingerprint: 8B8A 05A2 216E E6E4 C5EE 3D54 0D56 88EB F310 2BE7)" />
+
+    <Switch
+        android:id="@+id/switchShowPublicKey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:checked="false"
+        android:switchPadding="@dimen/default_margin_small"
+        android:text="@string/show_the_public_key" />
+
+    <TextView
+        android:id="@+id/textViewPgpPublicKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textColor="#088447"
+        android:textIsSelectable="true"
+        android:visibility="gone"
+        tools:text="(Fingerprint: 8B8A 05A2 216E E6E4 C5EE 3D54 0D56 88EB F310 2BE7)"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/buttonSaveContact"
+        style="@style/AppWidget.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/save_contact"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/buttonUpdateContact"
+        style="@style/AppWidget.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/update_contact"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

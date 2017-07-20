@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/textViewMessagePartPgpMessage"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/default_margin_medium"
+    android:background="@drawable/bg_message_part_pgp_message"
+    android:textColor="@color/mine_shaft"
+    android:textIsSelectable="true"
+    android:textSize="@dimen/default_text_size_medium"
+    tools:text="This email contains a key backup. It will help you access your encrypted messages from other computers (along with your pass phrase). You can safely leave it in your inbox or archive it.
+
+The key below is protected with pass phrase that only you know. You should make sure to note your pass phrase down.
+
+DO NOT DELETE THIS EMAIL. Write me at tom@cryptup.org so that I can help. I respond very promptly." />
