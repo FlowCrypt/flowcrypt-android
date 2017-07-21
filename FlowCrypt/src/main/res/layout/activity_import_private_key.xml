@@ -4,24 +4,61 @@
   ~ Contributors: DenBond7
   -->
 
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layoutContent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity">
+    android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/importPrivateKeyView"
-        layout="@layout/content_import_key"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+    <TextView
+        android:id="@+id/textViewImportPrivateKey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
+        android:text="@string/import_private_key"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/text_size_setup_flow_crypt"
+        android:textStyle="bold"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-</android.support.design.widget.CoordinatorLayout>
+    <Button
+        android:id="@+id/buttonLoadFromFile"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_top_first_button"
+        android:text="@string/load_from_a_file"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/textViewImportPrivateKey" />
+
+    <Button
+        android:id="@+id/buttonLoadFromClipboard"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/margin_between_buttons"
+        android:text="@string/load_from_clipboard"
+        android:theme="@style/AppWidget.Button.Raised.Green"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintTop_toBottomOf="@+id/buttonLoadFromFile" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+
+</android.support.constraint.ConstraintLayout>

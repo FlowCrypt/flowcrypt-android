@@ -30,7 +30,8 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
             GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
                     CreateOrImportKeyActivity.class);
 
-    private static final String KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_ACCOUNT",
+    private static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_ACCOUNT",
             CreateOrImportKeyActivity.class);
 
     private boolean isShowAnotherAccountButton = true;
@@ -38,7 +39,7 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
 
     public static Intent newIntent(Context context, Account account, boolean isShowAnotherAccount) {
         Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
-        intent.putExtra(KEY_ACCOUNT, account);
+        intent.putExtra(EXTRA_KEY_ACCOUNT, account);
         intent.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, isShowAnotherAccount);
         return intent;
     }
@@ -64,7 +65,8 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
         if (getIntent() != null) {
             this.isShowAnotherAccountButton = getIntent().getBooleanExtra
                     (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-            this.account = getIntent().getParcelableExtra(CreateOrImportKeyActivity.KEY_ACCOUNT);
+            this.account =
+                    getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT);
         }
 
         initViews();
