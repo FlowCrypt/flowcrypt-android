@@ -127,8 +127,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                             Intent startEmailServiceIntent = new Intent(this, EmailSyncService
                                     .class);
                             startEmailServiceIntent.putExtra(EmailSyncService
-                                            .EXTRA_KEY_GMAIL_ACCOUNT,
-                                    account);
+                                    .EXTRA_KEY_GMAIL_ACCOUNT, account);
                             startService(startEmailServiceIntent);
                         }
 
@@ -136,6 +135,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                                 EmailManagerActivity.class);
                         intentRunEmailManagerActivity.putExtra(EmailManagerActivity
                                 .EXTRA_KEY_ACCOUNT, account);
+                        intentRunEmailManagerActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intentRunEmailManagerActivity);
                         finish();
                         break;
