@@ -33,15 +33,15 @@ import java.util.List;
  *         Time: 01:37
  *         E-mail: DenBond7@gmail.com
  */
-public class RestoreAccountActivity extends BaseActivity
+public class LoadPrivateKeysBackupFromGmailActivity extends BaseActivity
         implements LoaderManager.LoaderCallbacks<LoaderResult>,
         RestoreAccountFragment.OnRunEmailManagerActivityListener {
 
     public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-            "KEY_EXTRA_PRIVATE_KEYS", RestoreAccountActivity.class);
+            "KEY_EXTRA_PRIVATE_KEYS", LoadPrivateKeysBackupFromGmailActivity.class);
 
     public static final String KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
-            "KEY_EXTRA_ACCOUNT", RestoreAccountActivity.class);
+            "KEY_EXTRA_ACCOUNT", LoadPrivateKeysBackupFromGmailActivity.class);
 
     private static final int REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY = 10;
 
@@ -237,7 +237,8 @@ public class RestoreAccountActivity extends BaseActivity
                     @Override
                     public void onClick(View v) {
                         getSupportLoaderManager().restartLoader(R.id
-                                .loader_id_load_gmail_backups, null, RestoreAccountActivity
+                                        .loader_id_load_gmail_backups, null,
+                                LoadPrivateKeysBackupFromGmailActivity
                                 .this);
                     }
                 });

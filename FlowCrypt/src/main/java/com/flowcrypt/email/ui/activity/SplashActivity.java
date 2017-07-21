@@ -216,9 +216,9 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             } else {
                 if (account != null) {
                     Intent intentRunRestoreActivity = new Intent(this,
-                            RestoreAccountActivity.class);
+                            LoadPrivateKeysBackupFromGmailActivity.class);
                     intentRunRestoreActivity.putExtra(
-                            RestoreAccountActivity.KEY_EXTRA_ACCOUNT, account);
+                            LoadPrivateKeysBackupFromGmailActivity.KEY_EXTRA_ACCOUNT, account);
                     startActivity(intentRunRestoreActivity);
                 } else {
                     //todo-denbond7 handle this situation

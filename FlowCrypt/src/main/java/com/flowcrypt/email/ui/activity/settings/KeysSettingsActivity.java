@@ -96,11 +96,13 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
                                     (CreateOrImportKeyActivity.KEY_EXTRA_PRIVATE_KEYS);
                             if (privateKeys != null && privateKeys.size() > 0) {
                                 Intent intentRunRestoreAccountActivity = new Intent(this,
-                                        RestoreAccountActivity.class);
+                                        LoadPrivateKeysBackupFromGmailActivity.class);
                                 intentRunRestoreAccountActivity.putExtra(
-                                        RestoreAccountActivity.KEY_EXTRA_ACCOUNT, account);
+                                        LoadPrivateKeysBackupFromGmailActivity.KEY_EXTRA_ACCOUNT,
+                                         account);
                                 intentRunRestoreAccountActivity.putExtra(
-                                        RestoreAccountActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
+                                        LoadPrivateKeysBackupFromGmailActivity
+                                        .KEY_EXTRA_PRIVATE_KEYS, privateKeys);
                                 startActivity(intentRunRestoreAccountActivity);
                                 finish();
                             } else {
