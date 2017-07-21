@@ -22,6 +22,7 @@ import android.view.View;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -44,8 +45,10 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ACCOUNT", ImportPrivateKeyActivity.class);
 
-    private static final int REQUEST_CODE_IMPORT_KEYS = 101;
-    private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 102;
+    private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 10;
+    private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 11;
+    private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 12;
+
     private ArrayList<String> privateKeys;
     private Account account;
 
@@ -83,7 +86,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CODE_IMPORT_KEYS:
+            case REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null) {
@@ -105,13 +108,43 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                             }
 
                             if (!privateKeys.isEmpty()) {
-
+                                startActivityForResult(CheckKeysActivity.newIntent(this,
+                                        privateKeys,
+                                        getString(R.string.template_check_key_name, "test"),
+                                        getString(R.string.continue_),
+                                        getString(R.string.choose_another_key)),
+                                        REQUEST_CODE_CHECK_PRIVATE_KEYS);
                             }
                         }
                         break;
                 }
                 break;
 
+            case REQUEST_CODE_CHECK_PRIVATE_KEYS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (account != null) {
+                            Intent startEmailServiceIntent = new Intent(this, EmailSyncService
+                                    .class);
+                            startEmailServiceIntent.putExtra(EmailSyncService
+                                            .EXTRA_KEY_GMAIL_ACCOUNT,
+                                    account);
+                            startService(startEmailServiceIntent);
+                        }
+
+                        Intent intentRunEmailManagerActivity = new Intent(this,
+                                EmailManagerActivity.class);
+                        intentRunEmailManagerActivity.putExtra(EmailManagerActivity
+                                .EXTRA_KEY_ACCOUNT, account);
+                        startActivity(intentRunEmailManagerActivity);
+                        finish();
+                        break;
+
+                    case CheckKeysActivity.RESULT_NEGATIVE:
+
+                        break;
+                }
+                break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -192,7 +225,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
         intent.setType(Constants.MIME_TYPE_PGP_KEY);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(Intent.createChooser(intent,
-                getString(R.string.select_key_or_keys)), REQUEST_CODE_IMPORT_KEYS);
+                getString(R.string.select_key_or_keys)),
+                REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM);
     }
 
     private void initViews() {

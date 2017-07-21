@@ -126,4 +126,7 @@
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
+    <string name="choose_another_key">Choose another key</string>
+    <string name="continue_">Continue</string>
+    <string name="template_check_key_name">Private Key: [%1$s]</string>
 </resources>
