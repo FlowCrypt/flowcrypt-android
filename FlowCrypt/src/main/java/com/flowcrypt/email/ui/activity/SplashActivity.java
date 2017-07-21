@@ -12,6 +12,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
@@ -20,10 +22,12 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -38,6 +42,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The launcher Activity.
@@ -48,8 +53,8 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 public class SplashActivity extends BaseActivity implements SplashActivityFragment
-        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient
-        .ConnectionCallbacks {
+        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks, LoaderManager.LoaderCallbacks<LoaderResult> {
     private static final String ACTION_SIGN_OUT = GeneralUtil.generateUniqueExtraKey
             ("ACTION_SIGN_OUT", SplashActivity.class);
     private static final String ACTION_REVOKE_ACCESS = GeneralUtil.generateUniqueExtraKey
@@ -66,6 +71,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
 
     private boolean isSignOutAction;
     private boolean isRevokeAccessAction;
+    private Account account;
 
     /**
      * Generate the sign out intent.
@@ -188,10 +194,46 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         }
     }
 
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_load_gmail_backups:
+                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
+
+            default:
+                return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        switch (loader.getId()) {
+            case R.id.loader_id_load_gmail_backups:
+                if (loaderResult.getResult() != null) {
+                    List<String> stringList = (List<String>) loaderResult.getResult();
+                    finish();
+                    if (stringList.isEmpty()) {
+                        startActivity(new Intent(this, CreateOrImportKeyActivity.class));
+                    } else {
+                        //start com.flowcrypt.email.ui.activity.CheckKeysActivity
+                    }
+                } else if (loaderResult.getException() != null) {
+                    UIUtil.showInfoSnackbar(getRootView(),
+                            loaderResult.getException().getMessage());
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
     private void handleSignInResult(GoogleSignInResult googleSignInResult) {
         if (googleSignInResult.isSuccess()) {
-
-            Account account = null;
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
@@ -200,8 +242,8 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 //todo-denbond7 handle this situation
             }
 
-            finish();
             if (SecurityUtils.isBackupKeysExist(this)) {
+                finish();
                 if (account != null) {
                     Intent startEmailServiceIntent = new Intent(this, EmailSyncService.class);
                     startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
@@ -215,11 +257,8 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 startActivity(intentRunEmailManagerActivity);
             } else {
                 if (account != null) {
-                    Intent intentRunRestoreActivity = new Intent(this,
-                            LoadPrivateKeysBackupFromGmailActivity.class);
-                    intentRunRestoreActivity.putExtra(
-                            LoadPrivateKeysBackupFromGmailActivity.KEY_EXTRA_ACCOUNT, account);
-                    startActivity(intentRunRestoreActivity);
+                    getSupportLoaderManager().initLoader(
+                            R.id.loader_id_load_gmail_backups, null, this);
                 } else {
                     //todo-denbond7 handle this situation
                 }
@@ -229,8 +268,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus()
                         .getStatusMessage());
             }
-            signInView.setVisibility(View.VISIBLE);
-            splashView.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
         }
     }
 
