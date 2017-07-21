@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.View;
-import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -100,7 +99,7 @@ public class RestoreAccountActivity extends BaseActivity
             case REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        if (data != null && data.hasExtra(CreateOrImportKeyActivity
+                        /*if (data != null && data.hasExtra(CreateOrImportKeyActivity
                                 .KEY_EXTRA_PRIVATE_KEYS)) {
                             this.privateKeys = data.getStringArrayListExtra
                                     (CreateOrImportKeyActivity.KEY_EXTRA_PRIVATE_KEYS);
@@ -118,7 +117,7 @@ public class RestoreAccountActivity extends BaseActivity
                                     Toast.LENGTH_SHORT).show();
                             startActivityForResult(new Intent(this, CreateOrImportKeyActivity
                                     .class), REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
-                        }
+                        }*/
                         break;
 
                     case Activity.RESULT_CANCELED:

@@ -123,4 +123,7 @@
     <string name="error_occurred_while_saving_contact">An error occurred while saving the contact.</string>
     <string name="contact_successfully_updated">The contact successfully updated!</string>
     <string name="error_occurred_while_updating_contact">An error occurred while updating the contact.</string>
+    <string name="import_private_key">Import Private Key</string>
+    <string name="load_from_a_file">Load from a file</string>
+    <string name="load_from_clipboard">Load from clipboard</string>
 </resources>

@@ -17,7 +17,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -25,13 +24,11 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
-import com.flowcrypt.email.ui.activity.RestoreAccountActivity;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This Activity show information about available keys in the database.
@@ -93,7 +90,7 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
             case REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        if (data != null && data.hasExtra(CreateOrImportKeyActivity
+                        /*if (data != null && data.hasExtra(CreateOrImportKeyActivity
                                 .KEY_EXTRA_PRIVATE_KEYS)) {
                             ArrayList<String> privateKeys = data.getStringArrayListExtra
                                     (CreateOrImportKeyActivity.KEY_EXTRA_PRIVATE_KEYS);
@@ -115,7 +112,7 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
                             Toast.makeText(this, R.string.error_occurred_please_try_again,
                                     Toast.LENGTH_SHORT).show();
                             runCreateOrImportKeyActivity();
-                        }
+                        }*/
                         break;
                 }
                 break;

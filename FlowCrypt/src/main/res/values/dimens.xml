@@ -43,7 +43,7 @@
     <dimen name="margin_top_button_select_another_account">24dp</dimen>
     <dimen name="height_silver_line">1dp</dimen>
     <dimen name="size_of_small_progressbar">16dp</dimen>
-    <dimen name="margin_top_fisrt_button">96dp</dimen>
+    <dimen name="margin_top_first_button">96dp</dimen>
     <dimen name="margin_between_buttons">32dp</dimen>
     <dimen name="user_photo_size">48dp</dimen>
 </resources>

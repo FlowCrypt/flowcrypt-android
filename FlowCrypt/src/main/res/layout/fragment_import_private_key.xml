@@ -12,11 +12,11 @@
     tools:context="com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment">
 
     <TextView
-        android:id="@+id/textViewSetupFlowCrypt"
+        android:id="@+id/textViewImportPrivateKey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
-        android:text="@string/set_up_flow_crypt"
+        android:text="@string/import_private_key"
         android:textColor="@color/gray"
         android:textSize="@dimen/text_size_setup_flow_crypt"
         android:textStyle="bold"
@@ -25,41 +25,28 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/buttonCreateNewKey"
+        android:id="@+id/buttonLoadFromFile"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_first_button"
-        android:enabled="false"
-        android:text="@string/create_a_new_key"
+        android:text="@string/load_from_a_file"
         android:theme="@style/AppWidget.Button.Raised.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewImportPrivateKey" />
 
     <Button
-        android:id="@+id/buttonImportMyKey"
+        android:id="@+id/buttonLoadFromClipboard"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
-        android:text="@string/import_my_key"
+        android:text="@string/load_from_clipboard"
         android:theme="@style/AppWidget.Button.Raised.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/buttonCreateNewKey" />
-
-    <Button
-        android:id="@+id/buttonSelectAnotherAccount"
-        style="@style/AppWidget.Button"
-        android:layout_width="0dp"
-        android:layout_marginTop="@dimen/margin_between_buttons"
-        android:text="@string/use_another_account"
-        android:theme="@style/AppWidget.Button.Raised.Grey"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/buttonImportMyKey" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonLoadFromFile" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineLeft"
