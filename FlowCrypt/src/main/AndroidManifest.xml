@@ -40,10 +40,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.LoadPrivateKeysBackupFromGmailActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.MessageDetailsActivity"
             android:screenOrientation="portrait" />
 

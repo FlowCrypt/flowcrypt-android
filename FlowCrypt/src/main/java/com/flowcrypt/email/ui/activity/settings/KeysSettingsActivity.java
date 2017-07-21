@@ -23,7 +23,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
@@ -167,10 +166,10 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
     }
 
     private void runCreateOrImportKeyActivity() {
-        Intent intent = new Intent(this, CreateOrImportKeyActivity.class);
+        /*Intent intent = new Intent(this, CreateOrImportKeyActivity.class);
         intent.putExtra(CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON,
                 false);
-        startActivityForResult(intent, REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
+        startActivityForResult(intent, REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);*/
     }
 
     private void initViews() {

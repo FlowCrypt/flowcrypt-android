@@ -215,7 +215,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                     List<String> stringList = (List<String>) loaderResult.getResult();
                     finish();
                     if (stringList.isEmpty()) {
-                        startActivity(new Intent(this, CreateOrImportKeyActivity.class));
+                        startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
                     } else {
                         //start com.flowcrypt.email.ui.activity.CheckKeysActivity
                     }
