@@ -11,7 +11,6 @@ import android.os.Build;
 import android.text.Html;
 
 import com.eclipsesource.v8.JavaCallback;
-import com.eclipsesource.v8.NodeJS;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
@@ -28,8 +27,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
+import java.security.spec.RSAPrivateKeySpec;
 import java.util.Arrays;
+
+import javax.crypto.Cipher;
 
 
 public class Js { // Create one object per thread and use them separately. Not thread-safe.
@@ -252,6 +257,9 @@ public class Js { // Create one object per thread and use them separately. Not t
         v8.registerJavaMethod(methods, "secure_random", "engine_host_secure_random", new Class[]{
                 Integer.class});
         v8.registerJavaMethod(methods, "html_to_text", "html_to_text", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "rsa_decrypt", "java_rsa_decrypt", new Class[]{V8Array.class,
+                V8Array.class, V8Array.class});
+
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -446,6 +454,25 @@ class JavaMethodsForJavascript {
         }
 
         return (b.multiply(java_mod_pow(b,e.subtract(one),m))).mod(m);
+    }
+
+    private BigInteger big_integer(V8Array v8arr) {
+        return new BigInteger(v8arr.getBytes(0, v8arr.length()));
+    }
+
+    public String rsa_decrypt(V8Array modulus, V8Array exponent, V8Array encrypted) {
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            KeySpec keySpec = new RSAPrivateKeySpec(big_integer(modulus), big_integer(exponent));
+            PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+            Cipher decryptCipher = Cipher.getInstance("RSA/ECB/NoPadding");
+            decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] decrypted_bytes = decryptCipher.doFinal(encrypted.getBytes(0, encrypted.length()));
+            return new BigInteger(decrypted_bytes).toString();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return "";
     }
 
     public V8Array secure_random(Integer byte_length) {
