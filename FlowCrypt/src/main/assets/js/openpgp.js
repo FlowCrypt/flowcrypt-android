@@ -6867,26 +6867,28 @@ exports.default = {
         case 'rsa_encrypt_sign':
         case 'rsa_encrypt':
             // decrypt in java
-            var modulus = [0].concat(str2bin(keyIntegers[0].toBytes()));
-            var exponent = str2bin(keyIntegers[2].toBytes());
             var encrypted = str2bin(dataIntegers[0].toBytes());
+            var modulus = keyIntegers[0].data.toString();
+            var exponent = keyIntegers[2].data.toString()
             var r = dataIntegers[0].data.clone();
             var string_bi = java_rsa_decrypt(modulus, exponent, encrypted);
-            r.fromString(string_bi);
-            return r;
-
-//          // original javascript
-//          var rsa = new _public_key2.default.rsa();
-//          // 0 and 1 are the public key.
-//          var n = keyIntegers[0].toBigInteger();
-//          var e = keyIntegers[1].toBigInteger();
-//          // 2 to 5 are the private key.
-//          var d = keyIntegers[2].toBigInteger();
-//          p = keyIntegers[3].toBigInteger();
-//          var q = keyIntegers[4].toBigInteger();
-//          var u = keyIntegers[5].toBigInteger();
-//          var m = dataIntegers[0].toBigInteger();
-//          return rsa.decrypt(m, n, e, d, p, q, u);
+            if(string_bi && string_bi[0] !== '-') { // if java decrypted it successfully
+              r.fromString(string_bi);
+              return r;
+            } else { // fallback on JavaScript
+              console.log('JAVA FAILED TO DECRYPT SESSION KEY FOR THIS MESSAGE: Falling back on JavaScript');
+              var rsa = new _public_key2.default.rsa();
+              // 0 and 1 are the public key.
+              var n = keyIntegers[0].toBigInteger();
+              var e = keyIntegers[1].toBigInteger();
+              // 2 to 5 are the private key.
+              var d = keyIntegers[2].toBigInteger();
+              p = keyIntegers[3].toBigInteger();
+              var q = keyIntegers[4].toBigInteger();
+              var u = keyIntegers[5].toBigInteger();
+              var m = dataIntegers[0].toBigInteger();
+              return rsa.decrypt(m, n, e, d, p, q, u);
+            }
         case 'elgamal':
           var elgamal = new _public_key2.default.elgamal();
           var x = keyIntegers[3].toBigInteger();

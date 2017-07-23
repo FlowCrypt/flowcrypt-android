@@ -257,8 +257,8 @@ public class Js { // Create one object per thread and use them separately. Not t
         v8.registerJavaMethod(methods, "secure_random", "engine_host_secure_random", new Class[]{
                 Integer.class});
         v8.registerJavaMethod(methods, "html_to_text", "html_to_text", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "rsa_decrypt", "java_rsa_decrypt", new Class[]{V8Array.class,
-                V8Array.class, V8Array.class});
+        v8.registerJavaMethod(methods, "rsa_decrypt", "java_rsa_decrypt", new Class[]{String.class,
+                String.class, V8Array.class});
 
     }
 
@@ -456,21 +456,17 @@ class JavaMethodsForJavascript {
         return (b.multiply(java_mod_pow(b,e.subtract(one),m))).mod(m);
     }
 
-    private BigInteger big_integer(V8Array v8arr) {
-        return new BigInteger(v8arr.getBytes(0, v8arr.length()));
-    }
-
-    public String rsa_decrypt(V8Array modulus, V8Array exponent, V8Array encrypted) {
+    public String rsa_decrypt(String modulus, String exponent, V8Array encrypted) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            KeySpec keySpec = new RSAPrivateKeySpec(big_integer(modulus), big_integer(exponent));
+            KeySpec keySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(exponent));
             PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
             Cipher decryptCipher = Cipher.getInstance("RSA/ECB/NoPadding");
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] decrypted_bytes = decryptCipher.doFinal(encrypted.getBytes(0, encrypted.length()));
             return new BigInteger(decrypted_bytes).toString();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("JAVA RSA ERROR:" + e.getClass() + " --- "  + e.getMessage());
         }
         return "";
     }
