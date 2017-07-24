@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -42,7 +43,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * The launcher Activity.
@@ -61,6 +62,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             ("ACTION_REVOKE_ACCESS", SplashActivity.class);
 
     private static final int REQUEST_CODE_SIGN_IN = 100;
+    private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
     /**
      * The main entry point for Google Play services integration.
      */
@@ -156,6 +158,24 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 handleSignInResult(googleSignInResult);
                 break;
 
+            case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, account);
+                        finish();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                        finish();
+                        break;
+
+                    case CheckKeysActivity.RESULT_NEGATIVE:
+                        isSignOutAction = true;
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -212,12 +232,17 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
                 if (loaderResult.getResult() != null) {
-                    List<String> stringList = (List<String>) loaderResult.getResult();
-                    finish();
+                    ArrayList<String> stringList = (ArrayList<String>) loaderResult.getResult();
                     if (stringList.isEmpty()) {
+                        finish();
                         startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
                     } else {
-                        //start com.flowcrypt.email.ui.activity.CheckKeysActivity
+                        startActivityForResult(CheckKeysActivity.newIntent(this,
+                                stringList,
+                                getString(R.string.found_backup_of_your_account_key),
+                                getString(R.string.continue_),
+                                getString(R.string.use_another_account)),
+                                REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
                     }
                 } else if (loaderResult.getException() != null) {
                     UIUtil.showInfoSnackbar(getRootView(),
@@ -243,18 +268,9 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             }
 
             if (SecurityUtils.isBackupKeysExist(this)) {
+                EmailSyncService.startEmailSyncService(this, account);
+                EmailManagerActivity.runEmailManagerActivity(this, account);
                 finish();
-                if (account != null) {
-                    Intent startEmailServiceIntent = new Intent(this, EmailSyncService.class);
-                    startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
-                            account);
-                    startService(startEmailServiceIntent);
-                }
-
-                Intent intentRunEmailManagerActivity = new Intent(this, EmailManagerActivity.class);
-                intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
-                        account);
-                startActivity(intentRunEmailManagerActivity);
             } else {
                 if (account != null) {
                     getSupportLoaderManager().initLoader(

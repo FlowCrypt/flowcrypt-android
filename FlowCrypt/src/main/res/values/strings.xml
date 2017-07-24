@@ -37,7 +37,7 @@
     <string name="all_labels">All labels</string>
     <string name="no_results">No results</string>
     <string name="set_up_flow_crypt">Set up FlowCrypt</string>
-    <string name="found_backup_of_your_account_key">Found backup of your account key</string>
+    <string name="found_backup_of_your_account_key">Found a backup of your account key</string>
     <string name="enter_your_pass_phrase">Enter your pass phrase</string>
     <string name="load_account">Load Account</string>
     <string name="loading_account">Loading account</string>
@@ -46,7 +46,7 @@
     <string name="passphrase_must_be_non_empty">Passphrase must be non-empty!</string>
     <string name="your_message_must_be_non_empty">Your message must be non-empty!</string>
     <string name="password_is_incorrect">Password is incorrect, try again!</string>
-    <string name="use_another_account">Use another Account</string>
+    <string name="use_another_account">Use another account</string>
     <string name="reply_all">Reply all</string>
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Something wrong with receiving a message!</string>

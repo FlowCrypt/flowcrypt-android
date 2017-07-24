@@ -26,7 +26,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
@@ -66,7 +65,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
     @Override
     public LoaderResult loadInBackground() {
-        List<String> keys = new ArrayList<>();
+        ArrayList<String> keys = new ArrayList<>();
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);

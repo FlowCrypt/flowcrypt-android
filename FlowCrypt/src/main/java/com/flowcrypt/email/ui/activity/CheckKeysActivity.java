@@ -119,8 +119,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 break;
 
             case R.id.buttonNegativeAction:
-                finish();
                 setResult(RESULT_NEGATIVE);
+                finish();
                 break;
         }
     }

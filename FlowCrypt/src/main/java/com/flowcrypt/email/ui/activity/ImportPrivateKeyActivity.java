@@ -123,21 +123,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
             case REQUEST_CODE_CHECK_PRIVATE_KEYS:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        if (account != null) {
-                            Intent startEmailServiceIntent = new Intent(this, EmailSyncService
-                                    .class);
-                            startEmailServiceIntent.putExtra(EmailSyncService
-                                    .EXTRA_KEY_GMAIL_ACCOUNT, account);
-                            startService(startEmailServiceIntent);
-                        }
-
-                        Intent intentRunEmailManagerActivity = new Intent(this,
-                                EmailManagerActivity.class);
-                        intentRunEmailManagerActivity.putExtra(EmailManagerActivity
-                                .EXTRA_KEY_ACCOUNT, account);
-                        intentRunEmailManagerActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intentRunEmailManagerActivity);
+                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, account);
                         finish();
                         break;
 
