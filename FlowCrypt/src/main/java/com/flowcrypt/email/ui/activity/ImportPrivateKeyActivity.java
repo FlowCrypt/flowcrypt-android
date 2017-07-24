@@ -9,6 +9,8 @@ package com.flowcrypt.email.ui.activity;
 import android.Manifest;
 import android.accounts.Account;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,12 +20,16 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -47,12 +53,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 10;
     private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 11;
     private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 12;
-    private ArrayList<PrivateKeyDetails> privateKeyDetailsList;
     private Account account;
-
-    public ImportPrivateKeyActivity() {
-        this.privateKeyDetailsList = new ArrayList<>();
-    }
+    private ClipboardManager clipboardManager;
 
     public static Intent newIntent(Context context, Account account) {
         Intent intent = new Intent(context, ImportPrivateKeyActivity.class);
@@ -78,6 +80,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
             this.account = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT);
         }
 
+        clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+
         initViews();
     }
 
@@ -88,6 +92,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null) {
+                            ArrayList<PrivateKeyDetails> privateKeyDetailsList = new ArrayList<>();
                             if (checkPrivateKeySize(data.getData())) {
                                 privateKeyDetailsList.add(new PrivateKeyDetails(
                                         GeneralUtil.getFileNameFromUri(this, data.getData()),
@@ -175,7 +180,63 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                     }
                 }
                 break;
+
+            case R.id.buttonLoadFromClipboard:
+                if (clipboardManager.hasPrimaryClip()) {
+                    ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
+                    CharSequence privateKeyFromClipboard = item.getText();
+                    if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
+                        if (isValidPrivateKey(privateKeyFromClipboard.toString())) {
+                            ArrayList<PrivateKeyDetails> privateKeyDetailsList = new ArrayList<>();
+                            privateKeyDetailsList.add(new PrivateKeyDetails(null,
+                                    privateKeyFromClipboard.toString(),
+                                    PrivateKeyDetails.Type.CLIPBOARD));
+                            startActivityForResult(CheckKeysActivity.newIntent(this,
+                                    privateKeyDetailsList,
+                                    getString(R.string.loaded_private_key_from_your_clipboard),
+                                    getString(R.string.continue_),
+                                    getString(R.string.choose_another_key)),
+                                    REQUEST_CODE_CHECK_PRIVATE_KEYS);
+                            showInfoSnackbar(getRootView(), privateKeyFromClipboard.toString());
+                        } else {
+                            InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance
+                                    (getString(R.string.hint), getString(R.string
+                                            .hint_clipboard_has_wrong_structure));
+                            infoDialogFragment.show(getSupportFragmentManager(),
+                                    InfoDialogFragment.class.getSimpleName());
+                        }
+                    } else {
+                        showClipboardIsEmptyInfoDialog();
+                    }
+                } else {
+                    showClipboardIsEmptyInfoDialog();
+                }
+                break;
         }
+    }
+
+    /**
+     * Check that the private key has a valid structure.
+     *
+     * @param privateKeyFromClipboard The armored private key.
+     * @return true if private key has valid structure, otherwise false.
+     */
+    private boolean isValidPrivateKey(String privateKeyFromClipboard) {
+        //todo-denbond7 need to use loader to do this check (for better performance)
+        try {
+            Js js = new Js(this, null);
+            String normalizedArmoredKey = js.crypto_key_normalize(privateKeyFromClipboard);
+            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+            if (!TextUtils.isEmpty(pgpKey.getLongid())
+                    && !TextUtils.isEmpty(pgpKey.getFingerprint())
+                    && pgpKey.getPrimaryUserId() != null) {
+                return pgpKey.isPrivate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     /**
@@ -211,8 +272,6 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
      * After the user sees the explanation, we try again to request the permission.
      */
     private void runSelectFileIntent() {
-        privateKeyDetailsList.clear();
-
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -220,6 +279,14 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
         startActivityForResult(Intent.createChooser(intent,
                 getString(R.string.select_key_or_keys)),
                 REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM);
+    }
+
+    private void showClipboardIsEmptyInfoDialog() {
+        InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance
+                (getString(R.string.hint), getString(R.string
+                        .hint_clipboard_is_empty, getString(R.string.app_name)));
+        infoDialogFragment.show(getSupportFragmentManager(),
+                InfoDialogFragment.class.getSimpleName());
     }
 
     private void initViews() {
