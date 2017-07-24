@@ -129,4 +129,6 @@
     <string name="choose_another_key">Choose another key</string>
     <string name="continue_">Continue</string>
     <string name="template_check_key_name">Private Key: [%1$s]</string>
+    <string name="can_not_read_this_private_key">Can not read this private key</string>
+    <string name="select_correct_private_key">Please select a correct private key</string>
 </resources>

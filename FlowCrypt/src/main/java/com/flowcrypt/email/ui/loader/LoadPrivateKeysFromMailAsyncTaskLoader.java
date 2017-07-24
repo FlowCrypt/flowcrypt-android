@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
@@ -65,7 +66,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
     @Override
     public LoaderResult loadInBackground() {
-        ArrayList<String> keys = new ArrayList<>();
+        ArrayList<PrivateKeyDetails> privateKeyDetailsList = new ArrayList<>();
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -81,14 +82,16 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
             for (Message message : foundMessages) {
                 String key = getKeyFromMessageIfItExists(message);
-                if (!TextUtils.isEmpty(key) && !keys.contains(key)) {
-                    keys.add(key);
+                if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList,
+                        key)) {
+                    privateKeyDetailsList.add(new PrivateKeyDetails(key,
+                            PrivateKeyDetails.Type.EMAIL));
                 }
             }
 
             gmailFolder.close(false);
             gmailSSLStore.close();
-            return new LoaderResult(keys, null);
+            return new LoaderResult(privateKeyDetailsList, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);
@@ -98,6 +101,23 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     @Override
     public void onStopLoading() {
         cancelLoad();
+    }
+
+    /**
+     * Check is the private key exists in the keys list.
+     *
+     * @param privateKeyDetailsList The list of {@link PrivateKeyDetails} objects.
+     * @param key                   The private key armored string.
+     * @return true if the key not exists in the list, otherwise false.
+     */
+    private boolean privateKeyNotExistsInList(ArrayList<PrivateKeyDetails> privateKeyDetailsList,
+                                              String key) {
+        for (PrivateKeyDetails privateKeyDetails : privateKeyDetailsList) {
+            if (key.equals(privateKeyDetails.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

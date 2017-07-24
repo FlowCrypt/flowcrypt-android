@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
@@ -55,7 +56,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             .generateUniqueExtraKey(
                     "KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE", CheckKeysActivity.class);
 
-    private ArrayList<String> privateKeys;
+    private ArrayList<PrivateKeyDetails> privateKeyDetailsList;
     private EditText editTextKeyPassword;
     private View progressBar;
     private String bottomTitle;
@@ -63,8 +64,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     private String anotherAccountButtonTitle;
     private boolean isThrowErrorIfDuplicateFound;
 
-    public static Intent newIntent(Context context, ArrayList<String> privateKeys, String
-            bottomTitle, String checkButtonTitle, String negativeActionButtonTitle) {
+    public static Intent newIntent(Context context, ArrayList<PrivateKeyDetails> privateKeys,
+                                   String bottomTitle, String checkButtonTitle,
+                                   String negativeActionButtonTitle) {
         Intent intent = new Intent(context, CheckKeysActivity.class);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
         intent.putExtra(KEY_EXTRA_BOTTOM_TITLE, bottomTitle);
@@ -92,7 +94,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
-            this.privateKeys = getIntent().getStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+            this.privateKeyDetailsList = getIntent().getParcelableArrayListExtra
+                    (KEY_EXTRA_PRIVATE_KEYS);
             this.bottomTitle = getIntent().getStringExtra(KEY_EXTRA_BOTTOM_TITLE);
             this.checkButtonTitle = getIntent().getStringExtra(KEY_EXTRA_CHECK_BUTTON_TITLE);
             this.anotherAccountButtonTitle = getIntent().getStringExtra
@@ -107,11 +110,15 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.buttonCheck:
                 UIUtil.hideSoftInput(this, editTextKeyPassword);
-                if (privateKeys != null && !privateKeys.isEmpty()) {
+                if (privateKeyDetailsList != null && !privateKeyDetailsList.isEmpty()) {
                     if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
-                        UIUtil.showInfoSnackbar(editTextKeyPassword,
+                        showInfoSnackbar(editTextKeyPassword,
                                 getString(R.string.passphrase_must_be_non_empty));
                     } else {
+                        if (getSnackBar() != null) {
+                            getSnackBar().dismiss();
+                        }
+
                         getSupportLoaderManager().restartLoader(R.id
                                 .loader_id_encrypt_and_save_private_keys_infos, null, this);
                     }
@@ -130,7 +137,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (id) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
-                return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, privateKeys,
+                return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, privateKeyDetailsList,
                         editTextKeyPassword.getText().toString(), isThrowErrorIfDuplicateFound);
 
             default:
@@ -146,10 +153,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             } else if (loaderResult.getException() != null) {
                 handleFailureLoaderResult(loader.getId(), loaderResult.getException());
             } else {
-                UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+                showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
             }
         } else {
-            UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+            showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
         }
     }
 
@@ -162,6 +169,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
+                showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
+                        ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
+                break;
         }
     }
 
@@ -174,7 +184,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                     setResult(Activity.RESULT_OK);
                     finish();
                 } else {
-                    UIUtil.showInfoSnackbar(getRootView(), getString(R.string
+                    showInfoSnackbar(getRootView(), getString(R.string
                             .password_is_incorrect));
                 }
                 break;

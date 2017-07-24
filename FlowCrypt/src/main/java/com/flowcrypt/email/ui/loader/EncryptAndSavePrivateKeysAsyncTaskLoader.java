@@ -15,12 +15,15 @@ import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.util.GeneralUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,16 +43,18 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     private static final String KEY_SUCCESS = "success";
 
     private boolean isThrowErrorIfDuplicateFound;
-    private List<String> privateKeys;
+    private List<PrivateKeyDetails> privateKeyDetailsList;
     private String passphrase;
 
     private KeysDaoSource keysDaoSource;
 
     public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
-                                                    List<String> privateKeys, String passphrase,
+                                                    ArrayList<PrivateKeyDetails>
+                                                            privateKeyDetailsList,
+                                                    String passphrase,
                                                     boolean isThrowErrorIfDuplicateFound) {
         super(context);
-        this.privateKeys = privateKeys;
+        this.privateKeyDetailsList = privateKeyDetailsList;
         this.passphrase = passphrase;
         this.keysDaoSource = new KeysDaoSource();
         this.isThrowErrorIfDuplicateFound = isThrowErrorIfDuplicateFound;
@@ -62,21 +67,38 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
-            for (String rawArmoredKey : privateKeys) {
-                String normalizedArmoredKey = js.crypto_key_normalize(rawArmoredKey);
+            for (PrivateKeyDetails privateKeyDetails : privateKeyDetailsList) {
+                String armoredPrivateKey = null;
+
+                switch (privateKeyDetails.getType()) {
+                    case FILE:
+                        armoredPrivateKey = GeneralUtil.readFileFromUriToString(getContext(),
+                                privateKeyDetails.getUri());
+                        break;
+
+                    case EMAIL:
+                    case CLIPBOARD:
+                        armoredPrivateKey = privateKeyDetails.getValue();
+                        break;
+                }
+
+
+                String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
                 PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
                 V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
-                if (pgpKey.isPrivate() && v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
-                    if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
-                        Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
-                        isOneOrMoreKeySaved = uri != null;
-                    } else if (isThrowErrorIfDuplicateFound) {
-                        return new LoaderResult(null, new Exception(getContext().getString(R
-                                .string.the_key_already_added)));
+                if (pgpKey.isPrivate()) {
+                    if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
+                        if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
+                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
+                            isOneOrMoreKeySaved = uri != null;
+                        } else if (isThrowErrorIfDuplicateFound) {
+                            return new LoaderResult(null, new Exception(getContext().getString(R
+                                    .string.the_key_already_added)));
+                        }
                     }
-                }
+                } else throw new IllegalArgumentException("This is not a private key");
             }
         } catch (Exception e) {
             e.printStackTrace();

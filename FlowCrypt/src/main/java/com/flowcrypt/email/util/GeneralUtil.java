@@ -8,9 +8,11 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 
 import com.flowcrypt.email.BuildConfig;
@@ -67,6 +69,56 @@ public class GeneralUtil {
     public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
         return IOUtils.toString(context.getContentResolver().openInputStream(uri),
                 StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Get a file size from his Uri.
+     *
+     * @param uri The {@link Uri} of the file.
+     * @return The size of the file in bytes.
+     */
+    public static int getFileSizeFromUri(Context context, Uri uri) {
+        Cursor returnCursor = context.getContentResolver().query(uri,
+                new String[]{OpenableColumns.SIZE}, null, null, null);
+
+        int size = -1;
+        if (returnCursor != null) {
+            if (returnCursor.moveToFirst()) {
+                int index = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+                if (index >= 0) {
+                    size = returnCursor.getInt(index);
+                }
+            }
+
+            returnCursor.close();
+        }
+
+        return size;
+    }
+
+    /**
+     * Get a file name from his Uri.
+     *
+     * @param uri The {@link Uri} of the file.
+     * @return The file name.
+     */
+    public static String getFileNameFromUri(Context context, Uri uri) {
+        Cursor returnCursor = context.getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+
+        String name = null;
+        if (returnCursor != null) {
+            if (returnCursor.moveToFirst()) {
+                int index = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    name = returnCursor.getString(index);
+                }
+            }
+
+            returnCursor.close();
+        }
+
+        return name;
     }
 
     /**

@@ -26,13 +26,13 @@
 
     <TextView
         android:id="@+id/textViewCheckKeysTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_found_backup"
+        android:gravity="center"
         android:text="@string/found_backup_of_your_account_key"
         android:textColor="@android:color/black"
         android:textSize="@dimen/default_text_size_medium"
-        app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
         app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />

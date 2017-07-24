@@ -9,10 +9,10 @@ package com.flowcrypt.email.ui.activity;
 import android.Manifest;
 import android.accounts.Account;
 import android.app.Activity;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,14 +20,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -44,16 +43,15 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
 
     public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ACCOUNT", ImportPrivateKeyActivity.class);
-
+    private static final int ONE_MB = 1024 * 1024;
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 10;
     private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 11;
     private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 12;
-
-    private ArrayList<String> privateKeys;
+    private ArrayList<PrivateKeyDetails> privateKeyDetailsList;
     private Account account;
 
     public ImportPrivateKeyActivity() {
-        this.privateKeys = new ArrayList<>();
+        this.privateKeyDetailsList = new ArrayList<>();
     }
 
     public static Intent newIntent(Context context, Account account) {
@@ -90,30 +88,25 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null) {
-                            try {
-                                ClipData clipData = data.getClipData();
-                                if (clipData == null) {
-                                    privateKeys.add(GeneralUtil.readFileFromUriToString
-                                            (getApplicationContext(), data.getData()));
-                                } else {
-                                    for (int i = 0; i < clipData.getItemCount(); i++) {
-                                        ClipData.Item item = clipData.getItemAt(i);
-                                        privateKeys.add(GeneralUtil.readFileFromUriToString
-                                                (getApplicationContext(), item.getUri()));
-                                    }
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
+                            if (checkPrivateKeySize(data.getData())) {
+                                privateKeyDetailsList.add(new PrivateKeyDetails(
+                                        GeneralUtil.getFileNameFromUri(this, data.getData()),
+                                        null,
+                                        data.getData(),
+                                        PrivateKeyDetails.Type.FILE));
                             }
 
-                            if (!privateKeys.isEmpty()) {
+                            if (!privateKeyDetailsList.isEmpty()) {
                                 startActivityForResult(CheckKeysActivity.newIntent(this,
-                                        privateKeys,
-                                        getString(R.string.template_check_key_name, "test"),
+                                        privateKeyDetailsList,
+                                        getString(R.string.template_check_key_name,
+                                                privateKeyDetailsList.get(0).getKeyName()),
                                         getString(R.string.continue_),
                                         getString(R.string.choose_another_key)),
                                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
+                            } else {
+                                showInfoSnackbar(getRootView(),
+                                        getString(R.string.select_correct_private_key));
                             }
                         }
                         break;
@@ -186,6 +179,17 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     }
 
     /**
+     * Check that the private key size mot bigger then 1 MB.
+     *
+     * @param data The {@link Uri} of the selected file.
+     * @return true if the private key size mot bigger then 1 MB, otherwise false
+     */
+    private boolean checkPrivateKeySize(Uri data) {
+        int fileSize = GeneralUtil.getFileSizeFromUri(this, data);
+        return fileSize > 0 && fileSize <= ONE_MB;
+    }
+
+    /**
      * Show an explanation to the user for read the sdcard.
      * After the user sees the explanation, we try again to request the permission.
      */
@@ -207,11 +211,12 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
      * After the user sees the explanation, we try again to request the permission.
      */
     private void runSelectFileIntent() {
+        privateKeyDetailsList.clear();
+
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(Constants.MIME_TYPE_PGP_KEY);
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("*/*");
         startActivityForResult(Intent.createChooser(intent,
                 getString(R.string.select_key_or_keys)),
                 REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM);
