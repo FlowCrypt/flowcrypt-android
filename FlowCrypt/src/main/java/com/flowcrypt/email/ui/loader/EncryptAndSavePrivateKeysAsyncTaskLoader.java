@@ -91,7 +91,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                 if (pgpKey.isPrivate()) {
                     if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
-                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, pgpKey, passphrase);
+                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, privateKeyDetails,
+                                    pgpKey, passphrase);
                             isOneOrMoreKeySaved = uri != null;
                         } else if (isThrowErrorIfDuplicateFound) {
                             return new LoaderResult(null, new Exception(getContext().getString(R
@@ -126,10 +127,12 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
      *
      * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
      *                              an information about a key;
+     * @param privateKeyDetails     The private key details
      * @param pgpKey                A normalized key;
      * @param passphrase            A passphrase which user entered;
      */
-    private Uri saveKeyToDatabase(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey,
+    private Uri saveKeyToDatabase(KeyStoreCryptoManager keyStoreCryptoManager,
+                                  PrivateKeyDetails privateKeyDetails, PgpKey pgpKey,
                                   String passphrase) throws Exception {
         KeysDao keysDao = new KeysDao();
         keysDao.setLongId(pgpKey.getLongid());
@@ -145,7 +148,16 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                     (pgpKey.getLongid());
         }
 
-        keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
+        switch (privateKeyDetails.getType()) {
+            case EMAIL:
+                keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
+                break;
+
+            case FILE:
+            case CLIPBOARD:
+                keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
+                break;
+        }
 
         String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(),
                 randomVector);
