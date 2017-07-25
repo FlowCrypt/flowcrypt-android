@@ -93,6 +93,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                     case Activity.RESULT_OK:
                         if (data != null) {
                             ArrayList<PrivateKeyDetails> privateKeyDetailsList = new ArrayList<>();
+                            //todo-denbond7 need to add check is key valid
                             if (checkPrivateKeySize(data.getData())) {
                                 privateKeyDetailsList.add(new PrivateKeyDetails(
                                         GeneralUtil.getFileNameFromUri(this, data.getData()),
@@ -123,6 +124,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                     case Activity.RESULT_OK:
                         EmailSyncService.startEmailSyncService(this, account);
                         EmailManagerActivity.runEmailManagerActivity(this, account);
+                        setResult(Activity.RESULT_OK);
                         finish();
                         break;
 
@@ -197,7 +199,6 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                                     getString(R.string.continue_),
                                     getString(R.string.choose_another_key)),
                                     REQUEST_CODE_CHECK_PRIVATE_KEYS);
-                            showInfoSnackbar(getRootView(), privateKeyFromClipboard.toString());
                         } else {
                             InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance
                                     (getString(R.string.hint), getString(R.string
@@ -242,11 +243,11 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     /**
      * Check that the private key size mot bigger then 1 MB.
      *
-     * @param data The {@link Uri} of the selected file.
+     * @param fileUri The {@link Uri} of the selected file.
      * @return true if the private key size mot bigger then 1 MB, otherwise false
      */
-    private boolean checkPrivateKeySize(Uri data) {
-        int fileSize = GeneralUtil.getFileSizeFromUri(this, data);
+    private boolean checkPrivateKeySize(Uri fileUri) {
+        long fileSize = GeneralUtil.getFileSizeFromUri(this, fileUri);
         return fileSize > 0 && fileSize <= ONE_MB;
     }
 
