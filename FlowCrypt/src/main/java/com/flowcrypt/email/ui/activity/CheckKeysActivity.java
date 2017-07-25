@@ -147,17 +147,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
-        if (loaderResult != null) {
-            if (loaderResult.getResult() != null) {
-                handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
-            } else if (loaderResult.getException() != null) {
-                handleFailureLoaderResult(loader.getId(), loaderResult.getException());
-            } else {
-                showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
-            }
-        } else {
-            showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
-        }
+        handleLoaderResult(loader, loaderResult);
     }
 
     @Override
@@ -165,7 +155,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     }
 
-    private void handleFailureLoaderResult(int loaderId, Exception e) {
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
@@ -175,7 +166,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         }
     }
 
-    private void handleSuccessLoaderResult(int loaderId, Object result) {
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);

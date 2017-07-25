@@ -10,12 +10,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.results.LoaderResult;
 
 /**
  * This is a base activity. This class describes a base logic for all activities.
@@ -129,6 +131,34 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     public Snackbar getSnackBar() {
         return snackbar;
+    }
+
+    public void dismissSnackBar() {
+        if (snackbar != null) {
+            snackbar.dismiss();
+        }
+    }
+
+    public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
+        if (loaderResult != null) {
+            if (loaderResult.getResult() != null) {
+                handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
+            } else if (loaderResult.getException() != null) {
+                handleFailureLoaderResult(loader.getId(), loaderResult.getException());
+            } else {
+                showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+            }
+        } else {
+            showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+        }
+    }
+
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+
+    }
+
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+
     }
 
     private void setupToolbarIfItExists() {

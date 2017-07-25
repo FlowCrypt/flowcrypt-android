@@ -130,10 +130,11 @@
     <string name="continue_">Continue</string>
     <string name="template_check_key_name">Private Key: [%1$s]</string>
     <string name="can_not_read_this_private_key">Can not read this private key</string>
-    <string name="select_correct_private_key">Please select a correct private key</string>
     <string name="info">Info</string>
     <string name="hint">Hint</string>
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your private key where you are storing it, select the text and copy it. After that, return back to %1$s.</string>
-    <string name="hint_clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP Private Key. Please make sure to copy the whole contents of the armored private key.</string>
+    <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP Private Key.</string>
+    <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP Private Key.</string>
     <string name="loaded_private_key_from_your_clipboard">Loaded a private key from your clipboard</string>
+    <string name="checking_the_private_key">Checking the private key…</string>
 </resources>
