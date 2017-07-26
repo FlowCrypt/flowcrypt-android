@@ -15,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -76,7 +77,7 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportMyKey:
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, account),
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false),
                         REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
@@ -93,6 +94,8 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
             case REQUEST_CODE_IMPORT_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
+                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, account);
                         finish();
                         break;
                 }

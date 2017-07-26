@@ -7,7 +7,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.Manifest;
-import android.accounts.Account;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -27,7 +26,6 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ValidatePrivateKeyAsyncTaskLoader;
@@ -49,21 +47,24 @@ import java.util.Arrays;
 public class ImportPrivateKeyActivity extends BaseBackStackActivity
         implements View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
-    public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_ACCOUNT", ImportPrivateKeyActivity.class);
+    public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
+            ImportPrivateKeyActivity.class);
+
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 10;
     private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 11;
     private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 12;
-    private Account account;
+
     private ClipboardManager clipboardManager;
     private PrivateKeyDetails privateKeyDetails;
     private View layoutContentView;
     private View layoutProgress;
     private boolean isCheckingPrivateKeyNow;
+    private boolean isThrowErrorIfDuplicateFound;
 
-    public static Intent newIntent(Context context, Account account) {
+    public static Intent newIntent(Context context, boolean isThrowErrorIfDuplicateFound) {
         Intent intent = new Intent(context, ImportPrivateKeyActivity.class);
-        intent.putExtra(EXTRA_KEY_ACCOUNT, account);
+        intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
     }
 
@@ -82,7 +83,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
         super.onCreate(savedInstanceState);
 
         if (getIntent() != null) {
-            this.account = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT);
+            this.isThrowErrorIfDuplicateFound =
+                    getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
         }
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -113,8 +115,6 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
             case REQUEST_CODE_CHECK_PRIVATE_KEYS:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        EmailSyncService.startEmailSyncService(this, account);
-                        EmailManagerActivity.runEmailManagerActivity(this, account);
                         setResult(Activity.RESULT_OK);
                         finish();
                         break;
@@ -263,7 +263,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                             getString(R.string.template_check_key_name,
                                     privateKeyDetails.getKeyName()),
                             getString(R.string.continue_),
-                            getString(R.string.choose_another_key)),
+                            getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 } else {
                     showInfoSnackbar(getRootView(),
@@ -281,7 +281,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                                     PrivateKeyDetails[]{privateKeyDetails})),
                             getString(R.string.loaded_private_key_from_your_clipboard),
                             getString(R.string.continue_),
-                            getString(R.string.choose_another_key)),
+                            getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 } else {
                     showInfoSnackbar(getRootView(),

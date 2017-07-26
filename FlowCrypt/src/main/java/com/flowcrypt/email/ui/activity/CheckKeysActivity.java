@@ -52,9 +52,12 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             "KEY_EXTRA_BOTTOM_TITLE", CheckKeysActivity.class);
     public static final String KEY_EXTRA_CHECK_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
             "KEY_EXTRA_CHECK_BUTTON_TITLE", CheckKeysActivity.class);
-    public static final String KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE = GeneralUtil
-            .generateUniqueExtraKey(
+    public static final String KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE =
+            GeneralUtil.generateUniqueExtraKey(
                     "KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE", CheckKeysActivity.class);
+    public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND =
+            GeneralUtil.generateUniqueExtraKey(
+                    "KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND", CheckKeysActivity.class);
 
     private ArrayList<PrivateKeyDetails> privateKeyDetailsList;
     private EditText editTextKeyPassword;
@@ -66,12 +69,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     public static Intent newIntent(Context context, ArrayList<PrivateKeyDetails> privateKeys,
                                    String bottomTitle, String checkButtonTitle,
-                                   String negativeActionButtonTitle) {
+                                   String negativeActionButtonTitle,
+                                   boolean isThrowErrorIfDuplicateFound) {
         Intent intent = new Intent(context, CheckKeysActivity.class);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
         intent.putExtra(KEY_EXTRA_BOTTOM_TITLE, bottomTitle);
         intent.putExtra(KEY_EXTRA_CHECK_BUTTON_TITLE, checkButtonTitle);
         intent.putExtra(KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE, negativeActionButtonTitle);
+        intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
     }
 
@@ -100,6 +105,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             this.checkButtonTitle = getIntent().getStringExtra(KEY_EXTRA_CHECK_BUTTON_TITLE);
             this.anotherAccountButtonTitle = getIntent().getStringExtra
                     (KEY_EXTRA_NEGATIVE_ACTION_BUTTON_TITLE);
+            this.isThrowErrorIfDuplicateFound = getIntent().getBooleanExtra(
+                    KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
         }
 
         initViews();

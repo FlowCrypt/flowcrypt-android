@@ -137,4 +137,5 @@
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP Private Key.</string>
     <string name="loaded_private_key_from_your_clipboard">Loaded a private key from your clipboard</string>
     <string name="checking_the_private_key">Checking the private key…</string>
+    <string name="key_successfully_imported">The key successfully imported</string>
 </resources>
