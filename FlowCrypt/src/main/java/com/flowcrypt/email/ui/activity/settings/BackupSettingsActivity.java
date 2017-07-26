@@ -9,10 +9,13 @@ package com.flowcrypt.email.ui.activity.settings;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,8 +26,10 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
+import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -44,8 +49,8 @@ import java.util.List;
  */
 
 public class BackupSettingsActivity extends BaseBackStackSyncActivity implements View
-        .OnClickListener,
-        RadioGroup.OnCheckedChangeListener {
+        .OnClickListener, RadioGroup.OnCheckedChangeListener, LoaderManager
+        .LoaderCallbacks<LoaderResult> {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
 
@@ -62,8 +67,10 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
 
     private List<String> privateKeys;
     private String account;
-    private boolean isBackEnable = true;
+    private boolean isPrivateKeySendingNow = false;
     private boolean isLoadPrivateKeysRequestSent;
+    private Uri destinationUri;
+    private boolean isPrivateKeySavingNow;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -92,12 +99,12 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 break;
 
             case R.id.syns_send_backup_with_private_key_to_key_owner:
-                isBackEnable = true;
+                isPrivateKeySendingNow = false;
                 layoutSyncStatus.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutContent);
-                UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                        .backup_was_sent_successfully));
+                Toast.makeText(this, R.string.backup_was_sent_successfully,
+                        Toast.LENGTH_SHORT).show();
                 break;
         }
     }
@@ -123,7 +130,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 break;
 
             case R.id.syns_send_backup_with_private_key_to_key_owner:
-                isBackEnable = true;
+                isPrivateKeySendingNow = false;
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutSyncStatus);
 
@@ -169,11 +176,15 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public void onBackPressed() {
-        if (isBackEnable) {
-            super.onBackPressed();
-        } else {
+        if (isPrivateKeySavingNow) {
+            getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_private_key_from_file);
+            isPrivateKeySavingNow = false;
+            UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+        } else if (isPrivateKeySendingNow) {
             Toast.makeText(this, R.string.please_wait_while_message_will_be_sent, Toast
                     .LENGTH_SHORT).show();
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -217,7 +228,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                     case R.id.radioButtonEmail:
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
-                            isBackEnable = false;
+                            isPrivateKeySendingNow = true;
                             UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
                             sendMessageWithPrivateKeyBackup(R.id
                                     .syns_send_backup_with_private_key_to_key_owner, account);
@@ -228,6 +239,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                         break;
 
                     case R.id.radioButtonDownload:
+                        destinationUri = null;
                         runActivityToChooseDestinationForExportedKey();
                         break;
                 }
@@ -259,7 +271,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY:
@@ -267,12 +279,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                     case Activity.RESULT_OK:
                         if (data != null && data.getData() != null) {
                             try {
-                                GeneralUtil.writeFileFromStringToUri(this, data.getData(),
-                                        SecurityUtils
-                                                .getPrivateKeysInfo(this).get(0).getPgpKeyInfo()
-                                                .getArmored());
-                                Toast.makeText(this, R.string.key_successfully_saved, Toast
-                                        .LENGTH_SHORT).show();
+                                destinationUri = data.getData();
+                                getSupportLoaderManager().restartLoader(R.id
+                                        .loader_id_save_private_key_as_file, null, this);
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
@@ -281,6 +290,67 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                         break;
                 }
                 break;
+        }
+    }
+
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_save_private_key_as_file:
+                isPrivateKeySavingNow = true;
+                UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+                return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(),
+                        destinationUri);
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        handleLoaderResult(loader, loaderResult);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+        switch (loader.getId()) {
+            case R.id.loader_id_save_private_key_as_file:
+                isPrivateKeySavingNow = false;
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+        }
+    }
+
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
+            case R.id.loader_id_save_private_key_as_file:
+                isPrivateKeySavingNow = false;
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+                if ((boolean) result) {
+                    Toast.makeText(this, R.string.key_successfully_saved, Toast
+                            .LENGTH_SHORT).show();
+                } else {
+                    showInfoSnackbar(getRootView(),
+                            getString(R.string.error_occurred_please_try_again));
+                }
+                break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
+        }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        switch (loaderId) {
+            case R.id.loader_id_save_private_key_as_file:
+                isPrivateKeySavingNow = false;
+                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+                showInfoSnackbar(getRootView(), e.getMessage());
+                break;
+
+            default:
+                super.handleFailureLoaderResult(loaderId, e);
         }
     }
 
