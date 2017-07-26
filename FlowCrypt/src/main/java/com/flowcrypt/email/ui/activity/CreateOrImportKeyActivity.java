@@ -6,17 +6,18 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.accounts.Account;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.ui.activity.fragment.CreateOrImportKeyFragment;
 import com.flowcrypt.email.util.GeneralUtil;
-
-import java.util.ArrayList;
 
 /**
  * This activity describes a logic for create ot import private keys.
@@ -26,13 +27,23 @@ import java.util.ArrayList;
  *         Time: 16:15.
  *         E-mail: DenBond7@gmail.com
  */
-public class CreateOrImportKeyActivity extends BaseActivity implements
-        CreateOrImportKeyFragment.OnPrivateKeysSelectedListener {
-    public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-            "KEY_EXTRA_PRIVATE_KEYS", CreateOrImportKeyActivity.class);
+public class CreateOrImportKeyActivity extends BaseActivity implements View.OnClickListener {
+    public static final int REQUEST_CODE_IMPORT_ACTIVITY = 10;
+    private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
+            GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
+                    CreateOrImportKeyActivity.class);
+    private static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_ACCOUNT",
+                    CreateOrImportKeyActivity.class);
+    private boolean isShowAnotherAccountButton = true;
+    private Account account;
 
-    public static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON = BuildConfig
-            .APPLICATION_ID + ".KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON";
+    public static Intent newIntent(Context context, Account account, boolean isShowAnotherAccount) {
+        Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
+        intent.putExtra(EXTRA_KEY_ACCOUNT, account);
+        intent.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, isShowAnotherAccount);
+        return intent;
+    }
 
     @Override
     public View getRootView() {
@@ -50,18 +61,67 @@ public class CreateOrImportKeyActivity extends BaseActivity implements
     }
 
     @Override
-    public void onPrivateKeysSelected(ArrayList<String> privateKeys) {
-        if (privateKeys != null && !privateKeys.isEmpty()) {
-            Intent intent = new Intent();
-            intent.putStringArrayListExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-            setResult(Activity.RESULT_OK, intent);
-            finish();
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getIntent() != null) {
+            this.isShowAnotherAccountButton = getIntent().getBooleanExtra
+                    (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
+            this.account =
+                    getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT);
+        }
+
+        initViews();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonImportMyKey:
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false),
+                        REQUEST_CODE_IMPORT_ACTIVITY);
+                break;
+
+            case R.id.buttonSelectAnotherAccount:
+                finish();
+                startActivity(SplashActivity.getSignOutIntent(this));
+                break;
         }
     }
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        setResult(Activity.RESULT_CANCELED);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_IMPORT_ACTIVITY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, account);
+                        finish();
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void initViews() {
+        if (findViewById(R.id.buttonCreateNewKey) != null) {
+            findViewById(R.id.buttonCreateNewKey).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonImportMyKey) != null) {
+            findViewById(R.id.buttonImportMyKey).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonSelectAnotherAccount) != null) {
+            if (isShowAnotherAccountButton) {
+                findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.VISIBLE);
+                findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
+            } else {
+                findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.GONE);
+            }
+        }
     }
 }

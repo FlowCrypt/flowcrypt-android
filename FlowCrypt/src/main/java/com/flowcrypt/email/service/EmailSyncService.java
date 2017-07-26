@@ -97,6 +97,21 @@ public class EmailSyncService extends Service implements SyncListener {
         this.replyToMessengers = new HashMap<>();
     }
 
+    /**
+     * This method can bu used to start {@link EmailSyncService}.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param account The user {@link Account}
+     */
+    public static void startEmailSyncService(Context context, Account account) {
+        if (account != null) {
+            Intent startEmailServiceIntent = new Intent(context, EmailSyncService.class);
+            startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
+                    account);
+            context.startService(startEmailServiceIntent);
+        } else throw new NullPointerException("The account is null");
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();

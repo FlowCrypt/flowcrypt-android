@@ -7,9 +7,9 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layoutContent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.RestoreAccountFragment">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/textViewSetupFlowCrypt"
@@ -25,14 +25,14 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textViewFoundBackup"
-        android:layout_width="wrap_content"
+        android:id="@+id/textViewCheckKeysTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_found_backup"
+        android:gravity="center"
         android:text="@string/found_backup_of_your_account_key"
         android:textColor="@android:color/black"
         android:textSize="@dimen/default_text_size_medium"
-        app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
         app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt" />
@@ -48,7 +48,7 @@
         app:layout_constraintBottom_toTopOf="@+id/textInputLayoutKeyPassword"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewCheckKeysTitle" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/textInputLayoutKeyPassword"
@@ -58,7 +58,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textViewFoundBackup"
+        app:layout_constraintTop_toBottomOf="@+id/textViewCheckKeysTitle"
         app:passwordToggleContentDescription="description"
         app:passwordToggleEnabled="true">
 
@@ -73,28 +73,28 @@
     </android.support.design.widget.TextInputLayout>
 
     <Button
-        android:id="@+id/buttonLoadAccount"
+        android:id="@+id/buttonCheck"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_load_account"
-        android:text="@string/load_account"
         android:theme="@style/AppWidget.Button.Raised.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword" />
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword"
+        tools:text="@string/load_account" />
 
     <Button
-        android:id="@+id/buttonSelectAnotherAccount"
+        android:id="@+id/buttonNegativeAction"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_button_select_another_account"
-        android:text="@string/use_another_account"
         android:theme="@style/AppWidget.Button.Raised.Grey"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toBottomOf="@+id/buttonLoadAccount" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonCheck"
+        tools:text="@string/use_another_account" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineLeft"

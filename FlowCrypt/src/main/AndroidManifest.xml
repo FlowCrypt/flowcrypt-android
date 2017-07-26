@@ -40,10 +40,6 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.RestoreAccountActivity"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ui.activity.MessageDetailsActivity"
             android:screenOrientation="portrait" />
 
@@ -59,6 +55,14 @@
 
         <activity
             android:name=".ui.activity.CreateOrImportKeyActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.ImportPrivateKeyActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.CheckKeysActivity"
             android:screenOrientation="portrait" />
 
         <activity

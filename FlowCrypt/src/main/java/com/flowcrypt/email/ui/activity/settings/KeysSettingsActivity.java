@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
-import android.accounts.Account;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,18 +19,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity;
-import com.flowcrypt.email.ui.activity.RestoreAccountActivity;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
+import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This Activity show information about available keys in the database.
@@ -44,15 +40,14 @@ import java.util.ArrayList;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class KeysSettingsActivity extends BaseBackStackSyncActivity implements LoaderManager
+public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager
         .LoaderCallbacks<Cursor>, View.OnClickListener {
-    private static final int REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY = 0;
+    private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0;
 
     private View progressBar;
     private View emptyView;
     private View layoutContent;
     private PrivateKeysListCursorAdapter privateKeysListCursorAdapter;
-    private Account account;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,55 +65,22 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
-        switch (requestCode) {
-            case R.id.syns_get_active_account:
-                account = new Account((String) obj, AccountDao.ACCOUNT_TYPE_GOOGLE);
-                break;
-        }
-    }
-
-    @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
-
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
         switch (requestCode) {
-            case REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY:
+            case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        if (data != null && data.hasExtra(CreateOrImportKeyActivity
-                                .KEY_EXTRA_PRIVATE_KEYS)) {
-                            ArrayList<String> privateKeys = data.getStringArrayListExtra
-                                    (CreateOrImportKeyActivity.KEY_EXTRA_PRIVATE_KEYS);
-                            if (privateKeys != null && privateKeys.size() > 0) {
-                                Intent intentRunRestoreAccountActivity = new Intent(this,
-                                        RestoreAccountActivity.class);
-                                intentRunRestoreAccountActivity.putExtra(
-                                        RestoreAccountActivity.KEY_EXTRA_ACCOUNT, account);
-                                intentRunRestoreAccountActivity.putExtra(
-                                        RestoreAccountActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-                                startActivity(intentRunRestoreAccountActivity);
-                                finish();
-                            } else {
-                                Toast.makeText(this, R.string.error_occurred_please_try_again,
-                                        Toast.LENGTH_SHORT).show();
-                                runCreateOrImportKeyActivity();
-                            }
-                        } else {
-                            Toast.makeText(this, R.string.error_occurred_please_try_again,
-                                    Toast.LENGTH_SHORT).show();
-                            runCreateOrImportKeyActivity();
-                        }
+                        Toast.makeText(this, R.string.key_successfully_imported, Toast
+                                .LENGTH_SHORT).show();
+                        getSupportLoaderManager().restartLoader(R.id
+                                .loader_id_load_contacts_with_has_pgp_true, null, this);
                         break;
                 }
                 break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -168,10 +130,8 @@ public class KeysSettingsActivity extends BaseBackStackSyncActivity implements L
     }
 
     private void runCreateOrImportKeyActivity() {
-        Intent intent = new Intent(this, CreateOrImportKeyActivity.class);
-        intent.putExtra(CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON,
-                false);
-        startActivityForResult(intent, REQUEST_CODE_START_CREATE_OR_IMPORT_KEY_ACTIVITY);
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, true),
+                REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
     }
 
     private void initViews() {

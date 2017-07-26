@@ -22,6 +22,10 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
         return this.v8object.executeBooleanFunction("isPrivate", null);
     }
 
+    public void encrypt(String passphrase) {
+        this.v8object.executeVoidFunction("encrypt", new V8Array(this.v8object.getRuntime()).push(passphrase));
+    }
+
     public String armor() {
         return this.v8object.executeStringFunction("armor", null);
     }

@@ -7,11 +7,14 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.accounts.Account;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
@@ -19,11 +22,14 @@ import android.widget.Toast;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -38,6 +44,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * The launcher Activity.
@@ -48,14 +55,15 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 public class SplashActivity extends BaseActivity implements SplashActivityFragment
-        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient
-        .ConnectionCallbacks {
+        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks, LoaderManager.LoaderCallbacks<LoaderResult> {
     private static final String ACTION_SIGN_OUT = GeneralUtil.generateUniqueExtraKey
             ("ACTION_SIGN_OUT", SplashActivity.class);
     private static final String ACTION_REVOKE_ACCESS = GeneralUtil.generateUniqueExtraKey
             ("ACTION_REVOKE_ACCESS", SplashActivity.class);
 
     private static final int REQUEST_CODE_SIGN_IN = 100;
+    private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
     /**
      * The main entry point for Google Play services integration.
      */
@@ -66,6 +74,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
 
     private boolean isSignOutAction;
     private boolean isRevokeAccessAction;
+    private Account account;
 
     /**
      * Generate the sign out intent.
@@ -150,6 +159,24 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 handleSignInResult(googleSignInResult);
                 break;
 
+            case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, account);
+                        finish();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                        finish();
+                        break;
+
+                    case CheckKeysActivity.RESULT_NEGATIVE:
+                        isSignOutAction = true;
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -188,10 +215,52 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         }
     }
 
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_load_gmail_backups:
+                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
+
+            default:
+                return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        switch (loader.getId()) {
+            case R.id.loader_id_load_gmail_backups:
+                if (loaderResult.getResult() != null) {
+                    ArrayList<PrivateKeyDetails> privateKeyDetailsList =
+                            (ArrayList<PrivateKeyDetails>) loaderResult.getResult();
+                    if (privateKeyDetailsList.isEmpty()) {
+                        finish();
+                        startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
+                    } else {
+                        startActivityForResult(CheckKeysActivity.newIntent(this,
+                                privateKeyDetailsList,
+                                getString(R.string.found_backup_of_your_account_key),
+                                getString(R.string.continue_),
+                                getString(R.string.use_another_account), false),
+                                REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
+                    }
+                } else if (loaderResult.getException() != null) {
+                    UIUtil.showInfoSnackbar(getRootView(),
+                            loaderResult.getException().getMessage());
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
     private void handleSignInResult(GoogleSignInResult googleSignInResult) {
         if (googleSignInResult.isSuccess()) {
-
-            Account account = null;
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
                 updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
@@ -200,26 +269,14 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 //todo-denbond7 handle this situation
             }
 
-            finish();
             if (SecurityUtils.isBackupKeysExist(this)) {
-                if (account != null) {
-                    Intent startEmailServiceIntent = new Intent(this, EmailSyncService.class);
-                    startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
-                            account);
-                    startService(startEmailServiceIntent);
-                }
-
-                Intent intentRunEmailManagerActivity = new Intent(this, EmailManagerActivity.class);
-                intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
-                        account);
-                startActivity(intentRunEmailManagerActivity);
+                EmailSyncService.startEmailSyncService(this, account);
+                EmailManagerActivity.runEmailManagerActivity(this, account);
+                finish();
             } else {
                 if (account != null) {
-                    Intent intentRunRestoreActivity = new Intent(this,
-                            RestoreAccountActivity.class);
-                    intentRunRestoreActivity.putExtra(
-                            RestoreAccountActivity.KEY_EXTRA_ACCOUNT, account);
-                    startActivity(intentRunRestoreActivity);
+                    getSupportLoaderManager().initLoader(
+                            R.id.loader_id_load_gmail_backups, null, this);
                 } else {
                     //todo-denbond7 handle this situation
                 }
@@ -229,8 +286,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus()
                         .getStatusMessage());
             }
-            signInView.setVisibility(View.VISIBLE);
-            splashView.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
         }
     }
 

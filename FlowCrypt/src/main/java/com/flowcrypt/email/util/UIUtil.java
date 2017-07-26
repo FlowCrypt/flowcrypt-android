@@ -35,13 +35,16 @@ public class UIUtil {
      * @param view        he view to find a parent from.
      * @param messageText The text to show.  Can be formatted text..
      */
-    public static void showInfoSnackbar(View view, String messageText) {
-        Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+    public static Snackbar showInfoSnackbar(View view, String messageText) {
+        Snackbar snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
                 .setAction(android.R.string.ok, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                     }
-                }).show();
+                });
+        snackbar.show();
+
+        return snackbar;
     }
 
     /**
@@ -52,10 +55,13 @@ public class UIUtil {
      * @param buttonName      The text of the Snackbar button;
      * @param onClickListener The Snackbar button click listener.
      */
-    public static void showSnackbar(View view, String messageText, String buttonName,
-                                    @NonNull View.OnClickListener onClickListener) {
-        Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
-                .setAction(buttonName, onClickListener).show();
+    public static Snackbar showSnackbar(View view, String messageText, String buttonName,
+                                        @NonNull View.OnClickListener onClickListener) {
+        Snackbar snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+                .setAction(buttonName, onClickListener);
+        snackbar.show();
+
+        return snackbar;
     }
 
     /**

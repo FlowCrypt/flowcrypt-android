@@ -6,17 +6,21 @@
 
 package com.flowcrypt.email.util;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 
 import com.flowcrypt.email.BuildConfig;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -67,6 +71,70 @@ public class GeneralUtil {
     public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
         return IOUtils.toString(context.getContentResolver().openInputStream(uri),
                 StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Get a file size from his Uri.
+     *
+     * @param fileUri The {@link Uri} of the file.
+     * @return The size of the file in bytes.
+     */
+    public static long getFileSizeFromUri(Context context, Uri fileUri) {
+        long fileSize = -1;
+
+        if (fileUri != null) {
+            if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(fileUri.getScheme())) {
+                fileSize = new File(fileUri.getPath()).length();
+            } else {
+                Cursor returnCursor = context.getContentResolver().query(fileUri,
+                        new String[]{OpenableColumns.SIZE}, null, null, null);
+
+                if (returnCursor != null) {
+                    if (returnCursor.moveToFirst()) {
+                        int index = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+                        if (index >= 0) {
+                            fileSize = returnCursor.getLong(index);
+                        }
+                    }
+
+                    returnCursor.close();
+                }
+            }
+        }
+
+        return fileSize;
+    }
+
+    /**
+     * Get a file name from his Uri.
+     *
+     * @param fileUri The {@link Uri} of the file.
+     * @return The file name.
+     */
+    public static String getFileNameFromUri(Context context, Uri fileUri) {
+        String fileName = null;
+
+        if (fileUri != null) {
+            if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(fileUri.getScheme())) {
+                fileName = new File(fileUri.getPath()).getName();
+            } else {
+                Cursor returnCursor = context.getContentResolver().query(fileUri,
+                        new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+
+                if (returnCursor != null) {
+                    if (returnCursor.moveToFirst()) {
+                        int index = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                        if (index >= 0) {
+                            fileName = returnCursor.getString(index);
+                        }
+                    }
+
+                    returnCursor.close();
+                }
+            }
+        }
+
+        return fileName;
     }
 
     /**

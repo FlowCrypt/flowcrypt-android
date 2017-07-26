@@ -9,6 +9,7 @@ package com.flowcrypt.email.ui.activity;
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -72,6 +73,19 @@ public class EmailManagerActivity extends BaseSyncActivity
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
+    }
+
+    /**
+     * This method can bu used to start {@link EmailManagerActivity}.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param account The user {@link Account}
+     */
+    public static void runEmailManagerActivity(Context context, Account account) {
+        Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
+        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
+                account);
+        context.startActivity(intentRunEmailManagerActivity);
     }
 
     @Override

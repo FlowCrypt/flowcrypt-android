@@ -15,6 +15,9 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 
@@ -114,7 +117,7 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
 
         for (int i = 0; i < privateKeyInfoList.size(); i++) {
             BodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey
-                    (privateKeyInfoList, i);
+                    (context, privateKeyInfoList, i);
             multipart.addBodyPart(attachmentsBodyPart);
         }
 
@@ -125,6 +128,7 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     /**
      * Generate a {@link BodyPart} with private key as an attachment.
      *
+     * @param context            Interface to global information about an application environment;
      * @param privateKeyInfoList The list of the private key info.
      * @param i                  The position in list.
      * @return {@link BodyPart} with private key as an attachment.
@@ -132,14 +136,21 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
      */
     @NonNull
     private BodyPart generateAttachmentBodyPartWithPrivateKey(
-            List<PrivateKeyInfo> privateKeyInfoList, int i)
+            Context context, List<PrivateKeyInfo> privateKeyInfoList, int i)
             throws Exception {
+        Js js = new Js(context, new SecurityStorageConnector(context));
+
         PrivateKeyInfo privateKeyInfo = privateKeyInfoList.get(i);
         BodyPart attachmentsBodyPart = new MimeBodyPart();
         String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName +
                 "_" + i);
-        DataSource dataSource = new ByteArrayDataSource(privateKeyInfo.getPgpKeyInfo()
-                .getArmored(), JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
+
+        String decryptedKeyFromDatabase = privateKeyInfo.getPgpKeyInfo().getArmored();
+        PgpKey pgpKey = js.crypto_key_read(decryptedKeyFromDatabase);
+        pgpKey.encrypt(privateKeyInfo.getPassphrase());
+
+        DataSource dataSource = new ByteArrayDataSource(pgpKey.armor(), JavaEmailConstants
+                .MIME_TYPE_TEXT_PLAIN);
         attachmentsBodyPart.setDataHandler(new DataHandler(dataSource));
         attachmentsBodyPart.setFileName(attachmentName);
         return attachmentsBodyPart;
