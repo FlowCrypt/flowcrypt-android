@@ -15,8 +15,9 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
@@ -27,7 +28,8 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         Time: 16:15.
  *         E-mail: DenBond7@gmail.com
  */
-public class CreateOrImportKeyActivity extends BaseActivity implements View.OnClickListener {
+public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivity implements
+        View.OnClickListener {
     public static final int REQUEST_CODE_IMPORT_ACTIVITY = 10;
     private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
             GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
@@ -77,8 +79,14 @@ public class CreateOrImportKeyActivity extends BaseActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportMyKey:
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false),
-                        REQUEST_CODE_IMPORT_ACTIVITY);
+                PrivateKeyDetails privateKeyDetails = null;
+                if (isServiceBound) {
+                    privateKeyDetails = checkClipboardToFindPrivateKeyService
+                            .getPrivateKeyDetails();
+                }
+
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(this,
+                        privateKeyDetails, false), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
             case R.id.buttonSelectAnotherAccount:

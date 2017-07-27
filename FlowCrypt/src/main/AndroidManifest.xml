@@ -118,6 +118,10 @@
         <service
             android:name=".service.EmailSyncService"
             android:exported="false" />
+
+        <service
+            android:name=".service.CheckClipboardToFindPrivateKeyService"
+            android:exported="false" />
     </application>
 
 </manifest>

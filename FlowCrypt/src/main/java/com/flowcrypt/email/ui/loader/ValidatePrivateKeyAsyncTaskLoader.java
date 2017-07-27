@@ -12,7 +12,6 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -75,7 +74,9 @@ public class ValidatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
                             new IllegalArgumentException("The private key cannot be empty"));
                 }
 
-                return new LoaderResult(isValidPrivateKey(armoredPrivateKey), null);
+                Js js = new Js(getContext(), null);
+
+                return new LoaderResult(js.is_valid_private_key(armoredPrivateKey), null);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -88,29 +89,6 @@ public class ValidatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     @Override
     public void onStopLoading() {
         cancelLoad();
-    }
-
-    /**
-     * Check that the private key has a valid structure.
-     *
-     * @param privateKeyFromClipboard The armored private key.
-     * @return true if private key has valid structure, otherwise false.
-     */
-    private boolean isValidPrivateKey(String privateKeyFromClipboard) {
-        try {
-            Js js = new Js(getContext(), null);
-            String normalizedArmoredKey = js.crypto_key_normalize(privateKeyFromClipboard);
-            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-            if (!TextUtils.isEmpty(pgpKey.getLongid())
-                    && !TextUtils.isEmpty(pgpKey.getFingerprint())
-                    && pgpKey.getPrimaryUserId() != null) {
-                return pgpKey.isPrivate();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
     }
 
     /**

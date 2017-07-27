@@ -26,7 +26,8 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ValidatePrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -44,11 +45,15 @@ import java.util.Arrays;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ImportPrivateKeyActivity extends BaseBackStackActivity
+public class ImportPrivateKeyActivity extends BaseCheckClipboardBackStackActivity
         implements View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
     public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
+            ImportPrivateKeyActivity.class);
+
+    public static final String KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD",
             ImportPrivateKeyActivity.class);
 
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 10;
@@ -61,9 +66,16 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     private View layoutProgress;
     private boolean isCheckingPrivateKeyNow;
     private boolean isThrowErrorIfDuplicateFound;
+    private boolean isCheckClipboardFromServiceEnable = true;
 
     public static Intent newIntent(Context context, boolean isThrowErrorIfDuplicateFound) {
+        return newIntent(context, null, isThrowErrorIfDuplicateFound);
+    }
+
+    public static Intent newIntent(Context context, PrivateKeyDetails privateKeyDetails, boolean
+            isThrowErrorIfDuplicateFound) {
         Intent intent = new Intent(context, ImportPrivateKeyActivity.class);
+        intent.putExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, privateKeyDetails);
         intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
     }
@@ -82,20 +94,50 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        bindService(new Intent(this, CheckClipboardToFindPrivateKeyService.class),
+                this, Context.BIND_AUTO_CREATE);
+
         if (getIntent() != null) {
             this.isThrowErrorIfDuplicateFound =
                     getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
+            this.privateKeyDetails =
+                    getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD);
         }
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
         initViews();
+
+        if (privateKeyDetails != null) {
+            startCheckKeysActivityToCheckClipboardKey();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (isServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
+            privateKeyDetails = checkClipboardToFindPrivateKeyService.getPrivateKeyDetails();
+
+            if (privateKeyDetails != null) {
+                startCheckKeysActivityToCheckClipboardKey();
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isCheckClipboardFromServiceEnable = true;
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM:
+                isCheckClipboardFromServiceEnable = false;
+
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null) {
@@ -113,6 +155,8 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                 break;
 
             case REQUEST_CODE_CHECK_PRIVATE_KEYS:
+                isCheckClipboardFromServiceEnable = false;
+
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         setResult(Activity.RESULT_OK);
@@ -276,13 +320,7 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
                 UIUtil.exchangeViewVisibility(getApplicationContext(),
                         false, layoutProgress, layoutContentView);
                 if ((boolean) result) {
-                    startActivityForResult(CheckKeysActivity.newIntent(this,
-                            new ArrayList<>(Arrays.asList(new
-                                    PrivateKeyDetails[]{privateKeyDetails})),
-                            getString(R.string.loaded_private_key_from_your_clipboard),
-                            getString(R.string.continue_),
-                            getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
-                            REQUEST_CODE_CHECK_PRIVATE_KEYS);
+                    startCheckKeysActivityToCheckClipboardKey();
                 } else {
                     showInfoSnackbar(getRootView(),
                             getString(R.string.clipboard_has_wrong_structure));
@@ -308,6 +346,16 @@ public class ImportPrivateKeyActivity extends BaseBackStackActivity
             default:
                 super.handleFailureLoaderResult(loaderId, e);
         }
+    }
+
+    private void startCheckKeysActivityToCheckClipboardKey() {
+        startActivityForResult(CheckKeysActivity.newIntent(this,
+                new ArrayList<>(Arrays.asList(new
+                        PrivateKeyDetails[]{privateKeyDetails})),
+                getString(R.string.loaded_private_key_from_your_clipboard),
+                getString(R.string.continue_),
+                getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
+                REQUEST_CODE_CHECK_PRIVATE_KEYS);
     }
 
     /**

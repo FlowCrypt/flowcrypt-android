@@ -9,6 +9,7 @@ package com.flowcrypt.email.js;
 import android.content.Context;
 import android.os.Build;
 import android.text.Html;
+import android.text.TextUtils;
 
 import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.Releasable;
@@ -188,6 +189,22 @@ public class Js { // Create one object per thread and use them separately. Not t
     public IdToken api_auth_parse_id_token(String id_token) {
         return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth",
                 "parse_id_token"}, new V8Array(v8).push(id_token)));
+    }
+
+    /**
+     * Check that the private key has a valid structure.
+     *
+     * @param armoredPrivateKey The armored private key.
+     * @return true if private key has valid structure, otherwise false.
+     */
+    public boolean is_valid_private_key(String armoredPrivateKey) {
+        String normalizedArmoredKey = crypto_key_normalize(armoredPrivateKey);
+        PgpKey pgpKey = crypto_key_read(normalizedArmoredKey);
+        if (!TextUtils.isEmpty(pgpKey.getLongid())
+                && !TextUtils.isEmpty(pgpKey.getFingerprint())
+                && pgpKey.getPrimaryUserId() != null) {
+            return pgpKey.isPrivate();
+        } else return false;
     }
 
     private static String read(File file) throws IOException {
@@ -453,20 +470,22 @@ class JavaMethodsForJavascript {
             return (answer.multiply(answer)).mod(m);
         }
 
-        return (b.multiply(java_mod_pow(b,e.subtract(one),m))).mod(m);
+        return (b.multiply(java_mod_pow(b, e.subtract(one), m))).mod(m);
     }
 
     public String rsa_decrypt(String modulus, String exponent, V8Array encrypted) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            KeySpec keySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(exponent));
+            KeySpec keySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger
+                    (exponent));
             PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
             Cipher decryptCipher = Cipher.getInstance("RSA/ECB/NoPadding");
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] decrypted_bytes = decryptCipher.doFinal(encrypted.getBytes(0, encrypted.length()));
+            byte[] decrypted_bytes = decryptCipher.doFinal(encrypted.getBytes(0, encrypted.length
+                    ()));
             return new BigInteger(decrypted_bytes).toString();
         } catch (Exception e) {
-            System.out.println("JAVA RSA ERROR:" + e.getClass() + " --- "  + e.getMessage());
+            System.out.println("JAVA RSA ERROR:" + e.getClass() + " --- " + e.getMessage());
         }
         return "";
     }
@@ -476,8 +495,8 @@ class JavaMethodsForJavascript {
         byte bytes[] = new byte[byte_length];
         random.nextBytes(bytes);
         V8Array array = new V8Array(v8);
-        for(Integer i = 0; i < byte_length; i++) {
-            array.push((int)bytes[i] + 128); // signed to unsigned conversion to get random 0-255
+        for (Integer i = 0; i < byte_length; i++) {
+            array.push((int) bytes[i] + 128); // signed to unsigned conversion to get random 0-255
         }
         return array;
     }

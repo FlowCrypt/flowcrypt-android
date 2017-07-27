@@ -26,6 +26,7 @@ import com.flowcrypt.email.model.PrivateKeyDetails;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
+import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
@@ -274,6 +275,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 EmailManagerActivity.runEmailManagerActivity(this, account);
                 finish();
             } else {
+                startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
                 if (account != null) {
                     getSupportLoaderManager().initLoader(
                             R.id.loader_id_load_gmail_backups, null, this);
