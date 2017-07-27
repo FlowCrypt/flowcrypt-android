@@ -70,6 +70,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
                     list.writeString("BODY[]<0.204800>");
                     args.writeArgument(list);
 
+
                     Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
                     Response serverStatusResponse = responses[responses.length - 1];
 

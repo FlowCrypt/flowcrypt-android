@@ -10,6 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/default_margin_medium"
+    android:autoLink="web"
     android:background="@drawable/bg_message_part_other"
     android:textColor="@color/mine_shaft"
     android:textIsSelectable="true"
