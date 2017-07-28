@@ -9,6 +9,7 @@ package com.flowcrypt.email.ui.activity.base;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
@@ -30,6 +31,8 @@ import com.flowcrypt.email.model.results.LoaderResult;
 public abstract class BaseActivity extends AppCompatActivity {
 
     private Snackbar snackbar;
+    private Toolbar toolbar;
+    private AppBarLayout appBarLayout;
 
     /**
      * This method can used to change "HomeAsUpEnabled" behavior.
@@ -55,7 +58,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getContentViewResourceId());
-        setupToolbarIfItExists();
+        initViews();
     }
 
     @Override
@@ -72,6 +75,13 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    public Toolbar getToolbar() {
+        return toolbar;
+    }
+
+    public AppBarLayout getAppBarLayout() {
+        return appBarLayout;
+    }
 
     /**
      * Show an information as Snackbar.
@@ -161,8 +171,13 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     }
 
+    private void initViews() {
+        appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
+        setupToolbarIfItExists();
+    }
+
     private void setupToolbarIfItExists() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (toolbar != null) {
             setSupportActionBar(toolbar);
         }

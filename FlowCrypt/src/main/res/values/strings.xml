@@ -8,6 +8,7 @@
     <string name="app_name">FlowCrypt</string>
 
     <string name="secure_compose">Secure Compose</string>
+    <string name="compose">Compose</string>
     <string name="prompt_recipient">Add recipient</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
@@ -140,4 +141,6 @@
     <string name="key_successfully_imported">Key successfully imported</string>
     <string name="attach_file">Attach file</string>
     <string name="switch_to_standard_email">Switch to standard email</string>
+    <string name="switch_to_secure_email">Switch to secure email</string>
+    <string name="this_message_will_not_be_encrypted">This message will not be encrypted</string>
 </resources>

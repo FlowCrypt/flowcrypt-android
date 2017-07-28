@@ -19,7 +19,9 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
@@ -40,10 +42,13 @@ import java.util.List;
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
     protected Js js;
+    protected OnMessageSendListener onMessageSendListener;
+    protected MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
     protected boolean isUpdateInfoAboutContactsEnable = true;
     protected boolean isUpdatedInfoAboutContactCompleted = true;
-    protected OnMessageSendListener onMessageSendListener;
-    private boolean isMessageSendingNow;
+    protected boolean isMessageSendingNow;
+
+    private OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
 
     /**
      * Generate an outgoing message info from entered information by user.
@@ -81,6 +86,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             this.onMessageSendListener = (OnMessageSendListener) context;
         } else throw new IllegalArgumentException(context.toString() + " must implement " +
                 OnMessageSendListener.class.getSimpleName());
+
+        if (context instanceof OnChangeMessageEncryptedTypeListener) {
+            this.onChangeMessageEncryptedTypeListener = (OnChangeMessageEncryptedTypeListener)
+                    context;
+        } else throw new IllegalArgumentException(context.toString() + " must implement " +
+                OnChangeMessageEncryptedTypeListener.class.getSimpleName());
     }
 
     @Override
@@ -125,6 +136,23 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 startActivity(new Intent(getContext(), FeedbackActivity.class));
                 return true;
 
+            case R.id.menuActionSwitchType:
+                switch (messageEncryptionType) {
+                    case ENCRYPTED:
+                        messageEncryptionType = MessageEncryptionType.STANDARD;
+                        break;
+
+                    case STANDARD:
+                        messageEncryptionType = MessageEncryptionType.ENCRYPTED;
+                        break;
+                }
+
+                if (onChangeMessageEncryptedTypeListener != null) {
+                    onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType
+                            (messageEncryptionType);
+                }
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -137,6 +165,11 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
 
         MenuItem menuActionSend = menu.findItem(R.id.menuActionSend);
         menuActionSend.setVisible(!isMessageSendingNow);
+
+        MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
+        menuActionSwitchType.setTitle(
+                messageEncryptionType == MessageEncryptionType.STANDARD ?
+                        R.string.switch_to_secure_email : R.string.switch_to_standard_email);
     }
 
     @Override

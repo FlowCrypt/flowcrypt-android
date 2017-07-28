@@ -8,11 +8,15 @@ package com.flowcrypt.email.ui.activity.base;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
@@ -25,11 +29,14 @@ import com.flowcrypt.email.util.GeneralUtil;
  */
 
 public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivity implements
-        BaseSendSecurityMessageFragment.OnMessageSendListener {
+        BaseSendSecurityMessageFragment.OnMessageSendListener,
+        OnChangeMessageEncryptedTypeListener {
 
     public static final String EXTRA_KEY_ACCOUNT_EMAIL =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_EMAIL",
                     BaseSendingMessageActivity.class);
+
+    private View nonEncryptedHintView;
 
     private boolean isMessageSendingNow;
     private String accountEmail;
@@ -43,6 +50,8 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        initNonEncryptedHintView();
 
         if (getIntent() != null) {
             if (getIntent().hasExtra(EXTRA_KEY_ACCOUNT_EMAIL)) {
@@ -99,5 +108,34 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     @Override
     public String getSenderEmail() {
         return accountEmail;
+    }
+
+    @Override
+    public void onChangeMessageEncryptedType(MessageEncryptionType messageEncryptionType) {
+        switch (messageEncryptionType) {
+            case ENCRYPTED:
+                getAppBarLayout().setBackgroundColor(getResources().getColor(R.color
+                        .colorPrimary));
+                getToolbar().setTitle(R.string.secure_compose);
+                getAppBarLayout().removeView(nonEncryptedHintView);
+                invalidateOptionsMenu();
+                break;
+
+            case STANDARD:
+                getAppBarLayout().setBackgroundColor(getResources().getColor(R.color.valencia));
+                getToolbar().setTitle(R.string.compose);
+                getAppBarLayout().addView(nonEncryptedHintView);
+                invalidateOptionsMenu();
+                break;
+        }
+    }
+
+    private void initNonEncryptedHintView() {
+        nonEncryptedHintView = getLayoutInflater().inflate(
+                R.layout.under_toolbar_line_with_text, getAppBarLayout(), false);
+
+        TextView textView = (TextView) nonEncryptedHintView.findViewById(R.id
+                .underToolbarTextTextView);
+        textView.setText(R.string.this_message_will_not_be_encrypted);
     }
 }
