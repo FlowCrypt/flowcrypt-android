@@ -138,4 +138,6 @@
     <string name="loaded_private_key_from_your_clipboard">Loaded private key from your clipboard</string>
     <string name="checking_the_private_key">Evaluating…</string>
     <string name="key_successfully_imported">Key successfully imported</string>
+    <string name="attach_file">Attach file</string>
+    <string name="switch_to_standard_email">Switch to standard email</string>
 </resources>

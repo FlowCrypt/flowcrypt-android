@@ -7,19 +7,20 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -95,12 +96,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_secure_compose, menu);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
@@ -124,6 +119,10 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                                     .please_wait_while_information_about_contacts_will_be_updated,
                             Toast.LENGTH_SHORT).show();
                 }
+                return true;
+
+            case R.id.menuActionHelp:
+                startActivity(new Intent(getContext(), FeedbackActivity.class));
                 return true;
 
             default:

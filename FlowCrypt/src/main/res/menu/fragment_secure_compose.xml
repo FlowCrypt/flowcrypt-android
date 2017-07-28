@@ -4,13 +4,30 @@
   ~ Contributors: DenBond7
   -->
 
-<menu
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menuActionAttachFile"
+        android:icon="@mipmap/ic_action_attach_file"
+        android:title="@string/attach_file"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/menuActionSend"
         android:icon="@mipmap/ic_action_send"
         android:title="@string/send"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionSwitchType"
+        android:icon="@mipmap/ic_action_switch"
+        android:title="@string/switch_to_standard_email"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionHelp"
+        android:icon="@mipmap/ic_help"
+        android:title="@string/help"
+        app:showAsAction="ifRoom" />
 </menu>
