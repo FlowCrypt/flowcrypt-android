@@ -163,8 +163,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        MenuItem menuActionSend = menu.findItem(R.id.menuActionSend);
-        menuActionSend.setVisible(!isMessageSendingNow);
+        menu.setGroupVisible(0, !isMessageSendingNow);
 
         MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
         menuActionSwitchType.setTitle(
@@ -183,7 +182,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
-                        outgoingMessageInfo);
+                        outgoingMessageInfo, messageEncryptionType);
 
             case R.id.loader_id_update_info_about_pgp_contacts:
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);

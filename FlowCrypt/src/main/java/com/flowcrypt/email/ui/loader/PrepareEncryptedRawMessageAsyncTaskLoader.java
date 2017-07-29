@@ -13,12 +13,13 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import java.util.ArrayList;
 
@@ -39,12 +40,14 @@ import java.util.ArrayList;
 
 public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private OutgoingMessageInfo outgoingMessageInfo;
+    private MessageEncryptionType messageEncryptionType;
 
-    public PrepareEncryptedRawMessageAsyncTaskLoader(Context context,
-                                                     @NonNull OutgoingMessageInfo
-                                                             outgoingMessageInfo) {
+    public PrepareEncryptedRawMessageAsyncTaskLoader(
+            Context context, @NonNull OutgoingMessageInfo outgoingMessageInfo,
+            MessageEncryptionType messageEncryptionType) {
         super(context);
         this.outgoingMessageInfo = outgoingMessageInfo;
+        this.messageEncryptionType = messageEncryptionType;
         onContentChanged();
     }
 
@@ -60,19 +63,28 @@ public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<L
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
             String[] pubKeys = getPubKeys(js);
 
-            if (pubKeys.length > 0) {
-                String encryptedText = js.crypto_message_encrypt(pubKeys,
-                        outgoingMessageInfo.getMessage(), true);
+            String messageText = null;
 
-                String encryptedMessage = js.mime_encode(encryptedText,
-                        outgoingMessageInfo.getToPgpContacts(),
-                        outgoingMessageInfo.getFromPgpContact(),
-                        outgoingMessageInfo.getSubject(),
-                        null,
-                        js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
+            switch (messageEncryptionType) {
+                case ENCRYPTED:
+                    messageText = js.crypto_message_encrypt(pubKeys,
+                            outgoingMessageInfo.getMessage(), true);
+                    break;
 
-                return new LoaderResult(encryptedMessage, null);
-            } else return new LoaderResult(null, null);
+                case STANDARD:
+                    messageText = outgoingMessageInfo.getMessage();
+                    break;
+            }
+
+
+            String rawMessage = js.mime_encode(messageText,
+                    outgoingMessageInfo.getToPgpContacts(),
+                    outgoingMessageInfo.getFromPgpContact(),
+                    outgoingMessageInfo.getSubject(),
+                    null,
+                    js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
+
+            return new LoaderResult(rawMessage, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);
