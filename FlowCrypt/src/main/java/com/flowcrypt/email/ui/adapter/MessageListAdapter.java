@@ -9,7 +9,6 @@ package com.flowcrypt.email.ui.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -22,6 +21,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.DateTimeUtil;
+import com.flowcrypt.email.util.UIUtil;
 
 /**
  * The MessageListAdapter responsible for displaying the message in the list.
@@ -82,16 +82,19 @@ public class MessageListAdapter extends CursorAdapter {
             if (generalMessageDetails.isSeen()) {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
 
-                viewHolder.textViewSenderAddress.setTextColor(getColor(context, R.color.scorpion));
-                viewHolder.textViewSubject.setTextColor(getColor(context, R.color.gray));
-                viewHolder.textViewDate.setTextColor(getColor(context, R.color.gray));
+                viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color
+                        .scorpion));
+                viewHolder.textViewSubject.setTextColor(UIUtil.getColor(context, R.color.gray));
+                viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, R.color.gray));
             } else {
                 changeViewsTypeface(viewHolder, Typeface.BOLD);
 
                 viewHolder.textViewSenderAddress.setTextColor(
-                        getColor(context, android.R.color.black));
-                viewHolder.textViewSubject.setTextColor(getColor(context, android.R.color.black));
-                viewHolder.textViewDate.setTextColor(getColor(context, android.R.color.black));
+                        UIUtil.getColor(context, android.R.color.black));
+                viewHolder.textViewSubject.setTextColor(UIUtil.getColor(context, android.R.color
+                        .black));
+                viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color
+                        .black));
             }
         } else {
             clearItem(viewHolder);
@@ -102,16 +105,6 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewSenderAddress.setTypeface(null, typeface);
         viewHolder.textViewSubject.setTypeface(null, typeface);
         viewHolder.textViewDate.setTypeface(null, typeface);
-    }
-
-    @SuppressWarnings("deprecation")
-    private int getColor(Context context, int colorResourcesId) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return context.getResources().getColor
-                    (colorResourcesId, context.getTheme());
-        } else {
-            return context.getResources().getColor(colorResourcesId);
-        }
     }
 
     /**

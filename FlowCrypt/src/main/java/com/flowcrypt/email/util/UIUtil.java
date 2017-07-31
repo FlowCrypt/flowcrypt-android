@@ -138,4 +138,20 @@ public class UIUtil {
         }
     }
 
+    /**
+     * Get a color value using the context.
+     *
+     * @param context          Interface to global information about an application environment.
+     * @param colorResourcesId The resources id of the needed color.
+     * @return The int value of the color.
+     */
+    @SuppressWarnings("deprecation")
+    public static int getColor(Context context, int colorResourcesId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return context.getResources().getColor
+                    (colorResourcesId, context.getTheme());
+        } else {
+            return context.getResources().getColor(colorResourcesId);
+        }
+    }
 }

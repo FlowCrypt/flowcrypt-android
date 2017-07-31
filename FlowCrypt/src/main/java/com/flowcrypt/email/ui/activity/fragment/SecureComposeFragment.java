@@ -6,9 +6,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,14 +24,15 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
+import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.ChipSpan;
-import com.hootsuite.nachos.chip.ChipSpanChipCreator;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import java.util.List;
@@ -157,25 +160,70 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         }
     }
 
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        super.handleSuccessLoaderResult(loaderId, result);
+        switch (loaderId) {
+            case R.id.loader_id_update_info_about_pgp_contacts:
+                UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult
+                        = (UpdateInfoAboutPgpContactsResult) result;
+
+                if (updateInfoAboutPgpContactsResult != null
+                        && updateInfoAboutPgpContactsResult.getUpdatedPgpContacts() != null) {
+                    updateChips(updateInfoAboutPgpContactsResult);
+                }
+                break;
+        }
+    }
+
+    private void updateChips(UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult) {
+        SpannableStringBuilder spannableStringBuilder
+                = new SpannableStringBuilder(recipientEditTextView.getText());
+
+        ChipSpan[] chipSpans = spannableStringBuilder.getSpans(0,
+                recipientEditTextView.length(), ChipSpan.class);
+
+        if (chipSpans.length > 0) {
+            for (PgpContact pgpContact : updateInfoAboutPgpContactsResult.getUpdatedPgpContacts()) {
+                for (ChipSpan chipSpan : chipSpans) {
+                    if (pgpContact.getEmail().equalsIgnoreCase(chipSpan.getText().toString())) {
+                        CustomChipSpanChipCreator.updateChipSpanBackground(getContext(), chipSpan,
+                                pgpContact.getHasPgp());
+                        break;
+                    }
+                }
+            }
+            recipientEditTextView.setText(spannableStringBuilder);
+        }
+    }
+
     /**
      * Init fragment views
      *
      * @param view The root fragment view.
      */
     private void initViews(View view) {
-        recipientEditTextView = (NachoTextView) view.findViewById(R.id.editTextRecipient);
-        recipientEditTextView.setAdapter(preparePgpContactAdapter());
-        recipientEditTextView.setNachoValidator(new ChipifyingNachoValidator());
-        recipientEditTextView.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
-                new ChipSpanChipCreator(), ChipSpan.class,
-                SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
-        recipientEditTextView.setOnFocusChangeListener(this);
+        initChipsView(view);
 
         editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
+    }
+
+    private void initChipsView(View view) {
+        recipientEditTextView = (NachoTextView) view.findViewById(R.id.editTextRecipient);
+        recipientEditTextView.setAdapter(preparePgpContactAdapter());
+        recipientEditTextView.setNachoValidator(new ChipifyingNachoValidator());
+        recipientEditTextView.setIllegalCharacters(',');
+        recipientEditTextView.setChipTokenizer(
+                new SingleCharacterSpanChipTokenizer(getContext(),
+                        new CustomChipSpanChipCreator(getContext()), ChipSpan.class,
+                        SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
+        recipientEditTextView.setOnFocusChangeListener(this);
+        recipientEditTextView.setChipBackground(
+                ColorStateList.valueOf(UIUtil.getColor(getContext(), R.color.dusty_gray)));
     }
 
     /**

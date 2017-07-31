@@ -18,9 +18,11 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Response;
@@ -66,6 +68,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
     public LoaderResult loadInBackground() {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
         boolean isAllInfoReceived = true;
+        List<PgpContact> pgpContacts = new ArrayList<>();
         try {
             Js js = new Js(getContext(), null);
             for (String email : emails) {
@@ -79,6 +82,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                         try {
                             PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
                             if (remotePgpContact != null) {
+                                pgpContacts.add(remotePgpContact);
                                 contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
                             }
                         } catch (IOException e) {
@@ -91,6 +95,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                     try {
                         PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
                         if (remotePgpContact != null) {
+                            pgpContacts.add(remotePgpContact);
                             contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
                         }
                     } catch (IOException e) {
@@ -99,7 +104,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                     }
                 }
             }
-            return new LoaderResult(isAllInfoReceived, null);
+            return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails,
+                    isAllInfoReceived, pgpContacts), null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);

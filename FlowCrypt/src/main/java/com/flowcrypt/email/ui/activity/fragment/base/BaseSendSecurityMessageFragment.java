@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
@@ -208,12 +209,13 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts:
-                boolean isAllInfoReceived = (boolean) result;
+                UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult
+                        = (UpdateInfoAboutPgpContactsResult) result;
 
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
 
-                if (!isAllInfoReceived) {
+                if (!updateInfoAboutPgpContactsResult.isAllInfoReceived()) {
                     Toast.makeText(getContext(),
                             R.string.info_about_some_contacts_not_received,
                             Toast.LENGTH_SHORT).show();
