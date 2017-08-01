@@ -143,4 +143,8 @@
     <string name="switch_to_standard_email">Switch to standard email</string>
     <string name="switch_to_secure_email">Switch to secure email</string>
     <string name="this_message_will_not_be_encrypted">This message will not be encrypted</string>
+    <string name="error_occurred_while_while_updating_contact">Error occurred while receiving the information about the contacts.</string>
+    <string name="import_their_public_key">Import their Public Key</string>
+    <string name="template_remove_recipient">Remove %1$s</string>
+    <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
 </resources>
