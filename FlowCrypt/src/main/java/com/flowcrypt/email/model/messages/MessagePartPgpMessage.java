@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.model.messages;
 
+import android.os.Parcel;
+
 /**
  * This class describes the already decrypted text.
  *
@@ -18,5 +20,10 @@ package com.flowcrypt.email.model.messages;
 public class MessagePartPgpMessage extends MessagePart {
     public MessagePartPgpMessage(String value) {
         super(MessagePartType.PGP_MESSAGE, value);
+    }
+
+    public MessagePartPgpMessage(Parcel in) {
+        super(in);
+        this.messagePartType = MessagePartType.PGP_MESSAGE;
     }
 }

@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.model.messages;
 
+import android.os.Parcel;
+
 /**
  * This class describes the simple not encrypted text.
  *
@@ -18,5 +20,10 @@ package com.flowcrypt.email.model.messages;
 public class MessagePartText extends MessagePart {
     public MessagePartText(String value) {
         super(MessagePartType.TEXT, value);
+    }
+
+    public MessagePartText(Parcel in) {
+        super(in);
+        this.messagePartType = MessagePartType.TEXT;
     }
 }

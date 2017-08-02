@@ -34,11 +34,30 @@ import com.flowcrypt.email.js.MessageBlock;
  */
 
 public class MessagePart implements Parcelable {
-
     public static final Creator<MessagePart> CREATOR = new Creator<MessagePart>() {
         @Override
         public MessagePart createFromParcel(Parcel source) {
-            return new MessagePart(source);
+            int tmpMessageBlockType = source.readInt();
+            MessagePartType messagePartType = tmpMessageBlockType == -1 ? null
+                    : MessagePartType.values()[tmpMessageBlockType];
+
+            if (messagePartType != null) {
+                switch (messagePartType) {
+                    case TEXT:
+                        return new MessagePartText(source);
+
+                    case PGP_MESSAGE:
+                        return new MessagePartPgpMessage(source);
+
+                    case PGP_PUBLIC_KEY:
+                        return new MessagePartPgpPublicKey(source);
+
+                    default:
+                        throw new AssertionError("An unknown " + MessagePart.class.getSimpleName());
+                }
+            } else {
+                return new MessagePart(source);
+            }
         }
 
         @Override
@@ -46,7 +65,7 @@ public class MessagePart implements Parcelable {
             return new MessagePart[size];
         }
     };
-    private MessagePartType messagePartType;
+    protected MessagePartType messagePartType;
     private String value;
 
     public MessagePart(MessagePartType messagePartType, String value) {
@@ -55,9 +74,6 @@ public class MessagePart implements Parcelable {
     }
 
     protected MessagePart(Parcel in) {
-        int tmpMessageBlockType = in.readInt();
-        this.messagePartType = tmpMessageBlockType == -1 ? null : MessagePartType.values()
-                [tmpMessageBlockType];
         this.value = in.readString();
     }
 
