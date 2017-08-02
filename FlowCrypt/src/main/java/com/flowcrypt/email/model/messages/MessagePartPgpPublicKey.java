@@ -55,6 +55,7 @@ public class MessagePartPgpPublicKey extends MessagePart {
 
     protected MessagePartPgpPublicKey(Parcel in) {
         super(in);
+        this.messagePartType = MessagePartType.PGP_PUBLIC_KEY;
         this.keyWords = in.readString();
         this.fingerprint = in.readString();
         this.keyOwner = in.readString();
