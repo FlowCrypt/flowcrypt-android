@@ -45,12 +45,12 @@
 
         <activity
             android:name=".ui.activity.SecureComposeActivity"
-            android:label="@string/title_activity_secure_compose"
+            android:label="@string/secure_compose"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.SecureReplyActivity"
-            android:label="@string/title_activity_security_reply"
+            android:label="@string/security_reply"
             android:screenOrientation="portrait" />
 
         <activity

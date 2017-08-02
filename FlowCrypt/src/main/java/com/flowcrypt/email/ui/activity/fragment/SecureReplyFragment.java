@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -20,6 +22,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -53,6 +56,15 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getActivity().getIntent() != null) {
+            this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
+                    (SecureReplyActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_security_reply, container, false);
@@ -62,6 +74,10 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
+
+        if (incomingMessageInfo != null) {
+            updateViews();
+        }
     }
 
     @Override
@@ -71,6 +87,12 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
             getLoaderManager().restartLoader(R.id
                     .loader_id_update_info_about_pgp_contacts, null, this);
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_secure_reply, menu);
     }
 
     @Override

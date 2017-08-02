@@ -18,6 +18,14 @@ import com.flowcrypt.email.model.MessageEncryptionType;
  */
 
 public interface OnChangeMessageEncryptedTypeListener {
+
+    /**
+     * Handle a switch of the message encryption type.
+     *
+     * @param messageEncryptionType The new message encryption type.
+     */
     void onChangeMessageEncryptedType(MessageEncryptionType messageEncryptionType);
+
+    MessageEncryptionType getMessageEncryptionType();
 }
 

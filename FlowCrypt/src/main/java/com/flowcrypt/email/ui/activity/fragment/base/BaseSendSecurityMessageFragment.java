@@ -7,7 +7,6 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
@@ -23,7 +22,6 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -44,12 +42,11 @@ import java.util.List;
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
-    protected MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
+    protected OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
+
     protected boolean isUpdateInfoAboutContactsEnable = true;
     protected boolean isUpdatedInfoAboutContactCompleted = true;
     protected boolean isMessageSendingNow;
-
-    private OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
 
     /**
      * Generate an outgoing message info from entered information by user.
@@ -108,6 +105,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.setGroupVisible(0, !isMessageSendingNow);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
@@ -133,29 +136,9 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 }
                 return true;
 
-            case R.id.menuActionHelp:
-                startActivity(new Intent(getContext(), FeedbackActivity.class));
-                return true;
-
-            case R.id.menuActionSwitchType:
-                switchMessageEncryptionType();
-                return true;
-
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-
-        menu.setGroupVisible(0, !isMessageSendingNow);
-
-        MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
-        menuActionSwitchType.setTitle(
-                messageEncryptionType == MessageEncryptionType.STANDARD ?
-                        R.string.switch_to_secure_email : R.string.switch_to_standard_email);
     }
 
     @Override
@@ -169,7 +152,8 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
                 return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
-                        outgoingMessageInfo, messageEncryptionType);
+                        outgoingMessageInfo, onChangeMessageEncryptedTypeListener
+                        .getMessageEncryptionType());
 
             case R.id.loader_id_update_info_about_pgp_contacts:
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);
@@ -260,22 +244,11 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
 
     /**
      * Switch the message encryption type.
+     *
+     * @param messageEncryptionType The new message encryption type.
      */
-    protected void switchMessageEncryptionType() {
-        switch (messageEncryptionType) {
-            case ENCRYPTED:
-                messageEncryptionType = MessageEncryptionType.STANDARD;
-                break;
-
-            case STANDARD:
-                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-                break;
-        }
-
-        if (onChangeMessageEncryptedTypeListener != null) {
-            onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType
-                    (messageEncryptionType);
-        }
+    protected void switchMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
+        onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType(messageEncryptionType);
     }
 
     /**

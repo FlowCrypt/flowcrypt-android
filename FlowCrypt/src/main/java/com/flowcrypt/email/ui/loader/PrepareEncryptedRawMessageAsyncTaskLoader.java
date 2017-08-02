@@ -76,7 +76,6 @@ public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<L
                     break;
             }
 
-
             String rawMessage = js.mime_encode(messageText,
                     outgoingMessageInfo.getToPgpContacts(),
                     outgoingMessageInfo.getFromPgpContact(),

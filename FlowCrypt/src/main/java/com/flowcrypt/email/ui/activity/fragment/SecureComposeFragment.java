@@ -92,7 +92,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
             case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
                 switch (resultCode) {
                     case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-                        switchMessageEncryptionType();
+                        switchMessageEncryptionType(MessageEncryptionType.STANDARD);
                         break;
 
                     case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
@@ -178,7 +178,8 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                                 .text_must_not_be_empty,
                         getString(R.string.prompt_compose_security_email)));
                 editTextEmailMessage.requestFocus();
-            } else if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+            } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
+                    MessageEncryptionType.ENCRYPTED) {
                 if (pgpContacts.isEmpty()) {
                     showSnackbar(getView(),
                             getString(R.string.please_update_information_about_contacts),

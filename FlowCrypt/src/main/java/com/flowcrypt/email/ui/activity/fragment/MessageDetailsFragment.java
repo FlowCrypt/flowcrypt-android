@@ -36,7 +36,9 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -324,9 +326,18 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * Run a screen where the user can start write a reply.
      */
     private void runSecurityReplyActivity() {
-        Intent intent = new Intent(getContext(), SecureReplyActivity.class);
-        intent.putExtra(SecureReplyActivity.KEY_INCOMING_MESSAGE_INFO,
-                incomingMessageInfo);
+        MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
+
+        for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+            if (messagePart instanceof MessagePartPgpPublicKey
+                    || messagePart instanceof MessagePartPgpMessage) {
+                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
+                break;
+            }
+        }
+
+        Intent intent = SecureReplyActivity.generateIntent(getContext(), incomingMessageInfo,
+                messageEncryptionType);
         if (getActivity() instanceof MessageDetailsActivity) {
             MessageDetailsActivity messageDetailsActivity = (MessageDetailsActivity) getActivity();
             intent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,

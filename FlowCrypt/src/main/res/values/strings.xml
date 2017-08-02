@@ -52,10 +52,8 @@
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Error: could not receive message</string>
     <string name="title_activity_test">TestActivity</string>
-    <string name="title_activity_secure_compose">Secure Compose</string>
     <string name="title_activity_login">Sign in</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait.</string>
-    <string name="title_activity_security_reply">Secure Reply</string>
     <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait.</string>
     <string name="create_a_new_key">Create a new key</string>
     <string name="import_my_key">Import my key</string>
@@ -148,4 +146,6 @@
     <string name="template_remove_recipient">Remove %1$s</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
     <string name="update">Update</string>
+    <string name="security_reply">Secure Reply</string>
+    <string name="reply">Reply</string>
 </resources>

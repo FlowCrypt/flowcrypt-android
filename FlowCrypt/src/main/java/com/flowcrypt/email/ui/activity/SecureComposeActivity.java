@@ -69,4 +69,15 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
             secureComposeFragment.onErrorOccurred(requestCode, errorType);
         }
     }
+
+    @Override
+    protected String getSecurityTitle() {
+        return getString(R.string.secure_compose);
+    }
+
+    @Override
+    protected String getStandardTitle() {
+        return getString(R.string.compose);
+    }
+
 }

@@ -6,14 +6,17 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.SecureReplyFragment;
+import com.flowcrypt.email.util.GeneralUtil;
 
 /**
  * This activity describes a logic of send encrypted message as a reply.
@@ -25,9 +28,19 @@ import com.flowcrypt.email.ui.activity.fragment.SecureReplyFragment;
  */
 public class SecureReplyActivity extends BaseSendingMessageActivity {
 
-    public static final String KEY_INCOMING_MESSAGE_INFO = BuildConfig.APPLICATION_ID + "" +
-            ".KEY_INCOMING_MESSAGE_INFO";
+    public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_INCOMING_MESSAGE_INFO", SecureReplyActivity.class);
+
     private View layoutContent;
+
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                        MessageEncryptionType messageEncryptionType) {
+
+        Intent intent = new Intent(context, SecureReplyActivity.class);
+        intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
+        intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
+        return intent;
+    }
 
     @Override
     public View getRootView() {
@@ -44,16 +57,7 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
         super.onCreate(savedInstanceState);
         layoutContent = findViewById(R.id.layoutContent);
 
-        if (getIntent() != null && getIntent().hasExtra(KEY_INCOMING_MESSAGE_INFO)) {
-            SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
-
-            if (secureReplyFragment != null) {
-                IncomingMessageInfo incomingMessageInfo = getIntent().getParcelableExtra
-                        (KEY_INCOMING_MESSAGE_INFO);
-                secureReplyFragment.setIncomingMessageInfo(incomingMessageInfo);
-            }
-        } else {
+        if (getIntent() == null || !getIntent().hasExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO)) {
             finish();
         }
     }
@@ -74,6 +78,16 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
                 getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
         return secureReplyFragment != null && !secureReplyFragment.isMessageSendingNow();
+    }
+
+    @Override
+    protected String getSecurityTitle() {
+        return getString(R.string.security_reply);
+    }
+
+    @Override
+    protected String getStandardTitle() {
+        return getString(R.string.reply);
     }
 
     @Override

@@ -18,6 +18,7 @@ import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
@@ -159,5 +160,9 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
 
     public Snackbar getSnackBar() {
         return snackbar;
+    }
+
+    public BaseActivity getBaseActivity() {
+        return (BaseActivity) getActivity();
     }
 }
