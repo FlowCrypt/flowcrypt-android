@@ -89,17 +89,23 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             isAllInfoReceived = false;
                             e.printStackTrace();
                         }
+                    } else {
+                        pgpContacts.add(localPgpContact);
                     }
                 } else {
-                    contactsDaoSource.addRow(getContext(), new PgpContact(email, null));
+                    PgpContact newPgpContact = new PgpContact(email, null);
+                    contactsDaoSource.addRow(getContext(), newPgpContact);
                     try {
                         PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
                         if (remotePgpContact != null) {
-                            pgpContacts.add(remotePgpContact);
                             contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                            pgpContacts.add(remotePgpContact);
+                        } else {
+                            pgpContacts.add(newPgpContact);
                         }
                     } catch (IOException e) {
                         isAllInfoReceived = false;
+                        pgpContacts.add(newPgpContact);
                         e.printStackTrace();
                     }
                 }

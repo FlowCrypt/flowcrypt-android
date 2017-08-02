@@ -138,26 +138,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 return true;
 
             case R.id.menuActionSwitchType:
-                switch (messageEncryptionType) {
-                    case ENCRYPTED:
-                        messageEncryptionType = MessageEncryptionType.STANDARD;
-                        break;
-
-                    case STANDARD:
-                        messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-                        break;
-                }
-
-                if (onChangeMessageEncryptedTypeListener != null) {
-                    onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType
-                            (messageEncryptionType);
-                }
+                switchMessageEncryptionType();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     @Override
@@ -270,6 +256,26 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
+    }
+
+    /**
+     * Switch the message encryption type.
+     */
+    protected void switchMessageEncryptionType() {
+        switch (messageEncryptionType) {
+            case ENCRYPTED:
+                messageEncryptionType = MessageEncryptionType.STANDARD;
+                break;
+
+            case STANDARD:
+                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
+                break;
+        }
+
+        if (onChangeMessageEncryptedTypeListener != null) {
+            onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType
+                    (messageEncryptionType);
+        }
     }
 
     /**

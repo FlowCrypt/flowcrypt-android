@@ -6,10 +6,13 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -24,17 +27,24 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
+import com.hootsuite.nachos.chip.Chip;
 import com.hootsuite.nachos.chip.ChipSpan;
+import com.hootsuite.nachos.tokenizer.ChipTokenizer;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,16 +58,20 @@ import java.util.List;
 public class SecureComposeFragment extends BaseSendSecurityMessageFragment implements View
         .OnFocusChangeListener {
 
+    private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
+
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
+    private List<PgpContact> pgpContacts;
 
     private ContactsDaoSource contactsDaoSource;
 
     public SecureComposeFragment() {
         contactsDaoSource = new ContactsDaoSource();
+        pgpContacts = new ArrayList<>();
     }
 
     @Override
@@ -70,6 +84,38 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
+                switch (resultCode) {
+                    case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
+                        switchMessageEncryptionType();
+                        break;
+
+                    case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
+
+                        break;
+
+                    case NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT:
+                        if (data != null) {
+                            PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment
+                                    .EXTRA_KEY_PGP_CONTACT);
+
+                            if (pgpContact != null) {
+                                removePgpContactFromRecipientsField(pgpContact);
+                            }
+                        }
+
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     @Override
@@ -117,21 +163,42 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     @Override
     public boolean isAllInformationCorrect() {
         if (TextUtils.isEmpty(recipientEditTextView.getText().toString())) {
-            UIUtil.showInfoSnackbar(recipientEditTextView, getString(R.string
+            showInfoSnackbar(recipientEditTextView, getString(R.string
                             .text_must_not_be_empty,
                     getString(R.string.prompt_recipient)));
             recipientEditTextView.requestFocus();
         } else if (isEmailValid()) {
             if (TextUtils.isEmpty(editTextEmailSubject.getText().toString())) {
-                UIUtil.showInfoSnackbar(editTextEmailSubject, getString(R.string
+                showInfoSnackbar(editTextEmailSubject, getString(R.string
                                 .text_must_not_be_empty,
                         getString(R.string.prompt_subject)));
                 editTextEmailSubject.requestFocus();
             } else if (TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
-                UIUtil.showInfoSnackbar(editTextEmailMessage, getString(R.string
+                showInfoSnackbar(editTextEmailMessage, getString(R.string
                                 .text_must_not_be_empty,
                         getString(R.string.prompt_compose_security_email)));
                 editTextEmailMessage.requestFocus();
+            } else if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                if (pgpContacts.isEmpty()) {
+                    showSnackbar(getView(),
+                            getString(R.string.please_update_information_about_contacts),
+                            getString(R.string.update), Snackbar.LENGTH_LONG,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                                        getLoaderManager().restartLoader(
+                                                R.id.loader_id_update_info_about_pgp_contacts, null,
+                                                SecureComposeFragment.this);
+                                    } else {
+                                        showInfoSnackbar(getView(), getString(R.string
+                                                .internet_connection_is_not_available));
+                                    }
+                                }
+                            });
+                } else if (isAllRecipientsHavePGP()) {
+                    return true;
+                }
             } else {
                 return true;
             }
@@ -147,6 +214,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 progressBarCheckContactsDetails.setVisibility(
                         hasFocus ? View.INVISIBLE : View.VISIBLE);
                 if (hasFocus) {
+                    pgpContacts.clear();
                     getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                 } else {
                     if (isUpdateInfoAboutContactsEnable) {
@@ -161,6 +229,18 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     }
 
     @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_prepare_encrypted_message:
+                pgpContacts.clear();
+                return super.onCreateLoader(id, args);
+
+            default:
+                return super.onCreateLoader(id, args);
+        }
+    }
+
+    @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         super.handleSuccessLoaderResult(loaderId, result);
         switch (loaderId) {
@@ -170,13 +250,63 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
 
                 if (updateInfoAboutPgpContactsResult != null
                         && updateInfoAboutPgpContactsResult.getUpdatedPgpContacts() != null) {
-                    updateChips(updateInfoAboutPgpContactsResult);
+                    pgpContacts = updateInfoAboutPgpContactsResult.getUpdatedPgpContacts();
+                    updateChips();
+                } else {
+                    pgpContacts = new ArrayList<>();
                 }
                 break;
         }
     }
 
-    private void updateChips(UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult) {
+    /**
+     * Remove the current {@link PgpContact} from recipients.
+     *
+     * @param deleteCandidatePgpContact The {@link PgpContact} which will be removed.
+     */
+    private void removePgpContactFromRecipientsField(PgpContact deleteCandidatePgpContact) {
+        ChipTokenizer chipTokenizer = recipientEditTextView.getChipTokenizer();
+        for (Chip chip : recipientEditTextView.getAllChips()) {
+            if (deleteCandidatePgpContact.getEmail().equalsIgnoreCase(chip.getText().toString())
+                    && chipTokenizer != null) {
+                chipTokenizer.deleteChip(chip, recipientEditTextView.getText());
+            }
+
+        }
+
+        for (PgpContact pgpContact : pgpContacts) {
+            if (deleteCandidatePgpContact.getEmail().equalsIgnoreCase(pgpContact.getEmail())) {
+                pgpContacts.remove(pgpContact);
+            }
+        }
+    }
+
+    /**
+     * Check that all recipients have PGP.
+     *
+     * @return true if all recipients have PGP, other wise false.
+     */
+    private boolean isAllRecipientsHavePGP() {
+        for (PgpContact pgpContact : pgpContacts) {
+            if (!pgpContact.getHasPgp()) {
+                showNoPgpFoundDialog(pgpContact);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void showNoPgpFoundDialog(PgpContact pgpContact) {
+        NoPgpFoundDialogFragment noPgpFoundDialogFragment =
+                NoPgpFoundDialogFragment.newInstance(pgpContact);
+
+        noPgpFoundDialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
+        noPgpFoundDialogFragment.show(getFragmentManager(),
+                NoPgpFoundDialogFragment.class.getSimpleName());
+    }
+
+    private void updateChips() {
         SpannableStringBuilder spannableStringBuilder
                 = new SpannableStringBuilder(recipientEditTextView.getText());
 
@@ -184,7 +314,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 recipientEditTextView.length(), ChipSpan.class);
 
         if (chipSpans.length > 0) {
-            for (PgpContact pgpContact : updateInfoAboutPgpContactsResult.getUpdatedPgpContacts()) {
+            for (PgpContact pgpContact : pgpContacts) {
                 for (ChipSpan chipSpan : chipSpans) {
                     if (pgpContact.getEmail().equalsIgnoreCase(chipSpan.getText().toString())) {
                         CustomChipSpanChipCreator.updateChipSpanBackground(getContext(), chipSpan,
@@ -258,7 +388,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         List<String> emails = recipientEditTextView.getChipAndTokenValues();
         for (String email : emails) {
             if (!js.str_is_email_valid(email)) {
-                UIUtil.showInfoSnackbar(recipientEditTextView, getString(R.string
+                showInfoSnackbar(recipientEditTextView, getString(R.string
                         .error_some_email_is_not_valid, email));
                 recipientEditTextView.requestFocus();
                 return false;
