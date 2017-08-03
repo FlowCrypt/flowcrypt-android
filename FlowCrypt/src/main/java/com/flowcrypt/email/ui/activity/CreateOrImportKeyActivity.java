@@ -15,7 +15,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -63,6 +63,11 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     }
 
     @Override
+    public boolean isPrivateKeyChecking() {
+        return true;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
@@ -79,14 +84,15 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportMyKey:
-                PrivateKeyDetails privateKeyDetails = null;
+                KeyDetails keyDetails = null;
                 if (isServiceBound) {
-                    privateKeyDetails = checkClipboardToFindPrivateKeyService
-                            .getPrivateKeyDetails();
+                    keyDetails = checkClipboardToFindPrivateKeyService
+                            .getKeyDetails();
                 }
 
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(this,
-                        privateKeyDetails, false), REQUEST_CODE_IMPORT_ACTIVITY);
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(
+                        this, getString(R.string.import_private_key), keyDetails,
+                        false, ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
             case R.id.buttonSelectAnotherAccount:

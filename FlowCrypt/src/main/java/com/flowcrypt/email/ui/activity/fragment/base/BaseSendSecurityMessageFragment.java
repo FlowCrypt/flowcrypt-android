@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
@@ -45,6 +47,7 @@ import java.util.List;
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
     protected static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
+    private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
 
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
@@ -124,7 +127,31 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                         break;
 
                     case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
+                        if (data != null) {
+                            PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment
+                                    .EXTRA_KEY_PGP_CONTACT);
 
+                            if (pgpContact != null) {
+                                startActivityForResult(
+                                        ImportPublicKeyActivity.newIntent(getContext(),
+                                                getString(R.string.import_public_key), pgpContact),
+                                        REQUEST_CODE_IMPORT_PUBLIC_KEY);
+                            }
+                        }
+
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_IMPORT_PUBLIC_KEY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getContext(), R.string.key_successfully_imported,
+                                Toast.LENGTH_SHORT).show();
+
+                        getLoaderManager().restartLoader(
+                                R.id.loader_id_update_info_about_pgp_contacts, null,
+                                BaseSendSecurityMessageFragment.this);
                         break;
                 }
                 break;

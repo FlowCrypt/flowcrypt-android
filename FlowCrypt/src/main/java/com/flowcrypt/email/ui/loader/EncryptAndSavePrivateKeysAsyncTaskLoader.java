@@ -17,7 +17,7 @@ import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
@@ -43,13 +43,13 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     private static final String KEY_SUCCESS = "success";
 
     private boolean isThrowErrorIfDuplicateFound;
-    private List<PrivateKeyDetails> privateKeyDetailsList;
+    private List<KeyDetails> privateKeyDetailsList;
     private String passphrase;
 
     private KeysDaoSource keysDaoSource;
 
     public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
-                                                    ArrayList<PrivateKeyDetails>
+                                                    ArrayList<KeyDetails>
                                                             privateKeyDetailsList,
                                                     String passphrase,
                                                     boolean isThrowErrorIfDuplicateFound) {
@@ -67,18 +67,18 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
-            for (PrivateKeyDetails privateKeyDetails : privateKeyDetailsList) {
+            for (KeyDetails keyDetails : privateKeyDetailsList) {
                 String armoredPrivateKey = null;
 
-                switch (privateKeyDetails.getType()) {
+                switch (keyDetails.getBornType()) {
                     case FILE:
                         armoredPrivateKey = GeneralUtil.readFileFromUriToString(getContext(),
-                                privateKeyDetails.getUri());
+                                keyDetails.getUri());
                         break;
 
                     case EMAIL:
                     case CLIPBOARD:
-                        armoredPrivateKey = privateKeyDetails.getValue();
+                        armoredPrivateKey = keyDetails.getValue();
                         break;
                 }
 
@@ -91,7 +91,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                 if (pgpKey.isPrivate()) {
                     if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
-                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, privateKeyDetails,
+                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, keyDetails,
                                     pgpKey, passphrase);
                             isOneOrMoreKeySaved = uri != null;
                         } else if (isThrowErrorIfDuplicateFound) {
@@ -127,12 +127,12 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
      *
      * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
      *                              an information about a key;
-     * @param privateKeyDetails     The private key details
+     * @param keyDetails     The private key details
      * @param pgpKey                A normalized key;
      * @param passphrase            A passphrase which user entered;
      */
     private Uri saveKeyToDatabase(KeyStoreCryptoManager keyStoreCryptoManager,
-                                  PrivateKeyDetails privateKeyDetails, PgpKey pgpKey,
+                                  KeyDetails keyDetails, PgpKey pgpKey,
                                   String passphrase) throws Exception {
         KeysDao keysDao = new KeysDao();
         keysDao.setLongId(pgpKey.getLongid());
@@ -148,7 +148,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                     (pgpKey.getLongid());
         }
 
-        switch (privateKeyDetails.getType()) {
+        switch (keyDetails.getBornType()) {
             case EMAIL:
                 keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
                 break;

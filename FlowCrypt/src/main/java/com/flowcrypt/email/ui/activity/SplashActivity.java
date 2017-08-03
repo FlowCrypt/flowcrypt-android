@@ -22,7 +22,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -234,14 +234,14 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
                 if (loaderResult.getResult() != null) {
-                    ArrayList<PrivateKeyDetails> privateKeyDetailsList =
-                            (ArrayList<PrivateKeyDetails>) loaderResult.getResult();
-                    if (privateKeyDetailsList.isEmpty()) {
+                    ArrayList<KeyDetails> keyDetailsList =
+                            (ArrayList<KeyDetails>) loaderResult.getResult();
+                    if (keyDetailsList.isEmpty()) {
                         finish();
                         startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
                     } else {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
-                                privateKeyDetailsList,
+                                keyDetailsList,
                                 getString(R.string.found_backup_of_your_account_key),
                                 getString(R.string.continue_),
                                 getString(R.string.use_another_account), false),

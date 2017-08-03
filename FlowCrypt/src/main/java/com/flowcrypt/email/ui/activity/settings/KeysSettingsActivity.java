@@ -130,7 +130,8 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
     }
 
     private void runCreateOrImportKeyActivity() {
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, true),
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(
+                this, getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
                 REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
     }
 

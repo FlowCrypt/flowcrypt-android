@@ -128,6 +128,13 @@ public class PgpContact implements Parcelable {
         return pubkey;
     }
 
+    public void setPubkey(String pubkey) {
+        this.pubkey = pubkey;
+        if (pubkey != null) {
+            this.has_pgp = true;
+        }
+    }
+
     public boolean getHasPgp() {
         return has_pgp;
     }

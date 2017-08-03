@@ -32,6 +32,8 @@ public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackA
     protected boolean isServiceBound;
     protected CheckClipboardToFindPrivateKeyService checkClipboardToFindPrivateKeyService;
 
+    public abstract boolean isPrivateKeyChecking();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +55,7 @@ public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackA
         CheckClipboardToFindPrivateKeyService.LocalBinder binder =
                 (CheckClipboardToFindPrivateKeyService.LocalBinder) service;
         checkClipboardToFindPrivateKeyService = binder.getService();
+        checkClipboardToFindPrivateKeyService.setMustBePrivateKey(isPrivateKeyChecking());
         isServiceBound = true;
     }
 

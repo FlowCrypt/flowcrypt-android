@@ -20,7 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
@@ -59,7 +59,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             GeneralUtil.generateUniqueExtraKey(
                     "KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND", CheckKeysActivity.class);
 
-    private ArrayList<PrivateKeyDetails> privateKeyDetailsList;
+    private ArrayList<KeyDetails> privateKeyDetailsList;
     private EditText editTextKeyPassword;
     private View progressBar;
     private String bottomTitle;
@@ -67,7 +67,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     private String anotherAccountButtonTitle;
     private boolean isThrowErrorIfDuplicateFound;
 
-    public static Intent newIntent(Context context, ArrayList<PrivateKeyDetails> privateKeys,
+    public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String checkButtonTitle,
                                    String negativeActionButtonTitle,
                                    boolean isThrowErrorIfDuplicateFound) {

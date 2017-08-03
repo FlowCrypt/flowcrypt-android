@@ -177,7 +177,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onBackPressed() {
         if (isPrivateKeySavingNow) {
-            getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_private_key_from_file);
+            getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_file);
             isPrivateKeySavingNow = false;
             UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
         } else if (isPrivateKeySendingNow) {

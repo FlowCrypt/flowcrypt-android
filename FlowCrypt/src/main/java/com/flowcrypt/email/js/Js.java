@@ -192,19 +192,32 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     /**
-     * Check that the private key has a valid structure.
+     * Check that the key has a valid structure.
      *
      * @param armoredPrivateKey The armored private key.
+     * @param isPrivateKey      true if this key must be private, otherwise false.
      * @return true if private key has valid structure, otherwise false.
      */
-    public boolean is_valid_private_key(String armoredPrivateKey) {
+    public boolean is_valid_key(String armoredPrivateKey, boolean isPrivateKey) {
         String normalizedArmoredKey = crypto_key_normalize(armoredPrivateKey);
         PgpKey pgpKey = crypto_key_read(normalizedArmoredKey);
-        if (!TextUtils.isEmpty(pgpKey.getLongid())
+        return !TextUtils.isEmpty(pgpKey.getLongid())
                 && !TextUtils.isEmpty(pgpKey.getFingerprint())
-                && pgpKey.getPrimaryUserId() != null) {
-            return pgpKey.isPrivate();
-        } else return false;
+                && pgpKey.getPrimaryUserId() != null
+                && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
+    }
+
+    /**
+     * Check that the key has a valid structure.
+     *
+     * @param pgpKey The {@link PgpKey} object.
+     * @return true if private key has valid structure, otherwise false.
+     */
+    public boolean is_valid_key(PgpKey pgpKey, boolean isPrivateKey) {
+        return !TextUtils.isEmpty(pgpKey.getLongid())
+                && !TextUtils.isEmpty(pgpKey.getFingerprint())
+                && pgpKey.getPrimaryUserId() != null
+                && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
     }
 
     private static String read(File file) throws IOException {

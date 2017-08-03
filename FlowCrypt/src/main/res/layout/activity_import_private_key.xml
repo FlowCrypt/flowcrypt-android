@@ -16,7 +16,7 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/textViewImportPrivateKey"
+            android:id="@+id/textViewImportKeyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
@@ -38,7 +38,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-            app:layout_constraintTop_toBottomOf="@+id/textViewImportPrivateKey" />
+            app:layout_constraintTop_toBottomOf="@+id/textViewImportKeyTitle" />
 
         <Button
             android:id="@+id/buttonLoadFromClipboard"

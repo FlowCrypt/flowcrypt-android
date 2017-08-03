@@ -15,7 +15,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
@@ -66,7 +66,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
     @Override
     public LoaderResult loadInBackground() {
-        ArrayList<PrivateKeyDetails> privateKeyDetailsList = new ArrayList<>();
+        ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
@@ -84,8 +84,8 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
                 String key = getKeyFromMessageIfItExists(message);
                 if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList,
                         key)) {
-                    privateKeyDetailsList.add(new PrivateKeyDetails(key,
-                            PrivateKeyDetails.Type.EMAIL));
+                    privateKeyDetailsList.add(new KeyDetails(key,
+                            KeyDetails.Type.EMAIL));
                 }
             }
 
@@ -106,14 +106,14 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     /**
      * Check is the private key exists in the keys list.
      *
-     * @param privateKeyDetailsList The list of {@link PrivateKeyDetails} objects.
+     * @param keyDetailsList The list of {@link KeyDetails} objects.
      * @param key                   The private key armored string.
      * @return true if the key not exists in the list, otherwise false.
      */
-    private boolean privateKeyNotExistsInList(ArrayList<PrivateKeyDetails> privateKeyDetailsList,
+    private boolean privateKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList,
                                               String key) {
-        for (PrivateKeyDetails privateKeyDetails : privateKeyDetailsList) {
-            if (key.equals(privateKeyDetails.getValue())) {
+        for (KeyDetails keyDetails : keyDetailsList) {
+            if (key.equals(keyDetails.getValue())) {
                 return false;
             }
         }

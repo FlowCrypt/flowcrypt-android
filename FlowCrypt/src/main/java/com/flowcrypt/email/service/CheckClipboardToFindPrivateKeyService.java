@@ -24,13 +24,14 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.model.PrivateKeyDetails;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.model.KeyDetails;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
- * This service will be used to do checking clipboard to find a valid private key while the
+ * This service will be used to do checking clipboard to find a valid key while the
  * service running.
  *
  * @author Denis Bondarenko
@@ -46,10 +47,11 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
     private volatile Looper serviceWorkerLooper;
     private volatile ServiceWorkerHandler serviceWorkerHandler;
 
-    private PrivateKeyDetails privateKeyDetails;
+    private KeyDetails keyDetails;
     private IBinder localBinder;
     private ClipboardManager clipboardManager;
     private Messenger replyMessenger;
+    private boolean isMustBePrivateKey;
 
     public CheckClipboardToFindPrivateKeyService() {
         this.localBinder = new LocalBinder();
@@ -97,12 +99,20 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
         checkClipboard();
     }
 
-    public PrivateKeyDetails getPrivateKeyDetails() {
-        return privateKeyDetails;
+    public KeyDetails getKeyDetails() {
+        return keyDetails;
+    }
+
+    public boolean isMustBePrivateKey() {
+        return isMustBePrivateKey;
+    }
+
+    public void setMustBePrivateKey(boolean mustBePrivateKey) {
+        isMustBePrivateKey = mustBePrivateKey;
     }
 
     private void checkClipboard() {
-        privateKeyDetails = null;
+        keyDetails = null;
         if (clipboardManager.hasPrimaryClip()) {
             ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
             CharSequence privateKeyFromClipboard = item.getText();
@@ -144,9 +154,12 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
                                 checkClipboardToFindPrivateKeyService =
                                 checkClipboardToFindPrivateKeyServiceWeakReference.get();
 
-                        checkClipboardToFindPrivateKeyService.privateKeyDetails
-                                = new PrivateKeyDetails(null, (String) message.obj,
-                                PrivateKeyDetails.Type.CLIPBOARD);
+                        KeyDetails keyDetails = (KeyDetails) message.obj;
+
+                        checkClipboardToFindPrivateKeyService.keyDetails
+                                = new KeyDetails(null, keyDetails.getValue(), null,
+                                KeyDetails.Type.CLIPBOARD, checkClipboardToFindPrivateKeyService
+                                .isMustBePrivateKey(), keyDetails.getPgpContact());
                         Log.d(TAG, "Found a valid private key in clipboard");
                     }
                     break;
@@ -189,11 +202,18 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
 
                     if (js != null) {
                         String clipboardText = (String) msg.obj;
-                        if (js.is_valid_private_key(clipboardText)) {
+
+                        String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
+                        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+
+                        if (js.is_valid_key(pgpKey, isMustBePrivateKey)) {
                             try {
+                                KeyDetails keyDetails = new KeyDetails(null, clipboardText, null,
+                                        null,
+                                        false, pgpKey.getPrimaryUserId());
                                 Messenger messenger = msg.replyTo;
                                 messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT,
-                                        clipboardText));
+                                        keyDetails));
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                             }

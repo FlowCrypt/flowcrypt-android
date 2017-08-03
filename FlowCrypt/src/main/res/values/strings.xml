@@ -60,8 +60,8 @@
     <string name="access_to_read_the_sdcard_id_denied">Error: SD card read access denied</string>
     <string name="change">Change</string>
     <string name="do_request">Do request</string>
-    <string name="read_sdcard_permission_explanation_text">SD card read access needed to import private keys</string>
-    <string name="select_key_or_keys">Select key(s) to import</string>
+    <string name="read_sdcard_permission_explanation_text">SD card read access needed to import keys</string>
+    <string name="select_key_to_import">Select a key to import</string>
     <string name="title_activity_settings">Settings</string>
     <string name="backup">Backup</string>
     <string name="contacts">Contacts</string>
@@ -131,9 +131,9 @@
     <string name="can_not_read_this_private_key">Cannot read this private key</string>
     <string name="info">Info</string>
     <string name="hint">Hint</string>
-    <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your private key where you are storing it, select the text and copy it. After that, return back to %1$s.</string>
-    <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP Private Key.</string>
-    <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP Private Key.</string>
+    <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
+    <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
+    <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
     <string name="loaded_private_key_from_your_clipboard">Loaded private key from your clipboard</string>
     <string name="checking_the_private_key">Evaluating…</string>
     <string name="key_successfully_imported">Key successfully imported</string>
@@ -148,4 +148,7 @@
     <string name="update">Update</string>
     <string name="security_reply">Secure Reply</string>
     <string name="reply">Reply</string>
+    <string name="import_public_key">Import Public Key</string>
+    <string name="private_">Private</string>
+    <string name="public_">Public</string>
 </resources>
