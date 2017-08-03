@@ -41,12 +41,18 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
     public static final String EXTRA_KEY_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment.class);
 
+    private static final String EXTRA_KEY_IS_SHOW_REMOVE_ACTION = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_IS_SHOW_REMOVE_ACTION", NoPgpFoundDialogFragment.class);
+
     private PgpContact pgpContact;
     private List<NoPgpFoundDialogAction> noPgpFoundDialogActionList;
+    private boolean isShowRemoveAction;
 
-    public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact) {
+    public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact,
+                                                       boolean isShowRemoveAction) {
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact);
+        args.putBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION, isShowRemoveAction);
         NoPgpFoundDialogFragment noPgpFoundDialogFragment = new NoPgpFoundDialogFragment();
         noPgpFoundDialogFragment.setArguments(args);
         return noPgpFoundDialogFragment;
@@ -58,6 +64,7 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
 
         if (getArguments() != null) {
             this.pgpContact = getArguments().getParcelable(EXTRA_KEY_PGP_CONTACT);
+            this.isShowRemoveAction = getArguments().getBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION);
         }
 
         noPgpFoundDialogActionList = new ArrayList<>();
@@ -68,9 +75,11 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
         noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
                 R.mipmap.ic_document, getString(R.string.import_their_public_key),
                 RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY));
-        noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
-                R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
-                pgpContact.getEmail()), RESULT_CODE_REMOVE_CONTACT));
+        if (isShowRemoveAction) {
+            noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
+                    R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
+                    pgpContact.getEmail()), RESULT_CODE_REMOVE_CONTACT));
+        }
     }
 
     @NonNull

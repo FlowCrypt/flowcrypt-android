@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,6 +23,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.SecureReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
@@ -137,6 +139,28 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         if (TextUtils.isEmpty(editTextReplyEmailMessage.getText().toString())) {
             UIUtil.showInfoSnackbar(editTextReplyEmailMessage,
                     getString(R.string.sending_message_must_not_be_empty));
+        } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
+                MessageEncryptionType.ENCRYPTED) {
+            if (pgpContacts.isEmpty()) {
+                showSnackbar(getView(),
+                        getString(R.string.please_update_information_about_contacts),
+                        getString(R.string.update), Snackbar.LENGTH_LONG,
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                                    getLoaderManager().restartLoader(
+                                            R.id.loader_id_update_info_about_pgp_contacts, null,
+                                            SecureReplyFragment.this);
+                                } else {
+                                    showInfoSnackbar(getView(), getString(R.string
+                                            .internet_connection_is_not_available));
+                                }
+                            }
+                        });
+            } else if (isAllRecipientsHavePGP(false)) {
+                return true;
+            }
         } else {
             return true;
         }

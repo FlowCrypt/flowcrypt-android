@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
@@ -18,9 +19,11 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
@@ -28,6 +31,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,13 +44,19 @@ import java.util.List;
  */
 
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
+    protected static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
+
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
     protected OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
-
     protected boolean isUpdateInfoAboutContactsEnable = true;
     protected boolean isUpdatedInfoAboutContactCompleted = true;
     protected boolean isMessageSendingNow;
+    protected List<PgpContact> pgpContacts;
+
+    public BaseSendSecurityMessageFragment() {
+        pgpContacts = new ArrayList<>();
+    }
 
     /**
      * Generate an outgoing message info from entered information by user.
@@ -105,6 +115,26 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
+                switch (resultCode) {
+                    case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
+                        switchMessageEncryptionType(MessageEncryptionType.STANDARD);
+                        break;
+
+                    case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
+
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         menu.setGroupVisible(0, !isMessageSendingNow);
@@ -156,6 +186,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                         .getMessageEncryptionType());
 
             case R.id.loader_id_update_info_about_pgp_contacts:
+                pgpContacts.clear();
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);
                 isUpdatedInfoAboutContactCompleted = false;
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
@@ -185,7 +216,13 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
 
-                if (!updateInfoAboutPgpContactsResult.isAllInfoReceived()) {
+                if (updateInfoAboutPgpContactsResult != null
+                        && updateInfoAboutPgpContactsResult.getUpdatedPgpContacts() != null) {
+                    pgpContacts = updateInfoAboutPgpContactsResult.getUpdatedPgpContacts();
+                }
+
+                if (updateInfoAboutPgpContactsResult == null
+                        || !updateInfoAboutPgpContactsResult.isAllInfoReceived()) {
                     Toast.makeText(getContext(),
                             R.string.info_about_some_contacts_not_received,
                             Toast.LENGTH_SHORT).show();
@@ -249,6 +286,38 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      */
     protected void switchMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
         onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType(messageEncryptionType);
+    }
+
+    /**
+     * Check that all recipients have PGP.
+     *
+     * @return true if all recipients have PGP, other wise false.
+     */
+    protected boolean isAllRecipientsHavePGP(boolean isShowRemoveAction) {
+        for (PgpContact pgpContact : pgpContacts) {
+            if (!pgpContact.getHasPgp()) {
+                showNoPgpFoundDialog(pgpContact, isShowRemoveAction);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Show a dialog where we can select different actions.
+     *
+     * @param pgpContact         The {@link PgpContact} which will be used when we select the
+     *                           remove action.
+     * @param isShowRemoveAction true if we want to show the remove action, false otherwise.
+     */
+    private void showNoPgpFoundDialog(PgpContact pgpContact, boolean isShowRemoveAction) {
+        NoPgpFoundDialogFragment noPgpFoundDialogFragment =
+                NoPgpFoundDialogFragment.newInstance(pgpContact, isShowRemoveAction);
+
+        noPgpFoundDialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
+        noPgpFoundDialogFragment.show(getFragmentManager(),
+                NoPgpFoundDialogFragment.class.getSimpleName());
     }
 
     /**

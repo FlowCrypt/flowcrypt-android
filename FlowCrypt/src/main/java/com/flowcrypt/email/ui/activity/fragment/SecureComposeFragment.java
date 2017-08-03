@@ -12,7 +12,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -28,8 +27,6 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
-import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
@@ -44,7 +41,6 @@ import com.hootsuite.nachos.chip.ChipSpan;
 import com.hootsuite.nachos.tokenizer.ChipTokenizer;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,21 +53,16 @@ import java.util.List;
  */
 public class SecureComposeFragment extends BaseSendSecurityMessageFragment implements View
         .OnFocusChangeListener {
-
-    private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
-
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
-    private List<PgpContact> pgpContacts;
 
     private ContactsDaoSource contactsDaoSource;
 
     public SecureComposeFragment() {
         contactsDaoSource = new ContactsDaoSource();
-        pgpContacts = new ArrayList<>();
     }
 
     @Override
@@ -91,14 +82,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         switch (requestCode) {
             case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
                 switch (resultCode) {
-                    case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-                        switchMessageEncryptionType(MessageEncryptionType.STANDARD);
-                        break;
-
-                    case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
-
-                        break;
-
                     case NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT:
                         if (data != null) {
                             PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment
@@ -110,6 +93,9 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                         }
 
                         break;
+
+                    default:
+                        super.onActivityResult(requestCode, resultCode, data);
                 }
                 break;
 
@@ -197,7 +183,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                                     }
                                 }
                             });
-                } else if (isAllRecipientsHavePGP()) {
+                } else if (isAllRecipientsHavePGP(true)) {
                     return true;
                 }
             } else {
@@ -230,31 +216,12 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     }
 
     @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_prepare_encrypted_message:
-                pgpContacts.clear();
-                return super.onCreateLoader(id, args);
-
-            default:
-                return super.onCreateLoader(id, args);
-        }
-    }
-
-    @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         super.handleSuccessLoaderResult(loaderId, result);
         switch (loaderId) {
             case R.id.loader_id_update_info_about_pgp_contacts:
-                UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult
-                        = (UpdateInfoAboutPgpContactsResult) result;
-
-                if (updateInfoAboutPgpContactsResult != null
-                        && updateInfoAboutPgpContactsResult.getUpdatedPgpContacts() != null) {
-                    pgpContacts = updateInfoAboutPgpContactsResult.getUpdatedPgpContacts();
+                if (!pgpContacts.isEmpty()) {
                     updateChips();
-                } else {
-                    pgpContacts = new ArrayList<>();
                 }
                 break;
         }
@@ -280,31 +247,6 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                 pgpContacts.remove(pgpContact);
             }
         }
-    }
-
-    /**
-     * Check that all recipients have PGP.
-     *
-     * @return true if all recipients have PGP, other wise false.
-     */
-    private boolean isAllRecipientsHavePGP() {
-        for (PgpContact pgpContact : pgpContacts) {
-            if (!pgpContact.getHasPgp()) {
-                showNoPgpFoundDialog(pgpContact);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void showNoPgpFoundDialog(PgpContact pgpContact) {
-        NoPgpFoundDialogFragment noPgpFoundDialogFragment =
-                NoPgpFoundDialogFragment.newInstance(pgpContact);
-
-        noPgpFoundDialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
-        noPgpFoundDialogFragment.show(getFragmentManager(),
-                NoPgpFoundDialogFragment.class.getSimpleName());
     }
 
     private void updateChips() {
