@@ -18,6 +18,8 @@ import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.DateTimeUtil;
@@ -34,6 +36,8 @@ import com.flowcrypt.email.util.UIUtil;
 
 public class MessageListAdapter extends CursorAdapter {
     private MessageDaoSource messageDaoSource;
+    private Folder folder;
+    private FoldersManager.FolderType folderType;
 
     public MessageListAdapter(Context context, Cursor c) {
         super(context, c, false);
@@ -58,6 +62,19 @@ public class MessageListAdapter extends CursorAdapter {
         updateItem(context, generalMessageDetails, viewHolder);
     }
 
+    public Folder getFolder() {
+        return folder;
+    }
+
+    public void setFolder(Folder folder) {
+        this.folder = folder;
+        if (folder != null) {
+            this.folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
+        } else {
+            folderType = null;
+        }
+    }
+
     /**
      * Update an information of some item.
      *
@@ -65,16 +82,21 @@ public class MessageListAdapter extends CursorAdapter {
      *                              generalMessageDetails.
      * @param viewHolder            A View holder object which consist links to views.
      */
-    private void updateItem(Context context, GeneralMessageDetails generalMessageDetails, @NonNull
-            ViewHolder
-            viewHolder) {
+    private void updateItem(Context context, GeneralMessageDetails generalMessageDetails,
+                            @NonNull ViewHolder viewHolder) {
         if (generalMessageDetails != null) {
             String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ?
                     context.getString(R.string.no_subject) :
                     generalMessageDetails.getSubject();
 
-            viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails
-                    .getFrom()));
+            if (folderType == FoldersManager.FolderType.SENT) {
+                viewHolder.textViewSenderAddress.setText(
+                        generateAddresses(generalMessageDetails.getTo()));
+            } else {
+                viewHolder.textViewSenderAddress.setText(
+                        generateAddresses(generalMessageDetails.getFrom()));
+            }
+
             viewHolder.textViewSubject.setText(subject);
             viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
                     generalMessageDetails.getReceivedDateInMillisecond()));

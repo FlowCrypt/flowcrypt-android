@@ -106,6 +106,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 case R.id.loader_id_load_gmail_messages:
                     isNewMessagesLoadingNow = false;
                     if (data != null && data.getCount() != 0) {
+                        messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
                         statusView.setVisibility(View.GONE);
