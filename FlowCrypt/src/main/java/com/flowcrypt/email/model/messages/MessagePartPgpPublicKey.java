@@ -110,7 +110,8 @@ public class MessagePartPgpPublicKey extends MessagePart {
     }
 
     public boolean isPgpContactCanBeUpdated() {
-        return !pgpContact.getLongid().equals(longId);
+        return pgpContact != null
+                && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
     }
 
     public String getLongId() {
