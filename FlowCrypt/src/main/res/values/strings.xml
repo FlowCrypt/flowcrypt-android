@@ -100,6 +100,7 @@
     <string name="no_connection">No connection</string>
     <string name="archive">Archive</string>
     <string name="delete">Delete</string>
+    <string name="move_to_inbox">Move to Inbox</string>
     <string name="error_occurred_while_deleting_message">Error occurred while deleting the message</string>
     <string name="error_occurred_while_archiving_message">Error occurred while archiving the message</string>
     <string name="error_occurred_while_sending_message">Error occurred while sending the message</string>
@@ -151,4 +152,5 @@
     <string name="import_public_key">Import Public Key</string>
     <string name="private_">Private</string>
     <string name="public_">Public</string>
+    <string name="message_was_moved_to_inbox">The message was moved to inbox</string>
 </resources>

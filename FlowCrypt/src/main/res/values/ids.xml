@@ -25,6 +25,7 @@
     <item name="syns_request_code_load_message_details" type="id" />
     <item name="syns_request_archive_message" type="id" />
     <item name="syns_request_delete_message" type="id" />
+    <item name="syns_request_move_message_to_inbox" type="id" />
     <item name="syns_request_send_encrypted_message" type="id" />
     <item name="syns_get_active_account" type="id" />
     <item name="syns_load_private_keys" type="id" />

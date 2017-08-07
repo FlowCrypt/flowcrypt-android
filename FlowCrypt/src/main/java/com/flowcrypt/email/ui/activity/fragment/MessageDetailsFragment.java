@@ -74,6 +74,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private boolean isAdditionalActionEnable;
     private boolean isDeleteActionEnable;
     private boolean isArchiveActionEnable;
+    private boolean isMoveToInboxActionEnable;
     private OnActionListener onActionListener;
 
     public MessageDetailsFragment() {
@@ -132,6 +133,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
         MenuItem menuItemArchiveMessage = menu.findItem(R.id.menuActionArchiveMessage);
         MenuItem menuItemDeleteMessage = menu.findItem(R.id.menuActionDeleteMessage);
+        MenuItem menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox);
 
         if (menuItemArchiveMessage != null) {
             menuItemArchiveMessage.setVisible(isArchiveActionEnable && isAdditionalActionEnable);
@@ -140,17 +142,20 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         if (menuItemDeleteMessage != null) {
             menuItemDeleteMessage.setVisible(isDeleteActionEnable && isAdditionalActionEnable);
         }
+
+        if (menuActionMoveToInbox != null) {
+            menuActionMoveToInbox.setVisible(isMoveToInboxActionEnable
+                    && isAdditionalActionEnable);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionArchiveMessage:
-                archiveMessage();
-                return true;
-
             case R.id.menuActionDeleteMessage:
-                deleteMessage();
+            case R.id.menuActionMoveToInbox:
+                runMessageAction(item.getItemId());
                 return true;
 
             default:
@@ -254,6 +259,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         if (folderType != null) {
             switch (folderType) {
                 case All:
+                    isMoveToInboxActionEnable = true;
                     isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
                     break;
@@ -281,47 +287,44 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             }
         } else {
             isArchiveActionEnable = true;
+            isMoveToInboxActionEnable = false;
             isDeleteActionEnable = true;
         }
 
         getActivity().invalidateOptionsMenu();
     }
 
-    private void deleteMessage() {
+    /**
+     * Run the message action (archive/delete/move to inbox).
+     *
+     * @param menuId The action menu id.
+     */
+    private void runMessageAction(final int menuId) {
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             isAdditionalActionEnable = false;
             getActivity().invalidateOptionsMenu();
             statusView.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView,
-                    layoutContent);
-            onActionListener.onDeleteMessageClicked();
-        } else {
-            showSnackbar(getView(),
-                    getString(R.string.internet_connection_is_not_available),
-                    getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            deleteMessage();
-                        }
-                    });
-        }
-    }
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutContent);
+            switch (menuId) {
+                case R.id.menuActionArchiveMessage:
+                    onActionListener.onArchiveMessageClicked();
+                    break;
 
-    private void archiveMessage() {
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            isAdditionalActionEnable = false;
-            getActivity().invalidateOptionsMenu();
-            statusView.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView,
-                    layoutContent);
-            onActionListener.onArchiveMessageClicked();
+                case R.id.menuActionDeleteMessage:
+                    onActionListener.onDeleteMessageClicked();
+                    break;
+
+                case R.id.menuActionMoveToInbox:
+                    onActionListener.onMoveMessageToInboxClicked();
+                    break;
+            }
         } else {
             showSnackbar(getView(),
                     getString(R.string.internet_connection_is_not_available),
                     getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            archiveMessage();
+                            runMessageAction(menuId);
                         }
                     });
         }
@@ -594,5 +597,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         void onArchiveMessageClicked();
 
         void onDeleteMessageClicked();
+
+        void onMoveMessageToInboxClicked();
     }
 }

@@ -188,13 +188,28 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
             case R.id.syns_request_archive_message:
             case R.id.syns_request_delete_message:
+            case R.id.syns_request_move_message_to_inbox:
                 isBackEnable = true;
                 switch (resultCode) {
                     case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
-                        Toast.makeText(this, requestCode == R.id.syns_request_archive_message ? R
-                                        .string.message_was_archived : R.string.message_was_deleted,
-                                Toast.LENGTH_SHORT)
-                                .show();
+                        int toastMessageResourcesId = 0;
+
+                        switch (requestCode) {
+                            case R.id.syns_request_archive_message:
+                                toastMessageResourcesId = R.string.message_was_archived;
+                                break;
+
+                            case R.id.syns_request_delete_message:
+                                toastMessageResourcesId = R.string.message_was_deleted;
+                                break;
+
+                            case R.id.syns_request_move_message_to_inbox:
+                                toastMessageResourcesId = R.string.message_was_moved_to_inbox;
+                                break;
+                        }
+
+                        Toast.makeText(this, toastMessageResourcesId, Toast.LENGTH_SHORT).show();
+
                         new MessageDaoSource().deleteMessageFromFolder(this, email,
                                 folder.getFolderAlias(), uid);
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
@@ -212,9 +227,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
-            case R.id.syns_request_code_load_message_details:
-            case R.id.syns_request_archive_message:
-            case R.id.syns_request_delete_message:
+            default:
                 notifyMessageDetailsFragmentAboutError(requestCode, errorType);
                 break;
         }
@@ -224,16 +237,24 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onArchiveMessageClicked() {
         isBackEnable = false;
         FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
-        moveMessage(R.id.syns_request_archive_message, folder, foldersManager
-                .getFolderArchive(), uid);
+        moveMessage(R.id.syns_request_archive_message, folder,
+                foldersManager.getFolderArchive(), uid);
     }
 
     @Override
     public void onDeleteMessageClicked() {
         isBackEnable = false;
         FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
-        moveMessage(R.id.syns_request_delete_message, folder, foldersManager
-                .getFolderTrash(), uid);
+        moveMessage(R.id.syns_request_delete_message, folder,
+                foldersManager.getFolderTrash(), uid);
+    }
+
+    @Override
+    public void onMoveMessageToInboxClicked() {
+        isBackEnable = false;
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        moveMessage(R.id.syns_request_move_message_to_inbox, folder,
+                foldersManager.getFolderInbox(), uid);
     }
 
     public String getEmail() {
