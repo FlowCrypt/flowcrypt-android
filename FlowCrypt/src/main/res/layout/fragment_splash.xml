@@ -65,7 +65,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonTerms"
-        app:srcCompat="@mipmap/ic_flowcrypt_logo"
+        app:srcCompat="@mipmap/logo_flowcrypt"
         tools:layout_editor_absoluteX="-153dp" />
 
     <TextView
