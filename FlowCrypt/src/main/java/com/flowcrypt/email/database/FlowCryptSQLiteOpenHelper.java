@@ -14,6 +14,7 @@ import android.util.Log;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 
@@ -29,7 +30,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -62,11 +63,25 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
         sqLiteDatabase.execSQL(AccountDaoSource.ACCOUNTS_TABLE_SQL_CREATE);
         sqLiteDatabase.execSQL(AccountDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS);
+
+        sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+        sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        Log.i(TAG, "Database updated from OLD_VERSION = " + Integer.toString(oldVersion)
+        switch (oldVersion) {
+            case 1:
+                upgradeDatabaseFrom1To2Version(sqLiteDatabase);
+                break;
+        }
+
+        Log.d(TAG, "Database updated from OLD_VERSION = " + Integer.toString(oldVersion)
                 + " to NEW_VERSION = " + Integer.toString(newVersion));
+    }
+
+    private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+        sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES);
     }
 }
