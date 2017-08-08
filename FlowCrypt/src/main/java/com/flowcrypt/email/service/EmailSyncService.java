@@ -22,6 +22,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -222,8 +223,10 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
-            rawMessageWithOutAttachments, String ownerKey, int requestCode) {
+    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid,
+                                         String rawMessageWithOutAttachments,
+                                         List<AttachmentInfo> attachmentInfoList,
+                                         String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
