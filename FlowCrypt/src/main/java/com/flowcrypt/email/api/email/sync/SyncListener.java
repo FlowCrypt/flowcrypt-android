@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.sync;
 
 import android.content.Context;
 
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -85,15 +84,12 @@ public interface SyncListener {
      * @param imapFolder                   The folder where the new messages exist.
      * @param uid                          The UID of the message.
      * @param rawMessageWithOutAttachments The raw message without attachments.
-     * @param attachmentInfoList           The list of attachments info.
      * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
      * @param requestCode                  The unique request code for the reply to
      *                                     {@link android.os.Messenger}.
      */
-    void onMessageDetailsReceived(IMAPFolder imapFolder, long uid,
-                                  String rawMessageWithOutAttachments,
-                                  List<AttachmentInfo> attachmentInfoList,
-                                  String ownerKey, int requestCode);
+    void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
+            rawMessageWithOutAttachments, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.

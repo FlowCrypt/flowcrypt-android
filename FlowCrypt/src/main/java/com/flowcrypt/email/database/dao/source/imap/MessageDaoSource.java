@@ -15,19 +15,24 @@ import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 
 /**
@@ -53,6 +58,7 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_FLAGS = "flags";
     public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS =
             "raw_message_without_attachments";
+    public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
 
     public static final String IMAP_MESSAGES_INFO_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_MESSAGES + " (" +
@@ -66,7 +72,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_TO_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_SUBJECT + " TEXT DEFAULT NULL, " +
             COL_FLAGS + " TEXT DEFAULT NULL, " +
-            COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL " + ");";
+            COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
+            COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -94,7 +101,7 @@ public class MessageDaoSource extends BaseDaoSource {
      * @return A {@link Uri} of the created row.
      */
     public Uri addRow(Context context, String email, String label, long uid, Message message)
-            throws MessagingException {
+            throws MessagingException, IOException {
         ContentResolver contentResolver = context.getContentResolver();
         if (message != null && label != null && contentResolver != null) {
             ContentValues contentValues = prepareContentValues(email, label, message, uid);
@@ -116,7 +123,8 @@ public class MessageDaoSource extends BaseDaoSource {
      *                            .getUID(message)</code>
      */
     public int addRows(Context context, String email, String label,
-                       IMAPFolder imapFolder, Message[] messages) throws MessagingException {
+                       IMAPFolder imapFolder, Message[] messages)
+            throws MessagingException, IOException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
@@ -202,6 +210,8 @@ public class MessageDaoSource extends BaseDaoSource {
                 (COL_FLAGS))));
         generalMessageDetails.setRawMessageWithoutAttachments(
                 cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
+        generalMessageDetails.setMessageHasAttachment(cursor.getInt(cursor.getColumnIndex
+                (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
 
         return generalMessageDetails;
     }
@@ -464,7 +474,7 @@ public class MessageDaoSource extends BaseDaoSource {
      */
     @NonNull
     private ContentValues prepareContentValues(String email, String label, Message message, long
-            uid) throws MessagingException {
+            uid) throws MessagingException, IOException {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, email);
         contentValues.put(COL_FOLDER, label);
@@ -476,6 +486,7 @@ public class MessageDaoSource extends BaseDaoSource {
                 prepareAddressesForSaving(message.getRecipients(Message.RecipientType.TO)));
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, prepareFlagsToSave(message.getFlags()));
+        contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
         return contentValues;
     }
 
@@ -514,5 +525,35 @@ public class MessageDaoSource extends BaseDaoSource {
 
     private String[] parseEmails(String string) {
         return parseArray(string);
+    }
+
+    /**
+     * Check is {@link Part} has attachment.
+     *
+     * @param part The parent part.
+     * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise.
+     * @throws MessagingException
+     * @throws IOException
+     */
+    private boolean isMessageHasAttachment(Part part)
+            throws MessagingException, IOException {
+        if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart multiPart = (Multipart) part.getContent();
+            int numberOfParts = multiPart.getCount();
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                    boolean isMessageHasAttachment = isMessageHasAttachment(bodyPart);
+                    if (isMessageHasAttachment) {
+                        return true;
+                    }
+                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return false;
+        }
     }
 }

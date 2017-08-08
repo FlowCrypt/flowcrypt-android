@@ -72,6 +72,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 FetchProfile fetchProfile = new FetchProfile();
                 fetchProfile.add(FetchProfile.Item.ENVELOPE);
                 fetchProfile.add(FetchProfile.Item.FLAGS);
+                fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 

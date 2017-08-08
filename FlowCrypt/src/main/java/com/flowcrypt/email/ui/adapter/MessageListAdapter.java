@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
@@ -58,6 +59,7 @@ public class MessageListAdapter extends CursorAdapter {
                 .textViewSenderAddress);
         viewHolder.textViewDate = (TextView) view.findViewById(R.id.textViewDate);
         viewHolder.textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
+        viewHolder.imageViewAttachments = (ImageView) view.findViewById(R.id.imageViewAttachments);
 
         updateItem(context, generalMessageDetails, viewHolder);
     }
@@ -118,6 +120,9 @@ public class MessageListAdapter extends CursorAdapter {
                 viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color
                         .black));
             }
+
+            viewHolder.imageViewAttachments.setVisibility(generalMessageDetails
+                    .isMessageHasAttachment() ? View.VISIBLE : View.GONE);
         } else {
             clearItem(viewHolder);
         }
@@ -138,6 +143,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewSenderAddress.setText(null);
         viewHolder.textViewSubject.setText(null);
         viewHolder.textViewDate.setText(null);
+        viewHolder.imageViewAttachments.setVisibility(View.GONE);
 
         changeViewsTypeface(viewHolder, Typeface.NORMAL);
     }
@@ -166,5 +172,6 @@ public class MessageListAdapter extends CursorAdapter {
         TextView textViewSenderAddress;
         TextView textViewDate;
         TextView textViewSubject;
+        ImageView imageViewAttachments;
     }
 }

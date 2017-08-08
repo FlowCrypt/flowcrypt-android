@@ -8,6 +8,7 @@ package com.flowcrypt.email.service;
 
 import android.accounts.Account;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -42,8 +44,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 
 /**
@@ -224,10 +230,8 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid,
-                                         String rawMessageWithOutAttachments,
-                                         List<AttachmentInfo> attachmentInfoList,
-                                         String ownerKey, int requestCode) {
+    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
+            rawMessageWithOutAttachments, String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
@@ -238,12 +242,6 @@ public class EmailSyncService extends Service implements SyncListener {
                     folder.getFolderAlias(),
                     uid,
                     rawMessageWithOutAttachments);
-
-            new AttachmentDaoSource().addRows(getApplicationContext(),
-                    account.name,
-                    folder.getFolderAlias(),
-                    uid,
-                    attachmentInfoList);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
@@ -278,8 +276,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
+            updateAttachmentTable(folder, imapFolder, messages);
 
-        } catch (MessagingException | RemoteException e) {
+        } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -332,6 +331,67 @@ public class EmailSyncService extends Service implements SyncListener {
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
         }
+    }
+
+    /**
+     * @param folder     The local reflection of the remote folder.
+     * @param imapFolder The folder where the new messages exist.
+     * @param messages   The new messages.
+     * @throws MessagingException
+     * @throws IOException
+     */
+    private void updateAttachmentTable(com.flowcrypt.email.api.email.Folder folder,
+                                       IMAPFolder imapFolder, javax.mail.Message[] messages)
+            throws MessagingException, IOException {
+        AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+        ArrayList<ContentValues> contentValuesList = new ArrayList<>();
+
+        for (javax.mail.Message message : messages) {
+            ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfo(message);
+            if (!attachmentInfoList.isEmpty()) {
+                for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                    contentValuesList.add(AttachmentDaoSource.prepareContentValues(account.name,
+                            folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
+                }
+            }
+        }
+
+        attachmentDaoSource.addRows(getApplicationContext(),
+                contentValuesList.toArray(new ContentValues[0]));
+    }
+
+    /**
+     * Find attachments in the {@link Part}.
+     *
+     * @param part The parent part.
+     * @return The list of created {@link AttachmentInfo}
+     * @throws MessagingException
+     * @throws IOException
+     */
+    @NonNull
+    private ArrayList<AttachmentInfo> getAttachmentsInfo(Part part)
+            throws MessagingException, IOException {
+        ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+
+        if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart multiPart = (Multipart) part.getContent();
+            int numberOfParts = multiPart.getCount();
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfo(bodyPart);
+                    if (attachmentInfoLists.isEmpty()) {
+                        attachmentInfoList.addAll(attachmentInfoLists);
+                    }
+                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                    attachmentInfoList.add(
+                            new AttachmentInfo(bodyPart.getFileName(), bodyPart.getSize(),
+                                    new ContentType(bodyPart.getContentType()).getPrimaryType()));
+                }
+            }
+        }
+
+        return attachmentInfoList;
     }
 
     /**

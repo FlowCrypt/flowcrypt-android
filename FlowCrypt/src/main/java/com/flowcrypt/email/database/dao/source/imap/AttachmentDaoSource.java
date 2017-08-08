@@ -52,6 +52,28 @@ public class AttachmentDaoSource extends BaseDaoSource {
                     + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
                     " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
 
+    /**
+     * Prepare the content values for insert to the database.
+     *
+     * @param email          The email that the message linked.
+     * @param label          The folder label.
+     * @param uid            The message UID.
+     * @param attachmentInfo The attachment info which will be added to the database.
+     * @return generated {@link ContentValues}
+     */
+    @NonNull
+    public static ContentValues prepareContentValues(String email, String label, long uid,
+                                                     AttachmentInfo attachmentInfo) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, email);
+        contentValues.put(COL_FOLDER, label);
+        contentValues.put(COL_UID, uid);
+        contentValues.put(COL_NAME, attachmentInfo.getName());
+        contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
+        contentValues.put(COL_TYPE, attachmentInfo.getType());
+        return contentValues;
+    }
+
     @Override
     public String getTableName() {
         return TABLE_NAME_ATTACHMENT;
@@ -103,6 +125,20 @@ public class AttachmentDaoSource extends BaseDaoSource {
             }
 
             return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+        } else return 0;
+    }
+
+    /**
+     * This method add rows per single transaction.
+     *
+     * @param context       Interface to global information about an application environment.
+     * @param contentValues The array of prepared {@link ContentValues}.
+     * @return the number of newly created rows.
+     */
+    public int addRows(Context context, ContentValues[] contentValues) {
+        if (contentValues != null) {
+            ContentResolver contentResolver = context.getContentResolver();
+            return contentResolver.bulkInsert(getBaseContentUri(), contentValues);
         } else return 0;
     }
 
@@ -161,27 +197,5 @@ public class AttachmentDaoSource extends BaseDaoSource {
             return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND "
                     + COL_FOLDER + " = ?", new String[]{email, label});
         } else return -1;
-    }
-
-    /**
-     * Prepare the content values for insert to the database.
-     *
-     * @param email          The email that the message linked.
-     * @param label          The folder label.
-     * @param uid            The message UID.
-     * @param attachmentInfo The attachment info which will be added to the database.
-     * @return generated {@link ContentValues}
-     */
-    @NonNull
-    private ContentValues prepareContentValues(String email, String label, long uid,
-                                               AttachmentInfo attachmentInfo) {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_EMAIL, email);
-        contentValues.put(COL_FOLDER, label);
-        contentValues.put(COL_UID, uid);
-        contentValues.put(COL_NAME, attachmentInfo.getName());
-        contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
-        contentValues.put(COL_TYPE, attachmentInfo.getType());
-        return contentValues;
     }
 }

@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.iap.Argument;
@@ -16,17 +15,12 @@ import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.protocol.BODY;
-import com.sun.mail.imap.protocol.BODYSTRUCTURE;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.util.ASCIIUtility;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.Part;
 
 /**
  * This task load a detail information of the some message. At now this task creates and executes
@@ -60,21 +54,18 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, final SyncListener syncListener) throws Exception {
+    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
         IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
         imapFolder.open(Folder.READ_WRITE);
 
         if (syncListener != null) {
-            MessageDetails messageDetails = (MessageDetails) imapFolder.doCommand(new IMAPFolder
-                    .ProtocolCommand() {
+            String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
                 public Object doCommand(IMAPProtocol imapProtocol)
                         throws ProtocolException {
                     String rawMessage = null;
-                    List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
                     Argument args = new Argument();
                     Argument list = new Argument();
-                    list.writeString("BODYSTRUCTURE");
                     list.writeString("RFC822.SIZE");
                     list.writeString("BODY[]<0.204800>");
                     args.writeArgument(list);
@@ -93,58 +84,20 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
                             if (body != null && body.getByteArrayInputStream() != null) {
                                 rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
                             }
-
-                            getInformationAboutAttachments(attachmentInfoList,
-                                    fetchResponse.getItem(BODYSTRUCTURE.class));
                         }
                     }
 
                     imapProtocol.notifyResponseHandlers(responses);
                     imapProtocol.handleResult(serverStatusResponse);
 
-                    return new MessageDetails(rawMessage, attachmentInfoList);
+                    return rawMessage;
                 }
             });
 
-            syncListener.onMessageDetailsReceived(imapFolder, uid, messageDetails.rawMessage,
-                    messageDetails.attachmentInfoList, ownerKey, requestCode);
+            syncListener.onMessageDetailsReceived(imapFolder, uid, rawMessage, ownerKey,
+                    requestCode);
         }
 
         imapFolder.close(false);
-    }
-
-    /**
-     * Get an information about the email attachments if they exist.
-     *
-     * @param attachmentInfoList  The attachments info list where we will add a new found attachment
-     *                            info.
-     * @param parentBodyStructure The parent {@link BODYSTRUCTURE}.
-     */
-    private void getInformationAboutAttachments(List<AttachmentInfo> attachmentInfoList,
-                                                BODYSTRUCTURE parentBodyStructure) {
-        if (parentBodyStructure != null) {
-            BODYSTRUCTURE[] bodyStructureArray = parentBodyStructure.bodies;
-
-            for (BODYSTRUCTURE bodystructure : bodyStructureArray) {
-                if (bodystructure.bodies == null) {
-                    if (Part.ATTACHMENT.equalsIgnoreCase(bodystructure.disposition)) {
-                        attachmentInfoList.add(new AttachmentInfo(bodystructure.dParams.get
-                                ("FILENAME"), bodystructure.size, bodystructure.type));
-                    }
-                } else {
-                    getInformationAboutAttachments(attachmentInfoList, bodystructure);
-                }
-            }
-        }
-    }
-
-    private class MessageDetails {
-        String rawMessage;
-        List<AttachmentInfo> attachmentInfoList;
-
-        MessageDetails(String rawMessage, List<AttachmentInfo> attachmentInfoList) {
-            this.rawMessage = rawMessage;
-            this.attachmentInfoList = attachmentInfoList;
-        }
     }
 }

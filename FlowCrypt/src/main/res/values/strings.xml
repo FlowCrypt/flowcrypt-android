@@ -153,4 +153,5 @@
     <string name="private_">Private</string>
     <string name="public_">Public</string>
     <string name="message_was_moved_to_inbox">The message was moved to inbox</string>
+    <string name="attachment">Attachment</string>
 </resources>

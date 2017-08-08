@@ -35,6 +35,7 @@ public class GeneralMessageDetails implements Parcelable {
                     return new GeneralMessageDetails[size];
                 }
             };
+
     private String email;
     private String label;
     private long uid;
@@ -45,6 +46,7 @@ public class GeneralMessageDetails implements Parcelable {
     private String subject;
     private String[] flags;
     private String rawMessageWithoutAttachments;
+    private boolean isMessageHasAttachment;
 
     public GeneralMessageDetails() {
     }
@@ -60,6 +62,24 @@ public class GeneralMessageDetails implements Parcelable {
         this.subject = in.readString();
         this.flags = in.createStringArray();
         this.rawMessageWithoutAttachments = in.readString();
+        this.isMessageHasAttachment = in.readByte() != 0;
+    }
+
+    @Override
+    public String toString() {
+        return "GeneralMessageDetails{" +
+                "email='" + email + '\'' +
+                ", label='" + label + '\'' +
+                ", uid=" + uid +
+                ", receivedDateInMillisecond=" + receivedDateInMillisecond +
+                ", sentDateInMillisecond=" + sentDateInMillisecond +
+                ", from=" + Arrays.toString(from) +
+                ", to=" + Arrays.toString(to) +
+                ", subject='" + subject + '\'' +
+                ", flags=" + Arrays.toString(flags) +
+                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
+                (rawMessageWithoutAttachments) +
+                '}';
     }
 
     @Override
@@ -79,23 +99,7 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeString(this.subject);
         dest.writeStringArray(this.flags);
         dest.writeString(this.rawMessageWithoutAttachments);
-    }
-
-    @Override
-    public String toString() {
-        return "GeneralMessageDetails{" +
-                "email='" + email + '\'' +
-                ", label='" + label + '\'' +
-                ", uid=" + uid +
-                ", receivedDateInMillisecond=" + receivedDateInMillisecond +
-                ", sentDateInMillisecond=" + sentDateInMillisecond +
-                ", from=" + Arrays.toString(from) +
-                ", to=" + Arrays.toString(to) +
-                ", subject='" + subject + '\'' +
-                ", flags=" + Arrays.toString(flags) +
-                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
-                (rawMessageWithoutAttachments) +
-                '}';
+        dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
     }
 
     public String getEmail() {
@@ -180,5 +184,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public void setRawMessageWithoutAttachments(String rawMessageWithoutAttachments) {
         this.rawMessageWithoutAttachments = rawMessageWithoutAttachments;
+    }
+
+    public boolean isMessageHasAttachment() {
+        return isMessageHasAttachment;
+    }
+
+    public void setMessageHasAttachment(boolean messageHasAttachment) {
+        isMessageHasAttachment = messageHasAttachment;
     }
 }
