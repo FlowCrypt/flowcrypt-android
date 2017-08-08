@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 
@@ -46,6 +47,8 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW = 9;
     private static final int MATCHED_CODE_ACCOUNTS_TABLE = 10;
     private static final int MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11;
+    private static final int MATCHED_CODE_ATTACHMENT_TABLE = 12;
+    private static final int MATCHED_CODE_ATTACHMENT_SINGLE_ROW = 13;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -75,6 +78,10 @@ public class SecurityContentProvider extends ContentProvider {
                 MATCHED_CODE_ACCOUNTS_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACCOUNTS_SINGLE_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AttachmentDaoSource.TABLE_NAME_ATTACHMENT,
+                MATCHED_CODE_ATTACHMENT_TABLE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ATTACHMENT_SINGLE_ROW);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -119,24 +126,29 @@ public class SecurityContentProvider extends ContentProvider {
                     case MATCHED_CODE_IMAP_LABELS_TABLE:
                         id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null,
                                 values);
-                        result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri() + "/" +
-                                id);
+                        result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri()
+                                + "/" + id);
                         break;
 
                     case MATCHED_CODE_IMAP_MESSAGES_TABLE:
                         id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(),
                                 null, values);
                         result = Uri.parse(new MessageDaoSource().getBaseContentUri()
-                                + "/" +
-                                id);
+                                + "/" + id);
                         break;
 
                     case MATCHED_CODE_ACCOUNTS_TABLE:
                         id = sqLiteDatabase.insert(new AccountDaoSource().getTableName(),
                                 null, values);
                         result = Uri.parse(new AccountDaoSource().getBaseContentUri()
-                                + "/" +
-                                id);
+                                + "/" + id);
+                        break;
+
+                    case MATCHED_CODE_ATTACHMENT_TABLE:
+                        id = sqLiteDatabase.insert(new AttachmentDaoSource().getTableName(),
+                                null, values);
+                        result = Uri.parse(new AttachmentDaoSource().getBaseContentUri()
+                                + "/" + id);
                         break;
 
                     default:
@@ -235,6 +247,19 @@ public class SecurityContentProvider extends ContentProvider {
                             }
                             break;
 
+                        case MATCHED_CODE_ATTACHMENT_TABLE:
+                            for (ContentValues contentValues : values) {
+                                long id = sqLiteDatabase.insert(
+                                        new AttachmentDaoSource().getTableName(), null,
+                                        contentValues);
+                                if (id <= 0) {
+                                    throw new SQLException("Failed to insert row into " + uri);
+                                } else {
+                                    insertedRowsCount++;
+                                }
+                            }
+                            break;
+
                         default:
                             throw new UnsupportedOperationException("Unknown uri: " + uri);
                     }
@@ -305,6 +330,14 @@ public class SecurityContentProvider extends ContentProvider {
                                 selectionArgs);
                         break;
 
+                    case MATCHED_CODE_ATTACHMENT_TABLE:
+                        rowsCount = sqLiteDatabase.update(
+                                new AttachmentDaoSource().getTableName(),
+                                values,
+                                selection,
+                                selectionArgs);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -358,6 +391,11 @@ public class SecurityContentProvider extends ContentProvider {
                                 selection, selectionArgs);
                         break;
 
+                    case MATCHED_CODE_ATTACHMENT_TABLE:
+                        rowsCount = sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
+                                selection, selectionArgs);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -401,6 +439,10 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_ACCOUNTS_TABLE:
                 table = AccountDaoSource.TABLE_NAME_ACCOUNTS;
+                break;
+
+            case MATCHED_CODE_ATTACHMENT_TABLE:
+                table = AttachmentDaoSource.TABLE_NAME_ATTACHMENT;
                 break;
 
             default:
@@ -450,6 +492,12 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_ACCOUNTS_SINGLE_ROW:
                 return new AccountDaoSource().getSingleRowContentType();
+
+            case MATCHED_CODE_ATTACHMENT_TABLE:
+                return new AttachmentDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_ATTACHMENT_SINGLE_ROW:
+                return new AttachmentDaoSource().getSingleRowContentType();
 
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);

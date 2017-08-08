@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
@@ -237,6 +238,12 @@ public class EmailSyncService extends Service implements SyncListener {
                     folder.getFolderAlias(),
                     uid,
                     rawMessageWithOutAttachments);
+
+            new AttachmentDaoSource().addRows(getApplicationContext(),
+                    account.name,
+                    folder.getFolderAlias(),
+                    uid,
+                    attachmentInfoList);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);

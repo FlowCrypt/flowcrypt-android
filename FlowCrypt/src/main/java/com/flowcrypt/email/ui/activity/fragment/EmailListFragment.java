@@ -26,6 +26,7 @@ import android.widget.ListView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -316,10 +317,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         emptyView.setVisibility(View.GONE);
 
         getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        new MessageDaoSource().deleteCachedMessagesOfFolder(
-                getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
+        cleanCache();
     }
 
     /**
@@ -340,10 +338,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                new MessageDaoSource().deleteCachedMessagesOfFolder(
-                        getContext(),
-                        onManageEmailsListener.getCurrentAccount().name,
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
+                cleanCache();
             }
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
@@ -366,6 +361,19 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         } else {
             isNewMessagesLoadingNow = false;
         }
+    }
+
+    /**
+     * Clean the cache information about some folder.
+     */
+    private void cleanCache() {
+        new MessageDaoSource().deleteCachedMessagesOfFolder(
+                getContext(),
+                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
+        new AttachmentDaoSource().deleteCachedAttachmentInfoOfFolder(getContext(),
+                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
     /**
