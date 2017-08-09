@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
-        tools:text="This message includes a Public Key for tom@bitoasis.net." />
+        tools:text="Public Key for ..........................." />
 
     <TextView
         android:id="@+id/textViewKeyWordsTemplate"
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content"
         android:textIsSelectable="true"
-        tools:text="KeyWords: ASK REFORM DEPEND TOWER ACTOR DIAGRAM " />
+        tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
 
     <TextView
         android:id="@+id/textViewFingerprintTemplate"
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
-        tools:text="(Fingerprint: 8B8A 05A2 216E E6E4 C5EE 3D54 0D56 88EB F310 2BE7)" />
+        tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <Switch
         android:id="@+id/switchShowPublicKey"
@@ -54,7 +54,7 @@
         android:textColor="#088447"
         android:textIsSelectable="true"
         android:visibility="gone"
-        tools:text="(Fingerprint: 8B8A 05A2 216E E6E4 C5EE 3D54 0D56 88EB F310 2BE7)"
+        tools:text="-----BEGIN PGP PUBLIC KEY-----\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\n-----END PGP PUBLIC KEY-----"
         tools:visibility="visible" />
 
     <Button
