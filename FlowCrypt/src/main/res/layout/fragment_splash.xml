@@ -10,16 +10,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment"
-
-    >
-    <!--tools:showIn="@layout/activity_splash"-->
+    tools:showIn="@layout/activity_splash">
 
     <Button
         android:id="@+id/buttonPrivacy"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_main_screen_button"
         android:text="@string/privacy"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/buttonTerms"
@@ -29,9 +24,6 @@
     <Button
         android:id="@+id/buttonTerms"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_main_screen_button"
         android:text="@string/terms"
         app:layout_constraintLeft_toRightOf="@+id/buttonPrivacy"
         app:layout_constraintRight_toLeftOf="@+id/buttonSecurity"
@@ -41,9 +33,6 @@
     <Button
         android:id="@+id/buttonSecurity"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_main_screen_button"
         android:text="@string/security"
         app:layout_constraintLeft_toRightOf="@+id/buttonTerms"
         app:layout_constraintRight_toRightOf="parent"
@@ -68,8 +57,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonTerms"
-        app:srcCompat="@mipmap/logo_flowcrypt"
-        tools:layout_editor_absoluteX="-153dp" />
+        app:srcCompat="@mipmap/logo_flowcrypt" />
 
     <TextView
         android:id="@+id/textViewConnectYourEmail"

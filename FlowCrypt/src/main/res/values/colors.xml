@@ -7,14 +7,13 @@
 <resources>
     <color name="colorPrimary">#31a217</color>
     <color name="colorPrimaryDark">#2E7D32</color>
+    <color name="colorPrimaryLight">#81C784</color>
     <color name="colorAccent">#0a9fd3</color>
-    <color name="transparent">@android:color/transparent</color>
-    <color name="light_grey">#F2F2F2</color>
-    <color name="de_york">#81C784</color>
-    <color name="dark">#535353</color>
-    <color name="gray">#989898</color>
-    <color name="silver">#C6C6C6</color>
-    <color name="white_transparent">#A0FFFFFF</color>
-    <color name="gallery">#F0F0F0</color>
     <color name="red">#D14836</color>
+    <color name="light">#F8F8F8</color>
+    <color name="aluminum">#F0F0F0</color>
+    <color name="silver">#C6C6C6</color>
+    <color name="gray">#989898</color>
+    <color name="dark">#535353</color>
+    <color name="transparent_white">#A0FFFFFF</color>
 </resources>

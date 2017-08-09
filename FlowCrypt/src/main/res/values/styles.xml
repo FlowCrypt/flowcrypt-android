@@ -19,8 +19,8 @@
     </style>
 
     <style name="AppWidget.Button.White">
-        <item name="android:textColor">@color/dark</item>
-        <item name="colorButtonNormal">@android:color/white</item>
+        <item name="android:textColor">@color/gray</item>
+        <item name="colorButtonNormal">@color/light</item>
     </style>
 
     <style name="AppWidget.Button.Transparent">
@@ -28,8 +28,13 @@
     </style>
 
     <style name="AppWidget.Button.Transparent.MainScreenTopButton">
-        <item name="android:textColor">@color/silver</item>
+        <item name="android:textColor">@color/dark</item>
         <item name="android:textSize">@dimen/default_text_size_big</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/margin_top_main_screen_button</item>
+
     </style>
 
     <style name="AppWidget.Button.White.ConnectAccount">
@@ -39,6 +44,7 @@
         <item name="android:drawablePadding">@dimen/drawable_padding_main_screen_sign_button</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">@dimen/default_text_size_medium</item>
+        <item name="android:textColor">@color/dark</item>
     </style>
 
     <style name="AppWidget.Button.Raised.White.ConnectAccount" parent="Widget.AppCompat.Button.Colored">
@@ -80,7 +86,7 @@
 
     <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/white_transparent</item>
+        <item name="android:textColor">@color/transparent_white</item>
         <item name="textAllCaps">false</item>
     </style>
 

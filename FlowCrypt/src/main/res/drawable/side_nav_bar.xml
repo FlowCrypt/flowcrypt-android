@@ -10,6 +10,6 @@
         android:angle="135"
         android:centerColor="@color/colorPrimary"
         android:endColor="@color/colorPrimaryDark"
-        android:startColor="@color/de_york"
+        android:startColor="@color/colorPrimaryLight"
         android:type="linear" />
 </shape>
