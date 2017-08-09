@@ -47,9 +47,9 @@ public class CustomChipSpanChipCreator extends ChipSpanChipCreator {
                                                 boolean isHasPgp) {
         int color;
         if (isHasPgp) {
-            color = UIUtil.getColor(context, R.color.la_palma);
+            color = UIUtil.getColor(context, R.color.colorPrimary);
         } else {
-            color = UIUtil.getColor(context, R.color.dusty_gray);
+            color = UIUtil.getColor(context, R.color.gray);
         }
         chipSpan.setBackgroundColor(ColorStateList.valueOf(color));
     }

@@ -22,7 +22,7 @@
     <item android:gravity="left">
         <shape>
             <size android:width="4dp" />
-            <solid android:color="@color/dusty_gray" />
+            <solid android:color="@color/gray" />
         </shape>
     </item>
 

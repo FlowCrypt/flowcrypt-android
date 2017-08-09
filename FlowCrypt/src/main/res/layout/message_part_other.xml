@@ -12,7 +12,7 @@
     android:layout_marginBottom="@dimen/default_margin_medium"
     android:autoLink="web"
     android:background="@drawable/bg_message_part_other"
-    android:textColor="@color/mine_shaft"
+    android:textColor="@color/dark"
     android:textIsSelectable="true"
     android:textSize="@dimen/default_text_size_medium"
     tools:text="This email contains a key backup. It will help you access your encrypted messages from other computers (along with your pass phrase). You can safely leave it in your inbox or archive it.

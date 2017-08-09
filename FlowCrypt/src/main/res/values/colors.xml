@@ -5,23 +5,16 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#51B53F</color>
-    <color name="colorPrimaryDark">#2F733C</color>
-    <color name="colorAccent">#63A2E1</color>
+    <color name="colorPrimary">#31a217</color>
+    <color name="colorPrimaryDark">#2E7D32</color>
+    <color name="colorAccent">#0a9fd3</color>
     <color name="transparent">@android:color/transparent</color>
     <color name="light_grey">#F2F2F2</color>
-    <color name="silver_chalice">#AAAAAA</color>
-    <color name="fruit_salad">#4CAF50</color>
-    <color name="sea_green">#2E7D32</color>
     <color name="de_york">#81C784</color>
-    <color name="scorpion">#5B5B5B</color>
-    <color name="gray">#898989</color>
-    <color name="mine_shaft">#333333</color>
+    <color name="dark">#535353</color>
+    <color name="gray">#989898</color>
     <color name="silver">#C6C6C6</color>
-    <color name="la_palma">#31A217</color>
-    <color name="dove_gray">#666666</color>
     <color name="white_transparent">#A0FFFFFF</color>
     <color name="gallery">#F0F0F0</color>
-    <color name="dusty_gray">#989898</color>
-    <color name="valencia">#D14836</color>
+    <color name="red">#D14836</color>
 </resources>

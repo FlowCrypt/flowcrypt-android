@@ -189,7 +189,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
                 break;
 
             case STANDARD:
-                getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.valencia));
+                getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.red));
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().setTitle(getStandardTitle());
                 }

@@ -26,11 +26,11 @@
 
     <Button
         android:id="@+id/buttonSeeMoreBackupOptions"
-        style="@style/AppWidget.Button.WhiteText"
+        style="@style/AppWidget.Button.Green"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/default_margin_content"
         android:text="@string/see_more_backup_options"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewBackupFound" />

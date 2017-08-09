@@ -17,16 +17,11 @@
 
         <TextView
             android:id="@+id/textViewImportKeyTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
             android:text="@string/import_private_key"
-            android:textColor="@color/gray"
-            android:textSize="@dimen/text_size_setup_flow_crypt"
-            android:textStyle="bold"
+            style="@style/ScreenHeading"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
 
         <Button
             android:id="@+id/buttonLoadFromFile"
@@ -34,7 +29,7 @@
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_first_button"
             android:text="@string/load_from_a_file"
-            android:theme="@style/AppWidget.Button.Raised.Green"
+            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
@@ -46,7 +41,7 @@
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_between_buttons"
             android:text="@string/load_from_clipboard"
-            android:theme="@style/AppWidget.Button.Raised.Green"
+            android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"

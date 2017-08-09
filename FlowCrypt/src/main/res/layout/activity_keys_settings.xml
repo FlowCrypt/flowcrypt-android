@@ -35,7 +35,7 @@
                 android:id="@+id/listViewKeys"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:divider="@color/silver_chalice"
+                android:divider="@color/silver"
                 android:dividerHeight="1dp"
                 tools:listitem="@layout/key_item" />
 

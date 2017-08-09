@@ -11,25 +11,21 @@
 
     <TextView
         android:id="@+id/textViewSetupFlowCrypt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_setup_flow_crypt"
         android:text="@string/set_up_flow_crypt"
-        android:textColor="@color/gray"
-        android:textSize="@dimen/text_size_setup_flow_crypt"
-        android:textStyle="bold"
+        style="@style/ScreenHeading"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/buttonCreateNewKey"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Green"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_top_first_button"
+        android:alpha="0.5"
         android:enabled="false"
         android:text="@string/create_a_new_key"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
@@ -37,11 +33,11 @@
 
     <Button
         android:id="@+id/buttonImportMyKey"
-        style="@style/AppWidget.Button"
+        style="@style/AppWidget.Button.Green"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/import_my_key"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
@@ -53,7 +49,7 @@
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/margin_between_buttons"
         android:text="@string/use_another_account"
-        android:theme="@style/AppWidget.Button.Raised.Grey"
+        android:theme="@style/AppWidget.Button.White"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/guidelineRight"

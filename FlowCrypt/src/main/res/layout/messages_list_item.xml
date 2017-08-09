@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/scorpion"
+        android:textColor="@color/dark"
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="@+id/textViewDate"
         app:layout_constraintHorizontal_bias="0.0"

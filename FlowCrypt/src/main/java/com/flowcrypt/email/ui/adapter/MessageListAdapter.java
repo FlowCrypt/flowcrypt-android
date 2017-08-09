@@ -107,7 +107,7 @@ public class MessageListAdapter extends CursorAdapter {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
 
                 viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color
-                        .scorpion));
+                        .dark));
                 viewHolder.textViewSubject.setTextColor(UIUtil.getColor(context, R.color.gray));
                 viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, R.color.gray));
             } else {

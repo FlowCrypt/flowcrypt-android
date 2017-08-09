@@ -40,12 +40,12 @@
 
     <Button
         android:id="@+id/buttonBackupAction"
-        style="@style/AppWidget.Button.WhiteText"
+        style="@style/AppWidget.Button.Green"
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/default_margin_content"
         android:text="@string/backup_as_email"
         android:textAllCaps="true"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroupBackupsVariants" />

@@ -65,7 +65,7 @@
         android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:text="@string/save_contact"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />
 
@@ -77,7 +77,7 @@
         android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:text="@string/update_contact"
-        android:theme="@style/AppWidget.Button.Raised.Green"
+        android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
         tools:visibility="visible" />
 
