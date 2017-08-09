@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/layout_width_attachment_item"
+    android:layout_height="@dimen/layout_height_attachment_item"
+    android:layout_marginBottom="@dimen/default_margin_small"
+    android:layout_marginLeft="@dimen/default_margin_content"
+    android:layout_marginRight="@dimen/default_margin_content"
+    android:layout_marginTop="@dimen/default_margin_small"
+    android:background="@color/aluminum">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:paddingLeft="@dimen/default_margin_content"
+        android:paddingRight="@dimen/default_margin_content">
+
+        <ImageView
+            android:id="@+id/imageViewAttachmentIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/attachment"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@mipmap/ic_attachment" />
+
+        <TextView
+            android:id="@+id/textViewAttchmentName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:layout_marginLeft="@dimen/default_margin_content_small"
+            android:layout_marginRight="@dimen/default_margin_content_small"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:ellipsize="middle"
+            android:maxLines="1"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewAttachmentIcon"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toRightOf="@+id/imageViewAttachmentIcon"
+            app:layout_constraintRight_toLeftOf="@+id/imageButtonDownloadAttachment"
+            app:layout_constraintTop_toTopOf="@+id/imageViewAttachmentIcon"
+            tools:text="Some very very very very very large file name.txt" />
+
+        <ImageButton
+            android:id="@+id/imageButtonDownloadAttachment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/download"
+            app:layout_constraintBottom_toBottomOf="@+id/textViewAttchmentName"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textViewAttchmentName"
+            app:srcCompat="@mipmap/ic_file_download" />
+    </android.support.constraint.ConstraintLayout>
+</android.support.v7.widget.CardView>
+

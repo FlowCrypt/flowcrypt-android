@@ -32,9 +32,11 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.messages.MessagePart;
@@ -49,6 +51,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import java.util.List;
 
 /**
  * This fragment describe details of some message.
@@ -376,9 +380,30 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
             textViewSubject.setText(subject);
             updateMessageView();
+            showAttachmentsIfTheyExist();
 
             if (incomingMessageInfo.getReceiveDate() != null) {
                 textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
+            }
+        }
+    }
+
+    private void showAttachmentsIfTheyExist() {
+        if (generalMessageDetails != null && generalMessageDetails.isMessageHasAttachment()) {
+            List<AttachmentInfo> attachmentInfoList = new AttachmentDaoSource()
+                    .getAttachmentInfoList(getContext(), generalMessageDetails.getEmail(),
+                            generalMessageDetails.getLabel(), generalMessageDetails.getUid());
+            LayoutInflater layoutInflater = LayoutInflater.from(getContext());
+
+            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                View rootView = layoutInflater.inflate(R.layout.attachment_item,
+                        layoutMessageParts, false);
+
+                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id
+                        .textViewAttchmentName);
+                textViewAttachmentName.setText(attachmentInfo.getName());
+
+                layoutMessageParts.addView(rootView);
             }
         }
     }

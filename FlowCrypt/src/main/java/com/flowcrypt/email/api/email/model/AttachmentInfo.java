@@ -60,6 +60,15 @@ public class AttachmentInfo implements Parcelable {
         dest.writeString(this.type);
     }
 
+    @Override
+    public String toString() {
+        return "AttachmentInfo{" +
+                "name='" + name + '\'' +
+                ", encodedSize=" + encodedSize +
+                ", type='" + type + '\'' +
+                '}';
+    }
+
     public String getName() {
         return name;
     }
