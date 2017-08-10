@@ -52,6 +52,8 @@ import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import org.apache.commons.io.FileUtils;
+
 import java.util.List;
 
 /**
@@ -405,6 +407,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         .textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
+                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id
+                        .textViewAttachmentSize);
+                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo
+                        .getEncodedSize()));
+
                 layoutMessageParts.addView(rootView);
             }
         }
@@ -426,7 +433,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         case TEXT:
                             layoutMessageParts.addView(generateTextPart(messagePart,
                                     layoutInflater));
-                            if(i == 0) { // add a dividing line if first message part is text
+                            if (i == 0) { // add a dividing line if first message part is text
                                 viewFooterOfHeader.setBackgroundColor(UIUtil.getColor(getContext(),
                                         R.color.aluminum));
                             }

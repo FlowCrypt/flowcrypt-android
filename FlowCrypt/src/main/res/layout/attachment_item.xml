@@ -34,22 +34,33 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/ic_attachment" />
 
-        <TextView
-            android:id="@+id/textViewAttchmentName"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/default_margin_content_small"
-            android:layout_marginLeft="@dimen/default_margin_content_small"
-            android:layout_marginRight="@dimen/default_margin_content_small"
-            android:layout_marginStart="@dimen/default_margin_content_small"
-            android:ellipsize="middle"
-            android:maxLines="1"
-            app:layout_constraintBottom_toBottomOf="@+id/imageViewAttachmentIcon"
-            app:layout_constraintHorizontal_bias="0.0"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/default_margin_small"
+            android:paddingRight="@dimen/default_margin_small"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@+id/imageViewAttachmentIcon"
             app:layout_constraintRight_toLeftOf="@+id/imageButtonDownloadAttachment"
-            app:layout_constraintTop_toTopOf="@+id/imageViewAttachmentIcon"
-            tools:text="Some very very very very very large file name.txt" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/textViewAttchmentName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                tools:text="Some very very very very very large file name.txt" />
+
+            <TextView
+                android:id="@+id/textViewAttachmentSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/default_text_size_very_small"
+                tools:text="12.02 Mb" />
+        </LinearLayout>
+
 
         <ImageButton
             android:id="@+id/imageButtonDownloadAttachment"
@@ -57,10 +68,12 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewAttchmentName"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/textViewAttchmentName"
+            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/ic_file_download" />
+
+
     </android.support.constraint.ConstraintLayout>
 </android.support.v7.widget.CardView>
 
