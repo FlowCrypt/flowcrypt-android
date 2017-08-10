@@ -81,11 +81,25 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {
-        sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-        sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES);
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+            sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES);
 
-        sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-                " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS
-                + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS
+                    + " INTEGER DEFAULT 0;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE
+                    + " INTEGER DEFAULT 1;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE
+                    + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
     }
 }

@@ -36,6 +36,8 @@ public class AccountDaoSource extends BaseDaoSource {
     public static final String COL_GIVEN_NAME = "given_name";
     public static final String COL_FAMILY_NAME = "family_name";
     public static final String COL_PHOTO_URL = "photo_url";
+    public static final String COL_IS_ENABLE = "is_enable";
+    public static final String COL_IS_ACTIVE = "is_active";
 
     public static final String ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ACCOUNTS + " (" +
@@ -45,7 +47,9 @@ public class AccountDaoSource extends BaseDaoSource {
             COL_DISPLAY_NAME + " VARCHAR(100) DEFAULT NULL, " +
             COL_GIVEN_NAME + " VARCHAR(100) DEFAULT NULL, " +
             COL_FAMILY_NAME + " VARCHAR(100) DEFAULT NULL, " +
-            COL_PHOTO_URL + " TEXT DEFAULT NULL " + ");";
+            COL_PHOTO_URL + " TEXT DEFAULT NULL, " +
+            COL_IS_ENABLE + " INTEGER DEFAULT 1, " +
+            COL_IS_ACTIVE + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS =
             "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_ACCOUNT_TYPE +
@@ -92,6 +96,28 @@ public class AccountDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get an active {@link AccountDao} object from the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The {@link AccountDao};
+     */
+    public AccountDao getActiveAccountInformation(Context context) {
+        Cursor cursor = context.getContentResolver().query(
+                getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE +
+                        " = ?", new String[]{"1"}, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            return getCurrentAccountDao(cursor);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return null;
+    }
+
+    /**
      * Get a {@link AccountDao} object from the local database.
      *
      * @param context Interface to global information about an application environment.
@@ -104,8 +130,8 @@ public class AccountDaoSource extends BaseDaoSource {
         }
 
         Cursor cursor = context.getContentResolver().query(
-                getBaseContentUri(), null, ContactsDaoSource.COL_EMAIL +
-                        " = ?", new String[]{email}, null);
+                getBaseContentUri(), null, AccountDaoSource.COL_EMAIL + " = ?",
+                new String[]{email}, null);
 
         if (cursor != null && cursor.moveToFirst()) {
             return getCurrentAccountDao(cursor);
@@ -215,6 +241,7 @@ public class AccountDaoSource extends BaseDaoSource {
         contentValues.put(COL_DISPLAY_NAME, googleSignInAccount.getDisplayName());
         contentValues.put(COL_GIVEN_NAME, googleSignInAccount.getGivenName());
         contentValues.put(COL_FAMILY_NAME, googleSignInAccount.getFamilyName());
+        contentValues.put(COL_IS_ACTIVE, true);
         if (googleSignInAccount.getPhotoUrl() != null) {
             contentValues.put(COL_PHOTO_URL, googleSignInAccount.getPhotoUrl().toString());
         }
