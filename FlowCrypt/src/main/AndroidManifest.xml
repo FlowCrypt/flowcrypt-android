@@ -45,7 +45,7 @@
 
         <activity
             android:name=".ui.activity.SecureComposeActivity"
-            android:label="@string/secure_compose"
+            android:label="@string/compose"
             android:screenOrientation="portrait" />
 
         <activity

@@ -24,7 +24,7 @@ public interface OnChangeMessageEncryptedTypeListener {
      *
      * @param messageEncryptionType The new message encryption type.
      */
-    void onChangeMessageEncryptedType(MessageEncryptionType messageEncryptionType);
+    void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
 
     MessageEncryptionType getMessageEncryptionType();
 }

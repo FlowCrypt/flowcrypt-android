@@ -56,6 +56,7 @@
                 app:layout_constraintTop_toTopOf="@+id/textViewReplyRecipient" />
 
             <android.support.design.widget.TextInputLayout
+                android:id="@+id/textInputLayoutReplyEmailMessage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"

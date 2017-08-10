@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -56,6 +57,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
+    private TextInputLayout textInputLayoutEmailMessage;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
 
@@ -227,6 +229,21 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
         }
     }
 
+    @Override
+    public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
+        String emailMassageHint = null;
+        switch (messageEncryptionType) {
+            case ENCRYPTED:
+                emailMassageHint = getString(R.string.prompt_compose_security_email);
+                break;
+
+            case STANDARD:
+                emailMassageHint = getString(R.string.prompt_compose_standard_email);
+                break;
+        }
+        textInputLayoutEmailMessage.setHint(emailMassageHint);
+    }
+
     /**
      * Remove the current {@link PgpContact} from recipients.
      *
@@ -280,6 +297,8 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
 
         editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
+        textInputLayoutEmailMessage = (TextInputLayout) view.findViewById(R.id
+                .textInputLayoutEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);

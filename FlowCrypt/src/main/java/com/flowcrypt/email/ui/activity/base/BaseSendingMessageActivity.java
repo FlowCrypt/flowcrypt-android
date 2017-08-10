@@ -62,6 +62,9 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
 
     protected abstract void notifyFragmentAboutErrorFromService(int requestCode, int errorType);
 
+    protected abstract void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
+                                                                                   messageEncryptionType);
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +82,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
             if (messageEncryptionType == null) {
                 messageEncryptionType = MessageEncryptionType.ENCRYPTED;
             } else {
-                onChangeMessageEncryptedType(messageEncryptionType);
+                onMessageEncryptionTypeChange(messageEncryptionType);
             }
         }
     }
@@ -111,11 +114,11 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
             case R.id.menuActionSwitchType:
                 switch (messageEncryptionType) {
                     case ENCRYPTED:
-                        onChangeMessageEncryptedType(MessageEncryptionType.STANDARD);
+                        onMessageEncryptionTypeChange(MessageEncryptionType.STANDARD);
                         break;
 
                     case STANDARD:
-                        onChangeMessageEncryptedType(MessageEncryptionType.ENCRYPTED);
+                        onMessageEncryptionTypeChange(MessageEncryptionType.ENCRYPTED);
                         break;
                 }
                 return true;
@@ -177,7 +180,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     }
 
     @Override
-    public void onChangeMessageEncryptedType(MessageEncryptionType messageEncryptionType) {
+    public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         this.messageEncryptionType = messageEncryptionType;
         switch (messageEncryptionType) {
             case ENCRYPTED:
@@ -198,6 +201,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
         }
 
         invalidateOptionsMenu();
+        notifyFragmentAboutChangeMessageEncryptionType(messageEncryptionType);
     }
 
     @Override

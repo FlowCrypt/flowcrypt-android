@@ -99,4 +99,15 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
             secureReplyFragment.onErrorOccurred(requestCode, errorType);
         }
     }
+
+    @Override
+    protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
+                                                                          messageEncryptionType) {
+        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+
+        if (secureReplyFragment != null) {
+            secureReplyFragment.onMessageEncryptionTypeChange(messageEncryptionType);
+        }
+    }
 }

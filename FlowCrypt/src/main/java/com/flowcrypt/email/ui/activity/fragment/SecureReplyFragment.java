@@ -9,6 +9,7 @@ package com.flowcrypt.email.ui.activity.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -53,8 +54,24 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     private IncomingMessageInfo incomingMessageInfo;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
+    private TextInputLayout textInputLayoutReplyEmailMessage;
 
     public SecureReplyFragment() {
+    }
+
+    @Override
+    public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
+        String emailMassageHint = null;
+        switch (messageEncryptionType) {
+            case ENCRYPTED:
+                emailMassageHint = getString(R.string.prompt_compose_security_email);
+                break;
+
+            case STANDARD:
+                emailMassageHint = getString(R.string.prompt_compose_standard_email);
+                break;
+        }
+        textInputLayoutReplyEmailMessage.setHint(emailMassageHint);
     }
 
     @Override
@@ -188,10 +205,12 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
 
     private void initViews(View view) {
         this.textViewReplyRecipient = (TextView) view.findViewById(R.id.textViewReplyRecipient);
-        this.editTextReplyEmailMessage = (EditText) view.findViewById(R.id
-                .editTextReplyEmailMessage);
+        this.editTextReplyEmailMessage =
+                (EditText) view.findViewById(R.id.editTextReplyEmailMessage);
+        this.textInputLayoutReplyEmailMessage =
+                (TextInputLayout) view.findViewById(R.id.textInputLayoutReplyEmailMessage);
         this.layoutContent = view.findViewById(R.id.layoutForm);
-        this.progressBarCheckContactsDetails = view.findViewById(R.id
-                .progressBarCheckContactsDetails);
+        this.progressBarCheckContactsDetails =
+                view.findViewById(R.id.progressBarCheckContactsDetails);
     }
 }

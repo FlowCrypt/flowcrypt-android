@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.SecureComposeFragment;
 
@@ -71,8 +72,19 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
+    protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
+                                                                          messageEncryptionType) {
+        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
+                getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
+
+        if (secureComposeFragment != null) {
+            secureComposeFragment.onMessageEncryptionTypeChange(messageEncryptionType);
+        }
+    }
+
+    @Override
     protected String getSecurityTitle() {
-        return getString(R.string.secure_compose);
+        return getString(R.string.compose);
     }
 
     @Override

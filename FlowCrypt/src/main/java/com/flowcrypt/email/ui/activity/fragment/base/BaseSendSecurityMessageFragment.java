@@ -61,6 +61,8 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
         pgpContacts = new ArrayList<>();
     }
 
+    public abstract void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
+
     /**
      * Generate an outgoing message info from entered information by user.
      *
@@ -312,7 +314,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      * @param messageEncryptionType The new message encryption type.
      */
     protected void switchMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
-        onChangeMessageEncryptedTypeListener.onChangeMessageEncryptedType(messageEncryptionType);
+        onChangeMessageEncryptedTypeListener.onMessageEncryptionTypeChange(messageEncryptionType);
     }
 
     /**
