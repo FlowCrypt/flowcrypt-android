@@ -296,7 +296,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                         SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
         recipientEditTextView.setOnFocusChangeListener(this);
         recipientEditTextView.setChipBackground(
-                ColorStateList.valueOf(UIUtil.getColor(getContext(), R.color.gray)));
+                ColorStateList.valueOf(UIUtil.getColor(getContext(), R.color.aluminum)));
     }
 
     /**

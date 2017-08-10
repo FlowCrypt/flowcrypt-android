@@ -45,13 +45,16 @@ public class CustomChipSpanChipCreator extends ChipSpanChipCreator {
      */
     public static void updateChipSpanBackground(Context context, @NonNull ChipSpan chipSpan,
                                                 boolean isHasPgp) {
-        int color;
+        int backgroundColor, textColor;
         if (isHasPgp) {
-            color = UIUtil.getColor(context, R.color.colorPrimary);
+            backgroundColor = UIUtil.getColor(context, R.color.colorPrimary);
+            textColor = UIUtil.getColor(context, android.R.color.white);
         } else {
-            color = UIUtil.getColor(context, R.color.gray);
+            backgroundColor = UIUtil.getColor(context, R.color.aluminum);
+            textColor = UIUtil.getColor(context, R.color.dark);
         }
-        chipSpan.setBackgroundColor(ColorStateList.valueOf(color));
+        chipSpan.setBackgroundColor(ColorStateList.valueOf(backgroundColor));
+        chipSpan.setTextColor(textColor);
     }
 
     @Override

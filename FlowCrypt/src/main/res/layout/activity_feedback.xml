@@ -38,7 +38,7 @@
                 android:layout_width="0dp"
                 android:layout_height="@dimen/default_single_dip"
                 android:layout_marginBottom="@dimen/default_margin_content"
-                android:background="@color/silver"
+                android:background="@color/aluminum"
                 app:layout_constraintBottom_toTopOf="@+id/textViewAuthorHint"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="parent"
