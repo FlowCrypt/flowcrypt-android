@@ -80,9 +80,10 @@
             <View
                 android:id="@+id/layoutFooterOfHeader"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="@dimen/height_silver_line"
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/default_margin_medium"
+                android:background="@android:color/white"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textViewSubject" />

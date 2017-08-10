@@ -70,6 +70,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
+    private View viewFooterOfHeader;
     private ViewGroup layoutMessageParts;
     private View layoutContent;
 
@@ -362,6 +363,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewSenderAddress = (TextView) view.findViewById(R.id.textViewSenderAddress);
         textViewDate = (TextView) view.findViewById(R.id.textViewDate);
         textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
+        viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
         layoutMessageParts = (ViewGroup) view.findViewById(R.id.layoutMessageParts);
 
         layoutContent = view.findViewById(R.id.layoutContent);
@@ -411,7 +413,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private void updateMessageView() {
         if (incomingMessageInfo.getMessageParts() != null
                 && !incomingMessageInfo.getMessageParts().isEmpty()) {
-
+            int i = 0;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
                 if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
@@ -424,6 +426,10 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         case TEXT:
                             layoutMessageParts.addView(generateTextPart(messagePart,
                                     layoutInflater));
+                            if(i == 0) { // add a dividing line if first message part is text
+                                viewFooterOfHeader.setBackgroundColor(UIUtil.getColor(getContext(),
+                                        R.color.aluminum));
+                            }
                             break;
 
                         case PGP_PUBLIC_KEY:
@@ -438,6 +444,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             break;
                     }
                 }
+                i++;
             }
         } else {
             layoutMessageParts.removeAllViews();
