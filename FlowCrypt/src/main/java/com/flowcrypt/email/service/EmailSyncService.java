@@ -27,6 +27,8 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -101,6 +103,8 @@ public class EmailSyncService extends Service implements SyncListener {
      */
     private Account account;
 
+    private boolean isServiceStarted;
+
     public EmailSyncService() {
         this.replyToMessengers = new HashMap<>();
     }
@@ -134,6 +138,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " +
                 startId);
+        isServiceStarted = true;
         if (intent != null) {
             account = intent.getParcelableExtra(EXTRA_KEY_GMAIL_ACCOUNT);
             if (account != null) {
@@ -171,6 +176,21 @@ public class EmailSyncService extends Service implements SyncListener {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind:" + intent);
+
+        if (account == null) {
+            AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation
+                    (getApplicationContext());
+            if (accountDao != null) {
+                account = accountDao.getAccount();
+
+                if (account != null && !isServiceStarted) {
+                    EmailSyncService.startEmailSyncService(getContext(), account);
+                }
+            }
+        } else {
+            gmailSynsManager.beginSync(false);
+        }
+
         return messenger.getBinder();
     }
 

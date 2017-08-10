@@ -39,7 +39,6 @@ import java.lang.ref.WeakReference;
  */
 
 public abstract class BaseSyncActivity extends BaseActivity implements ServiceConnection {
-    private static final String TAG = BaseSyncActivity.class.getSimpleName();
     /**
      * Messenger for communicating with the service.
      */
@@ -95,6 +94,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
+        Log.d(TAG, "Activity connected to " + EmailSyncService.class.getSimpleName());
         syncServiceMessenger = new Messenger(service);
         isBound = true;
 
@@ -103,6 +103,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
+        Log.d(TAG, "Activity disconnected from " + EmailSyncService.class.getSimpleName());
         syncServiceMessenger = null;
         isBound = false;
     }

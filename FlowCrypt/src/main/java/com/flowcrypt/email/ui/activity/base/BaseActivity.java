@@ -14,6 +14,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -29,10 +30,15 @@ import com.flowcrypt.email.model.results.LoaderResult;
  *         E-mail: DenBond7@gmail.com
  */
 public abstract class BaseActivity extends AppCompatActivity {
+    protected static String TAG;
 
     private Snackbar snackbar;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
+
+    public BaseActivity() {
+        TAG = getClass().getSimpleName();
+    }
 
     /**
      * This method can used to change "HomeAsUpEnabled" behavior.
@@ -57,8 +63,33 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
         setContentView(getContentViewResourceId());
         initViews();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
     @Override
