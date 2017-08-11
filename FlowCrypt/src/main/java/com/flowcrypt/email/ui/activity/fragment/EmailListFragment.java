@@ -26,6 +26,7 @@ import android.widget.ListView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -225,17 +226,13 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
             cursor.moveToPosition(position);
 
-            startActivityForResult(
-                    MessageDetailsActivity.getIntent(
-                            getContext(),
-                            cursor.getString(cursor.getColumnIndex(MessageDaoSource.COL_EMAIL)),
-                            onManageEmailsListener.getCurrentFolder(),
-                            cursor.getInt(cursor.getColumnIndex(MessageDaoSource.COL_UID))),
+            GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
+
+            startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+                    onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
                     REQUEST_CODE_SHOW_MESSAGE_DETAILS);
         } else {
-            showInfoSnackbar(getView(),
-                    getString(R.string.internet_connection_is_not_available), Snackbar
-                            .LENGTH_LONG);
+            showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
         }
     }
 

@@ -42,25 +42,21 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         .LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener {
     public static final int RESULT_CODE_UPDATE_LIST = 100;
 
-    public static final String EXTRA_KEY_EMAIL =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_EMAIL", MessageDetailsActivity.class);
-    public static final String EXTRA_KEY_FOLDER =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER", MessageDetailsActivity.class);
-    public static final String EXTRA_KEY_UID =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_UID", MessageDetailsActivity.class);
+    public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER",
+            MessageDetailsActivity.class);
+    public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_GENERAL_MESSAGE_DETAILS", MessageDetailsActivity.class);
 
     private GeneralMessageDetails generalMessageDetails;
-    private String email;
     private Folder folder;
-    private int uid;
-    private boolean isNeedToReceiveMessageDetails;
+    private boolean isNeedToReceiveMessageBody;
     private boolean isBackEnable = true;
+    private boolean isRequestMessageDetailsStarted;
 
-    public static Intent getIntent(Context context, String email, Folder folder, int uid) {
+    public static Intent getIntent(Context context, Folder folder, GeneralMessageDetails generalMessageDetails) {
         Intent intent = new Intent(context, MessageDetailsActivity.class);
-        intent.putExtra(EXTRA_KEY_EMAIL, email);
         intent.putExtra(EXTRA_KEY_FOLDER, folder);
-        intent.putExtra(EXTRA_KEY_UID, uid);
+        intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
         return intent;
     }
 
@@ -78,15 +74,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
-            this.email = getIntent().getStringExtra(EXTRA_KEY_EMAIL);
-            this.folder = getIntent().getParcelableExtra((EXTRA_KEY_FOLDER));
-            this.uid = getIntent().getIntExtra(EXTRA_KEY_UID, -1);
+            this.folder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
+            this.generalMessageDetails = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
         }
 
         initViews();
 
-        getSupportLoaderManager().initLoader(
-                R.id.loader_id_load_message_info_from_database, null, this);
+        if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+            getSupportLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+        }
     }
 
     @Override
@@ -106,10 +102,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 return new CursorLoader(this, new MessageDaoSource().
                         getBaseContentUri(),
                         null,
-                        MessageDaoSource.COL_EMAIL + "= ? AND "
-                                + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
                                 + MessageDaoSource.COL_UID + " = ? ",
-                        new String[]{email, folder.getFolderAlias(), String.valueOf(uid)}, null);
+                        new String[]{generalMessageDetails.getEmail(), folder.getFolderAlias(),
+                                String.valueOf(generalMessageDetails.getUid())}, null);
 
             default:
                 return null;
@@ -120,30 +116,29 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info_from_database:
-                if (generalMessageDetails == null) {
+                if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
                     if (cursor != null && cursor.moveToFirst()) {
                         if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex
-                                (MessageDaoSource
-                                        .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
-                            if (isBound) {
+                                (MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
+                            if (isBound && !isRequestMessageDetailsStarted) {
+                                this.isRequestMessageDetailsStarted = true;
                                 loadMessageDetails(R.id.syns_request_code_load_message_details,
-                                        folder,
-                                        uid);
+                                        folder, generalMessageDetails.getUid());
                             } else {
-                                isNeedToReceiveMessageDetails = true;
+                                isNeedToReceiveMessageBody = true;
                             }
                         } else {
-                            isNeedToReceiveMessageDetails = false;
+                            isNeedToReceiveMessageBody = false;
                             MessageDaoSource messageDaoSource = new MessageDaoSource();
-                            messageDaoSource.setSeenStatusForLocalMessage(this, email, folder
-                                    .getFolderAlias(), uid);
+                            messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
+                                    folder.getFolderAlias(), generalMessageDetails.getUid());
                             generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                            showMessageDetails(generalMessageDetails, folder);
+                            showMessageBody(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         }
-                    } else
-                        throw new IllegalArgumentException("The message not exists in the " +
-                                "database");
+                    } else {
+                        throw new IllegalArgumentException("The message not exists in the database");
+                    }
                 }
                 break;
         }
@@ -160,9 +155,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
         super.onServiceConnected(name, service);
-        if (isNeedToReceiveMessageDetails && generalMessageDetails == null) {
-            loadMessageDetails(R.id.syns_request_code_load_message_details, folder,
-                    uid);
+        if (isNeedToReceiveMessageBody) {
+            loadMessageDetails(R.id.syns_request_code_load_message_details, folder, generalMessageDetails.getUid());
         }
     }
 
@@ -170,13 +164,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
+                isRequestMessageDetailsStarted = false;
                 switch (resultCode) {
                     case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
-                        new MessageDaoSource().setSeenStatusForLocalMessage(this, email, folder
-                                .getFolderAlias(), uid);
+                        new MessageDaoSource().setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
+                                folder.getFolderAlias(), generalMessageDetails.getUid());
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-                        getSupportLoaderManager().restartLoader(R.id
-                                        .loader_id_load_message_info_from_database,
+                        getSupportLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database,
                                 null, this);
                         break;
 
@@ -210,8 +204,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
                         Toast.makeText(this, toastMessageResourcesId, Toast.LENGTH_SHORT).show();
 
-                        new MessageDaoSource().deleteMessageFromFolder(this, email,
-                                folder.getFolderAlias(), uid);
+                        new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                                folder.getFolderAlias(), generalMessageDetails.getUid());
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         finish();
                         break;
@@ -227,6 +221,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
+            case R.id.syns_request_code_load_message_details:
+                isRequestMessageDetailsStarted = false;
+                notifyMessageDetailsFragmentAboutError(requestCode, errorType);
+                break;
+
             default:
                 notifyMessageDetailsFragmentAboutError(requestCode, errorType);
                 break;
@@ -236,29 +235,25 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onArchiveMessageClicked() {
         isBackEnable = false;
-        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_archive_message, folder,
-                foldersManager.getFolderArchive(), uid);
+                foldersManager.getFolderArchive(), generalMessageDetails.getUid());
     }
 
     @Override
     public void onDeleteMessageClicked() {
         isBackEnable = false;
-        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_delete_message, folder,
-                foldersManager.getFolderTrash(), uid);
+                foldersManager.getFolderTrash(), generalMessageDetails.getUid());
     }
 
     @Override
     public void onMoveMessageToInboxClicked() {
         isBackEnable = false;
-        FoldersManager foldersManager = FoldersManager.fromDatabase(this, email);
+        FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_move_message_to_inbox, folder,
-                foldersManager.getFolderInbox(), uid);
-    }
-
-    public String getEmail() {
-        return email;
+                foldersManager.getFolderInbox(), generalMessageDetails.getUid());
     }
 
     private void notifyUserAboutError(int requestCode) {
@@ -286,13 +281,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
-    private void showMessageDetails(GeneralMessageDetails generalMessageDetails, Folder folder) {
-        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.messageDetailsFragment);
+    private void showMessageBody(GeneralMessageDetails generalMessageDetails) {
+        MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.messageDetailsFragment);
 
         if (messageDetailsFragment != null) {
-            messageDetailsFragment.showMessageDetails(generalMessageDetails, folder);
+            messageDetailsFragment.showMessageBody(generalMessageDetails);
         }
     }
 

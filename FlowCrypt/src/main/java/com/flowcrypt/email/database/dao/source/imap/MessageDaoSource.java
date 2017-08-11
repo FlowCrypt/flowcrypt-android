@@ -196,7 +196,7 @@ public class MessageDaoSource extends BaseDaoSource {
 
         generalMessageDetails.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
         generalMessageDetails.setLabel(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-        generalMessageDetails.setUid(cursor.getLong(cursor.getColumnIndex(COL_UID)));
+        generalMessageDetails.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
         generalMessageDetails.setReceivedDateInMillisecond(
                 cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
         generalMessageDetails.setSentDateInMillisecond(

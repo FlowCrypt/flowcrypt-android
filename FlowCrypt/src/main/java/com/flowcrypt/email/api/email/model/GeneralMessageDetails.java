@@ -38,7 +38,7 @@ public class GeneralMessageDetails implements Parcelable {
 
     private String email;
     private String label;
-    private long uid;
+    private int uid;
     private long receivedDateInMillisecond;
     private long sentDateInMillisecond;
     private String[] from;
@@ -54,7 +54,7 @@ public class GeneralMessageDetails implements Parcelable {
     protected GeneralMessageDetails(Parcel in) {
         this.email = in.readString();
         this.label = in.readString();
-        this.uid = in.readLong();
+        this.uid = in.readInt();
         this.receivedDateInMillisecond = in.readLong();
         this.sentDateInMillisecond = in.readLong();
         this.from = in.createStringArray();
@@ -91,7 +91,7 @@ public class GeneralMessageDetails implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.email);
         dest.writeString(this.label);
-        dest.writeLong(this.uid);
+        dest.writeInt(this.uid);
         dest.writeLong(this.receivedDateInMillisecond);
         dest.writeLong(this.sentDateInMillisecond);
         dest.writeStringArray(this.from);
@@ -118,11 +118,11 @@ public class GeneralMessageDetails implements Parcelable {
         this.label = label;
     }
 
-    public long getUid() {
+    public int getUid() {
         return uid;
     }
 
-    public void setUid(long uid) {
+    public void setUid(int uid) {
         this.uid = uid;
     }
 

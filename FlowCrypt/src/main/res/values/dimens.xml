@@ -54,4 +54,5 @@
     <dimen name="margin_top_splash_icon">68dp</dimen>
     <dimen name="layout_height_attachment_item">48dp</dimen>
     <dimen name="layout_width_attachment_item">320dp</dimen>
+    <dimen name="min_height_layout_message_parts">400dp</dimen>
 </resources>

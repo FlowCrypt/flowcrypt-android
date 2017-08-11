@@ -28,7 +28,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -65,19 +64,20 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
-    public static final String KEY_GENERAL_MESSAGE_DETAILS = BuildConfig.APPLICATION_ID + "" +
-            ".KEY_GENERAL_MESSAGE_DETAILS";
-
-    private GeneralMessageDetails generalMessageDetails;
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
     private View viewFooterOfHeader;
     private ViewGroup layoutMessageParts;
     private View layoutContent;
+    private View imageButtonReplyAll;
+    private View progressBarActionRunning;
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
+    private GeneralMessageDetails generalMessageDetails;
+    private Folder folder;
+
     private boolean isAdditionalActionEnable;
     private boolean isDeleteActionEnable;
     private boolean isArchiveActionEnable;
@@ -102,17 +102,19 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         setHasOptionsMenu(true);
 
         dateFormat = DateFormat.getTimeFormat(getContext());
+        Intent activityIntent = getActivity().getIntent();
 
-        Bundle args = getArguments();
-
-        if (args != null) {
-            this.generalMessageDetails = args.getParcelable(KEY_GENERAL_MESSAGE_DETAILS);
+        if (activityIntent != null) {
+            this.generalMessageDetails = activityIntent.getParcelableExtra(MessageDetailsActivity
+                    .EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+            this.folder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER);
         }
+
+        updateActionsVisibility(folder);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_message_details, container, false);
     }
 
@@ -124,8 +126,16 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+            getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+        }
+    }
+
+    @Override
     public View getContentView() {
-        return layoutContent;
+        return layoutMessageParts;
     }
 
     @Override
@@ -151,8 +161,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         }
 
         if (menuActionMoveToInbox != null) {
-            menuActionMoveToInbox.setVisible(isMoveToInboxActionEnable
-                    && isAdditionalActionEnable);
+            menuActionMoveToInbox.setVisible(isMoveToInboxActionEnable && isAdditionalActionEnable);
         }
     }
 
@@ -174,8 +183,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info_from_database:
-                UIUtil.exchangeViewVisibility(getContext(), true, progressView,
-                        layoutContent);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageParts);
                 return new DecryptMessageAsyncTaskLoader(getContext(), generalMessageDetails
                         .getRawMessageWithoutAttachments());
             default:
@@ -187,11 +195,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_load_message_info_from_database:
+                imageButtonReplyAll.setVisibility(View.VISIBLE);
                 isAdditionalActionEnable = true;
                 getActivity().invalidateOptionsMenu();
                 this.incomingMessageInfo = (IncomingMessageInfo) result;
-                updateViews();
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutContent);
+                updateMessageBody();
+                UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
                 break;
             default:
                 super.handleSuccessLoaderResult(loaderId, result);
@@ -203,13 +212,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         super.handleFailureLoaderResult(loaderId, e);
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutContent);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.imageViewReplyAll:
+            case R.id.imageButtonReplyAll:
                 runSecurityReplyActivity();
                 break;
         }
@@ -226,11 +235,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * Show message details.
      *
      * @param generalMessageDetails This object contains general message details.
-     * @param folder                The folder where the message exists.
      */
-    public void showMessageDetails(GeneralMessageDetails generalMessageDetails, Folder folder) {
+    public void showMessageBody(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
-        updateActionsVisibility(folder);
         getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
@@ -238,8 +245,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
 
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView,
-                layoutContent);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
 
         switch (requestCode) {
             case R.id.syns_request_archive_message:
@@ -251,6 +257,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 UIUtil.showInfoSnackbar(getView(),
                         getString(R.string.error_occurred_while_deleting_message));
                 break;
+        }
+    }
+
+    protected void updateMessageBody() {
+        if (incomingMessageInfo != null) {
+            updateMessageView();
+            showAttachmentsIfTheyExist();
         }
     }
 
@@ -311,7 +324,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             isAdditionalActionEnable = false;
             getActivity().invalidateOptionsMenu();
             statusView.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutContent);
+            UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
             switch (menuId) {
                 case R.id.menuActionArchiveMessage:
                     onActionListener.onArchiveMessageClicked();
@@ -351,13 +364,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             }
         }
 
-        Intent intent = SecureReplyActivity.generateIntent(getContext(), incomingMessageInfo,
-                messageEncryptionType);
-        if (getActivity() instanceof MessageDetailsActivity) {
-            MessageDetailsActivity messageDetailsActivity = (MessageDetailsActivity) getActivity();
-            intent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,
-                    messageDetailsActivity.getEmail());
-        }
+        Intent intent = SecureReplyActivity.generateIntent(getContext(), incomingMessageInfo, messageEncryptionType);
+        intent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL, generalMessageDetails.getEmail());
         startActivity(intent);
     }
 
@@ -367,29 +375,24 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
         viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
         layoutMessageParts = (ViewGroup) view.findViewById(R.id.layoutMessageParts);
+        progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
         layoutContent = view.findViewById(R.id.layoutContent);
-
-        if (view.findViewById(R.id.imageViewReplyAll) != null) {
-            view.findViewById(R.id.imageViewReplyAll).setOnClickListener(this);
-        }
+        imageButtonReplyAll = view.findViewById(R.id.imageButtonReplyAll);
+        imageButtonReplyAll.setOnClickListener(this);
     }
 
     private void updateViews() {
-        if (incomingMessageInfo != null) {
-            String subject = TextUtils.isEmpty(incomingMessageInfo.getSubject())
-                    ? getString(R.string.no_subject)
-                    : incomingMessageInfo.getSubject();
+        if (generalMessageDetails != null) {
+            String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ? getString(R.string.no_subject) :
+                    generalMessageDetails.getSubject();
 
-            textViewSenderAddress.setText(incomingMessageInfo.getFrom().get(0));
+            textViewSenderAddress.setText(generalMessageDetails.getFrom()[0]);
             textViewSubject.setText(subject);
-            updateMessageView();
-            showAttachmentsIfTheyExist();
-
-            if (incomingMessageInfo.getReceiveDate() != null) {
-                textViewDate.setText(dateFormat.format(incomingMessageInfo.getReceiveDate()));
-            }
+            textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
         }
+
+        updateMessageBody();
     }
 
     private void showAttachmentsIfTheyExist() {
@@ -400,17 +403,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
             for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                View rootView = layoutInflater.inflate(R.layout.attachment_item,
-                        layoutMessageParts, false);
+                View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
 
-                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id
-                        .textViewAttchmentName);
+                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
-                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id
-                        .textViewAttachmentSize);
-                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo
-                        .getEncodedSize()));
+                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
+                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
 
                 layoutMessageParts.addView(rootView);
             }
@@ -418,24 +417,20 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void updateMessageView() {
-        if (incomingMessageInfo.getMessageParts() != null
-                && !incomingMessageInfo.getMessageParts().isEmpty()) {
-            int i = 0;
+        if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
+            boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
                 if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
                     switch (messagePart.getMessagePartType()) {
                         case PGP_MESSAGE:
-                            layoutMessageParts.addView(generatePgpMessagePart(messagePart,
-                                    layoutInflater));
+                            layoutMessageParts.addView(generatePgpMessagePart(messagePart, layoutInflater));
                             break;
 
                         case TEXT:
-                            layoutMessageParts.addView(generateTextPart(messagePart,
-                                    layoutInflater));
-                            if (i == 0) { // add a dividing line if first message part is text
-                                viewFooterOfHeader.setBackgroundColor(UIUtil.getColor(getContext(),
-                                        R.color.aluminum));
+                            layoutMessageParts.addView(generateTextPart(messagePart, layoutInflater));
+                            if (isFirstMessagePartIsText) {
+                                viewFooterOfHeader.setVisibility(View.VISIBLE);
                             }
                             break;
 
@@ -445,13 +440,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             break;
 
                         default:
-                            layoutMessageParts.addView(generateMessagePart(messagePart,
-                                    layoutInflater, R.layout.message_part_other,
-                                    layoutMessageParts));
+                            layoutMessageParts.addView(generateMessagePart(messagePart, layoutInflater,
+                                    R.layout.message_part_other, layoutMessageParts));
                             break;
                     }
                 }
-                i++;
+                isFirstMessagePartIsText = false;
             }
         } else {
             layoutMessageParts.removeAllViews();
@@ -621,15 +615,13 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     @NonNull
     private TextView generateTextPart(MessagePart messagePart, LayoutInflater layoutInflater) {
-        return generateMessagePart(messagePart, layoutInflater, R
-                .layout.message_part_text, layoutMessageParts);
+        return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_text, layoutMessageParts);
     }
 
     @NonNull
     private TextView generatePgpMessagePart(MessagePart messagePart,
                                             LayoutInflater layoutInflater) {
-        return generateMessagePart(messagePart, layoutInflater,
-                R.layout.message_part_pgp_message, layoutMessageParts);
+        return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_pgp_message, layoutMessageParts);
     }
 
     public interface OnActionListener {
