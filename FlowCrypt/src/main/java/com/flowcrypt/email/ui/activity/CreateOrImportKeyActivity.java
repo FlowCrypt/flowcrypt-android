@@ -108,7 +108,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
             case REQUEST_CODE_IMPORT_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailSyncService.startEmailSyncService(this);
                         EmailManagerActivity.runEmailManagerActivity(this, account);
                         finish();
                         break;

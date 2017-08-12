@@ -20,7 +20,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
@@ -85,8 +84,6 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_GET_ACTIVE_ACCOUNT = 11;
     public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 12;
 
-    public static final String EXTRA_KEY_GMAIL_ACCOUNT = BuildConfig.APPLICATION_ID
-            + ".EXTRA_KEY_GMAIL_ACCOUNT";
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
      * This {@link Messenger} is responsible for the receive intents from other client and
@@ -113,15 +110,10 @@ public class EmailSyncService extends Service implements SyncListener {
      * This method can bu used to start {@link EmailSyncService}.
      *
      * @param context Interface to global information about an application environment.
-     * @param account The user {@link Account}
      */
-    public static void startEmailSyncService(Context context, Account account) {
-        if (account != null) {
-            Intent startEmailServiceIntent = new Intent(context, EmailSyncService.class);
-            startEmailServiceIntent.putExtra(EmailSyncService.EXTRA_KEY_GMAIL_ACCOUNT,
-                    account);
-            context.startService(startEmailServiceIntent);
-        } else throw new NullPointerException("The account is null");
+    public static void startEmailSyncService(Context context) {
+        Intent startEmailServiceIntent = new Intent(context, EmailSyncService.class);
+        context.startService(startEmailServiceIntent);
     }
 
     @Override
@@ -136,16 +128,13 @@ public class EmailSyncService extends Service implements SyncListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " +
-                startId);
+        Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
         isServiceStarted = true;
-        if (intent != null) {
-            account = intent.getParcelableExtra(EXTRA_KEY_GMAIL_ACCOUNT);
-            if (account != null) {
-                gmailSynsManager.beginSync(false);
-            } else {
-                //todo-denbond7 handle this error;
-            }
+        this.account = new AccountDaoSource().getActiveAccountInformation(this).getAccount();
+        if (account != null) {
+            gmailSynsManager.beginSync(false);
+        } else {
+            //todo-denbond7 handle this error;
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -184,7 +173,7 @@ public class EmailSyncService extends Service implements SyncListener {
                 account = accountDao.getAccount();
 
                 if (account != null && !isServiceStarted) {
-                    EmailSyncService.startEmailSyncService(getContext(), account);
+                    EmailSyncService.startEmailSyncService(getContext());
                 }
             }
         } else {

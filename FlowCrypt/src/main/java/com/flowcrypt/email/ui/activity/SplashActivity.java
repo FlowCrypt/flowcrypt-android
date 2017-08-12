@@ -163,7 +163,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        EmailSyncService.startEmailSyncService(this, account);
+                        EmailSyncService.startEmailSyncService(this);
                         EmailManagerActivity.runEmailManagerActivity(this, account);
                         finish();
                         break;
@@ -271,7 +271,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             }
 
             if (SecurityUtils.isBackupKeysExist(this)) {
-                EmailSyncService.startEmailSyncService(this, account);
+                EmailSyncService.startEmailSyncService(this);
                 EmailManagerActivity.runEmailManagerActivity(this, account);
                 finish();
             } else {
