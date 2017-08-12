@@ -91,12 +91,12 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
         SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
                 getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
 
         if (secureReplyFragment != null) {
-            secureReplyFragment.onErrorOccurred(requestCode, errorType);
+            secureReplyFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 

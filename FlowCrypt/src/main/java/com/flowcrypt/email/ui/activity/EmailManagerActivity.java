@@ -115,7 +115,7 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
-                notifyEmailListFragmentAboutError(requestCode, errorType);
+                notifyEmailListFragmentAboutError(requestCode, errorType, e);
                 break;
         }
     }
@@ -296,13 +296,14 @@ public class EmailManagerActivity extends BaseSyncActivity
      *
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      * @param errorType   The {@link SyncErrorTypes}
+     * @param e           The exception which happened.
      */
-    private void notifyEmailListFragmentAboutError(int requestCode, int errorType) {
+    private void notifyEmailListFragmentAboutError(int requestCode, int errorType, Exception e) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.onErrorOccurred(requestCode, errorType);
+            emailListFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 

@@ -60,7 +60,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
 
     protected abstract String getStandardTitle();
 
-    protected abstract void notifyFragmentAboutErrorFromService(int requestCode, int errorType);
+    protected abstract void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e);
 
     protected abstract void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
                                                                                    messageEncryptionType);
@@ -153,7 +153,7 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
         switch (requestCode) {
             case R.id.syns_request_send_encrypted_message:
                 isMessageSendingNow = false;
-                notifyFragmentAboutErrorFromService(requestCode, errorType);
+                notifyFragmentAboutErrorFromService(requestCode, errorType, e);
                 break;
         }
     }

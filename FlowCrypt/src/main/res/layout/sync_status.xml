@@ -28,6 +28,7 @@
         android:layout_marginLeft="@dimen/default_margin_content_small"
         android:layout_marginRight="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceMedium"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

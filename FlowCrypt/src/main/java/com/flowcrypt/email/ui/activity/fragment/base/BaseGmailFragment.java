@@ -54,8 +54,9 @@ public abstract class BaseGmailFragment extends BaseFragment {
      *
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      * @param errorType   The {@link SyncErrorTypes}
+     * @param e           The exception which happened.
      */
-    public void onErrorOccurred(int requestCode, int errorType) {
+    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
         getContentView().setVisibility(View.GONE);
         textViewStatusInfo.setText(R.string.there_was_syncing_problem);
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);

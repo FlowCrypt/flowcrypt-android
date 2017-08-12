@@ -38,8 +38,8 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         Time: 16:29
  *         E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsActivity extends BaseBackStackSyncActivity implements LoaderManager
-        .LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener {
+public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
+        LoaderManager.LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener {
     public static final int RESULT_CODE_UPDATE_LIST = 100;
 
     public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER",
@@ -223,11 +223,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 isRequestMessageDetailsStarted = false;
-                notifyMessageDetailsFragmentAboutError(requestCode, errorType);
+                notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
                 break;
 
             default:
-                notifyMessageDetailsFragmentAboutError(requestCode, errorType);
+                notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
                 break;
         }
     }
@@ -271,13 +271,14 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
      *
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      * @param errorType   The {@link SyncErrorTypes}
+     * @param e           The exception which happened.
      */
-    private void notifyMessageDetailsFragmentAboutError(int requestCode, int errorType) {
+    private void notifyMessageDetailsFragmentAboutError(int requestCode, int errorType, Exception e) {
         MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
                 getSupportFragmentManager().findFragmentById(R.id.messageDetailsFragment);
 
         if (messageDetailsFragment != null) {
-            messageDetailsFragment.onErrorOccurred(requestCode, errorType);
+            messageDetailsFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 

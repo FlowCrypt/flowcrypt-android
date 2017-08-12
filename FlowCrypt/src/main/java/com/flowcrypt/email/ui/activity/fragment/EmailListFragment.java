@@ -299,8 +299,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType) {
-        super.onErrorOccurred(requestCode, errorType);
+    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
+        super.onErrorOccurred(requestCode, errorType, e);
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
                 footerProgressView.setVisibility(View.GONE);

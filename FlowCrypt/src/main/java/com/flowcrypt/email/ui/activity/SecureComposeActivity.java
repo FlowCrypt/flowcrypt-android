@@ -62,12 +62,12 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType) {
+    protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
         SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
                 getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
 
         if (secureComposeFragment != null) {
-            secureComposeFragment.onErrorOccurred(requestCode, errorType);
+            secureComposeFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 

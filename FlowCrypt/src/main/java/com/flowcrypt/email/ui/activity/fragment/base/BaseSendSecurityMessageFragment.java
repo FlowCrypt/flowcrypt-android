@@ -285,7 +285,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType) {
+    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
         notifyUserAboutErrorWhenSendMessage();
     }
 

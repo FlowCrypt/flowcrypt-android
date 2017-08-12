@@ -225,8 +225,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType) {
-        super.onErrorOccurred(requestCode, errorType);
+    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
+        super.onErrorOccurred(requestCode, errorType, e);
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
     }

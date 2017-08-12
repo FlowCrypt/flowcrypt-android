@@ -40,10 +40,8 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class FeedbackActivity extends BaseBackStackSyncActivity implements
-        LoaderManager.LoaderCallbacks<BaseResponse> {
-    private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + "" +
-            ".KEY_IS_MESSAGE_SENT";
+public class FeedbackActivity extends BaseBackStackSyncActivity implements LoaderManager.LoaderCallbacks<BaseResponse> {
+    private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + ".KEY_IS_MESSAGE_SENT";
 
     private View progressBar;
     private View layoutInput;
