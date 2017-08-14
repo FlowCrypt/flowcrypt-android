@@ -71,7 +71,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_subject"
-                    android:inputType="textEmailSubject"
+                    android:inputType="textEmailSubject|textCapSentences|textAutoCorrect"
                     android:maxLines="1" />
 
             </android.support.design.widget.TextInputLayout>
@@ -86,7 +86,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_compose_security_email"
-                    android:inputType="textCapSentences|textMultiLine" />
+                    android:inputType="textCapSentences|textMultiLine|textAutoCorrect" />
 
             </android.support.design.widget.TextInputLayout>
 
