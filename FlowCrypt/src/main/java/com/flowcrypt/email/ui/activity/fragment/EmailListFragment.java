@@ -27,6 +27,7 @@ import android.widget.ListView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -299,7 +300,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
+    public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
         super.onErrorOccurred(requestCode, errorType, e);
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
@@ -315,6 +316,24 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
         getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
         cleanCache();
+
+        switch (errorType) {
+            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string
+                        .retry), new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        switch (requestCode) {
+                            case R.id.syns_request_code_load_next_messages:
+                            case R.id.syns_request_code_force_load_new_messages:
+                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                loadNextMessages(-1);
+                                break;
+                        }
+                    }
+                });
+                break;
+        }
     }
 
     /**
@@ -353,6 +372,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
         lastPositionOfAlreadyLoaded = lastCalledPositionForLoadMore;
         footerProgressView.setVisibility(View.GONE);
+        progressView.setVisibility(View.GONE);
         if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
             updateList(false);
         } else {

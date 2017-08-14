@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
@@ -58,7 +59,21 @@ public abstract class BaseGmailFragment extends BaseFragment {
      */
     public void onErrorOccurred(int requestCode, int errorType, Exception e) {
         getContentView().setVisibility(View.GONE);
-        textViewStatusInfo.setText(R.string.there_was_syncing_problem);
+
+        switch (errorType) {
+            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                textViewStatusInfo.setText(R.string.there_was_syncing_problem);
+                break;
+
+            default:
+                if (e != null && !TextUtils.isEmpty(e.getMessage())) {
+                    textViewStatusInfo.setText(e.getMessage());
+                } else {
+                    textViewStatusInfo.setText(R.string.unknown_error);
+                }
+                break;
+        }
+
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
         if (getSnackBar() != null) {
             getSnackBar().dismiss();

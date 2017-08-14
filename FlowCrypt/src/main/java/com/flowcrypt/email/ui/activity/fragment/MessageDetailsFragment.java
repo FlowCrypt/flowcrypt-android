@@ -34,6 +34,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.js.PgpContact;
@@ -225,10 +226,25 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
+    public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
         super.onErrorOccurred(requestCode, errorType, e);
         isAdditionalActionEnable = true;
         getActivity().invalidateOptionsMenu();
+
+        switch (errorType) {
+            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
+                        getString(R.string.retry), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
+                                        R.id.syns_request_code_load_message_details, folder,
+                                        generalMessageDetails.getUid());
+                            }
+                        });
+                break;
+        }
     }
 
     /**
