@@ -273,7 +273,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
-                Intent composeActivityIntent = new Intent(this, SecureComposeActivity.class);
+                Intent composeActivityIntent = new Intent(this, ComposeActivity.class);
                 composeActivityIntent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,
                         account.name);
                 startActivity(composeActivityIntent);

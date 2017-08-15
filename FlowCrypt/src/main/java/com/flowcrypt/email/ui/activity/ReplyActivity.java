@@ -15,28 +15,28 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.SecureReplyFragment;
+import com.flowcrypt.email.ui.activity.fragment.ReplyFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
- * This activity describes a logic of send encrypted message as a reply.
+ * This activity describes a logic of send encrypted or standard message as a reply.
  *
  * @author DenBond7
  *         Date: 10.05.2017
  *         Time: 09:11
  *         E-mail: DenBond7@gmail.com
  */
-public class SecureReplyActivity extends BaseSendingMessageActivity {
+public class ReplyActivity extends BaseSendingMessageActivity {
 
     public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_INCOMING_MESSAGE_INFO", SecureReplyActivity.class);
+            ("EXTRA_KEY_INCOMING_MESSAGE_INFO", ReplyActivity.class);
 
     private View layoutContent;
 
     public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
 
-        Intent intent = new Intent(context, SecureReplyActivity.class);
+        Intent intent = new Intent(context, ReplyActivity.class);
         intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
         intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
         return intent;
@@ -64,20 +64,20 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
 
     @Override
     public void notifyUserAboutErrorWhenSendMessage() {
-        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+        ReplyFragment replyFragment = (ReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.replyFragment);
 
-        if (secureReplyFragment != null) {
-            secureReplyFragment.notifyUserAboutErrorWhenSendMessage();
+        if (replyFragment != null) {
+            replyFragment.notifyUserAboutErrorWhenSendMessage();
         }
     }
 
     @Override
     public boolean isCanFinishActivity() {
-        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+        ReplyFragment replyFragment = (ReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.replyFragment);
 
-        return secureReplyFragment != null && !secureReplyFragment.isMessageSendingNow();
+        return replyFragment != null && !replyFragment.isMessageSendingNow();
     }
 
     @Override
@@ -92,22 +92,22 @@ public class SecureReplyActivity extends BaseSendingMessageActivity {
 
     @Override
     protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
-        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+        ReplyFragment replyFragment = (ReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.replyFragment);
 
-        if (secureReplyFragment != null) {
-            secureReplyFragment.onErrorOccurred(requestCode, errorType, e);
+        if (replyFragment != null) {
+            replyFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 
     @Override
     protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
                                                                           messageEncryptionType) {
-        SecureReplyFragment secureReplyFragment = (SecureReplyFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureReplyFragment);
+        ReplyFragment replyFragment = (ReplyFragment)
+                getSupportFragmentManager().findFragmentById(R.id.replyFragment);
 
-        if (secureReplyFragment != null) {
-            secureReplyFragment.onMessageEncryptionTypeChange(messageEncryptionType);
+        if (replyFragment != null) {
+            replyFragment.onMessageEncryptionTypeChange(messageEncryptionType);
         }
     }
 }

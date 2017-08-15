@@ -44,12 +44,12 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.SecureComposeActivity"
+            android:name=".ui.activity.ComposeActivity"
             android:label="@string/compose"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.SecureReplyActivity"
+            android:name=".ui.activity.ReplyActivity"
             android:label="@string/security_reply"
             android:screenOrientation="portrait" />
 

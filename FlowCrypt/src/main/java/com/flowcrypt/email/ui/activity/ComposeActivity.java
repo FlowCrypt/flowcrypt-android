@@ -12,18 +12,18 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.SecureComposeFragment;
+import com.flowcrypt.email.ui.activity.fragment.ComposeFragment;
 
 
 /**
- * This activity describes a logic of send encrypted message.
+ * This activity describes a logic of send encrypted or standard message.
  *
  * @author DenBond7
  *         Date: 08.05.2017
  *         Time: 14:44
  *         E-mail: DenBond7@gmail.com
  */
-public class SecureComposeActivity extends BaseSendingMessageActivity {
+public class ComposeActivity extends BaseSendingMessageActivity {
     private View layoutContent;
 
     @Override
@@ -44,41 +44,39 @@ public class SecureComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     public void notifyUserAboutErrorWhenSendMessage() {
-        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.secureComposeFragment);
-        if (secureComposeFragment != null) {
-            secureComposeFragment.notifyUserAboutErrorWhenSendMessage();
+        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+                R.id.composeFragment);
+        if (composeFragment != null) {
+            composeFragment.notifyUserAboutErrorWhenSendMessage();
         }
     }
 
     @Override
     public boolean isCanFinishActivity() {
-        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
-                getSupportFragmentManager()
-                        .findFragmentById(R.id.secureComposeFragment);
+        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+                R.id.composeFragment);
 
-        return secureComposeFragment != null && !secureComposeFragment.isMessageSendingNow();
+        return composeFragment != null && !composeFragment.isMessageSendingNow();
     }
 
     @Override
     protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
-        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
+        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+                R.id.composeFragment);
 
-        if (secureComposeFragment != null) {
-            secureComposeFragment.onErrorOccurred(requestCode, errorType, e);
+        if (composeFragment != null) {
+            composeFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 
     @Override
     protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
                                                                           messageEncryptionType) {
-        SecureComposeFragment secureComposeFragment = (SecureComposeFragment)
-                getSupportFragmentManager().findFragmentById(R.id.secureComposeFragment);
+        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+                R.id.composeFragment);
 
-        if (secureComposeFragment != null) {
-            secureComposeFragment.onMessageEncryptionTypeChange(messageEncryptionType);
+        if (composeFragment != null) {
+            composeFragment.onMessageEncryptionTypeChange(messageEncryptionType);
         }
     }
 

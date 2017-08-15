@@ -45,14 +45,14 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 import java.util.List;
 
 /**
- * This fragment describe a logic of sent an encrypted message.
+ * This fragment describe a logic of sent an encrypted or standard message.
  *
  * @author DenBond7
  *         Date: 08.05.2017
  *         Time: 14:44
  *         E-mail: DenBond7@gmail.com
  */
-public class SecureComposeFragment extends BaseSendSecurityMessageFragment implements View
+public class ComposeFragment extends BaseSendSecurityMessageFragment implements View
         .OnFocusChangeListener {
     private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
@@ -63,7 +63,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
 
     private ContactsDaoSource contactsDaoSource;
 
-    public SecureComposeFragment() {
+    public ComposeFragment() {
         contactsDaoSource = new ContactsDaoSource();
     }
 
@@ -178,7 +178,7 @@ public class SecureComposeFragment extends BaseSendSecurityMessageFragment imple
                                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                                         getLoaderManager().restartLoader(
                                                 R.id.loader_id_update_info_about_pgp_contacts, null,
-                                                SecureComposeFragment.this);
+                                                ComposeFragment.this);
                                     } else {
                                         showInfoSnackbar(getView(), getString(R.string
                                                 .internet_connection_is_not_available));

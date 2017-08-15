@@ -26,7 +26,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.ui.activity.SecureReplyActivity;
+import com.flowcrypt.email.ui.activity.ReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -35,14 +35,14 @@ import com.flowcrypt.email.util.UIUtil;
 import java.util.List;
 
 /**
- * This fragment describe a logic of sent an encrypted message as a reply.
+ * This fragment describe a logic of sent an encrypted or standard message as a reply.
  *
  * @author DenBond7
  *         Date: 10.05.2017
  *         Time: 09:11
  *         E-mail: DenBond7@gmail.com
  */
-public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
+public class ReplyFragment extends BaseSendSecurityMessageFragment {
 
     /**
      * This constant will be used when we create a reply message subject.
@@ -58,7 +58,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     private TextInputLayout textInputLayoutReplyEmailMessage;
     private FoldersManager.FolderType folderType;
 
-    public SecureReplyFragment() {
+    public ReplyFragment() {
     }
 
     @Override
@@ -81,7 +81,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         super.onCreate(savedInstanceState);
         if (getActivity().getIntent() != null) {
             this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
-                    (SecureReplyActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+                    (ReplyActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
             if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
                 this.folderType = FoldersManager.getFolderTypeForImapFodler(incomingMessageInfo.getFolder()
                         .getAttributes());
@@ -179,7 +179,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
                                 if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                                     getLoaderManager().restartLoader(
                                             R.id.loader_id_update_info_about_pgp_contacts, null,
-                                            SecureReplyFragment.this);
+                                            ReplyFragment.this);
                                 } else {
                                     showInfoSnackbar(getView(), getString(R.string
                                             .internet_connection_is_not_available));
