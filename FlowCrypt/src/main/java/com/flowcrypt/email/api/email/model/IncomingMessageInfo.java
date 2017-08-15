@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.model.messages.MessagePart;
 
 import java.util.ArrayList;
@@ -38,20 +39,36 @@ public class IncomingMessageInfo extends MessageInfo {
     };
 
     private ArrayList<String> from;
+    private ArrayList<String> to;
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
+    private Folder folder;
 
     public IncomingMessageInfo() {
     }
 
-    protected IncomingMessageInfo(Parcel in) {
+    public IncomingMessageInfo(Parcel in) {
         super(in);
         this.from = in.createStringArrayList();
+        this.to = in.createStringArrayList();
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.originalRawMessageWithoutAttachments = in.readString();
         this.messageParts = in.createTypedArrayList(MessagePart.CREATOR);
+        this.folder = in.readParcelable(Folder.class.getClassLoader());
+    }
+
+    @Override
+    public String toString() {
+        return "IncomingMessageInfo{" +
+                "from=" + from +
+                "to=" + to +
+                ", receiveDate=" + receiveDate +
+                ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments + '\'' +
+                ", messageParts=" + messageParts +
+                ", folder=" + folder +
+                "} " + super.toString();
     }
 
     @Override
@@ -63,20 +80,11 @@ public class IncomingMessageInfo extends MessageInfo {
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeStringList(this.from);
+        dest.writeStringList(this.to);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
-    }
-
-    @Override
-    public String toString() {
-        return "IncomingMessageInfo{" +
-                "from=" + from +
-                ", receiveDate=" + receiveDate +
-                ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments
-                + '\'' +
-                ", messageParts=" + messageParts +
-                "} " + super.toString();
+        dest.writeParcelable(this.folder, flags);
     }
 
     /**
@@ -115,5 +123,21 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setMessageParts(List<MessagePart> messageParts) {
         this.messageParts = messageParts;
+    }
+
+    public Folder getFolder() {
+        return folder;
+    }
+
+    public void setFolder(Folder folder) {
+        this.folder = folder;
+    }
+
+    public ArrayList<String> getTo() {
+        return to;
+    }
+
+    public void setTo(ArrayList<String> to) {
+        this.to = to;
     }
 }

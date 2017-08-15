@@ -78,6 +78,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private IncomingMessageInfo incomingMessageInfo;
     private GeneralMessageDetails generalMessageDetails;
     private Folder folder;
+    private FoldersManager.FolderType folderType;
 
     private boolean isAdditionalActionEnable;
     private boolean isDeleteActionEnable;
@@ -199,7 +200,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 imageButtonReplyAll.setVisibility(View.VISIBLE);
                 isAdditionalActionEnable = true;
                 getActivity().invalidateOptionsMenu();
-                this.incomingMessageInfo = (IncomingMessageInfo) result;
+                incomingMessageInfo = (IncomingMessageInfo) result;
+                incomingMessageInfo.setFolder(folder);
                 updateMessageBody();
                 UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
                 break;
@@ -289,8 +291,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * @param folder The folder where current message exists.
      */
     private void updateActionsVisibility(Folder folder) {
-        FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFodler(folder
-                .getAttributes());
+        folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
 
         if (folderType != null) {
             switch (folderType) {
@@ -403,7 +404,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ? getString(R.string.no_subject) :
                     generalMessageDetails.getSubject();
 
-            textViewSenderAddress.setText(generalMessageDetails.getFrom()[0]);
+            if (folderType == FoldersManager.FolderType.SENT) {
+                textViewSenderAddress.setText(generalMessageDetails.getTo()[0]);
+            } else {
+                textViewSenderAddress.setText(generalMessageDetails.getFrom()[0]);
+            }
             textViewSubject.setText(subject);
             textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
         }

@@ -85,13 +85,19 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
         if (rawMessage != null) {
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
             ProcessedMime processedMime = js.mime_process(rawMessage);
-            ArrayList<String> addresses = new ArrayList<>();
+            ArrayList<String> addressesFrom = new ArrayList<>();
+            ArrayList<String> addressesTo = new ArrayList<>();
 
             for (MimeAddress mimeAddress : processedMime.getAddressHeader("from")) {
-                addresses.add(mimeAddress.getAddress());
+                addressesFrom.add(mimeAddress.getAddress());
             }
 
-            incomingMessageInfo.setFrom(addresses);
+            for (MimeAddress mimeAddress : processedMime.getAddressHeader("to")) {
+                addressesTo.add(mimeAddress.getAddress());
+            }
+
+            incomingMessageInfo.setFrom(addressesFrom);
+            incomingMessageInfo.setTo(addressesTo);
             incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
             incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
             incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);

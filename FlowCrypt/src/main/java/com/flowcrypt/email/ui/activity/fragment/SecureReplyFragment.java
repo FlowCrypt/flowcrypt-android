@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
@@ -55,6 +56,7 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     private View layoutContent;
     private View progressBarCheckContactsDetails;
     private TextInputLayout textInputLayoutReplyEmailMessage;
+    private FoldersManager.FolderType folderType;
 
     public SecureReplyFragment() {
     }
@@ -80,6 +82,10 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         if (getActivity().getIntent() != null) {
             this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
                     (SecureReplyActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+            if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
+                this.folderType = FoldersManager.getFolderTypeForImapFodler(incomingMessageInfo.getFolder()
+                        .getAttributes());
+            }
         }
     }
 
@@ -122,7 +128,8 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
         outgoingMessageInfo.setRawReplyMessage(
                 incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
         List<PgpContact> pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
-                (getContext(), incomingMessageInfo.getFrom());
+                (getContext(), FoldersManager.FolderType.SENT == folderType ? incomingMessageInfo.getTo() :
+                        incomingMessageInfo.getFrom());
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
@@ -143,7 +150,11 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
 
     @Override
     public List<String> getContactsEmails() {
-        return incomingMessageInfo.getFrom();
+        if (FoldersManager.FolderType.SENT == folderType) {
+            return incomingMessageInfo.getTo();
+        } else {
+            return incomingMessageInfo.getFrom();
+        }
     }
 
     @Override
@@ -186,20 +197,16 @@ public class SecureReplyFragment extends BaseSendSecurityMessageFragment {
     }
 
     /**
-     * Update an incoming message info and views on the current screen.
-     */
-    public void setIncomingMessageInfo(IncomingMessageInfo incomingMessageInfo) {
-        this.incomingMessageInfo = incomingMessageInfo;
-        updateViews();
-    }
-
-    /**
      * Update views on the screen. This method can be called when we need to update the current
      * screen.
      */
     private void updateViews() {
         if (incomingMessageInfo != null) {
-            textViewReplyRecipient.setText(incomingMessageInfo.getFrom().get(0));
+            if (FoldersManager.FolderType.SENT == folderType) {
+                textViewReplyRecipient.setText(incomingMessageInfo.getTo().get(0));
+            } else {
+                textViewReplyRecipient.setText(incomingMessageInfo.getFrom().get(0));
+            }
         }
     }
 
