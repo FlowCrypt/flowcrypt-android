@@ -7,13 +7,11 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,15 +30,10 @@ import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
-import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
-import com.hootsuite.nachos.chip.ChipSpan;
 import com.hootsuite.nachos.tokenizer.ChipTokenizer;
-import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import java.util.List;
 
@@ -54,7 +47,6 @@ import java.util.List;
  */
 public class ComposeFragment extends BaseSendSecurityMessageFragment implements View
         .OnFocusChangeListener {
-    private NachoTextView recipientEditTextView;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private TextInputLayout textInputLayoutEmailMessage;
@@ -124,7 +116,7 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
         outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
 
         List<PgpContact> pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase
-                (getContext(), recipientEditTextView.getChipValues());
+                (getContext(), editTextRecipients.getChipValues());
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
@@ -145,25 +137,22 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
 
     @Override
     public List<String> getContactsEmails() {
-        return recipientEditTextView.getChipAndTokenValues();
+        return editTextRecipients.getChipAndTokenValues();
     }
 
     @Override
     public boolean isAllInformationCorrect() {
-        if (TextUtils.isEmpty(recipientEditTextView.getText().toString())) {
-            showInfoSnackbar(recipientEditTextView, getString(R.string
-                            .text_must_not_be_empty,
+        if (TextUtils.isEmpty(editTextRecipients.getText().toString())) {
+            showInfoSnackbar(editTextRecipients, getString(R.string.text_must_not_be_empty,
                     getString(R.string.prompt_recipient)));
-            recipientEditTextView.requestFocus();
+            editTextRecipients.requestFocus();
         } else if (isEmailValid()) {
             if (TextUtils.isEmpty(editTextEmailSubject.getText().toString())) {
-                showInfoSnackbar(editTextEmailSubject, getString(R.string
-                                .text_must_not_be_empty,
+                showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
                         getString(R.string.prompt_subject)));
                 editTextEmailSubject.requestFocus();
             } else if (TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
-                showInfoSnackbar(editTextEmailMessage, getString(R.string
-                                .text_must_not_be_empty,
+                showInfoSnackbar(editTextEmailMessage, getString(R.string.text_must_not_be_empty,
                         getString(R.string.prompt_compose_security_email)));
                 editTextEmailMessage.requestFocus();
             } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
@@ -218,18 +207,6 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
     }
 
     @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        super.handleSuccessLoaderResult(loaderId, result);
-        switch (loaderId) {
-            case R.id.loader_id_update_info_about_pgp_contacts:
-                if (!pgpContacts.isEmpty()) {
-                    updateChips();
-                }
-                break;
-        }
-    }
-
-    @Override
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         String emailMassageHint = null;
         switch (messageEncryptionType) {
@@ -244,17 +221,24 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
         textInputLayoutEmailMessage.setHint(emailMassageHint);
     }
 
+    @Override
+    protected void initChipsView(View view) {
+        super.initChipsView(view);
+        editTextRecipients.setAdapter(preparePgpContactAdapter());
+        editTextRecipients.setOnFocusChangeListener(this);
+    }
+
     /**
      * Remove the current {@link PgpContact} from recipients.
      *
      * @param deleteCandidatePgpContact The {@link PgpContact} which will be removed.
      */
     private void removePgpContactFromRecipientsField(PgpContact deleteCandidatePgpContact) {
-        ChipTokenizer chipTokenizer = recipientEditTextView.getChipTokenizer();
-        for (Chip chip : recipientEditTextView.getAllChips()) {
+        ChipTokenizer chipTokenizer = editTextRecipients.getChipTokenizer();
+        for (Chip chip : editTextRecipients.getAllChips()) {
             if (deleteCandidatePgpContact.getEmail().equalsIgnoreCase(chip.getText().toString())
                     && chipTokenizer != null) {
-                chipTokenizer.deleteChip(chip, recipientEditTextView.getText());
+                chipTokenizer.deleteChip(chip, editTextRecipients.getText());
             }
 
         }
@@ -266,35 +250,12 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
         }
     }
 
-    private void updateChips() {
-        SpannableStringBuilder spannableStringBuilder
-                = new SpannableStringBuilder(recipientEditTextView.getText());
-
-        ChipSpan[] chipSpans = spannableStringBuilder.getSpans(0,
-                recipientEditTextView.length(), ChipSpan.class);
-
-        if (chipSpans.length > 0) {
-            for (PgpContact pgpContact : pgpContacts) {
-                for (ChipSpan chipSpan : chipSpans) {
-                    if (pgpContact.getEmail().equalsIgnoreCase(chipSpan.getText().toString())) {
-                        CustomChipSpanChipCreator.updateChipSpanBackground(getContext(), chipSpan,
-                                pgpContact.getHasPgp());
-                        break;
-                    }
-                }
-            }
-            recipientEditTextView.setText(spannableStringBuilder);
-        }
-    }
-
     /**
      * Init fragment views
      *
      * @param view The root fragment view.
      */
     private void initViews(View view) {
-        initChipsView(view);
-
         editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
         editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
         textInputLayoutEmailMessage = (TextInputLayout) view.findViewById(R.id
@@ -302,20 +263,6 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
-    }
-
-    private void initChipsView(View view) {
-        recipientEditTextView = (NachoTextView) view.findViewById(R.id.editTextRecipient);
-        recipientEditTextView.setAdapter(preparePgpContactAdapter());
-        recipientEditTextView.setNachoValidator(new ChipifyingNachoValidator());
-        recipientEditTextView.setIllegalCharacters(',');
-        recipientEditTextView.setChipTokenizer(
-                new SingleCharacterSpanChipTokenizer(getContext(),
-                        new CustomChipSpanChipCreator(getContext()), ChipSpan.class,
-                        SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
-        recipientEditTextView.setOnFocusChangeListener(this);
-        recipientEditTextView.setChipBackground(
-                ColorStateList.valueOf(UIUtil.getColor(getContext(), R.color.aluminum)));
     }
 
     /**
@@ -347,12 +294,12 @@ public class ComposeFragment extends BaseSendSecurityMessageFragment implements 
      * @return <tt>boolean</tt> An email validation result.
      */
     private boolean isEmailValid() {
-        List<String> emails = recipientEditTextView.getChipAndTokenValues();
+        List<String> emails = editTextRecipients.getChipAndTokenValues();
         for (String email : emails) {
             if (!js.str_is_email_valid(email)) {
-                showInfoSnackbar(recipientEditTextView, getString(R.string
+                showInfoSnackbar(editTextRecipients, getString(R.string
                         .error_some_email_is_not_valid, email));
-                recipientEditTextView.requestFocus();
+                editTextRecipients.requestFocus();
                 return false;
             }
         }

@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
+import android.text.SpannableStringBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,8 +30,13 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
+import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
+import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
+import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.hootsuite.nachos.NachoTextView;
+import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,6 +62,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     protected boolean isUpdatedInfoAboutContactCompleted = true;
     protected boolean isMessageSendingNow;
     protected List<PgpContact> pgpContacts;
+    protected NachoTextView editTextRecipients;
 
     public BaseSendSecurityMessageFragment() {
         pgpContacts = new ArrayList<>();
@@ -117,6 +124,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        initChipsView(view);
     }
 
     @Override
@@ -256,6 +269,10 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                             R.string.info_about_some_contacts_not_received,
                             Toast.LENGTH_SHORT).show();
                 }
+
+                if (!pgpContacts.isEmpty()) {
+                    updateChips();
+                }
                 break;
 
             default:
@@ -334,6 +351,41 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     /**
+     * This method does update chips in the recipients field.
+     */
+    protected void updateChips() {
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder
+                (editTextRecipients.getText());
+
+        PGPContactChipSpan[] pgpContactChipSpans = spannableStringBuilder.getSpans(0,
+                editTextRecipients.length(), PGPContactChipSpan.class);
+
+        if (pgpContactChipSpans.length > 0) {
+            for (PgpContact pgpContact : pgpContacts) {
+                for (PGPContactChipSpan pgpContactChipSpan : pgpContactChipSpans) {
+                    if (pgpContact.getEmail().equalsIgnoreCase(pgpContactChipSpan.getText()
+                            .toString())) {
+                        pgpContactChipSpan.setHasPgp(pgpContact.getHasPgp());
+                        break;
+                    }
+                }
+            }
+            editTextRecipients.invalidateChips();
+        }
+    }
+
+    protected void initChipsView(View view) {
+        editTextRecipients = (NachoTextView) view.findViewById(R.id.editTextRecipient);
+        editTextRecipients.setNachoValidator(new ChipifyingNachoValidator());
+        editTextRecipients.setIllegalCharacters(',');
+        editTextRecipients.setChipTokenizer(
+                new SingleCharacterSpanChipTokenizer(getContext(), new CustomChipSpanChipCreator
+                        (getContext()),
+                        PGPContactChipSpan.class, SingleCharacterSpanChipTokenizer
+                        .CHIP_SEPARATOR_WHITESPACE));
+    }
+
+    /**
      * Show a dialog where we can select different actions.
      *
      * @param pgpContact         The {@link PgpContact} which will be used when we select the
@@ -345,8 +397,8 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 NoPgpFoundDialogFragment.newInstance(pgpContact, isShowRemoveAction);
 
         noPgpFoundDialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
-        noPgpFoundDialogFragment.show(getFragmentManager(),
-                NoPgpFoundDialogFragment.class.getSimpleName());
+        noPgpFoundDialogFragment.show(getFragmentManager(), NoPgpFoundDialogFragment.class
+                .getSimpleName());
     }
 
     /**

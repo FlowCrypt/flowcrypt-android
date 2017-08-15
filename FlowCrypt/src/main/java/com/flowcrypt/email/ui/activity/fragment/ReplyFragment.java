@@ -17,7 +17,6 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -49,14 +48,13 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
      */
     private static final String SUBJECT_PREFIX_RE = "Re: ";
 
-    private TextView textViewReplyRecipient;
     private EditText editTextReplyEmailMessage;
-
-    private IncomingMessageInfo incomingMessageInfo;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
     private TextInputLayout textInputLayoutReplyEmailMessage;
+
     private FoldersManager.FolderType folderType;
+    private IncomingMessageInfo incomingMessageInfo;
 
     public ReplyFragment() {
     }
@@ -83,8 +81,8 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
             this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
                     (ReplyActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
             if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
-                this.folderType = FoldersManager.getFolderTypeForImapFodler(incomingMessageInfo.getFolder()
-                        .getAttributes());
+                this.folderType = FoldersManager.getFolderTypeForImapFodler(incomingMessageInfo
+                        .getFolder().getAttributes());
             }
         }
     }
@@ -108,9 +106,11 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            getLoaderManager().restartLoader(R.id
-                    .loader_id_update_info_about_pgp_contacts, null, this);
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())
+                && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
+                MessageEncryptionType.ENCRYPTED) {
+            getLoaderManager().restartLoader(
+                    R.id.loader_id_update_info_about_pgp_contacts, null, this);
         }
     }
 
@@ -128,8 +128,8 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
         outgoingMessageInfo.setRawReplyMessage(
                 incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
         List<PgpContact> pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
-                (getContext(), FoldersManager.FolderType.SENT == folderType ? incomingMessageInfo.getTo() :
-                        incomingMessageInfo.getFrom());
+                (getContext(), FoldersManager.FolderType.SENT == folderType ?
+                        incomingMessageInfo.getTo() : incomingMessageInfo.getFrom());
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
@@ -203,15 +203,15 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
     private void updateViews() {
         if (incomingMessageInfo != null) {
             if (FoldersManager.FolderType.SENT == folderType) {
-                textViewReplyRecipient.setText(incomingMessageInfo.getTo().get(0));
+                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getTo()));
             } else {
-                textViewReplyRecipient.setText(incomingMessageInfo.getFrom().get(0));
+                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
             }
+            editTextRecipients.chipifyAllUnterminatedTokens();
         }
     }
 
     private void initViews(View view) {
-        this.textViewReplyRecipient = (TextView) view.findViewById(R.id.textViewReplyRecipient);
         this.editTextReplyEmailMessage =
                 (EditText) view.findViewById(R.id.editTextReplyEmailMessage);
         this.textInputLayoutReplyEmailMessage =
@@ -219,5 +219,14 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
         this.layoutContent = view.findViewById(R.id.layoutForm);
         this.progressBarCheckContactsDetails =
                 view.findViewById(R.id.progressBarCheckContactsDetails);
+    }
+
+    private String prepareRecipients(List<String> recipients) {
+        String result = "";
+        for (String s : recipients) {
+            result += s + " ";
+        }
+
+        return result;
     }
 }
