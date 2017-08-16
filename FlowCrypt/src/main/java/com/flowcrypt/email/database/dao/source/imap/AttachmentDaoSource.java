@@ -37,6 +37,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
     public static final String COL_ENCODED_SIZE_IN_BYTES = "encodedSize";
     public static final String COL_TYPE = "type";
     public static final String COL_ATTACHMENT_ID = "attachment_id";
+    public static final String COL_FILE_URI = "file_uri";
 
     public static final String ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ATTACHMENT + " (" +
@@ -47,7 +48,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
             COL_NAME + " TEXT NOT NULL, " +
             COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
             COL_TYPE + " VARCHAR(100) NOT NULL, " +
-            COL_ATTACHMENT_ID + " TEXT NOT NULL " + ");";
+            COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
+            COL_FILE_URI + " TEXT " + ");";
 
     public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
