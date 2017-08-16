@@ -392,10 +392,14 @@ public class EmailSyncService extends Service implements SyncListener {
                     if (attachmentInfoLists.isEmpty()) {
                         attachmentInfoList.addAll(attachmentInfoLists);
                     }
-                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                    attachmentInfoList.add(
-                            new AttachmentInfo(bodyPart.getFileName(), bodyPart.getSize(),
-                                    new ContentType(bodyPart.getContentType()).getPrimaryType()));
+                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())
+                        && bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID).length > 0) {
+                    AttachmentInfo attachmentInfo = new AttachmentInfo();
+                    attachmentInfo.setName(bodyPart.getFileName());
+                    attachmentInfo.setEncodedSize(bodyPart.getSize());
+                    attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
+                    attachmentInfo.setId(bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)[0]);
+                    attachmentInfoList.add(attachmentInfo);
                 }
             }
         }
