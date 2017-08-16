@@ -81,16 +81,6 @@ public class ReplyActivity extends BaseSendingMessageActivity {
     }
 
     @Override
-    protected String getSecurityTitle() {
-        return getString(R.string.security_reply);
-    }
-
-    @Override
-    protected String getStandardTitle() {
-        return getString(R.string.reply);
-    }
-
-    @Override
     protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
         ReplyFragment replyFragment = (ReplyFragment)
                 getSupportFragmentManager().findFragmentById(R.id.replyFragment);

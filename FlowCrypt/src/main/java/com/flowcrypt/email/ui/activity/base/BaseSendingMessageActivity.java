@@ -56,10 +56,6 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
 
     protected abstract boolean isCanFinishActivity();
 
-    protected abstract String getSecurityTitle();
-
-    protected abstract String getStandardTitle();
-
     protected abstract void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e);
 
     protected abstract void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
@@ -185,17 +181,11 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
         switch (messageEncryptionType) {
             case ENCRYPTED:
                 getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary));
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setTitle(getSecurityTitle());
-                }
                 getAppBarLayout().removeView(nonEncryptedHintView);
                 break;
 
             case STANDARD:
                 getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.red));
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setTitle(getStandardTitle());
-                }
                 getAppBarLayout().addView(nonEncryptedHintView);
                 break;
         }
