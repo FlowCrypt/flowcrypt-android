@@ -147,7 +147,6 @@
     <string name="template_remove_recipient">Remove %1$s</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
     <string name="update">Update</string>
-    <string name="security_reply">Secure Reply</string>
     <string name="reply">Reply</string>
     <string name="import_public_key">Import Public Key</string>
     <string name="private_">Private</string>

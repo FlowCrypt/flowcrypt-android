@@ -80,14 +80,4 @@ public class ComposeActivity extends BaseSendingMessageActivity {
         }
     }
 
-    @Override
-    protected String getSecurityTitle() {
-        return getString(R.string.compose);
-    }
-
-    @Override
-    protected String getStandardTitle() {
-        return getString(R.string.compose);
-    }
-
 }

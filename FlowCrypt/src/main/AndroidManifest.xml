@@ -50,7 +50,7 @@
 
         <activity
             android:name=".ui.activity.ReplyActivity"
-            android:label="@string/security_reply"
+            android:label="@string/reply"
             android:screenOrientation="portrait" />
 
         <activity
