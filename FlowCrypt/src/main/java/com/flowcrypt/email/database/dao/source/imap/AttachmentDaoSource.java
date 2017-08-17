@@ -162,7 +162,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
         attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
         attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
         attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
-        attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
+        attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
         return attachmentInfo;
     }
 
