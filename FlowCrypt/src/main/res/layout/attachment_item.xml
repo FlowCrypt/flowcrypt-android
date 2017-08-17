@@ -16,6 +16,7 @@
     android:background="@color/aluminum">
 
     <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutAttachment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"

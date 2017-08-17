@@ -126,6 +126,10 @@
         <service
             android:name=".service.CheckClipboardToFindPrivateKeyService"
             android:exported="false" />
+
+        <service
+            android:name=".service.attachment.AttachmentDownloadManagerService"
+            android:exported="false" />
     </application>
 
 </manifest>

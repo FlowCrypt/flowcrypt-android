@@ -6,8 +6,12 @@
 
 package com.flowcrypt.email.api.email.model;
 
+import android.accounts.Account;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
+
+import com.flowcrypt.email.database.dao.source.AccountDao;
 
 /**
  * Simple POJO which defines an information about email attachments.
@@ -135,5 +139,10 @@ public class AttachmentInfo implements Parcelable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Nullable
+    public Account getGoogleAccount() {
+        return this.email == null ? null : new Account(this.email, AccountDao.ACCOUNT_TYPE_GOOGLE);
     }
 }

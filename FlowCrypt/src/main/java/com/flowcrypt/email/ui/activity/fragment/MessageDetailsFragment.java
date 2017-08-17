@@ -43,6 +43,7 @@ import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.ReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
@@ -423,7 +424,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             generalMessageDetails.getLabel(), generalMessageDetails.getUid());
             LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
-            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+            for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
                 View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
 
                 TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
@@ -431,6 +432,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
                 TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
+
+                rootView.findViewById(R.id.layoutAttachment).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+                                (getContext(), attachmentInfo));
+                    }
+                });
 
                 layoutMessageParts.addView(rootView);
             }
