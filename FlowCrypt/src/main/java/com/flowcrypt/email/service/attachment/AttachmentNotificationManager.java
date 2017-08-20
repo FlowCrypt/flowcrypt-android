@@ -92,12 +92,15 @@ public class AttachmentNotificationManager {
      * @param uri            The {@link Uri} of the downloaded attachment.
      */
     public void downloadComplete(Context context, int startId, AttachmentInfo attachmentInfo, Uri uri) {
-        Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, uri);
+        //// TODO-denbond7: 18.08.2017 Temporary disable open downloaded file. See https://developer.android
+        // .com/training/secure-file-sharing/index.html to resolve it.
+
+        /*Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, uri);
         intentOpenFile.setAction(Intent.ACTION_VIEW);
         intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        PendingIntent pendingIntentOpenFile = PendingIntent.getActivity(context, 0, intentOpenFile, 0);
+        PendingIntent pendingIntentOpenFile = PendingIntent.getActivity(context, 0, intentOpenFile, 0);*/
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setProgress(0, 0, false)
@@ -107,7 +110,7 @@ public class AttachmentNotificationManager {
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)
                 .setContentTitle(attachmentInfo.getName())
                 .setContentText(context.getString(R.string.download_complete))
-                .setContentIntent(pendingIntentOpenFile)
+                //.setContentIntent(pendingIntentOpenFile)
                 .setSubText(attachmentInfo.getEmail());
         notificationManager.notify(startId, mBuilder.build());
     }
