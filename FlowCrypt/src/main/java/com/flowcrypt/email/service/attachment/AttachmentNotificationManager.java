@@ -28,7 +28,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  */
 
 public class AttachmentNotificationManager {
-    private static final int REQUEST_CODE_CANCEL_LOADING = 0;
     private static final int REQUEST_CODE_RETRY = 1;
     private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
     private NotificationManager notificationManager;
@@ -46,10 +45,12 @@ public class AttachmentNotificationManager {
      */
     public void attachmentAddedToLoadQueue(Context context, int startId, AttachmentInfo attachmentInfo) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+                .setWhen(startId)
+                .setShowWhen(false)
                 .setProgress(0, 0, true)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .addAction(generateCancelDownloadNotificationAction(context, startId))
+                .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(attachmentInfo.getName())
@@ -72,9 +73,11 @@ public class AttachmentNotificationManager {
                                       int progress, long timeLeftInMillisecond) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, false)
+                .setWhen(startId)
+                .setShowWhen(false)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .addAction(generateCancelDownloadNotificationAction(context, startId))
+                .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(attachmentInfo.getName())
@@ -106,6 +109,8 @@ public class AttachmentNotificationManager {
                 .setProgress(0, 0, false)
                 .setAutoCancel(true)
                 .setOngoing(false)
+                .setWhen(startId)
+                .setShowWhen(false)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)
                 .setContentTitle(attachmentInfo.getName())
@@ -129,7 +134,7 @@ public class AttachmentNotificationManager {
                 .setProgress(0, 0, false)
                 .setAutoCancel(true)
                 .setOngoing(false)
-                .addAction(generateCancelDownloadNotificationAction(context, startId))
+                .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
                 .addAction(generateRetryDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)// TODO-denbond7: 18.08.2017 Need to show
@@ -157,11 +162,14 @@ public class AttachmentNotificationManager {
      * @return The created {@link NotificationCompat.Action}.
      */
     @NonNull
-    private NotificationCompat.Action generateCancelDownloadNotificationAction(Context context, int startId) {
-        //// TODO: 18.08.2017 Need to setup this function
-        PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, REQUEST_CODE_CANCEL_LOADING,
-                new Intent(), 0);
+    private NotificationCompat.Action generateCancelDownloadNotificationAction(Context context, int startId,
+                                                                               AttachmentInfo attachmentInfo) {
+        Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
+        intent.setAction(AttachmentDownloadManagerService.ACTION_CANCEL_DOWNLOAD_ATTACHMENT);
+        intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_START_ID, startId);
+        intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attachmentInfo);
 
+        PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, startId, intent, 0);
         return new NotificationCompat.Action.Builder(0, context.getString(R.string
                 .cancel), cancelDownloadPendingIntent).build();
     }

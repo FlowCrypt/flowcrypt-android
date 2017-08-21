@@ -158,4 +158,5 @@
     <string name="cancel">Cancel</string>
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete.</string>
+    <string name="template_attachment_already_loading">Attachment \"%1$s\" already loading </string>
 </resources>

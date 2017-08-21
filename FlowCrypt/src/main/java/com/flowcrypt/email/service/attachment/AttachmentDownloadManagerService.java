@@ -19,10 +19,13 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -43,6 +46,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.mail.BodyPart;
 import javax.mail.Folder;
@@ -69,12 +73,21 @@ import javax.mail.Part;
  */
 
 public class AttachmentDownloadManagerService extends Service {
+    public static final String ACTION_CANCEL_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
+            ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT";
+    public static final String ACTION_START_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
+            ".ACTION_START_DOWNLOAD_ATTACHMENT";
+
+    public static final String EXTRA_KEY_START_ID = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_START_ID", AttachmentDownloadManagerService.class);
     public static final String EXTRA_KEY_ATTACHMENT_INFO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ATTACHMENT_INFO", AttachmentDownloadManagerService.class);
+
     private static final String TAG = AttachmentDownloadManagerService.class.getSimpleName();
 
     private volatile Looper serviceWorkerLooper;
     private volatile AttachmentDownloadManagerService.ServiceWorkerHandler serviceWorkerHandler;
+    private volatile int callCounter;
 
     private Messenger replyMessenger;
     private AttachmentNotificationManager attachmentNotificationManager;
@@ -85,6 +98,7 @@ public class AttachmentDownloadManagerService extends Service {
 
     public static Intent newAttachmentDownloadIntent(Context context, AttachmentInfo attachmentInfo) {
         Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
+        intent.setAction(ACTION_START_DOWNLOAD_ATTACHMENT);
         intent.putExtra(EXTRA_KEY_ATTACHMENT_INFO, attachmentInfo);
         return intent;
     }
@@ -105,11 +119,25 @@ public class AttachmentDownloadManagerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
+        Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
+        if (intent != null && !TextUtils.isEmpty(intent.getAction())) {
             AttachmentInfo attachmentInfo = intent.getParcelableExtra(EXTRA_KEY_ATTACHMENT_INFO);
-            if (attachmentInfo != null) {
-                addDownloadTaskToQueue(getApplicationContext(), startId, attachmentInfo);
+            switch (intent.getAction()) {
+                case ACTION_CANCEL_DOWNLOAD_ATTACHMENT:
+                    int startIdOfCanceledAttachment = intent.getIntExtra(EXTRA_KEY_START_ID, -1);
+                    cancelDownloadAttachment(startIdOfCanceledAttachment, attachmentInfo);
+                    break;
+
+                case ACTION_START_DOWNLOAD_ATTACHMENT:
+                    if (attachmentInfo != null) {
+                        addDownloadTaskToQueue(getApplicationContext(), startId, attachmentInfo);
+                    }
+                    break;
             }
+        }
+
+        if (callCounter == 0) {
+            stopSelf();
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -119,7 +147,7 @@ public class AttachmentDownloadManagerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        serviceWorkerLooper.quit();
+        releaseResources();
     }
 
     @Nullable
@@ -128,7 +156,45 @@ public class AttachmentDownloadManagerService extends Service {
         return null;
     }
 
+    /**
+     * Try to stop current service if all started works done.
+     *
+     * @return true if service stopped, otherwise false.
+     */
+    private boolean tryToStopService() {
+        boolean isServiceStopped = false;
+
+        if (callCounter != 0) {
+            callCounter--;
+        }
+
+        if (callCounter == 0) {
+            stopSelf();
+            isServiceStopped = true;
+        }
+
+        Log.d(TAG, "tryToStopService| callCounter = " + callCounter + "| isServiceStopped = " + isServiceStopped);
+        return isServiceStopped;
+    }
+
+    private void releaseResources() {
+        Message message = serviceWorkerHandler.obtainMessage();
+        message.what = AttachmentDownloadManagerService.ServiceWorkerHandler.MESSAGE_RELEASE_RESOURCES;
+        serviceWorkerHandler.sendMessage(message);
+    }
+
+    private void cancelDownloadAttachment(int startIdOfCanceledAttachment, AttachmentInfo attachmentInfo) {
+        tryToStopService();
+        attachmentNotificationManager.loadCanceledByUser(startIdOfCanceledAttachment);
+        Message message = serviceWorkerHandler.obtainMessage();
+        message.what = AttachmentDownloadManagerService.ServiceWorkerHandler.MESSAGE_CANCEL_DOWNLOAD;
+        message.obj = attachmentInfo;
+        message.arg1 = startIdOfCanceledAttachment;
+        serviceWorkerHandler.sendMessage(message);
+    }
+
     private void addDownloadTaskToQueue(Context context, int startId, AttachmentInfo attachmentInfo) {
+        callCounter++;
         Message message = serviceWorkerHandler.obtainMessage();
         message.what = AttachmentDownloadManagerService.ServiceWorkerHandler.MESSAGE_START_DOWNLOAD;
         message.arg1 = startId;
@@ -140,8 +206,6 @@ public class AttachmentDownloadManagerService extends Service {
         void onAttachmentSuccessDownloaded(int startId, AttachmentInfo attachmentInfo, Uri uri);
 
         void onAttachmentDownloadFiled(int startId, AttachmentInfo attachmentInfo, Exception e);
-
-        void onAttachmentDownloadCanceled(int startId, AttachmentInfo attachmentInfo);
 
         void onProgress(int startId, AttachmentInfo attachmentInfo, int progressInPercentage, long timeLeft);
     }
@@ -157,6 +221,7 @@ public class AttachmentDownloadManagerService extends Service {
         static final int MESSAGE_DOWNLOAD_STARTED = 4;
         static final int MESSAGE_ATTACHMENT_ADDED_TO_QUEUE = 5;
         static final int MESSAGE_PROGRESS = 6;
+        static final int MESSAGE_RELEASE_RESOURCES = 8;
 
         private final WeakReference<AttachmentDownloadManagerService>
                 checkClipboardToFindPrivateKeyServiceWeakReference;
@@ -179,20 +244,21 @@ public class AttachmentDownloadManagerService extends Service {
                 Uri uri = downloadAttachmentTaskResult.getUri();
                 switch (message.what) {
                     case MESSAGE_EXCEPTION_HAPPENED:
-                        attachmentDownloadManagerService.stopSelf(downloadAttachmentTaskResult.getStartId());
+                        attachmentDownloadManagerService.tryToStopService();
                         attachmentDownloadManagerService.attachmentNotificationManager.errorHappened
                                 (attachmentDownloadManagerService, startId, attachmentInfo,
                                         downloadAttachmentTaskResult.getException());
                         break;
 
                     case MESSAGE_DOWNLOAD_TASK_FOR_ATTACHMENT_ALREADY_EXISTS:
-                        attachmentDownloadManagerService.stopSelf(downloadAttachmentTaskResult.getStartId());
-                        Toast.makeText(attachmentDownloadManagerService, "Task for " + attachmentInfo.getName() + " " +
-                                "already " + "exists", Toast.LENGTH_SHORT).show();
+                        attachmentDownloadManagerService.tryToStopService();
+                        Toast.makeText(attachmentDownloadManagerService,
+                                attachmentDownloadManagerService.getString(R.string.template_attachment_already_loading,
+                                        attachmentInfo.getName()), Toast.LENGTH_SHORT).show();
                         break;
 
                     case MESSAGE_ATTACHMENT_DOWNLOAD:
-                        attachmentDownloadManagerService.stopSelf(downloadAttachmentTaskResult.getStartId());
+                        attachmentDownloadManagerService.tryToStopService();
                         attachmentDownloadManagerService.attachmentNotificationManager.downloadComplete
                                 (attachmentDownloadManagerService, startId, attachmentInfo, uri);
                         break;
@@ -208,6 +274,10 @@ public class AttachmentDownloadManagerService extends Service {
                                         downloadAttachmentTaskResult.getProgressInPercentage(),
                                         downloadAttachmentTaskResult.getTimeLeft());
                         break;
+
+                    case MESSAGE_RELEASE_RESOURCES:
+                        attachmentDownloadManagerService.serviceWorkerLooper.quit();
+                        break;
                 }
             }
         }
@@ -219,7 +289,8 @@ public class AttachmentDownloadManagerService extends Service {
      */
     private static class ServiceWorkerHandler extends Handler implements OnDownloadAttachmentListener {
         static final int MESSAGE_START_DOWNLOAD = 1;
-
+        static final int MESSAGE_CANCEL_DOWNLOAD = 2;
+        static final int MESSAGE_RELEASE_RESOURCES = 3;
         /**
          * Maximum number of simultaneous downloads
          */
@@ -227,25 +298,27 @@ public class AttachmentDownloadManagerService extends Service {
         private final Messenger replyMessenger;
         private ExecutorService executorService;
         private HashMap<String, AttachmentInfo> stringAttachmentInfoHashMap;
+        private SparseArray<Future<?>> futureSparseArray;
 
         ServiceWorkerHandler(Looper looper, Messenger replyMessenger) {
             super(looper);
             this.replyMessenger = replyMessenger;
             this.executorService = Executors.newFixedThreadPool(QUEUE_SIZE);
             this.stringAttachmentInfoHashMap = new HashMap<>();
+            this.futureSparseArray = new SparseArray<>();
         }
 
         @Override
         public void handleMessage(Message msg) {
-            DownloadAttachmentTaskRequest downloadAttachmentTaskRequest
-                    = (DownloadAttachmentTaskRequest) msg.obj;
-
-            AttachmentInfo attachmentInfo = downloadAttachmentTaskRequest.getAttachmentInfo();
-            Context context = downloadAttachmentTaskRequest.getContext();
-            int startId = downloadAttachmentTaskRequest.getStartId();
-
             switch (msg.what) {
                 case MESSAGE_START_DOWNLOAD:
+                    DownloadAttachmentTaskRequest downloadAttachmentTaskRequest
+                            = (DownloadAttachmentTaskRequest) msg.obj;
+
+                    AttachmentInfo attachmentInfo = downloadAttachmentTaskRequest.getAttachmentInfo();
+                    Context context = downloadAttachmentTaskRequest.getContext();
+                    int startId = downloadAttachmentTaskRequest.getStartId();
+
                     try {
                         if (stringAttachmentInfoHashMap.get(attachmentInfo.getId()) == null) {
                             stringAttachmentInfoHashMap.put(attachmentInfo.getId(), attachmentInfo);
@@ -255,7 +328,7 @@ public class AttachmentDownloadManagerService extends Service {
                             AttachmentDownloadRunnable attachmentDownloadRunnable = new AttachmentDownloadRunnable
                                     (token, startId, attachmentInfo);
                             attachmentDownloadRunnable.setOnDownloadAttachmentListener(this);
-                            executorService.submit(attachmentDownloadRunnable);
+                            futureSparseArray.put(startId, executorService.submit(attachmentDownloadRunnable));
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_ADDED_TO_QUEUE,
                                     new DownloadAttachmentTaskResult.Builder().setStartId(startId).setAttachmentInfo
                                             (attachmentInfo).setException(null).setUri(null)
@@ -274,6 +347,32 @@ public class AttachmentDownloadManagerService extends Service {
                         }
                     }
                     break;
+
+                case MESSAGE_CANCEL_DOWNLOAD:
+                    Future future = futureSparseArray.get(msg.arg1);
+                    if (future != null) {
+                        future.cancel(true);
+                    }
+
+                    AttachmentInfo canceledAttachmentInfo = (AttachmentInfo) msg.obj;
+                    stringAttachmentInfoHashMap.remove(canceledAttachmentInfo.getId());
+                    futureSparseArray.remove(msg.arg1);
+                    break;
+
+                case MESSAGE_RELEASE_RESOURCES:
+                    if (executorService != null) {
+                        executorService.shutdown();
+                    }
+
+                    try {
+                        DownloadAttachmentTaskResult downloadAttachmentTaskResult
+                                = new DownloadAttachmentTaskResult.Builder().build();
+                        replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_RELEASE_RESOURCES,
+                                downloadAttachmentTaskResult));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
             }
         }
 
@@ -288,11 +387,6 @@ public class AttachmentDownloadManagerService extends Service {
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
-        }
-
-        @Override
-        public void onAttachmentDownloadCanceled(int startId, AttachmentInfo attachmentInfo) {
-            stringAttachmentInfoHashMap.remove(attachmentInfo.getId());
         }
 
         @Override
@@ -335,7 +429,7 @@ public class AttachmentDownloadManagerService extends Service {
     }
 
     private static class AttachmentDownloadRunnable implements Runnable {
-        public static final int MIN_UPDATE_PROGRESS_INTERVAL = 250;
+        private static final int MIN_UPDATE_PROGRESS_INTERVAL = 500;
         private static final int DEFAULT_BUFFER_SIZE = 1024 * 16;
         private AttachmentInfo attachmentInfo;
         private String token;
@@ -351,7 +445,8 @@ public class AttachmentDownloadManagerService extends Service {
         @Override
         public void run() {
             if (BuildConfig.DEBUG) {
-                Thread.currentThread().setName(attachmentInfo.getName() + "|" + startId);
+                Thread.currentThread().setName(AttachmentDownloadRunnable.class.getSimpleName() + "|" + startId
+                        + "|" + attachmentInfo.getName());
             }
 
             try {
@@ -378,26 +473,36 @@ public class AttachmentDownloadManagerService extends Service {
                         long lastUpdateTime = System.currentTimeMillis();
                         updateProgress(currentPercentage);
                         while (IOUtils.EOF != (n = input.read(buffer))) {
-                            output.write(buffer, 0, n);
-                            count += n;
-                            currentPercentage = (int) ((count / size) * 100f);
-                            if (currentPercentage - lastPercentage >= 1
-                                    && System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL) {
-                                lastPercentage = currentPercentage;
-                                lastUpdateTime = System.currentTimeMillis();
-                                updateProgress(currentPercentage);
+                            if (!Thread.currentThread().isInterrupted()) {
+                                output.write(buffer, 0, n);
+                                count += n;
+                                currentPercentage = (int) ((count / size) * 100f);
+                                if (currentPercentage - lastPercentage >= 1
+                                        && System.currentTimeMillis() - lastUpdateTime >=
+                                        MIN_UPDATE_PROGRESS_INTERVAL) {
+                                    lastPercentage = currentPercentage;
+                                    lastUpdateTime = System.currentTimeMillis();
+                                    updateProgress(currentPercentage);
+                                }
+                            } else {
+                                break;
                             }
                         }
-                        updateProgress(100);
+
+                        if (!Thread.currentThread().isInterrupted()) {
+                            updateProgress(100);
+                        }
 
                         output.close();
                     } finally {
                         IOUtils.closeQuietly(output);
                     }
 
-                    if (onDownloadAttachmentListener != null) {
-                        onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
-                                Uri.fromFile(attachmentFile));
+                    if (!Thread.currentThread().isInterrupted()) {
+                        if (onDownloadAttachmentListener != null) {
+                            onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
+                                    Uri.fromFile(attachmentFile));
+                        }
                     }
                 } else throw new IOException("The attachment does not exists on an IMAP server.");
 
