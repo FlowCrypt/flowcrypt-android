@@ -127,8 +127,8 @@ public class AttachmentNotificationManager {
     public void errorHappened(Context context, int startId, AttachmentInfo attachmentInfo, Exception e) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setProgress(0, 0, false)
-                .setAutoCancel(false)
-                .setOngoing(true)
+                .setAutoCancel(true)
+                .setOngoing(false)
                 .addAction(generateCancelDownloadNotificationAction(context, startId))
                 .addAction(generateRetryDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -182,6 +182,6 @@ public class AttachmentNotificationManager {
                 new Intent(), 0);
 
         return new NotificationCompat.Action.Builder(0, context.getString(R.string
-                .cancel), cancelDownloadPendingIntent).build();
+                .retry), cancelDownloadPendingIntent).build();
     }
 }

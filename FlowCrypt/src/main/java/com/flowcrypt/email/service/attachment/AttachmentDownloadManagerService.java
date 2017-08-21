@@ -335,6 +335,7 @@ public class AttachmentDownloadManagerService extends Service {
     }
 
     private static class AttachmentDownloadRunnable implements Runnable {
+        public static final int MIN_UPDATE_PROGRESS_INTERVAL = 250;
         private static final int DEFAULT_BUFFER_SIZE = 1024 * 16;
         private AttachmentInfo attachmentInfo;
         private String token;
@@ -374,12 +375,16 @@ public class AttachmentDownloadManagerService extends Service {
                         int n;
                         int lastPercentage = 0;
                         int currentPercentage = 0;
+                        long lastUpdateTime = System.currentTimeMillis();
+                        updateProgress(currentPercentage);
                         while (IOUtils.EOF != (n = input.read(buffer))) {
                             output.write(buffer, 0, n);
                             count += n;
                             currentPercentage = (int) ((count / size) * 100f);
-                            if (currentPercentage - lastPercentage >= 1) {
+                            if (currentPercentage - lastPercentage >= 1
+                                    && System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL) {
                                 lastPercentage = currentPercentage;
+                                lastUpdateTime = System.currentTimeMillis();
                                 updateProgress(currentPercentage);
                             }
                         }
@@ -435,7 +440,7 @@ public class AttachmentDownloadManagerService extends Service {
          * @throws IOException
          */
         private Part getAttachmentPart(Part part, String attachmentId) throws MessagingException, IOException {
-            if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
                 Multipart multiPart = (Multipart) part.getContent();
                 int numberOfParts = multiPart.getCount();
                 for (int partCount = 0; partCount < numberOfParts; partCount++) {
