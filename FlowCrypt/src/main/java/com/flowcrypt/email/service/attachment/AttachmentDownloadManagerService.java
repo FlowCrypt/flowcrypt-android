@@ -496,6 +496,13 @@ public class AttachmentDownloadManagerService extends Service {
                         output.close();
                     } finally {
                         IOUtils.closeQuietly(output);
+                        if (Thread.currentThread().isInterrupted()) {
+                            if (!attachmentFile.delete()) {
+                                Log.d(TAG, "Cannot delete file: " + attachmentFile);
+                            } else {
+                                Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+                            }
+                        }
                     }
 
                     if (!Thread.currentThread().isInterrupted()) {
