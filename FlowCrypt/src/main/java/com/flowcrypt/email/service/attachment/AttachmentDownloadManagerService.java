@@ -19,6 +19,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
@@ -325,11 +326,8 @@ public class AttachmentDownloadManagerService extends Service {
                     try {
                         if (stringAttachmentInfoHashMap.get(attachmentInfo.getId()) == null) {
                             stringAttachmentInfoHashMap.put(attachmentInfo.getId(), attachmentInfo);
-                            String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
-                                    JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-
                             AttachmentDownloadRunnable attachmentDownloadRunnable = new AttachmentDownloadRunnable
-                                    (token, startId, attachmentInfo);
+                                    (context.getApplicationContext(), startId, attachmentInfo);
                             attachmentDownloadRunnable.setOnDownloadAttachmentListener(this);
                             futureSparseArray.put(startId, executorService.submit(attachmentDownloadRunnable));
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_ADDED_TO_QUEUE,
@@ -435,12 +433,12 @@ public class AttachmentDownloadManagerService extends Service {
         private static final int MIN_UPDATE_PROGRESS_INTERVAL = 500;
         private static final int DEFAULT_BUFFER_SIZE = 1024 * 16;
         private AttachmentInfo attachmentInfo;
-        private String token;
+        private Context context;
         private int startId;
         private OnDownloadAttachmentListener onDownloadAttachmentListener;
 
-        public AttachmentDownloadRunnable(String token, int startId, AttachmentInfo attachmentInfo) {
-            this.token = token;
+        public AttachmentDownloadRunnable(Context context, int startId, AttachmentInfo attachmentInfo) {
+            this.context = context;
             this.startId = startId;
             this.attachmentInfo = attachmentInfo;
         }
@@ -455,6 +453,9 @@ public class AttachmentDownloadManagerService extends Service {
             File attachmentFile = prepareAttachmentFile();
 
             try {
+                String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
+                        JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+
                 GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token, attachmentInfo
                         .getEmail());
                 GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(GmailConstants.FOLDER_NAME_INBOX);
@@ -508,7 +509,8 @@ public class AttachmentDownloadManagerService extends Service {
                     if (!Thread.currentThread().isInterrupted()) {
                         if (onDownloadAttachmentListener != null) {
                             onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
-                                    Uri.fromFile(attachmentFile));
+                                    FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider",
+                                            attachmentFile));
                         }
                     }
                 } else throw new IOException("The attachment does not exists on an IMAP server.");
