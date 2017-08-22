@@ -395,7 +395,7 @@ public class AttachmentDownloadManagerService extends Service {
             try {
                 DownloadAttachmentTaskResult downloadAttachmentTaskResult = new DownloadAttachmentTaskResult.Builder()
                         .setStartId(startId).setAttachmentInfo(attachmentInfo)
-                        .setProgressInPercentage(progressInPercentage).build();
+                        .setProgressInPercentage(progressInPercentage).setTimeLeft(timeLeft).build();
                 replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_PROGRESS,
                         downloadAttachmentTaskResult));
             } catch (RemoteException e1) {
@@ -472,22 +472,25 @@ public class AttachmentDownloadManagerService extends Service {
                         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
                         double count = 0;
                         double size = attachmentInfo.getEncodedSize();
-                        int n;
+                        int numberOfReadBytes;
                         int lastPercentage = 0;
                         int currentPercentage = 0;
-                        long lastUpdateTime = System.currentTimeMillis();
-                        updateProgress(currentPercentage);
-                        while (IOUtils.EOF != (n = input.read(buffer))) {
+                        long startTime, elapsedTime;
+                        long lastUpdateTime = startTime = System.currentTimeMillis();
+                        updateProgress(currentPercentage, 0);
+                        while (IOUtils.EOF != (numberOfReadBytes = input.read(buffer))) {
                             if (!Thread.currentThread().isInterrupted()) {
-                                output.write(buffer, 0, n);
-                                count += n;
+                                output.write(buffer, 0, numberOfReadBytes);
+                                count += numberOfReadBytes;
                                 currentPercentage = (int) ((count / size) * 100f);
                                 if (currentPercentage - lastPercentage >= 1
                                         && System.currentTimeMillis() - lastUpdateTime >=
                                         MIN_UPDATE_PROGRESS_INTERVAL) {
                                     lastPercentage = currentPercentage;
                                     lastUpdateTime = System.currentTimeMillis();
-                                    updateProgress(currentPercentage);
+                                    elapsedTime = lastUpdateTime - startTime;
+                                    long allTimeForDownloading = (long) (elapsedTime * size / count);
+                                    updateProgress(currentPercentage, allTimeForDownloading - elapsedTime);
                                 }
                             } else {
                                 break;
@@ -495,7 +498,7 @@ public class AttachmentDownloadManagerService extends Service {
                         }
 
                         if (!Thread.currentThread().isInterrupted()) {
-                            updateProgress(100);
+                            updateProgress(100, 0);
                         }
 
                         output.close();
@@ -543,9 +546,9 @@ public class AttachmentDownloadManagerService extends Service {
             }
         }
 
-        private void updateProgress(int currentPercentage) {
+        private void updateProgress(int currentPercentage, long timeLeft) {
             if (onDownloadAttachmentListener != null) {
-                onDownloadAttachmentListener.onProgress(startId, attachmentInfo, currentPercentage, 0);
+                onDownloadAttachmentListener.onProgress(startId, attachmentInfo, currentPercentage, timeLeft);
             }
         }
 

@@ -29,6 +29,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  */
 
 public class AttachmentNotificationManager {
+    private static final int MAX_CONTENT_TITLE_LENGTH = 30;
     private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
     private NotificationManager notificationManager;
 
@@ -53,7 +54,7 @@ public class AttachmentNotificationManager {
                 .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(attachmentInfo.getName())
+                .setContentTitle(prepareContentTitle(attachmentInfo))
                 .setContentText(context.getString(R.string.waiting_to_load))
                 .setSubText(attachmentInfo.getEmail());
         notificationManager.notify(startId, mBuilder.build());
@@ -72,7 +73,7 @@ public class AttachmentNotificationManager {
     public void updateLoadingProgress(Context context, int startId, AttachmentInfo attachmentInfo,
                                       int progress, long timeLeftInMillisecond) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
-                .setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, false)
+                .setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0)
                 .setWhen(startId)
                 .setShowWhen(false)
                 .setAutoCancel(false)
@@ -80,7 +81,7 @@ public class AttachmentNotificationManager {
                 .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(attachmentInfo.getName())
+                .setContentTitle(prepareContentTitle(attachmentInfo))
                 .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
                 .setSubText(attachmentInfo.getEmail());
         notificationManager.notify(startId, mBuilder.build());
@@ -110,7 +111,7 @@ public class AttachmentNotificationManager {
                 .setShowWhen(false)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                .setContentTitle(attachmentInfo.getName())
+                .setContentTitle(prepareContentTitle(attachmentInfo))
                 .setContentText(context.getString(R.string.download_complete))
                 .setContentIntent(pendingIntentOpenFile)
                 .setSubText(attachmentInfo.getEmail());
@@ -136,7 +137,7 @@ public class AttachmentNotificationManager {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)// TODO-denbond7: 18.08.2017 Need to show
 /// error icon
-                .setContentTitle(attachmentInfo.getName())
+                .setContentTitle(prepareContentTitle(attachmentInfo))
                 .setContentText(TextUtils.isEmpty(e.getMessage())
                         ? context.getString(R.string.error_occurred_please_try_again) : e.getMessage())
                 .setSubText(attachmentInfo.getEmail());
@@ -150,6 +151,20 @@ public class AttachmentNotificationManager {
      */
     public void loadCanceledByUser(int startId) {
         notificationManager.cancel(startId);
+    }
+
+    /**
+     * Prepare a content title for a notification.
+     *
+     * @param attachmentInfo The {@link AttachmentInfo} object.
+     * @return The prepared title.
+     */
+    private String prepareContentTitle(AttachmentInfo attachmentInfo) {
+        String contentTitle = attachmentInfo.getName();
+        if (!TextUtils.isEmpty(contentTitle) && contentTitle.length() > MAX_CONTENT_TITLE_LENGTH) {
+            contentTitle = contentTitle.substring(0, MAX_CONTENT_TITLE_LENGTH) + "...";
+        }
+        return contentTitle;
     }
 
     /**
