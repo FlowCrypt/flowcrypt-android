@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".FlowCryptApplication"

@@ -6,13 +6,16 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -66,6 +69,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
+    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
@@ -86,6 +90,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private boolean isArchiveActionEnable;
     private boolean isMoveToInboxActionEnable;
     private OnActionListener onActionListener;
+    private AttachmentInfo lastClickedAttachmentInfo;
 
     public MessageDetailsFragment() {
     }
@@ -247,6 +252,25 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             }
                         });
                 break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
+                if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent(
+                            getContext(), lastClickedAttachmentInfo));
+                } else {
+                    Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission,
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -433,11 +457,19 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
 
-                rootView.findViewById(R.id.layoutAttachment).setOnClickListener(new View.OnClickListener() {
+                View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+                imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
-                                (getContext(), attachmentInfo));
+                        lastClickedAttachmentInfo = attachmentInfo;
+                        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        } else {
+                            getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+                                    (getContext(), attachmentInfo));
+                        }
                     }
                 });
 
