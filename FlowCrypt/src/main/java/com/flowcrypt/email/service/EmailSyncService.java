@@ -385,6 +385,7 @@ public class EmailSyncService extends Service implements SyncListener {
         if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
             Multipart multiPart = (Multipart) part.getContent();
             int numberOfParts = multiPart.getCount();
+            String[] headers;
             for (int partCount = 0; partCount < numberOfParts; partCount++) {
                 BodyPart bodyPart = multiPart.getBodyPart(partCount);
                 if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
@@ -393,12 +394,13 @@ public class EmailSyncService extends Service implements SyncListener {
                         attachmentInfoList.addAll(attachmentInfoLists);
                     }
                 } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())
-                        && bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID).length > 0) {
+                        && (headers = bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)) != null
+                        && headers.length > 0) {
                     AttachmentInfo attachmentInfo = new AttachmentInfo();
                     attachmentInfo.setName(bodyPart.getFileName());
                     attachmentInfo.setEncodedSize(bodyPart.getSize());
                     attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
-                    attachmentInfo.setId(bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)[0]);
+                    attachmentInfo.setId(headers[0]);
                     attachmentInfoList.add(attachmentInfo);
                 }
             }
