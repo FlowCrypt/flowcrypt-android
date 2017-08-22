@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 
 import com.flowcrypt.email.R;
@@ -28,7 +29,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  */
 
 public class AttachmentNotificationManager {
-    private static final int REQUEST_CODE_RETRY = 1;
     private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
     private NotificationManager notificationManager;
 
@@ -140,7 +140,8 @@ public class AttachmentNotificationManager {
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)// TODO-denbond7: 18.08.2017 Need to show
 /// error icon
                 .setContentTitle(attachmentInfo.getName())
-                .setContentText(e.getMessage())
+                .setContentText(TextUtils.isEmpty(e.getMessage())
+                        ? context.getString(R.string.error_occurred_please_try_again) : e.getMessage())
                 .setSubText(attachmentInfo.getEmail());
         notificationManager.notify(startId, mBuilder.build());
     }
@@ -185,9 +186,11 @@ public class AttachmentNotificationManager {
     @NonNull
     private NotificationCompat.Action generateRetryDownloadNotificationAction(Context context, int startId,
                                                                               AttachmentInfo attachmentInfo) {
-        //// TODO: 18.08.2017 Need to setup this function
-        PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, REQUEST_CODE_RETRY,
-                new Intent(), 0);
+        Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
+        intent.setAction(AttachmentDownloadManagerService.ACTION_RETRY_DOWNLOAD_ATTACHMENT);
+        intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attachmentInfo);
+
+        PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, startId, intent, 0);
 
         return new NotificationCompat.Action.Builder(0, context.getString(R.string
                 .retry), cancelDownloadPendingIntent).build();

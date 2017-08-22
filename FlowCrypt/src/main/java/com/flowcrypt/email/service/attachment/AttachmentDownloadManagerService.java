@@ -73,10 +73,12 @@ import javax.mail.Part;
  */
 
 public class AttachmentDownloadManagerService extends Service {
-    public static final String ACTION_CANCEL_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
-            ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT";
     public static final String ACTION_START_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
             ".ACTION_START_DOWNLOAD_ATTACHMENT";
+    public static final String ACTION_CANCEL_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
+            ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT";
+    public static final String ACTION_RETRY_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + "" +
+            ".ACTION_RETRY_DOWNLOAD_ATTACHMENT";
 
     public static final String EXTRA_KEY_START_ID = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_START_ID", AttachmentDownloadManagerService.class);
@@ -128,6 +130,7 @@ public class AttachmentDownloadManagerService extends Service {
                     cancelDownloadAttachment(startIdOfCanceledAttachment, attachmentInfo);
                     break;
 
+                case ACTION_RETRY_DOWNLOAD_ATTACHMENT:
                 case ACTION_START_DOWNLOAD_ATTACHMENT:
                     if (attachmentInfo != null) {
                         addDownloadTaskToQueue(getApplicationContext(), startId, attachmentInfo);
@@ -449,6 +452,8 @@ public class AttachmentDownloadManagerService extends Service {
                         + "|" + attachmentInfo.getName());
             }
 
+            File attachmentFile = prepareAttachmentFile();
+
             try {
                 GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token, attachmentInfo
                         .getEmail());
@@ -459,7 +464,6 @@ public class AttachmentDownloadManagerService extends Service {
                 Part attachment = getAttachmentPart(message, attachmentInfo.getId());
 
                 if (attachment != null) {
-                    File attachmentFile = prepareAttachmentFile();
                     InputStream input = attachment.getInputStream();
                     OutputStream output = FileUtils.openOutputStream(attachmentFile);
 
@@ -497,11 +501,7 @@ public class AttachmentDownloadManagerService extends Service {
                     } finally {
                         IOUtils.closeQuietly(output);
                         if (Thread.currentThread().isInterrupted()) {
-                            if (!attachmentFile.delete()) {
-                                Log.d(TAG, "Cannot delete file: " + attachmentFile);
-                            } else {
-                                Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
-                            }
+                            removeNotCompleteDownloadFile(attachmentFile);
                         }
                     }
 
@@ -517,6 +517,7 @@ public class AttachmentDownloadManagerService extends Service {
                 gmailSSLStore.close();
             } catch (Exception e) {
                 e.printStackTrace();
+                removeNotCompleteDownloadFile(attachmentFile);
                 if (onDownloadAttachmentListener != null) {
                     onDownloadAttachmentListener.onAttachmentDownloadFiled(startId, attachmentInfo, e);
                 }
@@ -525,6 +526,19 @@ public class AttachmentDownloadManagerService extends Service {
 
         public void setOnDownloadAttachmentListener(OnDownloadAttachmentListener onDownloadAttachmentListener) {
             this.onDownloadAttachmentListener = onDownloadAttachmentListener;
+        }
+
+        /**
+         * Remove the file which not downloaded fully.
+         *
+         * @param attachmentFile The file which will be removed.
+         */
+        private void removeNotCompleteDownloadFile(File attachmentFile) {
+            if (!attachmentFile.delete()) {
+                Log.d(TAG, "Cannot delete file: " + attachmentFile);
+            } else {
+                Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+            }
         }
 
         private void updateProgress(int currentPercentage) {
