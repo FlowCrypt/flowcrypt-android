@@ -41,15 +41,19 @@
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_bottom_line_gray">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
                         android:completionThreshold="2"
                         android:enabled="false"
+                        android:hint="@string/prompt_recipients"
                         android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:paddingTop="@dimen/default_margin_medium"
                         android:shrinkColumns="0, true" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -68,7 +72,7 @@
                 android:id="@+id/textInputLayoutReplyEmailMessage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:background="@drawable/bg_bottom_line_transparent"
                 app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                 app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
                 app:layout_constraintTop_toBottomOf="@+id/textInputLayoutRecipients">
@@ -77,8 +81,10 @@
                     android:id="@+id/editTextReplyEmailMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
                     android:hint="@string/prompt_compose_security_email"
-                    android:inputType="textCapSentences|textMultiLine|textAutoCorrect">
+                    android:inputType="textCapSentences|textMultiLine|textAutoCorrect"
+                    android:paddingTop="@dimen/default_margin_medium">
 
                     <requestFocus />
                 </android.support.design.widget.TextInputEditText>

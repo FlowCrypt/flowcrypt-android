@@ -9,6 +9,7 @@
 
     <string name="compose">Compose</string>
     <string name="prompt_recipient">Add recipient</string>
+    <string name="prompt_recipients">Recipients</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
     <string name="prompt_compose_standard_email">Compose standard message</string>
