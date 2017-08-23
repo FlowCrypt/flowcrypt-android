@@ -21,6 +21,7 @@ public class GmailConstants {
     public static final String PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth" +
             ".mechanisms";
+    public static final String PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE = "mail.gimaps.fetchsize";
 
     public static final String PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth";
     public static final String PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";

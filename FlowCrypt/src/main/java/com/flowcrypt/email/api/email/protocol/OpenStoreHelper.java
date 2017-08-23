@@ -48,11 +48,9 @@ public class OpenStoreHelper {
      * gimaps.
      */
 
-    public static GmailSSLStore openAndConnectToGimapsStore(Session session,
-                                                            String token, String accountName) throws
+    public static GmailSSLStore openAndConnectToGimapsStore(Session session, String token, String accountName) throws
             MessagingException {
-        GmailSSLStore gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants
-                .PROTOCOL_GIMAPS);
+        GmailSSLStore gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
         gmailSSLStore.connect(JavaEmailConstants.GMAIL_IMAP_SERVER, accountName, token);
         return gmailSSLStore;
     }
@@ -64,6 +62,17 @@ public class OpenStoreHelper {
      */
     public static Session getGmailSession() {
         Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGmail());
+        session.setDebug(BuildConfig.DEBUG);
+        return session;
+    }
+
+    /**
+     * Generate a session for gimaps protocol which will be use for download attachments.
+     *
+     * @return <tt>Session</tt> A new session for gimaps protocol based on properties for gimaps.
+     */
+    public static Session getAttachmentGmailSession() {
+        Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
         session.setDebug(BuildConfig.DEBUG);
         return session;
     }

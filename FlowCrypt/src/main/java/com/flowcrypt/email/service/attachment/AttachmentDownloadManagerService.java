@@ -457,8 +457,8 @@ public class AttachmentDownloadManagerService extends Service {
                 String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
                         JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
 
-                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
-                        attachmentInfo.getEmail());
+                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(
+                        OpenStoreHelper.getAttachmentGmailSession(), token, attachmentInfo.getEmail());
                 GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(new ImapLabelsDaoSource()
                         .getFolderByAlias(context, attachmentInfo.getEmail(),
                                 attachmentInfo.getFolder()).getServerFullFolderName());
@@ -577,6 +577,7 @@ public class AttachmentDownloadManagerService extends Service {
             if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
                 Multipart multiPart = (Multipart) part.getContent();
                 int numberOfParts = multiPart.getCount();
+                String[] headers;
                 for (int partCount = 0; partCount < numberOfParts; partCount++) {
                     BodyPart bodyPart = multiPart.getBodyPart(partCount);
                     if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
@@ -585,7 +586,9 @@ public class AttachmentDownloadManagerService extends Service {
                             return innerPart;
                         }
                     } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())
-                            && attachmentId.equals(bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)[0])) {
+                            && (headers = bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)) != null
+                            && headers.length > 0
+                            && attachmentId.equals(headers[0])) {
                         return bodyPart;
                     }
                 }
@@ -594,7 +597,5 @@ public class AttachmentDownloadManagerService extends Service {
                 return null;
             }
         }
-
-
     }
 }

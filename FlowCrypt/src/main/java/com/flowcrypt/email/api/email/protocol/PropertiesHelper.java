@@ -41,4 +41,16 @@ public class PropertiesHelper {
 
         return properties;
     }
+
+    /**
+     * Generate properties for gimaps protocol which will be used for download attachment.
+     *
+     * @return <tt>Properties</tt> New properties with setup gimaps connection;
+     */
+    public static Properties generatePropertiesForDownloadGmailAttachments() {
+        Properties properties = generatePropertiesForGmail();
+        properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE, 1024 * 256);
+
+        return properties;
+    }
 }
