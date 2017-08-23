@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
@@ -456,9 +457,11 @@ public class AttachmentDownloadManagerService extends Service {
                 String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
                         JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
 
-                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token, attachmentInfo
-                        .getEmail());
-                GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(GmailConstants.FOLDER_NAME_INBOX);
+                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
+                        attachmentInfo.getEmail());
+                GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(new ImapLabelsDaoSource()
+                        .getFolderByAlias(context, attachmentInfo.getEmail(),
+                                attachmentInfo.getFolder()).getServerFullFolderName());
                 gmailFolder.open(Folder.READ_ONLY);
 
                 javax.mail.Message message = gmailFolder.getMessageByUID(attachmentInfo.getUid());

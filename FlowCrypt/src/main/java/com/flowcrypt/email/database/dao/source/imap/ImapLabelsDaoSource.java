@@ -139,6 +139,30 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get a {@link Folder} from the database by an email and an alias.
+     *
+     * @param email       The email of the {@link Folder}.
+     * @param folderAlias The folder alias.
+     * @return {@link Folder} or null if such folder not found.
+     */
+    public Folder getFolderByAlias(Context context, String email, String folderAlias) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_EMAIL + " = ?" + " AND " +
+                COL_FOLDER_ALIAS + " = ?", new String[]{email, folderAlias}, null);
+
+        Folder folder = null;
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                folder = getFolder(cursor);
+            }
+            cursor.close();
+        }
+
+        return folder;
+    }
+
+    /**
      * Delete all folders of some email.
      *
      * @param context Interface to global information about an application environment.
