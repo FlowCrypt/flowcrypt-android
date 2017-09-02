@@ -53,11 +53,13 @@ import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
+import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import org.apache.commons.io.FileUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -479,7 +481,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void updateMessageView() {
-        if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
+        if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+            layoutMessageParts.removeAllViews();
+            EmailWebView emailWebView = new EmailWebView(getContext());
+            emailWebView.configure();
+            emailWebView.loadDataWithBaseURL(null, incomingMessageInfo.getHtmlMessage(), "text/html",
+                    StandardCharsets.UTF_8.displayName(), null);
+            layoutMessageParts.addView(emailWebView);
+        } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
             boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
