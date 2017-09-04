@@ -9,16 +9,24 @@ package com.flowcrypt.email.ui.activity.fragment.base;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
@@ -38,6 +46,8 @@ import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +64,9 @@ import java.util.List;
 public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment {
     protected static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
+    private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
+
+    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 5000000;
 
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
@@ -63,9 +76,12 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     protected boolean isMessageSendingNow;
     protected List<PgpContact> pgpContacts;
     protected NachoTextView editTextRecipients;
+    protected ArrayList<AttachmentInfo> attachmentInfoList;
+    private ViewGroup layoutAttachments;
 
     public BaseSendSecurityMessageFragment() {
         pgpContacts = new ArrayList<>();
+        attachmentInfoList = new ArrayList<>();
     }
 
     public abstract void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
@@ -129,7 +145,9 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        layoutAttachments = (ViewGroup) view.findViewById(R.id.layoutAttachments);
         initChipsView(view);
+        showAttachments();
     }
 
     @Override
@@ -171,6 +189,26 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 }
                 break;
 
+            case REQUEST_CODE_GET_CONTENT_FOR_SENDING:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (data != null && data.getData() != null) {
+                            AttachmentInfo attachmentInfo = getAttachmentInfoFromUri(data.getData());
+                            if (isAttachmentCanBeAdded(attachmentInfo)) {
+                                attachmentInfoList.add(attachmentInfo);
+                                showAttachments();
+                            } else {
+                                showInfoSnackbar(getView(), getString(R.string.warning_max_total_attachments_size),
+                                        Snackbar.LENGTH_LONG);
+                            }
+                        } else {
+                            showInfoSnackbar(getView(), getString(R.string.can_not_attach_this_file),
+                                    Snackbar.LENGTH_LONG);
+                        }
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -208,6 +246,14 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 }
                 return true;
 
+            case R.id.menuActionAttachFile:
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_attachment)),
+                        REQUEST_CODE_GET_CONTENT_FOR_SENDING);
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -223,6 +269,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 statusView.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
                 OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
+                outgoingMessageInfo.setAttachmentInfoArrayList(attachmentInfoList);
                 return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
                         outgoingMessageInfo, onChangeMessageEncryptedTypeListener
                         .getMessageEncryptionType());
@@ -386,6 +433,47 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     /**
+     * Check is attachment can be added to the current message.
+     *
+     * @param newAttachmentInfo The new attachment which will be maybe added.
+     * @return true if the attachment can be added, otherwise false.
+     */
+    private boolean isAttachmentCanBeAdded(AttachmentInfo newAttachmentInfo) {
+        int totalSizeOfAttachments = 0;
+
+        for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+            totalSizeOfAttachments += attachmentInfo.getEncodedSize();
+        }
+
+        totalSizeOfAttachments += newAttachmentInfo.getEncodedSize();
+
+        return totalSizeOfAttachments < MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+    }
+
+    /**
+     * Generate {@link AttachmentInfo} from the requested information from the file uri.
+     *
+     * @param uri The file {@link Uri}
+     * @return Generated {@link AttachmentInfo}.
+     */
+    private AttachmentInfo getAttachmentInfoFromUri(Uri uri) {
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null);
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+                attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
+                attachmentInfo.setUri(uri);
+            }
+
+            cursor.close();
+        }
+
+        return attachmentInfo;
+    }
+
+    /**
      * Show a dialog where we can select different actions.
      *
      * @param pgpContact         The {@link PgpContact} which will be used when we select the
@@ -402,7 +490,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     /**
-     * /**
      * Send an encrypted message. Before sending, we do some checks(is all information valid, is
      * internet connection available);
      */
@@ -412,6 +499,41 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             getActivity().invalidateOptionsMenu();
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
             onMessageSendListener.sendMessage(encryptedRawMessage);
+        }
+    }
+
+    /**
+     * Show attachments which were added.
+     */
+    private void showAttachments() {
+        if (!attachmentInfoList.isEmpty()) {
+            layoutAttachments.removeAllViews();
+            LayoutInflater layoutInflater = LayoutInflater.from(getContext());
+            for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
+                final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAttachments, false);
+
+                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
+                textViewAttachmentName.setText(attachmentInfo.getName());
+
+                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
+                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
+
+                View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+                imageButtonDownloadAttachment.setVisibility(View.GONE);
+
+                View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
+                imageButtonClearAttachment.setVisibility(View.VISIBLE);
+                imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        attachmentInfoList.remove(attachmentInfo);
+                        layoutAttachments.removeView(rootView);
+                    }
+                });
+                layoutAttachments.addView(rootView);
+            }
+        } else {
+            layoutAttachments.removeAllViews();
         }
     }
 

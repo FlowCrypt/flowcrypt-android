@@ -98,6 +98,15 @@
 
             </android.support.design.widget.TextInputLayout>
 
+            <LinearLayout
+                android:id="@+id/layoutAttachments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/default_margin_small"
+                android:paddingTop="@dimen/default_margin_small" />
+
         </LinearLayout>
     </ScrollView>
 

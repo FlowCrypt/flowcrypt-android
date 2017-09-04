@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.email.model;
 
 import android.accounts.Account;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -42,6 +43,7 @@ public class AttachmentInfo implements Parcelable {
     private long encodedSize;
     private String type;
     private String id;
+    private Uri uri;
 
     public AttachmentInfo() {
     }
@@ -54,6 +56,20 @@ public class AttachmentInfo implements Parcelable {
         this.encodedSize = in.readLong();
         this.type = in.readString();
         this.id = in.readString();
+        this.uri = in.readParcelable(Uri.class.getClassLoader());
+    }
+
+    @Override
+    public String toString() {
+        return "AttachmentInfo{" +
+                "email='" + email + '\'' +
+                ", folder='" + folder + '\'' +
+                ", uid=" + uid +
+                ", name='" + name + '\'' +
+                ", encodedSize=" + encodedSize +
+                ", type='" + type + '\'' +
+                ", id='" + id + '\'' +
+                '}';
     }
 
     @Override
@@ -70,19 +86,7 @@ public class AttachmentInfo implements Parcelable {
         dest.writeLong(this.encodedSize);
         dest.writeString(this.type);
         dest.writeString(this.id);
-    }
-
-    @Override
-    public String toString() {
-        return "AttachmentInfo{" +
-                "email='" + email + '\'' +
-                ", folder='" + folder + '\'' +
-                ", uid=" + uid +
-                ", name='" + name + '\'' +
-                ", encodedSize=" + encodedSize +
-                ", type='" + type + '\'' +
-                ", id='" + id + '\'' +
-                '}';
+        dest.writeParcelable(this.uri, flags);
     }
 
     public String getEmail() {
@@ -139,6 +143,14 @@ public class AttachmentInfo implements Parcelable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Uri getUri() {
+        return uri;
+    }
+
+    public void setUri(Uri uri) {
+        this.uri = uri;
     }
 
     @Nullable

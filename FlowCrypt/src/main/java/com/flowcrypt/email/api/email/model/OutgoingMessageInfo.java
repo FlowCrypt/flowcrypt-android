@@ -10,6 +10,8 @@ import android.os.Parcel;
 
 import com.flowcrypt.email.js.PgpContact;
 
+import java.util.ArrayList;
+
 /**
  * Simple POJO class which describe an outgoing message model.
  *
@@ -20,6 +22,7 @@ import com.flowcrypt.email.js.PgpContact;
  */
 
 public class OutgoingMessageInfo extends MessageInfo {
+
     public static final Creator<OutgoingMessageInfo> CREATOR = new Creator<OutgoingMessageInfo>() {
         @Override
         public OutgoingMessageInfo createFromParcel(Parcel source) {
@@ -31,10 +34,10 @@ public class OutgoingMessageInfo extends MessageInfo {
             return new OutgoingMessageInfo[size];
         }
     };
-
     private PgpContact[] toPgpContacts;
     private PgpContact fromPgpContact;
     private String rawReplyMessage;
+    private ArrayList<AttachmentInfo> attachmentInfoArrayList;
 
     public OutgoingMessageInfo() {
     }
@@ -44,6 +47,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         this.toPgpContacts = in.createTypedArray(PgpContact.CREATOR);
         this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
         this.rawReplyMessage = in.readString();
+        this.attachmentInfoArrayList = in.createTypedArrayList(AttachmentInfo.CREATOR);
     }
 
     @Override
@@ -57,6 +61,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         dest.writeTypedArray(this.toPgpContacts, flags);
         dest.writeParcelable(this.fromPgpContact, flags);
         dest.writeString(this.rawReplyMessage);
+        dest.writeTypedList(this.attachmentInfoArrayList);
     }
 
     public PgpContact[] getToPgpContacts() {
@@ -81,5 +86,13 @@ public class OutgoingMessageInfo extends MessageInfo {
 
     public void setRawReplyMessage(String rawReplyMessage) {
         this.rawReplyMessage = rawReplyMessage;
+    }
+
+    public ArrayList<AttachmentInfo> getAttachmentInfoArrayList() {
+        return attachmentInfoArrayList;
+    }
+
+    public void setAttachmentInfoArrayList(ArrayList<AttachmentInfo> attachmentInfoArrayList) {
+        this.attachmentInfoArrayList = attachmentInfoArrayList;
     }
 }
