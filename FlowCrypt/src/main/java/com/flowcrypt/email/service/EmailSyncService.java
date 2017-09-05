@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.GmailSynsManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -623,10 +624,10 @@ public class EmailSyncService extends Service implements SyncListener {
 
                     case MESSAGE_SEND_ENCRYPTED_MESSAGE:
                         if (gmailSynsManager != null && action != null) {
-                            String rawEncryptedMessage = (String) action.getObject();
+                            OutgoingMessageInfo outgoingMessageInfo = (OutgoingMessageInfo) action.getObject();
 
                             gmailSynsManager.sendEncryptedMessage(action.getOwnerKey(),
-                                    action.getRequestCode(), rawEncryptedMessage);
+                                    action.getRequestCode(), outgoingMessageInfo);
                         }
                         break;
 

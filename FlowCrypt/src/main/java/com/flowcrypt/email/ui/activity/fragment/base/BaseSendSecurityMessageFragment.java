@@ -36,7 +36,6 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
-import com.flowcrypt.email.ui.loader.PrepareEncryptedRawMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
@@ -66,7 +65,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
 
-    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024000;
+    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 5;
 
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
@@ -234,8 +233,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                     UIUtil.hideSoftInput(getContext(), getView());
                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                         if (isAllInformationCorrect()) {
-                            getLoaderManager().restartLoader(
-                                    R.id.loader_id_prepare_encrypted_message, null, this);
+                            sendMessage();
                         }
                     } else {
                         UIUtil.showInfoSnackbar(getView(), getString(R.string
@@ -264,19 +262,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_prepare_encrypted_message:
-                dismissCurrentSnackBar();
-                isUpdateInfoAboutContactsEnable = false;
-                isMessageSendingNow = true;
-                getActivity().invalidateOptionsMenu();
-                statusView.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
-                OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
-                outgoingMessageInfo.setAttachmentInfoArrayList(attachmentInfoList);
-                return new PrepareEncryptedRawMessageAsyncTaskLoader(getContext(),
-                        outgoingMessageInfo, onChangeMessageEncryptedTypeListener
-                        .getMessageEncryptionType());
-
             case R.id.loader_id_update_info_about_pgp_contacts:
                 pgpContacts.clear();
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.VISIBLE);
@@ -292,15 +277,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
-            case R.id.loader_id_prepare_encrypted_message:
-                isUpdateInfoAboutContactsEnable = true;
-                if (result != null) {
-                    sendEncryptMessage((String) result);
-                } else {
-                    notifyUserAboutErrorWhenSendMessage();
-                }
-                break;
-
             case R.id.loader_id_update_info_about_pgp_contacts:
                 UpdateInfoAboutPgpContactsResult updateInfoAboutPgpContactsResult
                         = (UpdateInfoAboutPgpContactsResult) result;
@@ -334,13 +310,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
         switch (loaderId) {
-            case R.id.loader_id_prepare_encrypted_message:
-                isUpdateInfoAboutContactsEnable = true;
-                isMessageSendingNow = false;
-                getActivity().invalidateOptionsMenu();
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
-                break;
-
             case R.id.loader_id_update_info_about_pgp_contacts:
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
@@ -351,11 +320,6 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
         super.onLoaderReset(loader);
-        switch (loader.getId()) {
-            case R.id.loader_id_prepare_encrypted_message:
-                isUpdateInfoAboutContactsEnable = true;
-                break;
-        }
     }
 
     @Override
@@ -501,15 +465,26 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     }
 
     /**
-     * Send an encrypted message. Before sending, we do some checks(is all information valid, is
-     * internet connection available);
+     * Send a message.
      */
-    private void sendEncryptMessage(String encryptedRawMessage) {
+    private void sendMessage() {
+        dismissCurrentSnackBar();
+
+        isUpdateInfoAboutContactsEnable = false;
+        isMessageSendingNow = true;
+
+        getActivity().invalidateOptionsMenu();
+
+        statusView.setVisibility(View.GONE);
+        UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
+
+        OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
+        outgoingMessageInfo.setAttachmentInfoArrayList(attachmentInfoList);
+        outgoingMessageInfo.setMessageEncryptionType(onChangeMessageEncryptedTypeListener
+                .getMessageEncryptionType());
+
         if (onMessageSendListener != null) {
-            isMessageSendingNow = true;
-            getActivity().invalidateOptionsMenu();
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
-            onMessageSendListener.sendMessage(encryptedRawMessage);
+            onMessageSendListener.sendMessage(outgoingMessageInfo);
         }
     }
 
@@ -552,7 +527,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
      * This interface will be used when we send a message.
      */
     public interface OnMessageSendListener {
-        void sendMessage(String encryptedRawMessage);
+        void sendMessage(OutgoingMessageInfo outgoingMessageInfo);
 
         String getSenderEmail();
     }

@@ -22,6 +22,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -330,16 +331,16 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * Move the message to an another folder.
      *
      * @param requestCode         The unique request code for identify the current action.
-     * @param rawEncryptedMessage The raw encrypted message.
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     *                            message.
      */
-    public void sendEncryptedMessage(int requestCode, String rawEncryptedMessage) {
+    public void sendEncryptedMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         if (checkBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                requestCode, rawEncryptedMessage);
+                requestCode, outgoingMessageInfo);
 
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_ENCRYPTED_MESSAGE,
-                action);
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_ENCRYPTED_MESSAGE, action);
 
         message.replyTo = replyMessenger;
         try {
