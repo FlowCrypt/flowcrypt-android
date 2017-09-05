@@ -162,6 +162,12 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
         return snackbar;
     }
 
+    public void dismissCurrentSnackBar() {
+        if (getSnackBar() != null) {
+            getSnackBar().dismiss();
+        }
+    }
+
     public BaseActivity getBaseActivity() {
         return (BaseActivity) getActivity();
     }

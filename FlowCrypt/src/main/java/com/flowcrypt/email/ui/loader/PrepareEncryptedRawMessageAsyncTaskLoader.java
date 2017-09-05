@@ -11,8 +11,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.js.Attachment;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -21,6 +23,10 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 /**
@@ -64,15 +70,39 @@ public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<L
             String[] pubKeys = getPubKeys(js);
 
             String messageText = null;
+            ArrayList<Attachment> attachments = new ArrayList<>();
+            ArrayList<AttachmentInfo> attachmentInfoArrayList = outgoingMessageInfo.getAttachmentInfoArrayList();
 
             switch (messageEncryptionType) {
                 case ENCRYPTED:
-                    messageText = js.crypto_message_encrypt(pubKeys,
-                            outgoingMessageInfo.getMessage(), true);
+                    messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage(), true);
+                    for (int i = 0; i < attachmentInfoArrayList.size(); i++) {
+                        AttachmentInfo attachmentInfo = attachmentInfoArrayList.get(i);
+                        InputStream inputStream = getContext().getContentResolver().openInputStream
+                                (attachmentInfo.getUri());
+
+                        if (inputStream != null) {
+                            String rawFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                            String encryptedFile = js.crypto_message_encrypt(pubKeys, rawFile, false);
+                            attachments.add(js.file_attachment(encryptedFile.getBytes(),
+                                    attachmentInfo.getName() + ".pgp", attachmentInfo.getType()));
+                        }
+                    }
                     break;
 
                 case STANDARD:
                     messageText = outgoingMessageInfo.getMessage();
+                    for (int i = 0; i < attachmentInfoArrayList.size(); i++) {
+                        AttachmentInfo attachmentInfo = attachmentInfoArrayList.get(i);
+                        InputStream inputStream = getContext().getContentResolver().openInputStream
+                                (attachmentInfo.getUri());
+
+                        if (inputStream != null) {
+                            byte[] content = IOUtils.toByteArray(inputStream);
+                            attachments.add(js.file_attachment(content, attachmentInfo.getName(),
+                                    attachmentInfo.getType()));
+                        }
+                    }
                     break;
             }
 
@@ -80,7 +110,7 @@ public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<L
                     outgoingMessageInfo.getToPgpContacts(),
                     outgoingMessageInfo.getFromPgpContact(),
                     outgoingMessageInfo.getSubject(),
-                    null,
+                    attachments.toArray(new Attachment[0]),
                     js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
 
             return new LoaderResult(rawMessage, null);

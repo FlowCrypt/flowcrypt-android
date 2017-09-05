@@ -66,7 +66,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
 
-    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 5000000;
+    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024000;
 
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
@@ -198,7 +198,9 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                                 attachmentInfoList.add(attachmentInfo);
                                 showAttachments();
                             } else {
-                                showInfoSnackbar(getView(), getString(R.string.warning_max_total_attachments_size),
+                                showInfoSnackbar(getView(),
+                                        getString(R.string.template_warning_max_total_attachments_size,
+                                                FileUtils.byteCountToDisplaySize(MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
                                         Snackbar.LENGTH_LONG);
                             }
                         } else {
@@ -263,6 +265,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_prepare_encrypted_message:
+                dismissCurrentSnackBar();
                 isUpdateInfoAboutContactsEnable = false;
                 isMessageSendingNow = true;
                 getActivity().invalidateOptionsMenu();
@@ -331,6 +334,13 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         super.handleFailureLoaderResult(loaderId, e);
         switch (loaderId) {
+            case R.id.loader_id_prepare_encrypted_message:
+                isUpdateInfoAboutContactsEnable = true;
+                isMessageSendingNow = false;
+                getActivity().invalidateOptionsMenu();
+                UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
+                break;
+
             case R.id.loader_id_update_info_about_pgp_contacts:
                 isUpdatedInfoAboutContactCompleted = true;
                 getUpdateInfoAboutContactsProgressBar().setVisibility(View.INVISIBLE);
@@ -464,6 +474,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
             if (cursor.moveToFirst()) {
                 attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
                 attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
+                attachmentInfo.setType(getContext().getContentResolver().getType(uri));
                 attachmentInfo.setUri(uri);
             }
 
