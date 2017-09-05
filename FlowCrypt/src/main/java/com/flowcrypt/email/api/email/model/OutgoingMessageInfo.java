@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.email.model;
 import android.os.Parcel;
 
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.MessageEncryptionType;
 
 import java.util.ArrayList;
 
@@ -38,6 +39,7 @@ public class OutgoingMessageInfo extends MessageInfo {
     private PgpContact fromPgpContact;
     private String rawReplyMessage;
     private ArrayList<AttachmentInfo> attachmentInfoArrayList;
+    private MessageEncryptionType messageEncryptionType;
 
     public OutgoingMessageInfo() {
     }
@@ -48,6 +50,9 @@ public class OutgoingMessageInfo extends MessageInfo {
         this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
         this.rawReplyMessage = in.readString();
         this.attachmentInfoArrayList = in.createTypedArrayList(AttachmentInfo.CREATOR);
+        int tmpMessageEncryptionType = in.readInt();
+        this.messageEncryptionType = tmpMessageEncryptionType == -1 ? null : MessageEncryptionType.values()
+                [tmpMessageEncryptionType];
     }
 
     @Override
@@ -62,6 +67,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         dest.writeParcelable(this.fromPgpContact, flags);
         dest.writeString(this.rawReplyMessage);
         dest.writeTypedList(this.attachmentInfoArrayList);
+        dest.writeInt(this.messageEncryptionType == null ? -1 : this.messageEncryptionType.ordinal());
     }
 
     public PgpContact[] getToPgpContacts() {
@@ -94,5 +100,13 @@ public class OutgoingMessageInfo extends MessageInfo {
 
     public void setAttachmentInfoArrayList(ArrayList<AttachmentInfo> attachmentInfoArrayList) {
         this.attachmentInfoArrayList = attachmentInfoArrayList;
+    }
+
+    public MessageEncryptionType getMessageEncryptionType() {
+        return messageEncryptionType;
+    }
+
+    public void setMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
+        this.messageEncryptionType = messageEncryptionType;
     }
 }

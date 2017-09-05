@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 
 import android.util.Log;
 
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
@@ -248,12 +249,12 @@ public class GmailSynsManager {
      *
      * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
      * @param requestCode         The unique request code for identify the current action.
-     * @param rawEncryptedMessage The raw encrypted message.
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     *                            message.
      */
-    public void sendEncryptedMessage(String ownerKey, int requestCode, String rawEncryptedMessage) {
+    public void sendEncryptedMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         try {
-            syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode,
-                    rawEncryptedMessage));
+            syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
@@ -165,9 +166,9 @@ public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivi
     }
 
     @Override
-    public void sendMessage(String rawEncryptedMessage) {
+    public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
         isMessageSendingNow = true;
-        sendEncryptedMessage(R.id.syns_request_send_encrypted_message, rawEncryptedMessage);
+        sendEncryptedMessage(R.id.syns_request_send_encrypted_message, outgoingMessageInfo);
     }
 
     @Override
