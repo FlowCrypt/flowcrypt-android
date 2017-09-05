@@ -15,10 +15,13 @@ import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
+import com.eclipsesource.v8.V8ArrayBuffer;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8ResultUndefined;
+import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
+import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -27,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -100,16 +104,20 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject,
-                              Attachment[] attachments, MimeMessage reply_to) {
+    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments,
+                              MimeMessage reply_to) {
         V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
-        headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject",
-                subject);
+        headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
+        V8Array files = new V8Array(v8);
         if (attachments != null && attachments.length > 0) {
-            System.err.println("Js.mime_encode: ignoring attachments (not implemented)");
+            for (Attachment attachment: attachments) {
+                files.push(attachment.getV8Object());
+            }
         }
-        this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body).push
-                (headers).push(NULL).push(cb_catcher));
+        this.call(
+            Void.class, new String[]{"mime", "encode"},
+            new V8Array(v8).push(body).push(headers).push(files).push(cb_catcher)
+        );
         return (String) cb_last_value[0];
     }
 
@@ -218,6 +226,13 @@ public class Js { // Create one object per thread and use them separately. Not t
                 && !TextUtils.isEmpty(pgpKey.getFingerprint())
                 && pgpKey.getPrimaryUserId() != null
                 && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
+    }
+
+    public Attachment file_attachment(byte[] content, String name, String type) {
+        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(content).getByteBuffer());
+        V8TypedArray uint8 = new V8TypedArray(v8, buffer, V8Value.BYTE, 0, content.length);
+        return new Attachment((V8Object) this.call(V8Object.class, new String[]{"file", "attachment"},
+                new V8Array(v8).push(name).push(type).push(uint8)));
     }
 
     private static String read(File file) throws IOException {
