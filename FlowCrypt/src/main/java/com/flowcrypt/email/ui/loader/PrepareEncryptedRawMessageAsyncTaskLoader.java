@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
@@ -75,17 +76,15 @@ public class PrepareEncryptedRawMessageAsyncTaskLoader extends AsyncTaskLoader<L
 
             switch (messageEncryptionType) {
                 case ENCRYPTED:
-                    messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage(), true);
+                    messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage());
                     for (int i = 0; i < attachmentInfoArrayList.size(); i++) {
                         AttachmentInfo attachmentInfo = attachmentInfoArrayList.get(i);
-                        InputStream inputStream = getContext().getContentResolver().openInputStream
-                                (attachmentInfo.getUri());
-
+                        Uri uri = attachmentInfo.getUri();
+                        InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
                         if (inputStream != null) {
-                            String rawFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                            String encryptedFile = js.crypto_message_encrypt(pubKeys, rawFile, false);
-                            attachments.add(js.file_attachment(encryptedFile.getBytes(),
-                                    attachmentInfo.getName() + ".pgp", attachmentInfo.getType()));
+                            String name = attachmentInfo.getName();
+                            byte[] file = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray(inputStream), name);
+                            attachments.add(js.file_attachment(file, name + ".pgp", attachmentInfo.getType()));
                         }
                     }
                     break;

@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -167,11 +166,20 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .push(longid));
     }
 
-    public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
-        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push
-                (text).push(NULL).push(armor).push(cb_catcher);
+    public String crypto_message_encrypt(String pubkeys[], String text) {
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL)
+                .push(true).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value[0]).get("data").toString();
+    }
+
+    public byte[] crypto_message_encrypt(String pubkeys[], byte[] content, String filename) {
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
+                .push(filename).push(false).push(cb_catcher);
+        this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
+        V8Object packets = (V8Object) ((V8Object)((V8Object) cb_last_value[0]).get("message")).get("packets");
+        V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
+        return data.getBytes(0, data.length());
     }
 
     public PgpDecrypted crypto_message_decrypt(String data, String password) {
@@ -229,10 +237,13 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public Attachment file_attachment(byte[] content, String name, String type) {
-        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(content).getByteBuffer());
-        V8TypedArray uint8 = new V8TypedArray(v8, buffer, V8Value.BYTE, 0, content.length);
         return new Attachment((V8Object) this.call(V8Object.class, new String[]{"file", "attachment"},
-                new V8Array(v8).push(name).push(type).push(uint8)));
+                new V8Array(v8).push(name).push(type).push(uint8(content))));
+    }
+
+    private V8TypedArray uint8(byte[] data) {
+        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
+        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
     }
 
     private static String read(File file) throws IOException {
