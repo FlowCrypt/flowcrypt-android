@@ -117,15 +117,15 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         switch (outgoingMessageInfo.getMessageEncryptionType()) {
             case ENCRYPTED:
-                messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage(), true);
+                messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage());
                 for (int i = 0; i < attachmentInfoArrayList.size(); i++) {
                     AttachmentInfo attachmentInfo = attachmentInfoArrayList.get(i);
                     InputStream inputStream = context.getContentResolver().openInputStream(attachmentInfo.getUri());
-
                     if (inputStream != null) {
-                        String rawFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-                        String encryptedFile = js.crypto_message_encrypt(pubKeys, rawFile, false);
-                        attachments.add(js.file_attachment(encryptedFile.getBytes(), attachmentInfo.getName() + ".pgp",
+                        attachments.add(js.file_attachment(
+                                js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray(inputStream),
+                                        attachmentInfo.getName()),
+                                attachmentInfo.getName() + ".pgp",
                                 attachmentInfo.getType()));
                     }
                 }
