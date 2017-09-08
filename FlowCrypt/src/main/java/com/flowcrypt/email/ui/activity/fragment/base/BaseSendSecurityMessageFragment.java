@@ -65,7 +65,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
 
-    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 5;
+    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 3;
 
     protected Js js;
     protected OnMessageSendListener onMessageSendListener;
