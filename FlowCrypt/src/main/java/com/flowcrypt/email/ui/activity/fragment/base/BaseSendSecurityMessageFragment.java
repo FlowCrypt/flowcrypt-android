@@ -17,6 +17,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -502,7 +503,7 @@ public abstract class BaseSendSecurityMessageFragment extends BaseGmailFragment 
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
                 TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
-                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
+                textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setVisibility(View.GONE);

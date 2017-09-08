@@ -19,6 +19,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,8 +57,6 @@ import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-
-import org.apache.commons.io.FileUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -457,7 +456,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
                 TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
-                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
+                textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
