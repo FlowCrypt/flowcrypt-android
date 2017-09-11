@@ -15,6 +15,6 @@
 
     <include
         android:id="@+id/layoutContent"
-        layout="@layout/content_secure_compose" />
+        layout="@layout/content_create_message" />
 
 </android.support.design.widget.CoordinatorLayout>

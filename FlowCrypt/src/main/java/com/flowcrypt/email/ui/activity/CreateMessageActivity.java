@@ -106,7 +106,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public int getContentViewResourceId() {
-        return R.layout.activity_secure_compose;
+        return R.layout.activity_create_message;
     }
 
     @Override
