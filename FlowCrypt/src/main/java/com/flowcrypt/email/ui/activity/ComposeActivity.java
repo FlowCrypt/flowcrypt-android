@@ -12,7 +12,7 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 
 
 /**
@@ -44,7 +44,7 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     public void notifyUserAboutErrorWhenSendMessage() {
-        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
                 ().findFragmentById(
                 R.id.composeFragment);
         if (composeFragment != null) {
@@ -54,7 +54,7 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     public boolean isCanFinishActivity() {
-        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
                 ().findFragmentById(
                 R.id.composeFragment);
 
@@ -63,7 +63,7 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
-        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
                 ().findFragmentById(
                 R.id.composeFragment);
 
@@ -75,7 +75,7 @@ public class ComposeActivity extends BaseSendingMessageActivity {
     @Override
     protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
                                                                           messageEncryptionType) {
-        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
                 ().findFragmentById(
                 R.id.composeFragment);
 

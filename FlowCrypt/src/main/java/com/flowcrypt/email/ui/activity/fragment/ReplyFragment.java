@@ -25,7 +25,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.ReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ import java.util.List;
  *         Time: 09:11
  *         E-mail: DenBond7@gmail.com
  */
-public class ReplyFragment extends BaseSendSecurityMessageFragment {
+public class ReplyFragment extends CreateMessageFragment {
 
     /**
      * This constant will be used when we create a reply message subject.

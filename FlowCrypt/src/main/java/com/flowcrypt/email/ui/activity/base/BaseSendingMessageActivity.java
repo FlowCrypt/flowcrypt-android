@@ -20,7 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -36,7 +36,7 @@ import com.flowcrypt.email.util.UIUtil;
  */
 
 public abstract class BaseSendingMessageActivity extends BaseBackStackSyncActivity implements
-        BaseSendSecurityMessageFragment.OnMessageSendListener,
+        CreateMessageFragment.OnMessageSendListener,
         OnChangeMessageEncryptedTypeListener {
 
     public static final String EXTRA_KEY_ACCOUNT_EMAIL =

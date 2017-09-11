@@ -71,8 +71,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class BaseSendSecurityMessageFragment extends BaseGmailFragment implements View
-        .OnFocusChangeListener {
+public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
@@ -98,7 +97,7 @@ public class BaseSendSecurityMessageFragment extends BaseGmailFragment implement
     private boolean isUpdatedInfoAboutContactCompleted = true;
     private boolean isMessageSendingNow;
 
-    public BaseSendSecurityMessageFragment() {
+    public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
         attachmentInfoList = new ArrayList<>();
         contactsDaoSource = new ContactsDaoSource();
@@ -193,7 +192,7 @@ public class BaseSendSecurityMessageFragment extends BaseGmailFragment implement
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
 
                         getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null,
-                                BaseSendSecurityMessageFragment.this);
+                                CreateMessageFragment.this);
                         break;
                 }
                 break;
@@ -496,7 +495,7 @@ public class BaseSendSecurityMessageFragment extends BaseGmailFragment implement
                                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                                         getLoaderManager().restartLoader(
                                                 R.id.loader_id_update_info_about_pgp_contacts, null,
-                                                BaseSendSecurityMessageFragment.this);
+                                                CreateMessageFragment.this);
                                     } else {
                                         showInfoSnackbar(getView(), getString(R.string
                                                 .internet_connection_is_not_available));
