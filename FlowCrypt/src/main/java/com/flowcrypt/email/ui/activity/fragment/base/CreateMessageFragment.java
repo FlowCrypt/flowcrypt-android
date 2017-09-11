@@ -41,7 +41,7 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
-import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
+import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
@@ -388,9 +388,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
-        if (getActivity() instanceof BaseSendingMessageActivity) {
-            BaseSendingMessageActivity baseSendingMessageActivity = (BaseSendingMessageActivity) getActivity();
-            outgoingMessageInfo.setFromPgpContact(new PgpContact(baseSendingMessageActivity.getSenderEmail(), null));
+        if (getActivity() instanceof CreateMessageActivity) {
+            CreateMessageActivity createMessageActivity = (CreateMessageActivity) getActivity();
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(createMessageActivity.getSenderEmail(), null));
         }
 
         return outgoingMessageInfo;

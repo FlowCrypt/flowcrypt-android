@@ -14,8 +14,7 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.ReplyFragment;
+import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
@@ -26,7 +25,7 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         Time: 09:11
  *         E-mail: DenBond7@gmail.com
  */
-public class ReplyActivity extends BaseSendingMessageActivity {
+public class ReplyActivity extends CreateMessageActivity {
 
     public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_INCOMING_MESSAGE_INFO", ReplyActivity.class);
@@ -62,7 +61,7 @@ public class ReplyActivity extends BaseSendingMessageActivity {
         }
     }
 
-    @Override
+    /*@Override
     public void notifyUserAboutErrorWhenSendMessage() {
         ReplyFragment replyFragment = (ReplyFragment)
                 getSupportFragmentManager().findFragmentById(R.id.replyFragment);
@@ -99,5 +98,5 @@ public class ReplyActivity extends BaseSendingMessageActivity {
         if (replyFragment != null) {
             replyFragment.onMessageEncryptionTypeChange(messageEncryptionType);
         }
-    }
+    }*/
 }

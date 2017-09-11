@@ -24,7 +24,7 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.ReplyActivity;
-import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
+import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 
 import java.util.List;
@@ -129,10 +129,10 @@ public class ReplyFragment extends CreateMessageFragment {
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
 
-        if (getActivity() instanceof BaseSendingMessageActivity) {
-            BaseSendingMessageActivity baseSendingMessageActivity = (BaseSendingMessageActivity)
+        if (getActivity() instanceof CreateMessageActivity) {
+            CreateMessageActivity createMessageActivity = (CreateMessageActivity)
                     getActivity();
-            outgoingMessageInfo.setFromPgpContact(new PgpContact(baseSendingMessageActivity
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(createMessageActivity
                     .getSenderEmail(), null));
         }
 
