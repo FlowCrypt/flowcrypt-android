@@ -12,7 +12,7 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
-import com.flowcrypt.email.ui.activity.fragment.ComposeFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
 
 
 /**
@@ -44,7 +44,8 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     public void notifyUserAboutErrorWhenSendMessage() {
-        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+                ().findFragmentById(
                 R.id.composeFragment);
         if (composeFragment != null) {
             composeFragment.notifyUserAboutErrorWhenSendMessage();
@@ -53,7 +54,8 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     public boolean isCanFinishActivity() {
-        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+                ().findFragmentById(
                 R.id.composeFragment);
 
         return composeFragment != null && !composeFragment.isMessageSendingNow();
@@ -61,7 +63,8 @@ public class ComposeActivity extends BaseSendingMessageActivity {
 
     @Override
     protected void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
-        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+                ().findFragmentById(
                 R.id.composeFragment);
 
         if (composeFragment != null) {
@@ -72,7 +75,8 @@ public class ComposeActivity extends BaseSendingMessageActivity {
     @Override
     protected void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
                                                                           messageEncryptionType) {
-        ComposeFragment composeFragment = (ComposeFragment) getSupportFragmentManager().findFragmentById(
+        BaseSendSecurityMessageFragment composeFragment = (BaseSendSecurityMessageFragment) getSupportFragmentManager
+                ().findFragmentById(
                 R.id.composeFragment);
 
         if (composeFragment != null) {

@@ -8,9 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,8 +26,6 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.ReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSendSecurityMessageFragment;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
 
 import java.util.List;
 
@@ -97,21 +93,21 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-
+/*
         if (incomingMessageInfo != null) {
             updateViews();
-        }
+        }*/
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())
+        /*if (GeneralUtil.isInternetConnectionAvailable(getContext())
                 && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
                 MessageEncryptionType.ENCRYPTED) {
             getLoaderManager().restartLoader(
                     R.id.loader_id_update_info_about_pgp_contacts, null, this);
-        }
+        }*/
     }
 
     @Override
@@ -143,7 +139,7 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
         return outgoingMessageInfo;
     }
 
-    @Override
+   /* @Override
     public View getUpdateInfoAboutContactsProgressBar() {
         return progressBarCheckContactsDetails;
     }
@@ -155,14 +151,14 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
         } else {
             return incomingMessageInfo.getFrom();
         }
-    }
+    }*/
 
     @Override
     public View getContentView() {
         return layoutContent;
     }
 
-    @Override
+    /*@Override
     public boolean isAllInformationCorrect() {
         if (TextUtils.isEmpty(editTextReplyEmailMessage.getText().toString())) {
             UIUtil.showInfoSnackbar(editTextReplyEmailMessage,
@@ -194,12 +190,12 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
         }
 
         return false;
-    }
+    }*/
 
     /**
      * Update views on the screen. This method can be called when we need to update the current
      * screen.
-     */
+     *//*
     private void updateViews() {
         if (incomingMessageInfo != null) {
             if (FoldersManager.FolderType.SENT == folderType) {
@@ -209,7 +205,7 @@ public class ReplyFragment extends BaseSendSecurityMessageFragment {
             }
             editTextRecipients.chipifyAllUnterminatedTokens();
         }
-    }
+    }*/
 
     private void initViews(View view) {
         this.editTextReplyEmailMessage =
