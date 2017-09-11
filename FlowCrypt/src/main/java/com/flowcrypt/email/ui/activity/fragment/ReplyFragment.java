@@ -23,8 +23,8 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ReplyActivity;
-import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 
 import java.util.List;

@@ -14,7 +14,6 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**

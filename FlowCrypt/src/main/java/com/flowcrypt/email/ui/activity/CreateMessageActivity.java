@@ -4,7 +4,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;

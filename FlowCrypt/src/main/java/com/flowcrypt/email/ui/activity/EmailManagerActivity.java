@@ -44,7 +44,6 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.ui.activity.base.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;

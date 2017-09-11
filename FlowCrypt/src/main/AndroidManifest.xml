@@ -46,7 +46,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.base.CreateMessageActivity"
+            android:name=".ui.activity.CreateMessageActivity"
             android:label="@string/reply"
             android:screenOrientation="portrait" />
 
