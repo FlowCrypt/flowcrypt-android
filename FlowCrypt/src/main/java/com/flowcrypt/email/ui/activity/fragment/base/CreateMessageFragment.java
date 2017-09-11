@@ -32,7 +32,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
@@ -85,6 +87,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private ArrayList<AttachmentInfo> attachmentInfoList;
     private NachoTextView editTextRecipients;
     private ContactsDaoSource contactsDaoSource;
+    private FoldersManager.FolderType folderType;
+    private IncomingMessageInfo incomingMessageInfo;
 
     private ViewGroup layoutAttachments;
     private EditText editTextEmailSubject;
@@ -96,6 +100,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdatedInfoAboutContactCompleted = true;
     private boolean isMessageSendingNow;
+    private boolean isIncomingMessageInfoUsed;
 
     public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
@@ -132,11 +137,20 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (getActivity().getIntent() != null) {
+            this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
+                    (CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+            if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
+                this.folderType = FoldersManager.getFolderTypeForImapFodler(
+                        incomingMessageInfo.getFolder().getAttributes());
+            }
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_secure_compose, container, false);
+        return inflater.inflate(R.layout.fragment_create_message, container, false);
     }
 
     @Override
@@ -144,6 +158,20 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         showAttachments();
+
+        if (incomingMessageInfo != null && !isIncomingMessageInfoUsed) {
+            this.isIncomingMessageInfoUsed = true;
+            updateViews();
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (incomingMessageInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext())
+                && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
+        }
     }
 
     @Override
@@ -360,40 +388,18 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         String emailMassageHint = null;
-        switch (messageEncryptionType) {
-            case ENCRYPTED:
-                emailMassageHint = getString(R.string.prompt_compose_security_email);
-                break;
+        if (messageEncryptionType != null) {
+            switch (messageEncryptionType) {
+                case ENCRYPTED:
+                    emailMassageHint = getString(R.string.prompt_compose_security_email);
+                    break;
 
-            case STANDARD:
-                emailMassageHint = getString(R.string.prompt_compose_standard_email);
-                break;
+                case STANDARD:
+                    emailMassageHint = getString(R.string.prompt_compose_standard_email);
+                    break;
+            }
         }
         textInputLayoutEmailMessage.setHint(emailMassageHint);
-    }
-
-    /**
-     * Generate an outgoing message info from entered information by user.
-     *
-     * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
-     * contains information about an outgoing message.
-     */
-    public OutgoingMessageInfo getOutgoingMessageInfo() {
-        OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
-        outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
-        outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
-
-        List<PgpContact> pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase
-                (getContext(), editTextRecipients.getChipValues());
-
-        outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
-
-        if (getActivity() instanceof CreateMessageActivity) {
-            CreateMessageActivity createMessageActivity = (CreateMessageActivity) getActivity();
-            outgoingMessageInfo.setFromPgpContact(new PgpContact(createMessageActivity.getSenderEmail(), null));
-        }
-
-        return outgoingMessageInfo;
     }
 
     /**
@@ -413,6 +419,39 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
+    }
+
+    /**
+     * Generate an outgoing message info from entered information by user.
+     *
+     * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
+     * contains information about an outgoing message.
+     */
+    private OutgoingMessageInfo getOutgoingMessageInfo() {
+        OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
+        outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
+        outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
+
+        List<PgpContact> pgpContacts;
+        if (incomingMessageInfo != null) {
+            outgoingMessageInfo.setRawReplyMessage(
+                    incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
+            pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
+                    (getContext(), FoldersManager.FolderType.SENT == folderType ?
+                            incomingMessageInfo.getTo() : incomingMessageInfo.getFrom());
+        } else {
+            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase
+                    (getContext(), editTextRecipients.getChipValues());
+        }
+
+        outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
+
+        if (getActivity() instanceof CreateMessageActivity) {
+            CreateMessageActivity createMessageActivity = (CreateMessageActivity) getActivity();
+            outgoingMessageInfo.setFromPgpContact(new PgpContact(createMessageActivity.getSenderEmail(), null));
+        }
+
+        return outgoingMessageInfo;
     }
 
     /**
@@ -480,8 +519,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                         getString(R.string.prompt_subject)));
                 editTextEmailSubject.requestFocus();
             } else if (TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
-                showInfoSnackbar(editTextEmailMessage, getString(R.string.text_must_not_be_empty,
-                        getString(R.string.prompt_compose_security_email)));
+                showInfoSnackbar(editTextEmailMessage, getString(R.string.sending_message_must_not_be_empty));
                 editTextEmailMessage.requestFocus();
             } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
                     MessageEncryptionType.ENCRYPTED) {
@@ -550,6 +588,34 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
+    }
+
+    /**
+     * Update views on the screen. This method can be called when we need to update the current
+     * screen.
+     */
+    private void updateViews() {
+        onMessageEncryptionTypeChange(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
+
+        if (incomingMessageInfo != null) {
+            if (FoldersManager.FolderType.SENT == folderType) {
+                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getTo()));
+            } else {
+                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+            }
+            editTextRecipients.chipifyAllUnterminatedTokens();
+            editTextEmailSubject.setText(getString(R.string.template_reply_subject, incomingMessageInfo.getSubject()));
+            editTextEmailMessage.requestFocus();
+        }
+    }
+
+    private String prepareRecipients(List<String> recipients) {
+        String result = "";
+        for (String s : recipients) {
+            result += s + " ";
+        }
+
+        return result;
     }
 
     /**

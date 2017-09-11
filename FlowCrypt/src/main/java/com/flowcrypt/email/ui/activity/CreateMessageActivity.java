@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -45,6 +47,9 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
 
+    public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity.class);
+
     private View nonEncryptedHintView;
     private View layoutContent;
 
@@ -52,6 +57,16 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     private MessageEncryptionType messageEncryptionType;
 
     private boolean isMessageSendingNow;
+
+    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
+                                        MessageEncryptionType messageEncryptionType) {
+
+        Intent intent = new Intent(context, CreateMessageActivity.class);
+        intent.putExtra(EXTRA_KEY_ACCOUNT_EMAIL, email);
+        intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
+        intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
+        return intent;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,6 +87,14 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
                 messageEncryptionType = MessageEncryptionType.ENCRYPTED;
             } else {
                 onMessageEncryptionTypeChange(messageEncryptionType);
+            }
+
+            if (getSupportActionBar() != null) {
+                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
+                    getSupportActionBar().setTitle(R.string.reply);
+                } else {
+                    getSupportActionBar().setTitle(R.string.compose);
+                }
             }
         }
     }

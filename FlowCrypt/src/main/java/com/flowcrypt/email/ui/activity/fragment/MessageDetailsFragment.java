@@ -50,7 +50,6 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
-import com.flowcrypt.email.ui.activity.ReplyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
@@ -407,9 +406,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             }
         }
 
-        Intent intent = ReplyActivity.generateIntent(getContext(), incomingMessageInfo, messageEncryptionType);
-        intent.putExtra(CreateMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL, generalMessageDetails.getEmail());
-        startActivity(intent);
+        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
+                incomingMessageInfo, messageEncryptionType));
     }
 
     private void initViews(View view) {
