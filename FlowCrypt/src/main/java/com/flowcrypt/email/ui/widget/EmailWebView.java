@@ -7,10 +7,18 @@
 package com.flowcrypt.email.ui.widget;
 
 import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import com.flowcrypt.email.R;
 
 /**
  * The custom realization of {@link WebView}
@@ -41,7 +49,7 @@ public class EmailWebView extends WebView {
         setVerticalScrollBarEnabled(false);
         setScrollBarStyle(SCROLLBARS_INSIDE_OVERLAY);
         setOverScrollMode(OVER_SCROLL_NEVER);
-        setWebViewClient(new WebViewClient());
+        setWebViewClient(new CustomWebClient(getContext()));
 
         WebSettings webSettings = this.getSettings();
         /*webSettings.setUseWideViewPort(true);
@@ -52,5 +60,42 @@ public class EmailWebView extends WebView {
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setJavaScriptEnabled(false);
         webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+    }
+
+    /**
+     * The custom realization of {@link WebViewClient}
+     */
+    private static class CustomWebClient extends WebViewClient {
+        private Context context;
+
+        CustomWebClient(Context context) {
+            this.context = context;
+        }
+
+        @SuppressWarnings("deprecation")
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            showUrlUsingChromeCustomTabs(Uri.parse(url));
+            return true;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            showUrlUsingChromeCustomTabs(request.getUrl());
+            return true;
+        }
+
+        /**
+         * Use {@link CustomTabsIntent} to show some url.
+         *
+         * @param uri The {@link Uri} which contains a url.
+         */
+        private void showUrlUsingChromeCustomTabs(Uri uri) {
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+            CustomTabsIntent customTabsIntent = builder.build();
+            builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
+            customTabsIntent.launchUrl(context, uri);
+        }
     }
 }
