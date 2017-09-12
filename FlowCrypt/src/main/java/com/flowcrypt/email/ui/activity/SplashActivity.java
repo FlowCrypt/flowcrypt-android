@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.SignInType;
@@ -55,9 +56,9 @@ import java.util.ArrayList;
  *         Time: 14:50
  *         E-mail: DenBond7@gmail.com
  */
-public class SplashActivity extends BaseActivity implements SplashActivityFragment
-        .OnSignInButtonClickListener, GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks, LoaderManager.LoaderCallbacks<LoaderResult> {
+public class SplashActivity extends BaseActivity implements SplashActivityFragment.OnSignInButtonClickListener,
+        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
+        LoaderManager.LoaderCallbacks<LoaderResult> {
     private static final String ACTION_SIGN_OUT = GeneralUtil.generateUniqueExtraKey
             ("ACTION_SIGN_OUT", SplashActivity.class);
     private static final String ACTION_REVOKE_ACCESS = GeneralUtil.generateUniqueExtraKey
@@ -119,8 +120,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder
-                (GoogleSignInOptions.DEFAULT_SIGN_IN)
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestScopes(new Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
                 .requestEmail()
                 .build();
@@ -141,6 +141,17 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
             }
         }
+
+        if (!isSignOutAction && !isRevokeAccessAction) {
+            AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+            if (accountDao != null) {
+                if (SecurityUtils.isBackupKeysExist(this)) {
+                    EmailSyncService.startEmailSyncService(this);
+                    EmailManagerActivity.runEmailManagerActivity(this, accountDao.getAccount());
+                    finish();
+                }
+            }
+        }
     }
 
     @Override
@@ -155,8 +166,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
-                GoogleSignInResult googleSignInResult =
-                        Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
                 handleSignInResult(googleSignInResult);
                 break;
 
@@ -211,8 +221,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     public void onConnectionSuspended(int i) {
         if (isSignOutAction || isRevokeAccessAction) {
             finish();
-            Toast.makeText(this, R.string.error_occurred_while_this_action_running, Toast
-                    .LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -234,8 +243,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_backups:
                 if (loaderResult.getResult() != null) {
-                    ArrayList<KeyDetails> keyDetailsList =
-                            (ArrayList<KeyDetails>) loaderResult.getResult();
+                    ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
                         finish();
                         startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
@@ -248,8 +256,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                                 REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
                     }
                 } else if (loaderResult.getException() != null) {
-                    UIUtil.showInfoSnackbar(getRootView(),
-                            loaderResult.getException().getMessage());
+                    UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException().getMessage());
                 }
                 break;
         }
@@ -277,16 +284,14 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             } else {
                 startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
                 if (account != null) {
-                    getSupportLoaderManager().initLoader(
-                            R.id.loader_id_load_gmail_backups, null, this);
+                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
                 } else {
                     //todo-denbond7 handle this situation
                 }
             }
         } else {
             if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-                UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus()
-                        .getStatusMessage());
+                UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus().getStatusMessage());
             }
             UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
         }
@@ -296,8 +301,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                                                                       googleSignInAccount) {
         AccountDaoSource accountDaoSource = new AccountDaoSource();
 
-        boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this,
-                googleSignInAccount) > 0;
+        boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0;
 
         if (!isAccountUpdated) {
             accountDaoSource.addRow(this, googleSignInAccount);
@@ -320,13 +324,10 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                         try {
                             if (status.isSuccess()) {
                                 resetAppComponents();
-                                UIUtil.exchangeViewVisibility(SplashActivity.this, false,
-                                        splashView,
-                                        signInView);
+                                UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
                             } else {
                                 finish();
-                                Toast.makeText(SplashActivity.this, R.string
-                                                .error_occurred_while_this_action_running,
+                                Toast.makeText(SplashActivity.this, R.string.error_occurred_while_this_action_running,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (IOException e) {
@@ -348,13 +349,10 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                         try {
                             if (status.isSuccess()) {
                                 resetAppComponents();
-                                UIUtil.exchangeViewVisibility(SplashActivity.this, false,
-                                        splashView,
-                                        signInView);
+                                UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
                             } else {
                                 finish();
-                                Toast.makeText(SplashActivity.this, R.string
-                                                .error_occurred_while_this_action_running,
+                                Toast.makeText(SplashActivity.this, R.string.error_occurred_while_this_action_running,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (IOException e) {
@@ -388,8 +386,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             optionalPendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
                 @Override
                 public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
-                    UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView,
-                            signInView);
+                    UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
                     handleSignInResult(googleSignInResult);
                 }
             });
