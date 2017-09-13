@@ -9,6 +9,9 @@ package com.flowcrypt.email.ui.activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +23,7 @@ import android.widget.Spinner;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.util.GeneralUtil;
 
 import java.util.ArrayList;
 
@@ -33,7 +37,7 @@ import java.util.ArrayList;
  */
 
 public class AddNewAccountActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
-        AdapterView.OnItemSelectedListener {
+        AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher {
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -41,7 +45,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     private EditText editTextImapPort;
     private EditText editTextSmtpServer;
     private EditText editTextSmtpPort;
-    private EditText editTextSmtpEmail;
+    private EditText editTextSmtpUsername;
     private EditText editTextSmtpPassword;
     private Spinner spinnerImapSecyrityType;
     private Spinner spinnerSmtpSecyrityType;
@@ -98,6 +102,39 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
 
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonTryToConnect:
+                if (isAllInformationCorrect()) {
+
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+        if (GeneralUtil.isEmailValid(editable)) {
+            String email = editable.toString();
+            String mainDomain = email.substring(email.indexOf('@') + 1, email.length());
+            editTextImapServer.setText(getString(R.string.template_imap_server, mainDomain));
+            editTextSmtpServer.setText(getString(R.string.template_smtp_server, mainDomain));
+            editTextUserName.setText(email.substring(0, email.indexOf('@')));
+            editTextSmtpUsername.setText(email.substring(0, email.indexOf('@')));
+        }
+    }
+
     protected void initViews() {
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextUserName = (EditText) findViewById(R.id.editTextUserName);
@@ -106,8 +143,10 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         editTextImapPort = (EditText) findViewById(R.id.editTextImapPort);
         editTextSmtpServer = (EditText) findViewById(R.id.editTextSmtpServer);
         editTextSmtpPort = (EditText) findViewById(R.id.editTextSmtpPort);
-        editTextSmtpEmail = (EditText) findViewById(R.id.editTextSmtpEmail);
+        editTextSmtpUsername = (EditText) findViewById(R.id.editTextSmtpUsername);
         editTextSmtpPassword = (EditText) findViewById(R.id.editTextSmtpPassword);
+
+        editTextEmail.addTextChangedListener(this);
 
         layoutSmtpSignIn = findViewById(R.id.layoutSmtpSignIn);
         checkBoxRequireSignInForSmtp = (CheckBox) findViewById(R.id.checkBoxRequireSignInForSmtp);
@@ -123,6 +162,10 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         spinnerImapSecyrityType.setOnItemSelectedListener(this);
         spinnerSmtpSecyrityType.setAdapter(userAdapter);
         spinnerSmtpSecyrityType.setOnItemSelectedListener(this);
+
+        if (findViewById(R.id.buttonTryToConnect) != null) {
+            findViewById(R.id.buttonTryToConnect).setOnClickListener(this);
+        }
     }
 
     @NonNull
@@ -134,5 +177,58 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         securityTypes.add(new SecurityType("STARTLS", 143, 25));
         securityTypes.add(new SecurityType("STARTLS (All certificates)", 143, 25));
         return securityTypes;
+    }
+
+    /**
+     * Do a lot of checks to validate an outgoing message info.
+     *
+     * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
+     */
+    private boolean isAllInformationCorrect() {
+        if (TextUtils.isEmpty(editTextEmail.getText())) {
+            showInfoSnackbar(editTextEmail, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)));
+            editTextEmail.requestFocus();
+        } else if (GeneralUtil.isEmailValid(editTextEmail.getText())) {
+            if (TextUtils.isEmpty(editTextUserName.getText())) {
+                showInfoSnackbar(editTextUserName, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.username)));
+                editTextUserName.requestFocus();
+            } else if (TextUtils.isEmpty(editTextPassword.getText())) {
+                showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.password)));
+                editTextPassword.requestFocus();
+            } else if (TextUtils.isEmpty(editTextImapServer.getText())) {
+                showInfoSnackbar(editTextImapServer, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.imap_server)));
+                editTextImapServer.requestFocus();
+            } else if (TextUtils.isEmpty(editTextImapPort.getText())) {
+                showInfoSnackbar(editTextImapPort, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.imap_port)));
+                editTextImapPort.requestFocus();
+            } else if (TextUtils.isEmpty(editTextSmtpServer.getText())) {
+                showInfoSnackbar(editTextSmtpServer, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.smtp_server)));
+                editTextSmtpServer.requestFocus();
+            } else if (TextUtils.isEmpty(editTextSmtpPort.getText())) {
+                showInfoSnackbar(editTextSmtpPort, getString(R.string.text_must_not_be_empty,
+                        getString(R.string.smtp_port)));
+                editTextSmtpPort.requestFocus();
+            } else if (checkBoxRequireSignInForSmtp.isChecked()) {
+                if (TextUtils.isEmpty(editTextSmtpUsername.getText())) {
+                    showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
+                            getString(R.string.smtp_sign_in_username)));
+                    editTextSmtpUsername.requestFocus();
+                } else if (TextUtils.isEmpty(editTextSmtpPassword.getText())) {
+                    showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
+                            getString(R.string.smtp_sign_in_password)));
+                    editTextSmtpPassword.requestFocus();
+                } else return true;
+            } else return true;
+        } else {
+            showInfoSnackbar(editTextEmail, getString(R.string.error_email_is_not_valid));
+            editTextEmail.requestFocus();
+        }
+
+        return false;
     }
 }

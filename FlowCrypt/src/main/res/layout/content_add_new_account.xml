@@ -140,8 +140,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:digits="0123456789"
                 android:hint="@string/imap_port"
-                android:inputType="numberDecimal"
+                android:inputType="number"
+                android:maxLength="5"
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
@@ -212,8 +214,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:digits="0123456789"
                 android:hint="@string/smtp_port"
-                android:inputType="numberDecimal"
+                android:inputType="number"
+                android:maxLength="5"
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
@@ -269,7 +273,7 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <android.support.design.widget.TextInputEditText
-                    android:id="@+id/editTextSmtpEmail"
+                    android:id="@+id/editTextSmtpUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
@@ -310,8 +314,7 @@
         <Button
             android:id="@+id/buttonTryToConnect"
             style="@style/AppWidget.Button"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="match_parent"
             android:layout_marginTop="@dimen/margin_top_load_account"
             android:text="@string/try_to_connect"
             android:theme="@style/AppWidget.Button.Green"
