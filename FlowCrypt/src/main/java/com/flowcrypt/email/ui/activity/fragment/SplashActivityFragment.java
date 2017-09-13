@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.ui.activity.AddNewAccountActivity;
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -61,6 +63,15 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
                 }
                 break;
 
+            case R.id.buttonOtherEmailProvider:
+                if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
+                    startActivity(new Intent(getContext(), AddNewAccountActivity.class));
+                } else {
+                    UIUtil.showInfoSnackbar(getView(),
+                            getString(R.string.internet_connection_is_not_available));
+                }
+                break;
+
             case R.id.buttonPrivacy:
                 startActivity(HtmlViewFromAssetsRawActivity.newIntent(getContext(),
                         getString(R.string.privacy), "html/privacy.htm"));
@@ -84,6 +95,10 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
     private void initViews(View view) {
         if (view.findViewById(R.id.buttonSignInWithGmail) != null) {
             view.findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonOtherEmailProvider) != null) {
+            view.findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
         }
 
         if (view.findViewById(R.id.buttonPrivacy) != null) {

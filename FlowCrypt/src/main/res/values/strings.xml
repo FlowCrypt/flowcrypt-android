@@ -167,4 +167,21 @@
     <string name="template_warning_max_total_attachments_size">Warning! Total size of added attachments should be under
         %1$s</string>
     <string name="template_reply_subject">Re: %1$s</string>
+    <string name="other_email_provider">Other email provider</string>
+    <string name="account_info">Account info</string>
+    <string name="e_mail">E-mail</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="incoming_mail_settings">Incoming mail settings</string>
+    <string name="imap_server">IMAP server</string>
+    <string name="imap_port">IMAP port</string>
+    <string name="security_type">Security type</string>
+    <string name="outgoing_mail_settings">Outgoing mail settings</string>
+    <string name="smtp_server">SMTP server</string>
+    <string name="smtp_port">SMTP port</string>
+    <string name="require_sign_in">Require sign-in</string>
+    <string name="smtp_sign_in_username">SMTP sign-in Username</string>
+    <string name="smtp_sign_in_password">SMTP sign-in password</string>
+    <string name="try_to_connect">Try to connect</string>
+    <string name="adding_new_account">Adding a new account</string>
 </resources>
