@@ -7,7 +7,6 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.content.ComponentName;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PersistableBundle;
@@ -134,13 +133,9 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
         switch (id) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
-                String version = "unknown Android version";
-                try {
-                    version = "Android v" + this.getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                String text = editTextUserMessage.getText().toString() + "\n\n" + version;
+                String text = editTextUserMessage.getText().toString() + "\n\n" + "Android v"
+                        + BuildConfig.VERSION_CODE;
+
                 return new ApiServiceAsyncTaskLoader(getApplicationContext(),
                         new PostHelpFeedbackRequest(new PostHelpFeedbackModel(email, text)));
             default:
@@ -153,15 +148,14 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
         switch (loader.getId()) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
-
                 if (data != null) {
                     if (data.getResponseModel() != null) {
                         PostHelpFeedbackResponse postHelpFeedbackResponse =
                                 (PostHelpFeedbackResponse) data.getResponseModel();
                         if (postHelpFeedbackResponse.isSent()) {
                             this.isMessageSent = true;
-                            UIUtil.showSnackbar(getRootView(), postHelpFeedbackResponse.getText(), getString(R.string.back),
-                                    new View.OnClickListener() {
+                            UIUtil.showSnackbar(getRootView(), postHelpFeedbackResponse.getText(),
+                                    getString(R.string.back), new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
                                             finish();
@@ -200,8 +194,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
 
     private boolean isInformationValid() {
         if (TextUtils.isEmpty(editTextUserMessage.getText().toString())) {
-            UIUtil.showInfoSnackbar(editTextUserMessage,
-getString(R.string.your_message_must_be_non_empty));
+            UIUtil.showInfoSnackbar(editTextUserMessage, getString(R.string.your_message_must_be_non_empty));
             return false;
         } else {
             return true;
