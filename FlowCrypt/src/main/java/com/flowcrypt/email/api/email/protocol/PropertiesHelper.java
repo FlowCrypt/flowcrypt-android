@@ -34,9 +34,9 @@ public class PropertiesHelper {
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS, JavaEmailConstants
                 .MECHANISMS_TYPE_XOAUTH2);
-        properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH, BOOLEAN_VALUE_TRUE);
-        properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
-        properties.put(GmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS, JavaEmailConstants
+        properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH, BOOLEAN_VALUE_TRUE);
+        properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
+        properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS, JavaEmailConstants
                 .MECHANISMS_TYPE_XOAUTH2);
 
         return properties;

@@ -73,7 +73,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
             GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
                     account.name);
             GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(
-                    GmailConstants.FOLDER_NAME_INBOX);
+                    JavaEmailConstants.FOLDER_INBOX);
             gmailFolder.open(Folder.READ_ONLY);
 
             Message[] foundMessages = gmailFolder.search(
@@ -107,7 +107,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
      * Check is the private key exists in the keys list.
      *
      * @param keyDetailsList The list of {@link KeyDetails} objects.
-     * @param key                   The private key armored string.
+     * @param key            The private key armored string.
      * @return true if the key not exists in the list, otherwise false.
      */
     private boolean privateKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList,

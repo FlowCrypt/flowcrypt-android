@@ -10,7 +10,6 @@ import android.os.Messenger;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.gimap.GmailSSLStore;
@@ -62,7 +61,7 @@ public class LoadPrivateKeysFromGmailSynsTask extends BaseSyncTask {
 
         if (syncListener != null) {
             IMAPFolder imapFolder =
-                    (IMAPFolder) gmailSSLStore.getFolder(GmailConstants.FOLDER_NAME_INBOX);
+                    (IMAPFolder) gmailSSLStore.getFolder(JavaEmailConstants.FOLDER_INBOX);
             imapFolder.open(Folder.READ_ONLY);
 
             List<String> keys = new ArrayList<>();

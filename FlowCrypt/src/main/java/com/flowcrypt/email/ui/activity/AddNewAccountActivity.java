@@ -7,8 +7,10 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -19,13 +21,16 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.ui.loader.AddNewAccountAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
-
-import java.util.ArrayList;
+import com.flowcrypt.email.util.UIUtil;
 
 /**
  * This activity describes a logic of adding a new account of other email providers.
@@ -37,7 +42,8 @@ import java.util.ArrayList;
  */
 
 public class AddNewAccountActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
-        AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher {
+        AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher, LoaderManager
+                .LoaderCallbacks<LoaderResult> {
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -50,6 +56,8 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     private Spinner spinnerImapSecyrityType;
     private Spinner spinnerSmtpSecyrityType;
     private View layoutSmtpSignIn;
+    private View progressView;
+    private View contentView;
     private CheckBox checkBoxRequireSignInForSmtp;
 
     @Override
@@ -64,7 +72,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
 
     @Override
     public View getRootView() {
-        return null;
+        return contentView;
     }
 
     @Override
@@ -87,12 +95,12 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         switch (parent.getId()) {
             case R.id.spinnerImapSecurityType:
                 SecurityType securityTypeForImap = (SecurityType) parent.getAdapter().getItem(position);
-                editTextImapPort.setText(String.valueOf(securityTypeForImap.getImapPort()));
+                editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefaultImapPort()));
                 break;
 
             case R.id.spinnerSmtpSecyrityType:
                 SecurityType securityTypeForSmtp = (SecurityType) parent.getAdapter().getItem(position);
-                editTextSmtpPort.setText(String.valueOf(securityTypeForSmtp.getSmtpPort()));
+                editTextSmtpPort.setText(String.valueOf(securityTypeForSmtp.getDefaultSmtpPort()));
                 break;
         }
     }
@@ -107,7 +115,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         switch (v.getId()) {
             case R.id.buttonTryToConnect:
                 if (isAllInformationCorrect()) {
-
+                    getSupportLoaderManager().restartLoader(R.id.loader_id_add_new_account, null, this);
                 }
                 break;
         }
@@ -135,6 +143,59 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         }
     }
 
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_add_new_account:
+                UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
+
+                AuthCredentials authCredentials = generateAuthCredentials();
+                return new AddNewAccountAsyncTaskLoader(this, authCredentials);
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        handleLoaderResult(loader, loaderResult);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
+            case R.id.loader_id_add_new_account:
+                Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+                UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
+                break;
+        }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        switch (loaderId) {
+            case R.id.loader_id_add_new_account:
+                UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
+                        : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+                break;
+
+            default:
+                super.handleFailureLoaderResult(loaderId, e);
+                break;
+        }
+    }
+
     protected void initViews() {
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextUserName = (EditText) findViewById(R.id.editTextUserName);
@@ -149,6 +210,8 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         editTextEmail.addTextChangedListener(this);
 
         layoutSmtpSignIn = findViewById(R.id.layoutSmtpSignIn);
+        progressView = findViewById(R.id.progressView);
+        contentView = findViewById(R.id.layoutContent);
         checkBoxRequireSignInForSmtp = (CheckBox) findViewById(R.id.checkBoxRequireSignInForSmtp);
         checkBoxRequireSignInForSmtp.setOnCheckedChangeListener(this);
 
@@ -156,7 +219,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         spinnerSmtpSecyrityType = (Spinner) findViewById(R.id.spinnerSmtpSecyrityType);
 
         ArrayAdapter<SecurityType> userAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, generateAvailableSecurityTypes());
+                android.R.layout.simple_spinner_dropdown_item, SecurityType.generateAvailableSecurityTypes(this));
 
         spinnerImapSecyrityType.setAdapter(userAdapter);
         spinnerImapSecyrityType.setOnItemSelectedListener(this);
@@ -168,15 +231,25 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         }
     }
 
-    @NonNull
-    private ArrayList<SecurityType> generateAvailableSecurityTypes() {
-        ArrayList<SecurityType> securityTypes = new ArrayList<>();
-        securityTypes.add(new SecurityType("None", 143, 25));
-        securityTypes.add(new SecurityType("SSL/TLS", 993, 465));
-        securityTypes.add(new SecurityType("SSL/TLS (All certificates)", 993, 465));
-        securityTypes.add(new SecurityType("STARTLS", 143, 25));
-        securityTypes.add(new SecurityType("STARTLS (All certificates)", 143, 25));
-        return securityTypes;
+    /**
+     * Generate the {@link AuthCredentials} using user input.
+     *
+     * @return {@link AuthCredentials}.
+     */
+    private AuthCredentials generateAuthCredentials() {
+        return new AuthCredentials.Builder().setEmail(editTextEmail.getText().toString())
+                .setUsername(editTextUserName.getText().toString())
+                .setPassword(editTextPassword.getText().toString())
+                .setImapServer(editTextImapServer.getText().toString())
+                .setImapPort(Integer.parseInt(editTextImapPort.getText().toString()))
+                .setImapSecurityType((SecurityType) spinnerImapSecyrityType.getSelectedItem())
+                .setSmtpServer(editTextSmtpServer.getText().toString())
+                .setSmtpPort(Integer.parseInt(editTextSmtpPort.getText().toString()))
+                .setSmtpSecurityType((SecurityType) spinnerSmtpSecyrityType.getSelectedItem())
+                .setIsRequireSignInForSmtp(checkBoxRequireSignInForSmtp.isChecked())
+                .setSmtpSigInUsername(editTextSmtpUsername.getText().toString())
+                .setSmtpSignInPassword(editTextSmtpPassword.getText().toString())
+                .build();
     }
 
     /**
@@ -216,11 +289,11 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
             } else if (checkBoxRequireSignInForSmtp.isChecked()) {
                 if (TextUtils.isEmpty(editTextSmtpUsername.getText())) {
                     showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
-                            getString(R.string.smtp_sign_in_username)));
+                            getString(R.string.smtp_username)));
                     editTextSmtpUsername.requestFocus();
                 } else if (TextUtils.isEmpty(editTextSmtpPassword.getText())) {
                     showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
-                            getString(R.string.smtp_sign_in_password)));
+                            getString(R.string.smtp_password)));
                     editTextSmtpPassword.requestFocus();
                 } else return true;
             } else return true;

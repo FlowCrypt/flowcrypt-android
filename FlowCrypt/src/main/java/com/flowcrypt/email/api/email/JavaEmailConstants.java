@@ -16,9 +16,16 @@ package com.flowcrypt.email.api.email;
  */
 
 public class JavaEmailConstants {
+    /*IMAP*/
     public static final String PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable";
-    public static final String PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth" +
-            ".mechanisms";
+    public static final String PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable";
+    public static final String PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms";
+    /*SMTP*/
+    public static final String PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth";
+    public static final String PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";
+    public static final String PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable";
+    public static final String PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth.mechanisms";
+
     public static final String MECHANISMS_TYPE_XOAUTH2 = "XOAUTH2";
     public static final String GMAIL_IMAP_SERVER = "imap.gmail.com";
     public static final String PROTOCOL_IMAP = "imap";
@@ -32,4 +39,5 @@ public class JavaEmailConstants {
     public static final String FOLDER_ATTRIBUTE_NO_SELECT = "\\Noselect";
 
     public static final String HEADER_X_ATTACHMENT_ID = "X-Attachment-Id";
+    public static final String FOLDER_INBOX = "INBOX";
 }

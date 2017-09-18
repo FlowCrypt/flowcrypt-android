@@ -179,11 +179,15 @@
     <string name="outgoing_mail_settings">Outgoing mail settings</string>
     <string name="smtp_server">SMTP server</string>
     <string name="smtp_port">SMTP port</string>
-    <string name="require_sign_in">Require sign-in</string>
-    <string name="smtp_sign_in_username">SMTP sign-in Username</string>
-    <string name="smtp_sign_in_password">SMTP sign-in password</string>
+    <string name="require_custom_sign_in">Require custom sign-in</string>
+    <string name="smtp_username">SMTP Username</string>
+    <string name="smtp_password">SMTP Password</string>
     <string name="try_to_connect">Try to connect</string>
     <string name="adding_new_account">Adding a new account</string>
     <string name="template_imap_server">imap.%1$s</string>
     <string name="template_smtp_server">smtp.%1$s</string>
+    <string name="checking_email_settings">Checking email settings</string>
+    <string name="none">None</string>
+    <string name="ssl_tls">SSL/TLS</string>
+    <string name="startls">STARTLS</string>
 </resources>

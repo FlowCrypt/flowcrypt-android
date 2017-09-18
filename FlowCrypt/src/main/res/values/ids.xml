@@ -17,6 +17,7 @@
     <item name="loader_id_validate_key_from_file" type="id" />
     <item name="loader_id_validate_key_from_clipboard" type="id" />
     <item name="loader_id_save_private_key_as_file" type="id" />
+    <item name="loader_id_add_new_account" type="id" />
 
     <item name="syns_request_code_update_label" type="id" />
     <item name="syns_request_code_load_next_messages" type="id" />
