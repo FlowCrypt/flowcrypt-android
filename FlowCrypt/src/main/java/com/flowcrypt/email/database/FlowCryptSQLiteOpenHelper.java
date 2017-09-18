@@ -30,7 +30,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -74,15 +74,61 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
             case 1:
                 upgradeDatabaseFrom1To2Version(sqLiteDatabase);
                 upgradeDatabaseFrom2To3Version(sqLiteDatabase);
+                upgradeDatabaseFrom3To4Version(sqLiteDatabase);
                 break;
 
             case 2:
                 upgradeDatabaseFrom2To3Version(sqLiteDatabase);
+                upgradeDatabaseFrom3To4Version(sqLiteDatabase);
+                break;
+
+            case 3:
+                upgradeDatabaseFrom3To4Version(sqLiteDatabase);
                 break;
         }
 
         Log.d(TAG, "Database updated from OLD_VERSION = " + Integer.toString(oldVersion)
                 + " to NEW_VERSION = " + Integer.toString(newVersion));
+    }
+
+    private void upgradeDatabaseFrom3To4Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_USERNAME + " TEXT NOT NULL DEFAULT 'user';");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_PASSWORD + " TEXT NOT NULL DEFAULT 'password';");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IMAP_SERVER + " TEXT NOT NULL DEFAULT 'example.com';");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IMAP_PORT + " INTEGER DEFAULT 143;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IMAP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IMAP_IS_USE_STARTTLS + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IMAP_AUTH_MECHANISMS + " TEXT;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_SERVER + " TEXT NOT NULL DEFAULT 'example.com';");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_PORT + " INTEGER DEFAULT 25;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_STARTTLS + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_AUTH_MECHANISMS + " TEXT;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_CUSTOM_SIGN + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_USERNAME + " TEXT DEFAULT NULL;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_SMTP_PASSWORD + " TEXT DEFAULT NULL;");
+
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
     }
 
     private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {

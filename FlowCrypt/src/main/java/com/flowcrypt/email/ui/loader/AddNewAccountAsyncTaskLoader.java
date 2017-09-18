@@ -62,7 +62,7 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE,
                     authCredentials.getImapSecurityType().getOption() == SecurityType.Option.STARTLS);
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH,
-                    authCredentials.isRequireSignInForSmtp());
+                    authCredentials.isUseCustomSignInForSmtp());
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE,
                     authCredentials.getSmtpSecurityType().getOption() == SecurityType.Option.SSL_TLS);
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE,
@@ -74,7 +74,16 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
             testImapConnection(session);
             testSmtpConnection(session);
 
-            return new LoaderResult(true, null);
+            AccountDaoSource accountDaoSource = new AccountDaoSource();
+
+            AccountDao accountDao = accountDaoSource.getAccountInformation(getContext(), authCredentials.getEmail());
+
+            if (accountDao == null) {
+                accountDaoSource.addRow(getContext(), authCredentials);
+                accountDao = accountDaoSource.getAccountInformation(getContext(), authCredentials.getEmail());
+            }
+
+            return new LoaderResult(accountDao, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);
@@ -113,7 +122,7 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
         String username;
         String password;
 
-        if (authCredentials.isRequireSignInForSmtp()) {
+        if (authCredentials.isUseCustomSignInForSmtp()) {
             username = authCredentials.getSmtpSigInUsername();
             password = authCredentials.getSmtpSignInPassword();
         } else {

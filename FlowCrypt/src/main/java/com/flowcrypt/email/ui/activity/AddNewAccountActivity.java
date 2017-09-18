@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.AddNewAccountAsyncTaskLoader;
@@ -171,8 +172,10 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_add_new_account:
-                Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                if (result instanceof AccountDao) {
+                    Toast.makeText(this, "Added a new account", Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             default:

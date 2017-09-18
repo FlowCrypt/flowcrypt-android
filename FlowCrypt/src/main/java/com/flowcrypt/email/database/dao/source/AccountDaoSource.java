@@ -14,7 +14,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.api.email.model.SecurityType;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 /**
@@ -38,6 +41,21 @@ public class AccountDaoSource extends BaseDaoSource {
     public static final String COL_PHOTO_URL = "photo_url";
     public static final String COL_IS_ENABLE = "is_enable";
     public static final String COL_IS_ACTIVE = "is_active";
+    public static final String COL_USERNAME = "username";
+    public static final String COL_PASSWORD = "password";
+    public static final String COL_IMAP_SERVER = "imap_server";
+    public static final String COL_IMAP_PORT = "imap_port";
+    public static final String COL_IMAP_IS_USE_SSL_TLS = "imap_is_use_ssl_tls";
+    public static final String COL_IMAP_IS_USE_STARTTLS = "imap_is_use_starttls";
+    public static final String COL_IMAP_AUTH_MECHANISMS = "imap_auth_mechanisms";
+    public static final String COL_SMTP_SERVER = "smtp_server";
+    public static final String COL_SMTP_PORT = "smtp_port";
+    public static final String COL_SMTP_IS_USE_SSL_TLS = "smtp_is_use_ssl_tls";
+    public static final String COL_SMTP_IS_USE_STARTTLS = "smtp_is_use_starttls";
+    public static final String COL_SMTP_AUTH_MECHANISMS = "smtp_auth_mechanisms";
+    public static final String COL_SMTP_IS_USE_CUSTOM_SIGN = "smtp_is_use_custom_sign";
+    public static final String COL_SMTP_USERNAME = "smtp_username";
+    public static final String COL_SMTP_PASSWORD = "smtp_password";
 
     public static final String ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ACCOUNTS + " (" +
@@ -49,12 +67,26 @@ public class AccountDaoSource extends BaseDaoSource {
             COL_FAMILY_NAME + " VARCHAR(100) DEFAULT NULL, " +
             COL_PHOTO_URL + " TEXT DEFAULT NULL, " +
             COL_IS_ENABLE + " INTEGER DEFAULT 1, " +
-            COL_IS_ACTIVE + " INTEGER DEFAULT 0 " + ");";
+            COL_IS_ACTIVE + " INTEGER DEFAULT 0, " +
+            COL_USERNAME + " TEXT NOT NULL, " +
+            COL_PASSWORD + " TEXT NOT NULL, " +
+            COL_IMAP_SERVER + " TEXT NOT NULL, " +
+            COL_IMAP_PORT + " INTEGER DEFAULT 143, " +
+            COL_IMAP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0, " +
+            COL_IMAP_IS_USE_STARTTLS + " INTEGER DEFAULT 0, " +
+            COL_IMAP_AUTH_MECHANISMS + " TEXT, " +
+            COL_SMTP_SERVER + " TEXT NOT NULL, " +
+            COL_SMTP_PORT + " INTEGER DEFAULT 25, " +
+            COL_SMTP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0, " +
+            COL_SMTP_IS_USE_STARTTLS + " INTEGER DEFAULT 0, " +
+            COL_SMTP_AUTH_MECHANISMS + " TEXT, " +
+            COL_SMTP_IS_USE_CUSTOM_SIGN + " INTEGER DEFAULT 0, " +
+            COL_SMTP_USERNAME + " TEXT DEFAULT NULL, " +
+            COL_SMTP_PASSWORD + " TEXT DEFAULT NULL " + ");";
 
-    public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS =
-            "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_ACCOUNT_TYPE +
-                    "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
-                    " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ")";
+    public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = "CREATE UNIQUE INDEX IF NOT EXISTS "
+            + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
+            " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ")";
 
     /**
      * Generate the {@link AccountDao} from the current cursor position;
@@ -86,9 +118,25 @@ public class AccountDaoSource extends BaseDaoSource {
      */
     public Uri addRow(Context context, GoogleSignInAccount googleSignInAccount) {
         ContentResolver contentResolver = context.getContentResolver();
-        if (googleSignInAccount != null
-                && contentResolver != null) {
+        if (googleSignInAccount != null && contentResolver != null) {
             ContentValues contentValues = generateContentValues(googleSignInAccount);
+            if (contentValues == null) return null;
+
+            return contentResolver.insert(getBaseContentUri(), contentValues);
+        } else return null;
+    }
+
+    /**
+     * Save an information about an account using the {@link AuthCredentials};
+     *
+     * @param context         Interface to global information about an application environment;
+     * @param authCredentials The sign-in settings of IMAP and SMTP servers.
+     * @return The created {@link Uri} or null;
+     */
+    public Uri addRow(Context context, AuthCredentials authCredentials) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (authCredentials != null && contentResolver != null) {
+            ContentValues contentValues = generateContentValues(authCredentials);
             if (contentValues == null) return null;
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -247,4 +295,40 @@ public class AccountDaoSource extends BaseDaoSource {
         }
         return contentValues;
     }
+
+    /**
+     * Generate a {@link ContentValues} using {@link AuthCredentials}.
+     *
+     * @param authCredentials The {@link AuthCredentials} object;
+     * @return The generated {@link ContentValues}.
+     */
+    private ContentValues generateContentValues(AuthCredentials authCredentials) {
+        ContentValues contentValues = new ContentValues();
+        String email = authCredentials.getEmail();
+        if (!TextUtils.isEmpty(email)) {
+            contentValues.put(COL_EMAIL, email.toLowerCase());
+        } else return null;
+
+        contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1, email.length()));
+        contentValues.put(COL_USERNAME, authCredentials.getUsername());
+        contentValues.put(COL_PASSWORD, authCredentials.getPassword());
+        contentValues.put(COL_IMAP_SERVER, authCredentials.getImapServer());
+        contentValues.put(COL_IMAP_PORT, authCredentials.getImapPort());
+        contentValues.put(COL_IMAP_IS_USE_SSL_TLS,
+                authCredentials.getImapSecurityType().getOption() == SecurityType.Option.SSL_TLS);
+        contentValues.put(COL_IMAP_IS_USE_STARTTLS,
+                authCredentials.getImapSecurityType().getOption() == SecurityType.Option.STARTLS);
+        contentValues.put(COL_SMTP_SERVER, authCredentials.getSmtpServer());
+        contentValues.put(COL_SMTP_PORT, authCredentials.getSmtpPort());
+        contentValues.put(COL_SMTP_IS_USE_SSL_TLS,
+                authCredentials.getSmtpSecurityType().getOption() == SecurityType.Option.SSL_TLS);
+        contentValues.put(COL_SMTP_IS_USE_STARTTLS,
+                authCredentials.getSmtpSecurityType().getOption() == SecurityType.Option.STARTLS);
+        contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.isUseCustomSignInForSmtp());
+        contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
+        contentValues.put(COL_SMTP_PASSWORD, authCredentials.getSmtpSignInPassword());
+
+        return contentValues;
+    }
+
 }

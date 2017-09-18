@@ -39,7 +39,7 @@ public class AuthCredentials implements Parcelable {
     private String smtpServer;
     private int smtpPort;
     private SecurityType smtpSecurityType;
-    private boolean isRequireSignInForSmtp;
+    private boolean isUseCustomSignInForSmtp;
     private String smtpSigInUsername;
     private String smtpSignInPassword;
 
@@ -48,7 +48,7 @@ public class AuthCredentials implements Parcelable {
 
     public AuthCredentials(String email, String username, String password, String imapServer, int imapPort,
                            SecurityType imapSecurityType, String smtpServer, int smtpPort, SecurityType
-                                   smtpSecurityType, boolean isRequireSignInForSmtp, String smtpSigInUsername, String
+                                   smtpSecurityType, boolean isUseCustomSignInForSmtp, String smtpSigInUsername, String
                                    smtpSignInPassword) {
         this.email = email;
         this.username = username;
@@ -59,7 +59,7 @@ public class AuthCredentials implements Parcelable {
         this.smtpServer = smtpServer;
         this.smtpPort = smtpPort;
         this.smtpSecurityType = smtpSecurityType;
-        this.isRequireSignInForSmtp = isRequireSignInForSmtp;
+        this.isUseCustomSignInForSmtp = isUseCustomSignInForSmtp;
         this.smtpSigInUsername = smtpSigInUsername;
         this.smtpSignInPassword = smtpSignInPassword;
     }
@@ -74,7 +74,7 @@ public class AuthCredentials implements Parcelable {
         this.smtpServer = in.readString();
         this.smtpPort = in.readInt();
         this.smtpSecurityType = in.readParcelable(SecurityType.class.getClassLoader());
-        this.isRequireSignInForSmtp = in.readByte() != 0;
+        this.isUseCustomSignInForSmtp = in.readByte() != 0;
         this.smtpSigInUsername = in.readString();
         this.smtpSignInPassword = in.readString();
     }
@@ -95,7 +95,7 @@ public class AuthCredentials implements Parcelable {
         dest.writeString(this.smtpServer);
         dest.writeInt(this.smtpPort);
         dest.writeParcelable(this.smtpSecurityType, flags);
-        dest.writeByte(this.isRequireSignInForSmtp ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isUseCustomSignInForSmtp ? (byte) 1 : (byte) 0);
         dest.writeString(this.smtpSigInUsername);
         dest.writeString(this.smtpSignInPassword);
     }
@@ -136,8 +136,8 @@ public class AuthCredentials implements Parcelable {
         return smtpSecurityType;
     }
 
-    public boolean isRequireSignInForSmtp() {
-        return isRequireSignInForSmtp;
+    public boolean isUseCustomSignInForSmtp() {
+        return isUseCustomSignInForSmtp;
     }
 
     public String getSmtpSigInUsername() {
