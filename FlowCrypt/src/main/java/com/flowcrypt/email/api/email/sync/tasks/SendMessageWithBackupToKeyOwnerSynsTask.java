@@ -79,8 +79,8 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
             Message message = generateMessage(syncListener.getContext(), session);
 
             Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-            transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM,
-                    GmailConstants.PORT_SMTP_GMAIL_COM, userName, password);
+            transport.connect(GmailConstants.GMAIL_SMTP_SERVER,
+                    GmailConstants.GMAIL_SMTP_PORT, userName, password);
 
             transport.sendMessage(message, message.getAllRecipients());
 

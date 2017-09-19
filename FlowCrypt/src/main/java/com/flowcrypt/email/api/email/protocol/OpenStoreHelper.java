@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.protocol;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import javax.mail.MessagingException;
@@ -51,7 +52,7 @@ public class OpenStoreHelper {
     public static GmailSSLStore openAndConnectToGimapsStore(Session session, String token, String accountName) throws
             MessagingException {
         GmailSSLStore gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
-        gmailSSLStore.connect(JavaEmailConstants.GMAIL_IMAP_SERVER, accountName, token);
+        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token);
         return gmailSSLStore;
     }
 

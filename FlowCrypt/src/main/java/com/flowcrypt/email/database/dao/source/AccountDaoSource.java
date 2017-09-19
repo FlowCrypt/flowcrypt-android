@@ -16,6 +16,8 @@ import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -356,6 +358,16 @@ public class AccountDaoSource extends BaseDaoSource {
         }
 
         contentValues.put(COL_DISPLAY_NAME, googleSignInAccount.getDisplayName());
+        contentValues.put(COL_USERNAME, googleSignInAccount.getEmail());
+        contentValues.put(COL_PASSWORD, "");
+        contentValues.put(COL_IMAP_SERVER, GmailConstants.GMAIL_IMAP_SERVER);
+        contentValues.put(COL_IMAP_PORT, GmailConstants.GMAIL_IMAP_PORT);
+        contentValues.put(COL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_SERVER);
+        contentValues.put(COL_SMTP_PORT, GmailConstants.GMAIL_SMTP_PORT);
+        contentValues.put(COL_IMAP_AUTH_MECHANISMS, JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2);
+        contentValues.put(COL_SMTP_AUTH_MECHANISMS, JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2);
+        contentValues.put(COL_IMAP_IS_USE_SSL_TLS, 1);
+        contentValues.put(COL_SMTP_IS_USE_SSL_TLS, 1);
         contentValues.put(COL_GIVEN_NAME, googleSignInAccount.getGivenName());
         contentValues.put(COL_FAMILY_NAME, googleSignInAccount.getFamilyName());
         contentValues.put(COL_IS_ACTIVE, true);

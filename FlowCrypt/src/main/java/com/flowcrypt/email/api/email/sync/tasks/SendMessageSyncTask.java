@@ -100,7 +100,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
             MimeMessage mimeMessage = createMimeMessage(session, context, pgpCacheDirectory);
 
             Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-            transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM, GmailConstants.PORT_SMTP_GMAIL_COM,
+            transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT,
                     userName, password);
 
             transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());

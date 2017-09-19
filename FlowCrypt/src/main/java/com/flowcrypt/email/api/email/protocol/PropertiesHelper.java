@@ -33,11 +33,11 @@ public class PropertiesHelper {
         Properties properties = new Properties();
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
         properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS, JavaEmailConstants
-                .MECHANISMS_TYPE_XOAUTH2);
+                .AUTH_MECHANISMS_XOAUTH2);
         properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH, BOOLEAN_VALUE_TRUE);
         properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
         properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS, JavaEmailConstants
-                .MECHANISMS_TYPE_XOAUTH2);
+                .AUTH_MECHANISMS_XOAUTH2);
 
         return properties;
     }
