@@ -6,14 +6,14 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import com.flowcrypt.email.api.email.sync.GmailSynsManager;
+import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import javax.mail.Session;
 
 /**
- * The sync task which will be run by {@link GmailSynsManager}
+ * The sync task which will be run by {@link EmailSyncManager}
  *
  * @author DenBond7
  *         Date: 16.06.2017

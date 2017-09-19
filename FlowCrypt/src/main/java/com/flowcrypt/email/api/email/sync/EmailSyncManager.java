@@ -47,8 +47,8 @@ import javax.mail.Session;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class GmailSynsManager {
-    private static final String TAG = GmailSynsManager.class.getSimpleName();
+public class EmailSyncManager {
+    private static final String TAG = EmailSyncManager.class.getSimpleName();
 
     private BlockingQueue<SyncTask> syncTaskBlockingQueue;
     private ExecutorService executorService;
@@ -61,7 +61,7 @@ public class GmailSynsManager {
     private volatile Session session;
     private volatile GmailSSLStore gmailSSLStore;
 
-    public GmailSynsManager() {
+    public EmailSyncManager() {
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
         updateLabels(null, 0);
@@ -118,7 +118,7 @@ public class GmailSynsManager {
     }
 
     /**
-     * Set the {@link SyncListener} for current {@link GmailSynsManager}
+     * Set the {@link SyncListener} for current {@link EmailSyncManager}
      *
      * @param syncListener A new listener.
      */

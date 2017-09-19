@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.sync.GmailSynsManager;
+import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -94,7 +94,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
     private Map<String, Messenger> replyToMessengers;
 
-    private GmailSynsManager gmailSynsManager;
+    private EmailSyncManager emailSyncManager;
 
     /**
      * The current {@link Account} for what we do synchronization.
@@ -121,10 +121,10 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        gmailSynsManager = new GmailSynsManager();
-        gmailSynsManager.setSyncListener(this);
+        emailSyncManager = new EmailSyncManager();
+        emailSyncManager.setSyncListener(this);
 
-        messenger = new Messenger(new IncomingHandler(this, gmailSynsManager, replyToMessengers));
+        messenger = new Messenger(new IncomingHandler(this, emailSyncManager, replyToMessengers));
     }
 
     @Override
@@ -133,7 +133,7 @@ public class EmailSyncService extends Service implements SyncListener {
         isServiceStarted = true;
         this.account = new AccountDaoSource().getActiveAccountInformation(this).getAccount();
         if (account != null) {
-            gmailSynsManager.beginSync(false);
+            emailSyncManager.beginSync(false);
         } else {
             //todo-denbond7 handle this error;
         }
@@ -146,8 +146,8 @@ public class EmailSyncService extends Service implements SyncListener {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
 
-        if (gmailSynsManager != null) {
-            gmailSynsManager.stopSync();
+        if (emailSyncManager != null) {
+            emailSyncManager.stopSync();
         }
     }
 
@@ -178,7 +178,7 @@ public class EmailSyncService extends Service implements SyncListener {
                 }
             }
         } else {
-            gmailSynsManager.beginSync(false);
+            emailSyncManager.beginSync(false);
         }
 
         return messenger.getBinder();
@@ -518,15 +518,15 @@ public class EmailSyncService extends Service implements SyncListener {
      * service and other Android components.
      */
     private static class IncomingHandler extends Handler {
-        private final WeakReference<GmailSynsManager> gmailSynsManagerWeakReference;
+        private final WeakReference<EmailSyncManager> gmailSynsManagerWeakReference;
         private final WeakReference<EmailSyncService> syncServiceWeakReference;
         private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
 
         IncomingHandler(EmailSyncService emailSyncService,
-                        GmailSynsManager gmailSynsManager,
+                        EmailSyncManager emailSyncManager,
                         Map<String, Messenger> replyToMessengersWeakReference) {
             this.syncServiceWeakReference = new WeakReference<>(emailSyncService);
-            this.gmailSynsManagerWeakReference = new WeakReference<>(gmailSynsManager);
+            this.gmailSynsManagerWeakReference = new WeakReference<>(emailSyncManager);
             this.replyToMessengersWeakReference = new WeakReference<>
                     (replyToMessengersWeakReference);
         }
@@ -534,7 +534,7 @@ public class EmailSyncService extends Service implements SyncListener {
         @Override
         public void handleMessage(Message message) {
             if (gmailSynsManagerWeakReference.get() != null) {
-                GmailSynsManager gmailSynsManager = gmailSynsManagerWeakReference.get();
+                EmailSyncManager emailSyncManager = gmailSynsManagerWeakReference.get();
                 Action action = null;
 
                 if (message.obj instanceof Action) {
@@ -561,60 +561,60 @@ public class EmailSyncService extends Service implements SyncListener {
                         break;
 
                     case MESSAGE_UPDATE_LABELS:
-                        if (gmailSynsManager != null && action != null) {
-                            gmailSynsManager.updateLabels(action.getOwnerKey(), action.requestCode);
+                        if (emailSyncManager != null && action != null) {
+                            emailSyncManager.updateLabels(action.getOwnerKey(), action.requestCode);
                         }
                         break;
 
                     case MESSAGE_LOAD_MESSAGES:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
                                     .email.Folder) action.getObject();
-                            gmailSynsManager.loadMessages(action.getOwnerKey(),
+                            emailSyncManager.loadMessages(action.getOwnerKey(),
                                     action.getRequestCode(), folder.getServerFullFolderName(),
                                     message.arg1, message.arg2);
                         }
                         break;
 
                     case MESSAGE_LOAD_NEXT_MESSAGES:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder folderOfMessages =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            gmailSynsManager.loadNextMessages(action.getOwnerKey(),
+                            emailSyncManager.loadNextMessages(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     folderOfMessages.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
                     case MESSAGE_LOAD_NEW_MESSAGES_MANUALLY:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder refreshFolder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            gmailSynsManager.loadNewMessagesManually(action.getOwnerKey(),
+                            emailSyncManager.loadNewMessagesManually(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     refreshFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
                     case MESSAGE_LOAD_MESSAGE_DETAILS:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder messageFolder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            gmailSynsManager.loadMessageDetails(action.getOwnerKey(),
+                            emailSyncManager.loadMessageDetails(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     messageFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
                     case MESSAGE_MOVE_MESSAGE:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder[] folders = (com.flowcrypt.email
                                     .api.email.Folder[]) action.getObject();
 
-                            gmailSynsManager.moveMessage(action.getOwnerKey(),
+                            emailSyncManager.moveMessage(action.getOwnerKey(),
                                     action.getRequestCode(),
                                     folders[0].getServerFullFolderName(),
                                     folders[1].getServerFullFolderName(),
@@ -623,19 +623,19 @@ public class EmailSyncService extends Service implements SyncListener {
                         break;
 
                     case MESSAGE_SEND_ENCRYPTED_MESSAGE:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             OutgoingMessageInfo outgoingMessageInfo = (OutgoingMessageInfo) action.getObject();
 
-                            gmailSynsManager.sendEncryptedMessage(action.getOwnerKey(),
+                            emailSyncManager.sendEncryptedMessage(action.getOwnerKey(),
                                     action.getRequestCode(), outgoingMessageInfo);
                         }
                         break;
 
                     case MESSAGE_LOAD_PRIVATE_KEYS:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             String searchTermString = (String) action.getObject();
 
-                            gmailSynsManager.loadPrivateKeys(action.getOwnerKey(),
+                            emailSyncManager.loadPrivateKeys(action.getOwnerKey(),
                                     action.getRequestCode(), searchTermString);
                         }
                         break;
@@ -655,10 +655,10 @@ public class EmailSyncService extends Service implements SyncListener {
                         break;
 
                     case MESSAGE_SEND_MESSAGE_WITH_BACKUP:
-                        if (gmailSynsManager != null && action != null) {
+                        if (emailSyncManager != null && action != null) {
                             String account = (String) action.getObject();
 
-                            gmailSynsManager.sendMessageWithBackup(action.getOwnerKey(),
+                            emailSyncManager.sendMessageWithBackup(action.getOwnerKey(),
                                     action.getRequestCode(), account);
                         }
                         break;

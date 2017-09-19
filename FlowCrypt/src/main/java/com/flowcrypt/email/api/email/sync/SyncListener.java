@@ -18,7 +18,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 
 /**
- * This class can be used for communication with {@link GmailSynsManager}
+ * This class can be used for communication with {@link EmailSyncManager}
  *
  * @author DenBond7
  *         Date: 19.06.2017
