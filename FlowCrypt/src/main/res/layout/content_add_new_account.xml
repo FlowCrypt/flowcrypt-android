@@ -89,6 +89,7 @@
                 android:ems="10"
                 android:hint="@string/password"
                 android:inputType="textPassword"
+                android:maxLength="60"
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
@@ -304,6 +305,7 @@
                     android:ems="10"
                     android:hint="@string/smtp_password"
                     android:inputType="textPassword"
+                    android:maxLength="60"
                     android:maxLines="1"
                     android:paddingTop="@dimen/default_margin_medium" />
 

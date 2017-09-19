@@ -9,6 +9,8 @@ package com.flowcrypt.email.database.dao.source;
 import android.accounts.Account;
 import android.support.annotation.Nullable;
 
+import com.flowcrypt.email.api.email.model.AuthCredentials;
+
 /**
  * The simple POJO object which describes an account information.
  *
@@ -27,15 +29,17 @@ public class AccountDao {
     private String givenName;
     private String familyName;
     private String photoUrl;
+    private AuthCredentials authCredentials;
 
     public AccountDao(String email, String accountType, String displayName, String givenName,
-                      String familyName, String photoUrl) {
+                      String familyName, String photoUrl, AuthCredentials authCredentials) {
         this.email = email;
         this.accountType = accountType;
         this.displayName = displayName;
         this.givenName = givenName;
         this.familyName = familyName;
         this.photoUrl = photoUrl;
+        this.authCredentials = authCredentials;
     }
 
     @Nullable
@@ -65,5 +69,9 @@ public class AccountDao {
 
     public String getPhotoUrl() {
         return photoUrl;
+    }
+
+    public AuthCredentials getAuthCredentials() {
+        return authCredentials;
     }
 }

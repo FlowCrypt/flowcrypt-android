@@ -58,15 +58,15 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
         try {
             Properties properties = new Properties();
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE,
-                    authCredentials.getImapSecurityType().getOption() == SecurityType.Option.SSL_TLS);
+                    authCredentials.getImapSecurityTypeOption() == SecurityType.Option.SSL_TLS);
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE,
-                    authCredentials.getImapSecurityType().getOption() == SecurityType.Option.STARTLS);
+                    authCredentials.getImapSecurityTypeOption() == SecurityType.Option.STARTLS);
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH,
                     authCredentials.isUseCustomSignInForSmtp());
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE,
-                    authCredentials.getSmtpSecurityType().getOption() == SecurityType.Option.SSL_TLS);
+                    authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.SSL_TLS);
             properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE,
-                    authCredentials.getSmtpSecurityType().getOption() == SecurityType.Option.STARTLS);
+                    authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.STARTLS);
 
             Session session = Session.getInstance(properties);
             session.setDebug(BuildConfig.DEBUG);
