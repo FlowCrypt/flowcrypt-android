@@ -19,6 +19,7 @@ import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.util.ASCIIUtility;
 
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Store;
@@ -94,6 +95,9 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
                     return rawMessage;
                 }
             });
+
+            Message message = imapFolder.getMessageByUID(uid);
+            message.setFlag(Flags.Flag.SEEN, true);
 
             syncListener.onMessageDetailsReceived(accountDao, imapFolder, uid, rawMessage, ownerKey, requestCode);
         }
