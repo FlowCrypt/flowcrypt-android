@@ -21,7 +21,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
@@ -43,8 +42,8 @@ import com.flowcrypt.email.util.UIUtil;
  */
 
 public class AddNewAccountActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
-        AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher, LoaderManager
-                .LoaderCallbacks<LoaderResult> {
+        AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
+        LoaderManager.LoaderCallbacks<LoaderResult> {
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -174,8 +173,9 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
             case R.id.loader_id_add_new_account:
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 if (result instanceof AccountDao) {
-                    Toast.makeText(this, "Added a new account", Toast.LENGTH_SHORT).show();
-                }
+                    AccountDao accountDao = (AccountDao) result;
+                    startActivity(CreateOrImportKeyActivity.newIntent(this, accountDao, true));
+                } else throw new IllegalArgumentException("The result data must contains the AccountDao object");
                 break;
 
             default:

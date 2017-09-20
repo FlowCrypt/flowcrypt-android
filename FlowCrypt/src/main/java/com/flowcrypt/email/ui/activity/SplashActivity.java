@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.accounts.Account;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -76,7 +75,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
 
     private boolean isSignOutAction;
     private boolean isRevokeAccessAction;
-    private Account account;
+    private AccountDao accountDao;
 
     /**
      * Generate the sign out intent.
@@ -143,11 +142,11 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         }
 
         if (!isSignOutAction && !isRevokeAccessAction) {
-            AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+            accountDao = new AccountDaoSource().getActiveAccountInformation(this);
             if (accountDao != null) {
                 if (SecurityUtils.isBackupKeysExist(this)) {
                     EmailSyncService.startEmailSyncService(this);
-                    EmailManagerActivity.runEmailManagerActivity(this, accountDao.getAccount());
+                    EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                     finish();
                 }
             }
@@ -174,7 +173,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                         finish();
                         break;
 
@@ -230,7 +229,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         switch (id) {
             case R.id.loader_id_load_gmail_backups:
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao.getAccount());
 
             default:
                 return null;
@@ -246,7 +245,8 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
                         finish();
-                        startActivity(CreateOrImportKeyActivity.newIntent(this, account, true));
+                        startActivity(CreateOrImportKeyActivity.newIntent(this, new AccountDaoSource()
+                                .getActiveAccountInformation(this), true));
                     } else {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,
@@ -271,19 +271,18 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         if (googleSignInResult.isSuccess()) {
             GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
             if (googleSignInAccount != null) {
-                updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
-                account = googleSignInAccount.getAccount();
+                accountDao = updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
             } else {
                 //todo-denbond7 handle this situation
             }
 
             if (SecurityUtils.isBackupKeysExist(this)) {
                 EmailSyncService.startEmailSyncService(this);
-                EmailManagerActivity.runEmailManagerActivity(this, account);
+                EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                 finish();
             } else {
                 startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
-                if (account != null) {
+                if (accountDao != null) {
                     getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
                 } else {
                     //todo-denbond7 handle this situation
@@ -297,15 +296,15 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
         }
     }
 
-    private void updateInformationAboutAccountInLocalDatabase(GoogleSignInAccount
-                                                                      googleSignInAccount) {
+    private AccountDao updateInformationAboutAccountInLocalDatabase(GoogleSignInAccount googleSignInAccount) {
         AccountDaoSource accountDaoSource = new AccountDaoSource();
 
         boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0;
-
         if (!isAccountUpdated) {
             accountDaoSource.addRow(this, googleSignInAccount);
         }
+
+        return new AccountDaoSource().getAccountInformation(this, googleSignInAccount.getEmail());
     }
 
     private void initViews() {

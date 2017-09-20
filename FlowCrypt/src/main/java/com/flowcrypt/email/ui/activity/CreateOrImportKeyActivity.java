@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.accounts.Account;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
@@ -34,15 +34,14 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
             GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
                     CreateOrImportKeyActivity.class);
-    private static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_ACCOUNT",
-                    CreateOrImportKeyActivity.class);
+    private static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity.class);
     private boolean isShowAnotherAccountButton = true;
-    private Account account;
+    private AccountDao accountDao;
 
-    public static Intent newIntent(Context context, Account account, boolean isShowAnotherAccount) {
+    public static Intent newIntent(Context context, AccountDao accountDao, boolean isShowAnotherAccount) {
         Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
-        intent.putExtra(EXTRA_KEY_ACCOUNT, account);
+        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, accountDao);
         intent.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, isShowAnotherAccount);
         return intent;
     }
@@ -73,8 +72,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
         if (getIntent() != null) {
             this.isShowAnotherAccountButton = getIntent().getBooleanExtra
                     (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-            this.account =
-                    getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT);
+            this.accountDao = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
         }
 
         initViews();
@@ -86,13 +84,12 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
             case R.id.buttonImportMyKey:
                 KeyDetails keyDetails = null;
                 if (isServiceBound) {
-                    keyDetails = checkClipboardToFindPrivateKeyService
-                            .getKeyDetails();
+                    keyDetails = checkClipboardToFindPrivateKeyService.getKeyDetails();
                 }
 
                 startActivityForResult(ImportPrivateKeyActivity.newIntent(
-                        this, getString(R.string.import_private_key), keyDetails,
-                        false, ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
+                        this, getString(R.string.import_private_key), keyDetails, false,
+                        ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
             case R.id.buttonSelectAnotherAccount:
@@ -109,7 +106,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, account);
+                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                         finish();
                         break;
                 }

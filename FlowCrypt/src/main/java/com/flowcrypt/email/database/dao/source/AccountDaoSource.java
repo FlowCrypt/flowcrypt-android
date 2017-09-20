@@ -222,8 +222,7 @@ public class AccountDaoSource extends BaseDaoSource {
      */
     public AccountDao getActiveAccountInformation(Context context) {
         Cursor cursor = context.getContentResolver().query(
-                getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE +
-                        " = ?", new String[]{"1"}, null);
+                getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE + " = ?", new String[]{"1"}, null);
 
         if (cursor != null && cursor.moveToFirst()) {
             return getCurrentAccountDao(context, cursor);
@@ -248,9 +247,8 @@ public class AccountDaoSource extends BaseDaoSource {
             email = email.toLowerCase();
         }
 
-        Cursor cursor = context.getContentResolver().query(
-                getBaseContentUri(), null, AccountDaoSource.COL_EMAIL + " = ?",
-                new String[]{email}, null);
+        Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, AccountDaoSource.COL_EMAIL + " " +
+                "= ?", new String[]{email}, null);
 
         if (cursor != null && cursor.moveToFirst()) {
             return getCurrentAccountDao(context, cursor);
@@ -307,22 +305,22 @@ public class AccountDaoSource extends BaseDaoSource {
     /**
      * Delete information about some {@link AccountDao}.
      *
-     * @param context Interface to global information about an application environment.
-     * @param account The account name and type.
+     * @param context    Interface to global information about an application environment.
+     * @param accountDao The object which contains information about an email account.
      * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
      * updated or -1 otherwise.
      */
-    public int deleteAccountInformation(Context context, Account account) {
-        if (account != null) {
+    public int deleteAccountInformation(Context context, AccountDao accountDao) {
+        if (accountDao != null) {
 
-            String email = account.name;
+            String email = accountDao.getEmail();
             if (email == null) {
                 return -1;
             } else {
                 email = email.toLowerCase();
             }
 
-            String type = account.type;
+            String type = accountDao.getAccountType();
             if (type == null) {
                 return -1;
             } else {
@@ -331,8 +329,7 @@ public class AccountDaoSource extends BaseDaoSource {
 
             ContentResolver contentResolver = context.getContentResolver();
             if (contentResolver != null) {
-                return contentResolver.delete(getBaseContentUri(),
-                        COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
+                return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
                         new String[]{email, type});
             } else return -1;
         } else return -1;

@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -28,6 +27,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -91,7 +91,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             new MessageDaoSource().getBaseContentUri(),
                             null,
                             MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
-                            new String[]{onManageEmailsListener.getCurrentAccount().name,
+                            new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
                                     onManageEmailsListener.getCurrentFolder().getFolderAlias()},
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
@@ -391,8 +391,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                     @Override
                     public void onClick(View v) {
                         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                            UIUtil.exchangeViewVisibility(getContext(), true,
-                                    progressView, statusView);
+                            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                             loadNextMessages(-1);
                         } else {
                             showRetrySnackbar();
@@ -405,13 +404,12 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
      * Clean the cache information about some folder.
      */
     private void cleanCache() {
-        new MessageDaoSource().deleteCachedMessagesOfFolder(
-                getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
+        new MessageDaoSource().deleteCachedMessagesOfFolder(getContext(),
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
                 onManageEmailsListener.getCurrentFolder().getFolderAlias());
 
         new AttachmentDaoSource().deleteCachedAttachmentInfoOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
                 onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
@@ -422,7 +420,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
-                        onManageEmailsListener.getCurrentAccount().name,
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
                         onManageEmailsListener.getCurrentFolder().getFolderAlias()));
     }
 
@@ -469,7 +467,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     public interface OnManageEmailsListener {
-        Account getCurrentAccount();
+        AccountDao getCurrentAccountDao();
 
         Folder getCurrentFolder();
     }
