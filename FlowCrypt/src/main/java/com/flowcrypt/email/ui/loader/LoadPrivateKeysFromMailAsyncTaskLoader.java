@@ -70,8 +70,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-            GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token,
-                    account.name);
+            GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token, account.name);
             GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(
                     JavaEmailConstants.FOLDER_INBOX);
             gmailFolder.open(Folder.READ_ONLY);

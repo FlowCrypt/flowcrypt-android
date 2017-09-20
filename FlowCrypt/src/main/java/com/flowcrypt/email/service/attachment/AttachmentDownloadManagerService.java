@@ -28,12 +28,10 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.gimap.GmailSSLStore;
 
@@ -454,11 +452,9 @@ public class AttachmentDownloadManagerService extends Service {
             File attachmentFile = prepareAttachmentFile();
 
             try {
-                String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
-                        JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-
-                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(
-                        OpenStoreHelper.getAttachmentGmailSession(), token, attachmentInfo.getEmail());
+                //TODO-DenBond7 ISSUE_75 Need fix after use different providers
+                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(context,
+                        OpenStoreHelper.getAttachmentGmailSession(), null);
                 GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(new ImapLabelsDaoSource()
                         .getFolderByAlias(context, attachmentInfo.getEmail(),
                                 attachmentInfo.getFolder()).getServerFullFolderName());

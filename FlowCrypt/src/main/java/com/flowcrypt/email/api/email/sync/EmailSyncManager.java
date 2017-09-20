@@ -330,7 +330,7 @@ public class EmailSyncManager {
                         try {
                             if (!isConnected()) {
                                 Log.d(TAG, "Not connected. Start a reconnection ...");
-                                openConnectionToGmailStore();
+                                openConnectionToStore();
                                 Log.d(TAG, "Reconnection done");
                             }
 
@@ -361,10 +361,10 @@ public class EmailSyncManager {
             Log.d(TAG, "SyncTaskRunnable stop");
         }
 
-        private void openConnectionToGmailStore() throws IOException,
+        private void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
             session = OpenStoreHelper.getSessionForAccountDao(accountDao);
-            store = OpenStoreHelper.openAndConnectToStore(accountDao, session, null);
+            store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
         }
 
         /**
@@ -384,7 +384,7 @@ public class EmailSyncManager {
          */
         private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
             if (!isConnected()) {
-                openConnectionToGmailStore();
+                openConnectionToStore();
             }
         }
     }
