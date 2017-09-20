@@ -115,7 +115,7 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param context    Interface to global information about an application environment.
      * @param email      The email that the message linked.
      * @param label      The folder label.
-     * @param imapFolder The {@link IMAPFolder} object which contains an information about a
+     * @param imapFolder The {@link IMAPFolder} object which contains information about a
      *                   remote folder.
      * @param messages   The messages array.
      * @return the number of newly created rows.

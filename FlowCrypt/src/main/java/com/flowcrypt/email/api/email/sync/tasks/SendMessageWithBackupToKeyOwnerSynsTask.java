@@ -13,8 +13,8 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -71,20 +71,17 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(Session session, String userName, String password, SyncListener syncListener)
-            throws Exception {
-        super.run(session, userName, password, syncListener);
+    public void runSMTPAction(AccountDao accountDao, Session session, SyncListener syncListener) throws Exception {
+        super.runSMTPAction(accountDao, session, syncListener);
 
         if (syncListener != null && !TextUtils.isEmpty(accountName)) {
             Message message = generateMessage(syncListener.getContext(), session);
 
-            Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-            transport.connect(GmailConstants.GMAIL_SMTP_SERVER,
-                    GmailConstants.GMAIL_SMTP_PORT, userName, password);
+            Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
 
             transport.sendMessage(message, message.getAllRecipients());
 
-            syncListener.onMessageWithBackupToKeyOwnerSent(ownerKey, requestCode, true);
+            syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);
         }
     }
 

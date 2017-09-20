@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.service;
 
-import android.accounts.Account;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
@@ -22,7 +21,6 @@ import android.util.Log;
 
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
@@ -33,8 +31,6 @@ import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
@@ -96,11 +92,6 @@ public class EmailSyncService extends Service implements SyncListener {
 
     private EmailSyncManager emailSyncManager;
 
-    /**
-     * The current {@link Account} for what we do synchronization.
-     */
-    private Account account;
-
     private boolean isServiceStarted;
 
     public EmailSyncService() {
@@ -121,7 +112,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        emailSyncManager = new EmailSyncManager();
+        emailSyncManager = new EmailSyncManager(new AccountDaoSource().getActiveAccountInformation(this));
         emailSyncManager.setSyncListener(this);
 
         messenger = new Messenger(new IncomingHandler(this, emailSyncManager, replyToMessengers));
@@ -131,13 +122,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
         isServiceStarted = true;
-        this.account = new AccountDaoSource().getActiveAccountInformation(this).getAccount();
-        if (account != null) {
-            emailSyncManager.beginSync(false);
-        } else {
-            //todo-denbond7 handle this error;
-        }
-
+        emailSyncManager.beginSync(false);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -167,20 +152,9 @@ public class EmailSyncService extends Service implements SyncListener {
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind:" + intent);
 
-        if (account == null) {
-            AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation
-                    (getApplicationContext());
-            if (accountDao != null) {
-                account = accountDao.getAccount();
-
-                if (account != null && !isServiceStarted) {
-                    EmailSyncService.startEmailSyncService(getContext());
-                }
-            }
-        } else {
-            emailSyncManager.beginSync(false);
+        if (!isServiceStarted) {
+            EmailSyncService.startEmailSyncService(getContext());
         }
-
         return messenger.getBinder();
     }
 
@@ -190,7 +164,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageWithBackupToKeyOwnerSent(String ownerKey, int requestCode,
+    public void onMessageWithBackupToKeyOwnerSent(AccountDao accountDao, String ownerKey, int requestCode,
                                                   boolean isSent) {
         try {
             if (isSent) {
@@ -204,7 +178,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onPrivateKeyFound(List<String> keys, String ownerKey, int requestCode) {
+    public void onPrivateKeyFound(AccountDao accountDao, List<String> keys, String ownerKey, int requestCode) {
         try {
             sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
         } catch (RemoteException e) {
@@ -213,7 +187,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onEncryptedMessageSent(String ownerKey, int requestCode, boolean isSent) {
+    public void onEncryptedMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent) {
         try {
             if (isSent) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
@@ -226,7 +200,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessagesMoved(IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+    public void onMessagesMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
                                 javax.mail.Message[] messages, String ownerKey, int requestCode) {
         try {
             if (messages != null && messages.length > 0) {
@@ -240,15 +214,15 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
-            rawMessageWithOutAttachments, String ownerKey, int requestCode) {
+    public void onMessageDetailsReceived(AccountDao accountDao, IMAPFolder imapFolder, long uid,
+                                         String rawMessageWithOutAttachments, String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
                     imapFolder.getName());
 
             messageDaoSource.updateMessageRawText(getApplicationContext(),
-                    account.name,
+                    accountDao.getEmail(),
                     folder.getFolderAlias(),
                     uid,
                     rawMessageWithOutAttachments);
@@ -264,8 +238,8 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onMessagesReceived(IMAPFolder imapFolder, javax.mail.Message[] messages, String
-            key, int requestCode) {
+    public void onMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                   String key, int requestCode) {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
@@ -274,7 +248,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
-                    account.name,
+                    accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
                     messages);
@@ -285,8 +259,8 @@ public class EmailSyncService extends Service implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
-            updateAttachmentTable(folder, imapFolder, messages);
+            updateLocalContactsIfMessagesFromSentFolder(accountDao, imapFolder, messages);
+            updateAttachmentTable(accountDao, folder, imapFolder, messages);
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
@@ -294,18 +268,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public String getValidToken() throws IOException, GoogleAuthException {
-        return GoogleAuthUtil.getToken(this, account,
-                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-    }
-
-    @Override
-    public String getEmail() {
-        return account.name;
-    }
-
-    @Override
-    public void onFolderInfoReceived(Folder[] folders, String key, int requestCode) {
+    public void onFolderInfoReceived(AccountDao accountDao, Folder[] folders, String key, int requestCode) {
         Log.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
 
         FoldersManager foldersManager = new FoldersManager();
@@ -319,9 +282,8 @@ public class EmailSyncService extends Service implements SyncListener {
         }
 
         ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-        imapLabelsDaoSource.deleteFolders(getApplicationContext(), account.name);
-        imapLabelsDaoSource.addRows(getApplicationContext(), account.name,
-                foldersManager.getAllFolders());
+        imapLabelsDaoSource.deleteFolders(getApplicationContext(), accountDao.getEmail());
+        imapLabelsDaoSource.addRows(getApplicationContext(), accountDao.getEmail(), foldersManager.getAllFolders());
 
         try {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
@@ -331,7 +293,7 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onError(int errorType, Exception e, String key, int requestCode) {
+    public void onError(AccountDao accountDao, int errorType, Exception e, String key, int requestCode) {
         Log.e(TAG, "onError: errorType" + errorType + "| e =" + e);
         try {
             if (replyToMessengers.containsKey(key)) {
@@ -344,13 +306,14 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     /**
+     * @param accountDao The object which contains information about an email account.
      * @param folder     The local reflection of the remote folder.
      * @param imapFolder The folder where the new messages exist.
      * @param messages   The new messages.
      * @throws MessagingException
      * @throws IOException
      */
-    private void updateAttachmentTable(com.flowcrypt.email.api.email.Folder folder,
+    private void updateAttachmentTable(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
                                        IMAPFolder imapFolder, javax.mail.Message[] messages)
             throws MessagingException, IOException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
@@ -360,14 +323,13 @@ public class EmailSyncService extends Service implements SyncListener {
             ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfo(message);
             if (!attachmentInfoList.isEmpty()) {
                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                    contentValuesList.add(AttachmentDaoSource.prepareContentValues(account.name,
+                    contentValuesList.add(AttachmentDaoSource.prepareContentValues(accountDao.getEmail(),
                             folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
                 }
             }
         }
 
-        attachmentDaoSource.addRows(getApplicationContext(),
-                contentValuesList.toArray(new ContentValues[0]));
+        attachmentDaoSource.addRows(getApplicationContext(), contentValuesList.toArray(new ContentValues[0]));
     }
 
     /**
@@ -379,8 +341,7 @@ public class EmailSyncService extends Service implements SyncListener {
      * @throws IOException
      */
     @NonNull
-    private ArrayList<AttachmentInfo> getAttachmentsInfo(Part part)
-            throws MessagingException, IOException {
+    private ArrayList<AttachmentInfo> getAttachmentsInfo(Part part) throws MessagingException, IOException {
         ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
         if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
@@ -441,8 +402,7 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param obj         The object which will be send to the request {@link Messenger}.
      * @throws RemoteException
      */
-    private void sendReply(String key, int requestCode, int resultCode, Object obj) throws
-            RemoteException {
+    private void sendReply(String key, int requestCode, int resultCode, Object obj) throws RemoteException {
         if (replyToMessengers.containsKey(key)) {
             Messenger messenger = replyToMessengers.get(key);
             messenger.send(Message.obtain(null, REPLY_OK, requestCode, resultCode, obj));
@@ -450,17 +410,17 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     /**
-     * Update an information about contacts in the local database if current messages from the
+     * Update information about contacts in the local database if current messages from the
      * Sent folder.
      *
+     * @param accountDao The object which contains information about an email account.
      * @param imapFolder The folder where messages exist.
      * @param messages   The received messages.
      */
-    private void updateLocalContactsIfMessagesFromSentFolder(IMAPFolder imapFolder, javax.mail
-            .Message[] messages) {
+    private void updateLocalContactsIfMessagesFromSentFolder(AccountDao accountDao, IMAPFolder imapFolder,
+                                                             javax.mail.Message[] messages) {
         try {
-            boolean isSentFolder = Arrays.asList(imapFolder.getAttributes())
-                    .contains("\\Sent");
+            boolean isSentFolder = Arrays.asList(imapFolder.getAttributes()).contains("\\Sent");
 
             if (isSentFolder) {
                 ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
@@ -480,13 +440,12 @@ public class EmailSyncService extends Service implements SyncListener {
      * This information will be retrieved from "to" and "cc" headers.
      *
      * @param message The input {@link Message}.
-     * @return <tt>{@link List}</tt> of EmailAndNamePair objects, which contains an information
+     * @return <tt>{@link List}</tt> of EmailAndNamePair objects, which contains information
      * about
      * emails and names.
-     * @throws MessagingException when retrieve an information about recipients.
+     * @throws MessagingException when retrieve information about recipients.
      */
-    private List<EmailAndNamePair> getEmailAndNamePairsFromMessage(javax.mail.Message message)
-            throws
+    private List<EmailAndNamePair> getEmailAndNamePairsFromMessage(javax.mail.Message message) throws
             MessagingException {
         List<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
 
@@ -522,8 +481,7 @@ public class EmailSyncService extends Service implements SyncListener {
         private final WeakReference<EmailSyncService> syncServiceWeakReference;
         private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
 
-        IncomingHandler(EmailSyncService emailSyncService,
-                        EmailSyncManager emailSyncManager,
+        IncomingHandler(EmailSyncService emailSyncService, EmailSyncManager emailSyncManager,
                         Map<String, Messenger> replyToMessengersWeakReference) {
             this.syncServiceWeakReference = new WeakReference<>(emailSyncService);
             this.gmailSynsManagerWeakReference = new WeakReference<>(emailSyncManager);
@@ -543,8 +501,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
                 switch (message.what) {
                     case MESSAGE_ADD_REPLY_MESSENGER:
-                        Map<String, Messenger> replyToMessengersForAdd
-                                = replyToMessengersWeakReference.get();
+                        Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
 
                         if (replyToMessengersForAdd != null && action != null) {
                             replyToMessengersForAdd.put(action.getOwnerKey(), message.replyTo);
@@ -552,8 +509,7 @@ public class EmailSyncService extends Service implements SyncListener {
                         break;
 
                     case MESSAGE_REMOVE_REPLY_MESSENGER:
-                        Map<String, Messenger> replyToMessengersForRemove
-                                = replyToMessengersWeakReference.get();
+                        Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakReference.get();
 
                         if (replyToMessengersForRemove != null && action != null) {
                             replyToMessengersForRemove.remove(action.getOwnerKey());
@@ -568,11 +524,10 @@ public class EmailSyncService extends Service implements SyncListener {
 
                     case MESSAGE_LOAD_MESSAGES:
                         if (emailSyncManager != null && action != null) {
-                            com.flowcrypt.email.api.email.Folder folder = (com.flowcrypt.email.api
-                                    .email.Folder) action.getObject();
-                            emailSyncManager.loadMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), folder.getServerFullFolderName(),
-                                    message.arg1, message.arg2);
+                            com.flowcrypt.email.api.email.Folder folder =
+                                    (com.flowcrypt.email.api.email.Folder) action.getObject();
+                            emailSyncManager.loadMessages(action.getOwnerKey(), action.getRequestCode(),
+                                    folder.getServerFullFolderName(), message.arg1, message.arg2);
                         }
                         break;
 
@@ -582,8 +537,7 @@ public class EmailSyncService extends Service implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.loadNextMessages(action.getOwnerKey(),
-                                    action.getRequestCode(),
-                                    folderOfMessages.getServerFullFolderName(), message.arg1);
+                                    action.getRequestCode(), folderOfMessages.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
@@ -593,8 +547,7 @@ public class EmailSyncService extends Service implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.loadNewMessagesManually(action.getOwnerKey(),
-                                    action.getRequestCode(),
-                                    refreshFolder.getServerFullFolderName(), message.arg1);
+                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
@@ -604,8 +557,7 @@ public class EmailSyncService extends Service implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.loadMessageDetails(action.getOwnerKey(),
-                                    action.getRequestCode(),
-                                    messageFolder.getServerFullFolderName(), message.arg1);
+                                    action.getRequestCode(), messageFolder.getServerFullFolderName(), message.arg1);
                         }
                         break;
 
@@ -614,10 +566,8 @@ public class EmailSyncService extends Service implements SyncListener {
                             com.flowcrypt.email.api.email.Folder[] folders = (com.flowcrypt.email
                                     .api.email.Folder[]) action.getObject();
 
-                            emailSyncManager.moveMessage(action.getOwnerKey(),
-                                    action.getRequestCode(),
-                                    folders[0].getServerFullFolderName(),
-                                    folders[1].getServerFullFolderName(),
+                            emailSyncManager.moveMessage(action.getOwnerKey(), action.getRequestCode(),
+                                    folders[0].getServerFullFolderName(), folders[1].getServerFullFolderName(),
                                     message.arg1);
                         }
                         break;
@@ -635,8 +585,8 @@ public class EmailSyncService extends Service implements SyncListener {
                         if (emailSyncManager != null && action != null) {
                             String searchTermString = (String) action.getObject();
 
-                            emailSyncManager.loadPrivateKeys(action.getOwnerKey(),
-                                    action.getRequestCode(), searchTermString);
+                            emailSyncManager.loadPrivateKeys(action.getOwnerKey(), action.getRequestCode(),
+                                    searchTermString);
                         }
                         break;
 
@@ -645,9 +595,8 @@ public class EmailSyncService extends Service implements SyncListener {
 
                         if (emailSyncService != null && action != null) {
                             try {
-                                emailSyncService.sendReply(action.getOwnerKey(),
-                                        action.getRequestCode(), REPLY_RESULT_CODE_ACTION_OK,
-                                        emailSyncService.getEmail());
+                                emailSyncService.sendReply(action.getOwnerKey(), action.getRequestCode(),
+                                        REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                             }
@@ -658,8 +607,8 @@ public class EmailSyncService extends Service implements SyncListener {
                         if (emailSyncManager != null && action != null) {
                             String account = (String) action.getObject();
 
-                            emailSyncManager.sendMessageWithBackup(action.getOwnerKey(),
-                                    action.getRequestCode(), account);
+                            emailSyncManager.sendMessageWithBackup(action.getOwnerKey(), action.getRequestCode(),
+                                    account);
                         }
                         break;
 

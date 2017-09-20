@@ -8,10 +8,9 @@ package com.flowcrypt.email.api.email.sync;
 
 import android.content.Context;
 
-import com.google.android.gms.auth.GoogleAuthException;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
-import java.io.IOException;
 import java.util.List;
 
 import javax.mail.Folder;
@@ -38,36 +37,40 @@ public interface SyncListener {
     /**
      * This method called when a message with a backup to the key owner was sent.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to
      *                    {@link android.os.Messenger}.
      * @param isSent      true if the message was sent, false otherwise.
      */
-    void onMessageWithBackupToKeyOwnerSent(String ownerKey, int requestCode, boolean isSent);
+    void onMessageWithBackupToKeyOwnerSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent);
 
     /**
      * This method called when the private keys found.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param keys        The private keys list.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to
      *                    {@link android.os.Messenger}.
      */
-    void onPrivateKeyFound(List<String> keys, String ownerKey, int requestCode);
+    void onPrivateKeyFound(AccountDao accountDao, List<String> keys, String ownerKey, int requestCode);
 
     /**
      * This method called when an encrypted message was sent.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to
      *                    {@link android.os.Messenger}.
      * @param isSent      true if the message was sent, false otherwise.
      */
-    void onEncryptedMessageSent(String ownerKey, int requestCode, boolean isSent);
+    void onEncryptedMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent);
 
     /**
      * This method called when a new messages received from the some folder.
      *
+     * @param accountDao            The {@link AccountDao} object which contains information about an email account.
      * @param sourceImapFolder      The source folder where the messages exist.
      * @param destinationImapFolder The destination folder where the messages were moved.
      * @param messages              The moved messages.
@@ -75,12 +78,14 @@ public interface SyncListener {
      * @param requestCode           The unique request code for the reply to
      *                              {@link android.os.Messenger}.
      */
-    void onMessagesMoved(IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+    void onMessagesMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
                          Message[] messages, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.
      *
+     * @param accountDao                   The {@link AccountDao} object which contains information about an email
+     *                                     account.
      * @param imapFolder                   The folder where the new messages exist.
      * @param uid                          The UID of the message.
      * @param rawMessageWithOutAttachments The raw message without attachments.
@@ -88,52 +93,39 @@ public interface SyncListener {
      * @param requestCode                  The unique request code for the reply to
      *                                     {@link android.os.Messenger}.
      */
-    void onMessageDetailsReceived(IMAPFolder imapFolder, long uid, String
+    void onMessageDetailsReceived(AccountDao accountDao, IMAPFolder imapFolder, long uid, String
             rawMessageWithOutAttachments, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param folder      The folder where the new messages exist.
      * @param messages    The new messages.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onMessagesReceived(IMAPFolder folder, Message[] messages, String ownerKey, int
+    void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey, int
             requestCode);
 
     /**
      * This method called when new folders list received.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param folders     The new folders list.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onFolderInfoReceived(Folder[] folders, String ownerKey, int requestCode);
+    void onFolderInfoReceived(AccountDao accountDao, Folder[] folders, String ownerKey, int requestCode);
 
     /**
      * Handle an error of synchronization.
      *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param errorType   The error type code.
      * @param e           The exception that occurred during synchronization.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onError(int errorType, Exception e, String ownerKey, int requestCode);
-
-    /**
-     * Get a valid OAuth2 token for current user. Must be called on the non-UI thread.
-     *
-     * @return A new valid OAuth2 token;
-     * @throws IOException
-     * @throws GoogleAuthException
-     */
-    String getValidToken() throws IOException, GoogleAuthException;
-
-    /**
-     * Get the email of the current account.
-     *
-     * @return The account email.
-     */
-    String getEmail();
+    void onError(AccountDao accountDao, int errorType, Exception e, String ownerKey, int requestCode);
 }

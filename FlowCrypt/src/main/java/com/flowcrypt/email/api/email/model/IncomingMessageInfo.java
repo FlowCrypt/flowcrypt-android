@@ -92,7 +92,7 @@ public class IncomingMessageInfo extends MessageInfo {
     }
 
     /**
-     * Return a list of String which contain an information
+     * Return a list of String which contain information
      * about from addresses.
      *
      * @return <tt>ArrayList<String></tt> The list of from addresses.

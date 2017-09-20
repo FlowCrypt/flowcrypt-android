@@ -331,7 +331,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * Move the message to an another folder.
      *
      * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
     public void sendEncryptedMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {

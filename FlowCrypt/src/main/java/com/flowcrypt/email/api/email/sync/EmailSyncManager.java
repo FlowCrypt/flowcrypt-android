@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.gimap.GmailSSLStore;
 
@@ -34,6 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.Store;
 
 /**
  * This class describes a logic of work with {@link GmailSSLStore} for the single account. Via
@@ -59,9 +61,11 @@ public class EmailSyncManager {
      */
     private volatile SyncListener syncListener;
     private volatile Session session;
-    private volatile GmailSSLStore gmailSSLStore;
+    private volatile Store store;
+    private volatile AccountDao accountDao;
 
-    public EmailSyncManager() {
+    public EmailSyncManager(AccountDao accountDao) {
+        this.accountDao = accountDao;
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
         updateLabels(null, 0);
@@ -249,7 +253,7 @@ public class EmailSyncManager {
      *
      * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
      * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
     public void sendEncryptedMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
@@ -292,6 +296,10 @@ public class EmailSyncManager {
         }
     }
 
+    public AccountDao getAccountDao() {
+        return accountDao;
+    }
+
     /**
      * Remove the old tasks from the queue of synchronization.
      *
@@ -328,15 +336,14 @@ public class EmailSyncManager {
 
                             Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
                             if (syncTask.isUseSMTP()) {
-                                syncTask.run(session, getEmail(), getValidToken(), syncListener);
+                                syncTask.runSMTPAction(accountDao, session, syncListener);
                             } else {
-                                syncTask.run(gmailSSLStore, syncListener);
+                                syncTask.runIMAPAction(accountDao, store, syncListener);
                             }
-                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
-                                    + " completed");
+                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
                         } catch (Exception e) {
                             e.printStackTrace();
-                            syncTask.handleException(e, syncListener);
+                            syncTask.handleException(accountDao, e, syncListener);
                         }
                     }
                 } catch (InterruptedException e) {
@@ -345,7 +352,7 @@ public class EmailSyncManager {
             }
 
             try {
-                gmailSSLStore.close();
+                store.close();
             } catch (MessagingException e) {
                 e.printStackTrace();
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
@@ -356,9 +363,8 @@ public class EmailSyncManager {
 
         private void openConnectionToGmailStore() throws IOException,
                 GoogleAuthException, MessagingException {
-            session = OpenStoreHelper.getGmailSession();
-            gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(session, getValidToken(),
-                    getEmail());
+            session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            store = OpenStoreHelper.openAndConnectToStore(accountDao, session, null);
         }
 
         /**
@@ -368,7 +374,7 @@ public class EmailSyncManager {
          * @return trus if connected, false otherwise.
          */
         private boolean isConnected() {
-            return gmailSSLStore != null && gmailSSLStore.isConnected();
+            return store != null && store.isConnected();
         }
 
         /**
@@ -380,22 +386,6 @@ public class EmailSyncManager {
             if (!isConnected()) {
                 openConnectionToGmailStore();
             }
-        }
-
-        private String getValidToken() throws IOException, GoogleAuthException {
-            if (syncListener != null) {
-                return syncListener.getValidToken();
-            } else
-                throw new IllegalArgumentException("You must specify"
-                        + SyncListener.class.getSimpleName() + " to use this method");
-        }
-
-        private String getEmail() throws IOException, GoogleAuthException {
-            if (syncListener != null) {
-                return syncListener.getEmail();
-            } else
-                throw new IllegalArgumentException("You must specify"
-                        + SyncListener.class.getSimpleName() + " to use this method");
         }
     }
 }

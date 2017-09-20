@@ -167,7 +167,7 @@ public class AccountDaoSource extends BaseDaoSource {
                 .setSmtpServer(cursor.getString(cursor.getColumnIndex(COL_SMTP_SERVER)))
                 .setSmtpPort(cursor.getInt(cursor.getColumnIndex(COL_SMTP_PORT)))
                 .setSmtpSecurityTypeOption(smtpSecurityTypeOption)
-                .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 0)
+                .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
                 .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
                 .setSmtpSignInPassword(keyStoreCryptoManager.decryptWithRSA(
                         cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
@@ -180,7 +180,7 @@ public class AccountDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Save an information about an account using the {@link GoogleSignInAccount};
+     * Save information about an account using the {@link GoogleSignInAccount};
      *
      * @param context             Interface to global information about an application environment;
      * @param googleSignInAccount Reflecting the user's sign in information.
@@ -189,7 +189,7 @@ public class AccountDaoSource extends BaseDaoSource {
     public Uri addRow(Context context, GoogleSignInAccount googleSignInAccount) {
         ContentResolver contentResolver = context.getContentResolver();
         if (googleSignInAccount != null && contentResolver != null) {
-            ContentValues contentValues = generateContentValuesWithEncryptedPassword(googleSignInAccount);
+            ContentValues contentValues = generateContentValues(googleSignInAccount);
             if (contentValues == null) return null;
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -197,7 +197,7 @@ public class AccountDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Save an information about an account using the {@link AuthCredentials};
+     * Save information about an account using the {@link AuthCredentials};
      *
      * @param context         Interface to global information about an application environment;
      * @param authCredentials The sign-in settings of IMAP and SMTP servers.
@@ -264,7 +264,7 @@ public class AccountDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Update an information about some {@link AccountDao}.
+     * Update information about some {@link AccountDao}.
      *
      * @param context             Interface to global information about an application environment.
      * @param googleSignInAccount Reflecting the user's sign in information.
@@ -295,7 +295,7 @@ public class AccountDaoSource extends BaseDaoSource {
 
             ContentResolver contentResolver = context.getContentResolver();
             if (contentResolver != null) {
-                ContentValues contentValues = generateContentValuesWithEncryptedPassword(googleSignInAccount);
+                ContentValues contentValues = generateContentValues(googleSignInAccount);
                 return contentResolver.update(getBaseContentUri(),
                         contentValues,
                         COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
@@ -305,7 +305,7 @@ public class AccountDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Delete an information about some {@link AccountDao}.
+     * Delete information about some {@link AccountDao}.
      *
      * @param context Interface to global information about an application environment.
      * @param account The account name and type.
@@ -345,7 +345,7 @@ public class AccountDaoSource extends BaseDaoSource {
      * @return The generated {@link ContentValues}.
      */
     @Nullable
-    private ContentValues generateContentValuesWithEncryptedPassword(GoogleSignInAccount googleSignInAccount) {
+    private ContentValues generateContentValues(GoogleSignInAccount googleSignInAccount) {
         ContentValues contentValues = new ContentValues();
         if (googleSignInAccount.getEmail() != null) {
             contentValues.put(COL_EMAIL, googleSignInAccount.getEmail().toLowerCase());
@@ -413,6 +413,8 @@ public class AccountDaoSource extends BaseDaoSource {
         contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
         contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials
                 .getSmtpSignInPassword()));
+
+        contentValues.put(COL_IS_ACTIVE, true);
 
         return contentValues;
     }

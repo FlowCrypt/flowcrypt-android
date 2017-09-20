@@ -186,7 +186,7 @@ public class ContactsDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Update an information about some {@link PgpContact}.
+     * Update information about some {@link PgpContact}.
      *
      * @param context    Interface to global information about an application environment.
      * @param pgpContact A new information of {@link PgpContact} in the database.
@@ -240,7 +240,7 @@ public class ContactsDaoSource extends BaseDaoSource {
      * @param context Interface to global information about an application environment.
      * @param email   An email in the database.
      * @param name    A new information about name of the email.
-     * @return The count of updated rows. Will be 1 if an information was updated or -1 otherwise.
+     * @return The count of updated rows. Will be 1 if information was updated or -1 otherwise.
      */
     public int updateNameOfPgpContact(Context context, String email, String name) {
         ContentResolver contentResolver = context.getContentResolver();

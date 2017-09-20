@@ -44,7 +44,7 @@ public class AccountDao {
 
     @Nullable
     public Account getAccount() {
-        return this.email == null ? null : new Account(this.email, ACCOUNT_TYPE_GOOGLE);
+        return this.email == null ? null : new Account(this.email, accountType);
     }
 
     public String getEmail() {

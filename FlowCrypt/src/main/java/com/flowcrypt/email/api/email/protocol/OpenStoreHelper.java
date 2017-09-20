@@ -9,10 +9,13 @@ package com.flowcrypt.email.api.email.protocol;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
+import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.Store;
 
 /**
  * This util class help generate Store classes.
@@ -76,5 +79,37 @@ public class OpenStoreHelper {
         Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
         session.setDebug(BuildConfig.DEBUG);
         return session;
+    }
+
+    public static Session getSessionForAccountDao(AccountDao accountDao) {
+        if (accountDao != null) {
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    return getGmailSession();
+
+                default:
+                    Session session = Session.getInstance(
+                            PropertiesHelper.generatePropertiesFromAuthCredentials(accountDao.getAuthCredentials()));
+                    session.setDebug(BuildConfig.DEBUG);
+                    return session;
+            }
+        } else throw new NullPointerException("AccountDao must not be a null!");
+    }
+
+    public static Store openAndConnectToStore(AccountDao accountDao, Session session, String token) throws
+            MessagingException {
+        if (accountDao != null) {
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    return OpenStoreHelper.openAndConnectToGimapsStore(session, token, accountDao.getEmail());
+
+                default:
+                    Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
+                    AuthCredentials authCredentials = accountDao.getAuthCredentials();
+                    store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
+                            authCredentials.getPassword());
+                    return store;
+            }
+        } else throw new NullPointerException("AccountDao must not be a null!");
     }
 }

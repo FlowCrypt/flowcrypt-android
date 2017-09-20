@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import java.util.List;
 
 /**
- * This class describe a model object, which contains an information about an end position of
+ * This class describe a model object, which contains information about an end position of
  * already loaded emails and last loaded emails;
  *
  * @author DenBond7
@@ -31,7 +31,7 @@ public class LoadEmailsResult {
     }
 
     /**
-     * Get an information about an end position of
+     * Get information about an end position of
      * already loaded emails.
      *
      * @return <tt>int</tt> An end position.

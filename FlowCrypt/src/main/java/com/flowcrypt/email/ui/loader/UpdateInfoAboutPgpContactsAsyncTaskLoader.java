@@ -131,7 +131,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
     }
 
     /**
-     * Get an information about {@link PgpContact} from the remote server.
+     * Get information about {@link PgpContact} from the remote server.
      *
      * @param email Used to generate a request to the server.
      * @param js    Used to create a {@link PgpContact} object from the information which

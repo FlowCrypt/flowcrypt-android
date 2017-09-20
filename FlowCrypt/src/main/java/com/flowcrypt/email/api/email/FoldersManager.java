@@ -40,7 +40,7 @@ public class FoldersManager {
     }
 
     /**
-     * Generate a new {@link FoldersManager} using an information from the local database.
+     * Generate a new {@link FoldersManager} using information from the local database.
      *
      * @param context     Interface to global information about an application environment.
      * @param accountName The name of an account.
@@ -69,7 +69,7 @@ public class FoldersManager {
     /**
      * Generate a new {@link Folder}
      *
-     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     * @param imapFolder  The {@link IMAPFolder} object which contains information about a
      *                    remote folder.
      * @param folderAlias The folder alias.
      * @return
@@ -86,7 +86,7 @@ public class FoldersManager {
     /**
      * Check if current folder is a custom label.
      *
-     * @param folder The {@link IMAPFolder} object which contains an information about a
+     * @param folder The {@link IMAPFolder} object which contains information about a
      *               remote folder.
      * @return true if this label is a custom, false otherwise.
      * @throws MessagingException
@@ -176,7 +176,7 @@ public class FoldersManager {
     /**
      * Add a new folder to {@link FoldersManager} to manage it.
      *
-     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     * @param imapFolder  The {@link IMAPFolder} object which contains information about a
      *                    remote folder.
      * @param folderAlias The folder alias.
      * @throws MessagingException
@@ -193,7 +193,7 @@ public class FoldersManager {
     /**
      * Add a new folder to {@link FoldersManager} to manage it.
      *
-     * @param folder The {@link Folder} object which contains an information about a
+     * @param folder The {@link Folder} object which contains information about a
      *               remote folder.
      */
     public void addFolder(Folder folder) {
@@ -290,7 +290,7 @@ public class FoldersManager {
     }
 
     /**
-     * This class contains an information about all servers folders types.
+     * This class contains information about all servers folders types.
      */
     public enum FolderType {
         INBOX("INBOX"),

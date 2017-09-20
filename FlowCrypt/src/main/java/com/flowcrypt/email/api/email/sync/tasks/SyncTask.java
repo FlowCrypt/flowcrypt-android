@@ -8,9 +8,10 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 
 import javax.mail.Session;
+import javax.mail.Store;
 
 /**
  * The sync task which will be run by {@link EmailSyncManager}
@@ -32,29 +33,29 @@ public interface SyncTask {
     /**
      * Run current task in the separate thread.
      *
-     * @param gmailSSLStore The connected and opened {@link GmailSSLStore} object.
-     * @param syncListener  The listener of synchronization.
+     * @param accountDao   The account information which will be used of connection.
+     * @param store        The connected and opened {@link Store} object.
+     * @param syncListener The listener of synchronization.
      * @throws Exception
      */
-    void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception;
+    void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception;
 
     /**
      * Run current task in the separate thread.
      *
+     * @param accountDao   The account information which will be used of connection.
      * @param session      The {@link Session} object.
-     * @param userName     The user name which will be used of connection.
-     * @param password     The password which will be used of connection.
      * @param syncListener The listener of synchronization.
      * @throws Exception
      */
-    void run(Session session, String userName, String password, SyncListener syncListener) throws
-            Exception;
+    void runSMTPAction(AccountDao accountDao, Session session, SyncListener syncListener) throws Exception;
 
     /**
      * This method will be called when an exception occurred while current task running.
      *
+     * @param accountDao   The account information which will be used of connection.
      * @param e            The occurred exception.
      * @param syncListener The listener of synchronization.
      */
-    void handleException(Exception e, SyncListener syncListener);
+    void handleException(AccountDao accountDao, Exception e, SyncListener syncListener);
 }

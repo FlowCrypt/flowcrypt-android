@@ -46,7 +46,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * This class use Android Keystore System for encrypt/decrypt an information. Since encryption
+ * This class use Android Keystore System for encrypt/decrypt information. Since encryption
  * which uses the RSA has a limit on the maximum size of the data that can be encrypted("The RSA
  * algorithm can only encrypt data that has a maximum byte length of the RSA key length in bits
  * divided with eight minus eleven padding bytes, i.e. number of maximum bytes = key length in

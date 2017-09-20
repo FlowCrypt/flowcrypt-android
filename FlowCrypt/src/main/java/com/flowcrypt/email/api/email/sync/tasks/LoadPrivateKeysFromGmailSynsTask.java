@@ -11,8 +11,8 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.gimap.GmailRawSearchTerm;
-import com.sun.mail.gimap.GmailSSLStore;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
@@ -28,6 +28,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
 
 /**
@@ -56,12 +57,12 @@ public class LoadPrivateKeysFromGmailSynsTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
-        super.run(gmailSSLStore, syncListener);
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        super.runIMAPAction(accountDao, store, syncListener);
 
         if (syncListener != null) {
             IMAPFolder imapFolder =
-                    (IMAPFolder) gmailSSLStore.getFolder(JavaEmailConstants.FOLDER_INBOX);
+                    (IMAPFolder) store.getFolder(JavaEmailConstants.FOLDER_INBOX);
             imapFolder.open(Folder.READ_ONLY);
 
             List<String> keys = new ArrayList<>();
@@ -75,7 +76,7 @@ public class LoadPrivateKeysFromGmailSynsTask extends BaseSyncTask {
                 }
             }
 
-            syncListener.onPrivateKeyFound(keys, ownerKey, requestCode);
+            syncListener.onPrivateKeyFound(accountDao, keys, ownerKey, requestCode);
 
             imapFolder.close(false);
         }

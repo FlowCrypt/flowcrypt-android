@@ -8,17 +8,17 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 
-import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.security.model.PrivateKeyInfo;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * This class implemented StorageConnectorInterface. We collect an information about available
+ * This class implemented StorageConnectorInterface. We collect information about available
  * private keys.
  *
  * @author DenBond7

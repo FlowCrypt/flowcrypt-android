@@ -7,12 +7,13 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Store;
 import javax.mail.UIDFolder;
 
 /**
@@ -38,15 +39,15 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
-        IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         imapFolder.open(Folder.READ_ONLY);
 
         int messagesCount = imapFolder.getMessageCount();
 
         if (syncListener != null) {
             if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-                syncListener.onMessagesReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 Message[] messages;
 
@@ -63,7 +64,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessagesReceived(imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
             }
         }
 

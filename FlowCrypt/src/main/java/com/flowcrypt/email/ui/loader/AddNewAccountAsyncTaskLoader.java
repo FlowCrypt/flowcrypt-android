@@ -12,12 +12,10 @@ import android.support.v4.content.AsyncTaskLoader;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
-import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
-
-import java.util.Properties;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
@@ -56,19 +54,8 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
     @Override
     public LoaderResult loadInBackground() {
         try {
-            Properties properties = new Properties();
-            properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE,
-                    authCredentials.getImapSecurityTypeOption() == SecurityType.Option.SSL_TLS);
-            properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE,
-                    authCredentials.getImapSecurityTypeOption() == SecurityType.Option.STARTLS);
-            properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH,
-                    authCredentials.isUseCustomSignInForSmtp());
-            properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE,
-                    authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.SSL_TLS);
-            properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE,
-                    authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.STARTLS);
-
-            Session session = Session.getInstance(properties);
+            Session session = Session.getInstance(
+                    PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
             session.setDebug(BuildConfig.DEBUG);
 
             testImapConnection(session);
