@@ -65,6 +65,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
 
     private static final int REQUEST_CODE_SIGN_IN = 100;
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
+    private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;
     /**
      * The main entry point for Google Play services integration.
      */
@@ -187,6 +188,21 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 }
                 break;
 
+
+            case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        EmailSyncService.startEmailSyncService(this);
+                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                        finish();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                        finish();
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -245,8 +261,8 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
                         finish();
-                        startActivity(CreateOrImportKeyActivity.newIntent(this, new AccountDaoSource()
-                                .getActiveAccountInformation(this), true));
+                        startActivityForResult(CreateOrImportKeyActivity.newIntent(this, new AccountDaoSource()
+                                .getActiveAccountInformation(this), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
                     } else {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,

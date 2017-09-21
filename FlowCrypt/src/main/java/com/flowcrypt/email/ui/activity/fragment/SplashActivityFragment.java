@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import com.flowcrypt.email.util.UIUtil;
  */
 public class SplashActivityFragment extends Fragment implements View.OnClickListener {
 
+    private static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 10;
     private OnSignInButtonClickListener onSignInButtonClickListener;
 
     @Override
@@ -52,6 +54,22 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_ADD_OTHER_ACCOUNT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        getActivity().finish();
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
@@ -65,7 +83,8 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
 
             case R.id.buttonOtherEmailProvider:
                 if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
-                    startActivity(new Intent(getContext(), AddNewAccountActivity.class));
+                    startActivityForResult(new Intent(getContext(), AddNewAccountActivity.class),
+                            REQUEST_CODE_ADD_OTHER_ACCOUNT);
                 } else {
                     UIUtil.showInfoSnackbar(getView(),
                             getString(R.string.internet_connection_is_not_available));

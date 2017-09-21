@@ -191,4 +191,5 @@
     <string name="ssl_tls">SSL/TLS</string>
     <string name="startls">STARTLS</string>
     <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
+    <string name="settings_not_valid">The settings is not valid</string>
 </resources>

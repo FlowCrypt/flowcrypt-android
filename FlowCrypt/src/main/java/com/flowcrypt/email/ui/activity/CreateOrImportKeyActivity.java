@@ -16,7 +16,6 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -105,8 +104,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
             case REQUEST_CODE_IMPORT_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                        setResult(Activity.RESULT_OK);
                         finish();
                         break;
                 }

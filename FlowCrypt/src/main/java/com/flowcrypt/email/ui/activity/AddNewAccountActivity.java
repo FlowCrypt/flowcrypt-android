@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -30,6 +32,7 @@ import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -50,6 +53,8 @@ import com.google.gson.JsonSyntaxException;
 public class AddNewAccountActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
         LoaderManager.LoaderCallbacks<LoaderResult> {
+    private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
+
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -105,6 +110,35 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_ADD_NEW_ACCOUNT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        try {
+                            authCredentials = generateAuthCredentials();
+                            AccountDaoSource accountDaoSource = new AccountDaoSource();
+                            accountDaoSource.addRow(this, authCredentials);
+                            AccountDao accountDao = accountDaoSource.getAccountInformation(this,
+                                    authCredentials.getEmail());
+                            EmailSyncService.startEmailSyncService(this);
+                            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                            setResult(Activity.RESULT_OK);
+                            finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw new IllegalStateException("Something wrong happened", e);
+                        }
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         switch (buttonView.getId()) {
             case R.id.checkBoxRequireSignInForSmtp:
@@ -145,9 +179,10 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonTryToConnect:
+                authCredentials = generateAuthCredentials();
                 if (isAllInformationCorrect()) {
                     if (isNotDuplicate()) {
-                        getSupportLoaderManager().restartLoader(R.id.loader_id_add_new_account, null, this);
+                        getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings, null, this);
                     } else {
                         showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
                                 authCredentials.getEmail()), Snackbar.LENGTH_LONG);
@@ -182,7 +217,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_add_new_account:
+            case R.id.loader_id_check_email_settings:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
 
                 authCredentials = generateAuthCredentials();
@@ -206,12 +241,18 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
-            case R.id.loader_id_add_new_account:
-                UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-                if (result instanceof AccountDao) {
-                    AccountDao accountDao = (AccountDao) result;
-                    startActivity(CreateOrImportKeyActivity.newIntent(this, accountDao, true));
-                } else throw new IllegalArgumentException("The result data must contains the AccountDao object");
+            case R.id.loader_id_check_email_settings:
+                boolean isSettingsValid = (boolean) result;
+                if (isSettingsValid) {
+                    AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
+                            null, null, null, null, null, authCredentials);
+                    startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
+                            REQUEST_CODE_ADD_NEW_ACCOUNT);
+                    UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                } else {
+                    UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                    showInfoSnackbar(getRootView(), getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG);
+                }
                 break;
 
             default:
@@ -223,7 +264,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
-            case R.id.loader_id_add_new_account:
+            case R.id.loader_id_check_email_settings:
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
                         : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
