@@ -190,4 +190,5 @@
     <string name="none">None</string>
     <string name="ssl_tls">SSL/TLS</string>
     <string name="startls">STARTLS</string>
+    <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
 </resources>

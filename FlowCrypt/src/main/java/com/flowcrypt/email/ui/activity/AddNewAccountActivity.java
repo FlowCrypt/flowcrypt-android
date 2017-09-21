@@ -28,9 +28,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.ui.loader.AddNewAccountAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
@@ -145,7 +146,12 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         switch (v.getId()) {
             case R.id.buttonTryToConnect:
                 if (isAllInformationCorrect()) {
-                    getSupportLoaderManager().restartLoader(R.id.loader_id_add_new_account, null, this);
+                    if (isNotDuplicate()) {
+                        getSupportLoaderManager().restartLoader(R.id.loader_id_add_new_account, null, this);
+                    } else {
+                        showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
+                                authCredentials.getEmail()), Snackbar.LENGTH_LONG);
+                    }
                 }
                 break;
         }
@@ -180,7 +186,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
 
                 authCredentials = generateAuthCredentials();
-                return new AddNewAccountAsyncTaskLoader(this, authCredentials);
+                return new CheckEmailSettingsAsyncTaskLoader(this, authCredentials);
 
             default:
                 return null;
@@ -227,6 +233,15 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
                 super.handleFailureLoaderResult(loaderId, e);
                 break;
         }
+    }
+
+    /**
+     * Check that current email is not duplicate and not added yet.
+     *
+     * @return true if email not added yet, otherwise false.
+     */
+    private boolean isNotDuplicate() {
+        return new AccountDaoSource().getAccountInformation(this, authCredentials.getEmail()) == null;
     }
 
     private void initViews(Bundle savedInstanceState) {

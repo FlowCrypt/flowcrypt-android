@@ -13,8 +13,6 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 
 import javax.mail.Folder;
@@ -25,20 +23,18 @@ import javax.mail.Transport;
 
 /**
  * This loader does job of valid {@link AuthCredentials}. If incoming {@link AuthCredentials} is valid then this
- * loader returns {@link AccountDao} which added to the local database to the table
- * {@link AccountDaoSource#TABLE_NAME_ACCOUNTS}. If incoming {@link AuthCredentials} is not valid then this loader
- * returns some server error.
+ * loader returns {@code true}, otherwise returns false.
  *
  * @author DenBond7
  *         Date: 14.09.2017.
  *         Time: 15:08.
  *         E-mail: DenBond7@gmail.com
  */
-public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
+public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     private final AuthCredentials authCredentials;
 
-    public AddNewAccountAsyncTaskLoader(Context context, AuthCredentials authCredentials) {
+    public CheckEmailSettingsAsyncTaskLoader(Context context, AuthCredentials authCredentials) {
         super(context);
         this.authCredentials = authCredentials;
         onContentChanged();
@@ -61,16 +57,7 @@ public class AddNewAccountAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> 
             testImapConnection(session);
             testSmtpConnection(session);
 
-            AccountDaoSource accountDaoSource = new AccountDaoSource();
-
-            AccountDao accountDao = accountDaoSource.getAccountInformation(getContext(), authCredentials.getEmail());
-
-            if (accountDao == null) {
-                accountDaoSource.addRow(getContext(), authCredentials);
-                accountDao = accountDaoSource.getAccountInformation(getContext(), authCredentials.getEmail());
-            }
-
-            return new LoaderResult(accountDao, null);
+            return new LoaderResult(true, null);
         } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(null, e);
