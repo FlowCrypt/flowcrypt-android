@@ -116,6 +116,10 @@ public class AuthCredentials implements Parcelable {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getImapServer() {
         return imapServer;
     }
@@ -150,6 +154,10 @@ public class AuthCredentials implements Parcelable {
 
     public String getSmtpSignInPassword() {
         return smtpSignInPassword;
+    }
+
+    public void setSmtpSignInPassword(String smtpSignInPassword) {
+        this.smtpSignInPassword = smtpSignInPassword;
     }
 
     public static class Builder {

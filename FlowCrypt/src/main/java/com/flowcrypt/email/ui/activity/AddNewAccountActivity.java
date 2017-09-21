@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -22,6 +23,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
@@ -30,7 +32,10 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.AddNewAccountAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * This activity describes a logic of adding a new account of other email providers.
@@ -59,6 +64,10 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     private View progressView;
     private View contentView;
     private CheckBox checkBoxRequireSignInForSmtp;
+    private AuthCredentials authCredentials;
+
+    private boolean isImapSpinnerInitAfterStart;
+    private boolean isSmtpSpinnerInitAfterStart;
 
     @Override
     public boolean isDisplayHomeAsUpEnabled() {
@@ -78,7 +87,20 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initViews();
+        this.authCredentials = getTempAuthCredentialsFromPreferences();
+
+        if (authCredentials == null) {
+            isImapSpinnerInitAfterStart = true;
+            isSmtpSpinnerInitAfterStart = true;
+        }
+
+        initViews(savedInstanceState);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        saveTempCredentialsToPreferences();
     }
 
     @Override
@@ -95,12 +117,20 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         switch (parent.getId()) {
             case R.id.spinnerImapSecurityType:
                 SecurityType securityTypeForImap = (SecurityType) parent.getAdapter().getItem(position);
-                editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefaultImapPort()));
+                if (isImapSpinnerInitAfterStart) {
+                    editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefaultImapPort()));
+                } else {
+                    isImapSpinnerInitAfterStart = true;
+                }
                 break;
 
             case R.id.spinnerSmtpSecyrityType:
                 SecurityType securityTypeForSmtp = (SecurityType) parent.getAdapter().getItem(position);
-                editTextSmtpPort.setText(String.valueOf(securityTypeForSmtp.getDefaultSmtpPort()));
+                if (isSmtpSpinnerInitAfterStart) {
+                    editTextSmtpPort.setText(String.valueOf(securityTypeForSmtp.getDefaultSmtpPort()));
+                } else {
+                    isSmtpSpinnerInitAfterStart = true;
+                }
                 break;
         }
     }
@@ -149,7 +179,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
             case R.id.loader_id_add_new_account:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
 
-                AuthCredentials authCredentials = generateAuthCredentials();
+                authCredentials = generateAuthCredentials();
                 return new AddNewAccountAsyncTaskLoader(this, authCredentials);
 
             default:
@@ -199,7 +229,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
         }
     }
 
-    protected void initViews() {
+    private void initViews(Bundle savedInstanceState) {
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextUserName = (EditText) findViewById(R.id.editTextUserName);
         editTextPassword = (EditText) findViewById(R.id.editTextPassword);
@@ -225,13 +255,81 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
                 android.R.layout.simple_spinner_dropdown_item, SecurityType.generateAvailableSecurityTypes(this));
 
         spinnerImapSecyrityType.setAdapter(userAdapter);
-        spinnerImapSecyrityType.setOnItemSelectedListener(this);
         spinnerSmtpSecyrityType.setAdapter(userAdapter);
+
+        spinnerImapSecyrityType.setOnItemSelectedListener(this);
         spinnerSmtpSecyrityType.setOnItemSelectedListener(this);
 
         if (findViewById(R.id.buttonTryToConnect) != null) {
             findViewById(R.id.buttonTryToConnect).setOnClickListener(this);
         }
+
+        if (savedInstanceState == null) {
+            updateView();
+        }
+    }
+
+    /**
+     * Update the current views if {@link AuthCredentials} not null.l
+     */
+    private void updateView() {
+        if (authCredentials != null) {
+
+            editTextEmail.setText(authCredentials.getEmail());
+            editTextUserName.setText(authCredentials.getUsername());
+            editTextImapServer.setText(authCredentials.getImapServer());
+            editTextImapPort.setText(String.valueOf(authCredentials.getImapPort()));
+            editTextSmtpServer.setText(authCredentials.getSmtpServer());
+            editTextSmtpPort.setText(String.valueOf(authCredentials.getSmtpPort()));
+            checkBoxRequireSignInForSmtp.setChecked(authCredentials.isUseCustomSignInForSmtp());
+            editTextSmtpUsername.setText(authCredentials.getSmtpSigInUsername());
+
+            int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();
+            for (int i = 0; i < imapOptionsCount; i++) {
+                if (authCredentials.getImapSecurityTypeOption() ==
+                        ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOption()) {
+                    spinnerImapSecyrityType.setSelection(i);
+                }
+            }
+
+            int smtpOptionsCount = spinnerSmtpSecyrityType.getAdapter().getCount();
+            for (int i = 0; i < smtpOptionsCount; i++) {
+                if (authCredentials.getSmtpSecurityTypeOption() ==
+                        ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOption()) {
+                    spinnerSmtpSecyrityType.setSelection(i);
+                }
+            }
+        }
+    }
+
+    /**
+     * Save the current {@link AuthCredentials} to the shared preferences.
+     */
+    private void saveTempCredentialsToPreferences() {
+        authCredentials = generateAuthCredentials();
+        Gson gson = new Gson();
+        authCredentials.setPassword(null);
+        authCredentials.setSmtpSignInPassword(null);
+        SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
+                Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCredentials));
+    }
+
+    /**
+     * Retrieve a temp {@link AuthCredentials} from the shared preferences.
+     */
+    private AuthCredentials getTempAuthCredentialsFromPreferences() {
+        String authCredentialsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences
+                (this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "");
+
+        if (!TextUtils.isEmpty(authCredentialsJson)) {
+            try {
+                return new Gson().fromJson(authCredentialsJson, AuthCredentials.class);
+            } catch (JsonSyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null;
     }
 
     /**

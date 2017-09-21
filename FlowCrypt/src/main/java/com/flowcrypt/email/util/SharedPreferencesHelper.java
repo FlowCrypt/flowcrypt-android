@@ -49,4 +49,10 @@ public class SharedPreferencesHelper {
         editor.putLong(key, value);
         return editor.commit();
     }
+
+    public static boolean setString(SharedPreferences sharedPreferences, String key, String value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(key, value);
+        return editor.commit();
+    }
 }
