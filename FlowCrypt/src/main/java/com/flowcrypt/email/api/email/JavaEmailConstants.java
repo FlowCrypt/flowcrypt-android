@@ -20,6 +20,7 @@ public class JavaEmailConstants {
     public static final String PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable";
     public static final String PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms";
+    public static final String PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE = "mail.imap.fetchsize";
 
     /*SMTP*/
     public static final String PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth";

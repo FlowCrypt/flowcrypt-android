@@ -56,6 +56,17 @@ public class PropertiesHelper {
     }
 
     /**
+     * Generate properties for imap protocol which will be used for download attachment.
+     *
+     * @return <tt>Properties</tt> New properties with setup imap connection;
+     */
+    public static Properties generatePropertiesForDownloadAttachments(AuthCredentials authCredentials) {
+        Properties properties = generatePropertiesFromAuthCredentials(authCredentials);
+        properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE, 1024 * 256);
+        return properties;
+    }
+
+    /**
      * Generate properties.
      *
      * @param authCredentials The object which contains information about settings for a connection.

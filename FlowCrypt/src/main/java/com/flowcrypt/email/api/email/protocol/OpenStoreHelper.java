@@ -86,6 +86,26 @@ public class OpenStoreHelper {
     }
 
     /**
+     * Generate a session which will be use for download attachments.
+     *
+     * @return <tt>Session</tt> A new session based on for download attachments.
+     */
+    public static Session getAttachmentSession(AccountDao accountDao) {
+        if (accountDao != null) {
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    return getAttachmentGmailSession();
+
+                default:
+                    Session session = Session.getInstance(
+                            PropertiesHelper.generatePropertiesForDownloadAttachments(accountDao.getAuthCredentials()));
+                    session.setDebug(BuildConfig.DEBUG);
+                    return session;
+            }
+        } else throw new NullPointerException("AccountDao must not be a null!");
+    }
+
+    /**
      * Generate a session for gimaps protocol which will be use for download attachments.
      *
      * @return <tt>Session</tt> A new session for gimaps protocol based on properties for gimaps.
