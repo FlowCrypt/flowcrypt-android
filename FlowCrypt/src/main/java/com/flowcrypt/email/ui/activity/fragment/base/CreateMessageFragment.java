@@ -432,16 +432,22 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
         outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
 
-        List<PgpContact> pgpContacts;
+        List<PgpContact> pgpContacts = new ArrayList<>();
         if (incomingMessageInfo != null) {
             outgoingMessageInfo.setRawReplyMessage(
                     incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
-            pgpContacts = new ContactsDaoSource().getPgpContactsListFromDatabase
-                    (getContext(), FoldersManager.FolderType.SENT == folderType ?
-                            incomingMessageInfo.getTo() : incomingMessageInfo.getFrom());
+
+        }
+
+        if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase(getContext(),
+                    editTextRecipients.getChipValues());
         } else {
-            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase
-                    (getContext(), editTextRecipients.getChipValues());
+            List<String> contacts = editTextRecipients.getChipValues();
+
+            for (String s : contacts) {
+                pgpContacts.add(new PgpContact(s, null));
+            }
         }
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));

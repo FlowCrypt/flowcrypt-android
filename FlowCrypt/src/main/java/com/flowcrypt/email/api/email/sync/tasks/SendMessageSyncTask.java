@@ -232,7 +232,10 @@ public class SendMessageSyncTask extends BaseSyncTask {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
         for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
-            contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
+            int updateResult = contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
+            if (updateResult == -1) {
+                contactsDaoSource.addRow(context, pgpContact);
+            }
         }
     }
 

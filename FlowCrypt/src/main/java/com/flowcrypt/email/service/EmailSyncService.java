@@ -76,7 +76,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
-    public static final int MESSAGE_SEND_ENCRYPTED_MESSAGE = 9;
+    public static final int MESSAGE_SEND_MESSAGE = 9;
     public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
     public static final int MESSAGE_GET_ACTIVE_ACCOUNT = 11;
     public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 12;
@@ -572,12 +572,12 @@ public class EmailSyncService extends Service implements SyncListener {
                         }
                         break;
 
-                    case MESSAGE_SEND_ENCRYPTED_MESSAGE:
+                    case MESSAGE_SEND_MESSAGE:
                         if (emailSyncManager != null && action != null) {
                             OutgoingMessageInfo outgoingMessageInfo = (OutgoingMessageInfo) action.getObject();
 
-                            emailSyncManager.sendEncryptedMessage(action.getOwnerKey(),
-                                    action.getRequestCode(), outgoingMessageInfo);
+                            emailSyncManager.sendMessage(action.getOwnerKey(), action.getRequestCode(),
+                                    outgoingMessageInfo);
                         }
                         break;
 

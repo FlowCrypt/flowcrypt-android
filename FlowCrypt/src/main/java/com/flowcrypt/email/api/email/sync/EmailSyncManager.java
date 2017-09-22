@@ -256,7 +256,7 @@ public class EmailSyncManager {
      * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
-    public void sendEncryptedMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
+    public void sendMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         try {
             syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
