@@ -252,6 +252,30 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             }
                         });
                 break;
+
+            default:
+                UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
+                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageParts);
+                showSnackbar(getView(), e.getMessage(),
+                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                switch (requestCode) {
+                                    case R.id.syns_request_archive_message:
+                                        runMessageAction(R.id.menuActionArchiveMessage);
+                                        break;
+
+                                    case R.id.syns_request_delete_message:
+                                        runMessageAction(R.id.menuActionDeleteMessage);
+                                        break;
+
+                                    case R.id.syns_request_move_message_to_inbox:
+                                        runMessageAction(R.id.menuActionMoveToInbox);
+                                        break;
+                                }
+                            }
+                        });
+                break;
         }
     }
 
