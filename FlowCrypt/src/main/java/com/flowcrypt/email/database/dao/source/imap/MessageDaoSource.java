@@ -480,7 +480,9 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_FOLDER, label);
         contentValues.put(COL_UID, uid);
         contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
-        contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
+        if (message.getSentDate() != null) {
+            contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
+        }
         contentValues.put(COL_FROM_ADDRESSES, prepareAddressesForSaving(message.getFrom()));
         contentValues.put(COL_TO_ADDRESSES,
                 prepareAddressesForSaving(message.getRecipients(Message.RecipientType.TO)));
