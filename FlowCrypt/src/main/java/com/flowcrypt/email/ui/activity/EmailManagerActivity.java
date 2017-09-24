@@ -198,7 +198,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             case Menu.NONE:
                 Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                if (!folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
+                if (folder == null || !folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
                     this.folder = newFolder;
                     updateEmailsListFragmentAfterFolderChange();
                 }
