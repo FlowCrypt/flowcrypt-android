@@ -340,6 +340,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * @param folder The folder where current message exists.
      */
     private void updateActionsVisibility(Folder folder) {
+        FoldersManager foldersManager = FoldersManager.fromDatabase(getContext(), generalMessageDetails.getEmail());
         folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
 
         if (folderType != null) {
@@ -377,6 +378,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             isDeleteActionEnable = true;
         }
 
+        isArchiveActionEnable = foldersManager.getFolderArchive() != null;
         getActivity().invalidateOptionsMenu();
     }
 
