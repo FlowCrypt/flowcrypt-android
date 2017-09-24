@@ -250,9 +250,11 @@ public class EmailManagerActivity extends BaseSyncActivity
 
                     if (folder == null) {
                         folder = foldersManager.getFolderInbox();
-                        if (folder != null) {
-                            updateEmailsListFragmentAfterFolderChange();
+                        if (folder == null) {
+                            folder = foldersManager.findInboxFolder();
                         }
+
+                        updateEmailsListFragmentAfterFolderChange();
                     }
                 }
                 break;

@@ -257,6 +257,16 @@ public class FoldersManager {
         return serverFolders;
     }
 
+    public Folder findInboxFolder() {
+        for (Folder folder : getAllFolders()) {
+            if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+                return folder;
+            }
+        }
+
+        return null;
+    }
+
     private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
         FolderType folderType = getFolderTypeForImapFodler(imapFolder.getAttributes());
         if (folderType == null) {
