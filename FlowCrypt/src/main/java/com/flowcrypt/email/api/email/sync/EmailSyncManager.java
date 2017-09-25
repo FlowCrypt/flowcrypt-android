@@ -336,7 +336,7 @@ public class EmailSyncManager {
 
                             Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
                             if (syncTask.isUseSMTP()) {
-                                syncTask.runSMTPAction(accountDao, session, syncListener);
+                                syncTask.runSMTPAction(accountDao, session, store, syncListener);
                             } else {
                                 syncTask.runIMAPAction(accountDao, store, syncListener);
                             }

@@ -62,7 +62,8 @@ abstract class BaseSyncTask implements SyncTask {
     }
 
     @Override
-    public void runSMTPAction(AccountDao accountDao, Session session, SyncListener syncListener) throws Exception {
+    public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+            throws Exception {
     }
 
     @Override

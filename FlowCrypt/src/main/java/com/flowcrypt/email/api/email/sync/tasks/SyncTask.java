@@ -36,7 +36,7 @@ public interface SyncTask {
      * @param accountDao   The account information which will be used of connection.
      * @param store        The connected and opened {@link Store} object.
      * @param syncListener The listener of synchronization.
-     * @throws Exception
+     * @throws Exception Different exceptions can be throw when we work with {@link Store}
      */
     void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception;
 
@@ -45,10 +45,11 @@ public interface SyncTask {
      *
      * @param accountDao   The account information which will be used of connection.
      * @param session      The {@link Session} object.
+     * @param store        The connected and opened {@link Store} object.
      * @param syncListener The listener of synchronization.
-     * @throws Exception
+     * @throws Exception Different exceptions can be throw when we work with {@link Session} or {@link Store}
      */
-    void runSMTPAction(AccountDao accountDao, Session session, SyncListener syncListener) throws Exception;
+    void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws Exception;
 
     /**
      * This method will be called when an exception occurred while current task running.

@@ -32,6 +32,7 @@ import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -71,8 +72,9 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     }
 
     @Override
-    public void runSMTPAction(AccountDao accountDao, Session session, SyncListener syncListener) throws Exception {
-        super.runSMTPAction(accountDao, session, syncListener);
+    public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
+        super.runSMTPAction(accountDao, session, store, syncListener);
 
         if (syncListener != null && !TextUtils.isEmpty(accountName)) {
             Message message = generateMessage(syncListener.getContext(), session);
