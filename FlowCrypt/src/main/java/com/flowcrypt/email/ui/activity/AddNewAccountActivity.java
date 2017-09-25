@@ -181,6 +181,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
             case R.id.buttonTryToConnect:
                 authCredentials = generateAuthCredentials();
                 if (isAllInformationCorrect()) {
+                    UIUtil.hideSoftInput(this, getRootView());
                     if (isNotDuplicate()) {
                         getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings, null, this);
                     } else {
