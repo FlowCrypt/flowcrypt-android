@@ -107,8 +107,6 @@ public class SendMessageSyncTask extends BaseSyncTask {
             Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
             transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
 
-            FileUtils.cleanDirectory(pgpCacheDirectory);
-
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
                     //Gmail automatically save a copy of the sent message.
@@ -117,6 +115,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
                 default:
                     saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
             }
+
+            FileUtils.cleanDirectory(pgpCacheDirectory);
 
             syncListener.onEncryptedMessageSent(accountDao, ownerKey, requestCode, true);
         }
