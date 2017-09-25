@@ -49,19 +49,27 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
     @Override
     public LoaderResult loadInBackground() {
+        Session session = Session.getInstance(
+                PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
+        session.setDebug(BuildConfig.DEBUG);
+
         try {
-            Session session = Session.getInstance(
-                    PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
-            session.setDebug(BuildConfig.DEBUG);
-
             testImapConnection(session);
-            testSmtpConnection(session);
-
-            return new LoaderResult(true, null);
-        } catch (Exception e) {
+        } catch (MessagingException e) {
             e.printStackTrace();
-            return new LoaderResult(null, e);
+            Exception exception = new Exception("IMAP: " + e.getMessage(), e);
+            return new LoaderResult(null, exception);
         }
+
+        try {
+            testSmtpConnection(session);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            Exception exception = new Exception("SMTP: " + e.getMessage(), e);
+            return new LoaderResult(null, exception);
+        }
+
+        return new LoaderResult(true, null);
     }
 
     @Override
