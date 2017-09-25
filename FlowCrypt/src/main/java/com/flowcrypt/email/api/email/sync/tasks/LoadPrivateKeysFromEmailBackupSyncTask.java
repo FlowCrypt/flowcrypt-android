@@ -40,7 +40,7 @@ import javax.mail.internet.MimeBodyPart;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class LoadPrivateKeysFromGmailSynsTask extends BaseSyncTask {
+public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
     private String searchTermString;
 
     /**
@@ -50,8 +50,8 @@ public class LoadPrivateKeysFromGmailSynsTask extends BaseSyncTask {
      * @param ownerKey         The name of the reply to {@link Messenger}.
      * @param requestCode      The unique request code for the reply to {@link Messenger}.
      */
-    public LoadPrivateKeysFromGmailSynsTask(String searchTermString,
-                                            String ownerKey, int requestCode) {
+    public LoadPrivateKeysFromEmailBackupSyncTask(String searchTermString,
+                                                  String ownerKey, int requestCode) {
         super(ownerKey, requestCode);
         this.searchTermString = searchTermString;
     }

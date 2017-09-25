@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromGmailSynsTask;
+import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
@@ -273,7 +273,7 @@ public class EmailSyncManager {
      */
     public void loadPrivateKeys(String ownerKey, int requestCode, String searchTermString) {
         try {
-            syncTaskBlockingQueue.put(new LoadPrivateKeysFromGmailSynsTask(searchTermString,
+            syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(searchTermString,
                     ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
