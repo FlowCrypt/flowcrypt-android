@@ -30,9 +30,11 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.search.SearchTerm;
+import javax.mail.search.SubjectTerm;
 
 /**
- * This task load the private keys from the user Gmail INBOX.
+ * This task load the private keys from the email INBOX folder.
  *
  * @author DenBond7
  *         Date: 05.07.2017
@@ -61,13 +63,25 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         super.runIMAPAction(accountDao, store, syncListener);
 
         if (syncListener != null) {
-            IMAPFolder imapFolder =
-                    (IMAPFolder) store.getFolder(JavaEmailConstants.FOLDER_INBOX);
+            IMAPFolder imapFolder = (IMAPFolder) store.getFolder(JavaEmailConstants.FOLDER_INBOX);
             imapFolder.open(Folder.READ_ONLY);
 
             List<String> keys = new ArrayList<>();
 
-            Message[] foundMessages = imapFolder.search(new GmailRawSearchTerm(searchTermString));
+            SearchTerm searchTerm;
+
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    searchTerm = new GmailRawSearchTerm(searchTermString);
+                    break;
+
+                default:
+                    searchTerm = new SubjectTerm("Your FlowCrypt Backup");
+                    //TODO-denbond7 Need to fix search backups for different providers
+                    break;
+            }
+
+            Message[] foundMessages = imapFolder.search(searchTerm);
 
             for (Message message : foundMessages) {
                 String key = getKeyFromMessageIfItExists(message);
