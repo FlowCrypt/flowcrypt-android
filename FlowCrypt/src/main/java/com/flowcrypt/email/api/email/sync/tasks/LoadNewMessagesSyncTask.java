@@ -42,6 +42,8 @@ public class LoadNewMessagesSyncTask extends BaseSyncTask {
         imapFolder.open(Folder.READ_ONLY);
 
         long nextUID = imapFolder.getUIDNext();
+        //TODO-DenBond7 if the server return -1 than that server doesn't support this functionality and we must fetch
+        // not seen messages for today date.
 
         if (syncListener != null) {
             if (lastUID < nextUID - 1) {
