@@ -9,6 +9,7 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -86,6 +88,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
      */
     public static Intent getSignOutIntent(Context context) {
         Intent intent = new Intent(context, SplashActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.setAction(ACTION_SIGN_OUT);
         return intent;
     }
@@ -98,6 +101,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
      */
     public static Intent getRevokeAccessIntent(Context context) {
         Intent intent = new Intent(context, SplashActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.setAction(ACTION_REVOKE_ACCESS);
         return intent;
     }
@@ -142,8 +146,8 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
             }
         }
 
+        accountDao = new AccountDaoSource().getActiveAccountInformation(this);
         if (!isSignOutAction && !isRevokeAccessAction) {
-            accountDao = new AccountDaoSource().getActiveAccountInformation(this);
             if (accountDao != null) {
                 if (SecurityUtils.isBackupKeysExist(this)) {
                     EmailSyncService.startEmailSyncService(this);
@@ -380,7 +384,10 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
 
     private void resetAppComponents() throws IOException {
         stopService(new Intent(this, EmailSyncService.class));
-        SecurityUtils.cleanSecurityInfo(this);
+        if (accountDao != null) {
+            getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
+                    + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+        }
     }
 
     /**

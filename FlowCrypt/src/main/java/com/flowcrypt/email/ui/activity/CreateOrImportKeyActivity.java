@@ -16,6 +16,7 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -46,6 +47,18 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getIntent() != null) {
+            this.isShowAnotherAccountButton = getIntent().getBooleanExtra
+                    (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
+            this.accountDao = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
+        }
+
+        initViews();
+    }
+
+    @Override
     public View getRootView() {
         return findViewById(R.id.layoutContent);
     }
@@ -66,18 +79,6 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getIntent() != null) {
-            this.isShowAnotherAccountButton = getIntent().getBooleanExtra
-                    (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-            this.accountDao = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
-        }
-
-        initViews();
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportMyKey:
@@ -86,14 +87,19 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                     keyDetails = checkClipboardToFindPrivateKeyService.getKeyDetails();
                 }
 
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(
-                        this, getString(R.string.import_private_key), keyDetails, false,
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(this,
+                        getString(R.string.import_private_key), keyDetails, false,
                         ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
             case R.id.buttonSelectAnotherAccount:
                 finish();
                 startActivity(SplashActivity.getSignOutIntent(this));
+                break;
+
+            case R.id.buttonSkipSetup:
+                setResult(Activity.RESULT_OK);
+                finish();
                 break;
         }
     }
@@ -130,6 +136,16 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                 findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
             } else {
                 findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.GONE);
+            }
+        }
+
+        if (findViewById(R.id.buttonSkipSetup) != null) {
+            View buttonSkipSetup = findViewById(R.id.buttonSkipSetup);
+            if (SecurityUtils.isBackupKeysExist(this)) {
+                buttonSkipSetup.setVisibility(View.VISIBLE);
+                buttonSkipSetup.setOnClickListener(this);
+            } else {
+                buttonSkipSetup.setVisibility(View.GONE);
             }
         }
     }
