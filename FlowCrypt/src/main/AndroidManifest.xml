@@ -101,6 +101,11 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.AddNewAccountActivity"
+            android:label="@string/adding_new_account"
+            android:screenOrientation="portrait" />
+
         <activity android:name=".ui.activity.DevSettingsActivity" />
 
         <!-- Providers -->

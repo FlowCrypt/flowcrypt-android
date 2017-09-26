@@ -126,7 +126,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
      * for generate an algorithm parameter spec String.
      *
      * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-     *                              an information about a key;
+     *                               information about a key;
      * @param keyDetails     The private key details
      * @param pgpKey                A normalized key;
      * @param passphrase            A passphrase which user entered;

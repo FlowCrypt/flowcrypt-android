@@ -11,7 +11,7 @@ import android.content.Context;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 
 /**
- * This class will be used to define an information about a new download attachment task.
+ * This class will be used to define information about a new download attachment task.
  *
  * @author Denis Bondarenko
  *         Date: 16.08.2017

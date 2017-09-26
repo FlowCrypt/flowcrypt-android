@@ -28,14 +28,13 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.sun.mail.gimap.GmailFolder;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -55,6 +54,8 @@ import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.Session;
+import javax.mail.Store;
 
 /**
  * This service will be use to download email attachments. To start load an attachment just run service via the intent
@@ -452,19 +453,17 @@ public class AttachmentDownloadManagerService extends Service {
             }
 
             File attachmentFile = prepareAttachmentFile();
+            AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, attachmentInfo.getEmail());
 
             try {
-                String token = GoogleAuthUtil.getToken(context, attachmentInfo.getGoogleAccount(),
-                        JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                Session session = OpenStoreHelper.getAttachmentSession(accountDao);
+                Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+                IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
+                        .getFolderByAlias(context, attachmentInfo.getEmail(), attachmentInfo.getFolder())
+                        .getServerFullFolderName());
+                imapFolder.open(Folder.READ_ONLY);
 
-                GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(
-                        OpenStoreHelper.getAttachmentGmailSession(), token, attachmentInfo.getEmail());
-                GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(new ImapLabelsDaoSource()
-                        .getFolderByAlias(context, attachmentInfo.getEmail(),
-                                attachmentInfo.getFolder()).getServerFullFolderName());
-                gmailFolder.open(Folder.READ_ONLY);
-
-                javax.mail.Message message = gmailFolder.getMessageByUID(attachmentInfo.getUid());
+                javax.mail.Message message = imapFolder.getMessageByUID(attachmentInfo.getUid());
                 Part attachment = getAttachmentPart(message, attachmentInfo.getId());
 
                 if (attachment != null) {
@@ -521,8 +520,8 @@ public class AttachmentDownloadManagerService extends Service {
                     }
                 } else throw new IOException("The attachment does not exists on an IMAP server.");
 
-                gmailFolder.close(false);
-                gmailSSLStore.close();
+                imapFolder.close(false);
+                store.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 removeNotCompleteDownloadFile(attachmentFile);

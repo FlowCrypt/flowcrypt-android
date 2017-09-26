@@ -191,7 +191,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     @Override
     public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
         isMessageSendingNow = true;
-        sendEncryptedMessage(R.id.syns_request_send_encrypted_message, outgoingMessageInfo);
+        sendMessage(R.id.syns_request_send_encrypted_message, outgoingMessageInfo);
     }
 
     @Override

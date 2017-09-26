@@ -60,7 +60,8 @@
                     style="?android:attr/progressBarStyleSmall"
                     android:layout_width="@dimen/size_of_small_progressbar"
                     android:layout_height="@dimen/size_of_small_progressbar"
-                    android:layout_gravity="center_vertical|end" />
+                    android:layout_gravity="center_vertical|end"
+                    android:visibility="gone" />
 
             </FrameLayout>
 

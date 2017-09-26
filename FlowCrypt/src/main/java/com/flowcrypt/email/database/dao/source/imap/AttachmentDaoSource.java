@@ -150,7 +150,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
     /**
      * Generate an {@link AttachmentInfo} object from the current cursor position.
      *
-     * @param cursor The {@link Cursor} which contains an information about an
+     * @param cursor The {@link Cursor} which contains information about an
      *               {@link AttachmentInfo} object.
      * @return A generated {@link AttachmentInfo}.
      */

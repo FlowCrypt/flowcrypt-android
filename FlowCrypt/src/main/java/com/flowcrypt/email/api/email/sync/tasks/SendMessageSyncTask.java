@@ -13,17 +13,18 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -40,8 +41,12 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.mail.BodyPart;
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -67,7 +72,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      *
      * @param ownerKey            The name of the reply to {@link Messenger}.
      * @param requestCode         The unique request code for the reply to {@link Messenger}.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
     public SendMessageSyncTask(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
@@ -81,9 +86,9 @@ public class SendMessageSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(Session session, String userName, String password, SyncListener syncListener)
+    public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
             throws Exception {
-        super.run(session, userName, password, syncListener);
+        super.runSMTPAction(accountDao, session, store, syncListener);
 
         if (syncListener != null) {
             Context context = syncListener.getContext();
@@ -99,16 +104,49 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             MimeMessage mimeMessage = createMimeMessage(session, context, pgpCacheDirectory);
 
-            Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-            transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM, GmailConstants.PORT_SMTP_GMAIL_COM,
-                    userName, password);
-
+            Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
             transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    //Gmail automatically save a copy of the sent message.
+                    break;
+
+                default:
+                    saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
+            }
 
             FileUtils.cleanDirectory(pgpCacheDirectory);
 
-            syncListener.onEncryptedMessageSent(ownerKey, requestCode, true);
+            syncListener.onEncryptedMessageSent(accountDao, ownerKey, requestCode, true);
         }
+    }
+
+    /**
+     * Save a copy of the sent message to the account SENT folder.
+     *
+     * @param accountDao  The object which contains information about an email account.
+     * @param store       The connected and opened {@link Store} object.
+     * @param context     Interface to global information about an application environment.
+     * @param mimeMessage The original {@link MimeMessage} which will be saved to the SENT folder.
+     * @throws MessagingException Errors can be happened when we try to save a copy of sent message.
+     */
+    private void saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context, MimeMessage
+            mimeMessage) throws MessagingException {
+        FoldersManager foldersManager = FoldersManager.fromDatabase(context,
+                accountDao.getEmail());
+        IMAPFolder sentImapFolder =
+                (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
+
+        if (sentImapFolder == null || !sentImapFolder.exists()) {
+            throw new IllegalArgumentException("The sent folder doesn't exists. Can't create a copy of " +
+                    "the sent message!");
+        }
+
+        sentImapFolder.open(Folder.READ_WRITE);
+        mimeMessage.setFlag(Flags.Flag.SEEN, true);
+        sentImapFolder.appendMessages(new Message[]{mimeMessage});
+        sentImapFolder.close(false);
     }
 
     /**
@@ -237,7 +275,10 @@ public class SendMessageSyncTask extends BaseSyncTask {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
         for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
-            contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
+            int updateResult = contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
+            if (updateResult == -1) {
+                contactsDaoSource.addRow(context, pgpContact);
+            }
         }
     }
 

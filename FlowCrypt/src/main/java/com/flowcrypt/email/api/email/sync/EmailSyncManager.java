@@ -14,12 +14,13 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromGmailSynsTask;
+import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.gimap.GmailSSLStore;
 
@@ -34,6 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.Store;
 
 /**
  * This class describes a logic of work with {@link GmailSSLStore} for the single account. Via
@@ -47,8 +49,8 @@ import javax.mail.Session;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class GmailSynsManager {
-    private static final String TAG = GmailSynsManager.class.getSimpleName();
+public class EmailSyncManager {
+    private static final String TAG = EmailSyncManager.class.getSimpleName();
 
     private BlockingQueue<SyncTask> syncTaskBlockingQueue;
     private ExecutorService executorService;
@@ -59,9 +61,11 @@ public class GmailSynsManager {
      */
     private volatile SyncListener syncListener;
     private volatile Session session;
-    private volatile GmailSSLStore gmailSSLStore;
+    private volatile Store store;
+    private volatile AccountDao accountDao;
 
-    public GmailSynsManager() {
+    public EmailSyncManager(AccountDao accountDao) {
+        this.accountDao = accountDao;
         this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
         this.executorService = Executors.newSingleThreadExecutor();
         updateLabels(null, 0);
@@ -118,7 +122,7 @@ public class GmailSynsManager {
     }
 
     /**
-     * Set the {@link SyncListener} for current {@link GmailSynsManager}
+     * Set the {@link SyncListener} for current {@link EmailSyncManager}
      *
      * @param syncListener A new listener.
      */
@@ -249,10 +253,10 @@ public class GmailSynsManager {
      *
      * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
      * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
-    public void sendEncryptedMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
+    public void sendMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         try {
             syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
@@ -269,7 +273,7 @@ public class GmailSynsManager {
      */
     public void loadPrivateKeys(String ownerKey, int requestCode, String searchTermString) {
         try {
-            syncTaskBlockingQueue.put(new LoadPrivateKeysFromGmailSynsTask(searchTermString,
+            syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(searchTermString,
                     ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -290,6 +294,10 @@ public class GmailSynsManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public AccountDao getAccountDao() {
+        return accountDao;
     }
 
     /**
@@ -322,21 +330,20 @@ public class GmailSynsManager {
                         try {
                             if (!isConnected()) {
                                 Log.d(TAG, "Not connected. Start a reconnection ...");
-                                openConnectionToGmailStore();
+                                openConnectionToStore();
                                 Log.d(TAG, "Reconnection done");
                             }
 
                             Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
                             if (syncTask.isUseSMTP()) {
-                                syncTask.run(session, getEmail(), getValidToken(), syncListener);
+                                syncTask.runSMTPAction(accountDao, session, store, syncListener);
                             } else {
-                                syncTask.run(gmailSSLStore, syncListener);
+                                syncTask.runIMAPAction(accountDao, store, syncListener);
                             }
-                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName()
-                                    + " completed");
+                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
                         } catch (Exception e) {
                             e.printStackTrace();
-                            syncTask.handleException(e, syncListener);
+                            syncTask.handleException(accountDao, e, syncListener);
                         }
                     }
                 } catch (InterruptedException e) {
@@ -345,7 +352,7 @@ public class GmailSynsManager {
             }
 
             try {
-                gmailSSLStore.close();
+                store.close();
             } catch (MessagingException e) {
                 e.printStackTrace();
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
@@ -354,11 +361,10 @@ public class GmailSynsManager {
             Log.d(TAG, "SyncTaskRunnable stop");
         }
 
-        private void openConnectionToGmailStore() throws IOException,
+        private void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
-            session = OpenStoreHelper.getGmailSession();
-            gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(session, getValidToken(),
-                    getEmail());
+            session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
         }
 
         /**
@@ -368,7 +374,7 @@ public class GmailSynsManager {
          * @return trus if connected, false otherwise.
          */
         private boolean isConnected() {
-            return gmailSSLStore != null && gmailSSLStore.isConnected();
+            return store != null && store.isConnected();
         }
 
         /**
@@ -378,24 +384,8 @@ public class GmailSynsManager {
          */
         private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
             if (!isConnected()) {
-                openConnectionToGmailStore();
+                openConnectionToStore();
             }
-        }
-
-        private String getValidToken() throws IOException, GoogleAuthException {
-            if (syncListener != null) {
-                return syncListener.getValidToken();
-            } else
-                throw new IllegalArgumentException("You must specify"
-                        + SyncListener.class.getSimpleName() + " to use this method");
-        }
-
-        private String getEmail() throws IOException, GoogleAuthException {
-            if (syncListener != null) {
-                return syncListener.getEmail();
-            } else
-                throw new IllegalArgumentException("You must specify"
-                        + SyncListener.class.getSimpleName() + " to use this method");
         }
     }
 }

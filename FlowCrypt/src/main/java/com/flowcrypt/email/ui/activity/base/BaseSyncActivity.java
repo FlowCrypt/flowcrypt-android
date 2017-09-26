@@ -328,19 +328,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     /**
-     * Move the message to an another folder.
+     * Send a message.
      *
      * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains an information about an outgoing
+     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
      *                            message.
      */
-    public void sendEncryptedMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
+    public void sendMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         if (checkBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, outgoingMessageInfo);
 
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_ENCRYPTED_MESSAGE, action);
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE, action);
 
         message.replyTo = replyMessenger;
         try {

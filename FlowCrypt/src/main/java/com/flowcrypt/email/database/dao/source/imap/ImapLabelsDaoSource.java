@@ -62,7 +62,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     /**
      * @param context     Interface to global information about an application environment.
      * @param accountName The account name which are an owner of the folder.
-     * @param folder      The {@link Folder} object which contains an information about
+     * @param folder      The {@link Folder} object which contains information about
      *                    {@link com.sun.mail.imap.IMAPFolder}.
      * @return A {@link Uri} of the created row.
      */
@@ -75,7 +75,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Add an information about folders to local the database.
+     * Add information about folders to local the database.
      *
      * @param context     Interface to global information about an application environment.
      * @param accountName The account name which are an owner of the folder.
@@ -199,7 +199,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
 
             return result;
         } else {
-            return null;
+            return "";
         }
     }
 

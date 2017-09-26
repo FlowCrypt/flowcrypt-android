@@ -15,7 +15,7 @@ import android.support.annotation.Nullable;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 
 /**
- * Simple POJO which defines an information about email attachments.
+ * Simple POJO which defines information about email attachments.
  *
  * @author Denis Bondarenko
  *         Date: 07.08.2017

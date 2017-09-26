@@ -6,7 +6,9 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,6 +18,7 @@ import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.ui.activity.AddNewAccountActivity;
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -26,6 +29,7 @@ import com.flowcrypt.email.util.UIUtil;
  */
 public class SplashActivityFragment extends Fragment implements View.OnClickListener {
 
+    private static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 10;
     private OnSignInButtonClickListener onSignInButtonClickListener;
 
     @Override
@@ -50,11 +54,37 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_ADD_OTHER_ACCOUNT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        getActivity().finish();
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
                 if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
                     signInButtonWasClicked(SignInType.GMAIL);
+                } else {
+                    UIUtil.showInfoSnackbar(getView(),
+                            getString(R.string.internet_connection_is_not_available));
+                }
+                break;
+
+            case R.id.buttonOtherEmailProvider:
+                if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
+                    startActivityForResult(new Intent(getContext(), AddNewAccountActivity.class),
+                            REQUEST_CODE_ADD_OTHER_ACCOUNT);
                 } else {
                     UIUtil.showInfoSnackbar(getView(),
                             getString(R.string.internet_connection_is_not_available));
@@ -84,6 +114,10 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
     private void initViews(View view) {
         if (view.findViewById(R.id.buttonSignInWithGmail) != null) {
             view.findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
+        }
+
+        if (view.findViewById(R.id.buttonOtherEmailProvider) != null) {
+            view.findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
         }
 
         if (view.findViewById(R.id.buttonPrivacy) != null) {

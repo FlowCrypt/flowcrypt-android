@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 /**
- * The simple POJO object, which contains an information about a post feedback result.
+ * The simple POJO object, which contains information about a post feedback result.
  * <p>
  * This class describes the next response:
  * <p>

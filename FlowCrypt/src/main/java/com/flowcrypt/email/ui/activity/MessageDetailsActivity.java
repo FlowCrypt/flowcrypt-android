@@ -226,6 +226,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
                 break;
 
+            case R.id.syns_request_archive_message:
+            case R.id.syns_request_delete_message:
+            case R.id.syns_request_move_message_to_inbox:
+                isBackEnable = true;
+                notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
+                break;
+
             default:
                 notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
                 break;
