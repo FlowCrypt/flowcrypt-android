@@ -7,13 +7,12 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
@@ -30,15 +29,8 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Store;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.search.AndTerm;
-import javax.mail.search.FromTerm;
-import javax.mail.search.OrTerm;
-import javax.mail.search.RecipientTerm;
 import javax.mail.search.SearchTerm;
-import javax.mail.search.SubjectTerm;
 
 /**
  * This task load the private keys from the email INBOX folder.
@@ -75,18 +67,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
 
             List<String> keys = new ArrayList<>();
 
-            SearchTerm searchTerm;
-
-            switch (accountDao.getAccountType()) {
-                case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                    searchTerm = new GmailRawSearchTerm(searchTermString);
-                    break;
-
-                default:
-                    searchTerm = generateSearchTerms(accountDao);
-                    break;
-            }
-
+            SearchTerm searchTerm = SearchBackupsUtil.generateSearchTerms(accountDao.getEmail());
             Message[] foundMessages = imapFolder.search(searchTerm);
 
             for (Message message : foundMessages) {
@@ -100,27 +81,6 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
 
             imapFolder.close(false);
         }
-    }
-
-    /**
-     * Generate {@link SearchTerm} for search the private key backups.
-     *
-     * @param accountDao The object which contains information about an email account.
-     * @return Generated {@link SearchTerm}.
-     */
-    @NonNull
-    private SearchTerm generateSearchTerms(AccountDao accountDao) throws AddressException {
-        SearchTerm subjectTerms = new OrTerm(new SearchTerm[]{
-                new SubjectTerm("Your CryptUp Backup"),
-                new SubjectTerm("Your FlowCrypt Backup"),
-                new SubjectTerm("Your CryptUP Backup"),
-                new SubjectTerm("All you need to know about CryptUP (contains a backup)"),
-                new SubjectTerm("CryptUP Account Backup")});
-
-
-        return new AndTerm(new SearchTerm[]{subjectTerms, new FromTerm(new InternetAddress(accountDao.getEmail())),
-                new RecipientTerm(Message.RecipientType.TO, new InternetAddress(accountDao.getEmail()))
-        });
     }
 
     /**

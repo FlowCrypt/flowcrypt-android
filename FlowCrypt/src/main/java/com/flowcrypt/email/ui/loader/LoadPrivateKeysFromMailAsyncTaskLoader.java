@@ -12,14 +12,13 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.gimap.GmailFolder;
-import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import org.apache.commons.io.IOUtils;
@@ -75,9 +74,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
                     JavaEmailConstants.FOLDER_INBOX);
             gmailFolder.open(Folder.READ_ONLY);
 
-            Message[] foundMessages = gmailFolder.search(
-                    new GmailRawSearchTerm(new Js(getContext(), null)
-                            .api_gmail_query_backups(account.name)));
+            Message[] foundMessages = gmailFolder.search(SearchBackupsUtil.generateSearchTerms(account.name));
 
             for (Message message : foundMessages) {
                 String key = getKeyFromMessageIfItExists(message);
