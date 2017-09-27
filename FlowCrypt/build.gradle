@@ -125,7 +125,7 @@ dependencies {
 
     compile "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
     compile "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
-    compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+    compile "com.squareup.okhttp3:logging-interceptor:${OKHTTP_VERSION}"
 
     compile "com.sun.mail:android-mail:${JAVA_MAIL_VERSION}"
     compile "com.sun.mail:android-activation:${JAVA_MAIL_VERSION}"
