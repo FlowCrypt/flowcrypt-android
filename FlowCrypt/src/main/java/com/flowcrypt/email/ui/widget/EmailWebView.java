@@ -52,14 +52,16 @@ public class EmailWebView extends WebView {
         setWebViewClient(new CustomWebClient(getContext()));
 
         WebSettings webSettings = this.getSettings();
-        /*webSettings.setUseWideViewPort(true);
-        webSettings.setLoadWithOverviewMode(true);*/
+
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setDisplayZoomControls(false);
         webSettings.setLoadsImagesAutomatically(true);
+        webSettings.setLoadsImagesAutomatically(true);
         webSettings.setJavaScriptEnabled(false);
-        webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+        webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
     }
 
     /**

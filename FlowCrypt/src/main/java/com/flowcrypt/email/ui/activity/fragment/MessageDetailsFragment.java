@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -508,8 +509,17 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             layoutMessageParts.removeAllViews();
             EmailWebView emailWebView = new EmailWebView(getContext());
             emailWebView.configure();
-            emailWebView.loadDataWithBaseURL(null, incomingMessageInfo.getHtmlMessage(), "text/html",
+
+            int margin = getResources().getDimensionPixelOffset(R.dimen.default_margin_content);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(margin, 0, margin, 0);
+            emailWebView.setLayoutParams(layoutParams);
+
+            emailWebView.loadDataWithBaseURL(null, prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+                    "text/html",
                     StandardCharsets.UTF_8.displayName(), null);
+
             layoutMessageParts.addView(emailWebView);
         } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
             boolean isFirstMessagePartIsText = true;
@@ -544,6 +554,18 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         } else {
             layoutMessageParts.removeAllViews();
         }
+    }
+
+    /**
+     * Prepare the input HTML to show the user a viewport option.
+     *
+     * @return A generated HTML page which will be more comfortable for user.
+     */
+    @NonNull
+    private String prepareViewportHtml(String incomingHtml) {
+        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width " +
+                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
+                " 100% !important;}</style></head><body>" + incomingHtml + "</body></html>";
     }
 
     /**
