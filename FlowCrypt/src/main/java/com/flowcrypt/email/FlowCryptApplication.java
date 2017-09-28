@@ -46,9 +46,7 @@ public class FlowCryptApplication extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        if (BuildConfig.DEBUG) {
-            ACRA.init(this);
-        }
+        ACRA.init(this);
     }
 
     /**
