@@ -97,6 +97,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".ui.activity.settings.ExperimentalSettingsActivity"
+            android:label="@string/experimental_settings"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".ui.activity.HtmlViewFromAssetsRawActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" />

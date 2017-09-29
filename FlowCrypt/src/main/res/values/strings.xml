@@ -194,4 +194,7 @@
     <string name="settings_not_valid">The settings is not valid</string>
     <string name="skip_setup">Skip setup</string>
     <string name="crash_the_app">Crash the App</string>
+    <string name="experimental">Experimental</string>
+    <string name="experimental_settings">Experimental Settings</string>
+    <string name="simulate_app_crash">Simulate app crash</string>
 </resources>
