@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -34,6 +35,7 @@ import com.flowcrypt.email.model.EmailAndNamePair;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +51,7 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
 
 /**
  * This the email synchronization service. This class is responsible for the logic of
@@ -310,18 +313,25 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param folder     The local reflection of the remote folder.
      * @param imapFolder The folder where the new messages exist.
      * @param messages   The new messages.
-     * @throws MessagingException
-     * @throws IOException
+     * @throws MessagingException This exception meybe happen when we try to call {@code
+     *                            {@link IMAPFolder#getUID(javax.mail.Message)}}
      */
     private void updateAttachmentTable(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
                                        IMAPFolder imapFolder, javax.mail.Message[] messages)
-            throws MessagingException, IOException {
+            throws MessagingException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
         ArrayList<ContentValues> contentValuesList = new ArrayList<>();
 
         for (javax.mail.Message message : messages) {
-            ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfo(message);
-            if (!attachmentInfoList.isEmpty()) {
+            ArrayList<AttachmentInfo> attachmentInfoList = null;
+
+            try {
+                attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, message.getMessageNumber(), message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                     contentValuesList.add(AttachmentDaoSource.prepareContentValues(accountDao.getEmail(),
                             folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
@@ -335,13 +345,16 @@ public class EmailSyncService extends Service implements SyncListener {
     /**
      * Find attachments in the {@link Part}.
      *
-     * @param part The parent part.
+     * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
+     * @param messageNumber This number will be used for fetching {@link Part} details;
+     * @param part          The parent part.
      * @return The list of created {@link AttachmentInfo}
      * @throws MessagingException
      * @throws IOException
      */
     @NonNull
-    private ArrayList<AttachmentInfo> getAttachmentsInfo(Part part) throws MessagingException, IOException {
+    private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(IMAPFolder imapFolder, int messageNumber, Part part)
+            throws MessagingException, IOException {
         ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
         if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
@@ -351,19 +364,35 @@ public class EmailSyncService extends Service implements SyncListener {
             for (int partCount = 0; partCount < numberOfParts; partCount++) {
                 BodyPart bodyPart = multiPart.getBodyPart(partCount);
                 if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfo(bodyPart);
-                    if (attachmentInfoLists.isEmpty()) {
+                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfoFromPart(imapFolder,
+                            messageNumber, bodyPart);
+                    if (!attachmentInfoLists.isEmpty()) {
                         attachmentInfoList.addAll(attachmentInfoLists);
                     }
-                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())
-                        && (headers = bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)) != null
-                        && headers.length > 0) {
-                    AttachmentInfo attachmentInfo = new AttachmentInfo();
-                    attachmentInfo.setName(bodyPart.getFileName());
-                    attachmentInfo.setEncodedSize(bodyPart.getSize());
-                    attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
-                    attachmentInfo.setId(headers[0]);
-                    attachmentInfoList.add(attachmentInfo);
+                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+                            partCount + 1);
+
+                    if (inputStream == null) {
+                        throw new MessagingException("Failed to fetch headers");
+                    }
+
+                    InternetHeaders internetHeaders = new InternetHeaders(inputStream);
+                    headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID);
+
+                    if (headers == null) {
+                        //try to receive custom Gmail attachments header X-Attachment-Id
+                        headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
+                    }
+
+                    if (headers != null && headers.length > 0) {
+                        AttachmentInfo attachmentInfo = new AttachmentInfo();
+                        attachmentInfo.setName(bodyPart.getFileName());
+                        attachmentInfo.setEncodedSize(bodyPart.getSize());
+                        attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
+                        attachmentInfo.setId(headers[0]);
+                        attachmentInfoList.add(attachmentInfo);
+                    }
                 }
             }
         }
