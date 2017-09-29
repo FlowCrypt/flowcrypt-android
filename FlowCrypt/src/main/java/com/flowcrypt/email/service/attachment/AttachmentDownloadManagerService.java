@@ -29,6 +29,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -56,6 +57,7 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.internet.InternetHeaders;
 
 /**
  * This service will be use to download email attachments. To start load an attachment just run service via the intent
@@ -464,7 +466,8 @@ public class AttachmentDownloadManagerService extends Service {
                 imapFolder.open(Folder.READ_ONLY);
 
                 javax.mail.Message message = imapFolder.getMessageByUID(attachmentInfo.getUid());
-                Part attachment = getAttachmentPart(message, attachmentInfo.getId());
+                Part attachment = getAttachmentPartById(accountDao, imapFolder, message.getMessageNumber(), message,
+                        attachmentInfo.getId());
 
                 if (attachment != null) {
                     InputStream input = attachment.getInputStream();
@@ -567,12 +570,17 @@ public class AttachmentDownloadManagerService extends Service {
         /**
          * Get {@link Part} which has an attachment with such attachment id.
          *
-         * @param part The parent part.
+         * @param accountDao    The object which contains information about an email account.
+         * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
+         * @param messageNumber This number will be used for fetching {@link Part} details;
+         * @param part          The parent part.
          * @return {@link Part} which has attachment or null if message doesn't have such attachment.
          * @throws MessagingException
          * @throws IOException
          */
-        private Part getAttachmentPart(Part part, String attachmentId) throws MessagingException, IOException {
+        private Part getAttachmentPartById(AccountDao accountDao, IMAPFolder imapFolder, int messageNumber, Part
+                part, String attachmentId)
+                throws MessagingException, IOException {
             if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
                 Multipart multiPart = (Multipart) part.getContent();
                 int numberOfParts = multiPart.getCount();
@@ -580,15 +588,30 @@ public class AttachmentDownloadManagerService extends Service {
                 for (int partCount = 0; partCount < numberOfParts; partCount++) {
                     BodyPart bodyPart = multiPart.getBodyPart(partCount);
                     if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                        Part innerPart = getAttachmentPart(bodyPart, attachmentId);
+                        Part innerPart = getAttachmentPartById(accountDao, imapFolder, messageNumber, bodyPart,
+                                attachmentId);
                         if (innerPart != null) {
                             return innerPart;
                         }
-                    } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())
-                            && (headers = bodyPart.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)) != null
-                            && headers.length > 0
-                            && attachmentId.equals(headers[0])) {
-                        return bodyPart;
+                    } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                        InputStream inputStream = ImapProtocolUtil.getHeaderStream(accountDao, imapFolder,
+                                messageNumber, partCount + 1);
+
+                        if (inputStream == null) {
+                            throw new MessagingException("Failed to fetch headers");
+                        }
+
+                        InternetHeaders internetHeaders = new InternetHeaders(inputStream);
+                        headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID);
+
+                        if (headers == null) {
+                            //try to receive custom Gmail attachments header X-Attachment-Id
+                            headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
+                        }
+
+                        if (headers != null && attachmentId.equals(headers[0])) {
+                            return bodyPart;
+                        }
                     }
                 }
                 return null;

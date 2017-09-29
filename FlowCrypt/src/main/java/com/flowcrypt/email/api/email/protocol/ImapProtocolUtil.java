@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.api.email.protocol;
 
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.protocol.BODY;
@@ -29,20 +30,33 @@ public class ImapProtocolUtil {
     /**
      * Return the MIME format stream of headers for this body part.
      *
+     * @param accountDao    The object which contains information about an email account.
      * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
      * @param messageNumber This number will be used for fetching {@link Part} details;
      * @param sectionId     The {@link Part} section id.
      * @return
      * @throws MessagingException
      */
-    public static InputStream getHeaderStream(IMAPFolder imapFolder, final int messageNumber, final int sectionId)
-            throws MessagingException {
+    public static InputStream getHeaderStream(AccountDao accountDao, IMAPFolder imapFolder, final int messageNumber,
+                                              int sectionId) throws MessagingException {
+
+        final String section;
+
+        switch (accountDao.getAccountType()) {
+            case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                section = sectionId + ".MIME";
+                break;
+
+            default:
+                section = sectionId + ".HEADER";
+                break;
+        }
 
         return (InputStream) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
             public Object doCommand(IMAPProtocol imapProtocol)
                     throws ProtocolException {
 
-                BODY body = imapProtocol.peekBody(messageNumber, sectionId + ".HEADER");
+                BODY body = imapProtocol.peekBody(messageNumber, section);
                 if (body != null) {
                     return body.getByteArrayInputStream();
                 } else return null;

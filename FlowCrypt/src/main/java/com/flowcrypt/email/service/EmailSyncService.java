@@ -326,7 +326,8 @@ public class EmailSyncService extends Service implements SyncListener {
             ArrayList<AttachmentInfo> attachmentInfoList = null;
 
             try {
-                attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, message.getMessageNumber(), message);
+                attachmentInfoList = getAttachmentsInfoFromPart(accountDao, imapFolder, message.getMessageNumber(),
+                        message);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -345,6 +346,7 @@ public class EmailSyncService extends Service implements SyncListener {
     /**
      * Find attachments in the {@link Part}.
      *
+     * @param accountDao    The object which contains information about an email account.
      * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
      * @param messageNumber This number will be used for fetching {@link Part} details;
      * @param part          The parent part.
@@ -353,7 +355,8 @@ public class EmailSyncService extends Service implements SyncListener {
      * @throws IOException
      */
     @NonNull
-    private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(IMAPFolder imapFolder, int messageNumber, Part part)
+    private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(AccountDao accountDao, IMAPFolder imapFolder, int
+            messageNumber, Part part)
             throws MessagingException, IOException {
         ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
@@ -364,13 +367,13 @@ public class EmailSyncService extends Service implements SyncListener {
             for (int partCount = 0; partCount < numberOfParts; partCount++) {
                 BodyPart bodyPart = multiPart.getBodyPart(partCount);
                 if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfoFromPart(imapFolder,
+                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfoFromPart(accountDao, imapFolder,
                             messageNumber, bodyPart);
                     if (!attachmentInfoLists.isEmpty()) {
                         attachmentInfoList.addAll(attachmentInfoLists);
                     }
                 } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(accountDao, imapFolder, messageNumber,
                             partCount + 1);
 
                     if (inputStream == null) {
