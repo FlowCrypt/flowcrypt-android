@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
@@ -174,8 +175,10 @@ public class SendMessageSyncTask extends BaseSyncTask {
             MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
 
             for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
-                mimeMultipart.addBodyPart(generateBodyPartWithAttachment(context, pgpCacheDirectory,
-                        js, pubKeys, attachmentInfo));
+                MimeBodyPart bodyPart = generateBodyPartWithAttachment(context, pgpCacheDirectory,
+                        js, pubKeys, attachmentInfo);
+                bodyPart.setContentID(EmailUtil.generateContentId());
+                mimeMultipart.addBodyPart(bodyPart);
             }
 
             mimeMessage.setContent(mimeMultipart);
@@ -193,15 +196,15 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @param js                The {@link Js} tools.
      * @param pubKeys           The public keys which will be used for generate an encrypted attachments.
      * @param attachmentInfo    The {@link AttachmentInfo} object, which contains general information about attachment.
-     * @return Generated {@link BodyPart} with an attachment.
+     * @return Generated {@link MimeBodyPart} with an attachment.
      * @throws IOException
      * @throws MessagingException
      */
     @NonNull
-    private BodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
-                                                    String[] pubKeys, AttachmentInfo attachmentInfo)
+    private MimeBodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
+                                                        String[] pubKeys, AttachmentInfo attachmentInfo)
             throws IOException, MessagingException {
-        BodyPart attachmentsBodyPart = new MimeBodyPart();
+        MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
         switch (outgoingMessageInfo.getMessageEncryptionType()) {
             case ENCRYPTED:
                 InputStream inputStream =
