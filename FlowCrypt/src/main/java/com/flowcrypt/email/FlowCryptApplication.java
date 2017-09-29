@@ -15,7 +15,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
 
 import org.acra.ACRA;
-import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
 
@@ -30,10 +29,7 @@ import org.acra.sender.HttpSender;
 @ReportsCrashes(
         formUri = "https://api.cryptup.io/help/acra",
         httpMethod = HttpSender.Method.POST,
-        reportType = HttpSender.Type.JSON,
-        mailTo = Constants.ANDROID_DEVELOPER_SUPPORT_EMAIL,
-        mode = ReportingInteractionMode.TOAST,
-        resToastText = R.string.application_crashed)
+        reportType = HttpSender.Type.JSON)
 public class FlowCryptApplication extends Application {
 
     @Override
