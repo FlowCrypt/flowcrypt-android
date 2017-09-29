@@ -44,6 +44,7 @@ public class ImapProtocolUtil {
 
         switch (accountDao.getAccountType()) {
             case AccountDao.ACCOUNT_TYPE_GOOGLE:
+            case AccountDao.ACCOUNT_TYPE_OUTLOOK:
                 section = sectionId + ".MIME";
                 break;
 

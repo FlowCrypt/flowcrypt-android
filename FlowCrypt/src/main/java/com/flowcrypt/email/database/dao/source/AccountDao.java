@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 
 public class AccountDao implements Parcelable {
     public static final String ACCOUNT_TYPE_GOOGLE = "com.google";
+    public static final String ACCOUNT_TYPE_OUTLOOK = "outlook.com";
     public static final Creator<AccountDao> CREATOR = new Creator<AccountDao>() {
         @Override
         public AccountDao createFromParcel(Parcel source) {
