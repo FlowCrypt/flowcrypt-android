@@ -193,4 +193,5 @@
     <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
     <string name="settings_not_valid">The settings is not valid</string>
     <string name="skip_setup">Skip setup</string>
+    <string name="expand_an_account_managment">Expand an account management</string>
 </resources>
