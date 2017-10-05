@@ -102,7 +102,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.AddNewAccountActivity"
+            android:name=".ui.activity.AddNewAccountManuallyActivity"
             android:label="@string/adding_new_account"
             android:screenOrientation="portrait" />
 

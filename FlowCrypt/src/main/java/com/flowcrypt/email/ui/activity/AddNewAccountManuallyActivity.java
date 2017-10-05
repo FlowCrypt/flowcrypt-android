@@ -50,7 +50,7 @@ import com.google.gson.JsonSyntaxException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class AddNewAccountActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
+public class AddNewAccountManuallyActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
         LoaderManager.LoaderCallbacks<LoaderResult> {
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
@@ -82,7 +82,7 @@ public class AddNewAccountActivity extends BaseActivity implements CompoundButto
 
     @Override
     public int getContentViewResourceId() {
-        return R.layout.activity_add_new_account;
+        return R.layout.activity_add_new_account_manually;
     }
 
     @Override

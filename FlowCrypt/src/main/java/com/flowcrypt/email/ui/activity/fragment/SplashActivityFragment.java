@@ -18,7 +18,7 @@ import android.view.ViewGroup;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.SignInType;
-import com.flowcrypt.email.ui.activity.AddNewAccountActivity;
+import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -83,7 +83,7 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
 
             case R.id.buttonOtherEmailProvider:
                 if (GeneralUtil.isInternetConnectionAvailable(getActivity())) {
-                    startActivityForResult(new Intent(getContext(), AddNewAccountActivity.class),
+                    startActivityForResult(new Intent(getContext(), AddNewAccountManuallyActivity.class),
                             REQUEST_CODE_ADD_OTHER_ACCOUNT);
                 } else {
                     UIUtil.showInfoSnackbar(getView(),
