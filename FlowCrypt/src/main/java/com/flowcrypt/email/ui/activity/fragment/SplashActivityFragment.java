@@ -15,13 +15,21 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.SignInType;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
+import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import org.acra.ACRA;
 
 /**
  * This fragment containing a splash view. Also in this fragment, the implementation of Sign In
@@ -59,7 +67,22 @@ public class SplashActivityFragment extends Fragment implements View.OnClickList
             case REQUEST_CODE_ADD_OTHER_ACCOUNT:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        getActivity().finish();
+                        try {
+                            AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
+                                    .KEY_EXTRA_AUTH_CREDENTIALS);
+                            AccountDaoSource accountDaoSource = new AccountDaoSource();
+                            accountDaoSource.addRow(getContext(), authCredentials);
+                            AccountDao accountDao = accountDaoSource.getAccountInformation(getContext(),
+                                    authCredentials.getEmail());
+                            EmailSyncService.startEmailSyncService(getContext());
+                            EmailManagerActivity.runEmailManagerActivity(getContext(), accountDao);
+
+                            getActivity().finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
+                            Toast.makeText(getContext(), R.string.unknown_error, Toast.LENGTH_SHORT).show();
+                        }
                         break;
                 }
                 break;

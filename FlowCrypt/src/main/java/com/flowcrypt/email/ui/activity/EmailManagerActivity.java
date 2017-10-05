@@ -24,10 +24,13 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -38,6 +41,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
@@ -47,6 +51,8 @@ import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
+
+import java.util.List;
 
 /**
  * This activity used to show messages list.
@@ -62,6 +68,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
+    public static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
@@ -69,6 +76,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     private AccountDao accountDao;
     private FoldersManager foldersManager;
     private Folder folder;
+    private LinearLayout accountManagementLayout;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -110,6 +118,27 @@ public class EmailManagerActivity extends BaseSyncActivity
         super.onDestroy();
         if (drawerLayout != null) {
             drawerLayout.removeDrawerListener(actionBarDrawerToggle);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_ADD_NEW_ACCOUNT:
+                switch (resultCode) {
+                    case RESULT_OK:
+                        EmailSyncService.switchAccount(EmailManagerActivity.this);
+                        AccountDao accountDao = data.getParcelableExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT);
+                        if (accountDao != null) {
+                            runEmailManagerActivity(EmailManagerActivity.this, accountDao);
+                            finish();
+                        }
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -270,6 +299,10 @@ public class EmailManagerActivity extends BaseSyncActivity
                 startActivity(CreateMessageActivity.generateIntent(this, accountDao.getEmail(), null,
                         MessageEncryptionType.ENCRYPTED));
                 break;
+
+            case R.id.viewIdAddNewAccount:
+                startActivityForResult(new Intent(this, AddNewAccountActivity.class), REQUEST_CODE_ADD_NEW_ACCOUNT);
+                break;
         }
     }
 
@@ -340,18 +373,16 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     private void initViews() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        actionBarDrawerToggle = new CustomDrawerToggle(this, drawerLayout, toolbar,
+        drawerLayout = findViewById(R.id.drawer_layout);
+        actionBarDrawerToggle = new CustomDrawerToggle(this, drawerLayout, getToolbar(),
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.navigationView);
+        navigationView = findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(this);
+        navigationView.addHeaderView(generateAccountManagementLayout());
 
         MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
         if (navigationMenuDevSettings != null) {
@@ -371,12 +402,16 @@ public class EmailManagerActivity extends BaseSyncActivity
      * @param view The view which contains user profile views.
      */
     private void initUserProfileView(View view) {
-        ImageView imageViewUserPhoto = (ImageView) view.findViewById(R.id.imageViewUserPhoto);
-        TextView textViewUserDisplayName = (TextView) view.findViewById(R.id.textViewUserDisplayName);
-        TextView textViewUserEmail = (TextView) view.findViewById(R.id.textViewUserEmail);
+        ImageView imageViewUserPhoto = view.findViewById(R.id.imageViewUserPhoto);
+        TextView textViewUserDisplayName = view.findViewById(R.id.textViewUserDisplayName);
+        TextView textViewUserEmail = view.findViewById(R.id.textViewUserEmail);
 
         if (accountDao != null) {
-            textViewUserDisplayName.setText(accountDao.getDisplayName());
+            if (TextUtils.isEmpty(accountDao.getDisplayName())) {
+                textViewUserDisplayName.setVisibility(View.GONE);
+            } else {
+                textViewUserDisplayName.setText(accountDao.getDisplayName());
+            }
             textViewUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
@@ -392,6 +427,103 @@ public class EmailManagerActivity extends BaseSyncActivity
             }
         }
 
+        View currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
+        final ImageView imageViewExpandAccountManagement = view.findViewById(R.id.imageViewExpandAccountManagement);
+        if (currentAccountDetailsItem != null) {
+            handleClickOnAccountManagementButton(currentAccountDetailsItem, imageViewExpandAccountManagement);
+        }
+    }
+
+    private void handleClickOnAccountManagementButton(View currentAccountDetailsItem, final ImageView imageView) {
+        currentAccountDetailsItem.setOnClickListener(new View.OnClickListener() {
+            private boolean isExpanded;
+
+            @Override
+            public void onClick(View v) {
+                if (isExpanded) {
+                    imageView.setImageResource(R.mipmap.ic_arrow_drop_down);
+                    navigationView.getMenu().setGroupVisible(0, true);
+                    accountManagementLayout.setVisibility(View.GONE);
+                } else {
+                    imageView.setImageResource(R.mipmap.ic_arrow_drop_up);
+                    navigationView.getMenu().setGroupVisible(0, false);
+                    accountManagementLayout.setVisibility(View.VISIBLE);
+                }
+
+                isExpanded = !isExpanded;
+            }
+        });
+    }
+
+    /**
+     * Generate view which contains information about added accounts and using him we can add a new one.
+     *
+     * @return The generated view.
+     */
+    private ViewGroup generateAccountManagementLayout() {
+        accountManagementLayout = new LinearLayout(this);
+        accountManagementLayout.setOrientation(LinearLayout.VERTICAL);
+        accountManagementLayout.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        accountManagementLayout.setVisibility(View.GONE);
+
+        List<AccountDao> accountDaoList = new AccountDaoSource().getAccountsWithoutActive(this, accountDao.getEmail());
+        for (final AccountDao accountDao : accountDaoList) {
+            accountManagementLayout.addView(generateAccountItemView(accountDao));
+        }
+
+        View addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account,
+                accountManagementLayout, false);
+        addNewAccountView.setId(R.id.viewIdAddNewAccount);
+        addNewAccountView.setOnClickListener(this);
+        accountManagementLayout.addView(addNewAccountView);
+
+        return accountManagementLayout;
+    }
+
+    private View generateAccountItemView(final AccountDao accountDao) {
+        View accountItemView = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item,
+                accountManagementLayout, false);
+        accountItemView.setTag(accountDao);
+
+        ImageView imageViewUserPhoto = accountItemView.findViewById(R.id.imageViewUserPhoto);
+        TextView textViewUserDisplayName = accountItemView.findViewById(R.id.textViewUserDisplayName);
+        TextView textViewUserEmail = accountItemView.findViewById(R.id.textViewUserEmail);
+
+        if (accountDao != null) {
+            if (TextUtils.isEmpty(accountDao.getDisplayName())) {
+                textViewUserDisplayName.setVisibility(View.GONE);
+            } else {
+                textViewUserDisplayName.setText(accountDao.getDisplayName());
+            }
+            textViewUserEmail.setText(accountDao.getEmail());
+
+            if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+                RequestOptions requestOptions = new RequestOptions();
+                requestOptions.centerCrop();
+                requestOptions.transform(new CircleTransformation());
+                requestOptions.error(R.mipmap.ic_account_default_photo);
+
+                Glide.with(this)
+                        .load(accountDao.getPhotoUrl())
+                        .apply(requestOptions)
+                        .into(imageViewUserPhoto);
+            }
+        }
+
+        accountItemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+                if (accountDao != null) {
+                    new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, accountDao.getEmail());
+                    EmailSyncService.switchAccount(EmailManagerActivity.this);
+                    runEmailManagerActivity(EmailManagerActivity.this, accountDao);
+                }
+            }
+        });
+
+        return accountItemView;
     }
 
     /**

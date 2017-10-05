@@ -32,7 +32,6 @@ import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -53,8 +52,10 @@ import com.google.gson.JsonSyntaxException;
 public class AddNewAccountManuallyActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
         LoaderManager.LoaderCallbacks<LoaderResult> {
-    private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
+    public static final String KEY_EXTRA_AUTH_CREDENTIALS =
+            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", ImportPublicKeyActivity.class);
 
+    private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -115,20 +116,11 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case REQUEST_CODE_ADD_NEW_ACCOUNT:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        try {
-                            authCredentials = generateAuthCredentials();
-                            AccountDaoSource accountDaoSource = new AccountDaoSource();
-                            accountDaoSource.addRow(this, authCredentials);
-                            AccountDao accountDao = accountDaoSource.getAccountInformation(this,
-                                    authCredentials.getEmail());
-                            EmailSyncService.startEmailSyncService(this);
-                            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
-                            setResult(Activity.RESULT_OK);
-                            finish();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw new IllegalStateException("Something wrong happened", e);
-                        }
+                        authCredentials = generateAuthCredentials();
+                        Intent intent = new Intent();
+                        intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCredentials);
+                        setResult(Activity.RESULT_OK, intent);
+                        finish();
                         break;
                 }
                 break;
@@ -287,26 +279,26 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     }
 
     private void initViews(Bundle savedInstanceState) {
-        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
-        editTextUserName = (EditText) findViewById(R.id.editTextUserName);
-        editTextPassword = (EditText) findViewById(R.id.editTextPassword);
-        editTextImapServer = (EditText) findViewById(R.id.editTextImapServer);
-        editTextImapPort = (EditText) findViewById(R.id.editTextImapPort);
-        editTextSmtpServer = (EditText) findViewById(R.id.editTextSmtpServer);
-        editTextSmtpPort = (EditText) findViewById(R.id.editTextSmtpPort);
-        editTextSmtpUsername = (EditText) findViewById(R.id.editTextSmtpUsername);
-        editTextSmtpPassword = (EditText) findViewById(R.id.editTextSmtpPassword);
+        editTextEmail = findViewById(R.id.editTextEmail);
+        editTextUserName = findViewById(R.id.editTextUserName);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        editTextImapServer = findViewById(R.id.editTextImapServer);
+        editTextImapPort = findViewById(R.id.editTextImapPort);
+        editTextSmtpServer = findViewById(R.id.editTextSmtpServer);
+        editTextSmtpPort = findViewById(R.id.editTextSmtpPort);
+        editTextSmtpUsername = findViewById(R.id.editTextSmtpUsername);
+        editTextSmtpPassword = findViewById(R.id.editTextSmtpPassword);
 
         editTextEmail.addTextChangedListener(this);
 
         layoutSmtpSignIn = findViewById(R.id.layoutSmtpSignIn);
         progressView = findViewById(R.id.progressView);
         contentView = findViewById(R.id.layoutContent);
-        checkBoxRequireSignInForSmtp = (CheckBox) findViewById(R.id.checkBoxRequireSignInForSmtp);
+        checkBoxRequireSignInForSmtp = findViewById(R.id.checkBoxRequireSignInForSmtp);
         checkBoxRequireSignInForSmtp.setOnCheckedChangeListener(this);
 
-        spinnerImapSecyrityType = (Spinner) findViewById(R.id.spinnerImapSecurityType);
-        spinnerSmtpSecyrityType = (Spinner) findViewById(R.id.spinnerSmtpSecyrityType);
+        spinnerImapSecyrityType = findViewById(R.id.spinnerImapSecurityType);
+        spinnerSmtpSecyrityType = findViewById(R.id.spinnerSmtpSecyrityType);
 
         ArrayAdapter<SecurityType> userAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item, SecurityType.generateAvailableSecurityTypes(this));

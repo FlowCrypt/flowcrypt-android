@@ -65,7 +65,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(getContentViewResourceId());
-        initViews();
+        initScreenViews();
     }
 
     @Override
@@ -202,13 +202,13 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     }
 
-    private void initViews() {
-        appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
+    private void initScreenViews() {
+        appBarLayout = findViewById(R.id.appBarLayout);
         setupToolbarIfItExists();
     }
 
     private void setupToolbarIfItExists() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             setSupportActionBar(toolbar);
         }

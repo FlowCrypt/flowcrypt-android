@@ -37,7 +37,7 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <ImageView
-            android:id="@+id/imageButton"
+            android:id="@+id/imageViewExpandAccountManagement"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/expand_an_account_managment"
@@ -60,7 +60,6 @@
                 android:id="@+id/textViewUserDisplayName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 tools:text="Android Studio" />
 

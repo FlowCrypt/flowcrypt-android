@@ -34,5 +34,6 @@
     <item name="viewIdProgressView" type="id" />
     <item name="viewIdStatusView" type="id" />
     <item name="viewIdTextViewStatusInfo" type="id" />
+    <item name="viewIdAddNewAccount" type="id" />
 
 </resources>
