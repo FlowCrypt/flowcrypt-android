@@ -77,18 +77,6 @@ public class SplashActivity extends BaseSignInActivity implements
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        if (accountDao != null) {
-            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
-                checkGoogleSignResult();
-            }
-        } else {
-            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
-        }
-    }
-
-    @Override
     public boolean isDisplayHomeAsUpEnabled() {
         return false;
     }
@@ -124,6 +112,8 @@ public class SplashActivity extends BaseSignInActivity implements
                         break;
 
                     case CheckKeysActivity.RESULT_NEGATIVE:
+                        clearInfoAboutOldAccount(accountDao);
+                        UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
                         break;
                 }
                 break;
@@ -142,7 +132,11 @@ public class SplashActivity extends BaseSignInActivity implements
                         break;
 
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-                        clearInfoAboutOldAccount(data);
+                        this.accountDao = null;
+                        if (data != null) {
+                            clearInfoAboutOldAccount((AccountDao) data.getParcelableExtra(CreateOrImportKeyActivity
+                                    .EXTRA_KEY_ACCOUNT_DAO));
+                        }
                         break;
                 }
                 break;
@@ -169,7 +163,11 @@ public class SplashActivity extends BaseSignInActivity implements
                         break;
 
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-                        clearInfoAboutOldAccount(data);
+                        this.accountDao = null;
+                        if (data != null) {
+                            clearInfoAboutOldAccount((AccountDao) data.getParcelableExtra(CreateOrImportKeyActivity
+                                    .EXTRA_KEY_ACCOUNT_DAO));
+                        }
                         break;
                 }
                 break;
@@ -247,18 +245,12 @@ public class SplashActivity extends BaseSignInActivity implements
     /**
      * Clear information about created but a not used account.
      *
-     * @param data The intent which contains information about account which will be deleted from the local database.
+     * @param accountDao The account which will be deleted from the local database.
      */
-    private void clearInfoAboutOldAccount(Intent data) {
-        this.accountDao = null;
-        if (data != null) {
-            AccountDao accountDao = data.getParcelableExtra(CreateOrImportKeyActivity
-                    .EXTRA_KEY_ACCOUNT_DAO);
-
-            if (accountDao != null) {
-                getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-                        + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
-            }
+    private void clearInfoAboutOldAccount(AccountDao accountDao) {
+        if (accountDao != null) {
+            getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
+                    + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
         }
     }
 
