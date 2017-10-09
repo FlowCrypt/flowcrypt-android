@@ -108,9 +108,6 @@ public class SplashActivity extends BaseSignInActivity implements
                         break;
 
                     case Activity.RESULT_CANCELED:
-                        finish();
-                        break;
-
                     case CheckKeysActivity.RESULT_NEGATIVE:
                         clearInfoAboutOldAccount(accountDao);
                         UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
