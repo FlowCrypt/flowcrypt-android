@@ -8,24 +8,26 @@ package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
-import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -34,6 +36,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+
+import org.acra.ACRA;
 
 import java.util.ArrayList;
 
@@ -45,7 +49,7 @@ import java.util.ArrayList;
  *         Time: 14:50
  *         E-mail: DenBond7@gmail.com
  */
-public class SplashActivity extends BaseSignInActivity implements SplashActivityFragment.OnSignInButtonClickListener,
+public class SplashActivity extends BaseSignInActivity implements
         GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
         LoaderManager.LoaderCallbacks<LoaderResult> {
 
@@ -56,21 +60,6 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
     private View splashView;
 
     private AccountDao accountDao;
-
-    @Override
-    public boolean isDisplayHomeAsUpEnabled() {
-        return false;
-    }
-
-    @Override
-    public View getRootView() {
-        return signInView;
-    }
-
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_splash;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,6 +86,21 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
         } else {
             UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
         }
+    }
+
+    @Override
+    public boolean isDisplayHomeAsUpEnabled() {
+        return false;
+    }
+
+    @Override
+    public View getRootView() {
+        return signInView;
+    }
+
+    @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_splash;
     }
 
     @Override
@@ -136,6 +140,37 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
                     case Activity.RESULT_CANCELED:
                         finish();
                         break;
+
+                    case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
+                        clearInfoAboutOldAccount(data);
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_ADD_OTHER_ACCOUNT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        try {
+                            AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
+                                    .KEY_EXTRA_AUTH_CREDENTIALS);
+                            AccountDaoSource accountDaoSource = new AccountDaoSource();
+                            accountDaoSource.addRow(this, authCredentials);
+                            AccountDao accountDao = accountDaoSource.getAccountInformation(this,
+                                    authCredentials.getEmail());
+                            EmailSyncService.startEmailSyncService(this);
+                            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+
+                            finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
+                            Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+
+                    case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
+                        clearInfoAboutOldAccount(data);
+                        break;
                 }
                 break;
 
@@ -145,13 +180,26 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
     }
 
     @Override
-    public void onSignInButtonClick(SignInType signInType) {
-        switch (signInType) {
-            case GMAIL:
-                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-                startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonPrivacy:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
+                        getString(R.string.privacy), "html/privacy.htm"));
                 break;
+
+            case R.id.buttonTerms:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
+                        getString(R.string.terms), "html/terms.htm"));
+                break;
+
+            case R.id.buttonSecurity:
+                startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
+                        getString(R.string.security), "html/security.htm"));
+                break;
+            default:
+                super.onClick(v);
         }
+
     }
 
     @Override
@@ -174,7 +222,6 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
                 if (loaderResult.getResult() != null) {
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
-                        finish();
                         startActivityForResult(CreateOrImportKeyActivity.newIntent(this, new AccountDaoSource()
                                 .getActiveAccountInformation(this), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
                     } else {
@@ -195,6 +242,24 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
 
+    }
+
+    /**
+     * Clear information about created but a not used account.
+     *
+     * @param data The intent which contains information about account which will be deleted from the local database.
+     */
+    private void clearInfoAboutOldAccount(Intent data) {
+        this.accountDao = null;
+        if (data != null) {
+            AccountDao accountDao = data.getParcelableExtra(CreateOrImportKeyActivity
+                    .EXTRA_KEY_ACCOUNT_DAO);
+
+            if (accountDao != null) {
+                getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
+                        + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+            }
+        }
     }
 
     private void handleSignInResult(GoogleSignInResult googleSignInResult) {
@@ -237,9 +302,32 @@ public class SplashActivity extends BaseSignInActivity implements SplashActivity
         return new AccountDaoSource().getAccountInformation(this, googleSignInAccount.getEmail());
     }
 
+    /**
+     * In this method we init all used views.
+     */
     private void initViews() {
         signInView = findViewById(R.id.signInView);
         splashView = findViewById(R.id.splashView);
+
+        if (findViewById(R.id.buttonSignInWithGmail) != null) {
+            findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonOtherEmailProvider) != null) {
+            findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonPrivacy) != null) {
+            findViewById(R.id.buttonPrivacy).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonTerms) != null) {
+            findViewById(R.id.buttonTerms).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonSecurity) != null) {
+            findViewById(R.id.buttonSecurity).setOnClickListener(this);
+        }
     }
 
     /**

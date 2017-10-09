@@ -7,13 +7,18 @@
 package com.flowcrypt.email.util.google;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.R;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
 
 /**
  * This class describes methods which can be used to work with {@link GoogleApiClient}.
@@ -42,5 +47,21 @@ public class GoogleApiClientHelper {
                 .addConnectionCallbacks(connectionCallbacks)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
                 .build();
+    }
+
+    /**
+     * Sign out from the Google account.
+     */
+    public static void signOutFromGoogleAccount(final Context context, GoogleApiClient googleApiClient) {
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        if (!status.isSuccess()) {
+                            Toast.makeText(context,
+                                    R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 }

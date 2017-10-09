@@ -122,6 +122,11 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                         setResult(Activity.RESULT_OK, intent);
                         finish();
                         break;
+
+                    case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
+                        setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data);
+                        finish();
+                        break;
                 }
                 break;
 

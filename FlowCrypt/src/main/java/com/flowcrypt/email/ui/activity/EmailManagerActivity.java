@@ -34,7 +34,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -57,11 +56,8 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 
 import java.util.List;
 
@@ -347,7 +343,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         switch (accountDao.getAccountType()) {
             case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                signOutFromGoogleAccount();
+                GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
                 break;
         }
 
@@ -579,22 +575,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         });
 
         return accountItemView;
-    }
-
-    /**
-     * Sign out from the Google account.
-     */
-    private void signOutFromGoogleAccount() {
-        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (!status.isSuccess()) {
-                            Toast.makeText(EmailManagerActivity.this,
-                                    R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
     }
 
     /**
