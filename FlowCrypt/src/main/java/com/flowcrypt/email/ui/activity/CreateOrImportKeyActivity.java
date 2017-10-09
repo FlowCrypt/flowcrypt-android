@@ -94,7 +94,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
             case R.id.buttonSelectAnotherAccount:
                 finish();
-                startActivity(SplashActivity.getSignOutIntent(this));
+                //startActivity(SplashActivity.getSignOutIntent(this));
                 break;
 
             case R.id.buttonSkipSetup:

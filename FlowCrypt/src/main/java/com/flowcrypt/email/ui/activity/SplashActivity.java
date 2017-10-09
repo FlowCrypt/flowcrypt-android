@@ -7,46 +7,34 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Toast;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.SignInType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -57,54 +45,17 @@ import java.util.ArrayList;
  *         Time: 14:50
  *         E-mail: DenBond7@gmail.com
  */
-public class SplashActivity extends BaseActivity implements SplashActivityFragment.OnSignInButtonClickListener,
+public class SplashActivity extends BaseSignInActivity implements SplashActivityFragment.OnSignInButtonClickListener,
         GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
         LoaderManager.LoaderCallbacks<LoaderResult> {
-    private static final String ACTION_SIGN_OUT = GeneralUtil.generateUniqueExtraKey
-            ("ACTION_SIGN_OUT", SplashActivity.class);
-    private static final String ACTION_REVOKE_ACCESS = GeneralUtil.generateUniqueExtraKey
-            ("ACTION_REVOKE_ACCESS", SplashActivity.class);
 
-    private static final int REQUEST_CODE_SIGN_IN = 100;
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
     private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;
-    /**
-     * The main entry point for Google Play services integration.
-     */
-    private GoogleApiClient googleApiClient;
 
     private View signInView;
     private View splashView;
 
-    private boolean isSignOutAction;
-    private boolean isRevokeAccessAction;
     private AccountDao accountDao;
-
-    /**
-     * Generate the sign out intent.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return The sign out intent.
-     */
-    public static Intent getSignOutIntent(Context context) {
-        Intent intent = new Intent(context, SplashActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.setAction(ACTION_SIGN_OUT);
-        return intent;
-    }
-
-    /**
-     * Generate the revoke access intent.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return The revoke access intent.
-     */
-    public static Intent getRevokeAccessIntent(Context context) {
-        Intent intent = new Intent(context, SplashActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.setAction(ACTION_REVOKE_ACCESS);
-        return intent;
-    }
 
     @Override
     public boolean isDisplayHomeAsUpEnabled() {
@@ -124,36 +75,14 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(new Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
-                .requestEmail()
-                .build();
-
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this).addConnectionCallbacks(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
-                .build();
-
         initViews();
 
-        if (getIntent() != null && getIntent().getAction() != null) {
-            if (ACTION_SIGN_OUT.equals(getIntent().getAction())) {
-                isSignOutAction = true;
-                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-            } else if (ACTION_REVOKE_ACCESS.equals(getIntent().getAction())) {
-                isRevokeAccessAction = true;
-                UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-            }
-        }
-
         accountDao = new AccountDaoSource().getActiveAccountInformation(this);
-        if (!isSignOutAction && !isRevokeAccessAction) {
-            if (accountDao != null) {
-                if (SecurityUtils.isBackupKeysExist(this)) {
-                    EmailSyncService.startEmailSyncService(this);
-                    EmailManagerActivity.runEmailManagerActivity(this, accountDao);
-                    finish();
-                }
+        if (accountDao != null) {
+            if (SecurityUtils.isBackupKeysExist(this)) {
+                EmailSyncService.startEmailSyncService(this);
+                EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                finish();
             }
         }
     }
@@ -161,8 +90,12 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     @Override
     public void onStart() {
         super.onStart();
-        if (!isSignOutAction && !isRevokeAccessAction) {
-            checkGoogleSignResult();
+        if (accountDao != null) {
+            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+                checkGoogleSignResult();
+            }
+        } else {
+            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
         }
     }
 
@@ -187,7 +120,6 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                         break;
 
                     case CheckKeysActivity.RESULT_NEGATIVE:
-                        isSignOutAction = true;
                         break;
                 }
                 break;
@@ -219,28 +151,6 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
                 Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
                 startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
                 break;
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (isSignOutAction) {
-            signOutFromGoogleAccount();
-        } else if (isRevokeAccessAction) {
-            revokeAccessFomGoogleAccount();
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        if (isSignOutAction || isRevokeAccessAction) {
-            finish();
-            Toast.makeText(this, R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -330,64 +240,6 @@ public class SplashActivity extends BaseActivity implements SplashActivityFragme
     private void initViews() {
         signInView = findViewById(R.id.signInView);
         splashView = findViewById(R.id.splashView);
-    }
-
-    /**
-     * Revoke access to the Gmail account.
-     */
-    private void revokeAccessFomGoogleAccount() {
-        Auth.GoogleSignInApi.revokeAccess(googleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        try {
-                            if (status.isSuccess()) {
-                                resetAppComponents();
-                                UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
-                            } else {
-                                finish();
-                                Toast.makeText(SplashActivity.this, R.string.error_occurred_while_this_action_running,
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
-                        }
-                    }
-                });
-    }
-
-    /**
-     * Sign out from the Google account.
-     */
-    private void signOutFromGoogleAccount() {
-        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        try {
-                            if (status.isSuccess()) {
-                                resetAppComponents();
-                                UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
-                            } else {
-                                finish();
-                                Toast.makeText(SplashActivity.this, R.string.error_occurred_while_this_action_running,
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
-                        }
-                    }
-                });
-    }
-
-    private void resetAppComponents() throws IOException {
-        stopService(new Intent(this, EmailSyncService.class));
-        if (accountDao != null) {
-            getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-                    + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
-        }
     }
 
     /**

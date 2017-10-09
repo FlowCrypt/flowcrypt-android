@@ -20,11 +20,6 @@
                 android:id="@+id/navigationMenuLogOut"
                 android:icon="@mipmap/ic_sign_out"
                 android:title="@string/log_out" />
-
-            <item
-                android:id="@+id/navigationMenuRevokeAccess"
-                android:icon="@mipmap/ic_revoke_access"
-                android:title="Revoke Access(Test)" />
         </menu>
     </item>
 

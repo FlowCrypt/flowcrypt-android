@@ -11,9 +11,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.LoaderManager;
@@ -32,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -43,6 +46,7 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -50,7 +54,14 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 
 import java.util.List;
 
@@ -64,7 +75,8 @@ import java.util.List;
  */
 public class EmailManagerActivity extends BaseSyncActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
-        View.OnClickListener, EmailListFragment.OnManageEmailsListener {
+        View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks {
 
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
@@ -77,6 +89,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     private FoldersManager foldersManager;
     private Folder folder;
     private LinearLayout accountManagementLayout;
+    private GoogleApiClient googleApiClient;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -98,6 +111,9 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
+                .generateGoogleSignInOptions());
 
         if (getIntent() != null) {
             accountDao = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO);
@@ -205,13 +221,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
-                finish();
-                startActivity(SplashActivity.getSignOutIntent(this));
-                break;
-
-            case R.id.navigationMenuRevokeAccess:
-                finish();
-                startActivity(SplashActivity.getRevokeAccessIntent(this));
+                logout();
                 break;
 
             case R.id.navigationMenuActionSettings:
@@ -314,6 +324,51 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public Folder getCurrentFolder() {
         return folder;
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    private void logout() {
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+        List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, accountDao.getEmail());
+
+        switch (accountDao.getAccountType()) {
+            case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                signOutFromGoogleAccount();
+                break;
+        }
+
+        if (accountDao != null) {
+            getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
+                    + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+        }
+
+        if (accountDaoList != null && !accountDaoList.isEmpty()) {
+            AccountDao newActiveAccount = accountDaoList.get(0);
+            new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, newActiveAccount.getEmail());
+            EmailSyncService.switchAccount(EmailManagerActivity.this);
+            runEmailManagerActivity(EmailManagerActivity.this, newActiveAccount);
+        } else {
+            stopService(new Intent(this, EmailSyncService.class));
+            Intent intent = new Intent(this, SplashActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+
+        finish();
     }
 
     /**
@@ -524,6 +579,22 @@ public class EmailManagerActivity extends BaseSyncActivity
         });
 
         return accountItemView;
+    }
+
+    /**
+     * Sign out from the Google account.
+     */
+    private void signOutFromGoogleAccount() {
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        if (!status.isSuccess()) {
+                            Toast.makeText(EmailManagerActivity.this,
+                                    R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     /**
