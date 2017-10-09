@@ -343,7 +343,9 @@ public class EmailSyncManager {
                         try {
                             if (isNeedToResetConnection) {
                                 isNeedToResetConnection = false;
-                                store.close();
+                                if (store != null) {
+                                    store.close();
+                                }
                                 session = null;
                             }
 
