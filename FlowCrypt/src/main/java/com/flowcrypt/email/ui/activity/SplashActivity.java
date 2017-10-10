@@ -267,7 +267,7 @@ public class SplashActivity extends BaseSignInActivity implements
             } else {
                 startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
                 if (accountDao != null) {
-                    getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_backups, null, this);
+                    getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_backups, null, this);
                 } else {
                     //todo-denbond7 handle this situation
                 }
