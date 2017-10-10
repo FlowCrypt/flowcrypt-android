@@ -36,6 +36,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
     public static final String COL_NAME = "name";
     public static final String COL_ENCODED_SIZE_IN_BYTES = "encodedSize";
     public static final String COL_TYPE = "type";
+    public static final String COL_ATTACHMENT_ID = "attachment_id";
+    public static final String COL_FILE_URI = "file_uri";
 
     public static final String ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ATTACHMENT + " (" +
@@ -45,9 +47,11 @@ public class AttachmentDaoSource extends BaseDaoSource {
             COL_UID + " INTEGER NOT NULL, " +
             COL_NAME + " TEXT NOT NULL, " +
             COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
-            COL_TYPE + " VARCHAR(100) NOT NULL " + ");";
+            COL_TYPE + " VARCHAR(100) NOT NULL, " +
+            COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
+            COL_FILE_URI + " TEXT " + ");";
 
-    public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES =
+    public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
                     + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
                     " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
@@ -71,6 +75,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
         contentValues.put(COL_NAME, attachmentInfo.getName());
         contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
         contentValues.put(COL_TYPE, attachmentInfo.getType());
+        contentValues.put(COL_ATTACHMENT_ID, attachmentInfo.getId());
         return contentValues;
     }
 
@@ -145,15 +150,20 @@ public class AttachmentDaoSource extends BaseDaoSource {
     /**
      * Generate an {@link AttachmentInfo} object from the current cursor position.
      *
-     * @param cursor The {@link Cursor} which contains an information about an
+     * @param cursor The {@link Cursor} which contains information about an
      *               {@link AttachmentInfo} object.
      * @return A generated {@link AttachmentInfo}.
      */
     public AttachmentInfo getAttachmentInfo(Cursor cursor) {
-        return new AttachmentInfo(
-                cursor.getString(cursor.getColumnIndex(COL_NAME)),
-                cursor.getInt(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
-                cursor.getString(cursor.getColumnIndex(COL_TYPE)));
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        attachmentInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+        attachmentInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
+        attachmentInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
+        attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
+        attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
+        attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
+        attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
+        return attachmentInfo;
     }
 
     /**

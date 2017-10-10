@@ -78,7 +78,7 @@ public class MessageListAdapter extends CursorAdapter {
     }
 
     /**
-     * Update an information of some item.
+     * Update information of some item.
      *
      * @param generalMessageDetails A model which consist information about the
      *                              generalMessageDetails.
@@ -166,7 +166,7 @@ public class MessageListAdapter extends CursorAdapter {
     }
 
     /**
-     * A view holder class which describes an information about item views.
+     * A view holder class which describes information about item views.
      */
     private static class ViewHolder {
         TextView textViewSenderAddress;

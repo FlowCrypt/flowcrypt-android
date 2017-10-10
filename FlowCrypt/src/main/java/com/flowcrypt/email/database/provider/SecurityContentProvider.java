@@ -361,14 +361,14 @@ public class SecurityContentProvider extends ContentProvider {
             if (sqLiteDatabase != null) {
                 switch (match) {
                     case MATCHED_CODE_KEY_CLEAN_DATABASE:
-                        rowsCount = sqLiteDatabase.delete(
-                                new KeysDaoSource().getTableName(), selection, selectionArgs);
-                        rowsCount += sqLiteDatabase.delete(
-                                new ContactsDaoSource().getTableName(), selection, selectionArgs);
-                        rowsCount += sqLiteDatabase.delete(
-                                new ImapLabelsDaoSource().getTableName(), selection, selectionArgs);
-                        rowsCount += sqLiteDatabase.delete(
-                                new MessageDaoSource().getTableName(), selection, selectionArgs);
+                        rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(),
+                                AccountDaoSource.COL_EMAIL + " = ?", selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
+                                ImapLabelsDaoSource.COL_EMAIL + " = ?", selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(),
+                                MessageDaoSource.COL_EMAIL + " = ?", selectionArgs);
+                        rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
+                                AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs);
                         break;
 
                     case MATCHED_CODE_CONTACTS_TABLE:

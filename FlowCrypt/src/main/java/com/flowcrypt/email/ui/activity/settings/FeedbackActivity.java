@@ -111,9 +111,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
                     if (isInformationValid()) {
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
                             UIUtil.hideSoftInput(this, editTextUserMessage);
-                            getSupportLoaderManager().restartLoader(R.id
-                                            .loader_id_post_help_feedback,
-                                    null, this);
+                            getSupportLoaderManager().restartLoader(R.id.loader_id_post_help_feedback, null, this);
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                                     .internet_connection_is_not_available));
@@ -135,11 +133,11 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
         switch (id) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
+                String text = editTextUserMessage.getText().toString() + "\n\n" + "Android v"
+                        + BuildConfig.VERSION_CODE;
 
                 return new ApiServiceAsyncTaskLoader(getApplicationContext(),
-                        new PostHelpFeedbackRequest(new PostHelpFeedbackModel(email,
-                                editTextUserMessage.getText().toString())));
-
+                        new PostHelpFeedbackRequest(new PostHelpFeedbackModel(email, text)));
             default:
                 return null;
         }
@@ -150,25 +148,21 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
         switch (loader.getId()) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
-
                 if (data != null) {
                     if (data.getResponseModel() != null) {
                         PostHelpFeedbackResponse postHelpFeedbackResponse =
                                 (PostHelpFeedbackResponse) data.getResponseModel();
                         if (postHelpFeedbackResponse.isSent()) {
                             this.isMessageSent = true;
-                            UIUtil.showSnackbar(getRootView(),
-                                    postHelpFeedbackResponse.getText(),
-                                    getString(R.string.back),
-                                    new View.OnClickListener() {
+                            UIUtil.showSnackbar(getRootView(), postHelpFeedbackResponse.getText(),
+                                    getString(R.string.back), new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
                                             finish();
                                         }
                                     });
                         } else if (postHelpFeedbackResponse.getApiError() != null) {
-                            UIUtil.showInfoSnackbar(getRootView(),
-                                    postHelpFeedbackResponse.getApiError().getMessage());
+                            UIUtil.showInfoSnackbar(getRootView(), postHelpFeedbackResponse.getApiError().getMessage());
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                                     .unknown_error));
@@ -200,8 +194,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
 
     private boolean isInformationValid() {
         if (TextUtils.isEmpty(editTextUserMessage.getText().toString())) {
-            UIUtil.showInfoSnackbar(editTextUserMessage,
-                    getString(R.string.your_message_must_be_non_empty));
+            UIUtil.showInfoSnackbar(editTextUserMessage, getString(R.string.your_message_must_be_non_empty));
             return false;
         } else {
             return true;

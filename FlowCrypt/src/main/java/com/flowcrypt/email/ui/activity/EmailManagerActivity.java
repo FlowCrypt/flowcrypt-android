@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.accounts.Account;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,11 +38,10 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -59,16 +57,16 @@ import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformat
  *         E-mail: DenBond7@gmail.com
  */
 public class EmailManagerActivity extends BaseSyncActivity
-        implements NavigationView.OnNavigationItemSelectedListener, LoaderManager
-        .LoaderCallbacks<Cursor>, View.OnClickListener, EmailListFragment.OnManageEmailsListener {
+        implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
+        View.OnClickListener, EmailListFragment.OnManageEmailsListener {
 
-    public static final String EXTRA_KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey(
-            "EXTRA_KEY_ACCOUNT", EmailManagerActivity.class);
+    public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
+            "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
 
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private NavigationView navigationView;
-    private Account account;
+    private AccountDao accountDao;
     private FoldersManager foldersManager;
     private Folder folder;
 
@@ -79,15 +77,40 @@ public class EmailManagerActivity extends BaseSyncActivity
     /**
      * This method can bu used to start {@link EmailManagerActivity}.
      *
-     * @param context Interface to global information about an application environment.
-     * @param account The user {@link Account}
+     * @param context    Interface to global information about an application environment.
+     * @param accountDao The object which contains information about an email account.
      */
-    public static void runEmailManagerActivity(Context context, Account account) {
+    public static void runEmailManagerActivity(Context context, AccountDao accountDao) {
         Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
-        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT,
-                account);
+        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
         context.stopService(new Intent(context, CheckClipboardToFindPrivateKeyService.class));
         context.startActivity(intentRunEmailManagerActivity);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getIntent() != null) {
+            accountDao = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO);
+            if (accountDao == null) {
+                throw new IllegalArgumentException("You must pass an AccountDao to this activity.");
+            }
+
+            getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
+        } else {
+            finish();
+        }
+
+        initViews();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (drawerLayout != null) {
+            drawerLayout.removeDrawerListener(actionBarDrawerToggle);
+        }
     }
 
     @Override
@@ -99,13 +122,11 @@ public class EmailManagerActivity extends BaseSyncActivity
                 break;
 
             case R.id.syns_request_code_load_next_messages:
-                onNextMessagesLoaded(resultCode == EmailSyncService
-                        .REPLY_RESULT_CODE_NEED_UPDATE);
+                onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
-                onForceLoadNewMessagesCompleted(resultCode == EmailSyncService
-                        .REPLY_RESULT_CODE_NEED_UPDATE);
+                onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
         }
     }
@@ -142,32 +163,6 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (getIntent() != null) {
-            account = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT);
-            if (account == null) {
-                throw new IllegalArgumentException("You must pass an Account to this activity.");
-            }
-
-            getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
-        } else {
-            finish();
-        }
-
-        initViews();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (drawerLayout != null) {
-            drawerLayout.removeDrawerListener(actionBarDrawerToggle);
-        }
-    }
-
-    @Override
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
@@ -181,13 +176,11 @@ public class EmailManagerActivity extends BaseSyncActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.navigationMenuLogOut:
-                new AccountDaoSource().deleteAccountInformation(this, account);
                 finish();
                 startActivity(SplashActivity.getSignOutIntent(this));
                 break;
 
             case R.id.navigationMenuRevokeAccess:
-                new AccountDaoSource().deleteAccountInformation(this, account);
                 finish();
                 startActivity(SplashActivity.getRevokeAccessIntent(this));
                 break;
@@ -202,7 +195,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             case Menu.NONE:
                 Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                if (!folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
+                if (folder == null || !folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
                     this.folder = newFolder;
                     updateEmailsListFragmentAfterFolderChange();
                 }
@@ -217,9 +210,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_gmail_labels:
-                return new CursorLoader(this, new ImapLabelsDaoSource().
-                        getBaseContentUri(), null, ImapLabelsDaoSource.COL_EMAIL +
-                        " = ?", new String[]{account.name}, null);
+                return new CursorLoader(this, new ImapLabelsDaoSource().getBaseContentUri(), null,
+                        ImapLabelsDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
             default:
                 return null;
         }
@@ -255,9 +247,11 @@ public class EmailManagerActivity extends BaseSyncActivity
 
                     if (folder == null) {
                         folder = foldersManager.getFolderInbox();
-                        if (folder != null) {
-                            updateEmailsListFragmentAfterFolderChange();
+                        if (folder == null) {
+                            folder = foldersManager.findInboxFolder();
                         }
+
+                        updateEmailsListFragmentAfterFolderChange();
                     }
                 }
                 break;
@@ -273,17 +267,15 @@ public class EmailManagerActivity extends BaseSyncActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
-                Intent composeActivityIntent = new Intent(this, ComposeActivity.class);
-                composeActivityIntent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL,
-                        account.name);
-                startActivity(composeActivityIntent);
+                startActivity(CreateMessageActivity.generateIntent(this, accountDao.getEmail(), null,
+                        MessageEncryptionType.ENCRYPTED));
                 break;
         }
     }
 
     @Override
-    public Account getCurrentAccount() {
-        return account;
+    public AccountDao getCurrentAccountDao() {
+        return accountDao;
     }
 
     @Override
@@ -361,8 +353,7 @@ public class EmailManagerActivity extends BaseSyncActivity
         navigationView = (NavigationView) findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(this);
 
-        MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id
-                .navigationMenuDevSettings);
+        MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
         if (navigationMenuDevSettings != null) {
             navigationMenuDevSettings.setVisible(BuildConfig.DEBUG);
         }
@@ -381,11 +372,8 @@ public class EmailManagerActivity extends BaseSyncActivity
      */
     private void initUserProfileView(View view) {
         ImageView imageViewUserPhoto = (ImageView) view.findViewById(R.id.imageViewUserPhoto);
-        TextView textViewUserDisplayName =
-                (TextView) view.findViewById(R.id.textViewUserDisplayName);
+        TextView textViewUserDisplayName = (TextView) view.findViewById(R.id.textViewUserDisplayName);
         TextView textViewUserEmail = (TextView) view.findViewById(R.id.textViewUserEmail);
-
-        AccountDao accountDao = new AccountDaoSource().getAccountInformation(this, account.name);
 
         if (accountDao != null) {
             textViewUserDisplayName.setText(accountDao.getDisplayName());
@@ -413,10 +401,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     private class CustomDrawerToggle extends ActionBarDrawerToggle {
 
         CustomDrawerToggle(Activity activity, DrawerLayout drawerLayout, Toolbar toolbar,
-                           @StringRes int openDrawerContentDescRes, @StringRes int
-                                   closeDrawerContentDescRes) {
-            super(activity, drawerLayout, toolbar, openDrawerContentDescRes,
-                    closeDrawerContentDescRes);
+                           @StringRes int openDrawerContentDescRes, @StringRes int closeDrawerContentDescRes) {
+            super(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes);
         }
 
         @Override
@@ -427,8 +413,7 @@ public class EmailManagerActivity extends BaseSyncActivity
                 updateLabels(R.id.syns_request_code_update_label);
             }
 
-            getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
-                    EmailManagerActivity.this);
+            getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);
         }
     }
 }

@@ -46,21 +46,17 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * This class use Android Keystore System for encrypt/decrypt an information. Since encryption
- * which uses the RSA has a limit on the maximum size of the data that can be encrypted("The RSA
- * algorithm can only encrypt data that has a maximum byte length of the RSA key length in bits
- * divided with eight minus eleven padding bytes, i.e. number of maximum bytes = key length in
- * bits / 8 - 11.", see http://stackoverflow
- * .com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256
- * -bytes-when), we use
- * the following algorithm:
+ * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a
+ * limit on the maximum size of the data that can be encrypted("The RSA algorithm can only encrypt data that has a
+ * maximum byte length of the RSA key length in bits
+ * divided with eight minus eleven padding bytes, i.e. number of maximum bytes = key length in bits / 8 - 11.", see
+ * http://stackoverflow.com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256
+ * -bytes-when), we use the following algorithm:
  * <ul>
  * <li>Generate a RSA key pair via {@code KeyPairGenerator.getInstance(
  * KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE)}</li>
  * <li>Generate a 128 bits symmetric key with use {@link SecureRandom}</li>
- * <li>Encrypt and save the symmetric key with the RSA key from Android Keystore System to the
- * shared
- * preferences</li>
+ * <li>Encrypt and save the symmetric key with the RSA key from Android Keystore System to the shared preferences</li>
  * <li>Encrypt the data with the decrypted symmetric key</li>
  * <li>Decrypt the data with the decrypted symmetric key</li>
  * </ul>
@@ -74,8 +70,7 @@ import javax.security.auth.x500.X500Principal;
 public class KeyStoreCryptoManager {
     public static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
     public static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
-    private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding =
-            "RSA/ECB/PKCS1Padding";
+    private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding = "RSA/ECB/PKCS1Padding";
     private static final String TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding";
     private static final String ALGORITHM_RSA = "RSA";
     private static final String ALGORITHM_SHA1PRNG = "SHA1PRNG";
@@ -123,8 +118,7 @@ public class KeyStoreCryptoManager {
      * @return <tt>String</tt> Return a normalized String.
      */
     public static String normalizeAlgorithmParameterSpecString(String rawString) {
-        if (!TextUtils.isEmpty(rawString) && rawString.length() >=
-                SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
+        if (!TextUtils.isEmpty(rawString) && rawString.length() >= SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
             return rawString.substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
         } else
             throw new IllegalArgumentException("The rawString must be equals or longer then " +
@@ -137,18 +131,17 @@ public class KeyStoreCryptoManager {
      * <p>
      * For encrypt will be created a Cipher object with transformation
      * {@link KeyStoreCryptoManager#TRANSFORMATION_AES_CBC_PKCS5_PADDING} and initialized as
-     * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter
-     * spec. Then the plainData which will be as input will be convert to byte[] and encrypt via
-     * cipher.doFinal. After this we will return a base64 encoded encrypted result.
+     * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter spec. Then the
+     * plainData which will be as input will be convert to byte[] and encrypt via cipher.doFinal. After this we will
+     * return a base64 encoded encrypted result.
      *
      * @param plainData                    The input text which will be encrypted.
-     * @param algorithmParameterSpecString The algorithm parameter spec which will be used to
-     *                                     randomize encryption. The size must be equal 16 byte
+     * @param algorithmParameterSpecString The algorithm parameter spec which will be used to randomize encryption.
+     *                                     The size must be equal 16 byte
      * @return <tt>String</tt> A base64 encoded encrypted result.
      * @throws Exception The encryption process can throw a lot of exceptions.
      */
-    public String encrypt(String plainData, String algorithmParameterSpecString) throws
-            Exception {
+    public String encrypt(String plainData, String algorithmParameterSpecString) throws Exception {
         if (TextUtils.isEmpty(algorithmParameterSpecString)) {
             throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
         }
@@ -174,19 +167,17 @@ public class KeyStoreCryptoManager {
      * <p>
      * will be created a Cipher object with transformation
      * {@link KeyStoreCryptoManager#TRANSFORMATION_AES_CBC_PKCS5_PADDING} and initialized as
-     * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter
-     * spec. Then the encryptedData which will be as input will be decode to byte[] and decrypt
-     * via cipher.doFinal. After this we will return a decrypted result.
+     * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter spec. Then the
+     * encryptedData which will be as input will be decode to byte[] and decrypt via cipher.doFinal. After this we
+     * will return a decrypted result.
      *
-     * @param encryptedData                The input encrypted text, which must be encrypted
-     *                                     and encoded in base64.
-     * @param algorithmParameterSpecString The algorithm parameter spec which will be used to
-     *                                     randomize encryption. The size must be equal 16 byte.
+     * @param encryptedData                The input encrypted text, which must be encrypted and encoded in base64.
+     * @param algorithmParameterSpecString The algorithm parameter spec which will be used to randomize encryption.
+     *                                     The size must be equal 16 byte.
      * @return <tt>String</tt> Return a decrypted data.
      * @throws Exception The encryption process can throw a lot of exceptions.
      */
-    public String decrypt(String encryptedData, String algorithmParameterSpecString) throws
-            Exception {
+    public String decrypt(String encryptedData, String algorithmParameterSpecString) throws Exception {
         if (TextUtils.isEmpty(algorithmParameterSpecString)) {
             throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
         }
@@ -206,6 +197,67 @@ public class KeyStoreCryptoManager {
     }
 
     /**
+     * This method does encrypt of the input text and returns an encrypted data.
+     * <p>
+     * For encrypt will be created a Cipher object with transformation
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding} and initialized as
+     * {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData which will be as input will be convert to
+     * byte[] and encryptWithRSA via cipher.doFinal. After this we will return a base64 encoded encrypted result.
+     *
+     * @param plainData The input text which will be encrypted.
+     * @return <tt>String</tt> A base64 encoded encrypted result.
+     * @throws NoSuchPaddingException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     * @throws BadPaddingException
+     * @throws IllegalBlockSizeException
+     * @throws IOException
+     */
+    public String encryptWithRSA(String plainData) throws NoSuchPaddingException, NoSuchAlgorithmException,
+            InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException {
+        if (!TextUtils.isEmpty(plainData)) {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+            byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
+            byte[] encryptedBytes = cipher.doFinal(plainDataBytes);
+
+            return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+        } else return plainData;
+    }
+
+    /**
+     * This method does decrypt of the input encrypted text and return a decrypted data.
+     * <p>
+     * For decrypt will be created a Cipher object with transformation
+     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding} and initialized as
+     * {@link Cipher#DECRYPT_MODE} with a private key. Then the encryptedData which will be as input will be decode
+     * to byte[] and decrypt via cipher.doFinal. After this we will return a decrypted result.
+     *
+     * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
+     *                      base64.
+     * @return <tt>String</tt> Return a decrypted data.
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws NoSuchAlgorithmException
+     * @throws BadPaddingException
+     * @throws IllegalBlockSizeException
+     * @throws IOException
+     */
+    public String decryptWithRSA(String encryptedData) throws InvalidKeyException, NoSuchPaddingException,
+            NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, IOException {
+        if (!TextUtils.isEmpty(encryptedData)) {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+            byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } else return encryptedData;
+    }
+
+    /**
      * Do initialization of an AES SecretKeySpec object.
      *
      * @throws Exception The initialization can throw a lot of exceptions.
@@ -214,13 +266,12 @@ public class KeyStoreCryptoManager {
         String encryptedSecretKey = getSecretKeyFromSharedPreferences();
         if (getSecretKeyFromSharedPreferences() == null) {
             encryptedSecretKey = generateEncodedSecretKey();
-            saveSecretKeyToSharedPrefernces(encryptedSecretKey);
+            saveSecretKeyToSharedPreferences(encryptedSecretKey);
         }
 
         String decryptedSecretKey = decryptWithRSA(encryptedSecretKey);
 
-        secretKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT),
-                ALGORITHM_AES);
+        secretKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
     }
 
     /**
@@ -243,82 +294,15 @@ public class KeyStoreCryptoManager {
     }
 
     /**
-     * This method does encrypt of the input text and returns an encrypted data.
-     * <p>
-     * For encrypt will be created a Cipher object with transformation
-     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding
-     * } and initialized as {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData
-     * which will be as input will be convert to byte[] and encryptWithRSA via cipher.doFinal.
-     * After this we will return a base64 encoded encrypted result.
-     *
-     * @param plainData The input text which will be encrypted.
-     * @return <tt>String</tt> A base64 encoded encrypted result.
-     * @throws NoSuchPaddingException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws IOException
-     */
-    private String encryptWithRSA(String plainData) throws NoSuchPaddingException,
-            NoSuchAlgorithmException, InvalidKeyException, BadPaddingException,
-            IllegalBlockSizeException, IOException {
-        if (!TextUtils.isEmpty(plainData)) {
-            Cipher cipher = Cipher.getInstance
-                    (TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-
-            byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
-            byte[] encryptedBytes = cipher.doFinal(plainDataBytes);
-
-            return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
-        } else return plainData;
-    }
-
-    /**
-     * This method does decrypt of the input encrypted text and return a decrypted data.
-     * <p>
-     * For decrypt will be created a Cipher object with transformation
-     * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding
-     * } and initialized as {@link Cipher#DECRYPT_MODE} with a private key. Then the
-     * encryptedData which will be as input will be decode to byte[] and decrypt via cipher
-     * .doFinal. After this we will return a decrypted result.
-     *
-     * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
-     *                      base64.
-     * @return <tt>String</tt> Return a decrypted data.
-     * @throws InvalidKeyException
-     * @throws NoSuchPaddingException
-     * @throws NoSuchAlgorithmException
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws IOException
-     */
-    private String decryptWithRSA(String encryptedData) throws InvalidKeyException,
-            NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException,
-            IllegalBlockSizeException, IOException {
-        if (!TextUtils.isEmpty(encryptedData)) {
-            Cipher cipher = Cipher.getInstance
-                    (TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-            byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } else return encryptedData;
-    }
-
-    /**
      * Create KeyPair for alias {@link KeyStoreCryptoManager#ANDROID_KEY_STORE_RSA_ALIAS}.
      *
      * @throws NoSuchProviderException
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
      */
-    private void createRSAKeyPair() throws NoSuchProviderException,
-            NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
-            BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, IOException {
+    private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
+            InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, NoSuchPaddingException,
+            IllegalBlockSizeException, IOException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
         } else {
@@ -335,8 +319,8 @@ public class KeyStoreCryptoManager {
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private KeyPair generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow() throws
-            NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    private KeyPair generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow() throws NoSuchAlgorithmException,
+            NoSuchProviderException, InvalidAlgorithmParameterException {
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
                 KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE);
@@ -390,8 +374,7 @@ public class KeyStoreCryptoManager {
      * @return <tt>{@link String}</tt> An encrypted secret key or null if it not found.
      */
     private String getSecretKeyFromSharedPreferences() {
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getString(PREFERENCE_KEY_SECRET, null);
     }
 
@@ -401,9 +384,8 @@ public class KeyStoreCryptoManager {
      * @param newSecretKey A new secret key, which must be encrypted.
      * @return <tt>{@link Boolean}</tt> true if saving operation success, false otherwise..
      */
-    private boolean saveSecretKeyToSharedPrefernces(String newSecretKey) {
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(context);
+    private boolean saveSecretKeyToSharedPreferences(String newSecretKey) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor edit = sharedPreferences.edit();
         edit.putString(PREFERENCE_KEY_SECRET, newSecretKey);
         return edit.commit();
@@ -422,8 +404,7 @@ public class KeyStoreCryptoManager {
      * @throws NoSuchPaddingException
      * @throws IOException
      */
-    private String generateEncodedSecretKey() throws NoSuchProviderException,
-            NoSuchAlgorithmException,
+    private String generateEncodedSecretKey() throws NoSuchProviderException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchPaddingException, IOException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);

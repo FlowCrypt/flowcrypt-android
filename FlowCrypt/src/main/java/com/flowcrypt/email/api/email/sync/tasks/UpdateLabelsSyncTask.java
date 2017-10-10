@@ -9,10 +9,10 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.os.Messenger;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 
 import javax.mail.Folder;
-import javax.mail.MessagingException;
+import javax.mail.Store;
 
 /**
  * This task do job of receiving a Gmail labels list.
@@ -36,11 +36,11 @@ public class UpdateLabelsSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws
-            MessagingException {
-        Folder[] folders = gmailSSLStore.getDefaultFolder().list("*");
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        super.runIMAPAction(accountDao, store, syncListener);
+        Folder[] folders = store.getDefaultFolder().list("*");
         if (syncListener != null) {
-            syncListener.onFolderInfoReceived(folders, ownerKey, requestCode);
+            syncListener.onFolderInfoReceived(accountDao, folders, ownerKey, requestCode);
         }
     }
 }

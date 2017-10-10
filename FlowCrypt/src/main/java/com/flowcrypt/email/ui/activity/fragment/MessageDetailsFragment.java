@@ -6,16 +6,20 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,17 +48,17 @@ import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
+import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
-import com.flowcrypt.email.ui.activity.ReplyActivity;
-import com.flowcrypt.email.ui.activity.base.BaseSendingMessageActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
+import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
-import org.apache.commons.io.FileUtils;
-
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -65,6 +70,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
+    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
@@ -85,6 +91,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private boolean isArchiveActionEnable;
     private boolean isMoveToInboxActionEnable;
     private OnActionListener onActionListener;
+    private AttachmentInfo lastClickedAttachmentInfo;
 
     public MessageDetailsFragment() {
     }
@@ -246,6 +253,49 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             }
                         });
                 break;
+
+            default:
+                UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
+                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageParts);
+                showSnackbar(getView(), e.getMessage(),
+                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                switch (requestCode) {
+                                    case R.id.syns_request_archive_message:
+                                        runMessageAction(R.id.menuActionArchiveMessage);
+                                        break;
+
+                                    case R.id.syns_request_delete_message:
+                                        runMessageAction(R.id.menuActionDeleteMessage);
+                                        break;
+
+                                    case R.id.syns_request_move_message_to_inbox:
+                                        runMessageAction(R.id.menuActionMoveToInbox);
+                                        break;
+                                }
+                            }
+                        });
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
+                if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent(
+                            getContext(), lastClickedAttachmentInfo));
+                } else {
+                    Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission,
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -291,6 +341,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * @param folder The folder where current message exists.
      */
     private void updateActionsVisibility(Folder folder) {
+        FoldersManager foldersManager = FoldersManager.fromDatabase(getContext(), generalMessageDetails.getEmail());
         folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
 
         if (folderType != null) {
@@ -328,6 +379,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             isDeleteActionEnable = true;
         }
 
+        isArchiveActionEnable = foldersManager.getFolderArchive() != null;
         getActivity().invalidateOptionsMenu();
     }
 
@@ -381,9 +433,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             }
         }
 
-        Intent intent = ReplyActivity.generateIntent(getContext(), incomingMessageInfo, messageEncryptionType);
-        intent.putExtra(BaseSendingMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL, generalMessageDetails.getEmail());
-        startActivity(intent);
+        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
+                incomingMessageInfo, messageEncryptionType));
     }
 
     private void initViews(View view) {
@@ -423,14 +474,30 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                             generalMessageDetails.getLabel(), generalMessageDetails.getUid());
             LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
-            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+            for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
                 View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
 
                 TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
                 TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
-                textViewAttachmentSize.setText(FileUtils.byteCountToDisplaySize(attachmentInfo.getEncodedSize()));
+                textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
+
+                View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+                imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        lastClickedAttachmentInfo = attachmentInfo;
+                        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        } else {
+                            getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+                                    (getContext(), attachmentInfo));
+                        }
+                    }
+                });
 
                 layoutMessageParts.addView(rootView);
             }
@@ -438,7 +505,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void updateMessageView() {
-        if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
+        if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+            layoutMessageParts.removeAllViews();
+            EmailWebView emailWebView = new EmailWebView(getContext());
+            emailWebView.configure();
+
+            int margin = getResources().getDimensionPixelOffset(R.dimen.default_margin_content);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(margin, 0, margin, 0);
+            emailWebView.setLayoutParams(layoutParams);
+
+            emailWebView.loadDataWithBaseURL(null, prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+                    "text/html",
+                    StandardCharsets.UTF_8.displayName(), null);
+
+            layoutMessageParts.addView(emailWebView);
+        } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
             boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
@@ -471,6 +554,18 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         } else {
             layoutMessageParts.removeAllViews();
         }
+    }
+
+    /**
+     * Prepare the input HTML to show the user a viewport option.
+     *
+     * @return A generated HTML page which will be more comfortable for user.
+     */
+    @NonNull
+    private String prepareViewportHtml(String incomingHtml) {
+        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width " +
+                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
+                " 100% !important;}</style></head><body>" + incomingHtml + "</body></html>";
     }
 
     /**

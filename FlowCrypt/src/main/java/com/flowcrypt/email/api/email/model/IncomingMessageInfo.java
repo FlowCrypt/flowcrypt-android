@@ -44,6 +44,7 @@ public class IncomingMessageInfo extends MessageInfo {
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
     private Folder folder;
+    private String htmlMessage;
 
     public IncomingMessageInfo() {
     }
@@ -57,6 +58,7 @@ public class IncomingMessageInfo extends MessageInfo {
         this.originalRawMessageWithoutAttachments = in.readString();
         this.messageParts = in.createTypedArrayList(MessagePart.CREATOR);
         this.folder = in.readParcelable(Folder.class.getClassLoader());
+        this.htmlMessage = in.readString();
     }
 
     @Override
@@ -68,6 +70,7 @@ public class IncomingMessageInfo extends MessageInfo {
                 ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments + '\'' +
                 ", messageParts=" + messageParts +
                 ", folder=" + folder +
+                ", htmlMessage=" + htmlMessage +
                 "} " + super.toString();
     }
 
@@ -85,10 +88,11 @@ public class IncomingMessageInfo extends MessageInfo {
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
         dest.writeParcelable(this.folder, flags);
+        dest.writeString(htmlMessage);
     }
 
     /**
-     * Return a list of String which contain an information
+     * Return a list of String which contain information
      * about from addresses.
      *
      * @return <tt>ArrayList<String></tt> The list of from addresses.
@@ -139,5 +143,13 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setTo(ArrayList<String> to) {
         this.to = to;
+    }
+
+    public String getHtmlMessage() {
+        return htmlMessage;
+    }
+
+    public void setHtmlMessage(String htmlMessage) {
+        this.htmlMessage = htmlMessage;
     }
 }

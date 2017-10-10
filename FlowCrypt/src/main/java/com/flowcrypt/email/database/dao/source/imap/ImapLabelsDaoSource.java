@@ -62,7 +62,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     /**
      * @param context     Interface to global information about an application environment.
      * @param accountName The account name which are an owner of the folder.
-     * @param folder      The {@link Folder} object which contains an information about
+     * @param folder      The {@link Folder} object which contains information about
      *                    {@link com.sun.mail.imap.IMAPFolder}.
      * @return A {@link Uri} of the created row.
      */
@@ -75,7 +75,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Add an information about folders to local the database.
+     * Add information about folders to local the database.
      *
      * @param context     Interface to global information about an application environment.
      * @param accountName The account name which are an owner of the folder.
@@ -139,6 +139,30 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get a {@link Folder} from the database by an email and an alias.
+     *
+     * @param email       The email of the {@link Folder}.
+     * @param folderAlias The folder alias.
+     * @return {@link Folder} or null if such folder not found.
+     */
+    public Folder getFolderByAlias(Context context, String email, String folderAlias) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_EMAIL + " = ?" + " AND " +
+                COL_FOLDER_ALIAS + " = ?", new String[]{email, folderAlias}, null);
+
+        Folder folder = null;
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                folder = getFolder(cursor);
+            }
+            cursor.close();
+        }
+
+        return folder;
+    }
+
+    /**
      * Delete all folders of some email.
      *
      * @param context Interface to global information about an application environment.
@@ -175,7 +199,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
 
             return result;
         } else {
-            return null;
+            return "";
         }
     }
 

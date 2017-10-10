@@ -78,7 +78,7 @@ public abstract class BaseRequest<T> {
     }
 
     /**
-     * Get the request model which contains an information to create the request.
+     * Get the request model which contains information to create the request.
      *
      * @return <tt>T</tt>
      */

@@ -65,7 +65,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
      * This method handles a success result of some loader.
      *
      * @param loaderId The loader id.
-     * @param result   The object which contains an information about the loader results
+     * @param result   The object which contains information about the loader results
      */
     public void handleSuccessLoaderResult(int loaderId, Object result) {
 
@@ -89,7 +89,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
     }
 
     /**
-     * This method returns an information about an availability of a "back press action" at the
+     * This method returns information about an availability of a "back press action" at the
      * current moment.
      *
      * @return true if a back press action enable at current moment, false otherwise.
@@ -103,7 +103,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
     }
 
     /**
-     * Show an information as Snackbar.
+     * Show information as Snackbar.
      *
      * @param view        The view to find a parent from.
      * @param messageText The text to show.  Can be formatted text.
@@ -113,7 +113,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
     }
 
     /**
-     * Show an information as Snackbar.
+     * Show information as Snackbar.
      *
      * @param view        The view to find a parent from.
      * @param messageText The text to show.  Can be formatted text.
@@ -160,6 +160,12 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
 
     public Snackbar getSnackBar() {
         return snackbar;
+    }
+
+    public void dismissCurrentSnackBar() {
+        if (getSnackBar() != null) {
+            getSnackBar().dismiss();
+        }
     }
 
     public BaseActivity getBaseActivity() {

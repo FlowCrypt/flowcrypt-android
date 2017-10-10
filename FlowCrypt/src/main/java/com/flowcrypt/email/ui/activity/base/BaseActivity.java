@@ -115,7 +115,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Show an information as Snackbar.
+     * Show information as Snackbar.
      *
      * @param view        The view to find a parent from.
      * @param messageText The text to show.  Can be formatted text.
@@ -125,7 +125,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Show an information as Snackbar.
+     * Show information as Snackbar.
      *
      * @param view        The view to find a parent from.
      * @param messageText The text to show.  Can be formatted text.

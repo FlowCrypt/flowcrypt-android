@@ -12,7 +12,7 @@ import android.os.Parcelable;
 import java.util.Arrays;
 
 /**
- * This is a simple POJO object, which describe an information about the email folder.
+ * This is a simple POJO object, which describe information about the email folder.
  *
  * @author DenBond7
  *         Date: 07.06.2017

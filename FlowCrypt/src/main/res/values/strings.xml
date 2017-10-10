@@ -9,6 +9,7 @@
 
     <string name="compose">Compose</string>
     <string name="prompt_recipient">Add recipient</string>
+    <string name="prompt_recipients">Recipients</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
     <string name="prompt_compose_standard_email">Compose standard message</string>
@@ -155,4 +156,45 @@
     <string name="attachment">Attachment</string>
     <string name="can_not_connect_to_the_imap_server">Can not connect to the IMAP server</string>
     <string name="failed_load_message_from_email_server">Failed to load a message from the email server</string>
+    <string name="cancel">Cancel</string>
+    <string name="waiting_to_load">Waiting to load</string>
+    <string name="download_complete">Download complete.</string>
+    <string name="template_attachment_already_loading">Attachment \"%1$s\" already loading </string>
+    <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
+        storage permission</string>
+    <string name="choose_attachment">Choose an attachment</string>
+    <string name="can_not_attach_this_file">Can\'t attach this file!</string>
+    <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
+        %1$s</string>
+    <string name="template_reply_subject">Re: %1$s</string>
+    <string name="other_email_provider">Other email provider</string>
+    <string name="account_info">Account info</string>
+    <string name="e_mail">E-mail</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="incoming_mail_settings">Incoming mail settings</string>
+    <string name="imap_server">IMAP server</string>
+    <string name="imap_port">IMAP port</string>
+    <string name="security_type">Security type</string>
+    <string name="outgoing_mail_settings">Outgoing mail settings</string>
+    <string name="smtp_server">SMTP server</string>
+    <string name="smtp_port">SMTP port</string>
+    <string name="require_custom_sign_in">Set different credentials for SMTP</string>
+    <string name="smtp_username">SMTP Username</string>
+    <string name="smtp_password">SMTP Password</string>
+    <string name="try_to_connect">Connect</string>
+    <string name="adding_new_account">Add email account</string>
+    <string name="template_imap_server">imap.%1$s</string>
+    <string name="template_smtp_server">smtp.%1$s</string>
+    <string name="checking_email_settings">Checking email settings</string>
+    <string name="none">None</string>
+    <string name="ssl_tls">SSL/TLS</string>
+    <string name="startls">STARTLS</string>
+    <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
+    <string name="settings_not_valid">The settings is not valid</string>
+    <string name="skip_setup">Use existing keys</string>
+    <string name="crash_the_app">Crash the App</string>
+    <string name="experimental">Experimental</string>
+    <string name="experimental_settings">Experimental Settings</string>
+    <string name="simulate_app_crash">Simulate app crash</string>
 </resources>

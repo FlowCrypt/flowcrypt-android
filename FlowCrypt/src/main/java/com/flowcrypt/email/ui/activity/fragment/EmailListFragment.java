@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -28,6 +27,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
@@ -84,17 +84,14 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                     }
 
                     if (getSupportActionBar() != null) {
-                        getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder()
-                                .getUserFriendlyName());
+                        getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
                     }
 
                     return new CursorLoader(getContext(),
                             new MessageDaoSource().getBaseContentUri(),
                             null,
-                            MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
-                                    .COL_FOLDER + " = ?",
-                            new String[]{
-                                    onManageEmailsListener.getCurrentAccount().name,
+                            MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
+                            new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
                                     onManageEmailsListener.getCurrentFolder().getFolderAlias()},
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
@@ -113,8 +110,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                         messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
                         statusView.setVisibility(View.GONE);
-                        UIUtil.exchangeViewVisibility(getContext(), false, progressView,
-                                listViewMessages);
+                        UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
                     } else {
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
@@ -122,13 +118,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                                 loadNextMessages(0);
                             } else {
                                 textViewStatusInfo.setText(R.string.no_connection);
-                                UIUtil.exchangeViewVisibility(getContext(),
-                                        false, progressView, statusView);
+                                UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+                                showRetrySnackbar();
                             }
-
                         } else {
-                            UIUtil.exchangeViewVisibility(getContext(),
-                                    false, progressView, emptyView);
+                            UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
                         }
                     }
                     break;
@@ -171,8 +165,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_email_list, container, false);
     }
 
@@ -265,8 +258,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
             }
 
-            showInfoSnackbar(getView(),
-                    getString(R.string.internet_connection_is_not_available));
+            showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
         }
     }
 
@@ -319,19 +311,19 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
         switch (errorType) {
             case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-                showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string
-                        .retry), new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        switch (requestCode) {
-                            case R.id.syns_request_code_load_next_messages:
-                            case R.id.syns_request_code_force_load_new_messages:
-                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                                loadNextMessages(-1);
-                                break;
-                        }
-                    }
-                });
+                showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
+                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                switch (requestCode) {
+                                    case R.id.syns_request_code_load_next_messages:
+                                    case R.id.syns_request_code_force_load_new_messages:
+                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                        loadNextMessages(-1);
+                                        break;
+                                }
+                            }
+                        });
                 break;
         }
     }
@@ -362,6 +354,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         }
     }
 
+    /**
+     * Handle a result from the load new messages action.
+     *
+     * @param needToRefreshList true if we must refresh the emails list.
+     */
     public void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         swipeRefreshLayout.setRefreshing(false);
         if (needToRefreshList || messageListAdapter.getCount() == 0) {
@@ -369,6 +366,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         }
     }
 
+    /**
+     * Handle a result from the load next messages action.
+     *
+     * @param isNeedToUpdateList true if we must reload the emails list.
+     */
     public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
         lastPositionOfAlreadyLoaded = lastCalledPositionForLoadMore;
         footerProgressView.setVisibility(View.GONE);
@@ -381,31 +383,49 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     /**
+     * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
+     */
+    private void showRetrySnackbar() {
+        showSnackbar(getView(), getString(R.string.no_connection),
+                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                            loadNextMessages(-1);
+                        } else {
+                            showRetrySnackbar();
+                        }
+                    }
+                });
+    }
+
+    /**
      * Clean the cache information about some folder.
      */
     private void cleanCache() {
-        new MessageDaoSource().deleteCachedMessagesOfFolder(
-                getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
+        new MessageDaoSource().deleteCachedMessagesOfFolder(getContext(),
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
                 onManageEmailsListener.getCurrentFolder().getFolderAlias());
+
         new AttachmentDaoSource().deleteCachedAttachmentInfoOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccount().name,
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
                 onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
     /**
-     * Try to load a new messages from IMAP server.
+     * Try to load a new messages from an IMAP server.
      */
     private void loadNewMessages() {
         baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
-                messageDaoSource.getLastUIDOfMessageInLabel(getContext(), onManageEmailsListener
-                        .getCurrentAccount().name, onManageEmailsListener.getCurrentFolder()
-                        .getFolderAlias()));
+                messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias()));
     }
 
     /**
-     * Try to load a next messages from IMAP server.
+     * Try to load a next messages from an IMAP server.
      *
      * @param totalItemsCount The count of already loaded messages.
      */
@@ -415,13 +435,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             isNewMessagesLoadingNow = true;
             lastCalledPositionForLoadMore = totalItemsCount;
             baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
-                    onManageEmailsListener.getCurrentFolder(),
-                    totalItemsCount);
+                    onManageEmailsListener.getCurrentFolder(), totalItemsCount);
         } else {
             footerProgressView.setVisibility(View.GONE);
-            showSnackbar(getView(),
-                    getString(R.string.internet_connection_is_not_available),
-                    getString(R.string.retry), new View.OnClickListener() {
+            showSnackbar(getView(), getString(R.string.internet_connection_is_not_available),
+                    getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             loadNextMessages(totalItemsCount);
@@ -434,8 +452,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
-        footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout
-                .list_view_progress_footer, listViewMessages, false);
+        footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout.list_view_progress_footer,
+                listViewMessages, false);
         footerProgressView.setVisibility(View.GONE);
 
         listViewMessages.addFooterView(footerProgressView);
@@ -444,15 +462,12 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
         emptyView = view.findViewById(R.id.emptyView);
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setColorSchemeResources(
-                R.color.colorPrimary,
-                R.color.colorPrimary,
-                R.color.colorPrimary);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(this);
     }
 
     public interface OnManageEmailsListener {
-        Account getCurrentAccount();
+        AccountDao getCurrentAccountDao();
 
         Folder getCurrentFolder();
     }

@@ -15,10 +15,13 @@ import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
+import com.eclipsesource.v8.V8ArrayBuffer;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8ResultUndefined;
+import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
+import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -100,16 +103,20 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject,
-                              Attachment[] attachments, MimeMessage reply_to) {
+    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments,
+                              MimeMessage reply_to) {
         V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
-        headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject",
-                subject);
+        headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
+        V8Array files = new V8Array(v8);
         if (attachments != null && attachments.length > 0) {
-            System.err.println("Js.mime_encode: ignoring attachments (not implemented)");
+            for (Attachment attachment: attachments) {
+                files.push(attachment.getV8Object());
+            }
         }
-        this.call(Void.class, new String[]{"mime", "encode"}, new V8Array(v8).push(body).push
-                (headers).push(NULL).push(cb_catcher));
+        this.call(
+            Void.class, new String[]{"mime", "encode"},
+            new V8Array(v8).push(body).push(headers).push(files).push(cb_catcher)
+        );
         return (String) cb_last_value[0];
     }
 
@@ -159,11 +166,20 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .push(longid));
     }
 
-    public String crypto_message_encrypt(String pubkeys[], String text, Boolean armor) {
-        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push
-                (text).push(NULL).push(armor).push(cb_catcher);
+    public String crypto_message_encrypt(String pubkeys[], String text) {
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL)
+                .push(true).push(cb_catcher);
         this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
         return ((V8Object) cb_last_value[0]).get("data").toString();
+    }
+
+    public byte[] crypto_message_encrypt(String pubkeys[], byte[] content, String filename) {
+        V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
+                .push(filename).push(false).push(cb_catcher);
+        this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
+        V8Object packets = (V8Object) ((V8Object)((V8Object) cb_last_value[0]).get("message")).get("packets");
+        V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
+        return data.getBytes(0, data.length());
     }
 
     public PgpDecrypted crypto_message_decrypt(String data, String password) {
@@ -218,6 +234,16 @@ public class Js { // Create one object per thread and use them separately. Not t
                 && !TextUtils.isEmpty(pgpKey.getFingerprint())
                 && pgpKey.getPrimaryUserId() != null
                 && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
+    }
+
+    public Attachment file_attachment(byte[] content, String name, String type) {
+        return new Attachment((V8Object) this.call(V8Object.class, new String[]{"file", "attachment"},
+                new V8Array(v8).push(name).push(type).push(uint8(content))));
+    }
+
+    private V8TypedArray uint8(byte[] data) {
+        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
+        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
     }
 
     private static String read(File file) throws IOException {

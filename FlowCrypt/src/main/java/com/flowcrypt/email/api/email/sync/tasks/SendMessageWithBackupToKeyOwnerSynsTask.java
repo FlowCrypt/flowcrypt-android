@@ -12,9 +12,10 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -32,6 +33,7 @@ import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -71,20 +73,18 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(Session session, String userName, String password, SyncListener syncListener)
-            throws Exception {
-        super.run(session, userName, password, syncListener);
+    public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
+        super.runSMTPAction(accountDao, session, store, syncListener);
 
         if (syncListener != null && !TextUtils.isEmpty(accountName)) {
             Message message = generateMessage(syncListener.getContext(), session);
 
-            Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
-            transport.connect(GmailConstants.HOST_SMTP_GMAIL_COM,
-                    GmailConstants.PORT_SMTP_GMAIL_COM, userName, password);
+            Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
 
             transport.sendMessage(message, message.getAllRecipients());
 
-            syncListener.onMessageWithBackupToKeyOwnerSent(ownerKey, requestCode, true);
+            syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);
         }
     }
 
@@ -116,8 +116,9 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
         List<PrivateKeyInfo> privateKeyInfoList = SecurityUtils.getPrivateKeysInfo(context);
 
         for (int i = 0; i < privateKeyInfoList.size(); i++) {
-            BodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey
+            MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey
                     (context, privateKeyInfoList, i);
+            attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
             multipart.addBodyPart(attachmentsBodyPart);
         }
 
@@ -135,13 +136,13 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
      * @throws Exception will occur when generate this {@link BodyPart}.
      */
     @NonNull
-    private BodyPart generateAttachmentBodyPartWithPrivateKey(
+    private MimeBodyPart generateAttachmentBodyPartWithPrivateKey(
             Context context, List<PrivateKeyInfo> privateKeyInfoList, int i)
             throws Exception {
         Js js = new Js(context, new SecurityStorageConnector(context));
 
         PrivateKeyInfo privateKeyInfo = privateKeyInfoList.get(i);
-        BodyPart attachmentsBodyPart = new MimeBodyPart();
+        MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
         String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName +
                 "_" + i);
 

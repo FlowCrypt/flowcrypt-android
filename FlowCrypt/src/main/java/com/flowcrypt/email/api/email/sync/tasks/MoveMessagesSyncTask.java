@@ -9,11 +9,12 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.os.Messenger;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Store;
 
 /**
  * This task does job of moving messages.
@@ -48,9 +49,9 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
-        IMAPFolder sourceImapFolder = (IMAPFolder) gmailSSLStore.getFolder(sourceFolderName);
-        IMAPFolder destinationImapFolder = (IMAPFolder) gmailSSLStore.getFolder
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        IMAPFolder sourceImapFolder = (IMAPFolder) store.getFolder(sourceFolderName);
+        IMAPFolder destinationImapFolder = (IMAPFolder) store.getFolder
                 (destinationFolderName);
 
         if (sourceImapFolder == null || !sourceImapFolder.exists()) {
@@ -70,12 +71,12 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
 
             destinationImapFolder.open(Folder.READ_WRITE);
             sourceImapFolder.moveMessages(messages, destinationImapFolder);
-            syncListener.onMessagesMoved(sourceImapFolder, destinationImapFolder, messages,
+            syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, messages,
                     ownerKey, requestCode);
 
             destinationImapFolder.close(false);
         } else {
-            syncListener.onMessagesMoved(sourceImapFolder, destinationImapFolder, new Message[]{},
+            syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, new Message[]{},
                     ownerKey, requestCode);
         }
 

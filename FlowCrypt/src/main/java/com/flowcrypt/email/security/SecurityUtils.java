@@ -7,15 +7,11 @@
 package com.flowcrypt.email.security;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
-import android.preference.PreferenceManager;
 
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.security.model.PrivateKeyInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,20 +85,6 @@ public class SecurityUtils {
         }
 
         return isBackupKeysExist;
-    }
-
-    /**
-     * Reset a security information of a current user.
-     */
-    public static void cleanSecurityInfo(Context context) {
-        context.getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI
-                + "/" + FlowcryptContract.CLEAN_DATABASE), null, null);
-
-        SharedPreferences sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor edit = sharedPreferences.edit();
-        edit.remove(KeyStoreCryptoManager.PREFERENCE_KEY_SECRET);
-        edit.apply();
     }
 
     /**

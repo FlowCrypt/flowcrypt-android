@@ -13,10 +13,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".FlowCryptApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -44,13 +46,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.ComposeActivity"
-            android:label="@string/compose"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.ReplyActivity"
-            android:label="@string/reply"
+            android:name=".ui.activity.CreateMessageActivity"
             android:screenOrientation="portrait" />
 
         <activity
@@ -101,8 +97,18 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".ui.activity.settings.ExperimentalSettingsActivity"
+            android:label="@string/experimental_settings"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".ui.activity.HtmlViewFromAssetsRawActivity"
             android:label="@string/app_name"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.AddNewAccountActivity"
+            android:label="@string/adding_new_account"
             android:screenOrientation="portrait" />
 
         <activity android:name=".ui.activity.DevSettingsActivity" />
@@ -113,6 +119,16 @@
             android:authorities="${applicationId}.SecurityContentProvider"
             android:enabled="true"
             android:exported="false" />
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
         <!-- Services -->
         <service
@@ -125,6 +141,10 @@
 
         <service
             android:name=".service.CheckClipboardToFindPrivateKeyService"
+            android:exported="false" />
+
+        <service
+            android:name=".service.attachment.AttachmentDownloadManagerService"
             android:exported="false" />
     </application>
 

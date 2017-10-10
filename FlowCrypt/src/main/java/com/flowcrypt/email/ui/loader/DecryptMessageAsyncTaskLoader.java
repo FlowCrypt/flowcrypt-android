@@ -15,6 +15,7 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.MimeAddress;
+import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.js.PgpKey;
@@ -101,8 +102,14 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
             incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
             incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
             incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
-            incomingMessageInfo.setMessageParts(getMessagePartsFromProcessedMime(js,
-                    processedMime));
+            incomingMessageInfo.setMessageParts(getMessagePartsFromProcessedMime(js, processedMime));
+
+            MimeMessage mimeMessage = js.mime_decode(rawMessage);
+
+            if (mimeMessage != null) {
+                incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+            }
+
         } else {
             return null;
         }

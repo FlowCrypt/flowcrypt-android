@@ -15,7 +15,7 @@ import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import java.util.List;
 
 /**
- * The simple POJO class which describes an information about result from the
+ * The simple POJO class which describes information about result from the
  * {@link UpdateInfoAboutPgpContactsAsyncTaskLoader}
  *
  * @author Denis Bondarenko

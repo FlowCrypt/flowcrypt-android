@@ -9,12 +9,13 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Store;
 import javax.mail.UIDFolder;
 
 /**
@@ -40,8 +41,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
-        IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         imapFolder.open(Folder.READ_ONLY);
 
         if (countOfAlreadyLoadedMessages < 0) {
@@ -61,7 +62,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
         if (syncListener != null) {
             if (end < 1) {
-                syncListener.onMessagesReceived(imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -76,7 +77,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessagesReceived(imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
             }
         }
 

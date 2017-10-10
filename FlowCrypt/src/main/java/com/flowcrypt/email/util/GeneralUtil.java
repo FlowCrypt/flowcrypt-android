@@ -15,6 +15,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.BuildConfig;
 
@@ -187,5 +188,15 @@ public class GeneralUtil {
             stringBuilder.insert(i, template);
         }
         return stringBuilder.toString();
+    }
+
+    /**
+     * Check is current email valid.
+     *
+     * @param email The current email.
+     * @return true if the email has valid format, otherwise false.
+     */
+    public static boolean isEmailValid(CharSequence email) {
+        return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 }

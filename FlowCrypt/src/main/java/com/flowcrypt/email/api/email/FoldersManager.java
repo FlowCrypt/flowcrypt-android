@@ -13,7 +13,6 @@ import android.text.TextUtils;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -40,7 +39,7 @@ public class FoldersManager {
     }
 
     /**
-     * Generate a new {@link FoldersManager} using an information from the local database.
+     * Generate a new {@link FoldersManager} using information from the local database.
      *
      * @param context     Interface to global information about an application environment.
      * @param accountName The name of an account.
@@ -69,7 +68,7 @@ public class FoldersManager {
     /**
      * Generate a new {@link Folder}
      *
-     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     * @param imapFolder  The {@link IMAPFolder} object which contains information about a
      *                    remote folder.
      * @param folderAlias The folder alias.
      * @return
@@ -86,7 +85,7 @@ public class FoldersManager {
     /**
      * Check if current folder is a custom label.
      *
-     * @param folder The {@link IMAPFolder} object which contains an information about a
+     * @param folder The {@link IMAPFolder} object which contains information about a
      *               remote folder.
      * @return true if this label is a custom, false otherwise.
      * @throws MessagingException
@@ -176,14 +175,14 @@ public class FoldersManager {
     /**
      * Add a new folder to {@link FoldersManager} to manage it.
      *
-     * @param imapFolder  The {@link IMAPFolder} object which contains an information about a
+     * @param imapFolder  The {@link IMAPFolder} object which contains information about a
      *                    remote folder.
      * @param folderAlias The folder alias.
      * @throws MessagingException
      */
     public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
         if (imapFolder != null
-                && !isFolderHasNoSelectAttribute(imapFolder)
+                && !EmailUtil.isFolderHasNoSelectAttribute(imapFolder)
                 && !TextUtils.isEmpty(imapFolder.getFullName())
                 && !folders.containsKey(imapFolder.getFullName())) {
             this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
@@ -193,7 +192,7 @@ public class FoldersManager {
     /**
      * Add a new folder to {@link FoldersManager} to manage it.
      *
-     * @param folder The {@link Folder} object which contains an information about a
+     * @param folder The {@link Folder} object which contains information about a
      *               remote folder.
      */
     public void addFolder(Folder folder) {
@@ -257,6 +256,16 @@ public class FoldersManager {
         return serverFolders;
     }
 
+    public Folder findInboxFolder() {
+        for (Folder folder : getAllFolders()) {
+            if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+                return folder;
+            }
+        }
+
+        return null;
+    }
+
     private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
         FolderType folderType = getFolderTypeForImapFodler(imapFolder.getAttributes());
         if (folderType == null) {
@@ -276,21 +285,7 @@ public class FoldersManager {
     }
 
     /**
-     * Check if current folder has {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}. If the
-     * folder contains it attribute we will not show this folder in the list.
-     *
-     * @param imapFolder The {@link IMAPFolder} object.
-     * @return true if current folder contains attribute
-     * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
-     * @throws MessagingException
-     */
-    private boolean isFolderHasNoSelectAttribute(IMAPFolder imapFolder) throws MessagingException {
-        List<String> attributes = Arrays.asList(imapFolder.getAttributes());
-        return attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
-    }
-
-    /**
-     * This class contains an information about all servers folders types.
+     * This class contains information about all servers folders types.
      */
     public enum FolderType {
         INBOX("INBOX"),

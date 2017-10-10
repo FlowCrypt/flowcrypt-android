@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:padding="@dimen/default_margin_content">
+
+        <TextView
+            android:id="@+id/textViewAccountInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/account_info"
+            android:textColor="@android:color/holo_red_dark"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutEmail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewAccountInfo">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/e_mail"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutUsername"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutEmail">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextUserName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/username"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutUsername"
+            app:passwordToggleContentDescription="description"
+            app:passwordToggleEnabled="true">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:ems="10"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                android:maxLength="60"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textViewIncomingEmailSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_huge"
+            android:text="@string/incoming_mail_settings"
+            android:textColor="@android:color/holo_red_dark"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutPassword" />
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutImapServer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewIncomingEmailSettings">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextImapServer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/imap_server"
+                android:inputType="textWebEmailAddress"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutImapPort"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutImapServer">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextImapPort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:digits="0123456789"
+                android:hint="@string/imap_port"
+                android:inputType="number"
+                android:maxLength="5"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textViewSecurityType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/security_type"
+            app:layout_constraintBottom_toBottomOf="@+id/spinnerImapSecurityType"
+            app:layout_constraintLeft_toLeftOf="@+id/layoutImapPort"
+            app:layout_constraintTop_toTopOf="@+id/spinnerImapSecurityType" />
+
+        <Spinner
+            android:id="@+id/spinnerImapSecurityType"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            app:layout_constraintLeft_toRightOf="@+id/textViewSecurityType"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutImapPort" />
+
+        <TextView
+            android:id="@+id/textViewOutgoingEmailSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_huge"
+            android:text="@string/outgoing_mail_settings"
+            android:textColor="@android:color/holo_red_dark"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerImapSecurityType" />
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutSmtpServer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewOutgoingEmailSettings">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextSmtpServer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/smtp_server"
+                android:inputType="textWebEmailAddress"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/layoutSmtpPort"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:background="@drawable/bg_bottom_line_gray"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutSmtpServer">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/editTextSmtpPort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:digits="0123456789"
+                android:hint="@string/smtp_port"
+                android:inputType="number"
+                android:maxLength="5"
+                android:maxLines="1"
+                android:paddingTop="@dimen/default_margin_medium" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textViewSmtpSecurityType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/security_type"
+            app:layout_constraintBottom_toBottomOf="@+id/spinnerSmtpSecyrityType"
+            app:layout_constraintLeft_toLeftOf="@+id/layoutSmtpPort"
+            app:layout_constraintTop_toTopOf="@+id/spinnerSmtpSecyrityType" />
+
+        <Spinner
+            android:id="@+id/spinnerSmtpSecyrityType"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            app:layout_constraintLeft_toRightOf="@+id/textViewSmtpSecurityType"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPort" />
+
+        <CheckBox
+            android:id="@+id/checkBoxRequireSignInForSmtp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:text="@string/require_custom_sign_in"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerSmtpSecyrityType" />
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/layoutSmtpSignIn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/checkBoxRequireSignInForSmtp"
+            tools:visibility="visible">
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/layoutSmtpUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:background="@drawable/bg_bottom_line_gray"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/editTextSmtpUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/smtp_username"
+                    android:inputType="textEmailSubject"
+                    android:maxLines="1"
+                    android:paddingTop="@dimen/default_margin_medium" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/layoutSmtpPassword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:background="@drawable/bg_bottom_line_gray"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/layoutSmtpUserName"
+                app:passwordToggleContentDescription="description"
+                app:passwordToggleEnabled="true">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/editTextSmtpPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:ems="10"
+                    android:hint="@string/smtp_password"
+                    android:inputType="textPassword"
+                    android:maxLength="60"
+                    android:maxLines="1"
+                    android:paddingTop="@dimen/default_margin_medium" />
+
+            </android.support.design.widget.TextInputLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
+        <Button
+            android:id="@+id/buttonTryToConnect"
+            style="@style/AppWidget.Button"
+            android:layout_width="match_parent"
+            android:layout_marginTop="@dimen/margin_top_load_account"
+            android:text="@string/try_to_connect"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutSmtpSignIn" />
+
+
+    </android.support.constraint.ConstraintLayout>
+
+</ScrollView>

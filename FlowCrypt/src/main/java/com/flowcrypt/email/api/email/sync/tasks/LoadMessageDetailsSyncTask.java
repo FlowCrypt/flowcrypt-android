@@ -9,7 +9,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.os.Messenger;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.iap.Argument;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
@@ -19,8 +19,10 @@ import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.util.ASCIIUtility;
 
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Store;
 
 /**
  * This task load a detail information of the some message. At now this task creates and executes
@@ -54,8 +56,8 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void run(GmailSSLStore gmailSSLStore, SyncListener syncListener) throws Exception {
-        IMAPFolder imapFolder = (IMAPFolder) gmailSSLStore.getFolder(folderName);
+    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         imapFolder.open(Folder.READ_WRITE);
 
         if (syncListener != null) {
@@ -94,8 +96,10 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
                 }
             });
 
-            syncListener.onMessageDetailsReceived(imapFolder, uid, rawMessage, ownerKey,
-                    requestCode);
+            Message message = imapFolder.getMessageByUID(uid);
+            message.setFlag(Flags.Flag.SEEN, true);
+
+            syncListener.onMessageDetailsReceived(accountDao, imapFolder, uid, rawMessage, ownerKey, requestCode);
         }
 
         imapFolder.close(false);
