@@ -9,8 +9,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment"
-    tools:showIn="@layout/activity_splash">
+    tools:context="com.flowcrypt.email.ui.activity.fragment.SplashActivityFragment">
 
     <Button
         android:id="@+id/buttonPrivacy"
@@ -72,17 +71,12 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewLogo"
-        app:layout_constraintVertical_bias="0.215"
-        tools:layout_constraintBottom_creator="1"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintRight_creator="1"
-        android:layout_marginTop="0dp"/>
+        app:layout_constraintVertical_bias="0.215" />
 
     <Button
         android:id="@+id/buttonSignInWithGmail"
         style="@style/AppWidget.Button.White.ConnectAccount"
-        android:layout_width="320dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="@dimen/first_button_padding"
         android:drawableStart="@mipmap/ic_gmail"
         android:text="@string/continue_with_gmail"
         android:theme="@style/AppWidget.Button.White.ConnectAccount"
@@ -96,7 +90,6 @@
     <Button
         android:id="@+id/buttonOtherEmailProvider"
         style="@style/AppWidget.Button.White.ConnectAccount"
-        android:layout_width="320dp"
         android:layout_marginTop="@dimen/default_margin_big"
         android:drawableStart="@mipmap/ic_email"
         android:text="@string/other_email_provider"

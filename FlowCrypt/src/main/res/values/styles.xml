@@ -38,7 +38,7 @@
     </style>
 
     <style name="AppWidget.Button.White.ConnectAccount">
-        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_width">@dimen/default_button_width</item>
         <item name="android:paddingLeft">@dimen/padding_left_main_screen_sign_button</item>
         <item name="android:paddingRight">@dimen/padding_right_main_screen_sign_button</item>
         <item name="android:drawablePadding">@dimen/drawable_padding_main_screen_sign_button</item>
