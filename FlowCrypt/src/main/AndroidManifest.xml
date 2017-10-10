@@ -18,7 +18,7 @@
 
     <application
         android:name=".FlowCryptApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -94,6 +94,11 @@
         <activity
             android:name=".ui.activity.settings.FeedbackActivity"
             android:label="@string/help_feedback_or_question"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.settings.ExperimentalSettingsActivity"
+            android:label="@string/experimental_settings"
             android:screenOrientation="portrait" />
 
         <activity

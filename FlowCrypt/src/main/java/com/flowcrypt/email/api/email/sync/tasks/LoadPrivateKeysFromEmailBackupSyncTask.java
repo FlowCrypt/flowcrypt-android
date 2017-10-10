@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.os.Messenger;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
@@ -42,19 +43,14 @@ import javax.mail.search.SearchTerm;
  */
 
 public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
-    private String searchTermString;
-
     /**
      * The base constructor.
      *
-     * @param searchTermString The search phrase.
-     * @param ownerKey         The name of the reply to {@link Messenger}.
-     * @param requestCode      The unique request code for the reply to {@link Messenger}.
+     * @param ownerKey    The name of the reply to {@link Messenger}.
+     * @param requestCode The unique request code for the reply to {@link Messenger}.
      */
-    public LoadPrivateKeysFromEmailBackupSyncTask(String searchTermString,
-                                                  String ownerKey, int requestCode) {
+    public LoadPrivateKeysFromEmailBackupSyncTask(String ownerKey, int requestCode) {
         super(ownerKey, requestCode);
-        this.searchTermString = searchTermString;
     }
 
     @Override
@@ -62,24 +58,28 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         super.runIMAPAction(accountDao, store, syncListener);
 
         if (syncListener != null) {
-            IMAPFolder imapFolder = (IMAPFolder) store.getFolder(JavaEmailConstants.FOLDER_INBOX);
-            imapFolder.open(Folder.READ_ONLY);
-
+            Folder[] folders = store.getDefaultFolder().list("*");
             List<String> keys = new ArrayList<>();
 
-            SearchTerm searchTerm = SearchBackupsUtil.generateSearchTerms(accountDao.getEmail());
-            Message[] foundMessages = imapFolder.search(searchTerm);
+            for (Folder folder : folders) {
+                if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+                    folder.open(Folder.READ_ONLY);
 
-            for (Message message : foundMessages) {
-                String key = getKeyFromMessageIfItExists(message);
-                if (!TextUtils.isEmpty(key) && !keys.contains(key)) {
-                    keys.add(key);
+                    SearchTerm searchTerm = SearchBackupsUtil.generateSearchTerms(accountDao.getEmail());
+                    Message[] foundMessages = folder.search(searchTerm);
+
+                    for (Message message : foundMessages) {
+                        String key = getKeyFromMessageIfItExists(message);
+                        if (!TextUtils.isEmpty(key) && !keys.contains(key)) {
+                            keys.add(key);
+                        }
+                    }
+
+                    folder.close(false);
                 }
             }
 
             syncListener.onPrivateKeyFound(accountDao, keys, ownerKey, requestCode);
-
-            imapFolder.close(false);
         }
     }
 

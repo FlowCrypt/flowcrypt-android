@@ -641,10 +641,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
                     case MESSAGE_LOAD_PRIVATE_KEYS:
                         if (emailSyncManager != null && action != null) {
-                            String searchTermString = (String) action.getObject();
-
-                            emailSyncManager.loadPrivateKeys(action.getOwnerKey(), action.getRequestCode(),
-                                    searchTermString);
+                            emailSyncManager.loadPrivateKeys(action.getOwnerKey(), action.getRequestCode());
                         }
                         break;
 

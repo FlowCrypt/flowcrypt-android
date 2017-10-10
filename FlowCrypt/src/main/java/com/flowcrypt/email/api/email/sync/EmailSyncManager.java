@@ -265,12 +265,10 @@ public class EmailSyncManager {
      *
      * @param ownerKey         The name of the reply to {@link android.os.Messenger}.
      * @param requestCode      The unique request code for identify the current action.
-     * @param searchTermString The search phrase.
      */
-    public void loadPrivateKeys(String ownerKey, int requestCode, String searchTermString) {
+    public void loadPrivateKeys(String ownerKey, int requestCode) {
         try {
-            syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(searchTermString,
-                    ownerKey, requestCode));
+            syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

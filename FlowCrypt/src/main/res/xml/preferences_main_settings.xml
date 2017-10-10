@@ -34,4 +34,10 @@
             android:targetClass="com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity"
             android:targetPackage="@string/application_id" />
     </Preference>
+
+    <Preference android:title="@string/experimental">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.settings.ExperimentalSettingsActivity"
+            android:targetPackage="@string/application_id" />
+    </Preference>
 </PreferenceScreen>
