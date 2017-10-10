@@ -78,7 +78,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         switch (requestCode) {
             case R.id.syns_get_active_account:
                 account = (String) obj;
-                loadPrivateKeys(R.id.syns_load_private_keys, account);
+                loadPrivateKeys(R.id.syns_load_private_keys);
                 break;
 
             case R.id.syns_load_private_keys:
@@ -124,7 +124,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                                 UIUtil.exchangeViewVisibility(
                                         BackupSettingsActivity.this, true,
                                         progressBar, layoutContent);
-                                loadPrivateKeys(R.id.syns_load_private_keys, account);
+                                loadPrivateKeys(R.id.syns_load_private_keys);
                             }
                         });
                 break;

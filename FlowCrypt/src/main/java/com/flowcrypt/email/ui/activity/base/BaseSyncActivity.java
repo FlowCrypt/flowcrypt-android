@@ -24,10 +24,8 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.service.EmailSyncService;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -162,22 +160,18 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * Load the user private keys.
      *
      * @param requestCode The unique request code for identify the current action.
-     * @param accountName The account name.
      */
-    public void loadPrivateKeys(int requestCode, String accountName) {
+    public void loadPrivateKeys(int requestCode) {
         if (checkBound()) return;
         try {
-            String searchTermString = new Js(this, null).api_gmail_query_backups(accountName);
-
-            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                    requestCode, searchTermString);
+            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(), requestCode, null);
 
             Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS,
                     action);
             message.replyTo = replyMessenger;
 
             syncServiceMessenger.send(message);
-        } catch (RemoteException | IOException e) {
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
     }

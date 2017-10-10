@@ -11,6 +11,7 @@ import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
@@ -18,8 +19,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.sun.mail.gimap.GmailFolder;
-import com.sun.mail.gimap.GmailSSLStore;
+import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
 
@@ -33,6 +33,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
 
 /**
@@ -69,24 +70,29 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
         try {
             String token = GoogleAuthUtil.getToken(getContext(), account,
                     JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-            GmailSSLStore gmailSSLStore = OpenStoreHelper.openAndConnectToGimapsStore(token, account.name);
-            GmailFolder gmailFolder = (GmailFolder) gmailSSLStore.getFolder(
-                    JavaEmailConstants.FOLDER_INBOX);
-            gmailFolder.open(Folder.READ_ONLY);
 
-            Message[] foundMessages = gmailFolder.search(SearchBackupsUtil.generateSearchTerms(account.name));
+            Store store = OpenStoreHelper.openAndConnectToGimapsStore(token, account.name);
+            Folder[] folders = store.getDefaultFolder().list("*");
 
-            for (Message message : foundMessages) {
-                String key = getKeyFromMessageIfItExists(message);
-                if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList,
-                        key)) {
-                    privateKeyDetailsList.add(new KeyDetails(key,
-                            KeyDetails.Type.EMAIL));
+            for (Folder folder : folders) {
+                if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+                    folder.open(Folder.READ_ONLY);
+
+                    Message[] foundMessages = folder.search(SearchBackupsUtil.generateSearchTerms(account.name));
+
+                    for (Message message : foundMessages) {
+                        String key = getKeyFromMessageIfItExists(message);
+                        if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList, key)) {
+                            privateKeyDetailsList.add(new KeyDetails(key,
+                                    KeyDetails.Type.EMAIL));
+                        }
+                    }
+
+                    folder.close(false);
                 }
             }
 
-            gmailFolder.close(false);
-            gmailSSLStore.close();
+            store.close();
             return new LoaderResult(privateKeyDetailsList, null);
         } catch (Exception e) {
             e.printStackTrace();

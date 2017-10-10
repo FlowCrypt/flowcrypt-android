@@ -13,7 +13,6 @@ import android.text.TextUtils;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -183,7 +182,7 @@ public class FoldersManager {
      */
     public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
         if (imapFolder != null
-                && !isFolderHasNoSelectAttribute(imapFolder)
+                && !EmailUtil.isFolderHasNoSelectAttribute(imapFolder)
                 && !TextUtils.isEmpty(imapFolder.getFullName())
                 && !folders.containsKey(imapFolder.getFullName())) {
             this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
@@ -283,20 +282,6 @@ public class FoldersManager {
         } else {
             return folderType.value;
         }
-    }
-
-    /**
-     * Check if current folder has {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}. If the
-     * folder contains it attribute we will not show this folder in the list.
-     *
-     * @param imapFolder The {@link IMAPFolder} object.
-     * @return true if current folder contains attribute
-     * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
-     * @throws MessagingException
-     */
-    private boolean isFolderHasNoSelectAttribute(IMAPFolder imapFolder) throws MessagingException {
-        List<String> attributes = Arrays.asList(imapFolder.getAttributes());
-        return attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
     }
 
     /**
