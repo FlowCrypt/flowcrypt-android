@@ -164,7 +164,7 @@
         storage permission</string>
     <string name="choose_attachment">Choose an attachment</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
-    <string name="template_warning_max_total_attachments_size">Warning! Total size of added attachments should be under
+    <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
     <string name="template_reply_subject">Re: %1$s</string>
     <string name="other_email_provider">Other email provider</string>
@@ -179,11 +179,11 @@
     <string name="outgoing_mail_settings">Outgoing mail settings</string>
     <string name="smtp_server">SMTP server</string>
     <string name="smtp_port">SMTP port</string>
-    <string name="require_custom_sign_in">Require custom sign-in</string>
+    <string name="require_custom_sign_in">Set different credentials for SMTP</string>
     <string name="smtp_username">SMTP Username</string>
     <string name="smtp_password">SMTP Password</string>
-    <string name="try_to_connect">Try to connect</string>
-    <string name="adding_new_account">Adding a new account</string>
+    <string name="try_to_connect">Connect</string>
+    <string name="adding_new_account">Add email account</string>
     <string name="template_imap_server">imap.%1$s</string>
     <string name="template_smtp_server">smtp.%1$s</string>
     <string name="checking_email_settings">Checking email settings</string>
@@ -192,7 +192,7 @@
     <string name="startls">STARTLS</string>
     <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
     <string name="settings_not_valid">The settings is not valid</string>
-    <string name="skip_setup">Skip setup</string>
+    <string name="skip_setup">Use existing keys</string>
     <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>
