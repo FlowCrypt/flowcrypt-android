@@ -26,7 +26,7 @@
             android:id="@+id/buttonCreateNewKey"
             style="@style/AppWidget.Button.Green"
             android:layout_width="0dp"
-            android:layout_marginTop="@dimen/margin_top_first_button"
+            android:layout_marginTop="48dp"
             android:alpha="0.5"
             android:enabled="false"
             android:text="@string/create_a_new_key"
