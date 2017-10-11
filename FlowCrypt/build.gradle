@@ -19,7 +19,7 @@ buildscript {
 apply plugin: 'com.android.application'
 apply plugin: 'com.github.gfx.ribbonizer'
 
-SimpleDateFormat simpleDateFormat = new SimpleDateFormat('dd_MM_yyyy_HH_mm');
+SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
 
 android {
     compileSdkVersion COMPILE_SDK_VERSION as int
