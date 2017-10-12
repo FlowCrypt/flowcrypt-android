@@ -261,6 +261,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {

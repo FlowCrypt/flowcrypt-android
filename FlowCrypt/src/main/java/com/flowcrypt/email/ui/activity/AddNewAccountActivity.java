@@ -8,21 +8,34 @@ package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.acra.ACRA;
+
+import java.util.ArrayList;
 
 /**
  * This activity describes a logic of add a new email account.
@@ -34,10 +47,24 @@ import org.acra.ACRA;
  */
 
 public class AddNewAccountActivity extends BaseSignInActivity implements View.OnClickListener, GoogleApiClient
-        .OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+        .OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LoaderManager.LoaderCallbacks<LoaderResult> {
 
     public static final String KEY_EXTRA_NEW_ACCOUNT =
             GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", AddNewAccountActivity.class);
+
+    private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL = 100;
+    private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
+
+    private View progressView;
+    private View contentView;
+    private GoogleSignInAccount googleSignInAccount;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        progressView = findViewById(R.id.progressView);
+        contentView = findViewById(R.id.layoutContent);
+    }
 
     @Override
     public boolean isDisplayHomeAsUpEnabled() {
@@ -60,19 +87,12 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
             case REQUEST_CODE_SIGN_IN:
                 GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
                 if (googleSignInResult.isSuccess()) {
-                    GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
+                    googleSignInAccount = googleSignInResult.getSignInAccount();
                     if (googleSignInAccount != null) {
                         if (new AccountDaoSource().getAccountInformation(this,
                                 googleSignInAccount.getEmail()) == null) {
-                            AccountDaoSource accountDaoSource = new AccountDaoSource();
-                            accountDaoSource.addRow(this, googleSignInAccount);
-                            accountDaoSource.setActiveAccount(this, googleSignInAccount.getEmail());
-
-                            Intent intent = new Intent();
-                            intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this));
-
-                            setResult(Activity.RESULT_OK, intent);
-                            finish();
+                            getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
+                                    null, this);
                         } else {
                             showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
                                     googleSignInAccount.getEmail()), Snackbar.LENGTH_LONG);
@@ -105,8 +125,119 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                 }
                 break;
 
+            case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        returnResultOk();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                    case CheckKeysActivity.RESULT_NEGATIVE:
+                        UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        returnResultOk();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                    case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
+                        this.googleSignInAccount = null;
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_load_private_key_backups_from_email:
+                UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
+                AccountDao accountDao = new AccountDao(googleSignInAccount.getEmail(),
+                        AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        handleLoaderResult(loader, loaderResult);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
+            case R.id.loader_id_load_private_key_backups_from_email:
+                ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
+                if (keyDetailsList.isEmpty()) {
+                    AccountDao accountDao = new AccountDao(googleSignInAccount.getEmail(),
+                            AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
+                    startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
+                            REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL);
+                    UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                } else {
+                    startActivityForResult(CheckKeysActivity.newIntent(this,
+                            keyDetailsList,
+                            getString(R.string.found_backup_of_your_account_key),
+                            getString(R.string.continue_),
+                            getString(R.string.use_another_account), false),
+                            REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
+                }
+                break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
+                break;
+        }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        switch (loaderId) {
+            case R.id.loader_id_load_private_key_backups_from_email:
+                UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
+                        : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+                break;
+
+            default:
+                super.handleFailureLoaderResult(loaderId, e);
+                break;
+        }
+    }
+
+    private void returnResultOk() {
+        AccountDaoSource accountDaoSource = saveGmailAccountToDatabase();
+
+        Intent intent = new Intent();
+        intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this));
+
+        setResult(Activity.RESULT_OK, intent);
+        finish();
+    }
+
+    @NonNull
+    private AccountDaoSource saveGmailAccountToDatabase() {
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+        accountDaoSource.addRow(this, googleSignInAccount);
+        accountDaoSource.setActiveAccount(this, googleSignInAccount.getEmail());
+        return accountDaoSource;
     }
 }

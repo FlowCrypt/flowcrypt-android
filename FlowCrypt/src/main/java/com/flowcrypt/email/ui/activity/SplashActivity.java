@@ -115,7 +115,6 @@ public class SplashActivity extends BaseSignInActivity implements
                 }
                 break;
 
-
             case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
