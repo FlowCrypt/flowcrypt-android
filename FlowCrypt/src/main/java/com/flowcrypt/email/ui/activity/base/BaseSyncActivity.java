@@ -108,7 +108,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     public String getReplyMessengerName() {
-        return getClass().getSimpleName();
+        return getClass().getSimpleName() + "_" + hashCode();
     }
 
     /**
