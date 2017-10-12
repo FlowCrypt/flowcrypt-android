@@ -21,7 +21,7 @@
 
         <include
             android:id="@+id/layoutContent"
-            layout="@layout/content_add_new_account"
+            layout="@layout/content_add_new_account_manually"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
