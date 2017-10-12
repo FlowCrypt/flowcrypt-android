@@ -289,7 +289,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                             keyDetailsList,
                             getString(R.string.found_backup_of_your_account_key),
                             getString(R.string.continue_),
-                            getString(R.string.use_another_account), false),
+                            getString(R.string.use_another_account), true),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
                 }
                 break;
