@@ -15,6 +15,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
 
 import org.acra.ACRA;
+import org.acra.ReportField;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
 
@@ -28,6 +29,35 @@ import org.acra.sender.HttpSender;
  */
 @ReportsCrashes(
         formUri = "https://api.cryptup.io/help/acra",
+        customReportContent = {
+                ReportField.ANDROID_VERSION,
+                ReportField.APP_VERSION_CODE,
+                ReportField.APP_VERSION_NAME,
+                ReportField.AVAILABLE_MEM_SIZE,
+                ReportField.BRAND,
+                ReportField.BUILD,
+                ReportField.BUILD_CONFIG,
+                ReportField.CRASH_CONFIGURATION,
+                ReportField.CUSTOM_DATA,
+                ReportField.DEVICE_FEATURES,
+                ReportField.DISPLAY,
+                ReportField.DUMPSYS_MEMINFO,
+                ReportField.ENVIRONMENT,
+                ReportField.FILE_PATH,
+                ReportField.INITIAL_CONFIGURATION,
+                ReportField.INSTALLATION_ID,
+                ReportField.IS_SILENT,
+                ReportField.LOGCAT,
+                ReportField.PACKAGE_NAME,
+                ReportField.PHONE_MODEL,
+                ReportField.PRODUCT,
+                ReportField.REPORT_ID,
+                ReportField.STACK_TRACE,
+                ReportField.TOTAL_MEM_SIZE,
+                ReportField.USER_APP_START_DATE,
+                ReportField.USER_CRASH_DATE,
+                ReportField.USER_EMAIL
+        },
         httpMethod = HttpSender.Method.POST,
         reportType = HttpSender.Type.JSON)
 public class FlowCryptApplication extends Application {
