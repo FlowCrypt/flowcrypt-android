@@ -200,9 +200,9 @@ public class SplashActivity extends BaseSignInActivity implements
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_load_gmail_backups:
+            case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao.getAccount());
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
                 return null;
@@ -213,7 +213,7 @@ public class SplashActivity extends BaseSignInActivity implements
     @Override
     public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
-            case R.id.loader_id_load_gmail_backups:
+            case R.id.loader_id_load_private_key_backups_from_email:
                 if (loaderResult.getResult() != null) {
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
@@ -267,7 +267,8 @@ public class SplashActivity extends BaseSignInActivity implements
             } else {
                 startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
                 if (accountDao != null) {
-                    getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_backups, null, this);
+                    getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null,
+                            this);
                 } else {
                     //todo-denbond7 handle this situation
                 }

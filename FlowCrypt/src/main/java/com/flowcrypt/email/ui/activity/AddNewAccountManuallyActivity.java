@@ -31,14 +31,18 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+
+import java.util.ArrayList;
 
 /**
  * This activity describes a logic of adding a new account of other email providers.
@@ -56,6 +60,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", ImportPublicKeyActivity.class);
 
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
+    private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11;
+
     private EditText editTextEmail;
     private EditText editTextUserName;
     private EditText editTextPassword;
@@ -116,14 +122,27 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case REQUEST_CODE_ADD_NEW_ACCOUNT:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        authCredentials = generateAuthCredentials();
-                        Intent intent = new Intent();
-                        intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCredentials);
-                        setResult(Activity.RESULT_OK, intent);
-                        finish();
+                        returnOkResult();
                         break;
 
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
+                        setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data);
+                        finish();
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        returnOkResult();
+                        break;
+
+                    case Activity.RESULT_CANCELED:
+                        UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                        break;
+
+                    case CheckKeysActivity.RESULT_NEGATIVE:
                         setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data);
                         finish();
                         break;
@@ -221,6 +240,12 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 authCredentials = generateAuthCredentials();
                 return new CheckEmailSettingsAsyncTaskLoader(this, authCredentials);
 
+            case R.id.loader_id_load_private_key_backups_from_email:
+                UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
+                AccountDao accountDao = new AccountDao(authCredentials.getEmail(), null
+                        , null, null, null, null, authCredentials);
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+
             default:
                 return null;
         }
@@ -242,14 +267,29 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case R.id.loader_id_check_email_settings:
                 boolean isSettingsValid = (boolean) result;
                 if (isSettingsValid) {
+                    getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
+                            null, this);
+                } else {
+                    UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                    showInfoSnackbar(getRootView(), getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG);
+                }
+                break;
+
+            case R.id.loader_id_load_private_key_backups_from_email:
+                ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
+                if (keyDetailsList.isEmpty()) {
                     AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
                             null, null, null, null, null, authCredentials);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_ADD_NEW_ACCOUNT);
                     UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 } else {
-                    UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-                    showInfoSnackbar(getRootView(), getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG);
+                    startActivityForResult(CheckKeysActivity.newIntent(this,
+                            keyDetailsList,
+                            getString(R.string.found_backup_of_your_account_key),
+                            getString(R.string.continue_),
+                            getString(R.string.use_another_account), false),
+                            REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
                 }
                 break;
 
@@ -263,6 +303,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_check_email_settings:
+            case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
                         : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
@@ -272,6 +313,17 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 super.handleFailureLoaderResult(loaderId, e);
                 break;
         }
+    }
+
+    /**
+     * Return the {@link Activity#RESULT_OK} to the initiator-activity.
+     */
+    private void returnOkResult() {
+        authCredentials = generateAuthCredentials();
+        Intent intent = new Intent();
+        intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCredentials);
+        setResult(Activity.RESULT_OK, intent);
+        finish();
     }
 
     /**

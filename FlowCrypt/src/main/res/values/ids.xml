@@ -6,7 +6,7 @@
 
 <resources>
     <item name="loader_id_load_gmail_messages" type="id" />
-    <item name="loader_id_load_gmail_backups" type="id" />
+    <item name="loader_id_load_private_key_backups_from_email" type="id" />
     <item name="loader_id_encrypt_and_save_private_keys_infos" type="id" />
     <item name="loader_id_load_message_info_from_database" type="id" />
     <item name="loader_id_load_gmail_labels" type="id" />
