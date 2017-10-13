@@ -10,7 +10,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -34,8 +33,6 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 
 import org.acra.ACRA;
 
@@ -60,6 +57,7 @@ public class SplashActivity extends BaseSignInActivity implements
     private View splashView;
 
     private AccountDao accountDao;
+    private GoogleSignInAccount currentGoogleSignInAccount;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,6 +100,7 @@ public class SplashActivity extends BaseSignInActivity implements
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
+                        AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
                         EmailSyncService.startEmailSyncService(this);
                         EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                         finish();
@@ -109,7 +108,7 @@ public class SplashActivity extends BaseSignInActivity implements
 
                     case Activity.RESULT_CANCELED:
                     case CheckKeysActivity.RESULT_NEGATIVE:
-                        clearInfoAboutOldAccount(accountDao);
+                        this.currentGoogleSignInAccount = null;
                         UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
                         break;
                 }
@@ -118,21 +117,16 @@ public class SplashActivity extends BaseSignInActivity implements
             case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
+                        AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
                         EmailSyncService.startEmailSyncService(this);
                         EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                         finish();
                         break;
 
                     case Activity.RESULT_CANCELED:
-                        finish();
-                        break;
-
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-                        this.accountDao = null;
-                        if (data != null) {
-                            clearInfoAboutOldAccount((AccountDao) data.getParcelableExtra(CreateOrImportKeyActivity
-                                    .EXTRA_KEY_ACCOUNT_DAO));
-                        }
+                        this.currentGoogleSignInAccount = null;
+                        UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
                         break;
                 }
                 break;
@@ -200,8 +194,13 @@ public class SplashActivity extends BaseSignInActivity implements
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_private_key_backups_from_email:
+                AccountDao accountDao = null;
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+                if (currentGoogleSignInAccount != null) {
+                    accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE,
+                            null, null, null, null, null);
+                }
+                return accountDao != null ? new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao) : null;
 
             default:
                 return null;
@@ -252,26 +251,10 @@ public class SplashActivity extends BaseSignInActivity implements
 
     private void handleSignInResult(GoogleSignInResult googleSignInResult) {
         if (googleSignInResult.isSuccess()) {
-            GoogleSignInAccount googleSignInAccount = googleSignInResult.getSignInAccount();
-            if (googleSignInAccount != null) {
-                accountDao = updateInformationAboutAccountInLocalDatabase(googleSignInAccount);
-            } else {
-                //todo-denbond7 handle this situation
-            }
+            currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
 
-            if (SecurityUtils.isBackupKeysExist(this)) {
-                EmailSyncService.startEmailSyncService(this);
-                EmailManagerActivity.runEmailManagerActivity(this, accountDao);
-                finish();
-            } else {
-                startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
-                if (accountDao != null) {
-                    getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null,
-                            this);
-                } else {
-                    //todo-denbond7 handle this situation
-                }
-            }
+            startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
+            getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         } else {
             if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
                 UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus().getStatusMessage());
@@ -280,7 +263,14 @@ public class SplashActivity extends BaseSignInActivity implements
         }
     }
 
-    private AccountDao updateInformationAboutAccountInLocalDatabase(GoogleSignInAccount googleSignInAccount) {
+    /**
+     * Created a GMAIL {@link AccountDao} and add it to the database.
+     *
+     * @param googleSignInAccount The {@link GoogleSignInAccount} object which contains information about a Google
+     *                            account.
+     * @return Generated {@link AccountDao}.
+     */
+    private AccountDao addGmailAccount(GoogleSignInAccount googleSignInAccount) {
         AccountDaoSource accountDaoSource = new AccountDaoSource();
 
         boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0;
@@ -316,31 +306,6 @@ public class SplashActivity extends BaseSignInActivity implements
 
         if (findViewById(R.id.buttonSecurity) != null) {
             findViewById(R.id.buttonSecurity).setOnClickListener(this);
-        }
-    }
-
-    /**
-     * In this method we check GoogleSignResult. If the user's cached credentials are valid the
-     * OptionalPendingResult will be "done" and the GoogleSignInResult will be available
-     * instantly. If the user has not previously signed in on this device or the sign-in has
-     * expired, this asynchronous branch will attempt to sign in the user silently. Cross-device
-     * single sign-on will occur in this branch.
-     */
-    private void checkGoogleSignResult() {
-        OptionalPendingResult<GoogleSignInResult> optionalPendingResult
-                = Auth.GoogleSignInApi.silentSignIn(googleApiClient);
-        if (optionalPendingResult.isDone()) {
-            GoogleSignInResult googleSignInResult = optionalPendingResult.get();
-            handleSignInResult(googleSignInResult);
-        } else {
-            UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-            optionalPendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
-                @Override
-                public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
-                    UIUtil.exchangeViewVisibility(SplashActivity.this, false, splashView, signInView);
-                    handleSignInResult(googleSignInResult);
-                }
-            });
         }
     }
 }
