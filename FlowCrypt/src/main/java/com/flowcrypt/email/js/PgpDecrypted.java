@@ -47,6 +47,10 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         return getCount("key_mismatch");
     }
 
+    public Integer countAttempts() {
+        return getCount("attempts");
+    }
+
     public String[] getEncryptedForLongids() {
         return getStrings("encrypted_for");
     }
