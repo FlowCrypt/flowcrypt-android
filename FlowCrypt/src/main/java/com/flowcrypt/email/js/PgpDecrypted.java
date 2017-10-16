@@ -68,7 +68,15 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         if(content == null) {
             return null;
         }
-        return this.getAttributeAsString(content, "data"); // todo - may need to convert from uint8
+        return getAttributeAsString(content, "data");
+    }
+
+    public byte[] getBytes() {
+        V8Object content = this.getAttributeAsObject("content");
+        if(content == null) {
+            return null;
+        }
+        return getAttributeAsBytes(content, "data");
     }
 
     private Integer getCount(String name) {
@@ -76,7 +84,7 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         if(counts == null) {
             return null;
         }
-        return this.getAttributeAsInteger(counts, name);
+        return getAttributeAsInteger(counts, name);
     }
 
     private String[] getStrings(String name) {
