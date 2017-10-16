@@ -24,6 +24,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -128,6 +129,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
+                    case CheckKeysActivity.RESULT_NEUTRAL:
                         returnResultOk();
                         break;
 
@@ -197,6 +199,8 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                             keyDetailsList,
                             getString(R.string.found_backup_of_your_account_key),
                             getString(R.string.continue_),
+                            SecurityUtils.isBackupKeysExist(this) ? getString(R.string
+                                    .use_existing_keys) : null,
                             getString(R.string.use_another_account), true),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
                 }

@@ -194,7 +194,7 @@
     <string name="settings_not_valid">The settings is not valid</string>
     <string name="expand_an_account_managment">Expand an account management</string>
     <string name="add_account">Add account</string>
-    <string name="skip_setup">Use existing keys</string>
+    <string name="use_existing_keys">Use existing keys</string>
     <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>

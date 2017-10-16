@@ -100,9 +100,9 @@ public class SplashActivity extends BaseSignInActivity implements
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
+                    case CheckKeysActivity.RESULT_NEUTRAL:
                         EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                        EmailManagerActivity.runEmailManagerActivity(this, addGmailAccount(currentGoogleSignInAccount));
                         finish();
                         break;
 
@@ -117,9 +117,8 @@ public class SplashActivity extends BaseSignInActivity implements
             case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
                         EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                        EmailManagerActivity.runEmailManagerActivity(this, addGmailAccount(currentGoogleSignInAccount));
                         finish();
                         break;
 
@@ -139,10 +138,9 @@ public class SplashActivity extends BaseSignInActivity implements
                                     .KEY_EXTRA_AUTH_CREDENTIALS);
                             AccountDaoSource accountDaoSource = new AccountDaoSource();
                             accountDaoSource.addRow(this, authCredentials);
-                            AccountDao accountDao = accountDaoSource.getAccountInformation(this,
-                                    authCredentials.getEmail());
                             EmailSyncService.startEmailSyncService(this);
-                            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                            EmailManagerActivity.runEmailManagerActivity(this,
+                                    accountDaoSource.getAccountInformation(this, authCredentials.getEmail()));
 
                             finish();
                         } catch (Exception e) {
@@ -222,7 +220,9 @@ public class SplashActivity extends BaseSignInActivity implements
                                 keyDetailsList,
                                 getString(R.string.found_backup_of_your_account_key),
                                 getString(R.string.continue_),
-                                getString(R.string.use_another_account), false),
+                                SecurityUtils.isBackupKeysExist(this) ? getString(R.string
+                                        .use_existing_keys) : null,
+                                getString(R.string.use_another_account), true),
                                 REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
                     }
                 } else if (loaderResult.getException() != null) {
