@@ -63,7 +63,7 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         return getStrings("errors");
     }
 
-    public String getContent() {
+    public String getString() {
         V8Object content = this.getAttributeAsObject("content");
         if(content == null) {
             return null;
