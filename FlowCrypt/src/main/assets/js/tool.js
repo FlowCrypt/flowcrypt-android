@@ -3905,7 +3905,7 @@
 (function ( /* EXTENSIONS AND CONFIG */ ) {
 
   if(typeof window.openpgp !== 'undefined' && typeof window.openpgp.config !== 'undefined' && typeof window.openpgp.config.versionstring !== 'undefined' && typeof window.openpgp.config.commentstring !== 'undefined') {
-    window.openpgp.config.versionstring = 'CryptUp ' + (catcher.version() || '') + ' Gmail Encryption https://cryptup.org';
+    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Email Encryption: flowcrypt.com';
     window.openpgp.config.commentstring = 'Seamlessly send, receive and search encrypted email';
   }
 

@@ -7,6 +7,7 @@
 package com.flowcrypt.email.js;
 
 import android.content.Context;
+import com.flowcrypt.email.BuildConfig;
 import android.os.Build;
 import android.text.Html;
 import android.text.TextUtils;
@@ -304,7 +305,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     private V8Object loadJavascriptCode() throws IOException {
-        v8.executeScript("var engine_host_version = 'Android 0.1';");
+        v8.executeScript("var engine_host_version = 'Android " + BuildConfig.VERSION_NAME.split("_")[0] + "';");
         v8.executeScript(read(context.getAssets().open("js/window.js")));
         v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
         v8.executeScript(read(context.getAssets().open("js/emailjs/punycode.js")));
