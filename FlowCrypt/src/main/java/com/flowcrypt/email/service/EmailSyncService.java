@@ -142,16 +142,19 @@ public class EmailSyncService extends Service implements SyncListener {
         Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
         isServiceStarted = true;
 
-        switch (intent.getAction()) {
-            case ACTION_SWITCH_ACCOUNT:
-                emailSyncManager.setAccount(new AccountDaoSource().getActiveAccountInformation(this));
-                emailSyncManager.beginSync(true);
-                break;
+        if (intent != null) {
+            switch (intent.getAction()) {
+                case ACTION_SWITCH_ACCOUNT:
+                    emailSyncManager.setAccount(new AccountDaoSource().getActiveAccountInformation(this));
+                    emailSyncManager.beginSync(true);
+                    break;
 
-            default:
-                emailSyncManager.beginSync(false);
-                break;
+                default:
+                    emailSyncManager.beginSync(false);
+                    break;
+            }
         }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
