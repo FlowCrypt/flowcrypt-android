@@ -34,13 +34,18 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -470,10 +475,9 @@ public class AttachmentDownloadManagerService extends Service {
                         attachmentInfo.getId());
 
                 if (attachment != null) {
-                    InputStream input = attachment.getInputStream();
-                    OutputStream output = FileUtils.openOutputStream(attachmentFile);
+                    InputStream inputStream = attachment.getInputStream();
 
-                    try {
+                    try (OutputStream outputStream = FileUtils.openOutputStream(attachmentFile)) {
                         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
                         double count = 0;
                         double size = attachmentInfo.getEncodedSize();
@@ -483,9 +487,9 @@ public class AttachmentDownloadManagerService extends Service {
                         long startTime, elapsedTime;
                         long lastUpdateTime = startTime = System.currentTimeMillis();
                         updateProgress(currentPercentage, 0);
-                        while (IOUtils.EOF != (numberOfReadBytes = input.read(buffer))) {
+                        while (IOUtils.EOF != (numberOfReadBytes = inputStream.read(buffer))) {
                             if (!Thread.currentThread().isInterrupted()) {
-                                output.write(buffer, 0, numberOfReadBytes);
+                                outputStream.write(buffer, 0, numberOfReadBytes);
                                 count += numberOfReadBytes;
                                 currentPercentage = (int) ((count / size) * 100f);
                                 if (currentPercentage - lastPercentage >= 1
@@ -505,14 +509,14 @@ public class AttachmentDownloadManagerService extends Service {
                         if (!Thread.currentThread().isInterrupted()) {
                             updateProgress(100, 0);
                         }
-
-                        output.close();
                     } finally {
-                        IOUtils.closeQuietly(output);
                         if (Thread.currentThread().isInterrupted()) {
                             removeNotCompleteDownloadFile(attachmentFile);
                         }
                     }
+
+                    attachmentFile = decryptFileIfNeed(context, attachmentFile);
+                    attachmentInfo.setName(attachmentFile.getName());
 
                     if (!Thread.currentThread().isInterrupted()) {
                         if (onDownloadAttachmentListener != null) {
@@ -536,6 +540,52 @@ public class AttachmentDownloadManagerService extends Service {
 
         public void setOnDownloadAttachmentListener(OnDownloadAttachmentListener onDownloadAttachmentListener) {
             this.onDownloadAttachmentListener = onDownloadAttachmentListener;
+        }
+
+        /**
+         * Do decryption of the downloaded file if it need.
+         *
+         * @param context Interface to global information about an application environment;
+         * @param file    The downloaded file which can be encrypted.
+         * @return The decrypted or the original file.
+         */
+        private File decryptFileIfNeed(Context context, File file) throws IOException {
+            if (file == null) {
+                return null;
+            }
+
+            if (!"pgp".equalsIgnoreCase(FilenameUtils.getExtension(file.getName()))) {
+                return file;
+            }
+
+            try (InputStream inputStream = new FileInputStream(file)) {
+                PgpDecrypted pgpDecrypted = new Js(context, new SecurityStorageConnector(context))
+                        .crypto_message_decrypt(IOUtils.toByteArray(inputStream));
+                byte[] decryptedBytes = pgpDecrypted.getBytes();
+
+                File decryptedFile = new File(file.getParent(),
+                        file.getName().substring(0, file.getName().lastIndexOf(".")));
+
+                boolean isInnerExceptionHappened = false;
+
+                try (OutputStream outputStream = FileUtils.openOutputStream(decryptedFile)) {
+                    IOUtils.write(decryptedBytes, outputStream);
+                    return decryptedFile;
+                } catch (IOException e) {
+                    if (!decryptedFile.delete()) {
+                        Log.d(TAG, "Cannot delete file: " + file);
+                    }
+
+                    isInnerExceptionHappened = true;
+                    throw e;
+                } finally {
+                    if (!isInnerExceptionHappened) {
+                        if (!file.delete()) {
+                            Log.d(TAG, "Cannot delete file: " + file);
+                        }
+                    }
+                }
+            }
         }
 
         /**
