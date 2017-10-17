@@ -199,4 +199,6 @@
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>
     <string name="simulate_app_crash">Simulate app crash</string>
+    <string name="attachments">Attachments</string>
+    <string name="download_attachments_notification_channel">The download attachments notification channel</string>
 </resources>
