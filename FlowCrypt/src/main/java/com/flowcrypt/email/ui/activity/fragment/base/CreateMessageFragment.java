@@ -31,6 +31,7 @@ import android.widget.FilterQueryProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -77,8 +78,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
-
-    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 3;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -236,7 +235,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             } else {
                                 showInfoSnackbar(getView(),
                                         getString(R.string.template_warning_max_total_attachments_size,
-                                                FileUtils.byteCountToDisplaySize(MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
+                                                FileUtils.byteCountToDisplaySize(
+                                                        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
                                         Snackbar.LENGTH_LONG);
                             }
                         } else {
@@ -679,7 +679,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         totalSizeOfAttachments += newAttachmentInfo.getEncodedSize();
 
-        return totalSizeOfAttachments < MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+        return totalSizeOfAttachments < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
     }
 
     /**

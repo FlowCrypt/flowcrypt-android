@@ -26,6 +26,7 @@ import android.util.SparseArray;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -463,6 +464,8 @@ public class AttachmentDownloadManagerService extends Service {
             AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, attachmentInfo.getEmail());
 
             try {
+                checkMaxDecryptedFileSize();
+
                 Session session = OpenStoreHelper.getAttachmentSession(accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
                 IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
@@ -543,6 +546,23 @@ public class AttachmentDownloadManagerService extends Service {
         }
 
         /**
+         * Check is decrypted file has size not more than
+         * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED}. If the file greater then
+         * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED} we throw an exception. This is only for files
+         * with the "pgp" extension.
+         */
+        private void checkMaxDecryptedFileSize() {
+            if ("pgp".equalsIgnoreCase(FilenameUtils.getExtension(attachmentInfo.getName()))) {
+                if (attachmentInfo.getEncodedSize() > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
+                    throw new IllegalArgumentException(context.getString(R.string
+                                    .template_warning_max_attachments_size_for_decryption,
+                            FileUtils.byteCountToDisplaySize(Constants
+                                    .MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED)));
+                }
+            }
+        }
+
+        /**
          * Do decryption of the downloaded file if it need.
          *
          * @param context Interface to global information about an application environment;
@@ -594,10 +614,12 @@ public class AttachmentDownloadManagerService extends Service {
          * @param attachmentFile The file which will be removed.
          */
         private void removeNotCompleteDownloadFile(File attachmentFile) {
-            if (!attachmentFile.delete()) {
-                Log.d(TAG, "Cannot delete file: " + attachmentFile);
-            } else {
-                Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+            if (attachmentFile != null && attachmentFile.exists()) {
+                if (!attachmentFile.delete()) {
+                    Log.d(TAG, "Cannot delete file: " + attachmentFile);
+                } else {
+                    Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+                }
             }
         }
 
