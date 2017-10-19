@@ -103,7 +103,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             updateContactsLastUseDateTime(context);
 
-            MimeMessage mimeMessage = createMimeMessage(session, context, pgpCacheDirectory);
+            MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory);
 
             Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
             transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
@@ -155,16 +155,16 @@ public class SendMessageSyncTask extends BaseSyncTask {
      *
      * @param session           Will be used to create {@link MimeMessage}
      * @param context           Interface to global information about an application environment.
-     * @param pgpCacheDirectory The cache directory which contains temp files.
-     * @return {@link MimeMessage}
+     * @param accountDao        The {@link AccountDao} which contains information about account.
+     * @param pgpCacheDirectory The cache directory which contains temp files.  @return {@link MimeMessage}
      * @throws IOException
      * @throws MessagingException
      */
     @NonNull
-    private MimeMessage createMimeMessage(Session session, Context context, File pgpCacheDirectory)
-            throws IOException, MessagingException {
+    private MimeMessage createMimeMessage(Session session, Context context, AccountDao accountDao,
+                                          File pgpCacheDirectory) throws IOException, MessagingException {
         Js js = new Js(context, new SecurityStorageConnector(context));
-        String[] pubKeys = getPubKeys(js, context);
+        String[] pubKeys = getPubKeys(context, js, accountDao);
 
         String rawMessage = generateRawMessageWithoutAttachments(js, pubKeys);
 
@@ -288,11 +288,12 @@ public class SendMessageSyncTask extends BaseSyncTask {
     /**
      * Get public keys for recipients + keys of the sender;
      *
-     * @param js      - {@link Js} util class.
-     * @param context - Interface to global information about an application environment.
+     * @param context    Interface to global information about an application environment.
+     * @param accountDao The {@link AccountDao} which contains information about account.
+     * @param js         - {@link Js} util class.
      * @return <tt>String[]</tt> An array of public keys.
      */
-    private String[] getPubKeys(Js js, Context context) {
+    private String[] getPubKeys(Context context, Js js, AccountDao accountDao) {
         ArrayList<String> publicKeys = new ArrayList<>();
         for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
             if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
@@ -300,30 +301,46 @@ public class SendMessageSyncTask extends BaseSyncTask {
             }
         }
 
-        publicKeys.addAll(generateOwnPublicKeys(js, context));
+        publicKeys.add(getAccountPublicKey(context, js, accountDao));
 
         return publicKeys.toArray(new String[0]);
     }
 
     /**
-     * Get public keys of the sender;
+     * Get a public key of the sender;
      *
-     * @param js      - {@link Js} util class.
-     * @param context - Interface to global information about an application environment.
-     * @return <tt>String[]</tt> An array of the sender public keys.
+     * @param context    Interface to global information about an application environment.
+     * @param js         {@link Js} util class.
+     * @param accountDao The {@link AccountDao} which contains information about account.
+     * @return <tt>String</tt> The sender public key.
      */
-    private ArrayList<String> generateOwnPublicKeys(Js js, Context context) {
-        ArrayList<String> publicKeys = new ArrayList<>();
+    private String getAccountPublicKey(Context context, Js js, AccountDao accountDao) {
+        PgpContact pgpContact = new ContactsDaoSource().getPgpContact(context, accountDao.getEmail());
 
-        SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
-        PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
-
-        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getArmored());
-            publicKeys.add(pgpKey.toPublic().armor());
+        if (pgpContact != null && !TextUtils.isEmpty(pgpContact.getPubkey())) {
+            return pgpContact.getPubkey();
         }
 
-        return publicKeys;
+        PgpKeyInfo[] pgpKeyInfoArray = new SecurityStorageConnector(context).getAllPgpPrivateKeys();
+        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getArmored());
+            if (pgpKey != null) {
+                PgpKey publicKey = pgpKey.toPublic();
+                if (publicKey != null) {
+                    PgpContact primaryUserId = pgpKey.getPrimaryUserId();
+                    if (primaryUserId != null) {
+                        if (!TextUtils.isEmpty(publicKey.armor())) {
+                            primaryUserId.setPubkey(publicKey.armor());
+                            new ContactsDaoSource().addRow(context, primaryUserId);
+                            return primaryUserId.getPubkey();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("The sender doesn't have a public key");
     }
 
     /**

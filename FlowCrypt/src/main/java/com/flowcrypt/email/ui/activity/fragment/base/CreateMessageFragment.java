@@ -439,12 +439,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         }
 
+        List<String> contacts = editTextRecipients.getChipValues();
         if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase(getContext(),
-                    editTextRecipients.getChipValues());
+            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase(getContext(), contacts);
         } else {
-            List<String> contacts = editTextRecipients.getChipValues();
-
             for (String s : contacts) {
                 pgpContacts.add(new PgpContact(s, null));
             }
@@ -499,7 +497,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     }
 
     private void initChipsView(View view) {
-        editTextRecipients = (NachoTextView) view.findViewById(R.id.editTextRecipient);
+        editTextRecipients = view.findViewById(R.id.editTextRecipient);
         editTextRecipients.setNachoValidator(new ChipifyingNachoValidator());
         editTextRecipients.setIllegalCharacters(',');
         editTextRecipients.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
@@ -585,12 +583,12 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      * @param view The root fragment view.
      */
     private void initViews(View view) {
-        layoutAttachments = (ViewGroup) view.findViewById(R.id.layoutAttachments);
+        layoutAttachments = view.findViewById(R.id.layoutAttachments);
         initChipsView(view);
 
-        editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
-        editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
-        textInputLayoutEmailMessage = (TextInputLayout) view.findViewById(R.id.textInputLayoutEmailMessage);
+        editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
+        editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
+        textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
@@ -754,10 +752,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
                 final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAttachments, false);
 
-                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
+                TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
-                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
+                TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
