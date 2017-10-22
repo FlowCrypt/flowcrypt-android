@@ -10,6 +10,7 @@ import android.accounts.Account;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 
@@ -47,7 +48,13 @@ public class AccountDao implements Parcelable {
     public AccountDao(String email, String accountType, String displayName, String givenName,
                       String familyName, String photoUrl, AuthCredentials authCredentials) {
         this.email = email;
-        this.accountType = accountType;
+        if (TextUtils.isEmpty(accountType)) {
+            if (!TextUtils.isEmpty(email)) {
+                this.accountType = email.substring(email.indexOf('@') + 1, email.length());
+            }
+        } else {
+            this.accountType = accountType;
+        }
         this.displayName = displayName;
         this.givenName = givenName;
         this.familyName = familyName;

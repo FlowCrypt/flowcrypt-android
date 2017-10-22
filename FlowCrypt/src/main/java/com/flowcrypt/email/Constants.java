@@ -44,4 +44,14 @@ public class Constants {
 
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";
+
+    /**
+     * The max total size off all attachment which can be send via the app.
+     */
+    public static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 3;
+
+    /**
+     * The max size off an attachment which can be decrypted via the app.
+     */
+    public static final int MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED = 1024 * 1024 * 3;
 }

@@ -31,6 +31,7 @@ import android.widget.FilterQueryProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -77,8 +78,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
-
-    private static final int MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 3;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -236,7 +235,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             } else {
                                 showInfoSnackbar(getView(),
                                         getString(R.string.template_warning_max_total_attachments_size,
-                                                FileUtils.byteCountToDisplaySize(MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
+                                                FileUtils.byteCountToDisplaySize(
+                                                        Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
                                         Snackbar.LENGTH_LONG);
                             }
                         } else {
@@ -439,12 +439,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         }
 
+        List<String> contacts = editTextRecipients.getChipValues();
         if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase(getContext(),
-                    editTextRecipients.getChipValues());
+            pgpContacts = contactsDaoSource.getPgpContactsListFromDatabase(getContext(), contacts);
         } else {
-            List<String> contacts = editTextRecipients.getChipValues();
-
             for (String s : contacts) {
                 pgpContacts.add(new PgpContact(s, null));
             }
@@ -499,7 +497,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     }
 
     private void initChipsView(View view) {
-        editTextRecipients = (NachoTextView) view.findViewById(R.id.editTextRecipient);
+        editTextRecipients = view.findViewById(R.id.editTextRecipient);
         editTextRecipients.setNachoValidator(new ChipifyingNachoValidator());
         editTextRecipients.setIllegalCharacters(',');
         editTextRecipients.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
@@ -585,12 +583,12 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      * @param view The root fragment view.
      */
     private void initViews(View view) {
-        layoutAttachments = (ViewGroup) view.findViewById(R.id.layoutAttachments);
+        layoutAttachments = view.findViewById(R.id.layoutAttachments);
         initChipsView(view);
 
-        editTextEmailSubject = (EditText) view.findViewById(R.id.editTextEmailSubject);
-        editTextEmailMessage = (EditText) view.findViewById(R.id.editTextEmailMessage);
-        textInputLayoutEmailMessage = (TextInputLayout) view.findViewById(R.id.textInputLayoutEmailMessage);
+        editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
+        editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
+        textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
         layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
@@ -679,7 +677,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         totalSizeOfAttachments += newAttachmentInfo.getEncodedSize();
 
-        return totalSizeOfAttachments < MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+        return totalSizeOfAttachments < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
     }
 
     /**
@@ -754,10 +752,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
                 final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAttachments, false);
 
-                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
+                TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
-                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
+                TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);

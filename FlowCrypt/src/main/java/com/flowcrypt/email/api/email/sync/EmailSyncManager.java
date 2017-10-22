@@ -22,7 +22,6 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -38,9 +37,9 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 /**
- * This class describes a logic of work with {@link GmailSSLStore} for the single account. Via
+ * This class describes a logic of work with {@link Store} for the single account. Via
  * this class we can retrieve a new information from the server and send a data to the server.
- * Here we open a new connection to the {@link GmailSSLStore} and keep it alive. This class does
+ * Here we open a new connection to the {@link Store} and keep it alive. This class does
  * all job to communicate with IMAP server.
  *
  * @author DenBond7
@@ -63,6 +62,7 @@ public class EmailSyncManager {
     private volatile Session session;
     private volatile Store store;
     private volatile AccountDao accountDao;
+    private boolean isNeedToResetConnection;
 
     public EmailSyncManager(AccountDao accountDao) {
         this.accountDao = accountDao;
@@ -79,7 +79,7 @@ public class EmailSyncManager {
     public void beginSync(boolean isNeedReset) {
         Log.d(TAG, "beginSync | isNeedReset = " + isNeedReset);
         if (isNeedReset) {
-            stopSync();
+            resetSync();
         }
 
         if (!isSyncThreadAlreadyWork()) {
@@ -101,11 +101,7 @@ public class EmailSyncManager {
      * Stop a synchronization.
      */
     public void stopSync() {
-        cancelAllSyncTask();
-
-        if (syncTaskRunnableFuture != null) {
-            syncTaskRunnableFuture.cancel(true);
-        }
+        resetSync();
 
         if (executorService != null) {
             executorService.shutdown();
@@ -298,6 +294,23 @@ public class EmailSyncManager {
         return accountDao;
     }
 
+    public void setAccount(AccountDao accountDao) {
+        this.accountDao = accountDao;
+    }
+
+    /**
+     * Reset a synchronization.
+     */
+    private void resetSync() {
+        cancelAllSyncTask();
+
+        if (syncTaskRunnableFuture != null) {
+            syncTaskRunnableFuture.cancel(true);
+        }
+
+        isNeedToResetConnection = true;
+    }
+
     /**
      * Remove the old tasks from the queue of synchronization.
      *
@@ -326,6 +339,14 @@ public class EmailSyncManager {
 
                     if (syncTask != null) {
                         try {
+                            if (isNeedToResetConnection) {
+                                isNeedToResetConnection = false;
+                                if (store != null) {
+                                    store.close();
+                                }
+                                session = null;
+                            }
+
                             if (!isConnected()) {
                                 Log.d(TAG, "Not connected. Start a reconnection ...");
                                 openConnectionToStore();
@@ -366,24 +387,13 @@ public class EmailSyncManager {
         }
 
         /**
-         * Check available connection to the gmail store.
+         * Check available connection to the store.
          * Must be called from non-main thread.
          *
          * @return trus if connected, false otherwise.
          */
         private boolean isConnected() {
             return store != null && store.isConnected();
-        }
-
-        /**
-         * Check available connection to the gmail store. If connection does not exists try to
-         * reconnect.
-         * Must be called from non-main thread.
-         */
-        private void checkConnection() throws GoogleAuthException, IOException, MessagingException {
-            if (!isConnected()) {
-                openConnectionToStore();
-            }
         }
     }
 }

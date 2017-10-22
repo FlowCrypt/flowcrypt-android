@@ -18,6 +18,7 @@ import android.text.format.DateUtils;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.ui.NotificationChannelManager;
 
 /**
  * This manager is responsible for displaying attachment notifications.
@@ -45,7 +46,8 @@ public class AttachmentNotificationManager {
      * @param attachmentInfo {@link AttachmentInfo} object which contains a detail information about an attachment.
      */
     public void attachmentAddedToLoadQueue(Context context, int startId, AttachmentInfo attachmentInfo) {
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
+                NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
                 .setWhen(startId)
                 .setShowWhen(false)
                 .setProgress(0, 0, true)
@@ -72,7 +74,8 @@ public class AttachmentNotificationManager {
      */
     public void updateLoadingProgress(Context context, int startId, AttachmentInfo attachmentInfo,
                                       int progress, long timeLeftInMillisecond) {
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
+                NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
                 .setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0)
                 .setWhen(startId)
                 .setShowWhen(false)
@@ -103,7 +106,8 @@ public class AttachmentNotificationManager {
 
         PendingIntent pendingIntentOpenFile = PendingIntent.getActivity(context, 0, intentOpenFile, 0);
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
+                NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
                 .setProgress(0, 0, false)
                 .setAutoCancel(true)
                 .setOngoing(false)
@@ -128,7 +132,8 @@ public class AttachmentNotificationManager {
      * @param e              The {@link Exception} which contains a detail information about happened error..
      */
     public void errorHappened(Context context, int startId, AttachmentInfo attachmentInfo, Exception e) {
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
+                NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
                 .setProgress(0, 0, false)
                 .setAutoCancel(true)
                 .setOngoing(false)

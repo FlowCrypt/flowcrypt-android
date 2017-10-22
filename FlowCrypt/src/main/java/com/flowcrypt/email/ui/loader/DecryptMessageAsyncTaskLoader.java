@@ -179,7 +179,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
         if (encryptedText != null) {
             PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(encryptedText);
             try {
-                return pgpDecrypted != null ? pgpDecrypted.getContent() : "";
+                return pgpDecrypted != null ? pgpDecrypted.getString() : "";
             } catch (Exception e) {
                 e.printStackTrace();
                 return encryptedText;

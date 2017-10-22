@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.ui.loader;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
@@ -14,11 +13,10 @@ import android.text.TextUtils;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
@@ -33,6 +31,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
 
@@ -49,11 +48,11 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     /**
      * An user account.
      */
-    private Account account;
+    private AccountDao accountDao;
 
-    public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, Account account) {
+    public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao accountDao) {
         super(context);
-        this.account = account;
+        this.accountDao = accountDao;
         onContentChanged();
     }
 
@@ -68,17 +67,17 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     public LoaderResult loadInBackground() {
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
         try {
-            String token = GoogleAuthUtil.getToken(getContext(), account,
-                    JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+            Session session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            Store store = OpenStoreHelper.openAndConnectToStore(getContext(), accountDao, session);
 
-            Store store = OpenStoreHelper.openAndConnectToGimapsStore(token, account.name);
             Folder[] folders = store.getDefaultFolder().list("*");
 
             for (Folder folder : folders) {
                 if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
                     folder.open(Folder.READ_ONLY);
 
-                    Message[] foundMessages = folder.search(SearchBackupsUtil.generateSearchTerms(account.name));
+                    Message[] foundMessages = folder.search(
+                            SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
 
                     for (Message message : foundMessages) {
                         String key = getKeyFromMessageIfItExists(message);

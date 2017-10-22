@@ -64,6 +64,9 @@ import javax.mail.internet.InternetHeaders;
  *         E-mail: DenBond7@gmail.com
  */
 public class EmailSyncService extends Service implements SyncListener {
+    public static final String ACTION_SWITCH_ACCOUNT = "ACTION_SWITCH_ACCOUNT";
+    public static final String ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC";
+
     public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
     public static final int REPLY_RESULT_CODE_ACTION_ERROR = 1;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
@@ -108,8 +111,21 @@ public class EmailSyncService extends Service implements SyncListener {
      */
     public static void startEmailSyncService(Context context) {
         Intent startEmailServiceIntent = new Intent(context, EmailSyncService.class);
+        startEmailServiceIntent.setAction(ACTION_BEGIN_SYNC);
         context.startService(startEmailServiceIntent);
     }
+
+    /**
+     * This method can bu used to start {@link EmailSyncService} with the action {@link #ACTION_SWITCH_ACCOUNT}.
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public static void switchAccount(Context context) {
+        Intent startEmailServiceIntent = new Intent(context, EmailSyncService.class);
+        startEmailServiceIntent.setAction(ACTION_SWITCH_ACCOUNT);
+        context.startService(startEmailServiceIntent);
+    }
+
 
     @Override
     public void onCreate() {
@@ -125,7 +141,20 @@ public class EmailSyncService extends Service implements SyncListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
         isServiceStarted = true;
-        emailSyncManager.beginSync(false);
+
+        if (intent != null) {
+            switch (intent.getAction()) {
+                case ACTION_SWITCH_ACCOUNT:
+                    emailSyncManager.setAccount(new AccountDaoSource().getActiveAccountInformation(this));
+                    emailSyncManager.beginSync(true);
+                    break;
+
+                default:
+                    emailSyncManager.beginSync(false);
+                    break;
+            }
+        }
+
         return super.onStartCommand(intent, flags, startId);
     }
 

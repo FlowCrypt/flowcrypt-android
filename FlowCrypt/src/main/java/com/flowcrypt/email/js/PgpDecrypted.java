@@ -47,6 +47,10 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         return getCount("key_mismatch");
     }
 
+    public Integer countAttempts() {
+        return getCount("attempts");
+    }
+
     public String[] getEncryptedForLongids() {
         return getStrings("encrypted_for");
     }
@@ -63,12 +67,20 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         return getStrings("errors");
     }
 
-    public String getContent() {
+    public String getString() {
         V8Object content = this.getAttributeAsObject("content");
         if(content == null) {
             return null;
         }
-        return this.getAttributeAsString(content, "data"); // todo - may need to convert from uint8
+        return getAttributeAsString(content, "data");
+    }
+
+    public byte[] getBytes() {
+        V8Object content = this.getAttributeAsObject("content");
+        if(content == null) {
+            return null;
+        }
+        return getAttributeAsBytes(content, "data");
     }
 
     private Integer getCount(String name) {
@@ -76,7 +88,7 @@ public class PgpDecrypted extends MeaningfulV8ObjectContainer {
         if(counts == null) {
             return null;
         }
-        return this.getAttributeAsInteger(counts, name);
+        return getAttributeAsInteger(counts, name);
     }
 
     private String[] getStrings(String name) {

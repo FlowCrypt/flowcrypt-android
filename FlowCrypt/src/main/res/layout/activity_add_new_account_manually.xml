@@ -10,7 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.flowcrypt.email.ui.activity.AddNewAccountActivity">
+    tools:context="com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity">
 
     <include layout="@layout/toolbar" />
 
@@ -21,13 +21,13 @@
 
         <include
             android:id="@+id/layoutContent"
-            layout="@layout/content_add_new_account"
+            layout="@layout/content_add_new_account_manually"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <include
             android:id="@+id/progressView"
-            layout="@layout/splash_after_auth"
+            layout="@layout/check_account_credentionals"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

@@ -14,8 +14,10 @@ import android.text.TextUtils;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -93,6 +95,12 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
                             Uri uri = saveKeyToDatabase(keyStoreCryptoManager, keyDetails,
                                     pgpKey, passphrase);
+                            PgpContact pgpContact = pgpKey.getPrimaryUserId();
+                            PgpKey publicKey = pgpKey.toPublic();
+                            if (pgpContact != null) {
+                                pgpContact.setPubkey(publicKey.armor());
+                                new ContactsDaoSource().addRow(getContext(), pgpContact);
+                            }
                             isOneOrMoreKeySaved = uri != null;
                         } else if (isThrowErrorIfDuplicateFound) {
                             return new LoaderResult(null, new Exception(getContext().getString(R
@@ -126,8 +134,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
      * for generate an algorithm parameter spec String.
      *
      * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-     *                               information about a key;
-     * @param keyDetails     The private key details
+     *                              information about a key;
+     * @param keyDetails            The private key details
      * @param pgpKey                A normalized key;
      * @param passphrase            A passphrase which user entered;
      */

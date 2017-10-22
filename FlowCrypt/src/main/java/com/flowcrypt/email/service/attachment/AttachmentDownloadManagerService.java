@@ -26,6 +26,7 @@ import android.util.SparseArray;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -34,13 +35,18 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -458,6 +464,8 @@ public class AttachmentDownloadManagerService extends Service {
             AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, attachmentInfo.getEmail());
 
             try {
+                checkMaxDecryptedFileSize();
+
                 Session session = OpenStoreHelper.getAttachmentSession(accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
                 IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
@@ -470,10 +478,9 @@ public class AttachmentDownloadManagerService extends Service {
                         attachmentInfo.getId());
 
                 if (attachment != null) {
-                    InputStream input = attachment.getInputStream();
-                    OutputStream output = FileUtils.openOutputStream(attachmentFile);
+                    InputStream inputStream = attachment.getInputStream();
 
-                    try {
+                    try (OutputStream outputStream = FileUtils.openOutputStream(attachmentFile)) {
                         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
                         double count = 0;
                         double size = attachmentInfo.getEncodedSize();
@@ -483,9 +490,9 @@ public class AttachmentDownloadManagerService extends Service {
                         long startTime, elapsedTime;
                         long lastUpdateTime = startTime = System.currentTimeMillis();
                         updateProgress(currentPercentage, 0);
-                        while (IOUtils.EOF != (numberOfReadBytes = input.read(buffer))) {
+                        while (IOUtils.EOF != (numberOfReadBytes = inputStream.read(buffer))) {
                             if (!Thread.currentThread().isInterrupted()) {
-                                output.write(buffer, 0, numberOfReadBytes);
+                                outputStream.write(buffer, 0, numberOfReadBytes);
                                 count += numberOfReadBytes;
                                 currentPercentage = (int) ((count / size) * 100f);
                                 if (currentPercentage - lastPercentage >= 1
@@ -505,14 +512,14 @@ public class AttachmentDownloadManagerService extends Service {
                         if (!Thread.currentThread().isInterrupted()) {
                             updateProgress(100, 0);
                         }
-
-                        output.close();
                     } finally {
-                        IOUtils.closeQuietly(output);
                         if (Thread.currentThread().isInterrupted()) {
                             removeNotCompleteDownloadFile(attachmentFile);
                         }
                     }
+
+                    attachmentFile = decryptFileIfNeed(context, attachmentFile);
+                    attachmentInfo.setName(attachmentFile.getName());
 
                     if (!Thread.currentThread().isInterrupted()) {
                         if (onDownloadAttachmentListener != null) {
@@ -539,15 +546,80 @@ public class AttachmentDownloadManagerService extends Service {
         }
 
         /**
+         * Check is decrypted file has size not more than
+         * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED}. If the file greater then
+         * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED} we throw an exception. This is only for files
+         * with the "pgp" extension.
+         */
+        private void checkMaxDecryptedFileSize() {
+            if ("pgp".equalsIgnoreCase(FilenameUtils.getExtension(attachmentInfo.getName()))) {
+                if (attachmentInfo.getEncodedSize() > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
+                    throw new IllegalArgumentException(context.getString(R.string
+                                    .template_warning_max_attachments_size_for_decryption,
+                            FileUtils.byteCountToDisplaySize(Constants
+                                    .MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED)));
+                }
+            }
+        }
+
+        /**
+         * Do decryption of the downloaded file if it need.
+         *
+         * @param context Interface to global information about an application environment;
+         * @param file    The downloaded file which can be encrypted.
+         * @return The decrypted or the original file.
+         */
+        private File decryptFileIfNeed(Context context, File file) throws IOException {
+            if (file == null) {
+                return null;
+            }
+
+            if (!"pgp".equalsIgnoreCase(FilenameUtils.getExtension(file.getName()))) {
+                return file;
+            }
+
+            try (InputStream inputStream = new FileInputStream(file)) {
+                PgpDecrypted pgpDecrypted = new Js(context, new SecurityStorageConnector(context))
+                        .crypto_message_decrypt(IOUtils.toByteArray(inputStream));
+                byte[] decryptedBytes = pgpDecrypted.getBytes();
+
+                File decryptedFile = new File(file.getParent(),
+                        file.getName().substring(0, file.getName().lastIndexOf(".")));
+
+                boolean isInnerExceptionHappened = false;
+
+                try (OutputStream outputStream = FileUtils.openOutputStream(decryptedFile)) {
+                    IOUtils.write(decryptedBytes, outputStream);
+                    return decryptedFile;
+                } catch (IOException e) {
+                    if (!decryptedFile.delete()) {
+                        Log.d(TAG, "Cannot delete file: " + file);
+                    }
+
+                    isInnerExceptionHappened = true;
+                    throw e;
+                } finally {
+                    if (!isInnerExceptionHappened) {
+                        if (!file.delete()) {
+                            Log.d(TAG, "Cannot delete file: " + file);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
          * Remove the file which not downloaded fully.
          *
          * @param attachmentFile The file which will be removed.
          */
         private void removeNotCompleteDownloadFile(File attachmentFile) {
-            if (!attachmentFile.delete()) {
-                Log.d(TAG, "Cannot delete file: " + attachmentFile);
-            } else {
-                Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+            if (attachmentFile != null && attachmentFile.exists()) {
+                if (!attachmentFile.delete()) {
+                    Log.d(TAG, "Cannot delete file: " + attachmentFile);
+                } else {
+                    Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+                }
             }
         }
 

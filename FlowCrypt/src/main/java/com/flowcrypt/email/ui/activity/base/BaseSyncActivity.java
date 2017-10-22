@@ -84,7 +84,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         // Unbind from the service
         unbindFromService();
@@ -108,7 +108,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     }
 
     public String getReplyMessengerName() {
-        return getClass().getSimpleName();
+        return getClass().getSimpleName() + "_" + hashCode();
     }
 
     /**

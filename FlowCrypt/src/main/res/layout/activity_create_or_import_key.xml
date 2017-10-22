@@ -65,7 +65,7 @@
             style="@style/AppWidget.Button"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_between_buttons"
-            android:text="@string/skip_setup"
+            android:text="@string/use_existing_keys"
             android:theme="@style/AppWidget.Button.White"
             android:visibility="gone"
             app:layout_constraintHorizontal_bias="0.0"

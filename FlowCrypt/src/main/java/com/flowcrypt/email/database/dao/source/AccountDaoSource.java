@@ -26,6 +26,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -332,6 +334,66 @@ public class AccountDaoSource extends BaseDaoSource {
                 return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
                         new String[]{email, type});
             } else return -1;
+        } else return -1;
+    }
+
+    /**
+     * Get the list of all added account without the active account.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   An email of the active account.
+     * @return The list of all added account without the active account
+     */
+    public List<AccountDao> getAccountsWithoutActive(Context context, String email) {
+        if (email != null) {
+            email = email.toLowerCase();
+        }
+
+        Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
+                AccountDaoSource.COL_EMAIL + " != ?", new String[]{email}, null);
+
+        List<AccountDao> accountDaoList = new ArrayList<>();
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                accountDaoList.add(getCurrentAccountDao(context, cursor));
+            }
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return accountDaoList;
+    }
+
+    /**
+     * Mark some account as active.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The account which will be set as active.
+     * @return The count of updated rows.
+     */
+    public int setActiveAccount(Context context, String email) {
+        if (email == null) {
+            return -1;
+        } else {
+            email = email.toLowerCase();
+        }
+
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver != null) {
+            ContentValues contentValuesDeactivateAllAccount = new ContentValues();
+            contentValuesDeactivateAllAccount.put(COL_IS_ACTIVE, 0);
+            int updateRowCount = contentResolver.update(getBaseContentUri(), contentValuesDeactivateAllAccount,
+                    null, null);
+
+            ContentValues contentValuesActivateAccount = new ContentValues();
+            contentValuesActivateAccount.put(COL_IS_ACTIVE, 1);
+            updateRowCount += contentResolver.update(getBaseContentUri(), contentValuesActivateAccount,
+                    COL_EMAIL + " = ? ", new String[]{email});
+
+            return updateRowCount;
+
         } else return -1;
     }
 

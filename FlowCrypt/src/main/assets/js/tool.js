@@ -2032,16 +2032,22 @@
   }
 
   function crypto_message_decrypt(db, account_email, encrypted_data, one_time_message_password, callback, force_output_format) {
-    var armored_encrypted = tool.value(crypto_armor_headers('message').begin).in(encrypted_data);
-    var armored_signed_only = tool.value(crypto_armor_headers('signed_message').begin).in(encrypted_data);
+    var armored_encrypted = false;
+    var armored_signed_only = false;
     var other_errors = [];
     try {
-      if(armored_encrypted) {
-        var message = openpgp.message.readArmored(encrypted_data);
-      } else if(armored_signed_only) {
-        var message = openpgp.cleartext.readArmored(encrypted_data);
+      if (encrypted_data instanceof Uint8Array) {
+        var message = openpgp.message.read(encrypted_data);
       } else {
-        var message = openpgp.message.read(tool.str.to_uint8(encrypted_data));
+        armored_encrypted = tool.value(crypto_armor_headers('message').begin).in(encrypted_data);
+        armored_signed_only = !armored_encrypted && tool.value(crypto_armor_headers('signed_message').begin).in(encrypted_data);
+        if(armored_encrypted) {
+          var message = openpgp.message.readArmored(encrypted_data);
+        } else if(armored_signed_only) {
+          var message = openpgp.cleartext.readArmored(encrypted_data);
+        } else {
+          var message = openpgp.message.read(tool.str.to_uint8(encrypted_data));
+        }
       }
     } catch(format_error) {
       callback({success: false, counts: zeroed_decrypt_error_counts(), format_error: format_error.message, errors: other_errors, encrypted: null, signature: null});
@@ -3899,7 +3905,7 @@
 (function ( /* EXTENSIONS AND CONFIG */ ) {
 
   if(typeof window.openpgp !== 'undefined' && typeof window.openpgp.config !== 'undefined' && typeof window.openpgp.config.versionstring !== 'undefined' && typeof window.openpgp.config.commentstring !== 'undefined') {
-    window.openpgp.config.versionstring = 'CryptUp ' + (catcher.version() || '') + ' Gmail Encryption https://cryptup.org';
+    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Email Encryption: flowcrypt.com';
     window.openpgp.config.commentstring = 'Seamlessly send, receive and search encrypted email';
   }
 

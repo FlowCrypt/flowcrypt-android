@@ -41,9 +41,9 @@
     <dimen name="margin_top_bottom_message">12dp</dimen>
     <dimen name="margin_top_screen_heading">80dp</dimen>
     <dimen name="text_size_screen_heading">32sp</dimen>
-    <dimen name="margin_top_found_backup">60dp</dimen>
+    <dimen name="margin_top_found_backup">40dp</dimen>
     <dimen name="padding_guideline_setup_screen">32dp</dimen>
-    <dimen name="margin_top_key_password">80dp</dimen>
+    <dimen name="margin_top_key_password">60dp</dimen>
     <dimen name="margin_top_load_account">32dp</dimen>
     <dimen name="margin_top_loading_account">32dp</dimen>
     <dimen name="margin_top_button_select_another_account">24dp</dimen>
