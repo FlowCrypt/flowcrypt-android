@@ -68,7 +68,10 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final String ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC";
 
     public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
-    public static final int REPLY_RESULT_CODE_ACTION_ERROR = 1;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED = 4;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
 
     public static final int REPLY_OK = 0;
@@ -202,7 +205,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (isSent) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -219,12 +222,12 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onEncryptedMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent) {
+    public void onMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent) {
         try {
             if (isSent) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -238,7 +241,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (messages != null && messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -260,7 +263,7 @@ public class EmailSyncService extends Service implements SyncListener {
                     rawMessageWithOutAttachments);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND);
             } else {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
@@ -440,9 +443,9 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param resultCode  The result code of the some action. Can take the following values:
      *                    <ul>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
      *                    </ul>
+     *                    and different errors.
      * @throws RemoteException
      */
     private void sendReply(String key, int requestCode, int resultCode) throws RemoteException {
@@ -457,9 +460,9 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param resultCode  The result code of the some action. Can take the following values:
      *                    <ul>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
      *                    </ul>
+     *                    and different errors.
      * @param obj         The object which will be send to the request {@link Messenger}.
      * @throws RemoteException
      */

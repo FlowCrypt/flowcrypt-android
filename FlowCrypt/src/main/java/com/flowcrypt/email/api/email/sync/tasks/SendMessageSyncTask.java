@@ -119,7 +119,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             FileUtils.cleanDirectory(pgpCacheDirectory);
 
-            syncListener.onEncryptedMessageSent(accountDao, ownerKey, requestCode, true);
+            syncListener.onMessageSent(accountDao, ownerKey, requestCode, true);
         }
     }
 

@@ -136,8 +136,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             showMessageBody(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         }
-                    } else {
-                        throw new IllegalArgumentException("The message not exists in the database");
                     }
                 }
                 break;
@@ -174,8 +172,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                                 null, this);
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
-                        // TODO-denbond7: 27.06.2017 need to handle error when load message details.
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND:
+                        new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                                folder.getFolderAlias(), generalMessageDetails.getUid());
+                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+                        Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
+                                Toast.LENGTH_LONG).show();
+                        finish();
                         break;
                 }
                 break;
@@ -210,7 +213,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED:
                         notifyUserAboutError(requestCode);
                         break;
                 }

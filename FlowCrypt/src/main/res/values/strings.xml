@@ -211,4 +211,5 @@
         (sender and the receiver). It seems the sender encrypted this message manually for themselves,
         and forgot to add you as a receiver. </string>
     <string name="diagnostic_info">Diagnostic info</string>
+    <string name="email_does_not_available_in_this_folder">This email doesn\'t available in this folder</string>
 </resources>

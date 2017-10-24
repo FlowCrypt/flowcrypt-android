@@ -97,7 +97,9 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
             });
 
             Message message = imapFolder.getMessageByUID(uid);
-            message.setFlag(Flags.Flag.SEEN, true);
+            if (message != null) {
+                message.setFlag(Flags.Flag.SEEN, true);
+            }
 
             syncListener.onMessageDetailsReceived(accountDao, imapFolder, uid, rawMessage, ownerKey, requestCode);
         }

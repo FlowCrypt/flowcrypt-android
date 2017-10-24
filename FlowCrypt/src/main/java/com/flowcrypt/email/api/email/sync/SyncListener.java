@@ -57,7 +57,7 @@ public interface SyncListener {
     void onPrivateKeyFound(AccountDao accountDao, List<String> keys, String ownerKey, int requestCode);
 
     /**
-     * This method called when an encrypted message was sent.
+     * This method called when a message was sent.
      *
      * @param accountDao  The {@link AccountDao} object which contains information about an email account.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
@@ -65,7 +65,7 @@ public interface SyncListener {
      *                    {@link android.os.Messenger}.
      * @param isSent      true if the message was sent, false otherwise.
      */
-    void onEncryptedMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent);
+    void onMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent);
 
     /**
      * This method called when a new messages received from the some folder.
