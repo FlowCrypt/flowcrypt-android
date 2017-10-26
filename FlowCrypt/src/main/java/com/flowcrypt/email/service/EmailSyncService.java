@@ -34,6 +34,8 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.sun.mail.imap.IMAPFolder;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -340,6 +342,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
+                ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
