@@ -173,12 +173,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         break;
 
                     case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND:
-                        new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
-                                folder.getFolderAlias(), generalMessageDetails.getUid());
-                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-                        Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
-                                Toast.LENGTH_LONG).show();
-                        finish();
+                        messageNotAvailableInFolder();
                         break;
                 }
                 break;
@@ -213,8 +208,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED:
-                        notifyUserAboutError(requestCode);
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS:
+                        messageNotAvailableInFolder();
                         break;
                 }
                 break;
@@ -264,6 +259,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_move_message_to_inbox, folder,
                 foldersManager.getFolderInbox(), generalMessageDetails.getUid());
+    }
+
+    private void messageNotAvailableInFolder() {
+        new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                folder.getFolderAlias(), generalMessageDetails.getUid());
+        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+        Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
+                Toast.LENGTH_LONG).show();
+        finish();
     }
 
     private void notifyUserAboutError(int requestCode) {

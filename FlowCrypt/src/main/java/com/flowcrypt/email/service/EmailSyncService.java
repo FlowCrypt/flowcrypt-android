@@ -71,7 +71,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1;
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2;
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3;
-    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED = 4;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS = 4;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
 
     public static final int REPLY_OK = 0;
@@ -237,11 +237,17 @@ public class EmailSyncService extends Service implements SyncListener {
     @Override
     public void onMessagesMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
                                 javax.mail.Message[] messages, String ownerKey, int requestCode) {
+        //Todo-denbond7 Not implemented yet.
+    }
+
+    @Override
+    public void onMessageMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+                               javax.mail.Message message, String ownerKey, int requestCode) {
         try {
-            if (messages != null && messages.length > 0) {
+            if (message != null) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_MOVED);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS);
             }
         } catch (RemoteException e) {
             e.printStackTrace();

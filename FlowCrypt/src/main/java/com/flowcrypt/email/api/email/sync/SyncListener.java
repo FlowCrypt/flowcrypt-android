@@ -84,6 +84,20 @@ public interface SyncListener {
     /**
      * This method called when a new messages received from the some folder.
      *
+     * @param accountDao            The {@link AccountDao} object which contains information about an email account.
+     * @param sourceImapFolder      The source folder where the messages exist.
+     * @param destinationImapFolder The destination folder where the messages were moved.
+     * @param message               The moved message.
+     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode           The unique request code for the reply to
+     *                              {@link android.os.Messenger}.
+     */
+    void onMessageMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+                        Message message, String ownerKey, int requestCode);
+
+    /**
+     * This method called when a new messages received from the some folder.
+     *
      * @param accountDao                   The {@link AccountDao} object which contains information about an email
      *                                     account.
      * @param imapFolder                   The folder where the new messages exist.
