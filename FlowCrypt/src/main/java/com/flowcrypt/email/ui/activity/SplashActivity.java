@@ -226,6 +226,7 @@ public class SplashActivity extends BaseSignInActivity implements
                                 REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
                     }
                 } else if (loaderResult.getException() != null) {
+                    UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
                     UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException().getMessage());
                 }
                 break;
