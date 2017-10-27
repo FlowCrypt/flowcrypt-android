@@ -26,8 +26,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +40,10 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
+import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
@@ -48,6 +55,7 @@ import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
+import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
@@ -74,7 +82,8 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener {
+public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener,
+        AdapterView.OnItemSelectedListener, View.OnClickListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
@@ -90,11 +99,15 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private IncomingMessageInfo incomingMessageInfo;
 
     private ViewGroup layoutAttachments;
+    private EditText editTextFrom;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private TextInputLayout textInputLayoutEmailMessage;
     private View layoutContent;
     private View progressBarCheckContactsDetails;
+    private Spinner spinnerFrom;
+    private AccountDao activeAccountDao;
+    private ArrayAdapter<String> fromAddressesArrayAdapter;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdatedInfoAboutContactCompleted = true;
@@ -130,6 +143,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        activeAccountDao = new AccountDaoSource().getAccountInformation(getContext(),
+                getActivity().getIntent().getStringExtra(CreateMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL));
+        fromAddressesArrayAdapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
+        fromAddressesArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        fromAddressesArrayAdapter.add(activeAccountDao.getEmail());
 
         try {
             js = new Js(getContext(), null);
@@ -167,6 +187,11 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(activeAccountDao.getAccountType())) {
+            getLoaderManager().restartLoader(R.id.loader_id_load_email_aliases, null, this);
+        }
+
         if (incomingMessageInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext())
                 && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
@@ -311,11 +336,15 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
                         editTextRecipients.getChipAndTokenValues());
 
+            case R.id.loader_id_load_email_aliases:
+                return new LoadGmailAliasesLoader(getContext(), activeAccountDao);
+
             default:
-                return null;
+                return super.onCreateLoader(id, args);
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
@@ -339,6 +368,27 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 if (!pgpContacts.isEmpty()) {
                     updateChips();
                 }
+                break;
+
+            case R.id.loader_id_load_email_aliases:
+                List<AccountAliasesDao> accountAliasesDaoList = (List<AccountAliasesDao>) result;
+                List<String> aliases = new ArrayList<>();
+                aliases.add(activeAccountDao.getEmail());
+
+                for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
+                    aliases.add(accountAliasesDao.getSendAsEmail());
+                }
+
+                fromAddressesArrayAdapter.clear();
+                fromAddressesArrayAdapter.addAll(aliases);
+
+                if (fromAddressesArrayAdapter.getCount() > 1) {
+                    editTextFrom.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.mipmap.ic_arrow_drop_down_grey, 0);
+                } else {
+                    editTextFrom.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+                }
+
+                new AccountAliasesDaoSource().updateAliases(getContext(), activeAccountDao, accountAliasesDaoList);
                 break;
 
             default:
@@ -381,6 +431,31 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                     } else {
                         progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
                     }
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (parent.getId()) {
+            case R.id.spinnerFrom:
+                editTextFrom.setText((CharSequence) parent.getAdapter().getItem(position));
+                break;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.editTextFrom:
+                if (fromAddressesArrayAdapter.getCount() > 1) {
+                    spinnerFrom.performClick();
                 }
                 break;
         }
@@ -449,11 +524,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
-
-        if (getActivity() instanceof CreateMessageActivity) {
-            CreateMessageActivity createMessageActivity = (CreateMessageActivity) getActivity();
-            outgoingMessageInfo.setFromPgpContact(new PgpContact(createMessageActivity.getSenderEmail(), null));
-        }
+        outgoingMessageInfo.setFromPgpContact(new PgpContact(activeAccountDao.getEmail(), null));
 
         return outgoingMessageInfo;
     }
@@ -586,6 +657,12 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         layoutAttachments = view.findViewById(R.id.layoutAttachments);
         initChipsView(view);
 
+        spinnerFrom = view.findViewById(R.id.spinnerFrom);
+        spinnerFrom.setOnItemSelectedListener(this);
+        spinnerFrom.setAdapter(fromAddressesArrayAdapter);
+
+        editTextFrom = view.findViewById(R.id.editTextFrom);
+        editTextFrom.setOnClickListener(this);
         editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
         editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
         textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);

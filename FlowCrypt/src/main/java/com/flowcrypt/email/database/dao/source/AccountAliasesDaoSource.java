@@ -142,6 +142,52 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Update information about aliases of some {@link AccountDao}.
+     *
+     * @param context               Interface to global information about an application environment.
+     * @param accountDao            The object which contains information about an email account.
+     * @param accountAliasesDaoList The list of an account aliases.
+     * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
+     * updated or -1 otherwise.
+     */
+    public int updateAliases(Context context, AccountDao accountDao, List<AccountAliasesDao> accountAliasesDaoList) {
+        deleteAccountAliases(context, accountDao);
+        return addRows(context, accountAliasesDaoList);
+    }
+
+    /**
+     * Delete information about aliases of some {@link AccountDao}.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param accountDao The object which contains information about an email account.
+     * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
+     * deleted or -1 otherwise.
+     */
+    public int deleteAccountAliases(Context context, AccountDao accountDao) {
+        if (accountDao != null) {
+            String email = accountDao.getEmail();
+            if (email == null) {
+                return -1;
+            } else {
+                email = email.toLowerCase();
+            }
+
+            String type = accountDao.getAccountType();
+            if (type == null) {
+                return -1;
+            } else {
+                type = type.toLowerCase();
+            }
+
+            ContentResolver contentResolver = context.getContentResolver();
+            if (contentResolver != null) {
+                return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
+                        new String[]{email, type});
+            } else return -1;
+        } else return -1;
+    }
+
+    /**
      * Generate a {@link ContentValues} using {@link AccountAliasesDao}.
      *
      * @param accountAliasesDao The {@link AccountAliasesDao} object;

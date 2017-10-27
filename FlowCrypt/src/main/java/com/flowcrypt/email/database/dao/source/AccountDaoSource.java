@@ -309,8 +309,8 @@ public class AccountDaoSource extends BaseDaoSource {
      *
      * @param context    Interface to global information about an application environment.
      * @param accountDao The object which contains information about an email account.
-     * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
-     * updated or -1 otherwise.
+     * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
+     * deleted or -1 otherwise.
      */
     public int deleteAccountInformation(Context context, AccountDao accountDao) {
         if (accountDao != null) {
