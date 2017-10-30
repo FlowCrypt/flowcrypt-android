@@ -482,7 +482,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public void notifyUserAboutErrorWhenSendMessage() {
         isMessageSendingNow = false;
-        getActivity().invalidateOptionsMenu();
+        if (getActivity() != null) {
+            getActivity().invalidateOptionsMenu();
+        }
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
         showInfoSnackbar(getView(), getString(R.string.error_occurred_while_sending_message));
     }
@@ -524,7 +526,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
 
         outgoingMessageInfo.setToPgpContacts(pgpContacts.toArray(new PgpContact[0]));
-        outgoingMessageInfo.setFromPgpContact(new PgpContact(activeAccountDao.getEmail(), null));
+        outgoingMessageInfo.setFromPgpContact(new PgpContact(editTextFrom.getText().toString(), null));
 
         return outgoingMessageInfo;
     }
@@ -691,12 +693,12 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     }
 
     private String prepareRecipients(List<String> recipients) {
-        String result = "";
+        StringBuilder stringBuilder = new StringBuilder();
         for (String s : recipients) {
-            result += s + " ";
+            stringBuilder.append(s).append(" ");
         }
 
-        return result;
+        return stringBuilder.toString();
     }
 
     /**

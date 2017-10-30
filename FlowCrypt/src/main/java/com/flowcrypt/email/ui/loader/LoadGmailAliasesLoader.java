@@ -9,17 +9,10 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
@@ -59,17 +52,7 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
     @Override
     public LoaderResult loadInBackground() {
         try {
-            GoogleAccountCredential googleAccountCredential = new GoogleAccountCredential(getContext(),
-                    JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
-            googleAccountCredential.setSelectedAccount(accountDao.getAccount());
-
-            HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            Gmail mService = new Gmail.Builder(
-                    httpTransport, jsonFactory, googleAccountCredential)
-                    .setApplicationName(getContext().getString(R.string.app_name))
-                    .build();
-
+            Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
             ListSendAsResponse aliases = mService.users().settings().sendAs().list("me").execute();
             List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
             for (SendAs alias : aliases.getSendAs()) {
