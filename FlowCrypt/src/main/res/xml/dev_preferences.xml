@@ -15,6 +15,10 @@
         <CheckBoxPreference
             android:key="@string/preferences_key_is_detect_memory_leak_enable"
             android:title="@string/preferences_title_enable_detect_memory_leak" />
+        <CheckBoxPreference
+            android:checked="true"
+            android:key="@string/preferences_key_is_acra_enable"
+            android:title="@string/preferences_title_enable_acra" />
         <Preference android:title="@string/crash_the_app">
             <intent
                 android:targetClass="com.flowcrypt.email"

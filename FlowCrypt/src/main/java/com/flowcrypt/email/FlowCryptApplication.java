@@ -61,7 +61,8 @@ import org.acra.sender.HttpSender;
                 ReportField.USER_EMAIL
         },
         httpMethod = HttpSender.Method.POST,
-        reportType = HttpSender.Type.JSON)
+        reportType = HttpSender.Type.JSON,
+        buildConfigClass = BuildConfig.class)
 public class FlowCryptApplication extends Application {
 
     @Override
@@ -77,7 +78,10 @@ public class FlowCryptApplication extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        ACRA.init(this);
+        if (!BuildConfig.DEBUG || SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+                (this), Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
+            ACRA.init(this);
+        }
     }
 
     /**

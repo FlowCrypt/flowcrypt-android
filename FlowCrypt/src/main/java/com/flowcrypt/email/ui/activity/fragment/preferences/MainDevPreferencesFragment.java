@@ -90,6 +90,7 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
                 break;
 
             case Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE:
+            case Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE:
                 showApplicationDetailsSettingsActivity();
                 break;
         }
