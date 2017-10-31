@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -168,7 +169,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_create_message, container, false);
     }
 
@@ -333,8 +334,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 pgpContacts.clear();
                 progressBarCheckContactsDetails.setVisibility(View.VISIBLE);
                 isUpdatedInfoAboutContactCompleted = false;
-                return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
-                        editTextRecipients.getChipAndTokenValues());
+                List<String> emails = selectOnlyValidEmails(editTextRecipients.getChipAndTokenValues());
+                return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), emails);
 
             case R.id.loader_id_load_email_aliases:
                 return new LoadGmailAliasesLoader(getContext(), activeAccountDao);
@@ -496,6 +497,22 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
+    }
+
+    /**
+     * Remove not valid emails from the recipients list.
+     *
+     * @param emails The input list of recipients.
+     * @return The list of valid emails.
+     */
+    private List<String> selectOnlyValidEmails(List<String> emails) {
+        List<String> validEmails = new ArrayList<>();
+        for (String email : emails) {
+            if (js.str_is_email_valid(email)) {
+                validEmails.add(email);
+            }
+        }
+        return validEmails;
     }
 
     /**
