@@ -114,6 +114,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                     if (accountDao.getEmail().equalsIgnoreCase(outgoingMessageInfo.getFromPgpContact().getEmail())) {
                         Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
                         transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                        isMessageSent = true;
                     } else {
                         Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -132,6 +133,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                 default:
                     Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
                     transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                    isMessageSent = true;
 
                     saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
             }
