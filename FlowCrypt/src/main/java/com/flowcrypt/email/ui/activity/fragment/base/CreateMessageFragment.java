@@ -65,6 +65,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
+import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
 import com.hootsuite.nachos.tokenizer.ChipTokenizer;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
@@ -72,6 +73,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -422,15 +424,18 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void onFocusChange(View v, boolean hasFocus) {
         switch (v.getId()) {
             case R.id.editTextRecipient:
-                progressBarCheckContactsDetails.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
-                if (hasFocus) {
-                    pgpContacts.clear();
-                    getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
-                } else {
-                    if (isUpdateInfoAboutContactsEnable) {
-                        getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
+                if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType()
+                        == MessageEncryptionType.ENCRYPTED) {
+                    progressBarCheckContactsDetails.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
+                    if (hasFocus) {
+                        pgpContacts.clear();
+                        getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                     } else {
-                        progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
+                        if (isUpdateInfoAboutContactsEnable) {
+                            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
+                        } else {
+                            progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
+                        }
                     }
                 }
                 break;
@@ -468,10 +473,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             switch (messageEncryptionType) {
                 case ENCRYPTED:
                     emailMassageHint = getString(R.string.prompt_compose_security_email);
+                    editTextRecipients.getOnFocusChangeListener().onFocusChange(editTextRecipients, false);
                     break;
 
                 case STANDARD:
                     emailMassageHint = getString(R.string.prompt_compose_standard_email);
+                    pgpContacts.clear();
+                    getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
                     break;
             }
         }
@@ -590,6 +598,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         editTextRecipients = view.findViewById(R.id.editTextRecipient);
         editTextRecipients.setNachoValidator(new ChipifyingNachoValidator());
         editTextRecipients.setIllegalCharacters(',');
+        editTextRecipients.addChipTerminator(' ', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_TO_TERMINATOR);
         editTextRecipients.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
                 new CustomChipSpanChipCreator(getContext()), PGPContactChipSpan.class,
                 SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
@@ -660,9 +669,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         }
 
-        for (PgpContact pgpContact : pgpContacts) {
+        for (Iterator<PgpContact> iterator = pgpContacts.iterator(); iterator.hasNext(); ) {
+            PgpContact pgpContact = iterator.next();
             if (deleteCandidatePgpContact.getEmail().equalsIgnoreCase(pgpContact.getEmail())) {
-                pgpContacts.remove(pgpContact);
+                iterator.remove();
             }
         }
     }

@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 /**
- * This class describes a response from the https://attester.cryptup.io/replace/request API.
+ * This class describes a response from the https://attester.flowcrypt.com/replace/request API.
  * <p>
  * <code>POST /replace/request
  * response(200): {

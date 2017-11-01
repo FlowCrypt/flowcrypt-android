@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 
 /**
- * This class describes the request to the API "https://attester.cryptup.io/lookup/email"
+ * This class describes the request to the API "https://attester.flowcrypt.com/lookup/email"
  *
  * @author DenBond7
  *         Date: 24.04.2017

@@ -12,7 +12,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * The request model for the https://attester.cryptup.io/replace/confirm API.
+ * The request model for the https://attester.flowcrypt.com/replace/confirm API.
  *
  * @author Denis Bondarenko
  *         Date: 13.07.2017

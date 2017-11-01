@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.ReplaceRequestModel;
 
 /**
- * This class describes a request to the https://attester.cryptup.io/replace/request API.
+ * This class describes a request to the https://attester.flowcrypt.com/replace/request API.
  * <p>
  * <code>POST /replace/request  {
  * "signed_message" (<type 'str'>)  # signed request_replace packet (using old/original key)

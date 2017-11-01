@@ -14,7 +14,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Response from the API
- * "https://attester.cryptup.io/lookup/email"
+ * "https://attester.flowcrypt.com/lookup/email"
  *
  * @author DenBond7
  *         Date: 24.04.2017

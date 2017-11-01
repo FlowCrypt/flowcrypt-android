@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.InitialConfirmModel;
 
 /**
- * This class describes a request to the https://attester.cryptup.io/initial/confirm API.
+ * This class describes a request to the https://attester.flowcrypt.com/initial/confirm API.
  * <p>
  * <code>POST /initial/confirm  {
  * [voluntary] "signed_message" (<type 'str'>)  # Signed attest packet if attesting first time

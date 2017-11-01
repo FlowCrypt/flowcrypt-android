@@ -26,7 +26,7 @@ import retrofit2.http.POST;
 public interface ApiService {
 
     /**
-     * This method create a Call object for the API "https://attester.cryptup.io/lookup/email"
+     * This method create a Call object for the API "https://attester.flowcrypt.com/lookup/email"
      *
      * @param postLookUpEmailModel POJO model for requests
      * @return <tt>Call<LookUpEmailResponse></tt>

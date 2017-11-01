@@ -40,9 +40,9 @@ public class ApiHelper {
 
     private ApiHelper(Context context) {
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-                .connectTimeout(2, TimeUnit.MINUTES)
-                .readTimeout(2, TimeUnit.MINUTES)
-                .writeTimeout(2, TimeUnit.MINUTES);
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS);
 
         okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
