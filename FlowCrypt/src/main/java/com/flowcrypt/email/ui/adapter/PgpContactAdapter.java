@@ -48,25 +48,21 @@ public class PgpContactAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        TextView textViewName = (TextView) view.findViewById(R.id.textViewName);
-        TextView textViewEmail = (TextView) view.findViewById(R.id.textViewEmail);
-        TextView textViewOnlyEmail = (TextView) view.findViewById(R.id.textViewOnlyEmail);
+        TextView textViewName = view.findViewById(R.id.textViewName);
+        TextView textViewEmail = view.findViewById(R.id.textViewEmail);
+        TextView textViewOnlyEmail = view.findViewById(R.id.textViewOnlyEmail);
 
         String name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME));
         String email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
 
         if (TextUtils.isEmpty(name)) {
-            textViewName.setVisibility(View.GONE);
-            textViewEmail.setVisibility(View.GONE);
-            textViewOnlyEmail.setVisibility(View.VISIBLE);
+            textViewEmail.setText(null);
+            textViewName.setText(null);
             textViewOnlyEmail.setText(email);
         } else {
-            textViewName.setVisibility(View.VISIBLE);
-            textViewEmail.setVisibility(View.VISIBLE);
-            textViewOnlyEmail.setVisibility(View.GONE);
-
             textViewEmail.setText(email);
             textViewName.setText(name);
+            textViewOnlyEmail.setText(null);
         }
     }
 }
