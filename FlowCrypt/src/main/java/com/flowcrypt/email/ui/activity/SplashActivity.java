@@ -32,7 +32,6 @@ import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.acra.ACRA;
 
@@ -46,9 +45,7 @@ import java.util.ArrayList;
  *         Time: 14:50
  *         E-mail: DenBond7@gmail.com
  */
-public class SplashActivity extends BaseSignInActivity implements
-        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
-        LoaderManager.LoaderCallbacks<LoaderResult> {
+public class SplashActivity extends BaseSignInActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
     private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;

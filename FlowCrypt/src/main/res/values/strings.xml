@@ -213,4 +213,5 @@
     <string name="diagnostic_info">Diagnostic info</string>
     <string name="email_does_not_available_in_this_folder">This email doesn\'t available in this folder</string>
     <string name="from">From</string>
+    <string name="google_api_is_not_available">Error: Google API is not available</string>
 </resources>

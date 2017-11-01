@@ -15,7 +15,6 @@ import android.view.View;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
@@ -52,12 +51,15 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
                 if (GeneralUtil.isInternetConnectionAvailable(this)) {
-                    googleApiClient.clearDefaultAccountAndReconnect();
-                    Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-                    startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+                    if (googleApiClient != null && googleApiClient.isConnected()) {
+                        googleApiClient.clearDefaultAccountAndReconnect();
+                        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+                        startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+                    } else {
+                        showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
+                    }
                 } else {
-                    UIUtil.showInfoSnackbar(getRootView(),
-                            getString(R.string.internet_connection_is_not_available));
+                    showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
                 }
                 break;
 
@@ -66,7 +68,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
                     startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class),
                             REQUEST_CODE_ADD_OTHER_ACCOUNT);
                 } else {
-                    UIUtil.showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
+                    showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
                 }
                 break;
         }
@@ -84,7 +86,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+        showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
     }
 
     protected void initGoogleApiClient() {

@@ -343,7 +343,11 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         switch (accountDao.getAccountType()) {
             case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
+                if (googleApiClient != null && googleApiClient.isConnected()) {
+                    GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
+                } else {
+                    showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
+                }
                 break;
         }
 
