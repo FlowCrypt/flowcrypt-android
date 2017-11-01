@@ -639,6 +639,23 @@ public class EmailSyncService extends Service implements SyncListener {
                             com.flowcrypt.email.api.email.Folder[] folders = (com.flowcrypt.email
                                     .api.email.Folder[]) action.getObject();
 
+                            String emailDomain = emailSyncManager.getAccountDao().getAccountType();
+
+                            if (folders == null || folders.length != 2) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. Folders " +
+                                        "are null.");
+                            }
+
+                            if (folders[0] == null) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
+                                        "source folder is null.");
+                            }
+
+                            if (folders[1] == null) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
+                                        "destination folder is null.");
+                            }
+
                             emailSyncManager.moveMessage(action.getOwnerKey(), action.getRequestCode(),
                                     folders[0].getServerFullFolderName(), folders[1].getServerFullFolderName(),
                                     message.arg1);
