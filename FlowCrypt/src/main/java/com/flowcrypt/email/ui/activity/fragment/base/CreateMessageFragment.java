@@ -164,8 +164,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
                     (CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
             if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
-                this.folderType = FoldersManager.getFolderTypeForImapFodler(
-                        incomingMessageInfo.getFolder().getAttributes());
+                this.folderType = FoldersManager.getFolderTypeForImapFolder(
+                        incomingMessageInfo.getFolder());
             }
         }
     }

@@ -34,8 +34,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
@@ -341,45 +343,39 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * @param folder The folder where current message exists.
      */
     private void updateActionsVisibility(Folder folder) {
-        FoldersManager foldersManager = FoldersManager.fromDatabase(getContext(), generalMessageDetails.getEmail());
-        folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
+        folderType = FoldersManager.getFolderTypeForImapFolder(folder);
 
         if (folderType != null) {
             switch (folderType) {
-                case All:
-                    isMoveToInboxActionEnable = true;
-                    isArchiveActionEnable = false;
+                case INBOX:
+                    if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equalsIgnoreCase(
+                            EmailUtil.getDomain(generalMessageDetails.getEmail()))) {
+                        isArchiveActionEnable = true;
+                    }
                     isDeleteActionEnable = true;
                     break;
 
                 case SENT:
-                    isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
                     break;
 
                 case TRASH:
-                    isArchiveActionEnable = true;
-                    isDeleteActionEnable = false;
-                    break;
-
-                case DRAFTS:
-                case SPAM:
-                    isArchiveActionEnable = false;
+                    isMoveToInboxActionEnable = true;
                     isDeleteActionEnable = false;
                     break;
 
                 default:
-                    isArchiveActionEnable = true;
+                    isMoveToInboxActionEnable = true;
+                    isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
                     break;
             }
         } else {
-            isArchiveActionEnable = true;
+            isArchiveActionEnable = false;
             isMoveToInboxActionEnable = false;
             isDeleteActionEnable = true;
         }
 
-        isArchiveActionEnable = foldersManager.getFolderArchive() != null;
         getActivity().invalidateOptionsMenu();
     }
 

@@ -109,18 +109,28 @@ public class FoldersManager {
     /**
      * Get a {@link FolderType} using folder attributes.
      *
-     * @param attributes The folder attributes.
+     * @param folder Some {@link javax.mail.Folder}.
      * @return {@link FolderType}.
      */
-    public static FolderType getFolderTypeForImapFodler(String[] attributes) {
+    public static FolderType getFolderTypeForImapFolder(Folder folder) {
         FolderType[] folderTypes = FolderType.values();
 
-        if (attributes != null) {
-            for (String attribute : attributes) {
-                for (FolderType folderType : folderTypes) {
-                    if (folderType.getValue().equals(attribute)) {
-                        return folderType;
+        if (folder != null) {
+            String[] attributes = folder.getAttributes();
+
+            if (attributes != null) {
+                for (String attribute : attributes) {
+                    for (FolderType folderType : folderTypes) {
+                        if (folderType.getValue().equals(attribute)) {
+                            return folderType;
+                        }
                     }
+                }
+            }
+
+            if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
+                if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+                    return FolderType.INBOX;
                 }
             }
         }
@@ -267,7 +277,7 @@ public class FoldersManager {
     }
 
     private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
-        FolderType folderType = getFolderTypeForImapFodler(imapFolder.getAttributes());
+        FolderType folderType = getFolderTypeForImapFolder(generateFolder(imapFolder, null));
         if (folderType == null) {
             return imapFolder.getFullName();
         } else {
@@ -276,7 +286,7 @@ public class FoldersManager {
     }
 
     private String prepareFolderKey(Folder folder) {
-        FolderType folderType = getFolderTypeForImapFodler(folder.getAttributes());
+        FolderType folderType = getFolderTypeForImapFolder(folder);
         if (folderType == null) {
             return folder.getServerFullFolderName();
         } else {

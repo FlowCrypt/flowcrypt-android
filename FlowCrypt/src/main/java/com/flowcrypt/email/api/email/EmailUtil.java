@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.api.email;
 
+import android.text.TextUtils;
+
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.Arrays;
@@ -25,7 +27,7 @@ public class EmailUtil {
     /**
      * Generate an unique content id.
      *
-     * @return
+     * @return A generated unique content id.
      */
     public static String generateContentId() {
         return "<" + UUID.randomUUID().toString() + "@flowcrypt" + ">";
@@ -43,5 +45,20 @@ public class EmailUtil {
     public static boolean isFolderHasNoSelectAttribute(IMAPFolder imapFolder) throws MessagingException {
         List<String> attributes = Arrays.asList(imapFolder.getAttributes());
         return attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
+    }
+
+    /**
+     * Get a domain of some email.
+     *
+     * @return The domain of some email.
+     */
+    public static String getDomain(String email) {
+        if (TextUtils.isEmpty(email)) {
+            return "";
+        } else if (email.contains("@")) {
+            return email.substring(email.indexOf('@') + 1, email.length());
+        } else {
+            return "";
+        }
     }
 }
