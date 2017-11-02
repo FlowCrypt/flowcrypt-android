@@ -385,6 +385,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 fromAddressesArrayAdapter.clear();
                 fromAddressesArrayAdapter.addAll(aliases);
 
+                prepareAliasForReplyIfNeed(aliases);
+
                 if (fromAddressesArrayAdapter.getCount() > 1) {
                     editTextFrom.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.mipmap.ic_arrow_drop_down_grey, 0);
                 } else {
@@ -505,6 +507,40 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
+    }
+
+    /**
+     * Prepare an alias for the reply. Will be used the email address that the email was received. Will be used the
+     * first found matched email.
+     *
+     * @param aliases A list of Gmail aliases.
+     */
+    private void prepareAliasForReplyIfNeed(List<String> aliases) {
+        if (incomingMessageInfo != null) {
+            ArrayList<String> toAddresses = incomingMessageInfo.getTo();
+            if (toAddresses != null) {
+                String firstFoundedAlias = null;
+                for (String toAddress : toAddresses) {
+                    if (firstFoundedAlias == null) {
+                        for (String alias : aliases) {
+                            if (alias.equalsIgnoreCase(toAddress)) {
+                                firstFoundedAlias = alias;
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                if (firstFoundedAlias != null) {
+                    int position = fromAddressesArrayAdapter.getPosition(firstFoundedAlias);
+                    if (position != -1) {
+                        spinnerFrom.setSelection(position);
+                    }
+                }
+            }
+        }
     }
 
     /**
