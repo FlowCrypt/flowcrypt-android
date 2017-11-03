@@ -20,6 +20,7 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -578,7 +579,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey,
                                        LayoutInflater layoutInflater) {
 
-        View messagePartPublicKeyView = layoutInflater.inflate(
+        final ViewGroup messagePartPublicKeyView = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_public_key, layoutMessageParts, false);
 
         TextView textViewKeyOwnerTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
@@ -593,6 +594,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean
                     isChecked) {
+                TransitionManager.beginDelayedTransition(messagePartPublicKeyView);
                 textViewPgpPublicKey.setVisibility(isChecked ? View.VISIBLE : View.GONE);
 
                 buttonView.setText(isChecked ? R.string.hide_the_public_key :
@@ -725,14 +727,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @NonNull
-    private TextView generatePgpMessagePart(MessagePartPgpMessage messagePartPgpMessage,
-                                            LayoutInflater layoutInflater) {
+    private View generatePgpMessagePart(MessagePartPgpMessage messagePartPgpMessage,
+                                        LayoutInflater layoutInflater) {
         if (messagePartPgpMessage != null) {
             if (TextUtils.isEmpty(messagePartPgpMessage.getErrorMessage())) {
                 return generateMessagePart(messagePartPgpMessage, layoutInflater, R.layout.message_part_pgp_message,
                         layoutMessageParts);
             } else {
                 switch (messagePartPgpMessage.getPgpMessageDecryptError()) {
+                    case FORMAT_ERROR:
+                        final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
+                                R.layout.message_part_pgp_message_format_error, layoutMessageParts, false);
+                        TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
+                        textViewFormatError.setText(messagePartPgpMessage.getErrorMessage());
+                        formatErrorLayout.addView(generateShowOriginalMessageLayout
+                                (messagePartPgpMessage.getValue(), layoutInflater, formatErrorLayout));
+                        return formatErrorLayout;
+
                     default:
                         TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
                                 R.layout.message_part_pgp_message_error, layoutMessageParts, false);
@@ -742,6 +753,38 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 }
             }
         } else return new TextView(getContext());
+    }
+
+    /**
+     * Generate a layout with switch button which will be regulate visibility of original message info.
+     *
+     * @param originalPgpMessage The original pgp message info.
+     * @param layoutInflater     The {@link LayoutInflater} instance.
+     * @param rootView           The root view which will be used while we create a new layout using
+     *                           {@link LayoutInflater}.
+     * @return A generated layout.
+     */
+    @NonNull
+    private ViewGroup generateShowOriginalMessageLayout(String originalPgpMessage, LayoutInflater layoutInflater,
+                                                        final ViewGroup rootView) {
+        ViewGroup showOriginalMessageLayout = (ViewGroup) layoutInflater.inflate(
+                R.layout.pgp_show_original_message, rootView, false);
+        final TextView textViewOriginalPgpMessage
+                = showOriginalMessageLayout.findViewById(R.id.textViewOriginalPgpMessage);
+        textViewOriginalPgpMessage.setText(originalPgpMessage);
+
+        Switch switchShowOriginalMessage = showOriginalMessageLayout.findViewById(R.id
+                .switchShowOriginalMessage);
+
+        switchShowOriginalMessage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                TransitionManager.beginDelayedTransition(rootView);
+                textViewOriginalPgpMessage.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
+            }
+        });
+        return showOriginalMessageLayout;
     }
 
     public interface OnActionListener {

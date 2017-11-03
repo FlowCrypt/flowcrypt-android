@@ -211,7 +211,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
     @NonNull
     private MessagePartPgpMessage generateMessagePartPgpMessage(Js js, MessageBlock messageBlock) {
         String encryptedContent = messageBlock.getContent();
-        String decryptedContent = null;
+        String value = encryptedContent;
         String errorMessage = null;
         MessagePartPgpMessage.PgpMessageDecryptError pgpMessageDecryptError = null;
 
@@ -223,9 +223,10 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
 
         if (pgpDecrypted != null) {
             if (pgpDecrypted.isSuccess()) {
-                decryptedContent = pgpDecrypted.getString();
+                value = pgpDecrypted.getString();
             } else if (!TextUtils.isEmpty(pgpDecrypted.getFormatError())) {
-                errorMessage = pgpDecrypted.getFormatError();
+                errorMessage = getContext().getString(R.string.decrypt_error_message_badly_formatted) + "\n\n" +
+                        pgpDecrypted.getFormatError();
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.FORMAT_ERROR;
             } else if (pgpDecrypted.getMissingPassphraseLongids() != null
                     && pgpDecrypted.getMissingPassphraseLongids().length > 0) {
@@ -265,6 +266,6 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                     getContext().getString(R.string.decrypt_error_please_write_me);
         }
 
-        return new MessagePartPgpMessage(decryptedContent, errorMessage, pgpMessageDecryptError);
+        return new MessagePartPgpMessage(value, errorMessage, pgpMessageDecryptError);
     }
 }

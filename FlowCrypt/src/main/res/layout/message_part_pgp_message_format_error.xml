@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_message_part_pgp_message_error"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewFormatError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_medium"
+        android:autoLink="web"
+        android:textColor="@android:color/black"
+        android:textIsSelectable="true"
+        android:textSize="@dimen/default_text_size_medium"
+        tools:text="At nihil sequi quo maiores molestiae consequatur. Id aut nam voluptate doloribus saepe consequatur molestias. Eos sunt est ipsam accusantium saepe doloribus veritatis.
+
+Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum nihil qui beatae. Et cum au" />
+</LinearLayout>
