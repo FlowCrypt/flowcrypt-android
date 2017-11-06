@@ -241,7 +241,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(getContext().getString(R.string.decrypt_error_could_not_open_message));
                 stringBuilder.append("\n\n");
-                stringBuilder.append(getContext().getString(R.string.decrypt_error_message_badly_formatted));
+                stringBuilder.append(getContext().getString(R.string.decrypt_error_please_write_me));
                 stringBuilder.append("\n\n");
 
                 for (String s : pgpDecrypted.getOtherErrors()) {
@@ -253,12 +253,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
             } else {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNKNOWN_ERROR;
                 errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message) +
-                        "\n\n" +
-                        getContext().getString(R.string.decrypt_error_please_write_me) +
-                        "\n\n" +
-                        getContext().getString(R.string.diagnostic_info) +
-                        ":\n" +
-                        pgpDecrypted.toString();
+                        "\n\n" + getContext().getString(R.string.decrypt_error_please_write_me);
             }
         } else {
             pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.JS_TOOL_ERROR;
