@@ -233,7 +233,8 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
             } else if (Objects.equals(pgpDecrypted.countPotentiallyMatchingKeys(), pgpDecrypted.countAttempts())) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
-                errorMessage = getContext().getString(R.string.decrypt_error_single_sender);
+                errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message) +
+                        "\n\n" + getContext().getString(R.string.decrypt_error_single_sender);
             } else if (pgpDecrypted.countUnsecureMdcErrors() > 0) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNSECURED_MDC_ERROR;
             } else if (pgpDecrypted.getOtherErrors() != null && pgpDecrypted.getOtherErrors().length > 0) {

@@ -209,7 +209,7 @@
         respond very promptly.</string>
     <string name="decrypt_error_single_sender">Normally, messages are encrypted for at least two people
         (sender and the receiver). It seems the sender encrypted this message manually for themselves,
-        and forgot to add you as a receiver. </string>
+        and forgot to add you as a receiver. Please ask them to send a new message.</string>
     <string name="diagnostic_info">Diagnostic info</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>

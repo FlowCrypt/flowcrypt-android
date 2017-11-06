@@ -4,17 +4,23 @@
   ~ Contributors: DenBond7
   -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textViewMessagePartPgpMessage"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/default_margin_medium"
-    android:autoLink="web"
     android:background="@drawable/bg_message_part_pgp_message_error"
-    android:textColor="@android:color/black"
-    android:textIsSelectable="true"
-    android:textSize="@dimen/default_text_size_medium"
-    tools:text="At nihil sequi quo maiores molestiae consequatur. Id aut nam voluptate doloribus saepe consequatur molestias. Eos sunt est ipsam accusantium saepe doloribus veritatis.
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewErrorMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_medium"
+        android:autoLink="web"
+        android:textColor="@android:color/black"
+        android:textIsSelectable="true"
+        android:textSize="@dimen/default_text_size_medium"
+        tools:text="At nihil sequi quo maiores molestiae consequatur. Id aut nam voluptate doloribus saepe consequatur molestias. Eos sunt est ipsam accusantium saepe doloribus veritatis.
 
 Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum nihil qui beatae. Et cum au" />
+</LinearLayout>

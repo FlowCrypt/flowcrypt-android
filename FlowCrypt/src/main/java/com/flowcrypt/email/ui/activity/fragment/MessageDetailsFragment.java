@@ -745,11 +745,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         return formatErrorLayout;
 
                     default:
-                        TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
+                        ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
                                 R.layout.message_part_pgp_message_error, layoutMessageParts, false);
-                        textViewMessagePartOther.setText(messagePartPgpMessage.getErrorMessage());
+                        TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
+                        textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
+                        viewGroup.addView(generateShowOriginalMessageLayout
+                                (messagePartPgpMessage.getValue(), layoutInflater, viewGroup));
 
-                        return textViewMessagePartOther;
+                        return viewGroup;
                 }
             }
         } else return new TextView(getContext());
