@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -53,6 +54,7 @@ import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
+import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
@@ -74,6 +76,8 @@ import java.util.List;
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
     private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
+    private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101;
+
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
@@ -142,6 +146,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         super.onActivityCreated(savedInstanceState);
         if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
             getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
+                        getLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -502,8 +523,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void updateMessageView() {
+        layoutMessageParts.removeAllViews();
         if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
-            layoutMessageParts.removeAllViews();
             EmailWebView emailWebView = new EmailWebView(getContext());
             emailWebView.configure();
 
@@ -744,6 +765,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                                 (messagePartPgpMessage.getValue(), layoutInflater, formatErrorLayout));
                         return formatErrorLayout;
 
+                    case MISSING_PRIVATE_KEY:
+                        return generateMissingPrivateKeyLayout(messagePartPgpMessage, layoutInflater);
+
                     default:
                         ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
                                 R.layout.message_part_pgp_message_error, layoutMessageParts, false);
@@ -756,6 +780,36 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 }
             }
         } else return new TextView(getContext());
+    }
+
+    /**
+     * Generate a layout which describes the missing private keys situation.
+     *
+     * @param messagePartPgpMessage The {@link MessagePartPgpMessage} which contains info about an error.
+     * @param layoutInflater        The {@link LayoutInflater} instance.
+     * @return Generated layout.
+     */
+    @NonNull
+    private View generateMissingPrivateKeyLayout(MessagePartPgpMessage messagePartPgpMessage,
+                                                 LayoutInflater layoutInflater) {
+        ViewGroup missingPrivateKeyLayout = (ViewGroup) layoutInflater.inflate(
+                R.layout.message_part_pgp_message_missing_private_key, layoutMessageParts, false);
+        TextView textViewErrorMessage = missingPrivateKeyLayout.findViewById(R.id.textViewErrorMessage);
+        textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
+
+        Button button = missingPrivateKeyLayout.findViewById(R.id.buttonImportPrivateKey);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(
+                        getContext(), getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
+                        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
+            }
+        });
+
+        missingPrivateKeyLayout.addView(generateShowOriginalMessageLayout
+                (messagePartPgpMessage.getValue(), layoutInflater, missingPrivateKeyLayout));
+        return missingPrivateKeyLayout;
     }
 
     /**

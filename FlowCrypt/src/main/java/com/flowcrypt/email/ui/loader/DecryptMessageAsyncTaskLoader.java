@@ -225,22 +225,29 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
             if (pgpDecrypted.isSuccess()) {
                 value = pgpDecrypted.getString();
             } else if (!TextUtils.isEmpty(pgpDecrypted.getFormatError())) {
-                errorMessage = getContext().getString(R.string.decrypt_error_message_badly_formatted) + "\n\n" +
-                        pgpDecrypted.getFormatError();
+                errorMessage = getContext().getString(R.string.decrypt_error_message_badly_formatted,
+                        getContext().getString(R.string.app_name)) + "\n\n" + pgpDecrypted.getFormatError();
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.FORMAT_ERROR;
             } else if (pgpDecrypted.getMissingPassphraseLongids() != null
                     && pgpDecrypted.getMissingPassphraseLongids().length > 0) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
-            } else if (Objects.equals(pgpDecrypted.countPotentiallyMatchingKeys(), pgpDecrypted.countAttempts())) {
+            } else if (Objects.equals(pgpDecrypted.countPotentiallyMatchingKeys(), pgpDecrypted.countAttempts())
+                    && Objects.equals(pgpDecrypted.countKeyMismatchErrors(), pgpDecrypted.countAttempts())) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
-                errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message) +
-                        "\n\n" + getContext().getString(R.string.decrypt_error_single_sender);
+                if (pgpDecrypted.getEncryptedForLongids().length > 1) {
+                    errorMessage = getContext().getString(R.string.decrypt_error_current_key_cannot_message);
+                } else {
+                    errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message,
+                            getContext().getString(R.string.app_name)) + "\n\n" +
+                            getContext().getString(R.string.decrypt_error_single_sender);
+                }
             } else if (pgpDecrypted.countUnsecureMdcErrors() > 0) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNSECURED_MDC_ERROR;
             } else if (pgpDecrypted.getOtherErrors() != null && pgpDecrypted.getOtherErrors().length > 0) {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.OTHER_ERRORS;
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(getContext().getString(R.string.decrypt_error_could_not_open_message));
+                stringBuilder.append(getContext().getString(R.string.decrypt_error_could_not_open_message,
+                        getContext().getString(R.string.app_name)));
                 stringBuilder.append("\n\n");
                 stringBuilder.append(getContext().getString(R.string.decrypt_error_please_write_me));
                 stringBuilder.append("\n\n");
@@ -253,7 +260,8 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                 errorMessage = stringBuilder.toString();
             } else {
                 pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNKNOWN_ERROR;
-                errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message) +
+                errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message,
+                        getContext().getString(R.string.app_name)) +
                         "\n\n" + getContext().getString(R.string.decrypt_error_please_write_me);
             }
         } else {
