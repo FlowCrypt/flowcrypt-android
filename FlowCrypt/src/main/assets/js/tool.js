@@ -1844,7 +1844,7 @@
         return armored;
       }
     } catch(error) {
-      catcher.handle_exception(error);
+//      catcher.handle_exception(error);  // todo - connect to ACRA
     }
   }
 
