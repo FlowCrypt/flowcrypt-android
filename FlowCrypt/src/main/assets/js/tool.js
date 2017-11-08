@@ -1,4 +1,4 @@
-/* Business Source License 1.0 © 2016 FlowCrypt Limited (tom@cryptup.org). Use limitations apply. This version will change to GPLv3 on 2020-01-01. See https://github.com/CryptUp/cryptup-browser/tree/master/src/LICENCE */
+/* Business Source License 1.0 © 2016 FlowCrypt Limited (human@flowcrypt.com). Use limitations apply. This version will change to GPLv3 on 2020-01-01. See https://github.com/CryptUp/cryptup-browser/tree/master/src/LICENCE */
 
 'use strict';
 
@@ -1074,7 +1074,7 @@
      --eSmP07Gus5SkSc9vNmF4C0AutMibfplSQ
      Content-Type: multipart/mixed; boundary="XKKJ27hlkua53SDqH7d1IqvElFHJROQA1"
      From: Henry Electrum <henry.electrum@gmail.com>
-     To: tom@cryptup.org
+     To: human@flowcrypt.com
      Message-ID: <abd68ba1-35c3-ee8a-0d60-0319c608d56b@gmail.com>
      Subject: compatibility - simples signed email
 
@@ -2077,7 +2077,7 @@
                         finally_callback_result(callback, {success: true, content: decrypted, encrypted: true, signature: keys.signed_by.length ? crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0]) : false});
                       }
                     } else {
-                      other_errors.push(decrypted.err instanceof Array ? decrypted.err.join(', ') : 'Decrypted data is null. Please write me at tom@cryptup.org to fix this.');
+                      other_errors.push(decrypted.err instanceof Array ? decrypted.err.join(', ') : 'Decrypted data is null. Please write me at human@flowcrypt.com to fix this.');
                       counts.attempts++;
                       finally_callback_result(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors});
                     }
@@ -2134,7 +2134,7 @@
       used_challange = true;
     }
     if(!armored_pubkeys && !used_challange) {
-      alert('Internal error: don\'t know how to encryt message. Please refresh the page and try again, or contact me at tom@cryptup.org if this happens repeatedly.');
+      alert('Internal error: don\'t know how to encryt message. Please refresh the page and try again, or contact me at human@flowcrypt.com if this happens repeatedly.');
       throw new Error('no-pubkeys-no-challenge');
     }
     if(signing_prv && typeof signing_prv.isPrivate !== 'undefined' && signing_prv.isPrivate()) {
@@ -2147,7 +2147,7 @@
       })();
     }, function (error) {
       console.log(error);
-      alert('Error encrypting message, please try again. If you see this repeatedly, contact me at tom@cryptup.org.');
+      alert('Error encrypting message, please try again. If you see this repeatedly, contact me at human@flowcrypt.com.');
       //todo: make the UI behave well on errors
     });
   }
@@ -3680,7 +3680,7 @@
     if(error_message && url && typeof line !== 'undefined' && !col && !error && !is_manually_called && !version && !env) { // safari has limited support
       error = { name: 'safari_error', message: error_message, stack: error_message };
     }
-    var user_log_message = ' Please report errors above to tom@cryptup.org. I fix errors VERY promptly.';
+    var user_log_message = ' Please report errors above to human@flowcrypt.com. I fix errors VERY promptly.';
     var ignored_errors = [
       'Invocation of form get(, function) doesn\'t match definition get(optional string or array or object keys, function callback)', // happens in gmail window when reloaded extension + now reloading gmail
       'Invocation of form set(, function) doesn\'t match definition set(object items, optional function callback)', // happens in gmail window when reloaded extension + now reloading gmail

@@ -39,14 +39,14 @@ DomainKey-Signature: a=rsa-sha1; c=nofws; d=mailgun.org; s=mg; q=dns;
  xexxErdLXr7uFGjsAolj0nxHYTBi22rhijWxmVpMHn/WYppPtupxYvZ0KPf1VggdAm+xeCis
  H00/Zm0tHibTB1Tym4KiyuQwFyV3M=
 X-Feedback-Id: 575a350163badc224255f6ba:mailgun
-Sender: tom@cryptup.org
+Sender: human@flowcrypt.com
 Date: Tue, 25 Apr 2017 15:17:11 +0000
 X-Mailgun-Sending-Ip: 198.61.254.4
 X-Mailgun-Sid: WyJmZDAyMCIsICJjcnlwdHVwLnRlc3RlckBnbWFpbC5jb20iLCAiMzA4ZWUzIl0=
 Received: by luna.mailgun.net with HTTP; Tue, 25 Apr 2017 15:17:10 +0000
 Message-Id: <20170425151710.103614.66605.93FFB13D@cryptup.org>
 To: cryptup.tester@gmail.com
-From: Tom at CryptUp <tom@cryptup.org>
+From: Tom at CryptUp <human@flowcrypt.com>
 Subject: Check this out - your first encrypted message (feel free to reply)
 Content-Type: text/plain; charset="ascii"
 Mime-Version: 1.0

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
   ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
   ~ Contributors: DenBond7
   -->
@@ -25,7 +25,7 @@
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/imageViewAttachments"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
-        tools:text="tom@cryptup.org" />
+        tools:text="human@flowcrypt.com" />
 
     <ImageView
         android:id="@+id/imageViewAttachments"
