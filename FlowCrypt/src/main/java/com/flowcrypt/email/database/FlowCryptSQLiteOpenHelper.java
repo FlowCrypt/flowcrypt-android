@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -30,7 +31,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 4;
+    public static final int DB_VERSION = 5;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -66,6 +67,9 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
         sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
         sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+
+        sqLiteDatabase.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE);
+        sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
     }
 
     @Override
@@ -75,20 +79,63 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom1To2Version(sqLiteDatabase);
                 upgradeDatabaseFrom2To3Version(sqLiteDatabase);
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
+                upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 break;
 
             case 2:
                 upgradeDatabaseFrom2To3Version(sqLiteDatabase);
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
+                upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 break;
 
             case 3:
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
+                upgradeDatabaseFrom4To5Version(sqLiteDatabase);
+                break;
+
+            case 4:
+                upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 break;
         }
 
         Log.d(TAG, "Database updated from OLD_VERSION = " + Integer.toString(oldVersion)
                 + " to NEW_VERSION = " + Integer.toString(newVersion));
+    }
+
+    private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+            sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS
+                    + " INTEGER DEFAULT 0;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE
+                    + " INTEGER DEFAULT 1;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE
+                    + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private void upgradeDatabaseFrom2To3Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            dropTable(sqLiteDatabase, AttachmentDaoSource.TABLE_NAME_ATTACHMENT);
+            sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+            sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
     }
 
     private void upgradeDatabaseFrom3To4Version(SQLiteDatabase sqLiteDatabase) {
@@ -131,36 +178,11 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         }
     }
 
-    private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {
+    private void upgradeDatabaseFrom4To5Version(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.beginTransaction();
         try {
-            sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-            sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
-
-            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-                    " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS
-                    + " INTEGER DEFAULT 0;");
-
-            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-                    " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE
-                    + " INTEGER DEFAULT 1;");
-
-            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-                    " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE
-                    + " INTEGER DEFAULT 0;");
-            sqLiteDatabase.setTransactionSuccessful();
-        } finally {
-            sqLiteDatabase.endTransaction();
-        }
-    }
-
-    private void upgradeDatabaseFrom2To3Version(SQLiteDatabase sqLiteDatabase) {
-        sqLiteDatabase.beginTransaction();
-        try {
-            dropTable(sqLiteDatabase, AttachmentDaoSource.TABLE_NAME_ATTACHMENT);
-            sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-            sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
-
+            sqLiteDatabase.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE);
+            sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();

@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -26,7 +26,7 @@ import retrofit2.http.POST;
 public interface ApiService {
 
     /**
-     * This method create a Call object for the API "https://attester.cryptup.io/lookup/email"
+     * This method create a Call object for the API "https://attester.flowcrypt.com/lookup/email"
      *
      * @param postLookUpEmailModel POJO model for requests
      * @return <tt>Call<LookUpEmailResponse></tt>

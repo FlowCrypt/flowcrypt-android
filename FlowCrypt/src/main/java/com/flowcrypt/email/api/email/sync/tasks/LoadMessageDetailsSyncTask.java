@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -97,7 +97,9 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
             });
 
             Message message = imapFolder.getMessageByUID(uid);
-            message.setFlag(Flags.Flag.SEEN, true);
+            if (message != null) {
+                message.setFlag(Flags.Flag.SEEN, true);
+            }
 
             syncListener.onMessageDetailsReceived(accountDao, imapFolder, uid, rawMessage, ownerKey, requestCode);
         }

@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -343,7 +343,11 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         switch (accountDao.getAccountType()) {
             case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
+                if (googleApiClient != null && googleApiClient.isConnected()) {
+                    GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
+                } else {
+                    showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
+                }
                 break;
         }
 

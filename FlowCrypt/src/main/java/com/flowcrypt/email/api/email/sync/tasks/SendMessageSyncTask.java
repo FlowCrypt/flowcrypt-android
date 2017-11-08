@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncListener;
@@ -25,12 +26,15 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.google.api.client.util.Base64;
+import com.google.api.services.gmail.Gmail;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,7 +94,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
     public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
             throws Exception {
         super.runSMTPAction(accountDao, session, store, syncListener);
-
+        boolean isMessageSent = false;
         if (syncListener != null) {
             Context context = syncListener.getContext();
 
@@ -105,21 +109,38 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory);
 
-            Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
-            transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
-
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    if (accountDao.getEmail().equalsIgnoreCase(outgoingMessageInfo.getFromPgpContact().getEmail())) {
+                        Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
+                        transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                        isMessageSent = true;
+                    } else {
+                        Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        mimeMessage.writeTo(byteArrayOutputStream);
+
+                        com.google.api.services.gmail.model.Message sentMessage
+                                = new com.google.api.services.gmail.model.Message();
+                        sentMessage.setRaw(Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray()));
+                        sentMessage = gmailApiService.users().messages().send("me", sentMessage).execute();
+                        isMessageSent = sentMessage.getId() != null;
+                    }
+
                     //Gmail automatically save a copy of the sent message.
                     break;
 
                 default:
+                    Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
+                    transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                    isMessageSent = true;
+
                     saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
             }
 
             FileUtils.cleanDirectory(pgpCacheDirectory);
 
-            syncListener.onEncryptedMessageSent(accountDao, ownerKey, requestCode, true);
+            syncListener.onMessageSent(accountDao, ownerKey, requestCode, isMessageSent);
         }
     }
 

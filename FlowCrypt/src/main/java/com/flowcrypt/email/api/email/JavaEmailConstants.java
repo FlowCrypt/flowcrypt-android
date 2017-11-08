@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -48,4 +48,6 @@ public class JavaEmailConstants {
     public static final String HEADER_X_ATTACHMENT_ID = "X-Attachment-Id";
     public static final String HEADER_CONTENT_ID = "Content-ID";
     public static final String FOLDER_INBOX = "INBOX";
+
+    public static final String EMAIL_PROVIDER_GMAIL = "gmail.com";
 }

@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -33,6 +33,8 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.sun.mail.imap.IMAPFolder;
+
+import org.acra.ACRA;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +70,10 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final String ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC";
 
     public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
-    public static final int REPLY_RESULT_CODE_ACTION_ERROR = 1;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3;
+    public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS = 4;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
 
     public static final int REPLY_OK = 0;
@@ -202,7 +207,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (isSent) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -219,12 +224,12 @@ public class EmailSyncService extends Service implements SyncListener {
     }
 
     @Override
-    public void onEncryptedMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent) {
+    public void onMessageSent(AccountDao accountDao, String ownerKey, int requestCode, boolean isSent) {
         try {
             if (isSent) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -234,11 +239,17 @@ public class EmailSyncService extends Service implements SyncListener {
     @Override
     public void onMessagesMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
                                 javax.mail.Message[] messages, String ownerKey, int requestCode) {
+        //Todo-denbond7 Not implemented yet.
+    }
+
+    @Override
+    public void onMessageMoved(AccountDao accountDao, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
+                               javax.mail.Message message, String ownerKey, int requestCode) {
         try {
-            if (messages != null && messages.length > 0) {
+            if (message != null) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -260,7 +271,7 @@ public class EmailSyncService extends Service implements SyncListener {
                     rawMessageWithOutAttachments);
 
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND);
             } else {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
@@ -331,6 +342,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
+                ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
@@ -440,9 +452,9 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param resultCode  The result code of the some action. Can take the following values:
      *                    <ul>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
      *                    </ul>
+     *                    and different errors.
      * @throws RemoteException
      */
     private void sendReply(String key, int requestCode, int resultCode) throws RemoteException {
@@ -457,9 +469,9 @@ public class EmailSyncService extends Service implements SyncListener {
      * @param resultCode  The result code of the some action. Can take the following values:
      *                    <ul>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_OK}</li>
-     *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_ACTION_ERROR}</li>
      *                    <li>{@link EmailSyncService#REPLY_RESULT_CODE_NEED_UPDATE}</li>
      *                    </ul>
+     *                    and different errors.
      * @param obj         The object which will be send to the request {@link Messenger}.
      * @throws RemoteException
      */
@@ -626,6 +638,23 @@ public class EmailSyncService extends Service implements SyncListener {
                         if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder[] folders = (com.flowcrypt.email
                                     .api.email.Folder[]) action.getObject();
+
+                            String emailDomain = emailSyncManager.getAccountDao().getAccountType();
+
+                            if (folders == null || folders.length != 2) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. Folders " +
+                                        "are null.");
+                            }
+
+                            if (folders[0] == null) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
+                                        "source folder is null.");
+                            }
+
+                            if (folders[1] == null) {
+                                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
+                                        "destination folder is null.");
+                            }
 
                             emailSyncManager.moveMessage(action.getOwnerKey(), action.getRequestCode(),
                                     folders[0].getServerFullFolderName(), folders[1].getServerFullFolderName(),

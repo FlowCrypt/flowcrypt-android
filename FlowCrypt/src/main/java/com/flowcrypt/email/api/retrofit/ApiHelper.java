@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -34,14 +34,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
  *         E-mail: DenBond7@gmail.com
  */
 public class ApiHelper {
+    private static final String BASE_URL_ATTESTER_FLOWCRYPT_COM = "https://attester.flowcrypt.com";
     private OkHttpClient okHttpClient;
     private Retrofit retrofit;
 
     private ApiHelper(Context context) {
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-                .connectTimeout(2, TimeUnit.MINUTES)
-                .readTimeout(2, TimeUnit.MINUTES)
-                .writeTimeout(2, TimeUnit.MINUTES);
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS);
 
         okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
@@ -61,7 +62,7 @@ public class ApiHelper {
         okHttpClient = okHttpClientBuilder.build();
 
         Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-                .baseUrl("https://attester.cryptup.io")
+                .baseUrl(BASE_URL_ATTESTER_FLOWCRYPT_COM)
                 .addConverterFactory(GsonConverterFactory
                         .create(new GsonBuilder()
                                 .excludeFieldsWithoutExposeAnnotation()

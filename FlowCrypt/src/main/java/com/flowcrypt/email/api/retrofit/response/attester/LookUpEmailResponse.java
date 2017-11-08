@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -14,7 +14,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Response from the API
- * "https://attester.cryptup.io/lookup/email"
+ * "https://attester.flowcrypt.com/lookup/email"
  *
  * @author DenBond7
  *         Date: 24.04.2017

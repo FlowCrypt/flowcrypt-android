@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -11,6 +11,9 @@ import android.os.Messenger;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -61,7 +64,11 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
 
         sourceImapFolder.open(Folder.READ_WRITE);
 
+        boolean isSingleMoving = uids.length == 1;
+
         Message[] messages = sourceImapFolder.getMessagesByUID(uids);
+
+        messages = trimNulls(messages);
 
         if (messages != null && messages.length > 0) {
             if (destinationImapFolder == null || !destinationImapFolder.exists()) {
@@ -71,15 +78,45 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
 
             destinationImapFolder.open(Folder.READ_WRITE);
             sourceImapFolder.moveMessages(messages, destinationImapFolder);
-            syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, messages,
-                    ownerKey, requestCode);
+            if (isSingleMoving) {
+                syncListener.onMessageMoved(accountDao, sourceImapFolder, destinationImapFolder, messages[0],
+                        ownerKey, requestCode);
+            } else {
+                syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, messages,
+                        ownerKey, requestCode);
+            }
 
             destinationImapFolder.close(false);
         } else {
-            syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, new Message[]{},
-                    ownerKey, requestCode);
+            if (isSingleMoving) {
+                syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, null,
+                        ownerKey, requestCode);
+            } else {
+                syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, new Message[]{},
+                        ownerKey, requestCode);
+            }
         }
 
         sourceImapFolder.close(false);
+    }
+
+    /**
+     * Remove all null objects from the array.
+     *
+     * @param messages The input messages array.
+     * @return The array of non-null messages.
+     */
+    private Message[] trimNulls(Message[] messages) {
+        if (messages != null) {
+            List<Message> list = new ArrayList<>();
+
+            for (Message message : messages) {
+                if (message != null) {
+                    list.add(message);
+                }
+            }
+
+            return list.toArray(new Message[0]);
+        } else return null;
     }
 }

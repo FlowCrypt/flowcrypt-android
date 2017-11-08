@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.InitialRequestModel;
 
 /**
- * This class describes a request to the https://attester.cryptup.io/initial/request API.
+ * This class describes a request to the https://attester.flowcrypt.com/initial/request API.
  * <p>
  * <code>POST /initial/request  {
  * "email" (<type 'str'>)  # email to use pubkey for

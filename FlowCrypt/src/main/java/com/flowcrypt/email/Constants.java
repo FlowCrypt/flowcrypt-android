@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -41,6 +41,8 @@ public class Constants {
             "preferences_key_is_write_logs_to_file_enable";
     public static final String PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE =
             "preferences_key_is_detect_memory_leak_enable";
+    public static final String PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE =
+            "preferences_key_is_acra_enable";
 
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";

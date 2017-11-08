@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -161,7 +161,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT:
                         notifyUserAboutErrorWhenSendMessage();
                         break;
                 }
@@ -261,7 +261,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         nonEncryptedHintView = getLayoutInflater().inflate(R.layout.under_toolbar_line_with_text,
                 getAppBarLayout(), false);
 
-        TextView textView = (TextView) nonEncryptedHintView.findViewById(R.id.underToolbarTextTextView);
+        TextView textView = nonEncryptedHintView.findViewById(R.id.underToolbarTextTextView);
         textView.setText(R.string.this_message_will_not_be_encrypted);
     }
 }

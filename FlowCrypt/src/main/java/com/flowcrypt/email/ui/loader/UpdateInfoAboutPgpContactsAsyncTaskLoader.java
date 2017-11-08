@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -34,13 +34,13 @@ import retrofit2.Response;
  * <li>a) look up the email in the database;
  * <li>b) if there is a record for that email and has_pgp==true, we can use the `pubkey` instead of
  * querying Attester;
- * <li>c) if there is a record but `has_pgp==false`, do `attester.cryptup.io/lookup/email` API call
+ * <li>c) if there is a record but `has_pgp==false`, do `attester.flowcrypt.com/lookup/email` API call
  * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
  * <li>e) no record in the db found:<ol>
  * <li>save an empty record eg `new PgpContact(email, null);` - this means we don't know if
  * they
  * have PGP yet
- * <li>look up the email on `attester.cryptup.io/lookup/email`
+ * <li>look up the email on `attester.flowcrypt.com/lookup/email`
  * <li>if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
  * client, attested);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
  * for you. Then save that object into database.
@@ -87,6 +87,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             }
                         } catch (IOException e) {
                             isAllInfoReceived = false;
+                            pgpContacts.add(localPgpContact);
                             e.printStackTrace();
                         }
                     } else {

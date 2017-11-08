@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -8,6 +8,7 @@ package com.flowcrypt.email;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
@@ -60,12 +61,14 @@ import org.acra.sender.HttpSender;
                 ReportField.USER_EMAIL
         },
         httpMethod = HttpSender.Method.POST,
-        reportType = HttpSender.Type.JSON)
+        reportType = HttpSender.Type.JSON,
+        buildConfigClass = BuildConfig.class)
 public class FlowCryptApplication extends Application {
 
     @Override
     public void onCreate() {
         super.onCreate();
+        MultiDex.install(this);
         NotificationChannelManager.registerNotificationChannels(this);
 
         intiLeakCanary();
@@ -75,7 +78,10 @@ public class FlowCryptApplication extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        ACRA.init(this);
+        if (!BuildConfig.DEBUG || SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+                (this), Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
+            ACRA.init(this);
+        }
     }
 
     /**

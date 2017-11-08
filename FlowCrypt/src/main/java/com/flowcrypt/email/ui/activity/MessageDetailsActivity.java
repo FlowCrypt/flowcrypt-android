@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -136,8 +136,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             showMessageBody(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         }
-                    } else {
-                        throw new IllegalArgumentException("The message not exists in the database");
                     }
                 }
                 break;
@@ -174,8 +172,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                                 null, this);
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
-                        // TODO-denbond7: 27.06.2017 need to handle error when load message details.
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND:
+                        messageNotAvailableInFolder();
                         break;
                 }
                 break;
@@ -210,8 +208,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         finish();
                         break;
 
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR:
-                        notifyUserAboutError(requestCode);
+                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS:
+                        messageNotAvailableInFolder();
                         break;
                 }
                 break;
@@ -261,6 +259,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_move_message_to_inbox, folder,
                 foldersManager.getFolderInbox(), generalMessageDetails.getUid());
+    }
+
+    private void messageNotAvailableInFolder() {
+        new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                folder.getFolderAlias(), generalMessageDetails.getUid());
+        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+        Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
+                Toast.LENGTH_LONG).show();
+        finish();
     }
 
     private void notifyUserAboutError(int requestCode) {

@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -90,6 +90,7 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
                 break;
 
             case Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE:
+            case Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE:
                 showApplicationDetailsSettingsActivity();
                 break;
         }

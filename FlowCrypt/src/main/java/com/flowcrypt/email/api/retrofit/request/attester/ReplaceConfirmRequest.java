@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.ReplaceConfirmModel;
 
 /**
- * This class describes a request to the https://attester.cryptup.io/replace/confirm API.
+ * This class describes a request to the https://attester.flowcrypt.com/replace/confirm API.
  * <p>
  * <code>POST /replace/confirm  {
  * "signed_message" (<type 'str'>)  # signed confirm_replace packet (using new/replacement key)

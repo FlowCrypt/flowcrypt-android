@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -15,7 +15,7 @@ package com.flowcrypt.email.api.retrofit;
  *         E-mail: DenBond7@gmail.com
  */
 public enum ApiName {
-    /*attester.cryptup.io*/
+    /*attester.flowcrypt.com*/
     POST_TEST_WELCOME,
     POST_INITIAL_REQUEST,
     POST_INITIAL_CONFIRM,

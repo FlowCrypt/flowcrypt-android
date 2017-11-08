@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,6 +21,7 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,8 +36,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
@@ -50,6 +54,7 @@ import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
+import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
@@ -71,6 +76,8 @@ import java.util.List;
  */
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
     private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
+    private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101;
+
     private TextView textViewSenderAddress;
     private TextView textViewDate;
     private TextView textViewSubject;
@@ -139,6 +146,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         super.onActivityCreated(savedInstanceState);
         if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
             getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
+                        getLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -341,45 +365,39 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      * @param folder The folder where current message exists.
      */
     private void updateActionsVisibility(Folder folder) {
-        FoldersManager foldersManager = FoldersManager.fromDatabase(getContext(), generalMessageDetails.getEmail());
-        folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
+        folderType = FoldersManager.getFolderTypeForImapFolder(folder);
 
         if (folderType != null) {
             switch (folderType) {
-                case All:
-                    isMoveToInboxActionEnable = true;
-                    isArchiveActionEnable = false;
+                case INBOX:
+                    if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equalsIgnoreCase(
+                            EmailUtil.getDomain(generalMessageDetails.getEmail()))) {
+                        isArchiveActionEnable = true;
+                    }
                     isDeleteActionEnable = true;
                     break;
 
                 case SENT:
-                    isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
                     break;
 
                 case TRASH:
-                    isArchiveActionEnable = true;
-                    isDeleteActionEnable = false;
-                    break;
-
-                case DRAFTS:
-                case SPAM:
-                    isArchiveActionEnable = false;
+                    isMoveToInboxActionEnable = true;
                     isDeleteActionEnable = false;
                     break;
 
                 default:
-                    isArchiveActionEnable = true;
+                    isMoveToInboxActionEnable = true;
+                    isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
                     break;
             }
         } else {
-            isArchiveActionEnable = true;
+            isArchiveActionEnable = false;
             isMoveToInboxActionEnable = false;
             isDeleteActionEnable = true;
         }
 
-        isArchiveActionEnable = foldersManager.getFolderArchive() != null;
         getActivity().invalidateOptionsMenu();
     }
 
@@ -438,11 +456,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void initViews(View view) {
-        textViewSenderAddress = (TextView) view.findViewById(R.id.textViewSenderAddress);
-        textViewDate = (TextView) view.findViewById(R.id.textViewDate);
-        textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
+        textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
+        textViewDate = view.findViewById(R.id.textViewDate);
+        textViewSubject = view.findViewById(R.id.textViewSubject);
         viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
-        layoutMessageParts = (ViewGroup) view.findViewById(R.id.layoutMessageParts);
+        layoutMessageParts = view.findViewById(R.id.layoutMessageParts);
         progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
         layoutContent = view.findViewById(R.id.layoutContent);
@@ -477,10 +495,10 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
                 View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
 
-                TextView textViewAttachmentName = (TextView) rootView.findViewById(R.id.textViewAttchmentName);
+                TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
-                TextView textViewAttachmentSize = (TextView) rootView.findViewById(R.id.textViewAttachmentSize);
+                TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
@@ -505,8 +523,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     private void updateMessageView() {
+        layoutMessageParts.removeAllViews();
         if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
-            layoutMessageParts.removeAllViews();
             EmailWebView emailWebView = new EmailWebView(getContext());
             emailWebView.configure();
 
@@ -525,10 +543,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-                if (messagePart != null && !TextUtils.isEmpty(messagePart.getValue())) {
+                if (messagePart != null) {
                     switch (messagePart.getMessagePartType()) {
                         case PGP_MESSAGE:
-                            layoutMessageParts.addView(generatePgpMessagePart(messagePart, layoutInflater));
+                            layoutMessageParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart,
+                                    layoutInflater));
                             break;
 
                         case TEXT:
@@ -581,19 +600,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey,
                                        LayoutInflater layoutInflater) {
 
-        View messagePartPublicKeyView = layoutInflater.inflate(
+        final ViewGroup messagePartPublicKeyView = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_public_key, layoutMessageParts, false);
 
-        TextView textViewKeyOwnerTemplate = (TextView) messagePartPublicKeyView
-                .findViewById(R.id.textViewKeyOwnerTemplate);
-        TextView textViewKeyWordsTemplate = (TextView) messagePartPublicKeyView
-                .findViewById(R.id.textViewKeyWordsTemplate);
-        TextView textViewFingerprintTemplate = (TextView) messagePartPublicKeyView
-                .findViewById(R.id.textViewFingerprintTemplate);
-        final TextView textViewPgpPublicKey = (TextView) messagePartPublicKeyView
-                .findViewById(R.id.textViewPgpPublicKey);
-        Switch switchShowPublicKey = (Switch) messagePartPublicKeyView
-                .findViewById(R.id.switchShowPublicKey);
+        TextView textViewKeyOwnerTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
+        TextView textViewKeyWordsTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyWordsTemplate);
+        TextView textViewFingerprintTemplate = messagePartPublicKeyView.findViewById(R.id.textViewFingerprintTemplate);
+        final TextView textViewPgpPublicKey = messagePartPublicKeyView.findViewById(R.id.textViewPgpPublicKey);
+        Switch switchShowPublicKey = messagePartPublicKeyView.findViewById(R.id.switchShowPublicKey);
 
         switchShowPublicKey.setOnCheckedChangeListener(new CompoundButton
                 .OnCheckedChangeListener() {
@@ -601,6 +615,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean
                     isChecked) {
+                TransitionManager.beginDelayedTransition(messagePartPublicKeyView);
                 textViewPgpPublicKey.setVisibility(isChecked ? View.VISIBLE : View.GONE);
 
                 buttonView.setText(isChecked ? R.string.hide_the_public_key :
@@ -646,8 +661,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      */
     private void initSaveContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
                                        View messagePartPublicKeyView) {
-        Button buttonSaveContact = (Button) messagePartPublicKeyView
-                .findViewById(R.id.buttonSaveContact);
+        Button buttonSaveContact = messagePartPublicKeyView.findViewById(R.id.buttonSaveContact);
         if (buttonSaveContact != null) {
             buttonSaveContact.setVisibility(View.VISIBLE);
             buttonSaveContact.setOnClickListener(new View.OnClickListener() {
@@ -687,8 +701,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      */
     private void initUpdateContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
                                          View messagePartPublicKeyView) {
-        Button buttonUpdateContact = (Button) messagePartPublicKeyView
-                .findViewById(R.id.buttonUpdateContact);
+        Button buttonUpdateContact = messagePartPublicKeyView.findViewById(R.id.buttonUpdateContact);
         if (buttonUpdateContact != null) {
             buttonUpdateContact.setVisibility(View.VISIBLE);
             buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
@@ -735,9 +748,100 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @NonNull
-    private TextView generatePgpMessagePart(MessagePart messagePart,
-                                            LayoutInflater layoutInflater) {
-        return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_pgp_message, layoutMessageParts);
+    private View generatePgpMessagePart(MessagePartPgpMessage messagePartPgpMessage,
+                                        LayoutInflater layoutInflater) {
+        if (messagePartPgpMessage != null) {
+            if (TextUtils.isEmpty(messagePartPgpMessage.getErrorMessage())) {
+                return generateMessagePart(messagePartPgpMessage, layoutInflater, R.layout.message_part_pgp_message,
+                        layoutMessageParts);
+            } else {
+                switch (messagePartPgpMessage.getPgpMessageDecryptError()) {
+                    case FORMAT_ERROR:
+                        final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
+                                R.layout.message_part_pgp_message_format_error, layoutMessageParts, false);
+                        TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
+                        textViewFormatError.setText(messagePartPgpMessage.getErrorMessage());
+                        formatErrorLayout.addView(generateShowOriginalMessageLayout
+                                (messagePartPgpMessage.getValue(), layoutInflater, formatErrorLayout));
+                        return formatErrorLayout;
+
+                    case MISSING_PRIVATE_KEY:
+                        return generateMissingPrivateKeyLayout(messagePartPgpMessage, layoutInflater);
+
+                    default:
+                        ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
+                                R.layout.message_part_pgp_message_error, layoutMessageParts, false);
+                        TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
+                        textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
+                        viewGroup.addView(generateShowOriginalMessageLayout
+                                (messagePartPgpMessage.getValue(), layoutInflater, viewGroup));
+
+                        return viewGroup;
+                }
+            }
+        } else return new TextView(getContext());
+    }
+
+    /**
+     * Generate a layout which describes the missing private keys situation.
+     *
+     * @param messagePartPgpMessage The {@link MessagePartPgpMessage} which contains info about an error.
+     * @param layoutInflater        The {@link LayoutInflater} instance.
+     * @return Generated layout.
+     */
+    @NonNull
+    private View generateMissingPrivateKeyLayout(MessagePartPgpMessage messagePartPgpMessage,
+                                                 LayoutInflater layoutInflater) {
+        ViewGroup missingPrivateKeyLayout = (ViewGroup) layoutInflater.inflate(
+                R.layout.message_part_pgp_message_missing_private_key, layoutMessageParts, false);
+        TextView textViewErrorMessage = missingPrivateKeyLayout.findViewById(R.id.textViewErrorMessage);
+        textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
+
+        Button button = missingPrivateKeyLayout.findViewById(R.id.buttonImportPrivateKey);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(
+                        getContext(), getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
+                        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
+            }
+        });
+
+        missingPrivateKeyLayout.addView(generateShowOriginalMessageLayout
+                (messagePartPgpMessage.getValue(), layoutInflater, missingPrivateKeyLayout));
+        return missingPrivateKeyLayout;
+    }
+
+    /**
+     * Generate a layout with switch button which will be regulate visibility of original message info.
+     *
+     * @param originalPgpMessage The original pgp message info.
+     * @param layoutInflater     The {@link LayoutInflater} instance.
+     * @param rootView           The root view which will be used while we create a new layout using
+     *                           {@link LayoutInflater}.
+     * @return A generated layout.
+     */
+    @NonNull
+    private ViewGroup generateShowOriginalMessageLayout(String originalPgpMessage, LayoutInflater layoutInflater,
+                                                        final ViewGroup rootView) {
+        ViewGroup showOriginalMessageLayout = (ViewGroup) layoutInflater.inflate(
+                R.layout.pgp_show_original_message, rootView, false);
+        final TextView textViewOriginalPgpMessage
+                = showOriginalMessageLayout.findViewById(R.id.textViewOriginalPgpMessage);
+        textViewOriginalPgpMessage.setText(originalPgpMessage);
+
+        Switch switchShowOriginalMessage = showOriginalMessageLayout.findViewById(R.id
+                .switchShowOriginalMessage);
+
+        switchShowOriginalMessage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                TransitionManager.beginDelayedTransition(rootView);
+                textViewOriginalPgpMessage.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
+            }
+        });
+        return showOriginalMessageLayout;
     }
 
     public interface OnActionListener {

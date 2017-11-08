@@ -1,5 +1,5 @@
 <!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
   ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
   ~ Contributors: DenBond7
   -->
@@ -37,6 +37,36 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
+                <Spinner
+                    android:id="@+id/spinnerFrom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:dropDownVerticalOffset="@dimen/default_height_for_click"
+                    android:visibility="invisible" />
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_bottom_line_gray">
+
+                    <EditText
+                        android:id="@+id/editTextFrom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="@string/from"
+                        android:inputType="none"
+                        android:paddingTop="@dimen/default_margin_medium" />
+
+                </android.support.design.widget.TextInputLayout>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -51,7 +81,10 @@
                         android:hint="@string/prompt_recipient"
                         android:paddingEnd="@dimen/size_of_small_progressbar"
                         android:paddingTop="@dimen/default_margin_medium"
-                        android:shrinkColumns="0, true" />
+                        android:shrinkColumns="0, true">
+
+                        <requestFocus />
+                    </com.flowcrypt.email.ui.widget.PgpContactsNachoTextView>
 
                 </android.support.design.widget.TextInputLayout>
 

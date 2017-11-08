@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -7,8 +7,11 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
+import android.text.TextUtils;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.MessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
@@ -24,6 +27,7 @@ import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.messages.MessagePartText;
+import com.flowcrypt.email.model.messages.MessagePartType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
@@ -31,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This loader decrypt if need a message and return
@@ -106,7 +111,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
 
             MimeMessage mimeMessage = js.mime_decode(rawMessage);
 
-            if (mimeMessage != null) {
+            if (mimeMessage != null && !isMessageContainsPGPBlocks(incomingMessageInfo)) {
                 incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
             }
 
@@ -114,6 +119,35 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
             return null;
         }
         return incomingMessageInfo;
+    }
+
+    /**
+     * Check that {@link IncomingMessageInfo} contains PGP blocks.
+     *
+     * @param incomingMessageInfo The incoming message.
+     * @return true if {@link IncomingMessageInfo} contains PGP blocks
+     * ({@link MessagePartType#PGP_MESSAGE}, {@link MessagePartType#PGP_PUBLIC_KEY},
+     * {@link MessagePartType#PGP_PASSWORD_MESSAGE},  {@link MessagePartType#PGP_SIGNED_MESSAGE}), otherwise - false
+     */
+    private boolean isMessageContainsPGPBlocks(IncomingMessageInfo incomingMessageInfo) {
+        if (incomingMessageInfo != null) {
+            List<MessagePart> messageParts = incomingMessageInfo.getMessageParts();
+
+            if (messageParts != null) {
+                for (MessagePart messagePart : messageParts) {
+                    if (messagePart.getMessagePartType() != null) {
+                        switch (messagePart.getMessagePartType()) {
+                            case PGP_MESSAGE:
+                            case PGP_PUBLIC_KEY:
+                            case PGP_PASSWORD_MESSAGE:
+                            case PGP_SIGNED_MESSAGE:
+                                return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -138,8 +172,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                         break;
 
                     case MessageBlock.TYPE_PGP_MESSAGE:
-                        messageParts.add(new MessagePartPgpMessage(decryptText(js,
-                                messageBlock.getContent())));
+                        messageParts.add(generateMessagePartPgpMessage(js, messageBlock));
                         break;
 
                     case MessageBlock.TYPE_PGP_PUBLIC_KEY:
@@ -169,23 +202,74 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
     }
 
     /**
-     * Decrypt an encrypted text.
+     * Generate {@link MessagePartPgpMessage} from encrypted {@link MessageBlock}.
      *
-     * @param js            The {@link Js} util.
-     * @param encryptedText The encrypted text which will be decrypted.
-     * @return The decrypted text.
+     * @param js           The {@link Js} util;
+     * @param messageBlock The encrypted {@link MessageBlock}.
+     * @return Generated {@link MessagePartPgpMessage}.
      */
-    private String decryptText(Js js, String encryptedText) {
-        if (encryptedText != null) {
-            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(encryptedText);
-            try {
-                return pgpDecrypted != null ? pgpDecrypted.getString() : "";
-            } catch (Exception e) {
-                e.printStackTrace();
-                return encryptedText;
+    @NonNull
+    private MessagePartPgpMessage generateMessagePartPgpMessage(Js js, MessageBlock messageBlock) {
+        String encryptedContent = messageBlock.getContent();
+        String value = encryptedContent;
+        String errorMessage = null;
+        MessagePartPgpMessage.PgpMessageDecryptError pgpMessageDecryptError = null;
+
+        if (TextUtils.isEmpty(encryptedContent)) {
+            return new MessagePartPgpMessage("", null, null);
+        }
+
+        PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(encryptedContent);
+
+        if (pgpDecrypted != null) {
+            if (pgpDecrypted.isSuccess()) {
+                value = pgpDecrypted.getString();
+            } else if (!TextUtils.isEmpty(pgpDecrypted.getFormatError())) {
+                errorMessage = getContext().getString(R.string.decrypt_error_message_badly_formatted,
+                        getContext().getString(R.string.app_name)) + "\n\n" + pgpDecrypted.getFormatError();
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.FORMAT_ERROR;
+            } else if (pgpDecrypted.getMissingPassphraseLongids() != null
+                    && pgpDecrypted.getMissingPassphraseLongids().length > 0) {
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
+            } else if (Objects.equals(pgpDecrypted.countPotentiallyMatchingKeys(), pgpDecrypted.countAttempts())
+                    && Objects.equals(pgpDecrypted.countKeyMismatchErrors(), pgpDecrypted.countAttempts())) {
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
+                if (pgpDecrypted.getEncryptedForLongids().length > 1) {
+                    errorMessage = getContext().getString(R.string.decrypt_error_current_key_cannot_message);
+                } else {
+                    errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message,
+                            getContext().getString(R.string.app_name)) + "\n\n" +
+                            getContext().getString(R.string.decrypt_error_single_sender);
+                }
+            } else if (pgpDecrypted.countUnsecureMdcErrors() > 0) {
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNSECURED_MDC_ERROR;
+            } else if (pgpDecrypted.getOtherErrors() != null && pgpDecrypted.getOtherErrors().length > 0) {
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.OTHER_ERRORS;
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(getContext().getString(R.string.decrypt_error_could_not_open_message,
+                        getContext().getString(R.string.app_name)));
+                stringBuilder.append("\n\n");
+                stringBuilder.append(getContext().getString(R.string.decrypt_error_please_write_me));
+                stringBuilder.append("\n\n");
+
+                for (String s : pgpDecrypted.getOtherErrors()) {
+                    stringBuilder.append(s);
+                    stringBuilder.append("\n");
+                }
+
+                errorMessage = stringBuilder.toString();
+            } else {
+                pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNKNOWN_ERROR;
+                errorMessage = getContext().getString(R.string.decrypt_error_could_not_open_message,
+                        getContext().getString(R.string.app_name)) +
+                        "\n\n" + getContext().getString(R.string.decrypt_error_please_write_me);
             }
         } else {
-            return null;
+            pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.JS_TOOL_ERROR;
+            errorMessage = getContext().getString(R.string.decrypt_error_js_tool_error) + "\n\n" +
+                    getContext().getString(R.string.decrypt_error_please_write_me);
         }
+
+        return new MessagePartPgpMessage(value, errorMessage, pgpMessageDecryptError);
     }
 }

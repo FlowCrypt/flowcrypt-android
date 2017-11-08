@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -55,11 +55,11 @@ public class MessageListAdapter extends CursorAdapter {
         GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
 
         ViewHolder viewHolder = new ViewHolder();
-        viewHolder.textViewSenderAddress = (TextView) view.findViewById(R.id
+        viewHolder.textViewSenderAddress = view.findViewById(R.id
                 .textViewSenderAddress);
-        viewHolder.textViewDate = (TextView) view.findViewById(R.id.textViewDate);
-        viewHolder.textViewSubject = (TextView) view.findViewById(R.id.textViewSubject);
-        viewHolder.imageViewAttachments = (ImageView) view.findViewById(R.id.imageViewAttachments);
+        viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
+        viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject);
+        viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
 
         updateItem(context, generalMessageDetails, viewHolder);
     }
@@ -71,7 +71,7 @@ public class MessageListAdapter extends CursorAdapter {
     public void setFolder(Folder folder) {
         this.folder = folder;
         if (folder != null) {
-            this.folderType = FoldersManager.getFolderTypeForImapFodler(folder.getAttributes());
+            this.folderType = FoldersManager.getFolderTypeForImapFolder(folder);
         } else {
             folderType = null;
         }

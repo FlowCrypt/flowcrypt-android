@@ -1,5 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (tom@cryptup.org).
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
  * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
  * Contributors: DenBond7
  */
@@ -26,6 +26,8 @@ import android.util.Log;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
+
+import org.acra.ACRA;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -203,20 +205,25 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
                     if (js != null) {
                         String clipboardText = (String) msg.obj;
 
-                        String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
-                        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+                        try {
+                            String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
+                            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
-                        if (js.is_valid_key(pgpKey, isMustBePrivateKey)) {
-                            try {
-                                KeyDetails keyDetails = new KeyDetails(null, clipboardText, null,
-                                        null,
-                                        false, pgpKey.getPrimaryUserId());
-                                Messenger messenger = msg.replyTo;
-                                messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT,
-                                        keyDetails));
-                            } catch (RemoteException e) {
-                                e.printStackTrace();
+                            if (js.is_valid_key(pgpKey, isMustBePrivateKey)) {
+                                try {
+                                    KeyDetails keyDetails = new KeyDetails(null, clipboardText, null,
+                                            null,
+                                            false, pgpKey.getPrimaryUserId());
+                                    Messenger messenger = msg.replyTo;
+                                    messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT,
+                                            keyDetails));
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
                             }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
                         }
                     }
                     break;
