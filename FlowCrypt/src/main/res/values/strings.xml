@@ -219,4 +219,5 @@
     <string name="show_original_message">Show the original message</string>
     <string name="hide_original_message">Hide the original message</string>
     <string name="import_missing_key">Import missing key</string>
+    <string name="security_settings_were_not_implemented_yet">Security Settings were not implemented yet, stay tuned.</string>
 </resources>

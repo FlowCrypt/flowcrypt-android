@@ -5,15 +5,15 @@
   -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference
-        android:layout="@layout/preference_item"
-        android:title="@string/backup">
+    <Preference android:title="@string/backup">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.BackupSettingsActivity"
             android:targetPackage="@string/application_id" />
     </Preference>
 
-    <Preference android:title="@string/security"></Preference>
+    <Preference
+        android:key="@string/preferences_key_settings_security"
+        android:title="@string/security" />
 
     <Preference android:title="@string/contacts">
         <intent
@@ -27,7 +27,7 @@
             android:targetPackage="@string/application_id" />
     </Preference>
 
-    <Preference android:title="@string/servers"></Preference>
+    <Preference android:title="@string/servers" />
 
     <Preference android:title="@string/legal">
         <intent
