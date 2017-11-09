@@ -88,7 +88,7 @@
 
         <activity
             android:name=".ui.activity.settings.BackupSettingsActivity"
-            android:label="@string/backup"
+            android:label="@string/backups"
             android:screenOrientation="portrait" />
 
         <activity
