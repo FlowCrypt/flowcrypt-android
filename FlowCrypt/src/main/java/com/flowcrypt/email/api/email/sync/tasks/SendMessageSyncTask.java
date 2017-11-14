@@ -28,12 +28,14 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -120,9 +123,18 @@ public class SendMessageSyncTask extends BaseSyncTask {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         mimeMessage.writeTo(byteArrayOutputStream);
 
+                        MimeMessage originalMimeMessage = new MimeMessage(session,
+                                new ByteArrayInputStream(outgoingMessageInfo.getRawReplyMessage().getBytes()));
+
+                        String threadId = getGmailMessageThreadID(gmailApiService, originalMimeMessage.getMessageID());
                         com.google.api.services.gmail.model.Message sentMessage
                                 = new com.google.api.services.gmail.model.Message();
                         sentMessage.setRaw(Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray()));
+
+                        if (!TextUtils.isEmpty(threadId)) {
+                            sentMessage.setThreadId(threadId);
+                        }
+
                         sentMessage = gmailApiService.users().messages().send("me", sentMessage).execute();
                         isMessageSent = sentMessage.getId() != null;
                     }
@@ -362,6 +374,26 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         throw new IllegalArgumentException("The sender doesn't have a public key");
+    }
+
+    /**
+     * Retrive a Gmail message thread id.
+     *
+     * @param service          A {@link Gmail} reference.
+     * @param rfc822msgidValue An rfc822 Message-Id value of the input message.
+     * @return The input message thread id.
+     * @throws IOException
+     */
+    private String getGmailMessageThreadID(Gmail service, String rfc822msgidValue) throws IOException {
+        ListMessagesResponse response = service.users().messages().list("me").setQ(
+                "rfc822msgid:" + rfc822msgidValue).execute();
+
+        if (response.getMessages() != null && response.getMessages().size() == 1) {
+            List<com.google.api.services.gmail.model.Message> messages = response.getMessages();
+            return messages.get(0).getThreadId();
+        }
+
+        return null;
     }
 
     /**
