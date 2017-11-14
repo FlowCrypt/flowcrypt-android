@@ -1,0 +1,130 @@
+package com.flowcrypt.email.ui.loader;
+
+import android.content.Context;
+import android.support.v4.content.AsyncTaskLoader;
+
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
+import com.flowcrypt.email.api.retrofit.ApiHelper;
+import com.flowcrypt.email.api.retrofit.ApiService;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.results.LoaderResult;
+import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.ListSendAsResponse;
+import com.google.api.services.gmail.model.SendAs;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import om.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
+import retrofit2.Response;
+
+/**
+ * This loader does job of receiving information about an array of public
+ * keys from "https://attester.flowcrypt.com/lookup/email".
+ *
+ * @author Denis Bondarenko
+ *         Date: 13.11.2017
+ *         Time: 15:13
+ *         E-mail: DenBond7@gmail.com
+ */
+
+public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResult> {
+    /**
+     * An user account.
+     */
+    private AccountDao accountDao;
+
+    public LoadAccountKeysInfoFromAttester(Context context, AccountDao accountDao) {
+        super(context);
+        this.accountDao = accountDao;
+        onContentChanged();
+    }
+
+    @Override
+    public void onStartLoading() {
+        if (takeContentChanged()) {
+            forceLoad();
+        }
+    }
+
+    @Override
+    public LoaderResult loadInBackground() {
+        if (accountDao != null) {
+            List<String> emails = new ArrayList<>();
+            try {
+                switch (accountDao.getAccountType()) {
+                    case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                        emails.addAll(getAvailableGmailAliases(accountDao));
+                        break;
+
+                    default:
+                        emails.add(accountDao.getEmail());
+                        break;
+                }
+
+                return new LoaderResult(getLookUpEmailsResponse(emails), null);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return new LoaderResult(null, e);
+            }
+        } else {
+            return new LoaderResult(null, new NullPointerException("AccountDao is null!"));
+        }
+    }
+
+    @Override
+    public void onStopLoading() {
+        cancelLoad();
+    }
+
+    /**
+     * Get available Gmail aliases for an input {@link AccountDao}.
+     *
+     * @param accountDao The {@link AccountDao} object which contains information about an email account.
+     * @return The list of available Gmail aliases.
+     */
+    private Collection<? extends String> getAvailableGmailAliases(AccountDao accountDao) {
+        List<String> aliasEmails = new ArrayList<>();
+        aliasEmails.add(accountDao.getEmail());
+
+        try {
+            Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
+            ListSendAsResponse aliases = gmail.users().settings().sendAs().list("me").execute();
+            for (SendAs alias : aliases.getSendAs()) {
+                if (alias.getVerificationStatus() != null) {
+                    aliasEmails.add(alias.getSendAsEmail());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return aliasEmails;
+    }
+
+    /**
+     * Get {@link LookUpEmailsResponse} object which contain a remote information about
+     * {@link PgpContact}.
+     *
+     * @param emails Used to generate a request to the server.
+     * @return {@link LookUpEmailsResponse}
+     * @throws IOException
+     */
+    private List<LookUpEmailResponse> getLookUpEmailsResponse(List<String> emails) throws IOException {
+        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+        Response<LookUpEmailsResponse> response = apiService.postLookUpEmails(new PostLookUpEmailsModel(emails))
+                .execute();
+
+        LookUpEmailsResponse lookUpEmailsResponse = response.body();
+
+        if (lookUpEmailsResponse != null) {
+            return lookUpEmailsResponse.getResults();
+        }
+        return new ArrayList<>();
+    }
+}

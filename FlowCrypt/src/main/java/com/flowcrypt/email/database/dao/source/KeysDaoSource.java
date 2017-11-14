@@ -15,6 +15,9 @@ import android.provider.BaseColumns;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class describe creating of table which has name {@link KeysDaoSource#TABLE_NAME_KEYS},
  * add, delete and update rows.
@@ -97,5 +100,29 @@ public class KeysDaoSource extends BaseDaoSource {
         }
 
         return result;
+    }
+
+    /**
+     * Get a list of of avalible keys longids.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The list of avalible keys longids.
+     */
+    public List<String> getAllKeysLongIds(Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                new String[]{COL_LONG_ID}, null, null, null);
+
+        List<String> longIds = new ArrayList<>();
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                longIds.add(cursor.getString(cursor.getColumnIndex(COL_LONG_ID)));
+            }
+
+            cursor.close();
+        }
+
+        return longIds;
     }
 }

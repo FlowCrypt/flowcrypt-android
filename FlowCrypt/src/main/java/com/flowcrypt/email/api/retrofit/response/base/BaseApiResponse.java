@@ -15,8 +15,8 @@ import com.google.gson.annotations.SerializedName;
  * The base API response implementation.
  *
  * @author Denis Bondarenko
- *         Date: 05.02.2016
- *         Time: 10:16
+ *         Date: 24.04.2017
+ *         Time: 17:50
  *         E-mail: DenBond7@gmail.com
  */
 public class BaseApiResponse implements ApiResponse {
@@ -40,7 +40,7 @@ public class BaseApiResponse implements ApiResponse {
     public BaseApiResponse() {
     }
 
-    protected BaseApiResponse(Parcel in) {
+    public BaseApiResponse(Parcel in) {
         this.apiError = in.readParcelable(ApiError.class.getClassLoader());
     }
 

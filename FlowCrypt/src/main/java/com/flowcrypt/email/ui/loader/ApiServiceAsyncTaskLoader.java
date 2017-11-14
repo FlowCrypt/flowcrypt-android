@@ -51,7 +51,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
 
             if (baseRequest != null && baseRequest.getApiName() != null) {
                 switch (baseRequest.getApiName()) {
-                    case POST_LOOKUP_EMAIL:
+                    case POST_LOOKUP_EMAIL_SINGLE:
                         BaseResponse<LookUpEmailResponse> lookUpEmailResponse =
                                 new BaseResponse<>();
                         lookUpEmailResponse.setApiName(baseRequest.getApiName());

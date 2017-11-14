@@ -6,6 +6,7 @@
 
 <resources>
     <string name="app_name">FlowCrypt</string>
+    <string name="support_email">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
     <string name="prompt_recipient">Add recipient</string>
@@ -67,7 +68,7 @@
     <string name="backups">Backups</string>
     <string name="contacts">Contacts</string>
     <string name="keys">Keys</string>
-    <string name="servers">Servers</string>
+    <string name="attester">Attester</string>
     <string name="legal">Legal</string>
     <string name="help">Help</string>
     <string name="licence">Licence</string>
@@ -205,7 +206,7 @@
     <string name="decrypt_error_js_tool_error">There is a JS tool error.</string>
     <string name="decrypt_error_could_not_open_message">Could not open this message with %1$s.</string>
     <string name="decrypt_error_message_badly_formatted">Message is either badly formatted or not compatible with %1$s.</string>
-    <string name="decrypt_error_please_write_me">Please write me at human@flowcrypt.com so that I can fix it. I
+    <string name="decrypt_error_please_write_me">Please write me at %1$s so that I can fix it. I
         respond very promptly.</string>
     <string name="decrypt_error_single_sender">Normally, messages are encrypted for at least two people
         (sender and the receiver). It seems the sender encrypted this message manually for themselves,
@@ -221,4 +222,9 @@
     <string name="import_missing_key">Import missing key</string>
     <string name="security_settings_were_not_implemented_yet">Security Settings were not implemented yet, stay tuned.</string>
     <string name="loading_backups">Loading backups</string>
+    <string name="submitted_can_receive_encrypted_email">Submitted, can receive encrypted email.</string>
+    <string name="no_public_key_recorded">No public key recorded. Your contacts may not know that you are using
+        encryption.</string>
+    <string name="wrong_public_key_recorded">Wrong public key recorded. Incoming encrypted email may not be readable
+        .</string>
 </resources>

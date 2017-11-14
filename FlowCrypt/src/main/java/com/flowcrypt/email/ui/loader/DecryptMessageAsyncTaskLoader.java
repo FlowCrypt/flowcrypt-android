@@ -249,7 +249,8 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
                 stringBuilder.append(getContext().getString(R.string.decrypt_error_could_not_open_message,
                         getContext().getString(R.string.app_name)));
                 stringBuilder.append("\n\n");
-                stringBuilder.append(getContext().getString(R.string.decrypt_error_please_write_me));
+                stringBuilder.append(getContext().getString(R.string.decrypt_error_please_write_me, getContext()
+                        .getString(R.string.support_email)));
                 stringBuilder.append("\n\n");
 
                 for (String s : pgpDecrypted.getOtherErrors()) {
