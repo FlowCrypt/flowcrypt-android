@@ -36,7 +36,8 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
         implements DialogInterface.OnClickListener {
     public static final int RESULT_CODE_SWITCH_TO_STANDARD_EMAIL = 10;
     public static final int RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 11;
-    public static final int RESULT_CODE_REMOVE_CONTACT = 12;
+    public static final int RESULT_CODE_COPY_FROM_OTHER_CONTACT = 12;
+    public static final int RESULT_CODE_REMOVE_CONTACT = 13;
 
     public static final String EXTRA_KEY_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment.class);
@@ -75,6 +76,9 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
         noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
                 R.mipmap.ic_document, getString(R.string.import_their_public_key),
                 RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY));
+        noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
+                R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
+                RESULT_CODE_COPY_FROM_OTHER_CONTACT));
         if (isShowRemoveAction) {
             noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
                     R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,

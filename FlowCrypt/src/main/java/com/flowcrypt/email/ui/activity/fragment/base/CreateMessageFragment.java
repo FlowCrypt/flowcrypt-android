@@ -53,6 +53,7 @@ import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
+import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
@@ -90,6 +91,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
+    private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -116,6 +118,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private boolean isUpdatedInfoAboutContactCompleted = true;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
+    private PgpContact pgpContactWithNoPublicKey;
 
     public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
@@ -213,15 +216,29 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
                     case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
                         if (data != null) {
-                            PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment
-                                    .EXTRA_KEY_PGP_CONTACT);
+                            PgpContact pgpContact = data.getParcelableExtra(
+                                    NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
                             if (pgpContact != null) {
                                 startActivityForResult(
                                         ImportPublicKeyActivity.newIntent(getContext(),
                                                 getString(R.string.import_public_key), pgpContact),
-
                                         REQUEST_CODE_IMPORT_PUBLIC_KEY);
+                            }
+                        }
+
+                        break;
+
+                    case NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT:
+                        if (data != null) {
+                            pgpContactWithNoPublicKey = data.getParcelableExtra(NoPgpFoundDialogFragment
+                                    .EXTRA_KEY_PGP_CONTACT);
+
+                            if (pgpContactWithNoPublicKey != null) {
+                                startActivityForResult(
+                                        SelectContactsActivity.newIntent(getContext(),
+                                                getString(R.string.use_public_key_from), false),
+                                        REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT);
                             }
                         }
 
@@ -250,6 +267,29 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                 CreateMessageFragment.this);
                         break;
                 }
+                break;
+
+            case REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (data != null) {
+                            PgpContact pgpContact = data.getParcelableExtra(SelectContactsActivity
+                                    .KEY_EXTRA_PGP_CONTACT);
+
+                            if (pgpContact != null) {
+                                pgpContactWithNoPublicKey.setPubkey(pgpContact.getPubkey());
+                                new ContactsDaoSource().updatePgpContact(getContext(), pgpContactWithNoPublicKey);
+
+                                Toast.makeText(getContext(), R.string.key_successfully_copied, Toast.LENGTH_LONG)
+                                        .show();
+                                getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null,
+                                        CreateMessageFragment.this);
+                            }
+                        }
+                        break;
+                }
+
+                pgpContactWithNoPublicKey = null;
                 break;
 
             case REQUEST_CODE_GET_CONTENT_FOR_SENDING:

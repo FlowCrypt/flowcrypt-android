@@ -146,6 +146,7 @@
     <string name="this_message_will_not_be_encrypted">This message will not be encrypted</string>
     <string name="please_update_information_about_contacts">Need to update recipient information</string>
     <string name="import_their_public_key">Import their Public Key</string>
+    <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
     <string name="update">Update</string>
@@ -225,6 +226,7 @@
     <string name="submitted_can_receive_encrypted_email">Submitted, can receive encrypted email.</string>
     <string name="no_public_key_recorded">No public key recorded. Your contacts may not know that you are using
         encryption.</string>
-    <string name="wrong_public_key_recorded">Wrong public key recorded. Incoming encrypted email may not be readable
-        .</string>
+    <string name="wrong_public_key_recorded">Wrong public key recorded. Incoming encrypted email may not be readable.</string>
+    <string name="use_public_key_from">Use Public key from</string>
+    <string name="key_successfully_copied">Key successfully copied</string>
 </resources>
