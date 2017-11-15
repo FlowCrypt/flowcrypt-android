@@ -229,4 +229,5 @@
     <string name="wrong_public_key_recorded">Wrong public key recorded. Incoming encrypted email may not be readable.</string>
     <string name="use_public_key_from">Use Public key from</string>
     <string name="key_successfully_copied">Key successfully copied</string>
+    <string name="search">Search</string>
 </resources>

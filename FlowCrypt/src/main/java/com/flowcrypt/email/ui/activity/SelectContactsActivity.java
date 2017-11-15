@@ -8,7 +8,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -32,7 +36,7 @@ import com.flowcrypt.email.util.UIUtil;
  */
 
 public class SelectContactsActivity extends BaseBackStackActivity implements LoaderManager.LoaderCallbacks<Cursor>,
-        AdapterView.OnItemClickListener {
+        AdapterView.OnItemClickListener, SearchView.OnQueryTextListener {
     public static final String KEY_EXTRA_PGP_CONTACT =
             GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT", SelectContactsActivity.class);
 
@@ -48,6 +52,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
     private ListView listViewContacts;
     private View emptyView;
     private ContactsListCursorAdapter contactsListCursorAdapter;
+    private String userSearchPattern;
 
     public static Intent newIntent(Context context, String title, boolean isMultiply) {
         Intent intent = new Intent(context, SelectContactsActivity.class);
@@ -94,12 +99,41 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_select_contact, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem searchItem = menu.findItem(R.id.menuSearch);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        if (!TextUtils.isEmpty(userSearchPattern)) {
+            searchItem.expandActionView();
+        }
+        searchView.setQuery(userSearchPattern, true);
+        searchView.setQueryHint(getString(R.string.search));
+        searchView.setOnQueryTextListener(this);
+        searchView.clearFocus();
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_contacts_with_has_pgp_true:
+                String selection = ContactsDaoSource.COL_HAS_PGP + " = ?";
+                String[] selectionArgs = new String[]{"1"};
+
+                if (!TextUtils.isEmpty(userSearchPattern)) {
+                    selection = ContactsDaoSource.COL_HAS_PGP + " = ? AND ( " + ContactsDaoSource.COL_EMAIL + " " +
+                            "LIKE ? OR " + ContactsDaoSource.COL_NAME + " " + " LIKE ? )";
+                    selectionArgs = new String[]{"1", "%" + userSearchPattern + "%", "%" + userSearchPattern + "%"};
+                }
+
                 return new CursorLoader(this, new ContactsDaoSource().
-                        getBaseContentUri(), null, ContactsDaoSource.COL_HAS_PGP +
-                        " = ?", new String[]{"1"}, null);
+                        getBaseContentUri(), null, selection, selectionArgs, null);
 
             default:
                 return null;
@@ -113,6 +147,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
                 UIUtil.exchangeViewVisibility(this, false, progressBar, listViewContacts);
 
                 if (data != null && data.getCount() > 0) {
+                    emptyView.setVisibility(View.GONE);
                     contactsListCursorAdapter.swapCursor(data);
                 } else {
                     UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
@@ -139,5 +174,19 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
         intentResult.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact);
         setResult(RESULT_OK, intentResult);
         finish();
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        this.userSearchPattern = query;
+        getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        this.userSearchPattern = newText;
+        getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+        return true;
     }
 }
