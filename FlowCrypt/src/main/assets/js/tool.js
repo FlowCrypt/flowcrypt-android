@@ -989,10 +989,13 @@
 
   function mime_process(mime_message, callback) {
     mime_decode(mime_message, function (success, decoded) {
-      if(typeof decoded.text === 'undefined' && decoded.html !== 'undefined') {
+      if(typeof decoded.text === 'undefined' && typeof decoded.html !== 'undefined') {
         decoded.text = html_to_text(decoded.html); // temporary solution
       }
-      var blocks = crypto_armor_detect_blocks(decoded.text);
+      var blocks = [];
+      if(decoded.text) {  // may be undefined or empty
+        blocks = blocks.concat(crypto_armor_detect_blocks(decoded.text));
+      }
       tool.each(decoded.attachments, function(i, file) {
         var treat_as = file_treat_as(file);
         if(treat_as === 'message') {
@@ -2769,7 +2772,7 @@
   function file_treat_as(attachment) {
     if(tool.value(attachment.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification'])) {
       return 'hidden';  // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
-    } else if(attachment.name === '') {
+    } else if(!attachment.name) { // empty string or undefined
       return attachment.size < 100 ? 'hidden' : 'message';
     } else if(attachment.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) { // ends with one of .gpg, .pgp, .???.asc, .????.asc
       return 'encrypted';
