@@ -6903,7 +6903,7 @@ exports.default = {
             var modulus = keyIntegers[0].data.toString();
             var exponent = keyIntegers[2].data.toString();
             var r = dataIntegers[0].data.clone();
-            var string_bi = java_rsa_decrypt(modulus, exponent, encrypted);
+            var string_bi = $_HOST_rsa_decrypt(modulus, exponent, encrypted);
             if(string_bi && string_bi[0] !== '-') { // if java decrypted it successfully
               r.fromString(string_bi);
               return r;
@@ -11060,7 +11060,7 @@ Barrett.prototype.sqrTo = barrettSqrTo;
 
 function bnModPow(e, m) {
     var bi = nbi();
-    bi.fromString(java_mod_pow(this.toString(), e.toString(), m.toString()));
+    bi.fromString($_HOST_mod_pow(this.toString(), e.toString(), m.toString()));
     return bi;
 //  var i = e.bitLength(),
 //      k,

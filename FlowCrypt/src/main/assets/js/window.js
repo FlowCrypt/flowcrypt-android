@@ -6,7 +6,7 @@ var window = {
   is_bare_engine: true,
   crypto: {
     getRandomValues: function (buf) {
-      var ran = engine_host_secure_random(buf.length);
+      var ran = $_HOST_secure_random(buf.length);
       for(var i=0; i<buf.length; i++) {
         buf[i] = ran[i];
       }
@@ -27,11 +27,11 @@ var window = {
       return engine_host_version;
     },
     handle_exception: function (e) {
-      engine_host_console_log(String(e));
+      $_HOST_console_log(String(e));
       // throw e;
     },
     report: function (x) {
-      engine_host_console_log('catcher.report: ' + String(x));
+      $_HOST_console_log('catcher.report: ' + String(x));
     },
     Promise: function wrapped_Promise(f) {
       var self = this;
@@ -49,19 +49,15 @@ var window = {
     keys_get: function (account_email, longid) {
       return new Promise(function (resolve, reject) {
         if(typeof longid === 'undefined') {
-          resolve(private_keys_get(account_email));
+          resolve($_HOST_storage_keys_get(account_email));
         } else {
-          resolve(private_keys_get(account_email, longid));
+          resolve($_HOST_storage_keys_get(account_email, longid));
         }
       });
     },
     passphrase_get: function (account_email, longid) {
       return new Promise(function (resolve, reject) {
-        console.log('c');
-        console.log(typeof get_passphrase);
-        var pp = get_passphrase(account_email, longid);
-        console.log(pp);
-        resolve(pp);
+        resolve($_HOST_storage_passphrase_get(account_email, longid));
       });
     },
   },
@@ -69,10 +65,10 @@ var window = {
 
 var console = {
   log: function(x) {
-    engine_host_console_log('Js.console.log: ' + console.formatter(x));
+    $_HOST_console_log('Js.console.log: ' + console.formatter(x));
   },
   error: function(x) {
-    engine_host_console_error('Js.console.error: ' + console.formatter(x));
+    $_HOST_console_error('Js.console.error: ' + console.formatter(x));
   },
   formatter: function(x) {
     if(typeof x === 'object') {
@@ -84,7 +80,7 @@ var console = {
 };
 
 var alert = function(m) {
-  engine_host_alert(String(m));
+  $_HOST_alert(String(m));
 };
 
 var engine_host_cb_value_formatter = function(v1, v2, v3, v4, v5) {

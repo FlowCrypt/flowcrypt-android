@@ -288,20 +288,17 @@ public class Js { // Create one object per thread and use them separately. Not t
 
     private void bindJavaMethods() {
         JavaMethodsForJavascript methods = new JavaMethodsForJavascript(v8, storage);
-        v8.registerJavaMethod(methods, "console_log", "engine_host_console_log", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "console_error", "engine_host_console_error", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "alert", "engine_host_alert", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, V8Array.class});
-        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class, String.class});
-        v8.registerJavaMethod(methods, "private_keys_get", "private_keys_get", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "get_passphrase", "get_passphrase", new Class[]{String.class, String.class});
-        v8.registerJavaMethod(methods, "java_mod_pow_strings", "java_mod_pow", new Class[]{String.class, String.class,
-                String.class});
-        v8.registerJavaMethod(methods, "secure_random", "engine_host_secure_random", new Class[]{Integer.class});
-        v8.registerJavaMethod(methods, "html_to_text", "html_to_text", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "rsa_decrypt", "java_rsa_decrypt", new Class[]{String.class, String.class,
-                V8Array.class});
-
+        v8.registerJavaMethod(methods, "console_log", "$_HOST_console_log", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "console_error", "$_HOST_console_error", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "alert", "$_HOST_alert", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class, V8Array.class});
+        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class, String.class});
+        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "storage_passphrase_get", "$_HOST_storage_passphrase_get", new Class[]{String.class, String.class});
+        v8.registerJavaMethod(methods, "mod_pow_strings", "$_HOST_mod_pow", new Class[]{String.class, String.class, String.class});
+        v8.registerJavaMethod(methods, "secure_random", "$_HOST_secure_random", new Class[]{Integer.class});
+        v8.registerJavaMethod(methods, "html_to_text", "$_HOST_html_to_text", new Class[]{String.class});
+        v8.registerJavaMethod(methods, "rsa_decrypt", "$_HOST_rsa_decrypt", new Class[]{String.class, String.class, V8Array.class});
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -435,7 +432,7 @@ class JavaMethodsForJavascript {
         this.v8 = v8;
     }
 
-    public V8Object private_keys_get(String account_email, String longid) {
+    public V8Object storage_keys_get(String account_email, String longid) {
         PgpKeyInfo ki = this.storage.getPgpPrivateKey(longid);
         if (ki == null) {
             return null;
@@ -443,7 +440,7 @@ class JavaMethodsForJavascript {
         return new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid());
     }
 
-    public V8Array private_keys_get(String account_email) {
+    public V8Array storage_keys_get(String account_email) {
         V8Array result = new V8Array(v8);
         for (PgpKeyInfo ki : this.storage.getAllPgpPrivateKeys()) {
             result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
@@ -451,7 +448,7 @@ class JavaMethodsForJavascript {
         return result;
     }
 
-    public V8Array private_keys_get(String account_email, V8Array longid) {
+    public V8Array storage_keys_get(String account_email, V8Array longid) {
         V8Array result = new V8Array(v8);
         for (PgpKeyInfo ki : this.storage.getFilteredPgpPrivateKeys(longid.getStrings(0, longid.length()))) {
             result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
@@ -459,7 +456,7 @@ class JavaMethodsForJavascript {
         return result;
     }
 
-    public String get_passphrase(String account_email, String longid) {
+    public String storage_passphrase_get(String account_email, String longid) {
         return this.storage.getPassphrase(longid);
     }
 
@@ -471,8 +468,8 @@ class JavaMethodsForJavascript {
         System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
     }
 
-    public String java_mod_pow_strings(String b, String e, String m) {
-        return java_mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
+    public String mod_pow_strings(String b, String e, String m) {
+        return mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
     }
 
     public String html_to_text(String html) {
@@ -485,7 +482,7 @@ class JavaMethodsForJavascript {
 
     // Do modular exponentiation for the expression b^e mod m
     // (b to the power e, modulo m).
-    public BigInteger java_mod_pow(BigInteger b, BigInteger e, BigInteger m) {
+    public BigInteger mod_pow(BigInteger b, BigInteger e, BigInteger m) {
         // prints the calculations
         // System.out.println(b + " " + e + " " + m);
         BigInteger zero = new BigInteger("0");
@@ -500,12 +497,12 @@ class JavaMethodsForJavascript {
 
         if (e.mod(two).equals(zero)) {
             // Calculates the square root of the answer
-            BigInteger answer = java_mod_pow(b, e.divide(two), m);
+            BigInteger answer = mod_pow(b, e.divide(two), m);
             // Reuses the result of the square root
             return (answer.multiply(answer)).mod(m);
         }
 
-        return (b.multiply(java_mod_pow(b, e.subtract(one), m))).mod(m);
+        return (b.multiply(mod_pow(b, e.subtract(one), m))).mod(m);
     }
 
     public String rsa_decrypt(String modulus, String exponent, V8Array encrypted) {

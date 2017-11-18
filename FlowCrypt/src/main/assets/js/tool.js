@@ -1015,8 +1015,8 @@
 
   function mime_process(mime_message, callback) {
     mime_decode(mime_message, function (success, decoded) {
-      if(typeof decoded.text === 'undefined' && typeof decoded.html !== 'undefined' && typeof html_to_text === 'function') { // android
-        decoded.text = html_to_text(decoded.html); // temporary solution
+      if(typeof decoded.text === 'undefined' && typeof decoded.html !== 'undefined' && typeof $_HOST_html_to_text === 'function') { // android
+        decoded.text = $_HOST_html_to_text(decoded.html); // temporary solution
       }
       var blocks = [];
       if(decoded.text) {  // may be undefined or empty
