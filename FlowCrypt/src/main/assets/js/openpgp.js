@@ -15822,11 +15822,13 @@ function decrypt(_ref6) {
       if (!publicKeys) {
         publicKeys = [];
       }
-      if (signature) {
-        //detached signature
-        result.signatures = message.verifyDetached(signature, publicKeys);
-      } else {
-        result.signatures = message.verify(publicKeys);
+      if(publicKeys.length) { // condition added by Tom for Android compatibility. Makes no sense to verify signatures without pubkeys
+        if (signature) {
+          //detached signature
+          result.signatures = message.verifyDetached(signature, publicKeys);
+        } else {
+          result.signatures = message.verify(publicKeys);
+        }
       }
     }
     return result;
