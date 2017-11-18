@@ -14,13 +14,55 @@ var window = {
   },
   catcher: {
     try: function(code) {
-      return code;
+      var self = this;
+      return function () {
+        try {
+          return code();
+        } catch(code_err) {
+          self.handle_exception(code_err);
+        }
+      };
     },
     version: function() {
       return engine_host_version;
     },
     handle_exception: function (e) {
-      throw e;
+      engine_host_console_log(String(e));
+      // throw e;
+    },
+    report: function (x) {
+      engine_host_console_log('catcher.report: ' + String(x));
+    },
+    Promise: function wrapped_Promise(f) {
+      var self = this;
+      return new Promise(function(resolve, reject) {
+        try {
+          f(resolve, reject);
+        } catch(e) {
+          self.handle_exception(e);
+          reject({code: null, message: 'Error happened, please write me at human@flowcrypt.com to fix this\n\nError: ' + e.message, internal: 'exception'});
+        }
+      })
+    },
+  },
+  flowcrypt_storage: {
+    keys_get: function (account_email, longid) {
+      return new Promise(function (resolve, reject) {
+        if(typeof longid === 'undefined') {
+          resolve(private_keys_get(account_email));
+        } else {
+          resolve(private_keys_get(account_email, longid));
+        }
+      });
+    },
+    passphrase_get: function (account_email, longid) {
+      return new Promise(function (resolve, reject) {
+        console.log('c');
+        console.log(typeof get_passphrase);
+        var pp = get_passphrase(account_email, longid);
+        console.log(pp);
+        resolve(pp);
+      });
     },
   },
 };

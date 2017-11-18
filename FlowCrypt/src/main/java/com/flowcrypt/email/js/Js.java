@@ -440,24 +440,21 @@ class JavaMethodsForJavascript {
         if (ki == null) {
             return null;
         }
-        return new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki.getLongid());
+        return new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid());
     }
 
     public V8Array private_keys_get(String account_email) {
         V8Array result = new V8Array(v8);
         for (PgpKeyInfo ki : this.storage.getAllPgpPrivateKeys()) {
-            result.push(new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki
-                    .getLongid()));
+            result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
         }
         return result;
     }
 
     public V8Array private_keys_get(String account_email, V8Array longid) {
         V8Array result = new V8Array(v8);
-        for (PgpKeyInfo ki : this.storage.getFilteredPgpPrivateKeys(longid.getStrings(0, longid
-                .length()))) {
-            result.push(new V8Object(v8).add("armored", ki.getArmored()).add("longid", ki
-                    .getLongid()));
+        for (PgpKeyInfo ki : this.storage.getFilteredPgpPrivateKeys(longid.getStrings(0, longid.length()))) {
+            result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
         }
         return result;
     }

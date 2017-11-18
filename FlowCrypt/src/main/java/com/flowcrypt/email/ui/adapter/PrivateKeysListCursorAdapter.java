@@ -58,7 +58,7 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
 
         String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
         PgpKeyInfo keyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longId);
-        PgpKey pgpKey = js.crypto_key_read(keyInfo.getArmored());
+        PgpKey pgpKey = js.crypto_key_read(keyInfo.getPrivate());
 
         textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
         textViewKeywords.setText(js.mnemonic(longId));
