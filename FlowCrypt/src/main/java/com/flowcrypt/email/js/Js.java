@@ -24,6 +24,7 @@ import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
 import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 
+import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -291,6 +292,7 @@ public class Js { // Create one object per thread and use them separately. Not t
         v8.registerJavaMethod(m, "console_log", "$_HOST_console_log", args(str));
         v8.registerJavaMethod(m, "console_error", "$_HOST_console_error", args(str));
         v8.registerJavaMethod(m, "alert", "$_HOST_alert", args(str));
+        v8.registerJavaMethod(m, "report", "$_HOST_report", args(Boolean.class, str, str, str));
         v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str, arr));
         v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str, str));
         v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str));
@@ -479,6 +481,25 @@ class JavaMethodsForJavaScript {
 
     public void console_error(String message) {
         System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
+    }
+
+    public void report(Boolean isError, String title, String stack_trace, String details) {
+        console_error(title);
+        console_error(stack_trace);
+        if(details.length() > 0) {
+            console_error(details);
+        }
+        ACRA.getErrorReporter().putCustomData("JAVASCRIPT_TITLE", title);
+        ACRA.getErrorReporter().putCustomData("JAVASCRIPT_STACK_TRACE", stack_trace);
+        ACRA.getErrorReporter().putCustomData("JAVASCRIPT_DETAILS", details);
+        if(isError) {
+            ACRA.getErrorReporter().handleSilentException(new JavaScriptError(title));
+        } else {
+            ACRA.getErrorReporter().handleSilentException(new JavaScriptReport(title));
+        }
+        ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_TITLE");
+        ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_STACK_TRACE");
+        ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_DETAILS");
     }
 
     public String mod_pow_strings(String b, String e, String m) {

@@ -27,11 +27,14 @@ var window = {
       return engine_host_version;
     },
     handle_exception: function (e) {
-      $_HOST_console_log(String(e));
-      // throw e;
+      $_HOST_report(true, String(e), e.stack || '', '');
     },
-    report: function (x) {
-      $_HOST_console_log('catcher.report: ' + String(x));
+    report: function (name, details) {
+      try {
+        throw new Error(name);
+      } catch(e) {
+        $_HOST_report(false, String(name), e.stack, this.format_details(details));
+      }
     },
     Promise: function wrapped_Promise(f) {
       var self = this;
@@ -44,6 +47,16 @@ var window = {
         }
       })
     },
+    format_details: function (details) {
+      if(typeof details !== 'string') {
+        try {
+          details = JSON.stringify(details);
+        } catch(stringify_error) {
+          details = '(could not stringify details "' + String(details) + '" in catcher.report because: ' + stringify_error.message + ')';
+        }
+      }
+      return details || '(no details provided)';
+    }
   },
   flowcrypt_storage: {
     keys_get: function (account_email, longid) {
@@ -62,6 +75,8 @@ var window = {
     },
   },
 };
+
+var catcher = window.catcher;
 
 var console = {
   log: function(x) {
