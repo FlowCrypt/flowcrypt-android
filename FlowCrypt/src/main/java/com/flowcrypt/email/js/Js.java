@@ -49,8 +49,10 @@ public class Js { // Create one object per thread and use them separately. Not t
     private final V8 v8;
     private final V8Object tool;
     private final int NULL = V8Value.NULL;
-    private V8Function cb_catcher;
+    private V8Function cb_catch;
     private Object[] cb_last_value = new Object[3];
+    private Class str = String.class;
+    private Class arr = V8Array.class;
 
     public Js(Context context, StorageConnectorInterface storage) throws IOException {
         if (context != null) {
@@ -66,29 +68,29 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public Boolean str_is_email_valid(String email) {
-        return (Boolean) this.call(Boolean.class, new String[]{"str", "is_email_valid"}, new V8Array(v8).push(email));
+        return (Boolean) this.call(Boolean.class, p("str", "is_email_valid"), new V8Array(v8).push(email));
     }
 
     public PgpContact str_parse_email(String email) {
-        V8Object e = (V8Object) this.call(Object.class, new String[]{"str", "parse_email"}, new V8Array(v8).push(email));
+        V8Object e = (V8Object) this.call(Object.class, p("str", "parse_email"), new V8Array(v8).push(email));
         return new PgpContact(e.getString("email"), e.getString("name"));
     }
 
-    public String str_base64url_encode(String str) {
-        return (String) this.call(String.class, new String[]{"str", "base64url_encode"}, new V8Array(v8).push(str));
+    public String str_base64url_encode(String string) {
+        return (String) this.call(str, p("str", "base64url_encode"), new V8Array(v8).push(string));
     }
 
-    public String str_base64url_decode(String str) {
-        return (String) this.call(String.class, new String[]{"str", "base64url_decode"}, new V8Array(v8).push(str));
+    public String str_base64url_decode(String string) {
+        return (String) this.call(str, p("str", "base64url_decode"), new V8Array(v8).push(string));
     }
 
-    public long time_to_utc_timestamp(String str) {
-        return Long.parseLong((String) this.call(String.class, new String[]{"time", "to_utc_timestamp"},
-                new V8Array(v8).push(str).push(true)));
+    public long time_to_utc_timestamp(String string) {
+        return Long.parseLong((String) this.call(str, p("time", "to_utc_timestamp"), new V8Array(v8).push(string)
+                .push(true)));
     }
 
     public MimeMessage mime_decode(String mime_message) {
-        this.call(Object.class, new String[]{"mime", "decode"}, new V8Array(v8).push(mime_message).push(cb_catcher));
+        this.call(Object.class, p("mime", "decode"), new V8Array(v8).push(mime_message).push(cb_catch));
         if ((Boolean) cb_last_value[0]) {
             return new MimeMessage((V8Object) cb_last_value[1], this);
         } else {
@@ -96,8 +98,7 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments,
-                              MimeMessage reply_to) {
+    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments, MimeMessage reply_to) {
         V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
         headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
         V8Array files = new V8Array(v8);
@@ -106,67 +107,60 @@ public class Js { // Create one object per thread and use them separately. Not t
                 files.push(attachment.getV8Object());
             }
         }
-        this.call(
-            Void.class, new String[]{"mime", "encode"},
-            new V8Array(v8).push(body).push(headers).push(files).push(cb_catcher)
-        );
+        this.call(Void.class, p("mime", "encode"), new V8Array(v8).push(body).push(headers).push(files).push(cb_catch));
         return (String) cb_last_value[0];
     }
 
     public ProcessedMime mime_process(String mime_message) {
-        this.call(Object.class, new String[]{"mime", "process"}, new V8Array(v8).push(mime_message).push(cb_catcher));
+        this.call(Object.class, p("mime", "process"), new V8Array(v8).push(mime_message).push(cb_catch));
         return new ProcessedMime((V8Object) cb_last_value[0], this);
     }
 
     public String crypto_key_normalize(String armored_key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "normalize"}, new V8Array(v8)
-                .push(armored_key));
+        return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
     }
 
     public PgpKey crypto_key_read(String armored_key) {
-        return new PgpKey((V8Object) this.call(Object.class, new String[]{"crypto", "key", "read"}, new V8Array(v8)
+        return new PgpKey((V8Object) this.call(Object.class, p("crypto", "key", "read"), new V8Array(v8)
                 .push(armored_key)), this);
     }
 
     public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
-        return (V8Object) this.call(Object.class, new String[]{"crypto", "key", "decrypt"}, new V8Array(v8)
+        return (V8Object) this.call(Object.class, p("crypto", "key", "decrypt"), new V8Array(v8)
                 .push(private_key.getV8Object()).push(passphrase));
     }
 
-    public String crypto_key_fingerprint(PgpKey key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "fingerprint"}, new V8Array(v8)
-                .push(key.getV8Object()));
+    public String crypto_key_fingerprint(PgpKey k) {
+        return (String) this.call(str, p("crypto", "key", "fingerprint"), new V8Array(v8).push(k.getV8Object()));
     }
 
-    public String crypto_key_longid(PgpKey key) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new V8Array(v8)
-                .push(key.getV8Object()));
+    public String crypto_key_longid(PgpKey k) {
+        return (String) this.call(str, p("crypto", "key", "longid"), new V8Array(v8).push(k.getV8Object()));
     }
 
     public String crypto_key_longid(String fingerprint) {
-        return (String) this.call(String.class, new String[]{"crypto", "key", "longid"}, new V8Array(v8)
-                .push(fingerprint));
+        return (String) this.call(str, p("crypto", "key", "longid"), new V8Array(v8).push(fingerprint));
     }
 
     public String crypto_armor_clip(String text) {
-        return (String) this.call(String.class, new String[]{"crypto", "armor", "clip"}, new V8Array(v8).push(text));
+        return (String) this.call(str, p("crypto", "armor", "clip"), new V8Array(v8).push(text));
     }
 
     public String mnemonic(String longid) {
-        return (String) this.call(String.class, v8, new String[]{"mnemonic"}, new V8Array(v8).push(longid));
+        return (String) this.call(str, v8, p("mnemonic"), new V8Array(v8).push(longid));
     }
 
     public String crypto_message_encrypt(String pubkeys[], String text) {
         V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL)
-                .push(true).push(cb_catcher);
-        this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
+                .push(true).push(cb_catch);
+        this.call(void.class, p("crypto", "message", "encrypt"), params);
         return ((V8Object) cb_last_value[0]).get("data").toString();
     }
 
     public byte[] crypto_message_encrypt(String pubkeys[], byte[] content, String filename) {
         V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
-                .push(filename).push(false).push(cb_catcher);
-        this.call(void.class, new String[]{"crypto", "message", "encrypt"}, params);
+                .push(filename).push(false).push(cb_catch);
+        this.call(void.class, p("crypto", "message", "encrypt"), params);
         V8Object packets = (V8Object) ((V8Object)((V8Object) cb_last_value[0]).get("message")).get("packets");
         V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
         return data.getBytes(0, data.length());
@@ -174,8 +168,8 @@ public class Js { // Create one object per thread and use them separately. Not t
 
     public PgpDecrypted crypto_message_decrypt(String data, String password) {
         // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
-        V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push(cb_catcher).push(NULL);
-        this.call(void.class, new String[]{"crypto", "message", "decrypt"}, params);
+        V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push(cb_catch).push(NULL);
+        this.call(void.class, p("crypto", "message", "decrypt"), params);
         return new PgpDecrypted((V8Object) cb_last_value[0]);
     }
 
@@ -185,23 +179,22 @@ public class Js { // Create one object per thread and use them separately. Not t
 
     public PgpDecrypted crypto_message_decrypt(byte[] bytes) {
         // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
-        V8Array params = new V8Array(v8).push(NULL).push("").push(uint8(bytes)).push("").push(cb_catcher).push(NULL);
-        this.call(void.class, new String[]{"crypto", "message", "decrypt"}, params);
+        V8Array params = new V8Array(v8).push(NULL).push("").push(uint8(bytes)).push("").push(cb_catch).push(NULL);
+        this.call(void.class, p("crypto", "message", "decrypt"), params);
         return new PgpDecrypted((V8Object) cb_last_value[0]);
     }
 
-    public String api_gmail_query_backups(String account_email) {
-        return (String) this.call(String.class, new String[]{"api", "gmail", "query", "backups"},
-                new V8Array(v8).push(account_email));
+    public String api_gmail_query_backups(String email) {
+        return (String) this.call(str, p("api", "gmail", "query", "backups"), new V8Array(v8).push(email));
     }
 
     public IdToken api_auth_parse_id_token(String id_token) {
-        return new IdToken((V8Object) this.call(Object.class, new String[]{"api", "auth", "parse_id_token"},
+        return new IdToken((V8Object) this.call(Object.class, p("api", "auth", "parse_id_token"),
                 new V8Array(v8).push(id_token)));
     }
 
     /**
-     * Check that the key has a valid structure.
+     * Check that the key has valid structure.
      *
      * @param armoredPrivateKey The armored private key.
      * @param isPrivateKey      true if this key must be private, otherwise false.
@@ -217,7 +210,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     /**
-     * Check that the key has a valid structure.
+     * Check that the key has valid structure.
      *
      * @param pgpKey The {@link PgpKey} object.
      * @return true if private key has valid structure, otherwise false.
@@ -230,8 +223,8 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public Attachment file_attachment(byte[] content, String name, String type) {
-        return new Attachment((V8Object) this.call(V8Object.class, new String[]{"file", "attachment"},
-                new V8Array(v8).push(name).push(type).push(uint8(content))));
+        return new Attachment((V8Object) this.call(V8Object.class, p("file", "attachment"), new V8Array(v8)
+                .push(name).push(type).push(uint8(content))));
     }
 
     private V8TypedArray uint8(byte[] data) {
@@ -247,9 +240,8 @@ public class Js { // Create one object per thread and use them separately. Not t
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
 
-    private V8Object mime_reply_headers(MimeMessage original) {
-        return (V8Object) this.call(Object.class, new String[]{"mime", "reply_headers"}, new V8Array(v8)
-                .push(original.getV8Object()));
+    private V8Object mime_reply_headers(MimeMessage m) {
+        return (V8Object) this.call(Object.class, p("mime", "reply_headers"), new V8Array(v8).push(m.getV8Object()));
     }
 
     private Object call(Class<?> return_type, String path[], V8Array args) {
@@ -264,7 +256,7 @@ public class Js { // Create one object per thread and use them separately. Not t
         if (obj == null) {
             obj = base;
         }
-        if (return_type == String.class) {
+        if (return_type == str) {
             return obj.executeStringFunction(path[path.length - 1], args);
         } else if (return_type == Boolean.class) {
             return obj.executeBooleanFunction(path[path.length - 1], args);
@@ -278,27 +270,35 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    private V8Array array(String arr[]) {
+    private V8Array array(String a[]) {
         V8Array v8arr = new V8Array(v8);
-        for (String v : arr) {
+        for (String v : a) {
             v8arr.push(v);
         }
         return v8arr;
     }
 
+    private String[] p(String... js) {
+        return js;
+    }
+
+    private Class[] args(Class... classes) {
+        return classes;
+    }
+
     private void bindJavaMethods() {
-        JavaMethodsForJavascript methods = new JavaMethodsForJavascript(v8, storage);
-        v8.registerJavaMethod(methods, "console_log", "$_HOST_console_log", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "console_error", "$_HOST_console_error", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "alert", "$_HOST_alert", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class, V8Array.class});
-        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class, String.class});
-        v8.registerJavaMethod(methods, "storage_keys_get", "$_HOST_storage_keys_get", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "storage_passphrase_get", "$_HOST_storage_passphrase_get", new Class[]{String.class, String.class});
-        v8.registerJavaMethod(methods, "mod_pow_strings", "$_HOST_mod_pow", new Class[]{String.class, String.class, String.class});
-        v8.registerJavaMethod(methods, "secure_random", "$_HOST_secure_random", new Class[]{Integer.class});
-        v8.registerJavaMethod(methods, "html_to_text", "$_HOST_html_to_text", new Class[]{String.class});
-        v8.registerJavaMethod(methods, "rsa_decrypt", "$_HOST_rsa_decrypt", new Class[]{String.class, String.class, V8Array.class});
+        JavaMethodsForJavaScript m = new JavaMethodsForJavaScript(v8, storage);
+        v8.registerJavaMethod(m, "console_log", "$_HOST_console_log", args(str));
+        v8.registerJavaMethod(m, "console_error", "$_HOST_console_error", args(str));
+        v8.registerJavaMethod(m, "alert", "$_HOST_alert", args(str));
+        v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str, arr));
+        v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str, str));
+        v8.registerJavaMethod(m, "storage_keys_get", "$_HOST_storage_keys_get", args(str));
+        v8.registerJavaMethod(m, "storage_passphrase_get", "$_HOST_storage_passphrase_get", args(str, str));
+        v8.registerJavaMethod(m, "mod_pow_strings", "$_HOST_mod_pow", args(str, str, str));
+        v8.registerJavaMethod(m, "secure_random", "$_HOST_secure_random", args(Integer.class));
+        v8.registerJavaMethod(m, "html_to_text", "$_HOST_html_to_text", args(str));
+        v8.registerJavaMethod(m, "rsa_decrypt", "$_HOST_rsa_decrypt", args(str, str, arr));
     }
 
     private V8Object loadJavascriptCode() throws IOException {
@@ -319,7 +319,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     private void bindCallbackCatcher() {
-        cb_catcher = new V8Function(v8, new JavaCallback() {
+        cb_catch = new V8Function(v8, new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
                 Arrays.fill(cb_last_value, null);
@@ -422,12 +422,25 @@ class MeaningfulV8ObjectContainer {
     }
 }
 
-class JavaMethodsForJavascript {
+
+class JavaScriptError extends Exception {
+    JavaScriptError(String msg) {
+        super(msg);
+    }
+}
+
+class JavaScriptReport extends Exception {
+    JavaScriptReport(String msg) {
+        super(msg);
+    }
+}
+
+class JavaMethodsForJavaScript {
 
     private final StorageConnectorInterface storage;
     private final V8 v8;
 
-    JavaMethodsForJavascript(V8 v8, StorageConnectorInterface storage) {
+    JavaMethodsForJavaScript(V8 v8, StorageConnectorInterface storage) {
         this.storage = storage;
         this.v8 = v8;
     }
@@ -460,11 +473,11 @@ class JavaMethodsForJavascript {
         return this.storage.getPassphrase(longid);
     }
 
-    public void console_log(final String message) {
+    public void console_log(String message) {
         System.out.println("[JAVASCRIPT.CONSOLE.LOG] " + message);
     }
 
-    public void console_error(final String message) {
+    public void console_error(String message) {
         System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
     }
 
@@ -480,28 +493,21 @@ class JavaMethodsForJavascript {
         }
     }
 
-    // Do modular exponentiation for the expression b^e mod m
-    // (b to the power e, modulo m).
     public BigInteger mod_pow(BigInteger b, BigInteger e, BigInteger m) {
-        // prints the calculations
-        // System.out.println(b + " " + e + " " + m);
+        // Do modular exponentiation for the expression b^e mod m (b to the power e, modulo m).
         BigInteger zero = new BigInteger("0");
         BigInteger one = new BigInteger("1");
         BigInteger two = one.add(one);
-
-        // Base Case
-        if (e.equals(zero))
+        if (e.equals(zero)) {
             return one;
-        if (e.equals(one))
-            return b.mod(m);
-
-        if (e.mod(two).equals(zero)) {
-            // Calculates the square root of the answer
-            BigInteger answer = mod_pow(b, e.divide(two), m);
-            // Reuses the result of the square root
-            return (answer.multiply(answer)).mod(m);
         }
-
+        if (e.equals(one)) {
+            return b.mod(m);
+        }
+        if (e.mod(two).equals(zero)) {
+            BigInteger answer = mod_pow(b, e.divide(two), m); // Calculates the square root of the answer
+            return (answer.multiply(answer)).mod(m); // Reuses the result of the square root
+        }
         return (b.multiply(mod_pow(b, e.subtract(one), m))).mod(m);
     }
 
