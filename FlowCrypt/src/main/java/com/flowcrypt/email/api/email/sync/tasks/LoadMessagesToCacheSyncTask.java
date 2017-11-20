@@ -51,7 +51,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
         int messagesCount = imapFolder.getMessageCount();
         int end = messagesCount - countOfAlreadyLoadedMessages;
-        int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP;
+        int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
         Log.d(TAG, "Run LoadMessagesToCacheSyncTask with parameters:"
                 + " folderName = " + folderName
