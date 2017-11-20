@@ -344,7 +344,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         PgpKeyInfo[] pgpKeyInfoArray = new SecurityStorageConnector(context).getAllPgpPrivateKeys();
         for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getArmored());
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
             if (pgpKey != null) {
                 PgpKey publicKey = pgpKey.toPublic();
                 if (publicKey != null) {

@@ -44,7 +44,7 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
             PrivateKeyInfo privateKeyInfo = SecurityUtils.getPrivateKeysInfo(getContext()).get(0);
-            String decryptedKey = privateKeyInfo.getPgpKeyInfo().getArmored();
+            String decryptedKey = privateKeyInfo.getPgpKeyInfo().getPrivate();
             PgpKey pgpKey = js.crypto_key_read(decryptedKey);
             pgpKey.encrypt(privateKeyInfo.getPassphrase());
 

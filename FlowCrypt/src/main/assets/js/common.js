@@ -1,13 +1,11 @@
-/* Business Source License 1.0 © 2016 FlowCrypt Limited (human@flowcrypt.com). Use limitations apply. This version will change to GPLv3 on 2020-01-01. See https://github.com/CryptUp/cryptup-browser/tree/master/src/LICENCE */
+/* Business Source License 1.0 © 2016-2017 FlowCrypt Limited. Use limitations apply. Contact human@flowcrypt.com */
 
 'use strict';
-
 
 (function ( /* ALL TOOLS */ ) {
 
   var tool = window.tool = {
     str: {
-      trim_lower: str_trim_lower, //todo - deprecate in favor of parse_email
       parse_email: str_parse_email,
       pretty_print: str_pretty_print,
       html_as_text: str_html_as_text,
@@ -28,6 +26,7 @@
       from_equal_sign_notation_as_utf: str_from_equal_sign_notation_as_utf,
       uint8_as_utf: str_uint8_as_utf,
       to_hex: str_to_hex,
+      from_hex: str_from_hex,
       extract_cryptup_attachments: str_extract_cryptup_attachments,
       extract_cryptup_reply_token: str_extract_cryptup_reply_token,
       strip_cryptup_reply_token: str_strip_cryptup_reply_token,
@@ -117,7 +116,7 @@
       },
     },
     diagnose: {
-      message_pubkeys: giagnose_message_pubkeys,
+      message_pubkeys: diagnose_message_pubkeys,
       keyserver_pubkeys: diagnose_keyserver_pubkeys,
     },
     crypto: {
@@ -155,7 +154,6 @@
     api: {
       auth: {
         window: api_auth_window,
-        process_fragment: api_auth_process_and_save_fragment,
         parse_id_token: api_auth_parse_id_token,
       },
       error: {
@@ -194,12 +192,7 @@
         search_contacts: api_gmail_search_contacts,
         extract_armored_block: gmail_api_extract_armored_block,
         fetch_messages_based_on_query_and_extract_first_available_header: api_gmail_fetch_messages_based_on_query_and_extract_first_available_header,
-      },
-      outlook: {
-        oauth_url: api_outlook_oauth_url,
-        message_send: api_outlook_sendmail,
-        message_get: api_outlook_message_get,
-        message_thread: api_outlook_message_thread,
+        fetch_key_backups: api_gmail_fetch_key_backups,
       },
       attester: {
         lookup_email: api_attester_lookup_email,
@@ -214,9 +207,8 @@
         },
       },
       cryptup: {
-        url: api_cryptup_url,
         auth_error: api_cryptup_auth_error,
-        error_text: api_cryptup_error_text,
+        url: api_cryptup_url,
         help_feedback: api_cryptup_help_feedback,
         help_uninstall: api_cryptup_help_uninstall,
         account_login: api_cryptup_account_login,
@@ -256,34 +248,41 @@
       }
     },
     enums: {
-      recovery_email_subjects: ['Your CryptUp Backup', 'Your FlowCrypt Backup', 'Your CryptUP Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'],
+      recovery_email_subjects: ['Your FlowCrypt Backup', 'Your CryptUp Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'],
     },
   };
 
-  /* tool.str */
-
-  function str_trim_lower(email) {
-    if(tool.value('<').in(email) && tool.value('>').in(email)) {
-      email = email.substr(email.indexOf('<') + 1, email.indexOf('>') - email.indexOf('<') - 1);
-    }
-    return email.trim().toLowerCase();
+  var openpgp = window.openpgp;
+  var storage = window.flowcrypt_storage;
+  if(typeof exports === 'object') {
+    exports.tool = tool;
+    openpgp = require('openpgp');
+    storage = require('js/storage').legacy;
   }
+
+  /* tool.str */
 
   function str_parse_email(email_string) {
     if(tool.value('<').in(email_string) && tool.value('>').in(email_string)) {
       return {
         email: email_string.substr(email_string.indexOf('<') + 1, email_string.indexOf('>') - email_string.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase(),
         name: email_string.substr(0, email_string.indexOf('<')).replace(/["']/g, '').trim(),
+        full: email_string,
       };
     }
     return {
       email: email_string.replace(/["']/g, '').trim().toLowerCase(),
       name: null,
+      full: email_string,
     };
   }
 
   function str_pretty_print(obj) {
-    return JSON.stringify(obj, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>');
+    if(typeof obj === 'object') {
+      return JSON.stringify(obj, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>');
+    } else {
+      return String(obj);
+    }
   }
 
   function str_html_as_text(html_text, callback) {
@@ -470,6 +469,15 @@
     return o;
   }
 
+  function str_from_hex(hex) {
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2) {
+      var v = parseInt(hex.substr(i, 2), 16);
+      if (v) str += String.fromCharCode(v);
+    }
+    return str;
+  }
+
   function str_int_to_hex(int_as_string) { // http://stackoverflow.com/questions/18626844/convert-a-large-integer-to-a-hex-string-in-javascript (Collin Anderson)
     var dec = int_as_string.toString().split(''), sum = [], hex = [], i, s;
     while(dec.length){
@@ -491,10 +499,13 @@
   }
 
   function str_strip_public_keys(decrypted_content, found_public_keys) {
-    return replace_armored_block_type(decrypted_content, crypto_armor_headers('public_key'), true, function (armored_public_key) {
-      found_public_keys.push(armored_public_key);
-      return '';
+    tool.each(crypto_armor_detect_blocks(decrypted_content), function(i, block) {
+      if(block.type === 'public_key') {
+        found_public_keys.push(block.content);
+        decrypted_content = decrypted_content.replace(block.content, '');
+      }
     });
+    return decrypted_content;
   }
 
   function str_extract_cryptup_reply_token(decrypted_content) {
@@ -647,21 +658,21 @@
   };
 
   function env_increment(type, callback) {
-    if(typeof account_storage_get === 'function') {
+    if(typeof storage.get === 'function' && typeof chrome === 'object') {
       if(!known_metric_types[type]) {
-        catcher.log('Unknown metric type "' + type + '"');
+        catcher.report('Unknown metric type "' + type + '"');
       }
-      account_storage_get(null, ['metrics'], function (storage) {
+      storage.get(null, ['metrics'], function (s) {
         var metrics_k = known_metric_types[type];
-        if(!storage.metrics) {
-          storage.metrics = {};
+        if(!s.metrics) {
+          s.metrics = {};
         }
-        if(!storage.metrics[metrics_k]) {
-          storage.metrics[metrics_k] = 1;
+        if(!s.metrics[metrics_k]) {
+          s.metrics[metrics_k] = 1;
         } else {
-          storage.metrics[metrics_k] += 1;
+          s.metrics[metrics_k] += 1;
         }
-        account_storage_set(null, { metrics: storage.metrics }, function () {
+        storage.set(null, { metrics: s.metrics }, function () {
           browser_message_send(null, 'update_uninstall_url', null, callback);
         });
       });
@@ -671,9 +682,7 @@
   }
 
   function env_webmails(cb) {
-    account_storage_get(null, ['dev_outlook_allow'], function(storage) {
-      cb(storage.dev_outlook_allow ? ['gmail', 'inbox', 'outlook'] : ['gmail', 'inbox']);
-    });
+    cb(['gmail', 'inbox']);
   }
 
   /* tool.arr */
@@ -764,7 +773,7 @@
   /* tool.time */
 
   function time_wait(until_this_function_evaluates_true) {
-    return new Promise(function (success, error) {
+    return catcher.Promise(function (success, error) {
       var interval = setInterval(function () {
         var result = until_this_function_evaluates_true();
         if(result === true) {
@@ -822,7 +831,7 @@
     request.send();
   }
 
-  function file_save_to_downloads(name, type, content) {
+  function file_save_to_downloads(name, type, content, render_in) {
     var blob = new Blob([content], { type: type });
     if(window.navigator && window.navigator.msSaveOrOpenBlob) {
       window.navigator.msSaveBlob(blob, name);
@@ -830,26 +839,36 @@
       var a = window.document.createElement('a');
       a.href = window.URL.createObjectURL(blob);
       a.download = name;
-      if(env_browser().name === 'firefox') {
-        document.body.appendChild(a);
+      if(render_in) {
+        a.textContent = 'DECRYPTED FILE';
+        a.style = 'font-size: 16px; font-weight: bold;';
+        render_in.html('<div style="font-size: 16px;padding: 17px 0;">File is ready.<br>Right-click the link and select <b>Save Link As</b></div>');
+        render_in.append(a);
+        render_in.find('a').click(function (e) {
+          alert('Please use right-click and select Save Link As');
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        });
+      } else {
+        if(typeof a.click === 'function') {
+          a.click();
+        } else { // safari
+          var e = document.createEvent('MouseEvents');
+          e.initMouseEvent('click', true, true, window);
+          a.dispatchEvent(e);
+        }
+        if(env_browser().name === 'firefox') {
+          document.body.removeChild(a);
+        }
+        window.URL.revokeObjectURL(a.href);
       }
-      if(typeof a.click === 'function') {
-        a.click();
-      } else { // safari
-        var e = document.createEvent('MouseEvents');
-        e.initMouseEvent('click', true, true, window);
-        a.dispatchEvent(e);
-      }
-      if(env_browser().name === 'firefox') {
-        document.body.removeChild(a);
-      }
-      window.URL.revokeObjectURL(a.href);
     }
   }
 
   function file_attachment(name, type, content, size, url) { // todo - refactor as (content, name, type, LENGTH, url), making all but content voluntary
     return { // todo: accept any type of content, then add getters for content(str, uint8, blob) and fetch(), also size('formatted')
-      name: name,
+      name: name || '',
       type: type || 'application/octet-stream',
       content: content,
       size: size || content.length,
@@ -862,8 +881,7 @@
   }
 
   function file_keyinfo_as_pubkey_attachment(keyinfo) {
-    var k = openpgp.key.readArmored(keyinfo.armored).keys[0];
-    return file_attachment('0x' + keyinfo.longid + '.asc', 'application/pgp-keys', k.toPublic().armor());
+    return file_attachment('0x' + keyinfo.longid + '.asc', 'application/pgp-keys', keyinfo.public);
   }
 
   /* tool.mime */
@@ -949,10 +967,14 @@
 
   function mime_resembles_message(message) {
     var m = message.toLowerCase();
-    if(m.match(/content-type: +[0-9a-z\-\/]+/) === null) {
+    var contentType = m.match(/content-type: +[0-9a-z\-\/]+/);
+    if(contentType === null) {
       return false;
     }
-    return Boolean(m.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || m.match(/content-disposition: +[0-9a-z\-\/]+/) || m.match(/; boundary=/) || m.match(/; charset=/));
+    if(m.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || m.match(/content-disposition: +[0-9a-z\-\/]+/) || m.match(/; boundary=/) || m.match(/; charset=/)) {
+      return true;
+    }
+    return Boolean(contentType.index === 0 && m.match(/boundary=/));
   }
 
   function mime_format_content_to_display(text, full_mime_message) {
@@ -971,16 +993,20 @@
 
   function mime_require(group, callback) {
     if(group === 'parser') {
-      if(typeof MimeParser !== 'undefined') {
+      if(typeof MimeParser !== 'undefined') { // browser
         callback(MimeParser);
-      } else {
+      } else if (typeof exports === 'object') { // electron
+        callback(require('emailjs-mime-parser'));
+      } else { // RequireJS
         tool.env.set_up_require();
         require(['emailjs-mime-parser'], callback);
       }
     } else {
-      if(typeof MimeBuilder !== 'undefined') {
+      if(typeof MimeBuilder !== 'undefined') { // browser
         callback(MimeBuilder);
-      } else {
+      } else if (typeof exports === 'object') { // electron
+        callback(require('emailjs-mime-builder'));
+      } else { // RequireJS
         tool.env.set_up_require();
         require(['emailjs-mime-builder'], callback);
       }
@@ -989,10 +1015,13 @@
 
   function mime_process(mime_message, callback) {
     mime_decode(mime_message, function (success, decoded) {
-      if(typeof decoded.text === 'undefined' && decoded.html !== 'undefined') {
-        decoded.text = html_to_text(decoded.html); // temporary solution
+      if(typeof decoded.text === 'undefined' && typeof decoded.html !== 'undefined' && typeof $_HOST_html_to_text === 'function') { // android
+        decoded.text = $_HOST_html_to_text(decoded.html); // temporary solution
       }
-      var blocks = crypto_armor_detect_blocks(decoded.text);
+      var blocks = [];
+      if(decoded.text) {  // may be undefined or empty
+        blocks = blocks.concat(crypto_armor_detect_blocks(decoded.text));
+      }
       tool.each(decoded.attachments, function(i, file) {
         var treat_as = file_treat_as(file);
         if(treat_as === 'message') {
@@ -1092,7 +1121,6 @@
       var first_boundary_index = mime_message.substr(0, 1000).toLowerCase().indexOf('boundary=');
       if(first_boundary_index) {
         var boundary = mime_message.substr(first_boundary_index, 100);
-        console.log(boundary);
         boundary = (boundary.match(/boundary="[^"]{1,70}"/gi) || boundary.match(/boundary=[a-z0-9][a-z0-9 ]{0,68}[a-z0-9]/gi) || [])[0];
         if(boundary) {
           boundary = boundary.replace(/^boundary="?|"$/gi, '');
@@ -1232,13 +1260,13 @@
   function ui_passphrase_toggle(pass_phrase_input_ids, force_initial_show_or_hide) {
     var button_hide = '<img src="/img/svgs/eyeclosed-icon.svg" class="eye-closed"><br>hide';
     var button_show = '<img src="/img/svgs/eyeopen-icon.svg" class="eye-open"><br>show';
-    account_storage_get(null, ['hide_pass_phrases'], function (storage) {
+    storage.get(null, ['hide_pass_phrases'], function (s) {
       if(force_initial_show_or_hide === 'hide') {
         var show = false;
       } else if(force_initial_show_or_hide === 'show') {
         var show = true;
       } else {
-        var show = !storage.hide_pass_phrases;
+        var show = !s.hide_pass_phrases;
       }
       tool.each(pass_phrase_input_ids, function (i, id) {
         $('#' + id).addClass('toggled_passphrase');
@@ -1253,11 +1281,11 @@
           if($('#' + id).attr('type') === 'password') {
             $('#' + id).attr('type', 'text');
             $(this).html(button_hide);
-            account_storage_set(null, { hide_pass_phrases: false, });
+            storage.set(null, { hide_pass_phrases: false });
           } else {
             $('#' + id).attr('type', 'password');
             $(this).html(button_show);
-            account_storage_set(null, { hide_pass_phrases: true, });
+            storage.set(null, { hide_pass_phrases: true });
           }
         });
       });
@@ -1278,7 +1306,7 @@
       cached: function(name) {
         if(!cache[name]) {
           if(typeof selectors[name] === 'undefined') {
-            catcher.log('unknown selector name: ' + name);
+            catcher.report('unknown selector name: ' + name);
           }
           cache[name] = $(selectors[name]);
         }
@@ -1286,13 +1314,13 @@
       },
       now: function(name) {
         if(typeof selectors[name] === 'undefined') {
-          catcher.log('unknown selector name: ' + name);
+          catcher.report('unknown selector name: ' + name);
         }
         return $(selectors[name]);
       },
       selector: function (name) {
         if(typeof selectors[name] === 'undefined') {
-          catcher.log('unknown selector name: ' + name);
+          catcher.report('unknown selector name: ' + name);
         }
         return selectors[name];
       }
@@ -1319,10 +1347,15 @@
   }
 
   function browser_message_send(destination_string, name, data, callback) {
-    var msg = { name: name, data: data, to: destination_string || null, respondable: !!(callback), uid: tool.str.random(10) };
+    var msg = { name: name, data: data, to: destination_string || null, respondable: !!(callback), uid: tool.str.random(10), stack: typeof catcher !== 'undefined' ? catcher.stack_trace() : 'unknown' };
     var is_background_page = env_is_background_script();
-    if (is_background_page && background_script_registered_handlers && msg.to === null) {
-      background_script_registered_handlers[msg.name](msg.data, null, callback); // calling from background script to background script: skip messaging completely
+    if(typeof  destination_string === 'undefined') { // don't know where to send the message
+      catcher.report('browser_message_send to:undefined');
+      if(typeof callback !== 'undefined') {
+        callback();
+      }
+    } else if (is_background_page && background_script_registered_handlers && msg.to === null) {
+      background_script_registered_handlers[msg.name](msg.data, 'background', callback); // calling from background script to background script: skip messaging completely
     } else if(is_background_page) {
       chrome.tabs.sendMessage(destination_parse(msg.to).tab, msg, undefined, function(r) {
         catcher.try(function() {
@@ -1371,7 +1404,7 @@
       } else if(tool.value(msg.name).in(Object.keys(background_script_registered_handlers))) {
         background_script_registered_handlers[msg.name](msg.data, sender, safe_respond);
       } else if(msg.to !== 'broadcast') {
-        catcher.log('tool.browser.message.listen_background error: handler "' + msg.name + '" not set');
+        catcher.report('tool.browser.message.listen_background error: handler "' + msg.name + '" not set', 'Message sender stack:\n' + msg.stack);
       }
       return msg.respondable === true;
     });
@@ -1398,7 +1431,7 @@
               frame_registered_handlers[msg.name](msg.data, sender, respond);
             } else if(msg.name !== '_tab_' && msg.to !== 'broadcast') {
               if(destination_parse(msg.to).frame !== null) { // only consider it an error if frameId was set because of firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1354337
-                catcher.log('tool.browser.message.listen error: handler "' + msg.name + '" not set');
+                catcher.report('tool.browser.message.listen error: handler "' + msg.name + '" not set', 'Message sender stack:\n' + msg.stack);
               } else { // once firefox fixes the bug, it will behave the same as Chrome and the following will never happen.
                 console.log('tool.browser.message.listen ignoring missing handler "' + msg.name + '" due to Firefox Bug');
               }
@@ -1412,43 +1445,52 @@
 
   /* tool.diagnose */
 
-  function giagnose_message_pubkeys(account_email, message) {
-    var message_key_ids = message.getEncryptionKeyIds();
-    var local_key_ids = crypto_key_ids(private_storage_get('local', account_email, 'master_public_key'));
-    var diagnosis = { found_match: false, receivers: message_key_ids.length };
-    tool.each(message_key_ids, function (i, msg_k_id) {
-      tool.each(local_key_ids, function (j, local_k_id) {
-        if(msg_k_id === local_k_id) {
-          diagnosis.found_match = true;
-          return false;
-        }
+  function diagnose_message_pubkeys(account_email, message) {
+    return catcher.Promise(function(resolve, reject) {
+      var message_key_ids = message.getEncryptionKeyIds();
+      storage.keys_get(account_email).then(function(private_keys) {
+        var local_key_ids = [].concat.apply([], private_keys.map(function(ki) {return ki.public}).map(crypto_key_ids));
+        var diagnosis = { found_match: false, receivers: message_key_ids.length };
+        tool.each(message_key_ids, function (i, msg_k_id) {
+          tool.each(local_key_ids, function (j, local_k_id) {
+            if(msg_k_id === local_k_id) {
+              diagnosis.found_match = true;
+              return false;
+            }
+          });
+        });
+        resolve(diagnosis);
       });
     });
-    return diagnosis;
   }
 
   function diagnose_keyserver_pubkeys(account_email, callback) {
     var diagnosis = { has_pubkey_missing: false, has_pubkey_mismatch: false, results: {} };
-    account_storage_get(account_email, ['addresses'], function (storage) {
-      api_attester_lookup_email(tool.arr.unique([account_email].concat(storage.addresses || [])), function (success, pubkey_search_results) {
-        if(success) {
+    storage.get(account_email, ['addresses'], function (s) {
+      storage.keys_get(account_email).then(function(stored_keys) {
+        var stored_keys_longids = stored_keys.map(function(ki) { return ki.longid; });
+        api_attester_lookup_email(tool.arr.unique([account_email].concat(s.addresses || []))).then(function(pubkey_search_results) {
           tool.each(pubkey_search_results.results, function (i, pubkey_search_result) {
-            if(!pubkey_search_result.pubkey) {
+            if (!pubkey_search_result.pubkey) {
               diagnosis.has_pubkey_missing = true;
-              diagnosis.results[pubkey_search_result.email] = { attested: false, pubkey: null, match: false };
+              diagnosis.results[pubkey_search_result.email] = {attested: false, pubkey: null, match: false};
             } else {
               var match = true;
-              if(!tool.value(crypto_key_longid(pubkey_search_result.pubkey)).in(arr_select(private_keys_get(account_email), 'longid'))) {
+              if (!tool.value(crypto_key_longid(pubkey_search_result.pubkey)).in(stored_keys_longids)) {
                 diagnosis.has_pubkey_mismatch = true;
                 match = false;
               }
-              diagnosis.results[pubkey_search_result.email] = { pubkey: pubkey_search_result.pubkey, attested: pubkey_search_result.attested, match: match };
+              diagnosis.results[pubkey_search_result.email] = {
+                pubkey: pubkey_search_result.pubkey,
+                attested: pubkey_search_result.attested,
+                match: match
+              };
             }
           });
           callback(diagnosis);
-        } else {
+        }, function(error) {
           callback();
-        }
+        });
       });
     });
   }
@@ -1557,10 +1599,10 @@
     return null;
   }
 
-  var password_sentence_present_test = /https:\/\/cryptup\.(org|io)\/[a-zA-Z0-9]{10}/;
+  var password_sentence_present_test = /https:\/\/(cryptup\.org|flowcrypt\.com)\/[a-zA-Z0-9]{10}/;
   var password_sentences = [
     /This\smessage\sis\sencrypted.+\n\n?/gm, // todo - should be in a common place as the code that generated it
-    /.*https:\/\/cryptup\.(org|io)\/[a-zA-Z0-9]{10}.*\n\n?/gm,
+    /.*https:\/\/(cryptup\.org|flowcrypt\.com)\/[a-zA-Z0-9]{10}.*\n\n?/gm,
   ];
 
   function crypto_armor_normalize(armored, type) {
@@ -1657,81 +1699,31 @@
   }
 
   function crypto_armor_replace_blocks(factory, original_text, message_id, sender_email, is_outgoing) {
-    original_text = str_normalize_spaces(original_text);
-    original_text = str_html_escape(original_text);
-    var replacement_text = original_text;
-    var has_password;
-    var has_pgp_message;
-    replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('public_key'), false, function(armored) {
-      return factory.embedded.pubkey(crypto_armor_normalize(str_html_unescape(armored), 'public_key'), is_outgoing);
-    });
-    if(tool.value(sender_email).in(['attest@cryptup.org'])) {
-      replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('attest_packet'), true, function(armored) {
-        return factory.embedded.attest(str_html_unescape(armored));
-      });
+    var blocks = crypto_armor_detect_blocks(original_text);
+    if(blocks.length === 1 && blocks[0].type === 'text') {
+      return;
     }
-    replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('cryptup_verification'), false, function(armored) {
-      return factory.embedded.subscribe(str_html_unescape(armored), 'embedded', null);
-    });
-    replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('signed_message'), true, function(armored) {
-      //todo - for now doesn't work with clipped signed messages because not tested yet
-      return factory.embedded.message(str_html_unescape(armored), message_id, is_outgoing, sender_email, false);
-    });
-    replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('message'), false, function(armored, has_end) {
-      if(typeof has_password === 'undefined') {
-        has_password = original_text.match(password_sentence_present_test) !== null;
-      }
-      has_pgp_message = true;
-      return factory.embedded.message(has_end ? crypto_armor_normalize(str_html_unescape(armored), 'message') : '', message_id, is_outgoing, sender_email, has_password || false);
-    });
-    replacement_text = replace_armored_block_type(replacement_text, crypto_armor_headers('password_message'), true, function (armored) {
-      armored = armored.trim();
-      var short = armored.substr(armored.length - 10);
-      if(!has_pgp_message && short.match(/^[a-zA-Z0-9]{10}$/) !== null) {
-        return '</div>' + factory.embedded.message('', message_id, is_outgoing, sender_email, true, null, short);
-      }
-      return armored;
-    });
-    if(replacement_text !== original_text) {
-      if(has_password) {
-        tool.each(password_sentences, function(i, remove_sentence_re) {
-          replacement_text = replacement_text.replace(remove_sentence_re, '');
-        });
-      }
-      return replacement_text.trim();
-    }
-  }
-
-  function replace_armored_block_type(text, block_headers, end_required, block_processor, optional_search_after_index) {
-    var begin_index = text.indexOf(block_headers.begin, optional_search_after_index);
-    if(begin_index < 0) {
-      return text;
-    }
-    var end_found = -1;
-    var end_len = 0;
-    if(typeof block_headers.end.exec === 'undefined') { // end defined by string
-      end_found = text.indexOf(block_headers.end, begin_index);
-      end_len = block_headers.end.length;
-    } else {
-      var regex_end_found = block_headers.end.exec(text);
-      if(regex_end_found) {
-        end_found = regex_end_found.index;
-        end_len = regex_end_found[0].length;
-      }
-    }
-    var end_index;
-    if(end_found < 0) {
-      if(end_required) {
-        return text;
+    var r = '';
+    tool.each(blocks, function(i, block) {
+      if(block.type === 'text') {
+        r += (Number(i) ? '\n\n' : '') + str_html_escape(block.content) + '\n\n';
+      } else if (block.type === 'message') {
+        r += factory.embedded.message(block.complete ? crypto_armor_normalize(block.content, 'message') : '', message_id, is_outgoing, sender_email, false);
+      } else if (block.type === 'signed_message') {
+        r += factory.embedded.message(block.content, message_id, is_outgoing, sender_email, false);
+      } else if (block.type === 'public_key') {
+        r += factory.embedded.pubkey(crypto_armor_normalize(block.content, 'public_key'), is_outgoing);
+      } else if (block.type === 'password_message') {
+        r += factory.embedded.message('', message_id, is_outgoing, sender_email, true, null, block.content); // here block.content is message short id
+      } else if (block.type === 'attest_packet') {
+        r += factory.embedded.attest(block.content);
+      } else if (block.type === 'cryptup_verification') {
+        r += factory.embedded.verification(block.content);
       } else {
-        end_index = text.length - 1; // end not found + not required, get everything (happens for long clipped messages)
+        catcher.report('dunno how to process block type: ' + block.type);
       }
-    } else {
-      end_index = end_found + end_len;
-    }
-    var block_replacement = '\n' + block_processor(text.substring(begin_index, end_index), end_found > 0) + '\n';
-    var text_with_replaced_block = text.substring(0, begin_index) + block_replacement + text.substring(end_index, text.length);
-    return replace_armored_block_type(text_with_replaced_block, block_headers, end_required, block_processor, begin_index + block_replacement.length);
+    });
+    return r;
   }
 
   /* tool.crypto.hash */
@@ -1809,12 +1801,12 @@
     }
     var found_expired_subkey = false;
     tool.each(key.subKeys, function (i, sub_key) {
-      if(sub_key.verify(key) === openpgp.enums.keyStatus.expired && openpgpjs_original_isValidEncryptionKeyPacket(sub_key.subKey, sub_key.bindingSignature)) {
+      if(sub_key.verify(key.primaryKey) === openpgp.enums.keyStatus.expired && sub_key.isValidEncryptionKey(key.primaryKey)) {
         found_expired_subkey = true;
         return false;
       }
     });
-    return found_expired_subkey;
+    return found_expired_subkey; // todo - shouldn't we be checking that ALL subkeys are either invalid or expired to declare a key expired?
   }
 
   function crypto_key_usable(armored) { // is pubkey usable for encrytion?
@@ -1844,7 +1836,7 @@
         return armored;
       }
     } catch(error) {
-//      catcher.handle_exception(error);  // todo - connect to ACRA
+      catcher.handle_exception(error);
     }
   }
 
@@ -1928,42 +1920,45 @@
     } else {
       keys.encrypted_for = [];
     }
-    keys.signed_by = (message.getSigningKeyIds() || []).map(function (id) {
+    keys.signed_by = (message.getSigningKeyIds() || []).filter(function(id) { return Boolean(id); }).map(function (id) {
       return crypto_key_longid(id.bytes);
     });
-    keys.potentially_matching = private_keys_get(account_email, keys.encrypted_for);
-    if(keys.potentially_matching.length === 0) { // not found any matching keys, or list of encrypted_for was not supplied in the message. Just try all keys.
-      keys.potentially_matching = private_keys_get(account_email);
-    }
-    keys.with_passphrases = [];
-    keys.without_passphrases = [];
-    tool.each(keys.potentially_matching, function (i, keyinfo) {
-      var passphrase = get_passphrase(account_email, keyinfo.longid);
-      if(passphrase !== null) {
-        var key = openpgp.key.readArmored(keyinfo.armored).keys[0];
-        if(crypto_key_decrypt(key, passphrase).success) {
-          keyinfo.decrypted = key;
-          keys.with_passphrases.push(keyinfo);
-        } else {
-          keys.without_passphrases.push(keyinfo);
-        }
-      } else {
-        keys.without_passphrases.push(keyinfo);
+    storage.keys_get(account_email).then(function(private_keys_all) {
+      keys.potentially_matching = private_keys_all.filter(function(ki) { return tool.value(ki.longid).in(keys.encrypted_for)});
+      if(keys.potentially_matching.length === 0) { // not found any matching keys, or list of encrypted_for was not supplied in the message. Just try all keys.
+        keys.potentially_matching = private_keys_all;
       }
-    });
-    if(keys.signed_by.length) {
-      db_contact_get(db, keys.signed_by, function (verification_contacts) {
-        keys.verification_contacts = verification_contacts.filter(function (contact) {
-          return contact !== null;
+      keys.with_passphrases = [];
+      keys.without_passphrases = [];
+      Promise.all(keys.potentially_matching.map(function(keyinfo) {return storage.passphrase_get(account_email, keyinfo.longid)})).then(function(passphrases) {
+        tool.each(keys.potentially_matching, function (i, keyinfo) {
+          if(passphrases[i] !== null) {
+            var key = openpgp.key.readArmored(keyinfo.private).keys[0];
+            if(crypto_key_decrypt(key, passphrases[i]).success) {
+              keyinfo.decrypted = key;
+              keys.with_passphrases.push(keyinfo);
+            } else {
+              keys.without_passphrases.push(keyinfo);
+            }
+          } else {
+            keys.without_passphrases.push(keyinfo);
+          }
         });
-        keys.for_verification = [].concat.apply([], keys.verification_contacts.map(function (contact) {
-          return openpgp.key.readArmored(contact.pubkey).keys;
-        }));
-        callback(keys);
+        if(keys.signed_by.length && typeof storage.db_contact_get === 'function') {
+          storage.db_contact_get(db, keys.signed_by, function (verification_contacts) {
+            keys.verification_contacts = verification_contacts.filter(function (contact) {
+              return contact !== null;
+            });
+            keys.for_verification = [].concat.apply([], keys.verification_contacts.map(function (contact) {
+              return openpgp.key.readArmored(contact.pubkey).keys;
+            }));
+            callback(keys);
+          });
+        } else {
+          callback(keys);
+        }
       });
-    } else {
-      callback(keys);
-    }
+    });
   }
 
   function zeroed_decrypt_error_counts(keys) {
@@ -2015,9 +2010,9 @@
     } catch(verify_error) {
       signature.match = null;
       if(verify_error.message === 'Can only verify message with one literal data packet.') {
-        signature.error = 'CryptUp is not equipped to verify this message (err 101)';
+        signature.error = 'FlowCrypt is not equipped to verify this message (err 101)';
       } else {
-        signature.error = 'CryptUp had trouble verifying this message (' + verify_error.message + ')';
+        signature.error = 'FlowCrypt had trouble verifying this message (' + verify_error.message + ')';
         catcher.handle_exception(verify_error);
       }
     }
@@ -2032,22 +2027,16 @@
   }
 
   function crypto_message_decrypt(db, account_email, encrypted_data, one_time_message_password, callback, force_output_format) {
-    var armored_encrypted = false;
-    var armored_signed_only = false;
+    var armored_encrypted = tool.value(crypto_armor_headers('message').begin).in(encrypted_data);
+    var armored_signed_only = tool.value(crypto_armor_headers('signed_message').begin).in(encrypted_data);
     var other_errors = [];
     try {
-      if (encrypted_data instanceof Uint8Array) {
-        var message = openpgp.message.read(encrypted_data);
+      if(armored_encrypted) {
+        var message = openpgp.message.readArmored(encrypted_data);
+      } else if(armored_signed_only) {
+        var message = openpgp.cleartext.readArmored(encrypted_data);
       } else {
-        armored_encrypted = tool.value(crypto_armor_headers('message').begin).in(encrypted_data);
-        armored_signed_only = !armored_encrypted && tool.value(crypto_armor_headers('signed_message').begin).in(encrypted_data);
-        if(armored_encrypted) {
-          var message = openpgp.message.readArmored(encrypted_data);
-        } else if(armored_signed_only) {
-          var message = openpgp.cleartext.readArmored(encrypted_data);
-        } else {
-          var message = openpgp.message.read(tool.str.to_uint8(encrypted_data));
-        }
+        var message = openpgp.message.read(tool.str.to_uint8(encrypted_data));
       }
     } catch(format_error) {
       callback({success: false, counts: zeroed_decrypt_error_counts(), format_error: format_error.message, errors: other_errors, encrypted: null, signature: null});
@@ -2074,7 +2063,8 @@
                   catcher.try(function () {
                     if(decrypted.data !== null) {
                       if(!counts.decrypted++) { // don't call back twice if encrypted for two of my keys
-                        finally_callback_result(callback, {success: true, content: decrypted, encrypted: true, signature: keys.signed_by.length ? crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0]) : false});
+                        // ORIGINAL ... signature: keys.signed_by.length ? crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0]) : false
+                        finally_callback_result(callback, {success: true, content: decrypted, encrypted: true, signature: null});
                       }
                     } else {
                       other_errors.push(decrypted.err instanceof Array ? decrypted.err.join(', ') : 'Decrypted data is null. Please write me at human@flowcrypt.com to fix this.');
@@ -2100,18 +2090,24 @@
     });
   }
 
-  function openpgpjs_original_isValidEncryptionKeyPacket(keyPacket, signature) {
-    return keyPacket.algorithm !== openpgp.enums.read(openpgp.enums.publicKey, openpgp.enums.publicKey.dsa) && keyPacket.algorithm !== openpgp.enums.read(openpgp.enums.publicKey, openpgp.enums.publicKey.rsa_sign) && (!signature.keyFlags || (signature.keyFlags[0] & openpgp.enums.keyFlags.encrypt_communication) !== 0 || (signature.keyFlags[0] & openpgp.enums.keyFlags.encrypt_storage) !== 0);
-  }
-
   function patch_public_keys_to_ignore_expiration(keys) {
-    function ignore_expiration_isValidEncryptionKey(primaryKey) {
-      var verifyResult = this.verify(primaryKey);
-      return(verifyResult === openpgp.enums.keyStatus.valid || verifyResult === openpgp.enums.keyStatus.expired) && openpgpjs_original_isValidEncryptionKeyPacket(this.subKey, this.bindingSignature);
-    }
+    var openpgpjs_original_isValidEncryptionKeyPacket = function(keyPacket, signature) {
+      return keyPacket.algorithm !== openpgp.enums.read(openpgp.enums.publicKey, openpgp.enums.publicKey.dsa) && keyPacket.algorithm !== openpgp.enums.read(openpgp.enums.publicKey, openpgp.enums.publicKey.rsa_sign) && (!signature.keyFlags || (signature.keyFlags[0] & openpgp.enums.keyFlags.encrypt_communication) !== 0 || (signature.keyFlags[0] & openpgp.enums.keyFlags.encrypt_storage) !== 0);
+    };
     tool.each(keys, function (i, key) {
       tool.each(key.subKeys || [], function (i, sub_key) {
-        sub_key.isValidEncryptionKey = ignore_expiration_isValidEncryptionKey;
+        sub_key.isValidEncryptionKey = function (primaryKey) {
+          var verifyResult = this.verify(primaryKey);
+          if (verifyResult !== openpgp.enums.keyStatus.valid && verifyResult !== openpgp.enums.keyStatus.expired) {
+            return false;
+          }
+          for (var i = 0; i < this.bindingSignatures.length; i++) {
+            if (openpgpjs_original_isValidEncryptionKeyPacket(this.subKey, this.bindingSignatures[i])) {
+              return true;
+            }
+          }
+          return false;
+        };
       });
     });
   }
@@ -2139,7 +2135,6 @@
     }
     if(signing_prv && typeof signing_prv.isPrivate !== 'undefined' && signing_prv.isPrivate()) {
       options.privateKeys = [signing_prv];
-      console.log('singing oonly');
     }
     openpgp.encrypt(options).then(function (result) {
       catcher.try(function () { // todo - this is very awkward, should create a Try wrapper with a better api
@@ -2183,7 +2178,7 @@
     };
   }
 
-  function api_call(base_url, path, values, callback, format, progress, headers, response_format, method) {
+  function api_call(base_url, path, values, format, progress, headers, response_format, method) {
     progress = progress || {};
     if(format === 'JSON' && values === null) {
       var formatted_values = undefined;
@@ -2204,34 +2199,40 @@
     } else {
       throw Error('unknown format:' + String(format));
     }
-    return $.ajax({
-      xhr: function() {
-        return get_ajax_progress_xhr(progress);
-      },
-      url: base_url + path,
-      method: method || 'POST',
-      data: formatted_values,
-      dataType: response_format || 'json',
-      crossDomain: true,
-      headers: headers || undefined,
-      processData: false,
-      contentType: content_type,
-      async: true,
-      timeout: typeof progress.upload === 'function' || typeof progress.download === 'function' ? undefined : 20000,
-      success: function (response) {
-        catcher.try(function () {
-          if(typeof callback === 'function') {
-            callback(true, response);
-          }
-        })();
-      },
-      error: function (XMLHttpRequest, status, error) {
-        catcher.try(function () {
-          if(typeof callback === 'function') {
-            callback(false, {request: XMLHttpRequest, status: status, error: error});
-          }
-        })();
-      },
+    return catcher.Promise(function(resolve, reject) {
+      $.ajax({
+        xhr: function() {
+          return get_ajax_progress_xhr(progress);
+        },
+        url: base_url + path,
+        method: method || 'POST',
+        data: formatted_values,
+        dataType: response_format || 'json',
+        crossDomain: true,
+        headers: headers || undefined,
+        processData: false,
+        contentType: content_type,
+        async: true,
+        timeout: typeof progress.upload === 'function' || typeof progress.download === 'function' ? undefined : 20000,
+        success: function (response) {
+          catcher.try(function () {
+            if(response && typeof response === 'object' && typeof response.error === 'object') {
+              reject(response.error);
+            } else {
+              resolve(response);
+            }
+          })();
+        },
+        error: function (XMLHttpRequest, status, error) {
+          catcher.try(function () {
+            if(XMLHttpRequest.status === 0) {
+              reject({code: null, message: 'Internet connection not available', internal: 'network'});
+            } else {
+              reject({code: XMLHttpRequest.status, message: String(error)});
+            }
+          })();
+        },
+      });
     });
   }
 
@@ -2245,10 +2246,12 @@
     from = from || '';
     to = to || '';
     subject = subject || '';
+    // var primary_pubkey = storage.keys_get(account_email, 'primary'); // todo - changing to async - add back later
     return {
-      headers: {
-        OpenPGP: 'id=' + tool.crypto.key.fingerprint(private_storage_get('local', account_email, 'master_public_key')),
-      },
+      // headers: (typeof exports !== 'object' && primary_pubkey !== null) ? { // todo - make it work in electron as well
+      //   OpenPGP: 'id=' + primary_pubkey.fingerprint,
+      // } : {},
+      headers: {},
       from: from,
       to: typeof to === 'object' ? to : to.split(','),
       subject: subject,
@@ -2264,10 +2267,10 @@
     var my_email = account_email;
     tool.each(reply_to_estimate, function (i, email) {
       if(email) {
-        if(tool.value(tool.str.trim_lower(email)).in(addresses)) { // my email
+        if(tool.value(tool.str.parse_email(email).email).in(addresses)) { // my email
           my_email = email;
-        } else if(!tool.value(tool.str.trim_lower(email)).in(reply_to)) { // skip duplicates
-          reply_to.push(tool.str.trim_lower(email)); // reply to all except my emails
+        } else if(!tool.value(tool.str.parse_email(email).email).in(reply_to)) { // skip duplicates
+          reply_to.push(tool.str.parse_email(email).email); // reply to all except my emails
         }
       }
     });
@@ -2286,19 +2289,25 @@
   function api_google_auth(auth_request, respond) {
     browser_message_tab_id(function(tab_id) {
       auth_request.tab_id = tab_id;
-      account_storage_get(auth_request.account_email, ['google_token_access', 'google_token_expires', 'google_token_refresh', 'google_token_scopes'], function (storage) {
-        if (typeof storage.google_token_access === 'undefined' || typeof storage.google_token_refresh === 'undefined' || api_google_has_new_scope(auth_request.scopes, storage.google_token_scopes, auth_request.omit_read_scope)) {
-          google_auth_window_show_and_respond_to_auth_request(auth_request, storage.google_token_scopes, respond);
+      storage.get(auth_request.account_email, ['google_token_access', 'google_token_expires', 'google_token_refresh', 'google_token_scopes'], function (s) {
+        if (typeof s.google_token_access === 'undefined' || typeof s.google_token_refresh === 'undefined' || api_google_has_new_scope(auth_request.scopes, s.google_token_scopes, auth_request.omit_read_scope)) {
+          if(!env_is_background_script()) {
+            google_auth_window_show_and_respond_to_auth_request(auth_request, s.google_token_scopes, respond);
+          } else {
+            respond({success: false, error: 'Cannot produce auth window from background script'});
+          }
         } else {
-          google_auth_refresh_token(storage.google_token_refresh, function (success, result) {
+          google_auth_refresh_token(s.google_token_refresh, function (success, result) {
             if (!success && result === tool.api.error.network) {
               respond({success: false, error: tool.api.error.network});
             } else if (typeof result.access_token !== 'undefined') {
-              google_auth_save_tokens(auth_request.account_email, result, storage.google_token_scopes, function () {
+              google_auth_save_tokens(auth_request.account_email, result, s.google_token_scopes, function () {
                 respond({ success: true, message_id: auth_request.message_id, account_email: auth_request.account_email }); //todo: email should be tested first with google_auth_check_email?
               });
+            } else if(!env_is_background_script()) {
+              google_auth_window_show_and_respond_to_auth_request(auth_request, s.google_token_scopes, respond);
             } else {
-              google_auth_window_show_and_respond_to_auth_request(auth_request, storage.google_token_scopes, respond);
+              respond({success: false, error: 'Cannot show auth window from background script'});
             }
           });
         }
@@ -2389,7 +2398,7 @@
     if(typeof tokens_object.refresh_token !== 'undefined') {
       to_save.google_token_refresh = tokens_object.refresh_token;
     }
-    account_storage_set(account_email, to_save, callback);
+    storage.set(account_email, to_save, callback);
   }
 
   function google_auth_get_tokens(code, callback, retries_left) {
@@ -2486,7 +2495,7 @@
   }
 
   function api_google_call(account_email, method, url, parameters, callback, fail_on_auth) {
-    account_storage_get(account_email, ['google_token_access', 'google_token_expires'], function (auth) {
+    storage.get(account_email, ['google_token_access', 'google_token_expires'], function (auth) {
       var data = method === 'GET' || method === 'DELETE' ? parameters : JSON.stringify(parameters);
       if(typeof auth.google_token_access !== 'undefined' && auth.google_token_expires > new Date().getTime()) { // have a valid gmail_api oauth token
         $.ajax({
@@ -2559,7 +2568,7 @@
       throw new Error('missing account_email in api_gmail_call');
     }
     progress = progress || {};
-    account_storage_get(account_email, ['google_token_access', 'google_token_expires'], function (auth) {
+    storage.get(account_email, ['google_token_access', 'google_token_expires'], function (auth) {
       if(typeof auth.google_token_access !== 'undefined' && auth.google_token_expires > new Date().getTime()) { // have a valid gmail_api oauth token
         if(typeof progress.upload === 'function') {
           var url = 'https://www.googleapis.com/upload/gmail/v1/users/me/' + resource + '?uploadType=multipart';
@@ -2769,12 +2778,12 @@
   function file_treat_as(attachment) {
     if(tool.value(attachment.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification'])) {
       return 'hidden';  // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
-    } else if(attachment.name === '') {
+    } else if(attachment.name === 'signature.asc' || attachment.type === 'application/pgp-signature') {
+      return  'signature';
+    } else if(!attachment.name && !tool.value('image/').in(attachment.type)) { // attachment.name may be '' or undefined - catch either
       return attachment.size < 100 ? 'hidden' : 'message';
     } else if(attachment.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) { // ends with one of .gpg, .pgp, .???.asc, .????.asc
       return 'encrypted';
-    } else if(attachment.name === 'signature.asc') {
-      return  'signature';
     } else if(attachment.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?\.asc$/g)) { // name starts with a key id
       return 'public_key';
     } else if((attachment.name.match(/\.asc$/) && attachment.size < 100000 && !attachment.inline) || tool.value(attachment.name).in(['message', 'message.asc', 'encrypted.asc'])) {
@@ -2875,6 +2884,43 @@
         api_gmail_fetch_messages_sequentially_from_list_and_extract_first_available_header(account_email, message_list_response.messages, header_names, callback);
       } else {
         callback(); // if the request is !success, it will just return undefined, which may not be the best
+      }
+    });
+  }
+
+  function api_gmail_fetch_key_backups(account_email, callback) {
+    tool.api.gmail.message_list(account_email, tool.api.gmail.query.backups(account_email), true, function (success, response) {
+      if(success) {
+        if(response.messages) {
+          var message_ids = response.messages.map(function(m) { return m.id});
+          tool.api.gmail.message_get(account_email, message_ids, 'full', function (success, messages) {
+            if(success) {
+              var attachments = [];
+              tool.each(messages, function (i, message) {
+                attachments = attachments.concat(tool.api.gmail.find_attachments(message));
+              });
+              tool.api.gmail.fetch_attachments(account_email, attachments, function (success, downloaded_attachments) {
+                var keys = [];
+                tool.each(downloaded_attachments, function (i, downloaded_attachment) {
+                  try {
+                    var armored_key = tool.str.base64url_decode(downloaded_attachment.data);
+                    var key = openpgp.key.readArmored(armored_key).keys[0];
+                    if(key.isPrivate()) {
+                      keys.push(key);
+                    }
+                  } catch(err) {}
+                });
+                callback(success, keys);
+              });
+            } else {
+              callback(false, 'Connection dropped while checking for backups. Please try again.');
+            }
+          });
+        } else {
+          callback(true, null);
+        }
+      } else {
+        callback(false, 'Connection dropped while checking for backups. Please try again.');
       }
     });
   }
@@ -2985,276 +3031,74 @@
     ].join(' ');
   }
 
-  /* tool.api.outlook */
-
-  var outlook_api_endpoint = 'https://outlook.office.com/api/v2.0/';
-
-  var api_outlook_oauth_config = {
-    oauth_url: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    client_id: '5c22daa5-737e-440b-8dd1-e4e9d0f4a1a9',
-    redirect_uri: 'https://outlook.office.com/noop/cryptup',
-    scopes_init: ['openid', 'email', 'https://outlook.office.com/Mail.ReadWrite', 'https://outlook.office.com/Mail.Send'],
-    scopes_refresh: ['https://outlook.office.com/Mail.ReadWrite', 'https://outlook.office.com/Mail.Send'],
-    state_header: 'CRYPTUP_STATE_',
-  };
-
-  function api_auth_process_and_save_fragment(fragment, renewing_tokens_on_account_email, state_must_match_this_frame_id, callback) {
-    var token_response = env_url_params(['error', 'error_description', 'access_token', 'token_type', 'expires_in', 'id_token', 'scope', 'state'], fragment.replace('#', ''));
-    if(!tool.value(api_outlook_oauth_config.state_header).in(token_response.state)) {
-      callback(false, 'CryptUp state not present in this result');
-    } else {
-      var state = str_html_attribute_decode(token_response.state.replace(api_outlook_oauth_config.state_header, ''));
-      if(state_must_match_this_frame_id && state.frame !== state_must_match_this_frame_id) {
-        callback(false, 'Does not match expected frame id', null, state);
-      } else {
-        if(token_response.error) {
-          if(token_response.error === 'login_required') {
-            callback(false, 'login_required', null, state);
-          } else {
-            callback(false, token_response.error + ':' + decodeURIComponent(token_response.error_description), null, state);
-          }
-        } else {
-          var token_account_email_claim = token_response.id_token ? api_auth_parse_id_token(token_response.id_token).email : null;
-          token_response.expires_in = Number(token_response.expires_in);
-          token_response.expires_on = Date.now() + token_response.expires_in * 1000;
-          if(renewing_tokens_on_account_email) {
-            account_storage_get(renewing_tokens_on_account_email, ['microsoft_auth'], function (storage) {
-              storage.microsoft_auth.expires_in = token_response.expires_in;
-              storage.microsoft_auth.expires_on = token_response.expires_on;
-              storage.microsoft_auth.access_token = token_response.access_token;
-              account_storage_set(renewing_tokens_on_account_email, {microsoft_auth: storage.microsoft_auth}, function () {
-                callback(true, storage.microsoft_auth, renewing_tokens_on_account_email, state);
-              });
-            });
-          } else {
-            if(token_account_email_claim) {
-              add_account_email_to_list_of_accounts(token_account_email_claim, function() {
-                account_storage_set(token_account_email_claim, {microsoft_auth: token_response}, function () {
-                  callback(true, token_response, token_account_email_claim, state);
-                });
-              });
-            } else {
-              callback(false, 'Could not get email from initial auth request', null, state);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  function silent_implicit_token_refresh_in_hidden_iframe(account_email, callback) {
-    var frame_id = 'frame_' + str_random(20);
-    browser_message_tab_id(function(tab_id) {
-      $('body').append(tool.e('iframe', {class: 'display_none', id: frame_id, src: api_outlook_oauth_url(account_email, frame_id, tab_id, true)}));
-      browser_message_listen({
-        microsoft_access_token_result: function (message) {
-          api_auth_process_and_save_fragment(message.fragment, account_email, frame_id, function (success, result, email, state) {
-            if(state.frame === frame_id && state.tab === tab_id) {
-              $('#' + frame_id).remove();
-              callback(success, result);
-            } else {
-              console.log('Ignoring auth request with a wrong frame or tab id: ' + [frame_id, tab_id, state.frame, state.tab].join(','));
-            }
-          });
-        },
-      }, tab_id);
-    });
-  }
-
-  function verbose_implicit_token_refresh_in_window_popup(account_email, callback) {
-    var window_id = 'popup_' + tool.str.random(20);
-    browser_message_tab_id(function (tab_id) {
-      var close_auth_window = tool.api.auth.window(api_outlook_oauth_url(account_email, window_id, tab_id, false), function () {
-        callback(false, 'Outlook login required');
-      });
-      browser_message_listen({
-        microsoft_access_token_result: function (message) {
-          api_auth_process_and_save_fragment(message.fragment, account_email, window_id, function (success, result, _, state) {
-            if(state.frame === window_id && state.tab === tab_id) {
-              close_auth_window();
-              callback(success, result);
-            } else {
-              console.log('Ignoring auth request with a wrong frame or tab id: ' + [window_id, tab_id, state.frame, state.tab].join(','));
-            }
-          });
-        },
-      }, tab_id); // adding tab_id_global to tool.browser.message.listen is necessary on cryptup-only pages because otherwise they will receive messages meant for ANY/ALL tabs
-    });
-
-  }
-
-  function api_outlook_oauth_url(suggested_account_email, window_or_frame_id, result_tab_id, silent_refresh) {
-    return env_url_create(api_outlook_oauth_config.oauth_url, {
-      client_id: api_outlook_oauth_config.client_id,
-      response_type: silent_refresh === true ? 'token' : 'token id_token',
-      redirect_uri: api_outlook_oauth_config.redirect_uri,
-      nonce: tool.str.random(20),
-      response_mode: 'fragment',
-      scope: silent_refresh ? api_outlook_oauth_config.scopes_refresh.join(' ') : api_outlook_oauth_config.scopes_init.join(' '),
-      state: api_outlook_oauth_config.state_header + str_html_attribute_encode({frame: window_or_frame_id, tab: result_tab_id}),
-      login_hint: suggested_account_email || '',
-      prompt: silent_refresh === true ? 'none' : '',
-    });
-  }
-
-  function api_outlook_call(account_email, resource, values, response_format, callback, progress, method) {
-    account_storage_get(account_email, ['microsoft_auth'], function (storage) {
-      if(Date.now() < storage.microsoft_auth.expires_on) {
-        api_call(outlook_api_endpoint, resource, values, callback, 'JSON', progress, {Authorization: 'Bearer ' + storage.microsoft_auth.access_token}, response_format, method);
-      } else { // token refresh needed
-        silent_implicit_token_refresh_in_hidden_iframe(account_email, function(auth_success, auth_result) {
-          if(auth_success) {
-            api_call(outlook_api_endpoint, resource, values, callback, 'JSON', progress, {Authorization: 'Bearer ' + auth_result.access_token}, response_format, method);
-          } else if(auth_result === 'login_required') {
-            alert('Outlook needs you to sign in again to continue using CryptUp.');
-            verbose_implicit_token_refresh_in_window_popup(account_email, function (verbose_auth_succcess, verbose_auth_result) {
-              if(verbose_auth_succcess) {
-                api_call(outlook_api_endpoint, resource, values, callback, 'JSON', progress, {Authorization: 'Bearer ' + verbose_auth_result.access_token}, response_format, method);
-              } else {
-                callback(false, 'Could not get permission from Outlook');
-              }
-            });
-          } else {
-            callback(false, 'error refreshing cryptup token: ' + auth_result);
-          }
-        });
-      }
-    });
-  }
-
-  var api_outlook_body_types = {'text/plain': 'Text', 'text/html': 'HTML'};
-
-  function api_outlook_sendmail(account_email, message, callback, progress_callback) {
-    var body_type = typeof message.body['text/html'] !== 'undefined' ? 'text/html' : 'text/plain';
-    var body = { ContentType: api_outlook_body_types[body_type], Content: message.body[body_type] };
-    var to = message.to.map(function(email) { return {"EmailAddress": {"Address": email} }; });
-    var attachments = message.attachments.map(function (attachment) {
-      return {
-        "@odata.type": "#Microsoft.OutlookServices.FileAttachment",
-        "Name": attachment.name,
-        "ContentBytes": btoa(typeof attachment.content === 'string' ? attachment.content : str_from_uint8(attachment.content)),
-        "ContentType": attachment.type,
-        "IsInline": false,
-        "Size": attachment.size,
-      };
-    });
-    if(!message.thread || !message.thread.length) { // new message or reply message fallback
-      api_outlook_call(account_email, 'me/sendmail', {Message: { ToRecipients: to, Subject: message.subject, Body: body, Attachments: attachments }}, 'text', callback, progress_callback);
-    } else { // reply. Create a draftt as a reply to message.thread, Outlook will automatically populate headers. Just need to update body and attachments (also recipients - user could have edited them)
-      api_outlook_call(account_email, 'me/messages/' + message.thread.pop() + '/createreplyall', {}, 'json', function (create_reply_success, create_reply_result) { // message.thread.pop() gets last message id in the thread
-        if(create_reply_success && create_reply_result && create_reply_result.Id) { // progress callback belongs below because that's where we update attachments
-          api_outlook_call(account_email, 'me/messages/' + create_reply_result.Id, { Body: body, Attachments: attachments, ToRecipients: to }, 'json', function (update_reply_success, update_reply_result) {
-            if(update_reply_success) {
-              api_outlook_call(account_email, 'me/messages/' + create_reply_result.Id + '/send', null, 'text', callback);
-            } else {
-              catcher.log('failed to update a reply message on outlook', update_reply_result);
-              callback(false, 'Failed to update a reply message on Outlook.');
-            }
-          }, progress_callback, 'PATCH');
-        } else if (create_reply_result && create_reply_result.request && create_reply_result.request.responseJSON && create_reply_result.request.responseJSON.error && create_reply_result.request.responseJSON.error.code === 'ErrorInvalidReferenceItem') {
-
-          // Outlook does not allow replying to sent messages (or has a similar restriction of this sort)
-          // POST message_id/createreplyall -> 400 {"code":"ErrorInvalidReferenceItem","message":"The reference item does not support the requested operation."}
-          // that is why message.thread reference contains all message ids in the thread, and this recursive call will try them one by one until Outlook API doesn't complain
-          // eventually, it will find a message in the thread that can be replied to
-          // if not, it will fall back to me/sendmail and send a fresh new email instead replying to a thread
-          // if you are a member of the Microsoft Office API team and are reading this, please fix it! This awful and ugly code makes me cry every morning.
-
-          console.log('Outlook API ErrorInvalidReferenceItem: ' + (create_reply_result.thread.length ? 'retrying createreplyall with a previous message id, ' + create_reply_result.thread.length + ' left' : 'sending reply as a new message'));
-          api_outlook_sendmail(account_email, message, callback, progress_callback);
-
-        } else {
-          catcher.log('failed to create a reply message on outlook', create_reply_result);
-          callback(false, 'Failed to create a reply message on Outlook.');
-        }
-      });
-    }
-  }
-
-  /*
-   Each message in the response contains multiple properties, including the Body property. The message body can be either HTML or text.
-   If the body is HTML, by default, any potentially unsafe HTML (for example, JavaScript) embedded in the Body property would be removed before the body content is returned in a REST response.
-   To get the entire, original HTML content, include the following HTTP request header:
-   Prefer: outlook.allow-unsafe-html
-   */
-  function api_outlook_message_get(account_email, message_id, callback, progress_callback) {
-    api_outlook_call(account_email, 'me/messages/' + message_id, null, 'json', callback, progress_callback);
-  }
-
-  function api_outlook_message_thread(account_email, conversation_id, callback) {
-    // http://stackoverflow.com/questions/41125652/fetch-messages-filtered-by-conversationid-via-office365-api
-    // string finalUrl = "https://outlook.office.com/api/beta/me/Messages?$filter=" + HttpUtility.UrlEncode(string.Format("ConversationId eq '{0}'", conversationId));
-    api_outlook_call(account_email, env_url_create('me/messages', {
-      '$filter': "ConversationId eq '" + conversation_id + "'",
-    }), null, 'json', callback, null, 'GET');
-  }
-
   /* tool.api.attester */
 
-  function api_attester_call(path, values, callback, format) {
-    api_call('https://attester.cryptup.io/', path, values, callback, format || 'JSON');
-    // api_call('http://127.0.0.1:5002/', path, values, callback, format || 'JSON');
+  function api_attester_call(path, values) {
+    return api_call('https://attester.flowcrypt.com/', path, values, 'JSON', null, {'api-version': 3});
+    // return api_call('http://127.0.0.1:5002/', path, values, 'JSON', null, {'api-version': 3});
   }
 
-  function api_attester_lookup_email(email, callback) {
+  function api_attester_lookup_email(email) {
     return api_attester_call('lookup/email', {
-      email: (typeof email === 'string') ? tool.str.trim_lower(email) : email.map(tool.str.trim_lower),
-    }, callback);
+      email: (typeof email === 'string') ? tool.str.parse_email(email).email : email.map(function(a) {return tool.str.parse_email(a).email; }),
+    });
   }
 
-  function api_attester_initial_legacy_submit(email, pubkey, attest, callback) {
+  function api_attester_initial_legacy_submit(email, pubkey, attest) {
     return api_attester_call('initial/legacy_submit', {
-      email: tool.str.trim_lower(email),
+      email: tool.str.parse_email(email).email,
       pubkey: pubkey.trim(),
       attest: attest || false,
-    }, callback);
+    });
   }
 
-  function api_attester_initial_confirm(signed_attest_packet, callback) {
+  function api_attester_initial_confirm(signed_attest_packet) {
     return api_attester_call('initial/confirm', {
       signed_message: signed_attest_packet,
-    }, callback);
+    });
   }
 
-  function api_attester_replace_request(email, signed_attest_packet, new_pubkey, callback) {
+  function api_attester_replace_request(email, signed_attest_packet, new_pubkey) {
     return api_attester_call('replace/request', {
       signed_message: signed_attest_packet,
       new_pubkey: new_pubkey,
       email: email,
-    }, callback);
+    });
   }
 
-  function api_attester_replace_confirm(signed_attest_packet, callback) {
+  function api_attester_replace_confirm(signed_attest_packet) {
     return api_attester_call('replace/confirm', {
       signed_message: signed_attest_packet,
-    }, callback);
+    });
   }
 
-  function api_attester_test_welcome(email, pubkey, callback) {
+  function api_attester_test_welcome(email, pubkey) {
     return api_attester_call('test/welcome', {
       email: email,
       pubkey: pubkey,
-    }, callback);
+    });
   }
 
   function api_attester_packet_armor(content_text) {
     return crypto_armor_headers('attest_packet').begin + '\n' + content_text + '\n' + crypto_armor_headers('attest_packet').end;
   }
 
-  function api_attester_packet_create_sign(values, decrypted_prv, callback) {
-    var lines = [];
-    tool.each(values, function (key, value) {
-      lines.push(key + ':' + value);
-    });
-    var content_text = lines.join('\n');
-    var packet = api_attester_packet_parse(api_attester_packet_armor(content_text));
-    if(packet.success !== true) {
-      callback(false, packet.error);
-    } else {
-      crypto_message_sign(decrypted_prv, content_text, true, function (success, signed_attest_packet) {
-        callback(success, signed_attest_packet);
+  function api_attester_packet_create_sign(values, decrypted_prv) {
+    return catcher.Promise(function (resolve, reject) {
+      var lines = [];
+      tool.each(values, function (key, value) {
+        lines.push(key + ':' + value);
       });
-    }
+      var content_text = lines.join('\n');
+      var packet = api_attester_packet_parse(api_attester_packet_armor(content_text));
+      if(packet.success !== true) {
+        reject({code: null, message: packet.error, internal: 'parse'});
+      } else {
+        crypto_message_sign(decrypted_prv, content_text, true, function (success, signed_attest_packet) {
+          resolve(signed_attest_packet);
+        });
+      }
+    });
   }
 
   function api_attester_packet_parse(text) {
@@ -3339,295 +3183,269 @@
 
   /* tool.api.cryptup */
 
-  function api_cryptup_call(path, values, callback, format) {
-    api_call(api_cryptup_url('api'), path, values, callback, format || 'JSON', null, {'api-version': 1});
-    // api_call('http://127.0.0.1:5001/', path, values, callback, format || 'JSON', null, {'api-version': 1});
+  function api_cryptup_call(path, values, format) {
+    return api_call(api_cryptup_url('api'), path, values, format || 'JSON', null, {'api-version': 3});
+    // return api_call('http://127.0.0.1:5001/', path, values, format || 'JSON', null, {'api-version': 3});
   }
 
   function api_cryptup_url(type, variable) {
     return {
       'api': 'https://api.cryptup.io/',
-      'me': 'https://cryptup.org/me/' + variable,
-      'pubkey': 'https://cryptup.org/pub/' + variable,
-      'decrypt': 'https://cryptup.org/' + variable,
-      'web': 'https://cryptup.org/',
+      'me': 'https://flowcrypt.com/me/' + variable,
+      'pubkey': 'https://flowcrypt.com/pub/' + variable,
+      'decrypt': 'https://flowcrypt.com/' + variable,
+      'web': 'https://flowcrypt.com/',
     }[type];
   }
 
-  function api_cryptup_auth_error() {
-    throw Error('tool.api.cryptup.auth_error not callable');
-  }
+  var api_cryptup_auth_error = {code: 401, message: 'Could not log in', internal: 'auth'};
 
-  function api_cryptup_error_text(server_call_response) {
-    if(server_call_response instanceof Array) {
-      var results;
-      tool.each(server_call_response, function(i, v) {
-        results += (i + 1) + ': ' + api_cryptup_error_text(v) + '\n';
-      });
-      return results.trim();
-    } else {
-      if(server_call_response && server_call_response.error) {
-        if(typeof server_call_response.error === 'object' && (server_call_response.error.internal_msg || server_call_response.error.public_msg)) {
-          return String(server_call_response.error.public_msg) + ' (' + server_call_response.error.internal_msg + ')';
-        } else {
-          return String(server_call_response.error);
-        }
-      } else if(server_call_response) {
-        return 'unknown';
-      } else {
-        return 'Internet connection problem, please try again';
-      }
-    }
-  }
-
-  function api_cryptup_response_formatter(callback) {
-    if(typeof callback === 'function') {
-      return function (success, response) {
-        if(response && response.error && typeof response.error === 'object' && response.error.internal_msg === 'auth') {
-          callback(api_cryptup_auth_error);
-        } else {
-          callback(success, response);
-        }
-      };
-    }
-  }
-
-  function api_cryptup_help_feedback(account_email, message, callback) {
+  function api_cryptup_help_feedback(account_email, message) {
     return api_cryptup_call('help/feedback', {
       email: account_email,
       message: message,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_help_uninstall(email, client, metrics, callback) {
+  function api_cryptup_help_uninstall(email, client, metrics) {
     return api_cryptup_call('help/uninstall', {
       email: email,
       client: client,
       metrics: metrics,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_account_check(emails, callback) {
-    api_cryptup_call('account/check', {
+  function api_cryptup_account_check(emails) {
+    return api_cryptup_call('account/check', {
       emails: emails,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_account_login(account_email, token, callback) {
-    storage_cryptup_auth_info(function (registered_email, registered_uuid, already_verified) {
-      var uuid = registered_uuid || tool.crypto.hash.sha1(tool.str.random(40));
-      var email = registered_email || account_email;
-      api_cryptup_call('account/login', { account: email, uuid: uuid, token: token || null, }, function (success, result) {
-        if(success) {
-          if(result.registered === true) {
-            account_storage_set(null, { cryptup_account_email: email, cryptup_account_uuid: uuid, cryptup_account_verified: result.verified === true, cryptup_account_subscription: result.subscription }, function () {
-              callback(true, result.verified === true, result.subscription);
-            });
-          } else {
-            if(typeof result.error === 'object') {
-              catcher.log('account/login fail response: ' + JSON.stringify(result.error));
-              callback(false, false, null, result.error.public_msg);
-            } else {
-              callback(false, false, null, result.error);
-            }
-          }
-        } else {
-          callback(false, false, null, 'connection error');
-        }
+  function api_cryptup_account_login(account_email, token) {
+    return catcher.Promise(function(resolve, reject) {
+      storage.auth_info(function (registered_email, registered_uuid, already_verified) {
+        var uuid = registered_uuid || tool.crypto.hash.sha1(tool.str.random(40));
+        var email = registered_email || account_email;
+        api_cryptup_call('account/login', {
+          account: email,
+          uuid: uuid, token: token || null,
+        }).validate(function (r) {return r.registered === true;}).then(function (response) {
+          var to_save = {cryptup_account_email: email, cryptup_account_uuid: uuid, cryptup_account_verified: response.verified === true, cryptup_account_subscription: response.subscription};
+          storage.set(null, to_save, function () {
+            resolve({verified: response.verified === true, subscription: response.subscription});
+          });
+        }, reject);
       });
     });
   }
 
-  function api_cryptup_account_subscribe(product, method, payment_source_token, callback) {
-    storage_cryptup_auth_info(function (email, uuid, verified) {
-      if(verified) {
-        api_cryptup_call('account/subscribe', {
-          account: email,
-          uuid: uuid,
-          method: method,
-          source: payment_source_token,
-          product: product,
-        }, api_cryptup_response_formatter(function (success_or_auth_error, result) {
-          if(success_or_auth_error === true) {
-            account_storage_set(null, { cryptup_account_subscription: result.subscription }, function () {
-              callback(true, result);
-            });
-          } else {
-            callback(success_or_auth_error, result);
-          }
-        }));
-      } else {
-        callback(api_cryptup_auth_error);
-      }
-    });
-  }
-
-  function api_cryptup_account_update(update_values, callback) {
-    storage_cryptup_auth_info(function (email, uuid, verified) {
-      if(verified) {
-        var request = {account: email, uuid: uuid};
-        tool.each(update_values, function(k, v) { request[k] = v; });
-        api_cryptup_call('account/update', request, api_cryptup_response_formatter(function (success_or_auth_error, result) {
-          callback(success_or_auth_error, result);
-        }));
-      } else {
-        callback(api_cryptup_auth_error);
-      }
-    });
-  }
-
-  function api_cryptup_message_presign_files(attachments, callback, auth_method) {
-    var lengths = attachments.map(function (a) { return a.size; });
-    if(!auth_method) {
-      api_cryptup_call('message/presign_files', {
-        lengths: lengths,
-      }, api_cryptup_response_formatter(callback));
-    } else if(auth_method === 'uuid') {
-      storage_cryptup_auth_info(function (email, uuid, verified) {
+  function api_cryptup_account_subscribe(product, method, payment_source_token) {
+    return catcher.Promise(function(resolve, reject) {
+      storage.auth_info(function (email, uuid, verified) {
         if(verified) {
-          api_cryptup_call('message/presign_files', {
+          api_cryptup_call('account/subscribe', {
             account: email,
             uuid: uuid,
-            lengths: lengths,
-          }, api_cryptup_response_formatter(callback));
+            method: method,
+            source: payment_source_token,
+            product: product,
+          }).then(function(response) {
+            storage.set(null, { cryptup_account_subscription: response.subscription }, function () {
+              resolve(response);
+            });
+          }, reject);
         } else {
-          callback(api_cryptup_auth_error);
+          reject(api_cryptup_auth_error);
         }
       });
-    } else {
-      api_cryptup_call('message/presign_files', {
-        message_token_account: auth_method.account,
-        message_token: auth_method.token,
-        lengths: attachments.map(function(a) { return a.size; }),
-      }, api_cryptup_response_formatter(callback));
-    }
+    });
   }
 
-  function api_cryptup_message_confirm_files(identifiers, callback) {
-    api_cryptup_call('message/confirm_files', {
-      identifiers: identifiers,
-    }, api_cryptup_response_formatter(callback));
+  function api_cryptup_account_update(update_values) {
+    return catcher.Promise(function(resolve, reject) {
+      storage.auth_info(function (email, uuid, verified) {
+        if(verified) {
+          var request = {account: email, uuid: uuid};
+          tool.each(update_values || {}, function(k, v) { request[k] = v; });
+          api_cryptup_call('account/update', request).validate(function(r) {return typeof r.result === 'object' }).then(resolve, reject);
+        } else {
+          reject(api_cryptup_auth_error);
+        }
+      });
+    });
   }
 
-  function api_cryptup_message_upload(encrypted_data_armored, callback, auth_method) { // todo - DEPRECATE THIS. Send as JSON to message/store
-    if(encrypted_data_armored.length > 100000) {
-      callback(false, {error: 'Message text should not be more than 100 KB. You can send very long texts as attachments.'});
-    } else {
-      var content = file_attachment('cryptup_encrypted_message.asc', 'text/plain', encrypted_data_armored);
+  function api_cryptup_message_presign_files(attachments, auth_method) {
+    return catcher.Promise(function (resolve, reject) {
+      var lengths = attachments.map(function (a) { return a.size; });
       if(!auth_method) {
-        api_cryptup_call('message/upload', {
-          content: content,
-        }, api_cryptup_response_formatter(callback), 'FORM');
-      } else {
-        storage_cryptup_auth_info(function (email, uuid, verified) {
+        api_cryptup_call('message/presign_files', {
+          lengths: lengths,
+        }).then(resolve, reject);
+      } else if(auth_method === 'uuid') {
+        storage.auth_info(function (email, uuid, verified) {
           if(verified) {
-            api_cryptup_call('message/upload', {
+            api_cryptup_call('message/presign_files', {
               account: email,
               uuid: uuid,
-              content: content,
-            }, api_cryptup_response_formatter(callback), 'FORM');
+              lengths: lengths,
+            }).then(resolve, reject);
           } else {
-            callback(api_cryptup_auth_error);
+            reject(api_cryptup_auth_error);
           }
         });
-      }
-    }
-  }
-
-  function api_cryptup_message_expiration(admin_codes, add_days, callback) {
-    storage_cryptup_auth_info(function (email, uuid, verified) {
-      if(verified) {
-        api_cryptup_call('message/expiration', {
-          account: email,
-          uuid: uuid,
-          admin_codes: admin_codes,
-          add_days: add_days || null,
-        }, api_cryptup_response_formatter(callback));
       } else {
-        callback(api_cryptup_auth_error);
+        api_cryptup_call('message/presign_files', {
+          message_token_account: auth_method.account,
+          message_token: auth_method.token,
+          lengths: attachments.map(function(a) { return a.size; }),
+        }).then(resolve, reject);
       }
     });
   }
 
-  function api_cryptup_message_token(callback) {
-    storage_cryptup_auth_info(function (email, uuid, verified) {
-      if(verified) {
-        api_cryptup_call('message/token', {
-          account: email,
-          uuid: uuid,
-        }, api_cryptup_response_formatter(callback));
+  function api_cryptup_message_confirm_files(identifiers) {
+    return api_cryptup_call('message/confirm_files', {
+      identifiers: identifiers,
+    });
+  }
+
+  function api_cryptup_message_upload(encrypted_data_armored, auth_method) { // todo - DEPRECATE THIS. Send as JSON to message/store
+    return catcher.Promise(function (resolve, reject) {
+      if(encrypted_data_armored.length > 100000) {
+        reject({code: null, message: 'Message text should not be more than 100 KB. You can send very long texts as attachments.'});
       } else {
-        callback(api_cryptup_auth_error);
+        var content = file_attachment('cryptup_encrypted_message.asc', 'text/plain', encrypted_data_armored);
+        if(!auth_method) {
+          api_cryptup_call('message/upload', {
+            content: content,
+          }, 'FORM').then(resolve, reject);
+        } else {
+          storage.auth_info(function (email, uuid, verified) {
+            if(verified) {
+              api_cryptup_call('message/upload', {
+                account: email,
+                uuid: uuid,
+                content: content,
+              }, 'FORM').then(resolve, reject);
+            } else {
+              reject(api_cryptup_auth_error);
+            }
+          });
+        }
       }
     });
   }
 
-  function api_cryptup_message_reply(short, token, from, to, subject, message, callback) {
-    api_cryptup_call('message/reply', {
+  function api_cryptup_message_expiration(admin_codes, add_days) {
+    return catcher.Promise(function (resolve, reject) {
+      storage.auth_info(function (email, uuid, verified) {
+        if(verified) {
+          api_cryptup_call('message/expiration', {
+            account: email,
+            uuid: uuid,
+            admin_codes: admin_codes,
+            add_days: add_days || null,
+          }).then(resolve, reject);
+        } else {
+          reject(api_cryptup_auth_error);
+        }
+      });
+    });
+  }
+
+  function api_cryptup_message_token() {
+    return catcher.Promise(function (resolve, reject) {
+      storage.auth_info(function (email, uuid, verified) {
+        if(verified) {
+          api_cryptup_call('message/token', {
+            account: email,
+            uuid: uuid,
+          }).then(resolve, reject);
+        } else {
+          reject(api_cryptup_auth_error);
+        }
+      });
+    });
+  }
+
+  function api_cryptup_message_reply(short, token, from, to, subject, message) {
+    return api_cryptup_call('message/reply', {
       short: short,
       token: token,
       from: from,
       to: to,
       subject: subject,
       message: message,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_message_contact(sender, message, callback, message_token) {
-    api_cryptup_call('message/contact', {
+  function api_cryptup_message_contact(sender, message, message_token) {
+    return api_cryptup_call('message/contact', {
       message_token_account: message_token.account,
       message_token: message_token.token,
       sender: sender,
       message: message,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_link_message(short, callback) {
+  function api_cryptup_link_message(short) {
     return api_cryptup_call('link/message', {
       short: short,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_link_me(alias, callback) {
+  function api_cryptup_link_me(alias) {
     return api_cryptup_call('link/me', {
       alias: alias,
-    }, api_cryptup_response_formatter(callback));
+    });
   }
 
-  function api_cryptup_account_check_sync(callback) {
-    if(typeof callback !== 'function') {
-      callback = function() {};
-    }
-    get_account_emails(function(emails) {
+  function api_cryptup_account_check_sync(callback) { // callbacks true on updated, false not updated, null for could not fetch
+    callback = typeof callback === 'function' ? callback : function() {};
+    storage.account_emails_get(function(emails) {
       if(emails.length) {
-        tool.api.cryptup.account_check(emails, function(success, result) {
-          if(success) {
-            storage_cryptup_auth_info(function (cryptup_account_email, cryptup_account_uuid, cryptup_account_verified) {
-              storage_cryptup_subscription(function(stored_level, stored_expire, stored_active, stored_method) {
-                var local_storage_update = {};
-                if(result.email && result.subscription && (result.subscription.level !== stored_level || result.subscription.method !== stored_method || result.subscription.expire !== stored_expire)) {
-                  local_storage_update['cryptup_account_subscription'] = result.subscription;
-                }
-                if((result.email && !cryptup_account_email) || (result.email && cryptup_account_email !== result.email)) {
+        tool.api.cryptup.account_check(emails).then(function(response) {
+          storage.auth_info(function (cryptup_account_email, cryptup_account_uuid, cryptup_account_verified) {
+            storage.subscription(function(stored_level, stored_expire, stored_active, stored_method) {
+              var local_storage_update = {};
+              if(response.email) {
+                if((response.email && !cryptup_account_email) || (response.email && cryptup_account_email !== response.email)) {
                   // this will of course fail auth on the server when used. The user will be prompted to verify this new device when that happens.
-                  local_storage_update['cryptup_account_email'] = result.email;
+                  local_storage_update['cryptup_account_email'] = response.email;
                   local_storage_update['cryptup_account_uuid'] = tool.crypto.hash.sha1(tool.str.random(40));
                   local_storage_update['cryptup_account_verified'] = true;
                 }
-                if(Object.keys(local_storage_update).length) {
-                  catcher.info('updating account subscription from ' + stored_level + ' to ' + result.subscription.level, result);
-                  account_storage_set(null, local_storage_update, function() {
-                    callback(true);
-                  });
-                } else {
-                  callback(false);
+              } else {
+                if(cryptup_account_email) {
+                  local_storage_update['cryptup_account_email'] = null;
+                  local_storage_update['cryptup_account_uuid'] = null;
+                  local_storage_update['cryptup_account_verified'] = false;
                 }
-              });
+              }
+              if(response.subscription) {
+                var rs = response.subscription;
+                if(rs.level !== stored_level || rs.method !== stored_method || rs.expire !== stored_expire || stored_active !== !rs.expired) {
+                  local_storage_update['cryptup_account_subscription'] = response.subscription;
+                }
+              } else {
+                if(stored_level || stored_expire || stored_active || stored_method) {
+                  local_storage_update['cryptup_account_subscription'] = null;
+                }
+              }
+              if(Object.keys(local_storage_update).length) {
+                catcher.log('updating account subscription from ' + stored_level + ' to ' + (response.subscription ? response.subscription.level : null), response);
+                storage.set(null, local_storage_update, function() {
+                  callback(true);
+                });
+              } else {
+                callback(false);
+              }
             });
-          } else {
-            catcher.info('could not check account subscription', result);
-            callback(null);
-          }
+          });
+        }, function(error) {
+          catcher.log('could not check account subscription', error);
+          callback(null);
         });
       } else {
         callback(null);
@@ -3637,28 +3455,24 @@
 
   /* tool.api.aws */
 
-  function api_aws_s3_upload(items, callback, progress_callback) {
+  function api_aws_s3_upload(items, progress_callback) {
     if (!items.length) {
       callback(false);
       return;
     }
-    var results = new Array(items.length);
     var progress = arr_zeroes(items.length);
+    var promises = [];
     tool.each(items, function (i, item) {
       var values = item.fields;
       values.file = file_attachment('encrpted_attachment', 'application/octet-stream', item.attachment.content);
-      api_call(item.base_url, '', values, function(success, s3_result) {
-        results[i] = success;
-        if(results.reduce(function(sum, r) { return sum + (typeof r !== 'undefined') }, 0) === results.length) { // no undefined left
-          callback(results.reduce(function(s, v) { return s + v; }, 0) === results.length, results); // callback(all_good, results);
-        }
-      }, 'FORM', {upload: function(single_file_progress) {
+      promises.push(api_call(item.base_url, '', values, 'FORM', {upload: function(single_file_progress) {
         progress[i] = single_file_progress;
         ui_event_prevent(ui_event_spree(), function() {
           progress_callback(arr_average(progress)); // this should of course be weighted average. How many years until someone notices?
         })();
-      }});
+      }}));
     });
+    return Promise.all(promises);
   }
 
 })();
@@ -3666,11 +3480,22 @@
 
 (function ( /* ERROR HANDLING */ ) {
 
+  var tool = typeof tool === 'object' ? tool : window.tool;
+  var storage = (typeof exports === 'object') ? require('js/storage').legacy : window.flowcrypt_storage;
   var RUNTIME = {};
-  figure_out_cryptup_runtime();
+  figure_out_flowcrypt_runtime();
 
   var original_on_error = window.onerror;
   window.onerror = handle_error;
+  window.onunhandledrejection = handle_promise_error;
+
+  function handle_promise_error(e) {
+    if(e && typeof e === 'object' && typeof e.reason === 'object' && e.reason.message) {
+      handle_exception(e.reason); // actual exception that happened in Promise, unhandled
+    } else {
+      log('unhandled_promise_reject_object', e); // some x that was called with reject(x) and later not handled
+    }
+  }
 
   function handle_error(error_message, url, line, col, error, is_manually_called, version, env) {
     if(typeof error === 'string') {
@@ -3680,10 +3505,20 @@
     if(error_message && url && typeof line !== 'undefined' && !col && !error && !is_manually_called && !version && !env) { // safari has limited support
       error = { name: 'safari_error', message: error_message, stack: error_message };
     }
+    if(typeof error_message === 'undefined' && line === 0 && col === 0 && is_manually_called && typeof error === 'object' && !(error instanceof Error)) {
+      try { // this sometimes happen with unhandled Promise.then(_, reject)
+        var stringified = JSON.stringify(error);
+      } catch(cannot) {
+        var stringified = 'typeof: ' + (typeof error) + '\n' + String(error);
+      }
+      error = { name: 'thrown_object', message: error.message || '(unknown)', stack: stringified};
+      error_message = 'thrown_object'
+    }
     var user_log_message = ' Please report errors above to human@flowcrypt.com. I fix errors VERY promptly.';
     var ignored_errors = [
       'Invocation of form get(, function) doesn\'t match definition get(optional string or array or object keys, function callback)', // happens in gmail window when reloaded extension + now reloading gmail
       'Invocation of form set(, function) doesn\'t match definition set(object items, optional function callback)', // happens in gmail window when reloaded extension + now reloading gmail
+      'Invocation of form runtime.connect(null, ) doesn\'t match definition runtime.connect(optional string extensionId, optional object connectInfo)',
     ];
     if(!error) {
       return;
@@ -3722,28 +3557,28 @@
         async: true,
         success: function (response) {
           if(response.saved === true) {
-            console.log('%cCRYPTUP ERROR:' + user_log_message, 'font-weight: bold;');
+            console.log('%cFlowCrypt ERROR:' + user_log_message, 'font-weight: bold;');
           } else {
-            console.log('%cCRYPTUP EXCEPTION:' + user_log_message, 'font-weight: bold;');
+            console.log('%cFlowCrypt EXCEPTION:' + user_log_message, 'font-weight: bold;');
           }
         },
         error: function (XMLHttpRequest, status, error) {
-          console.log('%cCRYPTUP FAILED:' + user_log_message, 'font-weight: bold;');
+          console.log('%cFlowCrypt FAILED:' + user_log_message, 'font-weight: bold;');
         },
       });
     } catch(ajax_err) {
       console.log(ajax_err.message);
-      console.log('%cCRYPTUP ISSUE:' + user_log_message, 'font-weight: bold;');
+      console.log('%cFlowCrypt ISSUE:' + user_log_message, 'font-weight: bold;');
     }
     try {
-      if(typeof account_storage_get === 'function' && typeof account_storage_set === 'function') {
+      if(typeof storage.get === 'function' && typeof storage.set === 'function') {
         tool.env.increment('error');
-        account_storage_get(null, ['errors'], function (storage) {
-          if(typeof storage.errors === 'undefined') {
-            storage.errors = [];
+        storage.get(null, ['errors'], function (s) {
+          if(typeof s.errors === 'undefined') {
+            s.errors = [];
           }
-          storage.errors.unshift(error.stack || error_message);
-          account_storage_set(null, storage);
+          s.errors.unshift(error.stack || error_message);
+          storage.set(null, s);
         });
       }
     } catch (storage_err) {
@@ -3781,7 +3616,25 @@
     }
   }
 
+  function report(name, details) {
+    try {
+      throw new Error(name);
+    } catch(e) {
+      if(typeof details !== 'string') {
+        try {
+          details = JSON.stringify(details);
+        } catch(stringify_error) {
+          details = '(could not stringify details "' + String(details) + '" in catcher.report because: ' + stringify_error.message + ')';
+        }
+      }
+      e.stack = e.stack + '\n\n\ndetails: ' + details;
+      handle_exception(e);
+    }
+  }
+
   function log(name, details) {
+    name = 'catcher.log: ' + name;
+    console.log(name);
     try {
       throw new Error(name);
     } catch(e) {
@@ -3793,36 +3646,36 @@
         }
       }
       e.stack = e.stack + '\n\n\ndetails: ' + details;
-      handle_exception(e);
-    }
-  }
-
-  function info(name, details) {
-    name = 'INFO: ' + name;
-    console.log(name);
-    try {
-      throw new Error(name);
-    } catch(e) {
-      if(typeof details !== 'string') {
-        try {
-          details = JSON.stringify(details);
-        } catch(stringify_error) {
-          details = '(could not stringify details "' + String(details) + '" in catcher.info because: ' + stringify_error.message + ')';
-        }
-      }
-      e.stack = e.stack + '\n\n\ndetails: ' + details;
       try {
-        account_storage_get(null, ['errors'], function (storage) {
-          if(typeof storage.errors === 'undefined') {
-            storage.errors = [];
+        storage.get(null, ['errors'], function (s) {
+          if(typeof s.errors === 'undefined') {
+            s.errors = [];
           }
-          storage.errors.unshift(e.stack || error_message);
-          account_storage_set(null, storage);
+          s.errors.unshift(e.stack || error_message);
+          storage.set(null, s);
         });
       } catch (storage_err) {
         console.log('failed to locally log info "' + String(name) + '" because: ' + storage_err.message);
       }
     }
+  }
+
+  function promise_error_alert(note) {
+    return function (error) {
+      console.log(error);
+      alert(note);
+    };
+  }
+
+  function wrapped_Promise(f) {
+    return new Promise(function(resolve, reject) {
+      try {
+        f(resolve, reject);
+      } catch(e) {
+        handle_exception(e);
+        reject({code: null, message: 'Error happened, please write me at human@flowcrypt.com to fix this\n\nError: ' + e.message, internal: 'exception'});
+      }
+    })
   }
 
   function environment(url) {
@@ -3837,9 +3690,9 @@
       env = 'ex:dev';
     } else if(url.indexOf('himcfccebk') !== -1) {
       env = 'ex:test';
-    } else if (url.indexOf('l.cryptup.org') !== -1 || url.indexOf('l.cryptup.io') !== -1) {
+    } else if (url.indexOf('l.flowcrypt.com') !== -1 || url.indexOf('127.0.0.1') !== -1) {
       env = 'web:local';
-    } else if (url.indexOf('cryptup.org') !== -1 || url.indexOf('cryptup.io') !== -1) {
+    } else if (url.indexOf('cryptup.org') !== -1 || url.indexOf('flowcrypt.com') !== -1) {
       env = 'web:prod';
     } else if (/chrome-extension:\/\/[a-z]{32}\/.+/.test(url)) {
       env = 'ex:fork';
@@ -3847,8 +3700,6 @@
       env = 'ex:script:gmail';
     } else if (url.indexOf('inbox.google.com') !== -1) {
       env = 'ex:script:inbox';
-    } else if (url.indexOf('outlook.live.com') !== -1) {
-      env = 'ex:script:outlook';
     } else if (/moz-extension:\/\/.+/.test(url)) {
       env = 'ex';
     }
@@ -3867,7 +3718,7 @@
     }
   }
 
-  function figure_out_cryptup_runtime() {
+  function figure_out_flowcrypt_runtime() {
     if(window.is_bare_engine !== true) {
       try {
         RUNTIME.version = chrome.runtime.getManifest().version;
@@ -3879,24 +3730,41 @@
           if(typeof extension_runtime !== 'undefined') {
             RUNTIME = extension_runtime;
           } else {
-            setTimeout(figure_out_cryptup_runtime, 200);
+            setTimeout(figure_out_flowcrypt_runtime, 200);
           }
         });
       }
     }
   }
 
+  function produce_new_stack_trace() {
+    try {
+      test();
+    } catch(e) {
+      return e.stack.split('\n').splice(3).join('\n'); // return stack after removing first 3 lines
+    }
+  }
+
+  var _c = { // web and extension code
+    handle_error: handle_error,
+    handle_exception: handle_exception,
+    report: report,
+    log: log,
+    version: cryptup_version,
+    try: try_wrapper,
+    environment: environment,
+    test: test,
+    Promise: wrapped_Promise,
+    promise_error_alert: promise_error_alert,
+    stack_trace: produce_new_stack_trace,
+  };
+
   if(window.is_bare_engine !== true) {
-    window.catcher = { // web and extension code
-      handle_error: handle_error,
-      handle_exception: handle_exception,
-      log: log,
-      info: info,
-      version: cryptup_version,
-      try: try_wrapper,
-      environment: environment,
-      test: test,
-    };
+    window.catcher = _c;
+  }
+
+  if(typeof exports === 'object') {
+    exports.catcher = _c;
   }
 
 })();
@@ -3905,7 +3773,7 @@
 (function ( /* EXTENSIONS AND CONFIG */ ) {
 
   if(typeof window.openpgp !== 'undefined' && typeof window.openpgp.config !== 'undefined' && typeof window.openpgp.config.versionstring !== 'undefined' && typeof window.openpgp.config.commentstring !== 'undefined') {
-    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Email Encryption: flowcrypt.com';
+    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Gmail Encryption flowcrypt.com';
     window.openpgp.config.commentstring = 'Seamlessly send, receive and search encrypted email';
   }
 
@@ -3913,51 +3781,85 @@
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   };
 
-  if(typeof $ === 'function') {
-    $.fn.reverse = [].reverse;
-  } else if(typeof jQuery === 'function') {
-    jQuery.fn.reverse = [].reverse;
-  }
-
   String.prototype.repeat = String.prototype.repeat || function(count) {
-      if (this == null) {
-        throw new TypeError('can\'t convert ' + this + ' to object');
+    if (this == null) {
+      throw new TypeError('can\'t convert ' + this + ' to object');
+    }
+    var str = '' + this;
+    count = +count;
+    if (count != count) {
+      count = 0;
+    }
+    if (count < 0) {
+      throw new RangeError('repeat count must be non-negative');
+    }
+    if (count == Infinity) {
+      throw new RangeError('repeat count must be less than infinity');
+    }
+    count = Math.floor(count);
+    if (str.length == 0 || count == 0) {
+      return '';
+    }
+    // Ensuring count is a 31-bit integer allows us to heavily optimize the
+    // main part. But anyway, most current (August 2014) browsers can't handle
+    // strings 1 << 28 chars or longer, so:
+    if (str.length * count >= 1 << 28) {
+      throw new RangeError('repeat count must not overflow maximum string size');
+    }
+    var rpt = '';
+    for (;;) {
+      if ((count & 1) == 1) {
+        rpt += str;
       }
-      var str = '' + this;
-      count = +count;
-      if (count != count) {
-        count = 0;
+      count >>>= 1;
+      if (count == 0) {
+        break;
       }
-      if (count < 0) {
-        throw new RangeError('repeat count must be non-negative');
-      }
-      if (count == Infinity) {
-        throw new RangeError('repeat count must be less than infinity');
-      }
-      count = Math.floor(count);
-      if (str.length == 0 || count == 0) {
-        return '';
-      }
-      // Ensuring count is a 31-bit integer allows us to heavily optimize the
-      // main part. But anyway, most current (August 2014) browsers can't handle
-      // strings 1 << 28 chars or longer, so:
-      if (str.length * count >= 1 << 28) {
-        throw new RangeError('repeat count must not overflow maximum string size');
-      }
-      var rpt = '';
-      for (;;) {
-        if ((count & 1) == 1) {
-          rpt += str;
+      str += str;
+    }
+    // Could we try:
+    // return Array(count + 1).join(this);
+    return rpt;
+  };
+
+  Promise.prototype.validate = Promise.prototype.validate || function(validity_checker) {
+    var original_promise = this;
+    return catcher.Promise(function(resolve, reject) {
+      original_promise.then(function(response) {
+        if(typeof response === 'object') {
+          if(validity_checker(response)) {
+            resolve(response);
+          } else {
+            reject({code: null, message: 'Could not validate result', internal: 'validate'});
+          }
+        } else {
+          reject({code: null, message: 'Could not validate result: not an object', internal: 'validate'});
         }
-        count >>>= 1;
-        if (count == 0) {
-          break;
-        }
-        str += str;
-      }
-      // Could we try:
-      // return Array(count + 1).join(this);
-      return rpt;
-    };
+      }, reject);
+    });
+  };
+
+  Promise.prototype.done = Promise.prototype.done || function(next) {
+    return this.then(function(x) {
+      next(true, x);
+    }, function(x) {
+      next(false, x);
+    });
+  };
+
+  Promise.sequence = Promise.sequence || function (promise_factories) {
+    return catcher.Promise(function (resolve, reject) {
+      var all_results = [];
+      return promise_factories.reduce(function(chained_promises, create_promise) {
+        return chained_promises.then(function(promise_result) {
+          all_results.push(promise_result);
+          return create_promise();
+        });
+      }, Promise.resolve('remove+me')).then(function(last_promise_result) {
+        all_results.push(last_promise_result);
+        resolve(all_results.splice(1)); // remove first bogus promise result
+      });
+    });
+  }
 
 })();
