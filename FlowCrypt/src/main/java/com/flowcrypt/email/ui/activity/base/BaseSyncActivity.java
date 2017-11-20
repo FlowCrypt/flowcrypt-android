@@ -249,18 +249,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     /**
      * Load the last messages which not exist in the database.
      *
-     * @param requestCode    The unique request code for identify the current action.
-     * @param currentFolder  {@link Folder} object.
-     * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
+     * @param requestCode           The unique request code for identify the current action.
+     * @param currentFolder         {@link Folder} object.
+     * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
+     * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
-    public void loadNewMessagesManually(int requestCode, Folder currentFolder, int lastUIDInCache) {
+    public void refreshMessages(int requestCode, Folder currentFolder, int lastUIDInCache, int countOfLoadedMessages) {
         if (checkBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, currentFolder);
 
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEW_MESSAGES_MANUALLY,
-                lastUIDInCache, 0, action);
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES,
+                lastUIDInCache, countOfLoadedMessages, action);
         message.replyTo = replyMessenger;
         try {
             syncServiceMessenger.send(message);

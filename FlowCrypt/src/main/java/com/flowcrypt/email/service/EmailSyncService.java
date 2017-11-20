@@ -10,6 +10,7 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -84,7 +85,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 3;
     public static final int MESSAGE_LOAD_MESSAGES = 4;
     public static final int MESSAGE_LOAD_NEXT_MESSAGES = 5;
-    public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
+    public static final int MESSAGE_REFRESH_MESSAGES = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
     public static final int MESSAGE_SEND_MESSAGE = 9;
@@ -302,11 +303,61 @@ public class EmailSyncService extends Service implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(accountDao, imapFolder, messages);
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
             updateAttachmentTable(accountDao, folder, imapFolder, messages);
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                          String key, int requestCode) {
+        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
+                "count: " + messages.length);
+        try {
+            com.flowcrypt.email.api.email.Folder folder =
+                    FoldersManager.generateFolder(imapFolder, imapFolder.getName());
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            List<String> messagesUIDInLocalDatabase = messageDaoSource.getUIDsOfMessagesInLabel
+                    (getApplicationContext(), accountDao.getEmail(), folder.getFolderAlias());
+
+            List<String> messagesUIDDeleteCandidates = generateDeleteCandidates(messagesUIDInLocalDatabase,
+                    imapFolder, messages);
+            messageDaoSource.deleteMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    messagesUIDDeleteCandidates);
+
+            List<javax.mail.Message> messagesNewCandidates = generateNewCandidates(messagesUIDInLocalDatabase,
+                    imapFolder, messages);
+            messageDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    imapFolder,
+                    messagesNewCandidates.toArray(new javax.mail.Message[0]));
+
+            messageDaoSource.updateMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    imapFolder,
+                    messages);
+
+            if (messages.length > 0) {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+            } else {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+            }
+
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
+            updateAttachmentTable(accountDao, folder, imapFolder, messagesNewCandidates.toArray(new javax.mail
+                    .Message[0]));
+
+        } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -347,6 +398,55 @@ public class EmailSyncService extends Service implements SyncListener {
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
         }
+    }
+
+    /**
+     * Generate a list of {@link javax.mail.Message} which contains candidates for insert.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return A generated list.
+     */
+    private List<javax.mail.Message> generateNewCandidates(List<String> messagesUIDInLocalDatabase,
+                                                           IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        List<javax.mail.Message> newCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                if (!messagesUIDInLocalDatabase.contains(String.valueOf(imapFolder.getUID(message)))) {
+                    newCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+        return newCandidates;
+    }
+
+    /**
+     * Generated a list of UID of the local messages which will be removed.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return A list of UID of the local messages which will be removed.
+     */
+    private List<String> generateDeleteCandidates(List<String> messagesUIDInLocalDatabase,
+                                                  IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        List<String> uidListDeleteCandidates = new ArrayList<>();
+        uidListDeleteCandidates.addAll(messagesUIDInLocalDatabase);
+        List<String> uidList = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                uidList.add(String.valueOf(imapFolder.getUID(message)));
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+        uidListDeleteCandidates.removeAll(uidList);
+        return uidListDeleteCandidates;
     }
 
     /**
@@ -486,12 +586,10 @@ public class EmailSyncService extends Service implements SyncListener {
      * Update information about contacts in the local database if current messages from the
      * Sent folder.
      *
-     * @param accountDao The object which contains information about an email account.
      * @param imapFolder The folder where messages exist.
      * @param messages   The received messages.
      */
-    private void updateLocalContactsIfMessagesFromSentFolder(AccountDao accountDao, IMAPFolder imapFolder,
-                                                             javax.mail.Message[] messages) {
+    private void updateLocalContactsIfMessagesFromSentFolder(IMAPFolder imapFolder, javax.mail.Message[] messages) {
         try {
             boolean isSentFolder = Arrays.asList(imapFolder.getAttributes()).contains("\\Sent");
 
@@ -614,13 +712,14 @@ public class EmailSyncService extends Service implements SyncListener {
                         }
                         break;
 
-                    case MESSAGE_LOAD_NEW_MESSAGES_MANUALLY:
+                    case MESSAGE_REFRESH_MESSAGES:
                         if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder refreshFolder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            emailSyncManager.loadNewMessagesManually(action.getOwnerKey(),
-                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(), message.arg1);
+                            emailSyncManager.refreshMessages(action.getOwnerKey(),
+                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(),
+                                    message.arg1, message.arg2);
                         }
                         break;
 

@@ -27,6 +27,29 @@ public abstract class BaseDaoSource implements BaseColumns {
 
     public abstract String getTableName();
 
+    /**
+     * Prepare a selection string depended on amount of selection args.
+     *
+     * @param objects Selection args.
+     * @return A generated string.
+     */
+    public static String prepareSelectionArgsString(Object[] objects) {
+        if (objects != null && objects.length > 0) {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < objects.length; i++) {
+                if (i == 0) {
+                    result.append("?");
+                } else {
+                    result.append(",?");
+                }
+            }
+
+            return result.toString();
+        } else {
+            return "";
+        }
+    }
+
     public final String getRowsContentType() {
         return "vnd.android.cursor.dir/vnd." + FlowcryptContract.AUTHORITY + "." + getTableName();
     }
