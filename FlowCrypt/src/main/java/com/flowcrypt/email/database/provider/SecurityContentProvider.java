@@ -7,8 +7,11 @@
 package com.flowcrypt.email.database.provider;
 
 import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -25,6 +28,8 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+
+import java.util.ArrayList;
 
 
 /**
@@ -289,8 +294,7 @@ public class SecurityContentProvider extends ContentProvider {
     }
 
     @Override
-    public int update(@NonNull Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         int rowsCount = -1;
         if (hotelDBHelper != null) {
             SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
@@ -481,6 +485,30 @@ public class SecurityContentProvider extends ContentProvider {
         }
 
         return cursor;
+    }
+
+    @NonNull
+    @Override
+    public ContentProviderResult[] applyBatch(@NonNull ArrayList<ContentProviderOperation> operations) throws
+            OperationApplicationException {
+        ContentProviderResult[] contentProviderResults = new ContentProviderResult[0];
+        if (hotelDBHelper != null) {
+            SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
+            if (sqLiteDatabase != null) {
+                sqLiteDatabase.beginTransaction();
+                try {
+                    contentProviderResults = super.applyBatch(operations);
+                    sqLiteDatabase.setTransactionSuccessful();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    sqLiteDatabase.endTransaction();
+                }
+            }
+        } else {
+            contentProviderResults = super.applyBatch(operations);
+        }
+        return contentProviderResults;
     }
 
     @Override
