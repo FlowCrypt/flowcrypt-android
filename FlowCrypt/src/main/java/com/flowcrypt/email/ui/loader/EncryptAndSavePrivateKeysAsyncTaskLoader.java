@@ -25,6 +25,8 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import com.flowcrypt.email.util.GeneralUtil;
 
+import org.acra.ACRA;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -111,6 +113,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             }
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
         return new LoaderResult(isOneOrMoreKeySaved, null);

@@ -26,6 +26,8 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.service.EmailSyncService;
 
+import org.acra.ACRA;
+
 import java.lang.ref.WeakReference;
 
 /**
@@ -131,6 +133,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -153,6 +156,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -173,6 +177,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -197,6 +202,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -222,6 +228,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -243,6 +250,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -267,6 +275,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -291,6 +300,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -319,6 +329,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -342,6 +353,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -390,6 +402,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -407,6 +420,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 

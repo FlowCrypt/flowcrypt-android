@@ -214,6 +214,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -223,6 +224,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -236,6 +238,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -256,6 +259,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -280,6 +284,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -310,6 +315,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -361,6 +367,7 @@ public class EmailSyncService extends Service implements SyncListener {
         } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
             e.printStackTrace();
             ACRA.getErrorReporter().handleException(e);
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -375,6 +382,7 @@ public class EmailSyncService extends Service implements SyncListener {
                 foldersManager.addFolder(imapFolder, folder.getName());
             } catch (MessagingException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
         }
 
@@ -386,6 +394,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -505,6 +514,7 @@ public class EmailSyncService extends Service implements SyncListener {
                         message);
             } catch (IOException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
 
             if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
@@ -637,6 +647,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -819,6 +830,7 @@ public class EmailSyncService extends Service implements SyncListener {
                                         REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
                             } catch (RemoteException e) {
                                 e.printStackTrace();
+                                ACRA.getErrorReporter().handleException(e);
                             }
                         }
                         break;

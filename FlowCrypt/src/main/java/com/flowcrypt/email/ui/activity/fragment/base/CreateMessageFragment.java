@@ -70,6 +70,7 @@ import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
 import com.hootsuite.nachos.tokenizer.ChipTokenizer;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
+import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -161,6 +162,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             js = new Js(getContext(), null);
         } catch (IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
 
         if (getActivity().getIntent() != null) {

@@ -27,6 +27,8 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 
 /**
@@ -153,6 +155,7 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
                     null, this);
         } catch (IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             throw new RuntimeException("Can not load Js util.");
         }
     }

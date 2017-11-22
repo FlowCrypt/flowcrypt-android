@@ -23,6 +23,8 @@ import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
@@ -138,6 +140,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -159,6 +162,7 @@ public class EmailSyncManager {
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -179,6 +183,7 @@ public class EmailSyncManager {
                     folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -200,6 +205,7 @@ public class EmailSyncManager {
                     folderName, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -222,6 +228,7 @@ public class EmailSyncManager {
                     folderName, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -242,6 +249,7 @@ public class EmailSyncManager {
                     sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -258,6 +266,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -272,6 +281,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -288,6 +298,7 @@ public class EmailSyncManager {
                     requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -363,11 +374,13 @@ public class EmailSyncManager {
                             Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
                         } catch (Exception e) {
                             e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
                             syncTask.handleException(accountDao, e, syncListener);
                         }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    ACRA.getErrorReporter().handleException(e);
                 }
             }
 
@@ -375,6 +388,7 @@ public class EmailSyncManager {
                 store.close();
             } catch (MessagingException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
             }
 

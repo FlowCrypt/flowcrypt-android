@@ -18,6 +18,8 @@ import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.GeneralUtil;
 
+import org.acra.ACRA;
+
 /**
  * This loader tries to save the backup of the private key as a file.
  * <p>
@@ -52,6 +54,7 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
                     destinationUri, pgpKey.armor()) > 0, null);
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
     }

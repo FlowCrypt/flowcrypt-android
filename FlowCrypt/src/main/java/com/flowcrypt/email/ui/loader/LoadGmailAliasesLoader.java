@@ -17,6 +17,8 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +73,7 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
             return new LoaderResult(accountAliasesDaoList, null);
         } catch (IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
     }

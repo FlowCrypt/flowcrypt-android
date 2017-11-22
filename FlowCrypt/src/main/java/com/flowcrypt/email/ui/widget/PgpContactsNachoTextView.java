@@ -13,6 +13,8 @@ import android.widget.AdapterView;
 
 import com.hootsuite.nachos.NachoTextView;
 
+import org.acra.ACRA;
+
 /**
  * The custom realization of {@link NachoTextView}.
  *
@@ -50,6 +52,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
             return super.toString();
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
         return getText().toString();
     }

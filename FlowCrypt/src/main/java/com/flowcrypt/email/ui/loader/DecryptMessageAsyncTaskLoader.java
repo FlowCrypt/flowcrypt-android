@@ -31,6 +31,8 @@ import com.flowcrypt.email.model.messages.MessagePartType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
+import org.acra.ACRA;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -70,6 +72,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
             return new LoaderResult(messageInfo, null);
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
     }

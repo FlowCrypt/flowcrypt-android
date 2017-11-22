@@ -15,6 +15,8 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,6 +72,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
                 return new LoaderResult(getLookUpEmailsResponse(emails), null);
             } catch (IOException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
                 return new LoaderResult(null, e);
             }
         } else {
@@ -102,6 +105,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
             }
         } catch (IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
 
         return aliasEmails;
