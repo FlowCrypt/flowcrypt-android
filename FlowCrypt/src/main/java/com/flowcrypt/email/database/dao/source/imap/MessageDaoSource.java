@@ -648,7 +648,7 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     private String[] parseFlags(String string) {
-        return parseArray(string, "(?=\\\\)");
+        return parseArray(string, "\\s");
     }
 
     private String[] parseEmails(String string) {
