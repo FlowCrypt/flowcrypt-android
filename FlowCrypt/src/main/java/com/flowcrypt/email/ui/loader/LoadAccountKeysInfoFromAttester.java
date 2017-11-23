@@ -6,6 +6,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -22,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import om.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 import retrofit2.Response;
 
 /**

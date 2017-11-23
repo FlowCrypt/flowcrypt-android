@@ -1,4 +1,10 @@
-package om.flowcrypt.email.api.retrofit.request.model;
+/*
+ * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
+ * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.api.retrofit.request.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;

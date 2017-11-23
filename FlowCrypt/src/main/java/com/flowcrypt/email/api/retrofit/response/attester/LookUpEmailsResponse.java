@@ -2,12 +2,11 @@ package com.flowcrypt.email.api.retrofit.response.attester;
 
 import android.os.Parcel;
 
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 import java.util.List;
-
-import om.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 
 /**
  * Response from the API
