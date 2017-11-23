@@ -65,6 +65,8 @@ import com.flowcrypt.email.util.UIUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This fragment describe details of some message.
@@ -130,7 +132,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_message_details, container, false);
     }
 
@@ -582,9 +584,22 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      */
     @NonNull
     private String prepareViewportHtml(String incomingHtml) {
-        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width " +
+        String body;
+        if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
+            Pattern patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL);
+            Matcher matcherBody = patternBody.matcher(incomingHtml);
+            if (matcherBody.find()) {
+                body = matcherBody.group();
+            } else {
+                body = "<body>" + incomingHtml + "</body>";
+            }
+        } else {
+            body = "<body>" + incomingHtml + "</body>";
+        }
+
+        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
                 "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
-                " 100% !important;}</style></head><body>" + incomingHtml + "</body></html>";
+                " 100% !important;}</style></head>" + body + "</html>";
     }
 
     /**
