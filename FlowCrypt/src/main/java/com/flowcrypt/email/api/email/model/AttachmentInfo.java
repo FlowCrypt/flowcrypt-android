@@ -44,6 +44,7 @@ public class AttachmentInfo implements Parcelable {
     private String type;
     private String id;
     private Uri uri;
+    private boolean isCanBeDeleted = true;
 
     public AttachmentInfo() {
     }
@@ -57,6 +58,7 @@ public class AttachmentInfo implements Parcelable {
         this.type = in.readString();
         this.id = in.readString();
         this.uri = in.readParcelable(Uri.class.getClassLoader());
+        this.isCanBeDeleted = in.readByte() != 0;
     }
 
     @Override
@@ -69,6 +71,8 @@ public class AttachmentInfo implements Parcelable {
                 ", encodedSize=" + encodedSize +
                 ", type='" + type + '\'' +
                 ", id='" + id + '\'' +
+                ", uri=" + uri +
+                ", isCanBeDeleted=" + isCanBeDeleted +
                 '}';
     }
 
@@ -87,6 +91,7 @@ public class AttachmentInfo implements Parcelable {
         dest.writeString(this.type);
         dest.writeString(this.id);
         dest.writeParcelable(this.uri, flags);
+        dest.writeByte(this.isCanBeDeleted ? (byte) 1 : (byte) 0);
     }
 
     public String getEmail() {
@@ -151,6 +156,14 @@ public class AttachmentInfo implements Parcelable {
 
     public void setUri(Uri uri) {
         this.uri = uri;
+    }
+
+    public boolean isCanBeDeleted() {
+        return isCanBeDeleted;
+    }
+
+    public void setCanBeDeleted(boolean isCanBeDeleted) {
+        this.isCanBeDeleted = isCanBeDeleted;
     }
 
     @Nullable

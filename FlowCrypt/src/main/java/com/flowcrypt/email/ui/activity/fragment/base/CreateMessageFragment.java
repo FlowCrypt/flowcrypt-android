@@ -10,9 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -37,10 +35,12 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -103,6 +103,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private ContactsDaoSource contactsDaoSource;
     private FoldersManager.FolderType folderType;
     private IncomingMessageInfo incomingMessageInfo;
+    private ServiceInfo serviceInfo;
 
     private ViewGroup layoutAttachments;
     private EditText editTextFrom;
@@ -166,11 +167,17 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
 
         if (getActivity().getIntent() != null) {
+            this.serviceInfo = getActivity().getIntent().getParcelableExtra
+                    (CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
             this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
                     (CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
             if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
                 this.folderType = FoldersManager.getFolderTypeForImapFolder(
                         incomingMessageInfo.getFolder());
+            }
+
+            if (this.serviceInfo != null && this.serviceInfo.getAttachmentInfoList() != null) {
+                attachmentInfoList.addAll(this.serviceInfo.getAttachmentInfoList());
             }
         }
     }
@@ -298,7 +305,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null && data.getData() != null) {
-                            AttachmentInfo attachmentInfo = getAttachmentInfoFromUri(data.getData());
+                            AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(getContext(),
+                                    data.getData());
                             if (isAttachmentCanBeAdded(attachmentInfo)) {
                                 attachmentInfoList.add(attachmentInfo);
                                 showAttachments();
@@ -795,6 +803,27 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             editTextEmailSubject.setText(getString(R.string.template_reply_subject, incomingMessageInfo.getSubject()));
             editTextEmailMessage.requestFocus();
         }
+
+        if (serviceInfo != null) {
+            editTextRecipients.setFocusable(serviceInfo.isToFieldEditEnable());
+            editTextRecipients.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
+
+            editTextFrom.setFocusable(serviceInfo.isFromFieldEditEnable());
+            editTextFrom.setFocusableInTouchMode(serviceInfo.isFromFieldEditEnable());
+            if (!serviceInfo.isFromFieldEditEnable()) {
+                editTextFrom.setOnClickListener(null);
+            }
+
+            editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
+            editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
+
+            editTextEmailMessage.setFocusable(serviceInfo.isMessageEditEnable());
+            editTextEmailMessage.setFocusableInTouchMode(serviceInfo.isMessageEditEnable());
+
+            if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
+                editTextEmailMessage.setText(serviceInfo.getSystemMessage());
+            }
+        }
     }
 
     private String prepareRecipients(List<String> recipients) {
@@ -864,29 +893,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         return totalSizeOfAttachments < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
     }
 
-    /**
-     * Generate {@link AttachmentInfo} from the requested information from the file uri.
-     *
-     * @param uri The file {@link Uri}
-     * @return Generated {@link AttachmentInfo}.
-     */
-    private AttachmentInfo getAttachmentInfoFromUri(Uri uri) {
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
-        Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null);
-
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
-                attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
-                attachmentInfo.setType(getContext().getContentResolver().getType(uri));
-                attachmentInfo.setUri(uri);
-            }
-
-            cursor.close();
-        }
-
-        return attachmentInfo;
-    }
 
     /**
      * Show a dialog where we can select different actions.
@@ -945,15 +951,17 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setVisibility(View.GONE);
 
-                View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
-                imageButtonClearAttachment.setVisibility(View.VISIBLE);
-                imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        attachmentInfoList.remove(attachmentInfo);
-                        layoutAttachments.removeView(rootView);
-                    }
-                });
+                if (attachmentInfo.isCanBeDeleted()) {
+                    View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
+                    imageButtonClearAttachment.setVisibility(View.VISIBLE);
+                    imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            attachmentInfoList.remove(attachmentInfo);
+                            layoutAttachments.removeView(rootView);
+                        }
+                    });
+                }
                 layoutAttachments.addView(rootView);
             }
         } else {

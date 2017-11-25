@@ -59,4 +59,7 @@ public class Constants {
      * The max size off an attachment which can be decrypted via the app.
      */
     public static final int MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED = 1024 * 1024 * 3;
+
+    public static final String PGP_CACHE_DIR = "PGP";
+    public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
 }

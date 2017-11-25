@@ -230,4 +230,13 @@
     <string name="use_public_key_from">Use Public key from</string>
     <string name="key_successfully_copied">Key successfully copied</string>
     <string name="search">Search</string>
+    <string name="have_not_any_other_key">I don\'t have any other key</string>
+    <string name="tell_sender_to_update_their_settings">You should tell the sender to update their settings and send a
+        new message.</string>
+    <string name="message_was_encrypted_for_wrong_key">Hello,\n\nI was not able to read your encrypted message because
+        it was encrypted for a wrong key.\n\nMy current public key is attached below. Please update your records and
+        send me a new encrypted message.\n\nThank you</string>
+    <string name="you_should_select_one_or_more_keys">You should select one or more keys</string>
+    <string name="select_keys">Select key(s):</string>
+    <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
 </resources>

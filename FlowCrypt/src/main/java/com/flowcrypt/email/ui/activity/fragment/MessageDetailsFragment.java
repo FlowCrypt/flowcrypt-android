@@ -43,6 +43,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
@@ -58,6 +59,7 @@ import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyDialogFragment;
 import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -79,6 +81,7 @@ import java.util.regex.Pattern;
 public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
     private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
     private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101;
+    private static final int REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102;
 
     private TextView textViewSenderAddress;
     private TextView textViewDate;
@@ -159,6 +162,36 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                     case Activity.RESULT_OK:
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
                         getLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        List<AttachmentInfo> attachmentInfoList = null;
+                        if (data != null) {
+                            attachmentInfoList = data.getParcelableArrayListExtra
+                                    (PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
+
+                            if (attachmentInfoList != null) {
+                                for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                                    attachmentInfo.setCanBeDeleted(false);
+                                }
+                            }
+                        }
+
+                        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails
+                                        .getEmail(),
+                                incomingMessageInfo, MessageEncryptionType.STANDARD,
+                                new ServiceInfo.Builder()
+                                        .setIsFromFieldEditEnable(false)
+                                        .setIsToFieldEditEnable(false)
+                                        .setIsSubjectEditEnable(false)
+                                        .setIsMessageTypeCanBeSwitched(false)
+                                        .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
+                                        .setAttachmentInfoList(attachmentInfoList)
+                                        .createServiceInfo()));
                         break;
                 }
                 break;
@@ -812,13 +845,26 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         TextView textViewErrorMessage = missingPrivateKeyLayout.findViewById(R.id.textViewErrorMessage);
         textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
 
-        Button button = missingPrivateKeyLayout.findViewById(R.id.buttonImportPrivateKey);
-        button.setOnClickListener(new View.OnClickListener() {
+        Button buttonImportPrivateKey = missingPrivateKeyLayout.findViewById(R.id.buttonImportPrivateKey);
+        buttonImportPrivateKey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivityForResult(ImportPrivateKeyActivity.newIntent(
                         getContext(), getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
                         REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
+            }
+        });
+
+        Button buttonSendOwnPublicKey = missingPrivateKeyLayout.findViewById(R.id.buttonSendOwnPublicKey);
+        buttonSendOwnPublicKey.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PrepareSendUserPublicKeyDialogFragment prepareSendUserPublicKeyDialogFragment
+                        = PrepareSendUserPublicKeyDialogFragment.newInstance(generalMessageDetails.getEmail());
+                prepareSendUserPublicKeyDialogFragment.setTargetFragment(MessageDetailsFragment.this,
+                        REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
+                prepareSendUserPublicKeyDialogFragment.show(getFragmentManager(),
+                        PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
             }
         });
 

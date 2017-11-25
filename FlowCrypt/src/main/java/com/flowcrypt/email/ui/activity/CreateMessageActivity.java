@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -50,21 +51,31 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity.class);
 
+    public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
+            ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
+
     private View nonEncryptedHintView;
     private View layoutContent;
 
     private String accountEmail;
     private MessageEncryptionType messageEncryptionType;
+    private ServiceInfo serviceInfo;
 
     private boolean isMessageSendingNow;
 
     public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
+        return generateIntent(context, email, incomingMessageInfo, messageEncryptionType, null);
+    }
+
+    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
+                                        MessageEncryptionType messageEncryptionType, ServiceInfo serviceInfo) {
 
         Intent intent = new Intent(context, CreateMessageActivity.class);
         intent.putExtra(EXTRA_KEY_ACCOUNT_EMAIL, email);
         intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
         intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
+        intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
         return intent;
     }
 
@@ -79,6 +90,8 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
             if (getIntent().hasExtra(EXTRA_KEY_ACCOUNT_EMAIL)) {
                 this.accountEmail = getIntent().getStringExtra(EXTRA_KEY_ACCOUNT_EMAIL);
             } else throw new IllegalArgumentException("The account email not specified!");
+
+            serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
 
             messageEncryptionType = (MessageEncryptionType) getIntent()
                     .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
@@ -122,6 +135,10 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
         menuActionSwitchType.setTitle(messageEncryptionType == MessageEncryptionType.STANDARD ?
                 R.string.switch_to_secure_email : R.string.switch_to_standard_email);
+
+        if (serviceInfo != null && !serviceInfo.isMessageTypeCanBeSwitched()) {
+            menu.removeItem(menuActionSwitchType.getItemId());
+        }
 
         return true;
     }

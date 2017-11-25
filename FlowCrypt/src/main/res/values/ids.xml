@@ -20,6 +20,7 @@
     <item name="loader_id_check_email_settings" type="id" />
     <item name="loader_id_load_email_aliases" type="id" />
     <item name="loader_id_load_keys_info_from_attester" type="id" />
+    <item name="loader_id_load_own_public_keys_as_attachment_info" type="id" />
 
     <item name="syns_request_code_update_label" type="id" />
     <item name="syns_request_code_load_next_messages" type="id" />

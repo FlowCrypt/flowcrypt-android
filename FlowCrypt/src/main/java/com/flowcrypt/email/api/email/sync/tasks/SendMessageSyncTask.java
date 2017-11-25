@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
@@ -68,7 +69,6 @@ import javax.mail.internet.MimeMultipart;
 
 public class SendMessageSyncTask extends BaseSyncTask {
     private static final String TAG = SendMessageSyncTask.class.getSimpleName();
-    private static final String PGP_CACHE_DIR = "PGP";
 
     private OutgoingMessageInfo outgoingMessageInfo;
 
@@ -98,7 +98,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
         if (syncListener != null) {
             Context context = syncListener.getContext();
 
-            File pgpCacheDirectory = new File(context.getCacheDir(), PGP_CACHE_DIR);
+            File pgpCacheDirectory = new File(context.getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
             if (pgpCacheDirectory.exists()) {
                 FileUtils.cleanDirectory(pgpCacheDirectory);
             } else if (!pgpCacheDirectory.mkdir()) {

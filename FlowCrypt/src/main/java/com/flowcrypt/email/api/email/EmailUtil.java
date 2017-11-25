@@ -6,8 +6,13 @@
 
 package com.flowcrypt.email.api.email;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.Arrays;
@@ -60,5 +65,31 @@ public class EmailUtil {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Generate {@link AttachmentInfo} from the requested information from the file uri.
+     *
+     * @param uri The file {@link Uri}
+     * @return Generated {@link AttachmentInfo}.
+     */
+    public static AttachmentInfo getAttachmentInfoFromUri(Context context, Uri uri) {
+        if (context != null && uri != null) {
+            AttachmentInfo attachmentInfo = new AttachmentInfo();
+            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+                    attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
+                    attachmentInfo.setType(context.getContentResolver().getType(uri));
+                    attachmentInfo.setUri(uri);
+                }
+
+                cursor.close();
+            }
+
+            return attachmentInfo;
+        } else return null;
     }
 }
