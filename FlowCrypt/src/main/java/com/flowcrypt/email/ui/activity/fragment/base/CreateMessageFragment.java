@@ -481,10 +481,15 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                     progressBarCheckContactsDetails.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
                     if (hasFocus) {
                         pgpContacts.clear();
-                        getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
+                        if (isAdded()) {
+                            getLoaderManager().destroyLoader(R.id.loader_id_update_info_about_pgp_contacts);
+                        }
                     } else {
                         if (isUpdateInfoAboutContactsEnable) {
-                            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
+                            if (isAdded()) {
+                                getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null,
+                                        this);
+                            }
                         } else {
                             progressBarCheckContactsDetails.setVisibility(View.INVISIBLE);
                         }
