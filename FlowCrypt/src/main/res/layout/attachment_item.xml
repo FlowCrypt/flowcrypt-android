@@ -7,13 +7,14 @@
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="@dimen/layout_width_attachment_item"
+    android:layout_width="match_parent"
     android:layout_height="@dimen/layout_height_attachment_item"
     android:layout_marginBottom="@dimen/default_margin_small"
     android:layout_marginLeft="@dimen/default_margin_content"
     android:layout_marginRight="@dimen/default_margin_content"
     android:layout_marginTop="@dimen/default_margin_small"
-    android:background="@color/aluminum">
+    android:background="@color/aluminum"
+    android:maxWidth="@dimen/layout_width_attachment_item">
 
     <LinearLayout
         android:id="@+id/layoutAttachment"
@@ -49,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"
-                android:maxLines="1"
+                android:singleLine="true"
                 tools:text="Some very very very very very large file name.txt" />
 
             <TextView
