@@ -50,7 +50,6 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
             ("KEY_FROM_EMAIL", InfoDialogFragment.class);
 
     private TextView textViewMessage;
-    private TextView emptyView;
     private ListView listViewKeys;
     private View progressBar;
     private View buttonOk;
@@ -89,7 +88,6 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
 
         textViewMessage = view.findViewById(R.id.textViewMessage);
         progressBar = view.findViewById(R.id.progressBar);
-        emptyView = view.findViewById(R.id.emptyView);
         listViewKeys = view.findViewById(R.id.listViewKeys);
         buttonOk = view.findViewById(R.id.buttonOk);
         buttonOk.setOnClickListener(this);
@@ -137,41 +135,42 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
                 attachmentInfoList = (ArrayList<AttachmentInfo>) result;
 
                 if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
-                    String[] strings = new String[attachmentInfoList.size()];
-                    for (int i = 0; i < attachmentInfoList.size(); i++) {
-                        AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
-                        strings[i] = attachmentInfo.getName();
-                    }
-
                     if (attachmentInfoList.size() > 1) {
                         textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-                        textViewMessage.append("\n\n");
-                        textViewMessage.append(getString(R.string.select_keys));
-
-                        ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
-                                .layout.simple_list_item_multiple_choice, strings);
-
-                        listViewKeys.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-                        listViewKeys.setAdapter(stringArrayAdapter);
+                        AttachmentInfo matchedAttachmentInfo = null;
 
                         for (int i = 0; i < attachmentInfoList.size(); i++) {
                             AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
                             if (fromEmail.equalsIgnoreCase(attachmentInfo.getEmail())) {
-                                listViewKeys.setItemChecked(i, true);
+                                matchedAttachmentInfo = attachmentInfo;
                             }
+                        }
+
+                        if (matchedAttachmentInfo != null) {
+                            attachmentInfoList.clear();
+                            attachmentInfoList.add(matchedAttachmentInfo);
+                        } else {
+                            textViewMessage.append("\n\n");
+                            textViewMessage.append(getString(R.string.select_keys));
+
+                            String[] strings = new String[attachmentInfoList.size()];
+                            for (int i = 0; i < attachmentInfoList.size(); i++) {
+                                AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
+                                strings[i] = attachmentInfo.getName();
+                            }
+
+                            ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
+                                    .layout.simple_list_item_multiple_choice, strings);
+
+                            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                            listViewKeys.setAdapter(stringArrayAdapter);
                         }
                     } else {
                         textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-                        textViewMessage.append("\n\n");
-                        textViewMessage.append(getString(R.string.your_public_key_will_be_appended));
-
-                        ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
-                                .layout.simple_list_item_1, strings);
-
-                        listViewKeys.setAdapter(stringArrayAdapter);
+                        listViewKeys.setVisibility(View.GONE);
                     }
                 } else {
-                    UIUtil.exchangeViewVisibility(getContext(), true, emptyView, listViewKeys);
+                    textViewMessage.setText(R.string.unknown_error);
                 }
                 break;
 
@@ -184,8 +183,8 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_load_own_public_keys_as_attachment_info:
-                UIUtil.exchangeViewVisibility(getContext(), true, emptyView, progressBar);
-                emptyView.setText(e.getMessage());
+                progressBar.setVisibility(View.GONE);
+                textViewMessage.setText(e != null ? e.getMessage() : getString(R.string.unknown_error));
                 break;
 
             default:
@@ -197,27 +196,36 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonOk:
-                if (attachmentInfoList.size() == 1) {
-                    sendResult(Activity.RESULT_OK, attachmentInfoList);
-                    dismiss();
-                } else {
-                    ArrayList<AttachmentInfo> selectedAttachmentInfoArrayList = new ArrayList<>();
-                    SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
-                    for (int i = 0; i < checkedItemPositions.size(); i++) {
-                        int key = checkedItemPositions.keyAt(i);
-                        if (checkedItemPositions.get(key)) {
-                            selectedAttachmentInfoArrayList.add(attachmentInfoList.get(key));
+                if (attachmentInfoList != null) {
+                    if (attachmentInfoList.size() == 1) {
+                        sendResult(Activity.RESULT_OK, attachmentInfoList);
+                        dismiss();
+                    } else {
+                        if (attachmentInfoList.size() != 0) {
+                            ArrayList<AttachmentInfo> selectedAttachmentInfoArrayList = new ArrayList<>();
+                            SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
+                            if (checkedItemPositions != null) {
+                                for (int i = 0; i < checkedItemPositions.size(); i++) {
+                                    int key = checkedItemPositions.keyAt(i);
+                                    if (checkedItemPositions.get(key)) {
+                                        selectedAttachmentInfoArrayList.add(attachmentInfoList.get(key));
+                                    }
+                                }
+                            }
+
+                            if (selectedAttachmentInfoArrayList.isEmpty()) {
+                                showToast(getString(R.string.you_should_select_one_or_more_keys));
+                            } else {
+                                sendResult(Activity.RESULT_OK, selectedAttachmentInfoArrayList);
+                                dismiss();
+                            }
+                        } else {
+                            dismiss();
                         }
                     }
-
-                    if (selectedAttachmentInfoArrayList.isEmpty()) {
-                        showToast(getString(R.string.you_should_select_one_or_more_keys));
-                    } else {
-                        sendResult(Activity.RESULT_OK, selectedAttachmentInfoArrayList);
-                        dismiss();
-                    }
+                } else {
+                    dismiss();
                 }
-
                 break;
         }
     }

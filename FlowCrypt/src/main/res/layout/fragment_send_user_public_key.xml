@@ -4,64 +4,65 @@
   ~ Contributors: DenBond7
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/textViewMessage"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginEnd="@dimen/default_margin_content"
         android:layout_marginStart="@dimen/default_margin_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:gravity="center"
+        android:paddingLeft="@dimen/default_margin_content_small"
+        android:paddingRight="@dimen/default_margin_content_small"
         android:text="@string/loading"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMessage" />
+
+    <ListView
+        android:id="@+id/listViewKeys"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
-
-        <ListView
-            android:id="@+id/listViewKeys"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="@color/aluminum"
-            android:dividerHeight="1dp"
-            tools:listitem="@layout/key_item" />
-
-        <TextView
-            android:id="@+id/emptyView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/no_results"
-            android:visibility="gone" />
-    </FrameLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:divider="@color/aluminum"
+        android:dividerHeight="@dimen/default_single_dip"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMessage"
+        tools:listitem="@layout/key_item" />
 
     <Button
         android:id="@+id/buttonOk"
         style="@style/AppWidget.Button"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content_small"
         android:text="@android:string/ok"
         android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
-        tools:visibility="visible" />
-</LinearLayout>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/listViewKeys" />
+</android.support.constraint.ConstraintLayout>

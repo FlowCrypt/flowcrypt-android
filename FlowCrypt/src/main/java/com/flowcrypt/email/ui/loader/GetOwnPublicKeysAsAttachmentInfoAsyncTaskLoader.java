@@ -76,7 +76,7 @@ public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLo
                     if (publicKey != null) {
                         PgpContact primaryUserId = pgpKey.getPrimaryUserId();
                         if (primaryUserId != null) {
-                            String fileName = primaryUserId.getEmail() + "_pbc.key";
+                            String fileName = "0x" + publicKey.getLongid().toUpperCase() + ".asc";
                             String publicKeyValue = publicKey.armor();
                             File publicKeyFile = new File(pgpCacheDirectory, fileName);
                             Uri destinationUri = Uri.fromFile(publicKeyFile);
