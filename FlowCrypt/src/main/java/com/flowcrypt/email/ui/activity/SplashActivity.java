@@ -98,9 +98,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                     case CheckKeysActivity.RESULT_NEUTRAL:
-                        EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, addGmailAccount(currentGoogleSignInAccount));
-                        finish();
+                        runEmailManagerActivityWithCurrentGmailAccount();
                         break;
 
                     case Activity.RESULT_CANCELED:
@@ -114,9 +112,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        EmailSyncService.startEmailSyncService(this);
-                        EmailManagerActivity.runEmailManagerActivity(this, addGmailAccount(currentGoogleSignInAccount));
-                        finish();
+                        runEmailManagerActivityWithCurrentGmailAccount();
                         break;
 
                     case Activity.RESULT_CANCELED:
@@ -133,13 +129,27 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                         try {
                             AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
                                     .KEY_EXTRA_AUTH_CREDENTIALS);
-                            AccountDaoSource accountDaoSource = new AccountDaoSource();
-                            accountDaoSource.addRow(this, authCredentials);
-                            EmailSyncService.startEmailSyncService(this);
-                            EmailManagerActivity.runEmailManagerActivity(this,
-                                    accountDaoSource.getAccountInformation(this, authCredentials.getEmail()));
+                            if (authCredentials != null) {
+                                AccountDaoSource accountDaoSource = new AccountDaoSource();
+                                accountDaoSource.addRow(this, authCredentials);
+                                EmailSyncService.startEmailSyncService(this);
 
-                            finish();
+                                AccountDao accountDao =
+                                        accountDaoSource.getAccountInformation(this, authCredentials.getEmail());
+
+                                if (accountDao != null) {
+                                    EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                                    finish();
+                                } else {
+                                    Toast.makeText(this, R.string.error_occured_try_again_later,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                ACRA.getErrorReporter().handleException(new NullPointerException("AuthCredentials is " +
+                                        "null!"));
+                                Toast.makeText(this, R.string.error_occured_try_again_later,
+                                        Toast.LENGTH_SHORT).show();
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                             ACRA.getErrorReporter().handleException(e);
@@ -235,6 +245,19 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     }
 
+    private void runEmailManagerActivityWithCurrentGmailAccount() {
+        EmailSyncService.startEmailSyncService(this);
+
+        AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
+        if (accountDao != null) {
+            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+            finish();
+        } else {
+            Toast.makeText(this, R.string.error_occured_try_again_later,
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /**
      * Clear information about created but a not used account.
      *
@@ -269,6 +292,11 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
      * @return Generated {@link AccountDao}.
      */
     private AccountDao addGmailAccount(GoogleSignInAccount googleSignInAccount) {
+        if (googleSignInAccount == null) {
+            ACRA.getErrorReporter().handleException(new NullPointerException("GoogleSignInAccount is null!"));
+            return null;
+        }
+
         AccountDaoSource accountDaoSource = new AccountDaoSource();
 
         boolean isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0;
