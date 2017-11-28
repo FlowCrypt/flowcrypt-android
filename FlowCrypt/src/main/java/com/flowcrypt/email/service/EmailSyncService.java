@@ -573,7 +573,7 @@ public class EmailSyncService extends Service implements SyncListener {
                         headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
                     }
 
-                    if (headers != null && headers.length > 0) {
+                    if (headers != null && headers.length > 0 && !TextUtils.isEmpty(bodyPart.getFileName())) {
                         AttachmentInfo attachmentInfo = new AttachmentInfo();
                         attachmentInfo.setName(bodyPart.getFileName());
                         attachmentInfo.setEncodedSize(bodyPart.getSize());
