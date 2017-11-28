@@ -48,13 +48,12 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
 
         if (syncListener != null) {
             Message[] newMessages = new Message[0];
-            Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages);
 
             if (lastUID < nextUID - 1) {
                 newMessages = getNewMessages(imapFolder, nextUID);
             }
-
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
+            Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
             int countOfUpdatedMessages = updatedMessages != null ? updatedMessages.length : 0;
             Message[] messages = new Message[countOfNewMessages + countOfUpdatedMessages];
 
@@ -99,11 +98,13 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
      *
      * @param imapFolder            The folder which contains messages.
      * @param countOfLoadedMessages The count of already loaded messages.
+     * @param countOfNewMessages    The count of new messages (offset value).
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    private Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages) throws MessagingException {
-        int end = imapFolder.getMessageCount();
+    private Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages, int countOfNewMessages)
+            throws MessagingException {
+        int end = imapFolder.getMessageCount() - countOfNewMessages;
         int start = end - countOfLoadedMessages + 1;
 
         if (end < 1) {
