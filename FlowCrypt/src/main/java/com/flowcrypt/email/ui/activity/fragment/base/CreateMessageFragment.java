@@ -163,7 +163,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             js = new Js(getContext(), null);
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
 
         if (getActivity().getIntent() != null) {

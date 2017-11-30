@@ -152,7 +152,9 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            ACRA.getErrorReporter().handleException(e);
+                            if (ACRA.isInitialised()) {
+                                ACRA.getErrorReporter().handleException(e);
+                            }
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                         break;

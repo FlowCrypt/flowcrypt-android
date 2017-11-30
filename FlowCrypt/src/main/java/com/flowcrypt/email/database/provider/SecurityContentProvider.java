@@ -286,7 +286,9 @@ public class SecurityContentProvider extends ContentProvider {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    ACRA.getErrorReporter().handleException(e);
+                    if (ACRA.isInitialised()) {
+                        ACRA.getErrorReporter().handleException(e);
+                    }
                 } finally {
                     sqLiteDatabase.endTransaction();
                 }
@@ -504,7 +506,9 @@ public class SecurityContentProvider extends ContentProvider {
                     sqLiteDatabase.setTransactionSuccessful();
                 } catch (Exception e) {
                     e.printStackTrace();
-                    ACRA.getErrorReporter().handleException(e);
+                    if (ACRA.isInitialised()) {
+                        ACRA.getErrorReporter().handleException(e);
+                    }
                 } finally {
                     sqLiteDatabase.endTransaction();
                 }

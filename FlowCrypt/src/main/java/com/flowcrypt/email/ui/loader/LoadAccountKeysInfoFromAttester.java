@@ -72,7 +72,9 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
                 return new LoaderResult(getLookUpEmailsResponse(emails), null);
             } catch (IOException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
                 return new LoaderResult(null, e);
             }
         } else {
@@ -105,7 +107,9 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
             }
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
 
         return aliasEmails;

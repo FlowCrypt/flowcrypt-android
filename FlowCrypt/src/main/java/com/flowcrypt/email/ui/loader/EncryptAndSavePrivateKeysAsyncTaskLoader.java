@@ -113,7 +113,9 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             }
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(null, e);
         }
         return new LoaderResult(isOneOrMoreKeySaved, null);

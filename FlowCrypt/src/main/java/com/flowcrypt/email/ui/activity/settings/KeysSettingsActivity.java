@@ -155,7 +155,9 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
                     null, this);
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             throw new RuntimeException("Can not load Js util.");
         }
     }

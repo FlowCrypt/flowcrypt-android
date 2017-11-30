@@ -438,7 +438,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 return new Gson().fromJson(authCredentialsJson, AuthCredentials.class);
             } catch (JsonSyntaxException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
         }
 

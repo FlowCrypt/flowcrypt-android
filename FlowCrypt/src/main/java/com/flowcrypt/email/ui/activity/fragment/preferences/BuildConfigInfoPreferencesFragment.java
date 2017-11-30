@@ -40,7 +40,9 @@ public class BuildConfigInfoPreferencesFragment extends DialogPreference {
                 formatter.format("%s: %s\n\n", field.getName(), field.get(null));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
         }
 

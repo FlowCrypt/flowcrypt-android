@@ -286,7 +286,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                                         .loader_id_save_private_key_as_file, null, this);
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ACRA.getErrorReporter().handleException(e);
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(e);
+                                }
                                 UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
                             }
                         }

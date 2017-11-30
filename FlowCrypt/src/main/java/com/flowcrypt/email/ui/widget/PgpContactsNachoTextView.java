@@ -52,7 +52,9 @@ public class PgpContactsNachoTextView extends NachoTextView {
             return super.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
         return getText().toString();
     }

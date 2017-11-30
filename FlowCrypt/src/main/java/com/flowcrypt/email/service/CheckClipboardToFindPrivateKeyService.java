@@ -199,7 +199,9 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
                             js = new Js(getApplicationContext(), null);
                         } catch (IOException e) {
                             e.printStackTrace();
-                            ACRA.getErrorReporter().handleException(e);
+                            if (ACRA.isInitialised()) {
+                                ACRA.getErrorReporter().handleException(e);
+                            }
                         }
                     }
 
@@ -220,12 +222,16 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
                                             keyDetails));
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
-                                    ACRA.getErrorReporter().handleException(e);
+                                    if (ACRA.isInitialised()) {
+                                        ACRA.getErrorReporter().handleException(e);
+                                    }
                                 }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            ACRA.getErrorReporter().handleException(e);
+                            if (ACRA.isInitialised()) {
+                                ACRA.getErrorReporter().handleException(e);
+                            }
                         }
                     }
                     break;

@@ -54,7 +54,9 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
                     destinationUri, pgpKey.armor()) > 0, null);
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(null, e);
         }
     }

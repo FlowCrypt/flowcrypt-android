@@ -45,7 +45,9 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 

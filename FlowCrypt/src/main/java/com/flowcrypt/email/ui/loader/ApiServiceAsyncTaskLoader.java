@@ -66,7 +66,9 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                         (lookUpEmailRequest.getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ACRA.getErrorReporter().handleException(e);
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(e);
+                                }
                                 lookUpEmailResponse.setException(e);
                             }
                         }
@@ -87,7 +89,9 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                                 .getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ACRA.getErrorReporter().handleException(e);
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(e);
+                                }
                                 postHelpFeedbackResponse.setException(e);
                             }
                         }
