@@ -239,5 +239,7 @@
     <string name="you_should_select_one_or_more_keys">You should select one or more keys</string>
     <string name="select_keys">Select key(s):</string>
     <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
-    <string name="error_occured_try_again_later">An error occurred. Please try again later.</string>
+    <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
+    <string name="error_occurred_while_get_info_about_private_keys">An error occurred while getting info about the
+        private keys</string>
 </resources>

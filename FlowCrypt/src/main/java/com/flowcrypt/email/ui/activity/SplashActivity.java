@@ -141,13 +141,13 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                     EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                                     finish();
                                 } else {
-                                    Toast.makeText(this, R.string.error_occured_try_again_later,
+                                    Toast.makeText(this, R.string.error_occurred_try_again_later,
                                             Toast.LENGTH_SHORT).show();
                                 }
                             } else {
                                 ACRA.getErrorReporter().handleException(new NullPointerException("AuthCredentials is " +
                                         "null!"));
-                                Toast.makeText(this, R.string.error_occured_try_again_later,
+                                Toast.makeText(this, R.string.error_occurred_try_again_later,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
@@ -255,7 +255,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             EmailManagerActivity.runEmailManagerActivity(this, accountDao);
             finish();
         } else {
-            Toast.makeText(this, R.string.error_occured_try_again_later,
+            Toast.makeText(this, R.string.error_occurred_try_again_later,
                     Toast.LENGTH_SHORT).show();
         }
     }
