@@ -66,8 +66,6 @@ public class EmailSyncManager {
      */
     private volatile SyncListener syncListener;
     private volatile AccountDao accountDao;
-    private boolean isNeedToResetConnectionForActiveQueue;
-    private boolean isNeedToResetConnectionForPassiveQueue;
 
     public EmailSyncManager(AccountDao accountDao) {
         this.accountDao = accountDao;
@@ -339,10 +337,9 @@ public class EmailSyncManager {
         return accountDao;
     }
 
-    public void setAccount(AccountDao accountDao) {
+    public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
-        this.isNeedToResetConnectionForPassiveQueue = true;
-        this.isNeedToResetConnectionForActiveQueue = true;
+        beginSync(true);
     }
 
     /**
@@ -367,9 +364,6 @@ public class EmailSyncManager {
         if (passiveSyncTaskRunnableFuture != null) {
             passiveSyncTaskRunnableFuture.cancel(true);
         }
-
-        isNeedToResetConnectionForActiveQueue = true;
-        isNeedToResetConnectionForPassiveQueue = true;
     }
 
     /**
@@ -397,7 +391,18 @@ public class EmailSyncManager {
             TAG = getClass().getSimpleName();
         }
 
-        abstract void resetConnectionIfNeed() throws MessagingException;
+        void resetConnectionIfNeed() throws MessagingException {
+            if (store != null && accountDao != null) {
+                store.getURLName().getUsername();
+                if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials().getUsername())) {
+                    Log.d(TAG, "Connection was reset!");
+                    if (store != null) {
+                        store.close();
+                    }
+                    session = null;
+                }
+            }
+        }
 
         void closeConnection() {
             try {
@@ -469,7 +474,7 @@ public class EmailSyncManager {
         @Override
         public void run() {
             Log.d(TAG, " run!");
-            Thread.currentThread().setName(getClass().getCanonicalName());
+            Thread.currentThread().setName(getClass().getSimpleName());
 
             while (!Thread.interrupted()) {
                 try {
@@ -494,25 +499,13 @@ public class EmailSyncManager {
             closeConnection();
             Log.d(TAG, " stopped!");
         }
-
-        @Override
-        void resetConnectionIfNeed() throws MessagingException {
-            if (isNeedToResetConnectionForPassiveQueue) {
-                Log.d(TAG, " Connection reset!");
-                isNeedToResetConnectionForPassiveQueue = false;
-                if (store != null) {
-                    store.close();
-                }
-                session = null;
-            }
-        }
     }
 
     private class ActiveSyncTaskRunnable extends BaseSyncRunnable {
         @Override
         public void run() {
             Log.d(TAG, " run!");
-            Thread.currentThread().setName(getClass().getCanonicalName());
+            Thread.currentThread().setName(getClass().getSimpleName());
             while (!Thread.interrupted()) {
                 try {
                     Log.d(TAG, "ActiveSyncTaskBlockingQueue size = " + activeSyncTaskBlockingQueue.size());
@@ -531,18 +524,6 @@ public class EmailSyncManager {
 
             closeConnection();
             Log.d(TAG, " stopped!");
-        }
-
-        @Override
-        void resetConnectionIfNeed() throws MessagingException {
-            if (isNeedToResetConnectionForActiveQueue) {
-                Log.d(TAG, " Connection reset!");
-                isNeedToResetConnectionForActiveQueue = false;
-                if (store != null) {
-                    store.close();
-                }
-                session = null;
-            }
         }
     }
 }
