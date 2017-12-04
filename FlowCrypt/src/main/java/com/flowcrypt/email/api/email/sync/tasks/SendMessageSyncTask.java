@@ -101,7 +101,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
             File pgpCacheDirectory = new File(context.getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
             if (pgpCacheDirectory.exists()) {
                 FileUtils.cleanDirectory(pgpCacheDirectory);
-            } else if (!pgpCacheDirectory.mkdir()) {
+            } else if (!pgpCacheDirectory.mkdirs()) {
                 Log.d(TAG, "Create cache directory " + pgpCacheDirectory.getName() + " filed!");
             }
 
