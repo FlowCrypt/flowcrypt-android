@@ -49,9 +49,9 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
             COL_VERIFICATION_STATUS + " TEXT NOT NULL " + ");";
 
     public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES = "CREATE UNIQUE INDEX IF NOT EXISTS "
-            + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS_ALIASES + " ON " +
-            TABLE_NAME_ACCOUNTS_ALIASES +
-            " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ")";
+            + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_" + COL_SEND_AS_EMAIL + "_in_" + TABLE_NAME_ACCOUNTS_ALIASES
+            + " ON " + TABLE_NAME_ACCOUNTS_ALIASES + " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ", " +
+            COL_SEND_AS_EMAIL + ")";
 
     /**
      * Generate the {@link AccountAliasesDao} from the current cursor position;
