@@ -76,11 +76,11 @@ public class EmailSyncManager {
     /**
      * Start a synchronization.
      *
-     * @param isNeedReset true if need a reconnect, false otherwise.
+     * @param isResetNeeded true if need a reconnect, false otherwise.
      */
-    public void beginSync(boolean isNeedReset) {
-        Log.d(TAG, "beginSync | isNeedReset = " + isNeedReset);
-        if (isNeedReset) {
+    public void beginSync(boolean isResetNeeded) {
+        Log.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
+        if (isResetNeeded) {
             resetSync();
         }
 
