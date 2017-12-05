@@ -714,7 +714,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
                         getString(R.string.prompt_subject)));
                 editTextEmailSubject.requestFocus();
-            } else if (TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
+            } else if ((attachmentInfoList != null && attachmentInfoList.isEmpty())
+                    && TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
                 showInfoSnackbar(editTextEmailMessage, getString(R.string.sending_message_must_not_be_empty));
                 editTextEmailMessage.requestFocus();
             } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
