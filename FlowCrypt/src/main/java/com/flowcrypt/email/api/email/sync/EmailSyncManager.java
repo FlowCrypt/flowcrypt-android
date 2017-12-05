@@ -380,7 +380,6 @@ public class EmailSyncManager {
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    ACRA.getErrorReporter().handleException(e);
                 }
             }
 
