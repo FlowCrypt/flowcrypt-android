@@ -30,12 +30,19 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 
 public class ContactsListCursorAdapter extends CursorAdapter {
     private OnDeleteContactButtonClickListener onDeleteContactButtonClickListener;
+    private boolean isDeleteEnable;
 
     public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                     OnDeleteContactButtonClickListener
-                                             onDeleteContactButtonClickListener) {
+                                     OnDeleteContactButtonClickListener onDeleteContactButtonClickListener) {
+        this(context, c, autoRequery, onDeleteContactButtonClickListener, true);
+    }
+
+    public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
+                                     OnDeleteContactButtonClickListener onDeleteContactButtonClickListener,
+                                     boolean isDeleteEnable) {
         super(context, c, autoRequery);
         this.onDeleteContactButtonClickListener = onDeleteContactButtonClickListener;
+        this.isDeleteEnable = isDeleteEnable;
     }
 
     @Override
@@ -45,11 +52,10 @@ public class ContactsListCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        TextView textViewName = (TextView) view.findViewById(R.id.textViewName);
-        TextView textViewEmail = (TextView) view.findViewById(R.id.textViewEmail);
-        TextView textViewOnlyEmail = (TextView) view.findViewById(R.id.textViewOnlyEmail);
-        ImageButton imageButtonDeleteContact = (ImageButton) view.findViewById(R.id
-                .imageButtonDeleteContact);
+        TextView textViewName = view.findViewById(R.id.textViewName);
+        TextView textViewEmail = view.findViewById(R.id.textViewEmail);
+        TextView textViewOnlyEmail = view.findViewById(R.id.textViewOnlyEmail);
+        ImageButton imageButtonDeleteContact = view.findViewById(R.id.imageButtonDeleteContact);
 
         String name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME));
         final String email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
@@ -72,15 +78,19 @@ public class ContactsListCursorAdapter extends CursorAdapter {
             textViewOnlyEmail.setText(null);
         }
 
-        imageButtonDeleteContact.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (onDeleteContactButtonClickListener != null) {
-                    onDeleteContactButtonClickListener.onDeleteContactButtonClick(email);
+        if (isDeleteEnable) {
+            imageButtonDeleteContact.setVisibility(View.VISIBLE);
+            imageButtonDeleteContact.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onDeleteContactButtonClickListener != null) {
+                        onDeleteContactButtonClickListener.onDeleteContactButtonClick(email);
+                    }
                 }
-
-            }
-        });
+            });
+        } else {
+            imageButtonDeleteContact.setVisibility(View.GONE);
+        }
     }
 
     /**

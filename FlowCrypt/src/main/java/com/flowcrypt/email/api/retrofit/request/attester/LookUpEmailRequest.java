@@ -21,6 +21,6 @@ import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 
 public class LookUpEmailRequest extends BaseRequest<PostLookUpEmailModel> {
     public LookUpEmailRequest(PostLookUpEmailModel postLookUpEmailModel) {
-        super(ApiName.POST_LOOKUP_EMAIL, postLookUpEmailModel);
+        super(ApiName.POST_LOOKUP_EMAIL_SINGLE, postLookUpEmailModel);
     }
 }

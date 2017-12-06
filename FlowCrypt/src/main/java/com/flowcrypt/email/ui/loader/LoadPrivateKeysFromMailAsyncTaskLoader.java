@@ -19,6 +19,7 @@ import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.sun.mail.imap.IMAPFolder;
 
+import org.acra.ACRA;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -95,6 +96,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
             return new LoaderResult(privateKeyDetailsList, null);
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
     }

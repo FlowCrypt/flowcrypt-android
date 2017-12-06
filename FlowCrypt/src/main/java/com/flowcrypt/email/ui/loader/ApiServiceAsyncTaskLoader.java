@@ -18,6 +18,8 @@ import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 
+import org.acra.ACRA;
+
 /**
  * A basic AsyncTaskLoader who make API calls.
  *
@@ -51,7 +53,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
 
             if (baseRequest != null && baseRequest.getApiName() != null) {
                 switch (baseRequest.getApiName()) {
-                    case POST_LOOKUP_EMAIL:
+                    case POST_LOOKUP_EMAIL_SINGLE:
                         BaseResponse<LookUpEmailResponse> lookUpEmailResponse =
                                 new BaseResponse<>();
                         lookUpEmailResponse.setApiName(baseRequest.getApiName());
@@ -64,6 +66,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                         (lookUpEmailRequest.getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                ACRA.getErrorReporter().handleException(e);
                                 lookUpEmailResponse.setException(e);
                             }
                         }
@@ -84,6 +87,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                                 .getRequestModel()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                ACRA.getErrorReporter().handleException(e);
                                 postHelpFeedbackResponse.setException(e);
                             }
                         }

@@ -67,8 +67,7 @@ public class NoPgpFoundDialogAdapter extends BaseAdapter {
             viewHolder = new ViewHolder();
             convertView = inflater.inflate(R.layout.no_pgp_found_dialog_item, parent, false);
 
-            viewHolder.textViewItemTitle = (TextView) convertView.findViewById(R.id
-                    .textViewNoPgpFoundDialogItem);
+            viewHolder.textViewItemTitle = convertView.findViewById(R.id.textViewNoPgpFoundDialogItem);
 
             convertView.setTag(viewHolder);
         } else {
@@ -83,7 +82,7 @@ public class NoPgpFoundDialogAdapter extends BaseAdapter {
         return convertView;
     }
 
-    private class ViewHolder {
+    private static class ViewHolder {
         TextView textViewItemTitle;
     }
 }

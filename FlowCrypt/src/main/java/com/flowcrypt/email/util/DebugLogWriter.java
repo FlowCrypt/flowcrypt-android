@@ -10,6 +10,7 @@ import android.os.Environment;
 
 import com.flowcrypt.email.BuildConfig;
 
+import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -50,6 +51,7 @@ public class DebugLogWriter {
                 FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
             } catch (IOException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
         }
 
@@ -64,6 +66,7 @@ public class DebugLogWriter {
             FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
         } catch (IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -73,6 +76,7 @@ public class DebugLogWriter {
                 FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
             } catch (IOException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
         }
     }

@@ -146,7 +146,7 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
         String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName +
                 "_" + i);
 
-        String decryptedKeyFromDatabase = privateKeyInfo.getPgpKeyInfo().getArmored();
+        String decryptedKeyFromDatabase = privateKeyInfo.getPgpKeyInfo().getPrivate();
         PgpKey pgpKey = js.crypto_key_read(decryptedKeyFromDatabase);
         pgpKey.encrypt(privateKeyInfo.getPassphrase());
 

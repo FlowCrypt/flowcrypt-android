@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/textViewMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_content"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:gravity="center"
+        android:paddingLeft="@dimen/default_margin_content_small"
+        android:paddingRight="@dimen/default_margin_content_small"
+        android:text="@string/loading"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMessage" />
+
+    <ListView
+        android:id="@+id/listViewKeys"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:divider="@color/aluminum"
+        android:dividerHeight="@dimen/default_single_dip"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMessage"
+        tools:listitem="@layout/key_item" />
+
+    <Button
+        android:id="@+id/buttonOk"
+        style="@style/AppWidget.Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:text="@android:string/ok"
+        android:theme="@style/AppWidget.Button.Green"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/listViewKeys" />
+</android.support.constraint.ConstraintLayout>

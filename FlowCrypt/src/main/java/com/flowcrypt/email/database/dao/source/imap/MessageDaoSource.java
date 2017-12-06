@@ -6,11 +6,16 @@
 
 package com.flowcrypt.email.database.dao.source.imap;
 
+import android.annotation.SuppressLint;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
@@ -24,7 +29,11 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.BodyPart;
@@ -122,8 +131,7 @@ public class MessageDaoSource extends BaseDaoSource {
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
-    public int addRows(Context context, String email, String label,
-                       IMAPFolder imapFolder, Message[] messages)
+    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages)
             throws MessagingException, IOException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
@@ -139,6 +147,65 @@ public class MessageDaoSource extends BaseDaoSource {
 
             return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
         } else return 0;
+    }
+
+    /**
+     * This method delete cached messages.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param email       The email that the message linked.
+     * @param label       The folder label.
+     * @param messagesUID The list of messages UID.
+     * @return the number of deleted rows.
+     */
+    public int deleteMessagesByUID(Context context, String email, String label, Collection<Long> messagesUID) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            List<String> selectionArgs = new LinkedList<>();
+            selectionArgs.add(email);
+            selectionArgs.add(label);
+
+            for (Long uid : messagesUID) {
+                selectionArgs.add(String.valueOf(uid));
+            }
+
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " IN (" + prepareSelectionArgsString(messagesUID.toArray()) + ");",
+                    selectionArgs.toArray(new String[0]));
+        } else return -1;
+    }
+
+    /**
+     * This method update cached messages.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param email      The email that the message linked.
+     * @param label      The folder label.
+     * @param imapFolder The {@link IMAPFolder} object which contains information about a
+     *                   remote folder.
+     * @param messages   The messages array.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] updateMessagesByUID(Context context, String email, String label,
+                                                       IMAPFolder imapFolder, Message[] messages)
+            throws IOException, RemoteException, OperationApplicationException, MessagingException {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null && messages != null && messages.length > 0) {
+
+            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            for (Message message : messages) {
+                ops.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                        .withValue(COL_FLAGS, message.getFlags().toString().toUpperCase())
+                        .withSelection(COL_EMAIL + "= ? AND "
+                                        + COL_FOLDER + " = ? AND "
+                                        + COL_UID + " = ? ",
+                                new String[]{email, label, String.valueOf(imapFolder.getUID(message))})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), ops);
+        } else return new ContentProviderResult[0];
     }
 
     /**
@@ -346,6 +413,65 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get the list of UID of all messages in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The list of UID of all messages in the database for some label.
+     */
+    public List<String> getUIDsOfMessagesInLabel(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        List<String> uidList = new ArrayList<>();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{COL_UID}, MessageDaoSource.COL_EMAIL + " = ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ?",
+                new String[]{email, label},
+                null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                uidList.add(cursor.getString(cursor.getColumnIndex(COL_UID)));
+            }
+            cursor.close();
+        }
+
+        return uidList;
+    }
+
+    /**
+     * Get a map of UID and flags of all messages in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The map of UID and flags of all messages in the database for some label.
+     */
+    @SuppressLint("UseSparseArrays")
+    public Map<Long, String> getMapOfUIDAndMessagesFlags(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Map<Long, String> uidList = new HashMap<>();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{COL_UID, COL_FLAGS},
+                MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
+                new String[]{email, label}, null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                uidList.put(cursor.getLong(cursor.getColumnIndex(COL_UID)),
+                        cursor.getString(cursor.getColumnIndex(COL_FLAGS)));
+            }
+            cursor.close();
+        }
+
+        return uidList;
+    }
+
+    /**
      * Get the count of messages in the database for some label.
      *
      * @param context Interface to global information about an application environment.
@@ -410,12 +536,12 @@ public class MessageDaoSource extends BaseDaoSource {
 
     private static String prepareArrayToSaving(String[] attributes) {
         if (attributes != null && attributes.length > 0) {
-            String result = "";
+            StringBuilder result = new StringBuilder();
             for (String attribute : attributes) {
-                result += attribute + "\t";
+                result.append(attribute).append("\t");
             }
 
-            return result;
+            return result.toString();
         } else {
             return null;
         }
@@ -487,7 +613,7 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_TO_ADDRESSES,
                 prepareAddressesForSaving(message.getRecipients(Message.RecipientType.TO)));
         contentValues.put(COL_SUBJECT, message.getSubject());
-        contentValues.put(COL_FLAGS, prepareFlagsToSave(message.getFlags()));
+        contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
         return contentValues;
     }
@@ -522,7 +648,7 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     private String[] parseFlags(String string) {
-        return parseArray(string);
+        return parseArray(string, "\\s");
     }
 
     private String[] parseEmails(String string) {

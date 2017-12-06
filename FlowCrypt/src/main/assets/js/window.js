@@ -6,7 +6,7 @@ var window = {
   is_bare_engine: true,
   crypto: {
     getRandomValues: function (buf) {
-      var ran = engine_host_secure_random(buf.length);
+      var ran = $_HOST_secure_random(buf.length);
       for(var i=0; i<buf.length; i++) {
         buf[i] = ran[i];
       }
@@ -14,23 +14,76 @@ var window = {
   },
   catcher: {
     try: function(code) {
-      return code;
+      var self = this;
+      return function () {
+        try {
+          return code();
+        } catch(code_err) {
+          self.handle_exception(code_err);
+        }
+      };
     },
     version: function() {
       return engine_host_version;
     },
     handle_exception: function (e) {
-      throw e;
+      $_HOST_report(true, String(e), e.stack || '', '');
+    },
+    report: function (name, details) {
+      try {
+        throw new Error(name);
+      } catch(e) {
+        $_HOST_report(false, String(name), e.stack, this.format_details(details));
+      }
+    },
+    Promise: function wrapped_Promise(f) {
+      var self = this;
+      return new Promise(function(resolve, reject) {
+        try {
+          f(resolve, reject);
+        } catch(e) {
+          self.handle_exception(e);
+          reject({code: null, message: 'Error happened, please write me at human@flowcrypt.com to fix this\n\nError: ' + e.message, internal: 'exception'});
+        }
+      })
+    },
+    format_details: function (details) {
+      if(typeof details !== 'string') {
+        try {
+          details = JSON.stringify(details);
+        } catch(stringify_error) {
+          details = '(could not stringify details "' + String(details) + '" in catcher.report because: ' + stringify_error.message + ')';
+        }
+      }
+      return details || '(no details provided)';
+    }
+  },
+  flowcrypt_storage: {
+    keys_get: function (account_email, longid) {
+      return new Promise(function (resolve, reject) {
+        if(typeof longid === 'undefined') {
+          resolve($_HOST_storage_keys_get(account_email));
+        } else {
+          resolve($_HOST_storage_keys_get(account_email, longid));
+        }
+      });
+    },
+    passphrase_get: function (account_email, longid) {
+      return new Promise(function (resolve, reject) {
+        resolve($_HOST_storage_passphrase_get(account_email, longid));
+      });
     },
   },
 };
 
+var catcher = window.catcher;
+
 var console = {
   log: function(x) {
-    engine_host_console_log('Js.console.log: ' + console.formatter(x));
+    $_HOST_console_log('Js.console.log: ' + console.formatter(x));
   },
   error: function(x) {
-    engine_host_console_error('Js.console.error: ' + console.formatter(x));
+    $_HOST_console_error('Js.console.error: ' + console.formatter(x));
   },
   formatter: function(x) {
     if(typeof x === 'object') {
@@ -42,7 +95,7 @@ var console = {
 };
 
 var alert = function(m) {
-  engine_host_alert(String(m));
+  $_HOST_alert(String(m));
 };
 
 var engine_host_cb_value_formatter = function(v1, v2, v3, v4, v5) {

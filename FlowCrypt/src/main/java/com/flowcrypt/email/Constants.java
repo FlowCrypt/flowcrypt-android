@@ -47,6 +47,9 @@ public class Constants {
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";
 
+    public static final String PREFERENCES_KEY_SETTINGS_SECURITY =
+            "preferences_key_settings_security";
+
     /**
      * The max total size off all attachment which can be send via the app.
      */
@@ -56,4 +59,7 @@ public class Constants {
      * The max size off an attachment which can be decrypted via the app.
      */
     public static final int MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED = 1024 * 1024 * 3;
+
+    public static final String PGP_CACHE_DIR = "PGP";
+    public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
 }

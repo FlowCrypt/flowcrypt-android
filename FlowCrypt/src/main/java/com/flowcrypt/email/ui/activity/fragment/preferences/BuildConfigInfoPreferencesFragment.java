@@ -13,6 +13,8 @@ import android.util.AttributeSet;
 
 import com.flowcrypt.email.BuildConfig;
 
+import org.acra.ACRA;
+
 import java.lang.reflect.Field;
 import java.util.Formatter;
 import java.util.Locale;
@@ -38,6 +40,7 @@ public class BuildConfigInfoPreferencesFragment extends DialogPreference {
                 formatter.format("%s: %s\n\n", field.getName(), field.get(null));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
         }
 

@@ -21,6 +21,8 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +91,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             isAllInfoReceived = false;
                             pgpContacts.add(localPgpContact);
                             e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
                         }
                     } else {
                         pgpContacts.add(localPgpContact);
@@ -108,6 +111,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                         isAllInfoReceived = false;
                         pgpContacts.add(newPgpContact);
                         e.printStackTrace();
+                        ACRA.getErrorReporter().handleException(e);
                     }
                 }
             }
@@ -115,6 +119,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                     isAllInfoReceived, pgpContacts), null);
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
             return new LoaderResult(null, e);
         }
     }

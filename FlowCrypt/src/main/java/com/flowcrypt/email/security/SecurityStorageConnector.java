@@ -13,6 +13,8 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 
+import org.acra.ACRA;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +45,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 

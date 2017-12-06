@@ -240,7 +240,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             if (messageListAdapter.getCount() > 0) {
                 swipeRefreshLayout.setRefreshing(true);
-                loadNewMessages();
+                refreshMessages();
             } else {
                 swipeRefreshLayout.setRefreshing(false);
 
@@ -416,10 +416,13 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     /**
      * Try to load a new messages from an IMAP server.
      */
-    private void loadNewMessages() {
-        baseSyncActivity.loadNewMessagesManually(R.id.syns_request_code_force_load_new_messages,
+    private void refreshMessages() {
+        baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias()),
+                messageDaoSource.getCountOfMessagesForLabel(getContext(),
                         onManageEmailsListener.getCurrentAccountDao().getEmail(),
                         onManageEmailsListener.getCurrentFolder().getFolderAlias()));
     }

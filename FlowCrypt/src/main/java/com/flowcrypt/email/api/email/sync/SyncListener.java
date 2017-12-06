@@ -119,8 +119,20 @@ public interface SyncListener {
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey, int
-            requestCode);
+    void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey,
+                            int requestCode);
+
+    /**
+     * This method called when received information about messages which already exist in the local database.
+     *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
+     * @param folder      The folder where the messages exist.
+     * @param messages    The refreshed messages.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     */
+    void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey,
+                                   int requestCode);
 
     /**
      * This method called when new folders list received.

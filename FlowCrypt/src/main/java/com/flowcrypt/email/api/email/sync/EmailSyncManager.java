@@ -13,15 +13,17 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadNewMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
+
+import org.acra.ACRA;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -74,11 +76,11 @@ public class EmailSyncManager {
     /**
      * Start a synchronization.
      *
-     * @param isNeedReset true if need a reconnect, false otherwise.
+     * @param isResetNeeded true if need a reconnect, false otherwise.
      */
-    public void beginSync(boolean isNeedReset) {
-        Log.d(TAG, "beginSync | isNeedReset = " + isNeedReset);
-        if (isNeedReset) {
+    public void beginSync(boolean isResetNeeded) {
+        Log.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
+        if (isResetNeeded) {
             resetSync();
         }
 
@@ -138,6 +140,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -159,6 +162,7 @@ public class EmailSyncManager {
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -179,6 +183,7 @@ public class EmailSyncManager {
                     folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -200,27 +205,30 @@ public class EmailSyncManager {
                     folderName, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
     /**
      * Add load a new messages information task. This method create a new
-     * {@link LoadNewMessagesSyncTask} object and added it to the current synchronization
+     * {@link RefreshMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
-     * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode    The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName     A server folder name.
-     * @param lastUIDInCache The UID of the last message of the current folder in the local cache.
+     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode           The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folderName            A server folder name.
+     * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
+     * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
-    public void loadNewMessagesManually(String ownerKey, int requestCode, String folderName, int
-            lastUIDInCache) {
+    public void refreshMessages(String ownerKey, int requestCode, String folderName, int lastUIDInCache,
+                                int countOfLoadedMessages) {
         try {
-            removeOldTasks(LoadNewMessagesSyncTask.class);
-            syncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode,
-                    folderName, lastUIDInCache));
+            removeOldTasks(RefreshMessagesSyncTask.class);
+            syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
+                    folderName, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -241,6 +249,7 @@ public class EmailSyncManager {
                     sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -257,20 +266,22 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
     /**
      * Load the private keys from the INBOX folder.
      *
-     * @param ownerKey         The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode      The unique request code for identify the current action.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for identify the current action.
      */
     public void loadPrivateKeys(String ownerKey, int requestCode) {
         try {
             syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -287,6 +298,7 @@ public class EmailSyncManager {
                     requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -362,6 +374,7 @@ public class EmailSyncManager {
                             Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
                         } catch (Exception e) {
                             e.printStackTrace();
+                            ACRA.getErrorReporter().handleException(e);
                             syncTask.handleException(accountDao, e, syncListener);
                         }
                     }
@@ -374,6 +387,7 @@ public class EmailSyncManager {
                 store.close();
             } catch (MessagingException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
             }
 

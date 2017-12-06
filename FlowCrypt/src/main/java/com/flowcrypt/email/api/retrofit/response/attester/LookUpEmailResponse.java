@@ -49,6 +49,10 @@ public class LookUpEmailResponse extends BaseApiResponse {
     @Expose
     private String email;
 
+    @SerializedName("longid")
+    @Expose
+    private String longId;
+
     public LookUpEmailResponse() {
     }
 
@@ -58,6 +62,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
         this.hasCryptup = in.readByte() != 0;
         this.pubkey = in.readString();
         this.email = in.readString();
+        this.longId = in.readString();
     }
 
     @Override
@@ -67,6 +72,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
                 ", hasCryptup=" + hasCryptup +
                 ", pubkey='" + pubkey + '\'' +
                 ", email='" + email + '\'' +
+                ", longId='" + longId + '\'' +
                 "} " + super.toString();
     }
 
@@ -82,6 +88,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
         dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
         dest.writeString(this.pubkey);
         dest.writeString(this.email);
+        dest.writeString(this.longId);
     }
 
     public boolean isAttested() {
@@ -98,5 +105,9 @@ public class LookUpEmailResponse extends BaseApiResponse {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getLongId() {
+        return longId;
     }
 }

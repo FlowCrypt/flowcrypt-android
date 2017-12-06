@@ -23,17 +23,17 @@ public class PgpKeyInfo implements Parcelable {
         }
     };
 
-    private final String longid;
-    private final String armored;
+    private final String kiLongid;
+    private final String kiPrivate;
 
-    public PgpKeyInfo(String armored, String longid) {
-        this.armored = armored;
-        this.longid = longid;
+    public PgpKeyInfo(String kiPrivate, String kiLongid) {
+        this.kiPrivate = kiPrivate;
+        this.kiLongid = kiLongid;
     }
 
     protected PgpKeyInfo(Parcel in) {
-        this.longid = in.readString();
-        this.armored = in.readString();
+        this.kiLongid = in.readString();
+        this.kiPrivate = in.readString();
     }
 
     @Override
@@ -43,15 +43,15 @@ public class PgpKeyInfo implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.longid);
-        dest.writeString(this.armored);
+        dest.writeString(this.kiLongid);
+        dest.writeString(this.kiPrivate);
     }
 
     public String getLongid() {
-        return longid;
+        return kiLongid;
     }
 
-    public String getArmored() {
-        return armored;
+    public String getPrivate() {
+        return kiPrivate;
     }
 }

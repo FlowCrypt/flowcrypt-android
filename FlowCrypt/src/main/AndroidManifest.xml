@@ -87,8 +87,13 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".ui.activity.settings.AttesterSettingsActivity"
+            android:label="@string/attester"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".ui.activity.settings.BackupSettingsActivity"
-            android:label="@string/backup"
+            android:label="@string/backups"
             android:screenOrientation="portrait" />
 
         <activity
@@ -116,7 +121,13 @@
             android:label="@string/adding_new_account"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.activity.DevSettingsActivity" />
+        <activity
+            android:name=".ui.activity.DevSettingsActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.SelectContactsActivity"
+            android:screenOrientation="portrait" />
 
         <!-- Providers -->
         <provider

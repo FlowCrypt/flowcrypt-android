@@ -19,12 +19,30 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <ProgressBar
+        <LinearLayout
             android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/default_margin_big"
+                android:fontFamily="sans-serif-light"
+                android:text="@string/loading_backups"
+                android:textColor="@color/dark"
+                android:textSize="@dimen/default_text_size_big" />
+        </LinearLayout>
+
 
         <ScrollView
             android:id="@+id/layoutContent"

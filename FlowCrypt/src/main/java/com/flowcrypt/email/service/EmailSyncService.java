@@ -10,6 +10,7 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -41,7 +42,9 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +87,7 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int MESSAGE_UPDATE_LABELS = 3;
     public static final int MESSAGE_LOAD_MESSAGES = 4;
     public static final int MESSAGE_LOAD_NEXT_MESSAGES = 5;
-    public static final int MESSAGE_LOAD_NEW_MESSAGES_MANUALLY = 6;
+    public static final int MESSAGE_REFRESH_MESSAGES = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
     public static final int MESSAGE_SEND_MESSAGE = 9;
@@ -211,6 +214,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -220,6 +224,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -233,6 +238,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -253,6 +259,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -277,6 +284,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -302,11 +310,64 @@ public class EmailSyncService extends Service implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(accountDao, imapFolder, messages);
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
             updateAttachmentTable(accountDao, folder, imapFolder, messages);
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+    }
+
+    @Override
+    public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                          String key, int requestCode) {
+        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
+                "count: " + messages.length);
+
+        try {
+            com.flowcrypt.email.api.email.Folder folder =
+                    FoldersManager.generateFolder(imapFolder, imapFolder.getName());
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
+                    (getApplicationContext(), accountDao.getEmail(), folder.getFolderAlias());
+
+            Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
+
+            messageDaoSource.deleteMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    generateDeleteCandidates(messagesUIDsInLocalDatabase, imapFolder, messages));
+
+            javax.mail.Message[] messagesNewCandidates = generateNewCandidates(messagesUIDsInLocalDatabase,
+                    imapFolder, messages);
+            messageDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    imapFolder,
+                    messagesNewCandidates);
+
+            messageDaoSource.updateMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(),
+                    folder.getFolderAlias(),
+                    imapFolder,
+                    generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase, imapFolder, messages));
+
+            if (messages.length > 0) {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+            } else {
+                sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+            }
+
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder,
+                    messagesNewCandidates);
+            updateAttachmentTable(accountDao, folder, imapFolder, messagesNewCandidates);
+
+        } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -321,6 +382,7 @@ public class EmailSyncService extends Service implements SyncListener {
                 foldersManager.addFolder(imapFolder, folder.getName());
             } catch (MessagingException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
         }
 
@@ -332,6 +394,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
         } catch (RemoteException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -347,6 +410,86 @@ public class EmailSyncService extends Service implements SyncListener {
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
         }
+    }
+
+    /**
+     * Generate an array of the messages which will be updated.
+     *
+     * @param messagesUIDWithFlagsInLocalDatabase The map of UID and flags of the local messages.
+     * @param imapFolder                          The remote {@link IMAPFolder}.
+     * @param messages                            The array of incoming messages.
+     * @return
+     */
+    private javax.mail.Message[] generateUpdateCandidates(
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase,
+            IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<javax.mail.Message> updateCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                String flags = messagesUIDWithFlagsInLocalDatabase.get(imapFolder.getUID(message));
+                if (flags == null) {
+                    flags = "";
+                }
+
+                if (!flags.equalsIgnoreCase(message.getFlags().toString())) {
+                    updateCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+        return updateCandidates.toArray(new javax.mail.Message[0]);
+    }
+
+    /**
+     * Generate an array of {@link javax.mail.Message} which contains candidates for insert.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return The generated array.
+     */
+    private javax.mail.Message[] generateNewCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                       IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        List<javax.mail.Message> newCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                if (!messagesUIDInLocalDatabase.contains(imapFolder.getUID(message))) {
+                    newCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+        return newCandidates.toArray(new javax.mail.Message[0]);
+    }
+
+    /**
+     * Generated a list of UID of the local messages which will be removed.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return A list of UID of the local messages which will be removed.
+     */
+    private Collection<Long> generateDeleteCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                      IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<Long> uidListDeleteCandidates = new HashSet<>();
+        uidListDeleteCandidates.addAll(messagesUIDInLocalDatabase);
+        Collection<Long> uidList = new HashSet<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                uidList.add(imapFolder.getUID(message));
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
+        }
+
+        uidListDeleteCandidates.removeAll(uidList);
+        return uidListDeleteCandidates;
     }
 
     /**
@@ -371,6 +514,7 @@ public class EmailSyncService extends Service implements SyncListener {
                         message);
             } catch (IOException e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
             }
 
             if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
@@ -429,7 +573,7 @@ public class EmailSyncService extends Service implements SyncListener {
                         headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
                     }
 
-                    if (headers != null && headers.length > 0) {
+                    if (headers != null && headers.length > 0 && !TextUtils.isEmpty(bodyPart.getFileName())) {
                         AttachmentInfo attachmentInfo = new AttachmentInfo();
                         attachmentInfo.setName(bodyPart.getFileName());
                         attachmentInfo.setEncodedSize(bodyPart.getSize());
@@ -486,12 +630,10 @@ public class EmailSyncService extends Service implements SyncListener {
      * Update information about contacts in the local database if current messages from the
      * Sent folder.
      *
-     * @param accountDao The object which contains information about an email account.
      * @param imapFolder The folder where messages exist.
      * @param messages   The received messages.
      */
-    private void updateLocalContactsIfMessagesFromSentFolder(AccountDao accountDao, IMAPFolder imapFolder,
-                                                             javax.mail.Message[] messages) {
+    private void updateLocalContactsIfMessagesFromSentFolder(IMAPFolder imapFolder, javax.mail.Message[] messages) {
         try {
             boolean isSentFolder = Arrays.asList(imapFolder.getAttributes()).contains("\\Sent");
 
@@ -505,6 +647,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
+            ACRA.getErrorReporter().handleException(e);
         }
     }
 
@@ -614,13 +757,14 @@ public class EmailSyncService extends Service implements SyncListener {
                         }
                         break;
 
-                    case MESSAGE_LOAD_NEW_MESSAGES_MANUALLY:
+                    case MESSAGE_REFRESH_MESSAGES:
                         if (emailSyncManager != null && action != null) {
                             com.flowcrypt.email.api.email.Folder refreshFolder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            emailSyncManager.loadNewMessagesManually(action.getOwnerKey(),
-                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(), message.arg1);
+                            emailSyncManager.refreshMessages(action.getOwnerKey(),
+                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(),
+                                    message.arg1, message.arg2);
                         }
                         break;
 
@@ -686,6 +830,7 @@ public class EmailSyncService extends Service implements SyncListener {
                                         REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
                             } catch (RemoteException e) {
                                 e.printStackTrace();
+                                ACRA.getErrorReporter().handleException(e);
                             }
                         }
                         break;

@@ -41,6 +41,7 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.sun.mail.imap.IMAPFolder;
 
+import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -349,6 +350,7 @@ public class AttachmentDownloadManagerService extends Service {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        ACRA.getErrorReporter().handleException(e);
                         try {
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED,
                                     new DownloadAttachmentTaskResult.Builder().setStartId(startId).setAttachmentInfo
@@ -382,6 +384,7 @@ public class AttachmentDownloadManagerService extends Service {
                                 downloadAttachmentTaskResult));
                     } catch (RemoteException e) {
                         e.printStackTrace();
+                        ACRA.getErrorReporter().handleException(e);
                     }
                     break;
             }
@@ -534,6 +537,7 @@ public class AttachmentDownloadManagerService extends Service {
                 store.close();
             } catch (Exception e) {
                 e.printStackTrace();
+                ACRA.getErrorReporter().handleException(e);
                 removeNotCompleteDownloadFile(attachmentFile);
                 if (onDownloadAttachmentListener != null) {
                     onDownloadAttachmentListener.onAttachmentDownloadFiled(startId, attachmentInfo, e);
