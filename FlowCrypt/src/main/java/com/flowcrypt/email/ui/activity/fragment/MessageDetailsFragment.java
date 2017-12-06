@@ -189,6 +189,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                                         .setIsToFieldEditEnable(false)
                                         .setIsSubjectEditEnable(false)
                                         .setIsMessageTypeCanBeSwitched(false)
+                                        .setIsAddNewAttachmentsEnable(false)
                                         .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
                                         .setAttachmentInfoList(attachmentInfoList)
                                         .createServiceInfo()));

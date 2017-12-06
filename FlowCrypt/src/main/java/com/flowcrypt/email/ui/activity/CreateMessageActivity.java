@@ -136,8 +136,14 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         menuActionSwitchType.setTitle(messageEncryptionType == MessageEncryptionType.STANDARD ?
                 R.string.switch_to_secure_email : R.string.switch_to_standard_email);
 
-        if (serviceInfo != null && !serviceInfo.isMessageTypeCanBeSwitched()) {
-            menu.removeItem(menuActionSwitchType.getItemId());
+        if (serviceInfo != null) {
+            if (!serviceInfo.isMessageTypeCanBeSwitched()) {
+                menu.removeItem(R.id.menuActionSwitchType);
+            }
+
+            if (!serviceInfo.isAddNewAttachmentsEnable()) {
+                menu.removeItem(R.id.menuActionAttachFile);
+            }
         }
 
         return true;
