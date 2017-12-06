@@ -151,7 +151,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
                             attachmentInfoList.add(matchedAttachmentInfo);
                         } else {
                             textViewMessage.append("\n\n");
-                            textViewMessage.append(getString(R.string.select_keys));
+                            textViewMessage.append(getString(R.string.select_key));
 
                             String[] strings = new String[attachmentInfoList.size()];
                             for (int i = 0; i < attachmentInfoList.size(); i++) {
@@ -160,9 +160,9 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
                             }
 
                             ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
-                                    .layout.simple_list_item_multiple_choice, strings);
+                                    .layout.simple_list_item_single_choice, strings);
 
-                            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
                             listViewKeys.setAdapter(stringArrayAdapter);
                         }
                     } else {
@@ -214,7 +214,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
                             }
 
                             if (selectedAttachmentInfoArrayList.isEmpty()) {
-                                showToast(getString(R.string.you_should_select_one_or_more_keys));
+                                showToast(getString(R.string.please_select_key));
                             } else {
                                 sendResult(Activity.RESULT_OK, selectedAttachmentInfoArrayList);
                                 dismiss();
