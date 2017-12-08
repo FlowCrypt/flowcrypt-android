@@ -318,7 +318,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 Throwable original = e != null ? e.getCause() : null;
                 if (original != null && original instanceof AuthenticationFailedException) {
                     if (editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants.GMAIL_IMAP_SERVER)) {
-                        showSnackbar(getRootView(), getString(R.string.less_secure_login_methods_are_not_allowed),
+                        showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
                                 getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
