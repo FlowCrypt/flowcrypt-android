@@ -106,8 +106,8 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                 switch (resultCode) {
                     case RESULT_OK:
                         try {
-                            AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
-                                    .KEY_EXTRA_AUTH_CREDENTIALS);
+                            AuthCredentials authCredentials = data.getParcelableExtra(
+                                    AddNewAccountManuallyActivity.KEY_EXTRA_AUTH_CREDENTIALS);
                             AccountDaoSource accountDaoSource = new AccountDaoSource();
                             accountDaoSource.addRow(this, authCredentials);
                             accountDaoSource.setActiveAccount(this, authCredentials.getEmail());
@@ -122,6 +122,10 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                             ACRA.getErrorReporter().handleException(e);
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
+                        break;
+
+                    case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
+                        super.onActivityResult(requestCode, resultCode, data);
                         break;
                 }
                 break;

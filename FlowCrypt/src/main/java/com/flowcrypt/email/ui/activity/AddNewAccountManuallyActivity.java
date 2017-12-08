@@ -27,6 +27,7 @@ import android.widget.Spinner;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -47,6 +48,8 @@ import org.acra.ACRA;
 
 import java.util.ArrayList;
 
+import javax.mail.AuthenticationFailedException;
+
 /**
  * This activity describes a logic of adding a new account of other email providers.
  *
@@ -59,6 +62,8 @@ import java.util.ArrayList;
 public class AddNewAccountManuallyActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
         LoaderManager.LoaderCallbacks<LoaderResult> {
+    public static final int RESULT_CODE_CONTINUE_WITH_GMAIL = 101;
+
     public static final String KEY_EXTRA_AUTH_CREDENTIALS =
             GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", ImportPublicKeyActivity.class);
 
@@ -309,6 +314,28 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_check_email_settings:
+                UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+                Throwable original = e != null ? e.getCause() : null;
+                if (original != null && original instanceof AuthenticationFailedException) {
+                    if (editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants.GMAIL_IMAP_SERVER)) {
+                        showSnackbar(getRootView(), getString(R.string.less_secure_login_methods_are_not_allowed),
+                                getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
+                                        finish();
+                                    }
+                                });
+                    } else {
+                        showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
+                                : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+                    }
+                } else {
+                    showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
+                            : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+                }
+                break;
+
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
