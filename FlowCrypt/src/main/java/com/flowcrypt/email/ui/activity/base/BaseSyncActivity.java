@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
@@ -64,8 +65,17 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object
-            obj);
+    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
+
+    /**
+     * In this method we can handle a progress state after run some action via {@link EmailSyncService}
+     *
+     * @param requestCode The unique request code for identifies the some action. Must be unique
+     *                    over all project.
+     * @param resultCode  The result code of a run action.
+     * @param obj         The object which returned from the service.
+     */
+    public abstract void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
 
     /**
      * In this method we can handle en error after run some action via {@link EmailSyncService}
@@ -75,8 +85,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param errorType   The {@link SyncErrorTypes}.
      * @param e           The exception which occurred.
      */
-    public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception
-            e);
+    public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -223,6 +232,8 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      */
     public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
         if (checkBound()) return;
+
+        onProgressReplyFromSyncServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, folder);
@@ -465,8 +476,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
                 BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
                 switch (message.what) {
                     case EmailSyncService.REPLY_OK:
-                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message
-                                .arg2, message.obj);
+                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2, message.obj);
                         break;
 
                     case EmailSyncService.REPLY_ERROR:
@@ -476,8 +486,12 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
                             exception = (Exception) message.obj;
                         }
 
-                        baseSyncActivity.onErrorFromSyncServiceReceived(message.arg1, message
-                                .arg2, exception);
+                        baseSyncActivity.onErrorFromSyncServiceReceived(message.arg1, message.arg2, exception);
+                        break;
+
+                    case EmailSyncService.REPLY_ACTION_PROGRESS:
+                        baseSyncActivity.onProgressReplyFromSyncServiceReceived(message.arg1, message.arg2,
+                                message.obj);
                         break;
                 }
             }

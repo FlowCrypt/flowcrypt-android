@@ -81,6 +81,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
     public static final int REPLY_OK = 0;
     public static final int REPLY_ERROR = 1;
+    public static final int REPLY_ACTION_PROGRESS = 2;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
@@ -428,6 +429,23 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode) {
+        Log.d(TAG, "onActionProgress: accountDao" + accountDao + "| ownerKey =" + ownerKey + "| requestCode =" +
+                requestCode);
+        try {
+            if (replyToMessengers.containsKey(ownerKey)) {
+                Messenger messenger = replyToMessengers.get(ownerKey);
+                messenger.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, accountDao));
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 

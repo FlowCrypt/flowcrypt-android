@@ -33,4 +33,9 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+
+    }
 }

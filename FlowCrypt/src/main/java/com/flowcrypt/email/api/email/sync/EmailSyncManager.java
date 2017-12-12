@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 
 import android.util.Log;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
@@ -220,6 +221,7 @@ public class EmailSyncManager {
     public void loadNextMessages(String ownerKey, int requestCode, String folderName, int
             countOfAlreadyLoadedMessages) {
         try {
+            notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
             activeSyncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
                     folderName, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
@@ -381,6 +383,19 @@ public class EmailSyncManager {
         }
     }
 
+    /**
+     * This method can be used for debugging. Using this method we can identify a progress of some operation.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param resultCode  The unique result code for the reply which identifies the progress of some request.
+     */
+    private void notifyAboutActionProgress(String ownerKey, int requestCode, int resultCode) {
+        if (syncListener != null) {
+            syncListener.onActionProgress(accountDao, ownerKey, requestCode, resultCode);
+        }
+    }
+
     private abstract class BaseSyncRunnable implements Runnable {
         protected final String TAG;
 
@@ -391,11 +406,14 @@ public class EmailSyncManager {
             TAG = getClass().getSimpleName();
         }
 
-        void resetConnectionIfNeed() throws MessagingException {
+        void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException {
             if (store != null && accountDao != null) {
-                store.getURLName().getUsername();
                 if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials().getUsername())) {
                     Log.d(TAG, "Connection was reset!");
+
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_resetting_connection);
+
                     if (store != null) {
                         store.close();
                     }
@@ -441,20 +459,29 @@ public class EmailSyncManager {
          */
         void runSyncTask(SyncTask syncTask) {
             try {
-                resetConnectionIfNeed();
+                notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                        R.id.progress_id_running_task);
+
+                resetConnectionIfNeed(syncTask);
 
                 if (!isConnected()) {
                     Log.d(TAG, "Not connected. Start a reconnection ...");
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_connecting_to_email_server);
                     openConnectionToStore();
                     Log.d(TAG, "Reconnection done");
                 }
 
-                Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName()
-                        + " for store " + store.toString());
+                Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName() + " for store "
+                        + store.toString());
 
                 if (syncTask.isUseSMTP()) {
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_running_smtp_action);
                     syncTask.runSMTPAction(accountDao, session, store, syncListener);
                 } else {
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_running_imap_action);
                     syncTask.runIMAPAction(accountDao, store, syncListener);
                 }
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");

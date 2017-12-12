@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.util.Log;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -43,6 +44,9 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     @Override
     public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
         IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
+        if (syncListener != null) {
+            syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_opening_store);
+        }
         imapFolder.open(Folder.READ_ONLY);
 
         if (countOfAlreadyLoadedMessages < 0) {
@@ -61,6 +65,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 + " | end = " + end);
 
         if (syncListener != null) {
+            syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
             if (end < 1) {
                 syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {

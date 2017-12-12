@@ -173,6 +173,52 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
+    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+        switch (requestCode) {
+            case R.id.syns_request_code_load_next_messages:
+                switch (resultCode) {
+                    case R.id.progress_id_start_of_loading_new_messages:
+                        updateActionProgressState(0, "Start of loading new messages");
+                        break;
+
+                    case R.id.progress_id_adding_task_to_queue:
+                        updateActionProgressState(10, "Adding a task to the queue");
+                        break;
+
+                    case R.id.progress_id_running_task:
+                        updateActionProgressState(20, "Running the task");
+                        break;
+
+                    case R.id.progress_id_resetting_connection:
+                        updateActionProgressState(30, "Resetting the connection");
+                        break;
+
+                    case R.id.progress_id_connecting_to_email_server:
+                        updateActionProgressState(40, "Connecting to the mail server");
+                        break;
+
+                    case R.id.progress_id_running_smtp_action:
+                        updateActionProgressState(50, "Running an SMTP action");
+                        break;
+
+                    case R.id.progress_id_running_imap_action:
+                        updateActionProgressState(60, "Running an IMAP action");
+                        break;
+
+                    case R.id.progress_id_opening_store:
+                        updateActionProgressState(70, "Opening the store");
+                        break;
+
+                    case R.id.progress_id_getting_list_of_emails:
+                        updateActionProgressState(80, "Getting a list of emails");
+                        break;
+                }
+                break;
+
+        }
+    }
+
+    @Override
     public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
@@ -384,6 +430,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         if (emailListFragment != null) {
             emailListFragment.onErrorOccurred(requestCode, errorType, e);
+            updateActionProgressState(100, null);
         }
     }
 
@@ -412,6 +459,22 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         if (emailListFragment != null) {
             emailListFragment.onNextMessagesLoaded(needToRefreshList);
+            emailListFragment.setActionProgress(100, null);
+        }
+    }
+
+    /**
+     * Update a progress of some action.
+     *
+     * @param progress The action progress.
+     * @param message  The user friendly message.
+     */
+    private void updateActionProgressState(int progress, String message) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.setActionProgress(progress, message);
         }
     }
 

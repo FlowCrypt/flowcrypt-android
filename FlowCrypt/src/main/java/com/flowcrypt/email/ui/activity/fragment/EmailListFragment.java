@@ -22,6 +22,8 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -56,6 +58,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     private View emptyView;
     private View footerProgressView;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private TextView textViewActionProgress;
+    private ProgressBar progressBarActionProgress;
+
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
     private MessageDaoSource messageDaoSource;
@@ -383,6 +388,29 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     /**
+     * Set a progress of the some action.
+     *
+     * @param progress The progress
+     * @param message  The user friendly message.
+     */
+    public void setActionProgress(int progress, String message) {
+        if (progressBarActionProgress != null) {
+            progressBarActionProgress.setProgress(progress);
+            progressBarActionProgress.setVisibility(progress == 100 ? View.GONE : View.VISIBLE);
+        }
+
+        if (textViewActionProgress != null) {
+            if (progress != 100) {
+                textViewActionProgress.setText(getString(R.string.progress_message, progress, message));
+                textViewActionProgress.setVisibility(View.VISIBLE);
+            } else {
+                textViewActionProgress.setText(null);
+                textViewActionProgress.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    /**
      * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
      */
     private void showRetrySnackbar() {
@@ -452,7 +480,10 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     private void initViews(View view) {
-        listViewMessages = (ListView) view.findViewById(R.id.listViewMessages);
+        textViewActionProgress = view.findViewById(R.id.textViewActionProgress);
+        progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress);
+
+        listViewMessages = view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
 
         footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout.list_view_progress_footer,
@@ -464,7 +495,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         listViewMessages.setOnScrollListener(this);
 
         emptyView = view.findViewById(R.id.emptyView);
-        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(this);
     }
