@@ -240,4 +240,5 @@
     <string name="select_keys">Select key(s):</string>
     <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
     <string name="error_occured_try_again_later">An error occurred. Please try again later.</string>
+    <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
 </resources>

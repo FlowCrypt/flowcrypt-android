@@ -38,6 +38,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
      * The main entry point for Google Play services integration.
      */
     protected GoogleApiClient googleApiClient;
+    protected boolean isRunSignInWithGmailNeeded;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,20 +48,26 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_ADD_OTHER_ACCOUNT:
+                switch (resultCode) {
+                    case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
+                        this.isRunSignInWithGmailNeeded = true;
+                        break;
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
-                if (GeneralUtil.isInternetConnectionAvailable(this)) {
-                    if (googleApiClient != null && googleApiClient.isConnected()) {
-                        googleApiClient.clearDefaultAccountAndReconnect();
-                        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-                        startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
-                    } else {
-                        showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
-                    }
-                } else {
-                    showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
-                }
+                signInWithGmailUsingOAuth2();
                 break;
 
             case R.id.buttonOtherEmailProvider:
@@ -76,7 +83,10 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
+        if (this.isRunSignInWithGmailNeeded) {
+            this.isRunSignInWithGmailNeeded = false;
+            signInWithGmailUsingOAuth2();
+        }
     }
 
     @Override
@@ -87,6 +97,23 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    /**
+     * Do sign in with Gmail account using OAuth2 mechanism.
+     */
+    protected void signInWithGmailUsingOAuth2() {
+        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                googleApiClient.clearDefaultAccountAndReconnect();
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+                startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
+            } else {
+                showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
+            }
+        } else {
+            showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
+        }
     }
 
     protected void initGoogleApiClient() {

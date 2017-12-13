@@ -15,8 +15,6 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
 import com.flowcrypt.email.model.results.LoaderResult;
 
-import org.acra.ACRA;
-
 import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -59,7 +57,6 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
             testImapConnection(session);
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
             Exception exception = new Exception("IMAP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
         }
@@ -68,7 +65,6 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
             testSmtpConnection(session);
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
             Exception exception = new Exception("SMTP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
         }
