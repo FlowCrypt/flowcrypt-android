@@ -29,7 +29,7 @@ import javax.mail.UIDFolder;
  */
 
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
-    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 10;
+    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
     private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
     private String folderName;
     private int countOfAlreadyLoadedMessages;
