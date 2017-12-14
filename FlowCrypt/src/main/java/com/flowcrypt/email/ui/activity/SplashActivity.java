@@ -166,6 +166,10 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                     .EXTRA_KEY_ACCOUNT_DAO));
                         }
                         break;
+
+                    case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
+                        super.onActivityResult(requestCode, resultCode, data);
+                        break;
                 }
                 break;
 

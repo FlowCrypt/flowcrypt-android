@@ -164,10 +164,17 @@ public class AccountDaoSource extends BaseDaoSource {
             smtpSecurityTypeOption = SecurityType.Option.STARTLS;
         }
 
+        String originalPassword = cursor.getString(cursor.getColumnIndex(COL_PASSWORD));
+
+        //fixed a bug when try to decrypting the template password.
+        // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+        if (originalPassword.equalsIgnoreCase("password")) {
+            originalPassword = "";
+        }
+
         return new AuthCredentials.Builder().setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)))
                 .setUsername(cursor.getString(cursor.getColumnIndex(COL_USERNAME)))
-                .setPassword(keyStoreCryptoManager.decryptWithRSA(
-                        cursor.getString(cursor.getColumnIndex(COL_PASSWORD))))
+                .setPassword(keyStoreCryptoManager.decryptWithRSA(originalPassword))
                 .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
                 .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
                 .setImapSecurityTypeOption(imapSecurityTypeOption)

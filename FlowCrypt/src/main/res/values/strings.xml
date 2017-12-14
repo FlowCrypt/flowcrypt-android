@@ -239,6 +239,8 @@
     <string name="please_select_key">Please select a key</string>
     <string name="select_key">Select a key</string>
     <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
+    <string name="error_occured_try_again_later">An error occurred. Please try again later.</string>
+    <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
     <string name="progress_message">%1$d\%% %2$s</string>
 </resources>
