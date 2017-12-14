@@ -11,6 +11,8 @@ import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
+import com.flowcrypt.email.security.SecurityStorageConnector;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -44,7 +46,7 @@ public class JsTest {
 
     @Test
     public void method_1_prepareStorageConnectorInterface() throws Exception {
-        this.storageConnectorInterface = new SampleStorageConnector(InstrumentationRegistry.getTargetContext());
+        this.storageConnectorInterface = new SecurityStorageConnector(InstrumentationRegistry.getTargetContext());
     }
 
     @Test
