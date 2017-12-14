@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.js;
 
+import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
@@ -36,6 +37,15 @@ public class JsForUiManager {
             e.printStackTrace();
             ACRA.getErrorReporter().handleException(e);
         }
+    }
+
+    /**
+     * Call this method to init {@link JsForUiManager}. Call this method on {@link Application#onCreate()}
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public static void init(Context context) {
+        getInstance(context.getApplicationContext());
     }
 
     public static JsForUiManager getInstance(Context context) {

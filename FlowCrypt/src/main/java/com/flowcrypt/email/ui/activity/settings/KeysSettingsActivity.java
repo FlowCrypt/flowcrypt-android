@@ -8,24 +8,22 @@ package com.flowcrypt.email.ui.activity.settings;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.PrivateKeyModel;
-import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.ui.adapter.PrivateKeyAdapter;
-import com.flowcrypt.email.ui.loader.PreparePrivateKeyModelListAsyncTaskLoader;
+import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
-
-import java.util.List;
 
 /**
  * This Activity show information about available keys in the database.
@@ -38,14 +36,14 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager
-        .LoaderCallbacks<LoaderResult>, View.OnClickListener {
+public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        View.OnClickListener {
     private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0;
 
     private View progressBar;
     private View emptyView;
     private View layoutContent;
-    private ListView listViewKeys;
+    private PrivateKeysListCursorAdapter privateKeysListCursorAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,7 +68,8 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         Toast.makeText(this, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-                        getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_keys, null, this);
+                        getSupportLoaderManager().restartLoader(R.id
+                                .loader_id_load_contacts_with_has_pgp_true, null, this);
                         break;
                 }
                 break;
@@ -81,10 +80,10 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
     }
 
     @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case R.id.loader_id_load_private_keys:
-                return new PreparePrivateKeyModelListAsyncTaskLoader(this);
+            case R.id.loader_id_load_contacts_with_has_pgp_true:
+                return new CursorLoader(this, new KeysDaoSource().getBaseContentUri(), null, null, null, null);
 
             default:
                 return null;
@@ -92,70 +91,57 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult data) {
-        handleLoaderResult(loader, data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_load_private_keys:
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()) {
+            case R.id.loader_id_load_contacts_with_has_pgp_true:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
 
-                List<PrivateKeyModel> privateKeyModelList = (List<PrivateKeyModel>) result;
-
-                if (!privateKeyModelList.isEmpty()) {
-                    listViewKeys.setAdapter(new PrivateKeyAdapter(this, privateKeyModelList));
+                if (data != null && data.getCount() > 0) {
+                    privateKeysListCursorAdapter.swapCursor(data);
                 } else {
                     UIUtil.exchangeViewVisibility(this, true, emptyView, layoutContent);
                 }
                 break;
-
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
         }
     }
 
     @Override
-    public void handleFailureLoaderResult(int loaderId, Exception e) {
-        switch (loaderId) {
-            case R.id.loader_id_load_private_keys:
-                finish();
-                Toast.makeText(this, R.string.error_occurred_while_get_info_about_private_keys,
-                        Toast.LENGTH_LONG).show();
+    public void onLoaderReset(Loader<Cursor> loader) {
+        switch (loader.getId()) {
+            case R.id.loader_id_load_contacts_with_has_pgp_true:
+                privateKeysListCursorAdapter.swapCursor(null);
                 break;
-
-            default:
-                super.handleFailureLoaderResult(loaderId, e);
         }
-
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonAddKey:
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, getString(R.string.import_private_key),
-                        true, ImportPrivateKeyActivity.class), REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
+                runCreateOrImportKeyActivity();
                 break;
         }
+    }
+
+    private void runCreateOrImportKeyActivity() {
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, getString(R.string.import_private_key),
+                true, ImportPrivateKeyActivity.class), REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
     }
 
     private void initViews() {
         this.progressBar = findViewById(R.id.progressBar);
         this.layoutContent = findViewById(R.id.layoutContent);
         this.emptyView = findViewById(R.id.emptyView);
-        listViewKeys = findViewById(R.id.listViewKeys);
+        this.privateKeysListCursorAdapter = new PrivateKeysListCursorAdapter(this, null);
+
+        ListView listViewKeys = findViewById(R.id.listViewKeys);
+        listViewKeys.setAdapter(privateKeysListCursorAdapter);
 
         if (findViewById(R.id.floatActionButtonAddKey) != null) {
             findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
         }
 
-        getSupportLoaderManager().initLoader(R.id.loader_id_load_private_keys, null, this);
+        getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+
     }
 }

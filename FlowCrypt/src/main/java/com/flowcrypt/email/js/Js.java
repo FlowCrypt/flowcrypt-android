@@ -7,7 +7,6 @@
 package com.flowcrypt.email.js;
 
 import android.content.Context;
-import com.flowcrypt.email.BuildConfig;
 import android.os.Build;
 import android.text.Html;
 import android.text.TextUtils;
@@ -23,6 +22,7 @@ import com.eclipsesource.v8.V8ResultUndefined;
 import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
 import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
+import com.flowcrypt.email.BuildConfig;
 
 import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
@@ -66,6 +66,10 @@ public class Js { // Create one object per thread and use them separately. Not t
         bindJavaMethods();
         tool = loadJavascriptCode();
         bindCallbackCatcher();
+    }
+
+    public StorageConnectorInterface getStorageConnector() {
+        return storage;
     }
 
     public Boolean str_is_email_valid(String email) {
@@ -228,17 +232,17 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .push(name).push(type).push(uint8(content))));
     }
 
-    private V8TypedArray uint8(byte[] data) {
-        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
-        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
-    }
-
     private static String read(File file) throws IOException {
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
     private static String read(InputStream inputStream) throws IOException {
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    }
+
+    private V8TypedArray uint8(byte[] data) {
+        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
+        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
     }
 
     private V8Object mime_reply_headers(MimeMessage m) {
@@ -346,30 +350,6 @@ class MeaningfulV8ObjectContainer {
         v8object = o;
     }
 
-    V8Array getAttributeAsArray(String k) {
-        return getAttributeAsArray(v8object, k);
-    }
-
-    V8Object getAttributeAsObject(String name) {
-        return getAttributeAsObject(v8object, name);
-    }
-
-    Boolean getAttributeAsBoolean(String name) {
-        return getAttributeAsBoolean(v8object, name);
-    }
-
-    Integer getAttributeAsInteger(String name) {
-        return getAttributeAsInteger(v8object, name);
-    }
-
-    String getAttributeAsString(String k) {
-        return getAttributeAsString(v8object, k);
-    }
-
-    byte[] getAttributeAsBytes(String k) {
-        return getAttributeAsBytes(v8object, k);
-    }
-
     static V8Array getAttributeAsArray(V8Object obj, String k) {
         try {
             return obj.getArray(k);
@@ -417,6 +397,30 @@ class MeaningfulV8ObjectContainer {
         } catch (V8ResultUndefined e) {
             return null;
         }
+    }
+
+    V8Array getAttributeAsArray(String k) {
+        return getAttributeAsArray(v8object, k);
+    }
+
+    V8Object getAttributeAsObject(String name) {
+        return getAttributeAsObject(v8object, name);
+    }
+
+    Boolean getAttributeAsBoolean(String name) {
+        return getAttributeAsBoolean(v8object, name);
+    }
+
+    Integer getAttributeAsInteger(String name) {
+        return getAttributeAsInteger(v8object, name);
+    }
+
+    String getAttributeAsString(String k) {
+        return getAttributeAsString(v8object, k);
+    }
+
+    byte[] getAttributeAsBytes(String k) {
+        return getAttributeAsBytes(v8object, k);
     }
 
     V8Object getV8Object() {

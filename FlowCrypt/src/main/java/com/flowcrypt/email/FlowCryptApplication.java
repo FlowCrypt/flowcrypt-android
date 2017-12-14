@@ -12,6 +12,7 @@ import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
@@ -68,6 +69,7 @@ public class FlowCryptApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        JsForUiManager.init(this);
         MultiDex.install(this);
         NotificationChannelManager.registerNotificationChannels(this);
 

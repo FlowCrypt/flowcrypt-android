@@ -17,8 +17,8 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 
@@ -39,10 +39,10 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
     private java.text.DateFormat dateFormat;
     private Js js;
 
-    public PrivateKeysListCursorAdapter(Context context, Cursor cursor, Js js) {
+    public PrivateKeysListCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor, false);
         this.dateFormat = DateFormat.getMediumDateFormat(context);
-        this.js = js;
+        this.js = JsForUiManager.getInstance(context).getJs();
     }
 
     @Override
@@ -52,12 +52,12 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        TextView textViewKeyOwner = (TextView) view.findViewById(R.id.textViewKeyOwner);
-        TextView textViewKeywords = (TextView) view.findViewById(R.id.textViewKeywords);
-        TextView textViewCreationDate = (TextView) view.findViewById(R.id.textViewCreationDate);
+        TextView textViewKeyOwner = view.findViewById(R.id.textViewKeyOwner);
+        TextView textViewKeywords = view.findViewById(R.id.textViewKeywords);
+        TextView textViewCreationDate = view.findViewById(R.id.textViewCreationDate);
 
         String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
-        PgpKeyInfo keyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longId);
+        PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
         PgpKey pgpKey = js.crypto_key_read(keyInfo.getPrivate());
 
         textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
