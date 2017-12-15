@@ -14,12 +14,17 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author Denis Bondarenko
@@ -49,6 +54,7 @@ public class JsTest {
     private PgpKey pgpKeyPrivateDen;
     private PgpKey pgpKeyPublicBen;
     private PgpKey pgpKeyPublicDen;
+    private File image1Mb;
 
     public JsTest() throws IOException {
         this.storageConnectorInterface = prepareStoreConnectorInterface();
@@ -57,6 +63,7 @@ public class JsTest {
         this.pgpKeyPublicBen = pgpKeyPrivateBen.toPublic();
         this.pgpKeyPrivateDen = generatePgpKey(js, ASSETS_PATH_DEN_SEC_ASC);
         this.pgpKeyPublicDen = pgpKeyPrivateDen.toPublic();
+        loadImages();
     }
 
     @Test
@@ -132,6 +139,44 @@ public class JsTest {
     public void testGetPrimaryUserId() throws Exception {
         PgpContact primaryUserId = pgpKeyPrivateBen.getPrimaryUserId();
         Assert.assertTrue(primaryUserId.getEmail().equalsIgnoreCase(BEN_EMAIL));
+    }
+
+    @Test
+    public void testLoadFileFromAssets() throws Exception {
+        File original_image1Mb = File.createTempFile(TAG, TAG);
+        FileUtils.copyInputStreamToFile(
+                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+    }
+
+    @Test
+    public void testDecryptFileWithCompareResults() throws Exception {
+        File decryptedFile = decryptFile(image1Mb);
+        File original_image1Mb = File.createTempFile(TAG, TAG);
+        FileUtils.copyInputStreamToFile(
+                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+
+        Assert.assertTrue(FileUtils.contentEquals(decryptedFile, original_image1Mb));
+    }
+
+    private File decryptFile(File image1Mb) throws IOException {
+        try (InputStream inputStream = new FileInputStream(image1Mb)) {
+            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(IOUtils.toByteArray(inputStream));
+            byte[] decryptedBytes = pgpDecrypted.getBytes();
+
+            File decryptedFile = File.createTempFile(TAG, TAG);
+
+            try (OutputStream outputStream = FileUtils.openOutputStream(decryptedFile)) {
+                IOUtils.write(decryptedBytes, outputStream);
+            }
+
+            return decryptedFile;
+        }
+    }
+
+    private void loadImages() throws IOException {
+        this.image1Mb = File.createTempFile(TAG, TAG);
+        FileUtils.copyInputStreamToFile(
+                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), image1Mb);
     }
 
     private DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
