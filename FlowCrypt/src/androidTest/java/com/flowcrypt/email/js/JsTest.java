@@ -11,12 +11,15 @@ import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.MediumTest;
 import android.support.test.runner.AndroidJUnit4;
+import android.util.Log;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,22 +50,40 @@ public class JsTest {
     private static final String BEN_KEYWORDS = "ACCOUNT GATE MARCH ESSENCE GLIDE CHEF";
     private static final String DEN_KEYWORDS = "BROOM ASSET BOIL DAY GOWN BOOK";
     private static final String TAG = JsTest.class.getSimpleName();
+    private static final String TESTS_DIRECTORY = "tests";
 
-    private Js js;
-    private StorageConnectorInterface storageConnectorInterface;
-    private PgpKey pgpKeyPrivateBen;
-    private PgpKey pgpKeyPrivateDen;
-    private PgpKey pgpKeyPublicBen;
-    private PgpKey pgpKeyPublicDen;
-    private File image1Mb;
+    private static Js js;
+    private static StorageConnectorInterface storageConnectorInterface;
+    private static PgpKey pgpKeyPrivateBen;
+    private static PgpKey pgpKeyPrivateDen;
+    private static PgpKey pgpKeyPublicBen;
+    private static PgpKey pgpKeyPublicDen;
+    private static File encryptedImage1Mb;
+    private static File image1Mb;
+    private static File parentDirectory;
 
-    public JsTest() throws IOException {
-        this.storageConnectorInterface = prepareStoreConnectorInterface();
-        this.js = new Js(InstrumentationRegistry.getTargetContext(), storageConnectorInterface);
-        this.pgpKeyPrivateBen = generatePgpKey(js, ASSETS_PATH_BEN_SEC_ASC);
-        this.pgpKeyPublicBen = pgpKeyPrivateBen.toPublic();
-        this.pgpKeyPrivateDen = generatePgpKey(js, ASSETS_PATH_DEN_SEC_ASC);
-        this.pgpKeyPublicDen = pgpKeyPrivateDen.toPublic();
+    @AfterClass
+    public static void cleanCacheDirectory() throws Exception {
+        if (parentDirectory != null && parentDirectory.exists()) {
+            FileUtils.cleanDirectory(parentDirectory);
+        }
+    }
+
+    @BeforeClass
+    public static void initCacheDirectory() throws Exception {
+        parentDirectory = new File(InstrumentationRegistry.getTargetContext().getCacheDir(), TESTS_DIRECTORY);
+        if (parentDirectory.exists()) {
+            FileUtils.cleanDirectory(parentDirectory);
+        } else if (!parentDirectory.mkdirs()) {
+            Log.d(TAG, "Create cache directory " + parentDirectory.getName() + " filed!");
+        }
+
+        storageConnectorInterface = prepareStoreConnectorInterface();
+        js = new Js(InstrumentationRegistry.getTargetContext(), storageConnectorInterface);
+        pgpKeyPrivateBen = generatePgpKey(js, ASSETS_PATH_BEN_SEC_ASC);
+        pgpKeyPublicBen = pgpKeyPrivateBen.toPublic();
+        pgpKeyPrivateDen = generatePgpKey(js, ASSETS_PATH_DEN_SEC_ASC);
+        pgpKeyPublicDen = pgpKeyPrivateDen.toPublic();
         loadImages();
     }
 
@@ -143,43 +164,33 @@ public class JsTest {
 
     @Test
     public void testLoadFileFromAssets() throws Exception {
-        File original_image1Mb = File.createTempFile(TAG, TAG);
+        File original_image1Mb = createTempFile();
         FileUtils.copyInputStreamToFile(
                 InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
     }
 
     @Test
     public void testDecryptFileWithCompareResults() throws Exception {
-        File decryptedFile = decryptFile(image1Mb);
-        File original_image1Mb = File.createTempFile(TAG, TAG);
+        File decryptedFile = decryptFile(encryptedImage1Mb);
+        File original_image1Mb = createTempFile();
         FileUtils.copyInputStreamToFile(
                 InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
 
         Assert.assertTrue(FileUtils.contentEquals(decryptedFile, original_image1Mb));
     }
 
-    private File decryptFile(File image1Mb) throws IOException {
-        try (InputStream inputStream = new FileInputStream(image1Mb)) {
-            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(IOUtils.toByteArray(inputStream));
-            byte[] decryptedBytes = pgpDecrypted.getBytes();
-
-            File decryptedFile = File.createTempFile(TAG, TAG);
-
-            try (OutputStream outputStream = FileUtils.openOutputStream(decryptedFile)) {
-                IOUtils.write(decryptedBytes, outputStream);
-            }
-
-            return decryptedFile;
-        }
+    @Test
+    public void testEncryptFile() throws Exception {
+        File encryptedTempFile = createTempFile();
+        byte[] encryptedBytes = js.crypto_message_encrypt(
+                new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()},
+                IOUtils.toByteArray(InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg")),
+                image1Mb.getName());
+        FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+        //Assert.assertTrue(FileUtils.contentEquals(encryptedImage1Mb, encryptedTempFile));
     }
 
-    private void loadImages() throws IOException {
-        this.image1Mb = File.createTempFile(TAG, TAG);
-        FileUtils.copyInputStreamToFile(
-                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), image1Mb);
-    }
-
-    private DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
+    private static DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
         Js js = new Js(InstrumentationRegistry.getTargetContext(), null);
 
         PgpContact[] pgpContacts = preparePgpContacts(js);
@@ -189,30 +200,13 @@ public class JsTest {
         return new DynamicStorageConnector(pgpContacts, pgpKeyPrivateKeys, passphraseStrings);
     }
 
-    private String[] preparePassphraseArray() {
-        return new String[]{PGP_PASSWORD_ANDROID, PGP_PASSWORD_ANDROID};
-    }
-
-    private PgpKeyInfo[] preparePgpKeyInfos(Js js) throws IOException {
-        PgpKeyInfo[] pgpKeyInfos = new PgpKeyInfo[2];
-        pgpKeyInfos[0] = generatePgpKeyInfo(js, ASSETS_PATH_BEN_SEC_ASC);
-        pgpKeyInfos[1] = generatePgpKeyInfo(js, ASSETS_PATH_DEN_SEC_ASC);
-        return pgpKeyInfos;
-    }
-
     @NonNull
-    private PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
+    private static PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
         String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
         return js.crypto_key_read(privateKey);
     }
 
-    @NonNull
-    private PgpKeyInfo generatePgpKeyInfo(Js js, String privateKeyName) throws IOException {
-        PgpKey pgpKeyPrivate = generatePgpKey(js, privateKeyName);
-        return new PgpKeyInfo(pgpKeyPrivate.armor(), js.crypto_key_longid(js.crypto_key_fingerprint(pgpKeyPrivate)));
-    }
-
-    private PgpContact[] preparePgpContacts(Js js) throws IOException {
+    private static PgpContact[] preparePgpContacts(Js js) throws IOException {
         PgpContact[] pgpContacts = new PgpContact[2];
 
         pgpContacts[0] = generatePgpContact(js, "Ben", ASSETS_PATH_BEN_SEC_ASC);
@@ -221,7 +215,7 @@ public class JsTest {
         return pgpContacts;
     }
 
-    private PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
+    private static PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
         String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
         PgpKey pgpKeyPrivate = js.crypto_key_read(privateKey);
         String fingerprint = js.crypto_key_fingerprint(pgpKeyPrivate);
@@ -233,7 +227,53 @@ public class JsTest {
                 js.mnemonic(longId), 0);
     }
 
-    private String readFileFromAssetsAsString(Context context, String filePath) throws IOException {
+    private static String readFileFromAssetsAsString(Context context, String filePath) throws IOException {
         return IOUtils.toString(context.getAssets().open(filePath), "UTF-8");
+    }
+
+    private static String[] preparePassphraseArray() {
+        return new String[]{PGP_PASSWORD_ANDROID, PGP_PASSWORD_ANDROID};
+    }
+
+    private static PgpKeyInfo[] preparePgpKeyInfos(Js js) throws IOException {
+        PgpKeyInfo[] pgpKeyInfos = new PgpKeyInfo[2];
+        pgpKeyInfos[0] = generatePgpKeyInfo(js, ASSETS_PATH_BEN_SEC_ASC);
+        pgpKeyInfos[1] = generatePgpKeyInfo(js, ASSETS_PATH_DEN_SEC_ASC);
+        return pgpKeyInfos;
+    }
+
+    @NonNull
+    private static PgpKeyInfo generatePgpKeyInfo(Js js, String privateKeyName) throws IOException {
+        PgpKey pgpKeyPrivate = generatePgpKey(js, privateKeyName);
+        return new PgpKeyInfo(pgpKeyPrivate.armor(), js.crypto_key_longid(js.crypto_key_fingerprint(pgpKeyPrivate)));
+    }
+
+    private static void loadImages() throws IOException {
+        encryptedImage1Mb = createTempFile();
+        image1Mb = createTempFile();
+        FileUtils.copyInputStreamToFile(
+                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), encryptedImage1Mb);
+        FileUtils.copyInputStreamToFile(
+                InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), image1Mb);
+    }
+
+    @NonNull
+    private static File createTempFile() throws IOException {
+        return File.createTempFile(TAG, null, parentDirectory);
+    }
+
+    private static File decryptFile(File image1Mb) throws IOException {
+        try (InputStream inputStream = new FileInputStream(image1Mb)) {
+            PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(IOUtils.toByteArray(inputStream));
+            byte[] decryptedBytes = pgpDecrypted.getBytes();
+
+            File decryptedFile = createTempFile();
+
+            try (OutputStream outputStream = FileUtils.openOutputStream(decryptedFile)) {
+                IOUtils.write(decryptedBytes, outputStream);
+            }
+
+            return decryptedFile;
+        }
     }
 }
