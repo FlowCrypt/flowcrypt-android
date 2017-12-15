@@ -30,6 +30,8 @@ import java.io.IOException;
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class JsTest {
+    private static final String ASSETS_PATH_BEN_SEC_ASC = "pgp/ben@flowcrypt.com-sec.asc";
+    private static final String ASSETS_PATH_DEN_SEC_ASC = "pgp/den@flowcrypt.com-sec.asc";
     private static final String PGP_PASSWORD_ANDROID = "android";
     private static final String BEN_EMAIL = "ben@flowcrypt.com";
     private static final String DEN_EMAIL = "den@flowcrypt.com";
@@ -40,17 +42,25 @@ public class JsTest {
     private static final String BEN_KEYWORDS = "ACCOUNT GATE MARCH ESSENCE GLIDE CHEF";
     private static final String DEN_KEYWORDS = "BROOM ASSET BOIL DAY GOWN BOOK";
     private static final String TAG = JsTest.class.getSimpleName();
-    private Js js;
 
+    private Js js;
     private StorageConnectorInterface storageConnectorInterface;
+    private PgpKey pgpKeyPrivateBen;
+    private PgpKey pgpKeyPrivateDen;
+    private PgpKey pgpKeyPublicBen;
+    private PgpKey pgpKeyPublicDen;
 
     public JsTest() throws IOException {
         this.storageConnectorInterface = prepareStoreConnectorInterface();
         this.js = new Js(InstrumentationRegistry.getTargetContext(), storageConnectorInterface);
+        this.pgpKeyPrivateBen = generatePgpKey(js, ASSETS_PATH_BEN_SEC_ASC);
+        this.pgpKeyPublicBen = pgpKeyPrivateBen.toPublic();
+        this.pgpKeyPrivateDen = generatePgpKey(js, ASSETS_PATH_DEN_SEC_ASC);
+        this.pgpKeyPublicDen = pgpKeyPrivateDen.toPublic();
     }
 
     @Test
-    public void initStorageConnectorInterface() throws Exception {
+    public void initSecurityStorageConnector() throws Exception {
         new SecurityStorageConnector(InstrumentationRegistry.getTargetContext());
     }
 
@@ -78,14 +88,60 @@ public class JsTest {
         Assert.assertTrue(decryptedText.equals("This is a very security encrypted text."));
     }
 
+    @Test
+    public void testIsEmailValid() throws Exception {
+        Assert.assertTrue(js.str_is_email_valid(DEN_EMAIL));
+    }
+
+    @Test
+    public void testArmor() throws Exception {
+        pgpKeyPrivateBen.armor();
+    }
+
+    @Test
+    public void testToPublic() throws Exception {
+        pgpKeyPrivateBen.toPublic();
+    }
+
+    @Test
+    public void testCryptoKeyFingerprint() throws Exception {
+        Assert.assertTrue(BEN_FINGERPRINT.equals(js.crypto_key_fingerprint(pgpKeyPrivateBen)));
+    }
+
+    @Test
+    public void testCryptoKeyLongidFromPgpKey() throws Exception {
+        Assert.assertTrue(BEN_LONG_ID.equals(js.crypto_key_longid(pgpKeyPrivateBen)));
+    }
+
+    @Test
+    public void testCryptoKeyLongidFromFingerprint() throws Exception {
+        Assert.assertTrue(BEN_LONG_ID.equals(js.crypto_key_longid(BEN_FINGERPRINT)));
+    }
+
+    @Test
+    public void testMnemonic() throws Exception {
+        Assert.assertTrue(BEN_KEYWORDS.equals(js.mnemonic(BEN_LONG_ID)));
+    }
+
+    @Test
+    public void testCryptoKeyRead() throws Exception {
+        js.crypto_key_read(readFileFromAssetsAsString(InstrumentationRegistry.getContext(), ASSETS_PATH_BEN_SEC_ASC));
+    }
+
+    @Test
+    public void testGetPrimaryUserId() throws Exception {
+        PgpContact primaryUserId = pgpKeyPrivateBen.getPrimaryUserId();
+        Assert.assertTrue(primaryUserId.getEmail().equalsIgnoreCase(BEN_EMAIL));
+    }
+
     private DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
         Js js = new Js(InstrumentationRegistry.getTargetContext(), null);
 
         PgpContact[] pgpContacts = preparePgpContacts(js);
-        PgpKeyInfo[] pgpKeyInfos = preparePgpKeyInfos(js);
+        PgpKeyInfo[] pgpKeyPrivateKeys = preparePgpKeyInfos(js);
         String[] passphraseStrings = preparePassphraseArray();
 
-        return new DynamicStorageConnector(pgpContacts, pgpKeyInfos, passphraseStrings);
+        return new DynamicStorageConnector(pgpContacts, pgpKeyPrivateKeys, passphraseStrings);
     }
 
     private String[] preparePassphraseArray() {
@@ -94,34 +150,39 @@ public class JsTest {
 
     private PgpKeyInfo[] preparePgpKeyInfos(Js js) throws IOException {
         PgpKeyInfo[] pgpKeyInfos = new PgpKeyInfo[2];
-        pgpKeyInfos[0] = generatePgpKeyInfo(js, "pgp/ben@flowcrypt.com-sec.asc");
-        pgpKeyInfos[1] = generatePgpKeyInfo(js, "pgp/den@flowcrypt.com-sec.asc");
+        pgpKeyInfos[0] = generatePgpKeyInfo(js, ASSETS_PATH_BEN_SEC_ASC);
+        pgpKeyInfos[1] = generatePgpKeyInfo(js, ASSETS_PATH_DEN_SEC_ASC);
         return pgpKeyInfos;
     }
 
     @NonNull
-    private PgpKeyInfo generatePgpKeyInfo(Js js, String privateKeyName) throws IOException {
+    private PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
         String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
-        return new PgpKeyInfo(js.crypto_key_read(privateKey).armor(),
-                js.crypto_key_longid(js.crypto_key_fingerprint(js.crypto_key_read(privateKey))));
+        return js.crypto_key_read(privateKey);
+    }
+
+    @NonNull
+    private PgpKeyInfo generatePgpKeyInfo(Js js, String privateKeyName) throws IOException {
+        PgpKey pgpKeyPrivate = generatePgpKey(js, privateKeyName);
+        return new PgpKeyInfo(pgpKeyPrivate.armor(), js.crypto_key_longid(js.crypto_key_fingerprint(pgpKeyPrivate)));
     }
 
     private PgpContact[] preparePgpContacts(Js js) throws IOException {
         PgpContact[] pgpContacts = new PgpContact[2];
 
-        pgpContacts[0] = generatePgpContact(js, "Ben", "pgp/ben@flowcrypt.com-sec.asc");
-        pgpContacts[1] = generatePgpContact(js, "Den", "pgp/den@flowcrypt.com-sec.asc");
+        pgpContacts[0] = generatePgpContact(js, "Ben", ASSETS_PATH_BEN_SEC_ASC);
+        pgpContacts[1] = generatePgpContact(js, "Den", ASSETS_PATH_DEN_SEC_ASC);
 
         return pgpContacts;
     }
 
     private PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
         String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
-        PgpKey pgpKey = js.crypto_key_read(privateKey);
-        String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(privateKey));
+        PgpKey pgpKeyPrivate = js.crypto_key_read(privateKey);
+        String fingerprint = js.crypto_key_fingerprint(pgpKeyPrivate);
         String longId = js.crypto_key_longid(fingerprint);
-        String keyOwner = pgpKey.getPrimaryUserId().getEmail();
-        String publicKey = pgpKey.toPublic().armor();
+        String keyOwner = pgpKeyPrivate.getPrimaryUserId().getEmail();
+        String publicKey = pgpKeyPrivate.toPublic().armor();
 
         return new PgpContact(keyOwner, contactName, publicKey, true, "test", false, fingerprint, longId,
                 js.mnemonic(longId), 0);
