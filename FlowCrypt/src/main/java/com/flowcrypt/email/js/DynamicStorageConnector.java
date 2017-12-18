@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.js;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 
 /**
@@ -80,5 +82,10 @@ public class DynamicStorageConnector implements StorageConnectorInterface {
             }
         }
         return null;
+    }
+
+    @Override
+    public void refresh(Context context) {
+
     }
 }

@@ -410,8 +410,9 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            InputStream inputStream = attachmentInfo.getUri() == null ? null : context.getContentResolver()
-                    .openInputStream(attachmentInfo.getUri());
+            InputStream inputStream = attachmentInfo.getUri() == null ? (attachmentInfo.getRawData() != null ?
+                    IOUtils.toInputStream(attachmentInfo.getRawData(), StandardCharsets.UTF_8) : null) :
+                    context.getContentResolver().openInputStream(attachmentInfo.getUri());
 
             return inputStream == null ? null : new BufferedInputStream(inputStream);
         }
