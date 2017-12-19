@@ -12,8 +12,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -24,11 +22,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.loader.GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
 
@@ -41,43 +42,21 @@ import java.util.ArrayList;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment implements View.OnClickListener,
-        LoaderManager.LoaderCallbacks<LoaderResult> {
+public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment implements View.OnClickListener {
     public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
             ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
 
-    private static final String KEY_FROM_EMAIL = GeneralUtil.generateUniqueExtraKey
-            ("KEY_FROM_EMAIL", InfoDialogFragment.class);
-
-    private TextView textViewMessage;
-    private ListView listViewKeys;
-    private View progressBar;
-    private View buttonOk;
-
-    private String fromEmail;
     private ArrayList<AttachmentInfo> attachmentInfoList;
+    private ListView listViewKeys;
 
     public PrepareSendUserPublicKeyDialogFragment() {
-    }
-
-    public static PrepareSendUserPublicKeyDialogFragment newInstance(String fromEmail) {
-
-        Bundle args = new Bundle();
-        args.putString(KEY_FROM_EMAIL, fromEmail);
-
-        PrepareSendUserPublicKeyDialogFragment fragment = new PrepareSendUserPublicKeyDialogFragment();
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Bundle args = getArguments();
-        if (args != null) {
-            this.fromEmail = args.getString(KEY_FROM_EMAIL);
-        }
+        this.attachmentInfoList = new ArrayList<>();
+        prepareAttachments();
     }
 
     @NonNull
@@ -86,110 +65,36 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
         View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
                 null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
 
-        textViewMessage = view.findViewById(R.id.textViewMessage);
-        progressBar = view.findViewById(R.id.progressBar);
+        TextView textViewMessage = view.findViewById(R.id.textViewMessage);
         listViewKeys = view.findViewById(R.id.listViewKeys);
-        buttonOk = view.findViewById(R.id.buttonOk);
+        View buttonOk = view.findViewById(R.id.buttonOk);
         buttonOk.setOnClickListener(this);
+
+        if (attachmentInfoList.size() > 1) {
+            textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+            textViewMessage.append("\n\n");
+            textViewMessage.append(getString(R.string.select_key));
+
+            String[] strings = new String[attachmentInfoList.size()];
+            for (int i = 0; i < attachmentInfoList.size(); i++) {
+                AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
+                strings[i] = attachmentInfo.getEmail();
+            }
+
+            ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
+                    .layout.simple_list_item_single_choice, strings);
+
+            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            listViewKeys.setAdapter(stringArrayAdapter);
+        } else {
+            textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+            listViewKeys.setVisibility(View.GONE);
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setView(view);
 
-        getLoaderManager().initLoader(R.id.loader_id_load_own_public_keys_as_attachment_info, null, this);
-
         return builder.create();
-    }
-
-    @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_load_own_public_keys_as_attachment_info:
-                return new GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader(getContext());
-
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
-        switch (loader.getId()) {
-            case R.id.loader_id_load_own_public_keys_as_attachment_info:
-                buttonOk.setVisibility(View.VISIBLE);
-                handleLoaderResult(loader, loaderResult);
-                break;
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_load_own_public_keys_as_attachment_info:
-                UIUtil.exchangeViewVisibility(getContext(), false, progressBar, listViewKeys);
-                attachmentInfoList = (ArrayList<AttachmentInfo>) result;
-
-                if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
-                    if (attachmentInfoList.size() > 1) {
-                        textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-                        AttachmentInfo matchedAttachmentInfo = null;
-
-                        for (int i = 0; i < attachmentInfoList.size(); i++) {
-                            AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
-                            if (fromEmail.equalsIgnoreCase(attachmentInfo.getEmail())) {
-                                matchedAttachmentInfo = attachmentInfo;
-                            }
-                        }
-
-                        if (matchedAttachmentInfo != null) {
-                            attachmentInfoList.clear();
-                            attachmentInfoList.add(matchedAttachmentInfo);
-                        } else {
-                            textViewMessage.append("\n\n");
-                            textViewMessage.append(getString(R.string.select_key));
-
-                            String[] strings = new String[attachmentInfoList.size()];
-                            for (int i = 0; i < attachmentInfoList.size(); i++) {
-                                AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
-                                strings[i] = attachmentInfo.getName();
-                            }
-
-                            ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
-                                    .layout.simple_list_item_single_choice, strings);
-
-                            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                            listViewKeys.setAdapter(stringArrayAdapter);
-                        }
-                    } else {
-                        textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-                        listViewKeys.setVisibility(View.GONE);
-                    }
-                } else {
-                    textViewMessage.setText(R.string.unknown_error);
-                }
-                break;
-
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
-        }
-    }
-
-    @Override
-    public void handleFailureLoaderResult(int loaderId, Exception e) {
-        switch (loaderId) {
-            case R.id.loader_id_load_own_public_keys_as_attachment_info:
-                progressBar.setVisibility(View.GONE);
-                textViewMessage.setText(e != null ? e.getMessage() : getString(R.string.unknown_error));
-                break;
-
-            default:
-                super.handleFailureLoaderResult(loaderId, e);
-        }
     }
 
     @Override
@@ -227,6 +132,23 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
                     dismiss();
                 }
                 break;
+        }
+    }
+
+    public void prepareAttachments() {
+        Js js = JsForUiManager.getInstance(getContext()).getJs();
+        PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
+        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+            if (pgpKey != null) {
+                PgpKey publicKey = pgpKey.toPublic();
+                if (publicKey != null) {
+                    PgpContact primaryUserId = pgpKey.getPrimaryUserId();
+                    if (primaryUserId != null) {
+                        attachmentInfoList.add(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
+                    }
+                }
+            }
         }
     }
 

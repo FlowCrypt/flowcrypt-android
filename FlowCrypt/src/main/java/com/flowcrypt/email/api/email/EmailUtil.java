@@ -10,9 +10,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.js.PgpKey;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.Arrays;
@@ -91,5 +94,35 @@ public class EmailUtil {
 
             return attachmentInfo;
         } else return null;
+    }
+
+    /**
+     * Generate {@link AttachmentInfo} using the sender public key.
+     *
+     * @param publicKey The sender public key
+     * @return A generated {@link AttachmentInfo}.
+     */
+    @Nullable
+    public static AttachmentInfo generateAttachmentInfoFromPublicKey(PgpKey publicKey) {
+        if (publicKey != null) {
+            String fileName = "0x" + publicKey.getLongid().toUpperCase() + ".asc";
+            String publicKeyValue = publicKey.armor();
+
+            if (!TextUtils.isEmpty(publicKeyValue)) {
+                AttachmentInfo attachmentInfo = new AttachmentInfo();
+
+                attachmentInfo.setName(fileName);
+                attachmentInfo.setEncodedSize(publicKeyValue.length());
+                attachmentInfo.setRawData(publicKeyValue);
+                attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
+                attachmentInfo.setEmail(publicKey.getPrimaryUserId().getEmail());
+
+                return attachmentInfo;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }

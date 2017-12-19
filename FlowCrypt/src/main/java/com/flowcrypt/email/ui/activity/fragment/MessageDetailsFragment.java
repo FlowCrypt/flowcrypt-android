@@ -35,7 +35,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
@@ -418,41 +417,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
      */
     private void showSendersPublicKeyDialog() {
         PrepareSendUserPublicKeyDialogFragment prepareSendUserPublicKeyDialogFragment
-                = PrepareSendUserPublicKeyDialogFragment.newInstance(generalMessageDetails.getEmail());
+                = new PrepareSendUserPublicKeyDialogFragment();
         prepareSendUserPublicKeyDialogFragment.setTargetFragment(MessageDetailsFragment.this,
                 REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
         prepareSendUserPublicKeyDialogFragment.show(getFragmentManager(),
                 PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
-    }
-
-    /**
-     * Generate {@link AttachmentInfo} using the sender public key.
-     *
-     * @param publicKey The sender public key
-     * @return A generated {@link AttachmentInfo}.
-     */
-    @Nullable
-    private AttachmentInfo generateAttachmentInfoFromPublicKey(PgpKey publicKey) {
-        if (publicKey != null) {
-            String fileName = "0x" + publicKey.getLongid().toUpperCase() + ".asc";
-            String publicKeyValue = publicKey.armor();
-
-            if (!TextUtils.isEmpty(publicKeyValue)) {
-                AttachmentInfo attachmentInfo = new AttachmentInfo();
-
-                attachmentInfo.setName(fileName);
-                attachmentInfo.setEncodedSize(publicKeyValue.length());
-                attachmentInfo.setRawData(publicKeyValue);
-                attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
-                attachmentInfo.setEmail(publicKey.getPrimaryUserId().getEmail());
-
-                return attachmentInfo;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -948,7 +917,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 if (publicKey == null) {
                     showSendersPublicKeyDialog();
                 } else {
-                    sendTemplateMessageWithPublicKey(generateAttachmentInfoFromPublicKey(publicKey));
+                    sendTemplateMessageWithPublicKey(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
                 }
             }
         });
