@@ -24,7 +24,7 @@ import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -280,7 +280,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         if (googleSignInResult.isSuccess()) {
             currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
 
-            startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
+            startService(new Intent(this, CheckClipboardToFindKeyService.class));
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         } else {
             if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {

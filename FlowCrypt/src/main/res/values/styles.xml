@@ -93,7 +93,10 @@
     <style name="ScreenHeading">
         <item name="android:textSize">@dimen/text_size_screen_heading</item>
         <item name="android:textColor">@color/dark</item>
-        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginStart">@dimen/default_margin_content</item>
+        <item name="android:layout_marginEnd">@dimen/default_margin_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">@dimen/margin_top_screen_heading</item>

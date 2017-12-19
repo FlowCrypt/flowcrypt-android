@@ -70,6 +70,7 @@ public class ValidateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
                         break;
 
                     case CLIPBOARD:
+                    case EMAIL:
                         armoredKey = keyDetails.getValue();
                         break;
                 }

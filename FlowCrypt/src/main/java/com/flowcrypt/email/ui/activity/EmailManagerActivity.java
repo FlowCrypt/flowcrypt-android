@@ -47,7 +47,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
@@ -100,7 +100,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public static void runEmailManagerActivity(Context context, AccountDao accountDao) {
         Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
         intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-        context.stopService(new Intent(context, CheckClipboardToFindPrivateKeyService.class));
+        context.stopService(new Intent(context, CheckClipboardToFindKeyService.class));
         context.startActivity(intentRunEmailManagerActivity);
     }
 

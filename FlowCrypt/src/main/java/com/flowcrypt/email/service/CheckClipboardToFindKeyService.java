@@ -42,9 +42,9 @@ import java.lang.ref.WeakReference;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CheckClipboardToFindPrivateKeyService extends Service implements ClipboardManager
+public class CheckClipboardToFindKeyService extends Service implements ClipboardManager
         .OnPrimaryClipChangedListener {
-    public static final String TAG = CheckClipboardToFindPrivateKeyService.class.getSimpleName();
+    public static final String TAG = CheckClipboardToFindKeyService.class.getSimpleName();
 
     private volatile Looper serviceWorkerLooper;
     private volatile ServiceWorkerHandler serviceWorkerHandler;
@@ -55,7 +55,7 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
     private Messenger replyMessenger;
     private boolean isMustBePrivateKey;
 
-    public CheckClipboardToFindPrivateKeyService() {
+    public CheckClipboardToFindKeyService() {
         this.localBinder = new LocalBinder();
         this.replyMessenger = new Messenger(new ReplyHandler(this));
     }
@@ -66,7 +66,9 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
         Log.d(TAG, "onCreate");
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboardManager.addPrimaryClipChangedListener(this);
+        if (clipboardManager != null) {
+            clipboardManager.addPrimaryClipChangedListener(this);
+        }
 
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
@@ -139,12 +141,12 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
      */
     private static class ReplyHandler extends Handler {
         static final int MESSAGE_WHAT = 1;
-        private final WeakReference<CheckClipboardToFindPrivateKeyService>
+        private final WeakReference<CheckClipboardToFindKeyService>
                 checkClipboardToFindPrivateKeyServiceWeakReference;
 
-        ReplyHandler(CheckClipboardToFindPrivateKeyService checkClipboardToFindPrivateKeyService) {
+        ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
             this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
-                    (checkClipboardToFindPrivateKeyService);
+                    (checkClipboardToFindKeyService);
         }
 
         @Override
@@ -152,15 +154,15 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
             switch (message.what) {
                 case MESSAGE_WHAT:
                     if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
-                        CheckClipboardToFindPrivateKeyService
-                                checkClipboardToFindPrivateKeyService =
+                        CheckClipboardToFindKeyService
+                                checkClipboardToFindKeyService =
                                 checkClipboardToFindPrivateKeyServiceWeakReference.get();
 
                         KeyDetails keyDetails = (KeyDetails) message.obj;
 
-                        checkClipboardToFindPrivateKeyService.keyDetails
+                        checkClipboardToFindKeyService.keyDetails
                                 = new KeyDetails(null, keyDetails.getValue(), null,
-                                KeyDetails.Type.CLIPBOARD, checkClipboardToFindPrivateKeyService
+                                KeyDetails.Type.CLIPBOARD, checkClipboardToFindKeyService
                                 .isMustBePrivateKey(), keyDetails.getPgpContact());
                         Log.d(TAG, "Found a valid private key in clipboard");
                     }
@@ -173,8 +175,8 @@ public class CheckClipboardToFindPrivateKeyService extends Service implements Cl
      * The local binder realization.
      */
     public class LocalBinder extends Binder {
-        public CheckClipboardToFindPrivateKeyService getService() {
-            return CheckClipboardToFindPrivateKeyService.this;
+        public CheckClipboardToFindKeyService getService() {
+            return CheckClipboardToFindKeyService.this;
         }
     }
 
