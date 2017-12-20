@@ -86,6 +86,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     private Folder folder;
     private LinearLayout accountManagementLayout;
     private GoogleApiClient googleApiClient;
+    private View currentAccountDetailsItem;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -545,7 +546,7 @@ public class EmailManagerActivity extends BaseSyncActivity
             }
         }
 
-        View currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
+        currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
         final ImageView imageViewExpandAccountManagement = view.findViewById(R.id.imageViewExpandAccountManagement);
         if (currentAccountDetailsItem != null) {
             handleClickOnAccountManagementButton(currentAccountDetailsItem, imageViewExpandAccountManagement);
@@ -664,6 +665,14 @@ public class EmailManagerActivity extends BaseSyncActivity
             }
 
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);
+        }
+
+        @Override
+        public void onDrawerClosed(View drawerView) {
+            super.onDrawerClosed(drawerView);
+            if (!navigationView.getMenu().getItem(0).isVisible()) {
+                currentAccountDetailsItem.performClick();
+            }
         }
     }
 }
