@@ -179,39 +179,39 @@ public class EmailManagerActivity extends BaseSyncActivity
             case R.id.syns_request_code_load_next_messages:
                 switch (resultCode) {
                     case R.id.progress_id_start_of_loading_new_messages:
-                        updateActionProgressState(0, "Start of loading new messages");
+                        updateActionProgressState(0, "Starting");
                         break;
 
                     case R.id.progress_id_adding_task_to_queue:
-                        updateActionProgressState(10, "Adding a task to the queue");
+                        updateActionProgressState(10, "Queuing");
                         break;
 
                     case R.id.progress_id_running_task:
-                        updateActionProgressState(20, "Running the task");
+                        updateActionProgressState(20, "Running task");
                         break;
 
                     case R.id.progress_id_resetting_connection:
-                        updateActionProgressState(30, "Resetting the connection");
+                        updateActionProgressState(30, "Resetting connection");
                         break;
 
                     case R.id.progress_id_connecting_to_email_server:
-                        updateActionProgressState(40, "Connecting to the mail server");
+                        updateActionProgressState(40, "Connecting");
                         break;
 
                     case R.id.progress_id_running_smtp_action:
-                        updateActionProgressState(50, "Running an SMTP action");
+                        updateActionProgressState(50, "Running SMTP action");
                         break;
 
                     case R.id.progress_id_running_imap_action:
-                        updateActionProgressState(60, "Running an IMAP action");
+                        updateActionProgressState(60, "Running IMAP action");
                         break;
 
                     case R.id.progress_id_opening_store:
-                        updateActionProgressState(70, "Opening the store");
+                        updateActionProgressState(70, "Opening store");
                         break;
 
                     case R.id.progress_id_getting_list_of_emails:
-                        updateActionProgressState(80, "Getting a list of emails");
+                        updateActionProgressState(80, "Getting list of emails");
                         break;
                 }
                 break;
