@@ -35,7 +35,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -53,6 +52,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.GlideApp;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
@@ -550,14 +550,12 @@ public class EmailManagerActivity extends BaseSyncActivity
             textViewUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.centerCrop();
-                requestOptions.transform(new CircleTransformation());
-                requestOptions.error(R.mipmap.ic_account_default_photo);
-
-                Glide.with(this)
+                GlideApp.with(this)
                         .load(accountDao.getPhotoUrl())
-                        .apply(requestOptions)
+                        .apply(new RequestOptions()
+                                .centerCrop()
+                                .transform(new CircleTransformation())
+                                .error(R.mipmap.ic_account_default_photo))
                         .into(imageViewUserPhoto);
             }
         }
@@ -634,14 +632,12 @@ public class EmailManagerActivity extends BaseSyncActivity
             textViewUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.centerCrop();
-                requestOptions.transform(new CircleTransformation());
-                requestOptions.error(R.mipmap.ic_account_default_photo);
-
-                Glide.with(this)
+                GlideApp.with(this)
                         .load(accountDao.getPhotoUrl())
-                        .apply(requestOptions)
+                        .apply(new RequestOptions()
+                                .centerCrop()
+                                .transform(new CircleTransformation())
+                                .error(R.mipmap.ic_account_default_photo))
                         .into(imageViewUserPhoto);
             }
         }
