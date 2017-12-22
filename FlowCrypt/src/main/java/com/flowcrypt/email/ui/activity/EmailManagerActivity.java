@@ -186,6 +186,22 @@ public class EmailManagerActivity extends BaseSyncActivity
                         updateActionProgressState(10, "Queuing");
                         break;
 
+                    case R.id.progress_id_queue_is_not_empty:
+                        updateActionProgressState(15, "Queue is not empty");
+                        break;
+
+                    case R.id.progress_id_thread_is_cancalled_and_done:
+                        updateActionProgressState(15, "Thread is cancelled and done");
+                        break;
+
+                    case R.id.progress_id_thread_is_done:
+                        updateActionProgressState(15, "Thread is done");
+                        break;
+
+                    case R.id.progress_id_thread_is_cancalled:
+                        updateActionProgressState(15, "Thread is cancelled");
+                        break;
+
                     case R.id.progress_id_running_task:
                         updateActionProgressState(20, "Running task");
                         break;

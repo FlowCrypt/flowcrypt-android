@@ -224,6 +224,22 @@ public class EmailSyncManager {
             notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
             activeSyncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
                     folderName, countOfAlreadyLoadedMessages));
+
+            if (activeSyncTaskBlockingQueue.size() != 1) {
+                notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_queue_is_not_empty);
+            } else {
+                if (activeSyncTaskRunnableFuture.isCancelled() && activeSyncTaskRunnableFuture.isDone()) {
+                    notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled_and_done);
+                } else {
+                    if (activeSyncTaskRunnableFuture.isDone()) {
+                        notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_done);
+                    }
+
+                    if (activeSyncTaskRunnableFuture.isCancelled()) {
+                        notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled);
+                    }
+                }
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {

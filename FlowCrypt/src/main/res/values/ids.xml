@@ -48,4 +48,8 @@
     <item name="progress_id_running_imap_action" type="id" />
     <item name="progress_id_opening_store" type="id" />
     <item name="progress_id_getting_list_of_emails" type="id" />
+    <item name="progress_id_queue_is_not_empty" type="id" />
+    <item name="progress_id_thread_is_cancalled_and_done" type="id" />
+    <item name="progress_id_thread_is_done" type="id" />
+    <item name="progress_id_thread_is_cancalled" type="id" />
 </resources>
