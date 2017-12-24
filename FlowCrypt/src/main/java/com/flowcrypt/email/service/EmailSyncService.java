@@ -161,6 +161,8 @@ public class EmailSyncService extends Service implements SyncListener {
                     emailSyncManager.beginSync(false);
                     break;
             }
+        } else {
+            emailSyncManager.beginSync(false);
         }
 
         return super.onStartCommand(intent, flags, startId);
