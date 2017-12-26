@@ -6,7 +6,9 @@
 
 package com.flowcrypt.email.util;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.v7.preference.PreferenceManager;
 
 import java.util.Set;
 
@@ -54,5 +56,15 @@ public class SharedPreferencesHelper {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
         return editor.commit();
+    }
+
+    /**
+     * Clear the all shared preferences.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return Returns true if the new values were successfully written to persistent storage.
+     */
+    public static boolean clear(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit();
     }
 }
