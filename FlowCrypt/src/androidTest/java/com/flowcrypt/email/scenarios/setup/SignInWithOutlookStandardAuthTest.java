@@ -22,9 +22,9 @@ public class SignInWithOutlookStandardAuthTest extends SignInWithStandardAuthTes
 
     @Override
     AuthCredentials getAuthCredentials() {
-        return new AuthCredentials.Builder().setEmail("@outlook.com")
-                .setUsername("@outlook.com")
-                .setPassword("")
+        return new AuthCredentials.Builder().setEmail("espresso_tester@outlook.com")
+                .setUsername("espresso_tester@outlook.com")
+                .setPassword("O2LixFbT")
                 .setImapServer("imap-mail.outlook.com")
                 .setImapPort(993)
                 .setImapSecurityTypeOption(SecurityType.Option.SSL_TLS)
