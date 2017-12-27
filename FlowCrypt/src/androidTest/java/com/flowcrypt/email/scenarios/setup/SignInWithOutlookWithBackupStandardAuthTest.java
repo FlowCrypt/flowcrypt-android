@@ -7,7 +7,7 @@
 package com.flowcrypt.email.scenarios.setup;
 
 import com.flowcrypt.email.api.email.model.AuthCredentials;
-import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.util.AuthCredentialsManager;
 
 /**
  * This test is using the Outlook credentials.
@@ -22,16 +22,6 @@ public class SignInWithOutlookWithBackupStandardAuthTest extends SignInWithBacku
 
     @Override
     AuthCredentials getAuthCredentials() {
-        return new AuthCredentials.Builder().setEmail("espresso_tester@outlook.com")
-                .setUsername("espresso_tester@outlook.com")
-                .setPassword("O2LixFbT")
-                .setImapServer("imap-mail.outlook.com")
-                .setImapPort(993)
-                .setImapSecurityTypeOption(SecurityType.Option.SSL_TLS)
-                .setSmtpServer("smtp-mail.outlook.com")
-                .setSmtpPort(587)
-                .setSmtpSecurityTypeOption(SecurityType.Option.STARTLS)
-                .setIsUseCustomSignInForSmtp(false)
-                .build();
+        return AuthCredentialsManager.getOutLookWithBackupAuthCredentials();
     }
 }
