@@ -22,7 +22,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
@@ -34,9 +33,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -58,7 +55,7 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
             .outerRule(new ClearAppSettingsRule())
             .around(new ActivityTestRule<>(SplashActivity.class));
 
-    private AuthCredentials authCredentials;
+    protected AuthCredentials authCredentials;
 
     abstract AuthCredentials getAuthCredentials();
 
@@ -92,24 +89,7 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
         this.authCredentials = getAuthCredentials();
     }
 
-    @Test
-    public void testStandardLogin_allConditionsTrue() throws Exception {
-        fillAllFields();
-        onView(withId(R.id.buttonTryToConnect)).perform(click());
-
-        typeAndCheckPrivateKeyPassword();
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
-    }
-
-    private void typeAndCheckPrivateKeyPassword() {
-        onView(withId(R.id.editTextKeyPassword)).perform(clearText(), typeText("android"),
-                closeSoftKeyboard());
-        onView(withId(R.id.buttonPositiveAction)).perform(click());
-    }
-
-    private void fillAllFields() {
-        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
-
+    protected void fillAllFields() {
         onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCredentials.getEmail()),
                 closeSoftKeyboard());
         onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCredentials.getUsername()),

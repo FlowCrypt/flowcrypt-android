@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.email.model.SecurityType;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class SignInWithOutlookWithBackupStandardAuthTest extends SignInWithStandardAuthTest {
+public class SignInWithOutlookWithBackupStandardAuthTest extends SignInWithBackupStandardAuthTest {
 
     @Override
     AuthCredentials getAuthCredentials() {
