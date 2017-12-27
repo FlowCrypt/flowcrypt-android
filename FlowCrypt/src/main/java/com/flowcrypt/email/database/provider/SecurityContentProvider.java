@@ -59,6 +59,7 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_ATTACHMENT_SINGLE_ROW = 13;
     private static final int MATCHED_CODE_ACCOUNT_ALIASES_TABLE = 14;
     private static final int MATCHED_CODE_ACCOUNT_ALIASES_ROW = 15;
+    private static final int MATCHED_CODE_KEY_ERASE_DATABASE = 16;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -70,6 +71,8 @@ public class SecurityContentProvider extends ContentProvider {
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_KEYS_TABLE_SINGLE_ROW);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.CLEAN_DATABASE,
                 MATCHED_CODE_KEY_CLEAN_DATABASE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.ERASE_DATABASE,
+                MATCHED_CODE_KEY_ERASE_DATABASE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS,
                 MATCHED_CODE_CONTACTS_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS +
@@ -394,6 +397,16 @@ public class SecurityContentProvider extends ContentProvider {
                                 MessageDaoSource.COL_EMAIL + " = ?", selectionArgs);
                         rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
                                 AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs);
+                        break;
+
+                    case MATCHED_CODE_KEY_ERASE_DATABASE:
+                        rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new AccountAliasesDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new KeysDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
                         break;
 
                     case MATCHED_CODE_CONTACTS_TABLE:
