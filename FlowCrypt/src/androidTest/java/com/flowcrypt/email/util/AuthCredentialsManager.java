@@ -28,6 +28,10 @@ public class AuthCredentialsManager {
         return readAuthCredentialsFromResources("outlook.json");
     }
 
+    public static AuthCredentials getDefaultWithBackupAuthCredentials() {
+        return readAuthCredentialsFromResources("default.json");
+    }
+
     private static AuthCredentials readAuthCredentialsFromResources(String path) {
         try {
             return new Gson().fromJson(

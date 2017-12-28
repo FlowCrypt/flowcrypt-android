@@ -8,6 +8,7 @@ package com.flowcrypt.email.scenarios.setup;
 
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Test;
 
@@ -69,6 +70,21 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
         onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
         onView(withText(R.string.use_another_account)).perform(click());
         onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testUseExistingKey() throws Exception {
+        PrivateKeysManager.addTempPrivateKey();
+
+        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
+        fillAllFields();
+        onView(withId(R.id.buttonTryToConnect)).perform(click());
+
+        checkRightHeader();
+        onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
+        onView(withText(R.string.use_existing_keys)).perform(click());
+
+        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
     }
 
     private void typeAndCheckPrivateKeyPassword(String password) {
