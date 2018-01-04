@@ -28,6 +28,10 @@ public class AuthCredentialsManager {
         return readAuthCredentialsFromResources("outlook.json");
     }
 
+    public static AuthCredentials getLocalWithOneBackupAuthCredentials() {
+        return readAuthCredentialsFromResources("user_with_one_backup.json");
+    }
+
     public static AuthCredentials getDefaultWithBackupAuthCredentials() {
         return readAuthCredentialsFromResources("default.json");
     }
