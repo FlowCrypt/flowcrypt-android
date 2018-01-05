@@ -28,8 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         Time: 16:15.
  *         E-mail: DenBond7@gmail.com
  */
-public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivity implements
-        View.OnClickListener {
+public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivity implements View.OnClickListener {
     public static final int RESULT_CODE_USE_ANOTHER_ACCOUNT = 10;
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity.class);
@@ -90,7 +89,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                 }
 
                 startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,
-                        getString(R.string.import_private_key), keyDetails, false,
+                        getString(R.string.import_private_key), keyDetails, true,
                         ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 
