@@ -59,9 +59,10 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
         super.onCreate(savedInstanceState);
         this.js = JsForUiManager.getInstance(this).getJs();
 
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+        if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
             UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
         } else {
+            hideImportButton();
             UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
         }
     }
@@ -124,7 +125,11 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                                 textViewImportKeyTitle.setText(getResources().getQuantityString(
                                         R.plurals.you_have_backups_that_was_not_imported, this.privateKeys.size()));
                             }
+                        } else {
+                            hideImportButton();
                         }
+                    } else {
+                        hideImportButton();
                     }
                     UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
                 }
@@ -157,7 +162,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportBackup:
-                if (privateKeys.size() > 0) {
+                if (privateKeys != null && !privateKeys.isEmpty()) {
                     this.keyDetails = new KeyDetails(privateKeys.get(0), KeyDetails.Type.EMAIL);
                     startActivityForResult(CheckKeysActivity.newIntent(this,
                             new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),

@@ -89,7 +89,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                     keyDetails = checkClipboardToFindKeyService.getKeyDetails();
                 }
 
-                startActivityForResult(ImportPrivateKeyActivity.newIntent(this,
+                startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,
                         getString(R.string.import_private_key), keyDetails, false,
                         ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;

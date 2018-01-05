@@ -68,6 +68,13 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
 
     /**
+     * Check is a sync enable.
+     *
+     * @return true - if sync enable, false - otherwise.
+     */
+    public abstract boolean isSyncEnable();
+
+    /**
      * In this method we can handle a progress state after run some action via {@link EmailSyncService}
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
@@ -90,16 +97,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bindService(new Intent(this, EmailSyncService.class), this, Context.BIND_AUTO_CREATE);
-        Log.d(TAG, "bind to " + EmailSyncService.class.getSimpleName());
+        if (isSyncEnable()) {
+            bindService(new Intent(this, EmailSyncService.class), this, Context.BIND_AUTO_CREATE);
+            Log.d(TAG, "bind to " + EmailSyncService.class.getSimpleName());
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // Unbind from the service
-        unbindFromService();
-        Log.d(TAG, "unbind from " + EmailSyncService.class.getSimpleName());
+        if (isSyncEnable()) {
+            unbindFromService();
+            Log.d(TAG, "unbind from " + EmailSyncService.class.getSimpleName());
+        }
     }
 
     @Override

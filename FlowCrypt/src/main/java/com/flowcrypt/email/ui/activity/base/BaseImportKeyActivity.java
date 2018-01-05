@@ -13,6 +13,7 @@ import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -49,6 +50,9 @@ import com.flowcrypt.email.util.UIUtil;
 public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         implements View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
+    public static final String KEY_EXTRA_IS_SYNC_ENABLE
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity.class);
+
     public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
             BaseImportKeyActivity.class);
@@ -79,6 +83,22 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
     private String title;
 
+    private ServiceConnection checkClipboardServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            CheckClipboardToFindKeyService.LocalBinder binder =
+                    (CheckClipboardToFindKeyService.LocalBinder) service;
+            checkClipboardToFindKeyService = binder.getService();
+            checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
+            isCheckClipboardServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isCheckClipboardServiceBound = false;
+        }
+    };
+
     public abstract void onKeyValidated(KeyDetails.Type type);
 
     public abstract boolean isPrivateKeyChecking();
@@ -87,15 +107,19 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         return newIntent(context, title, false, cls);
     }
 
-    public static Intent newIntent(Context context, String title, boolean
-            isThrowErrorIfDuplicateFound, Class<?> cls) {
+    public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
         return newIntent(context, title, null, isThrowErrorIfDuplicateFound, cls);
     }
 
-    public static Intent newIntent(Context context, String title,
-                                   KeyDetails keyDetails,
+    public static Intent newIntent(Context context, String title, KeyDetails keyDetails,
+                                   boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
+        return newIntent(context, true, title, keyDetails, isThrowErrorIfDuplicateFound, cls);
+    }
+
+    public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyDetails keyDetails,
                                    boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
         Intent intent = new Intent(context, cls);
+        intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
         intent.putExtra(KEY_EXTRA_TITLE, title);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, keyDetails);
         intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
@@ -108,11 +132,16 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
 
     @Override
+    public boolean isSyncEnable() {
+        return getIntent() == null || getIntent().getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true);
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         bindService(new Intent(this, CheckClipboardToFindKeyService.class),
-                this, Context.BIND_AUTO_CREATE);
+                checkClipboardServiceConnection, Context.BIND_AUTO_CREATE);
 
         if (getIntent() != null) {
             this.isThrowErrorIfDuplicateFound =
@@ -152,7 +181,10 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        isCheckClipboardServiceBound = false;
+        if (isCheckClipboardServiceBound) {
+            unbindService(checkClipboardServiceConnection);
+            isCheckClipboardServiceBound = false;
+        }
     }
 
     @Override
@@ -345,29 +377,6 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
             default:
                 super.handleFailureLoaderResult(loaderId, e);
-        }
-    }
-
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        if (name.getClassName().equals(CheckClipboardToFindKeyService.class.getName())) {
-            CheckClipboardToFindKeyService.LocalBinder binder =
-                    (CheckClipboardToFindKeyService.LocalBinder) service;
-            checkClipboardToFindKeyService = binder.getService();
-            checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
-            isCheckClipboardServiceBound = true;
-        } else {
-            super.onServiceConnected(name, service);
-        }
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        if (name.getClassName().equals(CheckClipboardToFindKeyService.class.getName())) {
-            isCheckClipboardServiceBound = false;
-        } else {
-            super.onServiceDisconnected(name);
         }
     }
 

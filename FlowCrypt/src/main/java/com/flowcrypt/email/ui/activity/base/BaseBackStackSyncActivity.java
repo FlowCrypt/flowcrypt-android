@@ -24,6 +24,11 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
     }
 
     @Override
+    public boolean isSyncEnable() {
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:

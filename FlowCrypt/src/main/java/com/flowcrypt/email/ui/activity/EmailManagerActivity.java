@@ -174,6 +174,11 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
+    public boolean isSyncEnable() {
+        return true;
+    }
+
+    @Override
     public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
