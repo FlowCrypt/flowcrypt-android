@@ -124,6 +124,7 @@
         strip: crypto_armor_strip,
         clip: crypto_armor_clip,
         headers: crypto_armor_headers,
+        detect_blocks: crypto_armor_detect_blocks,
         replace_blocks: crypto_armor_replace_blocks,
         normalize: crypto_armor_normalize,
       },
@@ -336,12 +337,12 @@
   }
 
   function str_month_name(month_index) {
-    return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][month_index];
+    return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][month_index];
   }
 
   function str_random(length) {
-    var id = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var id = '';
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     for(var i = 0; i < (length || 5); i++) {
       id += possible.charAt(Math.floor(Math.random() * possible.length));
     }
@@ -393,7 +394,7 @@
     for(var i = 0; i < u8a.length; i += CHUNK_SZ) {
       c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
     }
-    return c.join("");
+    return c.join('');
   }
 
   function str_to_uint8(raw) {
@@ -815,8 +816,8 @@
 
   function file_download_as_uint8(url, progress, callback) {
     var request = new XMLHttpRequest();
-    request.open("GET", url, true);
-    request.responseType = "arraybuffer";
+    request.open('GET', url, true);
+    request.responseType = 'arraybuffer';
     if(typeof progress === 'function') {
       request.onprogress = function (evt) {
         progress(evt.lengthComputable ? Math.floor((evt.loaded / evt.total) * 100) : null, evt.loaded, evt.total);
@@ -1061,14 +1062,14 @@
         var parser = new emailjs_mime_parser();
         var parsed = {};
         parser.onheader = function (node) {
-          if(!String(node.path.join("."))) { // root node headers
+          if(!String(node.path.join('.'))) { // root node headers
             tool.each(node.headers, function (name, header) {
               mime_message_contents.headers[name] = header[0].value;
             });
           }
         };
         parser.onbody = function (node, chunk) {
-          var path = String(node.path.join("."));
+          var path = String(node.path.join('.'));
           if(typeof parsed[path] === 'undefined') {
             parsed[path] = node;
           }
@@ -1570,7 +1571,7 @@
   var crypto_armor_headers_dict = {
     null: { begin: '-----BEGIN', end: '-----END' },
     public_key: { begin: '-----BEGIN PGP PUBLIC KEY BLOCK-----', end: '-----END PGP PUBLIC KEY BLOCK-----', replace: true },
-    private_key: { begin: '-----BEGIN PGP PRIVATE KEY BLOCK-----', end: '-----END PGP PRIVATE KEY BLOCK-----' },
+    private_key: { begin: '-----BEGIN PGP PRIVATE KEY BLOCK-----', end: '-----END PGP PRIVATE KEY BLOCK-----', replace: true },
     attest_packet: { begin: '-----BEGIN ATTEST PACKET-----', end: '-----END ATTEST PACKET-----', replace: true },
     cryptup_verification: { begin: '-----BEGIN CRYPTUP VERIFICATION-----', end: '-----END CRYPTUP VERIFICATION-----', replace: true },
     signed_message: { begin: '-----BEGIN PGP SIGNED MESSAGE-----', middle: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----', replace: true },
@@ -1711,7 +1712,7 @@
     }
     var r = '';
     tool.each(blocks, function(i, block) {
-      if(block.type === 'text') {
+      if(block.type === 'text' || block.type === 'private_key') {
         r += (Number(i) ? '\n\n' : '') + str_html_escape(block.content) + '\n\n';
       } else if (block.type === 'message') {
         r += factory.embedded.message(block.complete ? crypto_armor_normalize(block.content, 'message') : '', message_id, is_outgoing, sender_email, false);
@@ -1856,7 +1857,7 @@
       try {
         var fp = key.primaryKey.fingerprint.toUpperCase();
         if(formatting === 'spaced') {
-          return fp.replace(/(.{4})/g, "$1 ").trim();
+          return fp.replace(/(.{4})/g, '$1 ').trim();
         }
         return fp;
       } catch(error) {
@@ -1968,11 +1969,20 @@
   }
 
   function zeroed_decrypt_error_counts(keys) {
-    return { decrypted: 0, potentially_matching_keys: keys ? keys.potentially_matching.length : 0, rounds: keys ? keys.with_passphrases.length : 0, attempts: 0, key_mismatch: 0, wrong_password: 0, unsecure_mdc: 0 };
+    return {
+      decrypted: 0,
+      potentially_matching_keys: keys ? keys.potentially_matching.length : 0,
+      rounds: keys ? keys.with_passphrases.length : 0,
+      attempts: 0,
+      key_mismatch: 0,
+      wrong_password: 0,
+      unsecure_mdc: 0,
+      format_errors: 0,
+    };
   }
 
   function increment_decrypt_error_counts(counts, other_errors, one_time_message_password, decrypt_error) {
-    if(String(decrypt_error) === "Error: Error decrypting message: Cannot read property 'isDecrypted' of null" && !one_time_message_password) {
+    if(String(decrypt_error) === 'TypeError: Error decrypting message: Cannot read property \'isDecrypted\' of null' && !one_time_message_password) {
       counts.key_mismatch++; // wrong private key
     } else if(String(decrypt_error) === 'Error: Error decrypting message: Invalid session key for decryption.' && !one_time_message_password) {
       counts.key_mismatch++; // attempted opening password only message with key
@@ -1980,18 +1990,32 @@
       counts.wrong_password++; // wrong password
     } else if(String(decrypt_error) === 'Error: Error decrypting message: Decryption failed due to missing MDC in combination with modern cipher.') {
       counts.unsecure_mdc++;
+    } else if (String(decrypt_error) === 'Error: Error decrypting message: Decryption error') {
+      counts.format_errors++; // typically
     } else {
       other_errors.push(String(decrypt_error));
     }
     counts.attempts++;
   }
 
-  function finally_callback_result(callback, result) {
+  /**
+   *
+   * @param callback: callback function / listener
+   * @param result: result to be called back
+   * @returns {boolean}: continue to next attempt
+   */
+  function chained_decryption_result_collector(callback, result) {
     if(result.success) {
       callback(result); // callback the moment there is successful decrypt
+      return false; // do not try again
     } else if(result.counts.attempts === result.counts.rounds && !result.counts.decrypted) {
+      if(result.counts.format_errors > 0) {
+        result.format_error = 'This message seems to be badly formatted.';
+      }
       callback(result); // or callback if no success and this was the last attempt
+      return false; // do not try again
     }
+    return true; // next attempt
   }
 
   function get_decrypt_options(message, keyinfo, is_armored, one_time_message_password, force_output_format) {
@@ -2032,9 +2056,10 @@
     });
   }
 
-  function crypto_message_decrypt(db, account_email, encrypted_data, one_time_message_password, callback, force_output_format) {
+  function crypto_message_decrypt(db, account_email, encrypted_data, message_password, callback, output_format) {
     var armored_encrypted = tool.value(crypto_armor_headers('message').begin).in(encrypted_data);
     var armored_signed_only = tool.value(crypto_armor_headers('signed_message').begin).in(encrypted_data);
+    var is_armored = armored_encrypted || armored_signed_only;
     var other_errors = [];
     try {
       if(armored_encrypted) {
@@ -2059,38 +2084,43 @@
         callback({success: true, content: { data: message.text }, encrypted: false, signature: crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0])});
       } else {
         var missing_passphrases = keys.without_passphrases.map(function (keyinfo) { return keyinfo.longid; });
-        if(!keys.with_passphrases.length && !one_time_message_password) {
+        if(!keys.with_passphrases.length && !message_password) {
           callback({success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors});
         } else {
-          tool.each(keys.with_passphrases, function (i, keyinfo) {
-            if(!counts.decrypted) {
-              try {
-                openpgp.decrypt(get_decrypt_options(message, keyinfo, armored_encrypted || armored_signed_only, one_time_message_password, force_output_format)).then(function (decrypted) {
-                  catcher.try(function () {
-                    if(decrypted.data !== null) {
+          var keyinfos_for_looper = keys.with_passphrases.slice(); // copy keyinfo array
+          var keep_trying_until_decrypted_or_all_failed = function () {
+            catcher.try(function () {
+              if(!counts.decrypted && keyinfos_for_looper.length) {
+                try {
+                  openpgp.decrypt(get_decrypt_options(message, keyinfos_for_looper.shift(), is_armored, message_password, output_format)).then(function (decrypted) {
+                    catcher.try(function () {
                       if(!counts.decrypted++) { // don't call back twice if encrypted for two of my keys
-                        // ORIGINAL ... signature: keys.signed_by.length ? crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0]) : false
-                        finally_callback_result(callback, {success: true, content: decrypted, encrypted: true, signature: null});
+                        // var signature_result = keys.signed_by.length ? crypto_message_verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
+                        var signature_result = null;
+                        if(chained_decryption_result_collector(callback, {success: true, content: decrypted, encrypted: true, signature: signature_result})) {
+                          keep_trying_until_decrypted_or_all_failed();
+                        }
                       }
-                    } else {
-                      other_errors.push(decrypted.err instanceof Array ? decrypted.err.join(', ') : 'Decrypted data is null. Please write me at human@flowcrypt.com to fix this.');
-                      counts.attempts++;
-                      finally_callback_result(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors});
-                    }
-                  })();
-                }).catch(function (decrypt_error) {
-                  catcher.try(function () {
-                    increment_decrypt_error_counts(counts, other_errors, one_time_message_password, decrypt_error);
-                    finally_callback_result(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors});
-                  })();
-                });
-              } catch(decrypt_exception) {
-                other_errors.push(String(decrypt_exception));
-                counts.attempts++;
-                finally_callback_result(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors});
+                    })();
+                  }).catch(function (decrypt_error) {
+                    catcher.try(function () {
+                      increment_decrypt_error_counts(counts, other_errors, message_password, decrypt_error);
+                      if(chained_decryption_result_collector(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors})) {
+                        keep_trying_until_decrypted_or_all_failed();
+                      }
+                    })();
+                  });
+                } catch(decrypt_exception) {
+                  other_errors.push(String(decrypt_exception));
+                  counts.attempts++;
+                  if(chained_decryption_result_collector(callback, {success: false, signature: null, message: message, counts: counts, unsecure_mdc: !!counts.unsecure_mdc, encrypted_for: keys.encrypted_for, missing_passphrases: missing_passphrases, errors: other_errors})) {
+                    keep_trying_until_decrypted_or_all_failed();
+                  }
+                }
               }
-            }
-          });
+            })();
+          };
+          keep_trying_until_decrypted_or_all_failed(); // first attempt
         }
       }
     });
@@ -2158,7 +2188,7 @@
   function get_ajax_progress_xhr(progress_callbacks) {
     var progress_reporting_xhr = new window.XMLHttpRequest();
     if(typeof progress_callbacks.upload === 'function') {
-      progress_reporting_xhr.upload.addEventListener("progress", function(evt) {
+      progress_reporting_xhr.upload.addEventListener('progress', function(evt) {
         progress_callbacks.upload(evt.lengthComputable ? parseInt((evt.loaded / evt.total) * 100) : null);
       }, false);
     }
@@ -2376,7 +2406,7 @@
     }
     var auth_code_window = window.open(api_google_auth_code_url(auth_request), '_blank', 'height=600,left=100,menubar=no,status=no,toolbar=no,top=100,width=500');
     // auth window will show up. Inside the window, google_auth_code.js gets executed which will send
-    // a "gmail_auth_code_result" chrome message to "google_auth.google_auth_window_result_handler" and close itself
+    // a 'gmail_auth_code_result' chrome message to 'google_auth.google_auth_window_result_handler' and close itself
     if(env_browser().name !== 'firefox') {
       var window_closed_timer = setInterval(api_google_auth_window_closed_watcher, 250);
     }
@@ -2520,7 +2550,7 @@
           error: function (response) {
             try {
               var error_obj = JSON.parse(response.responseText);
-              if(typeof error_obj.error !== 'undefined' && error_obj.error.message === "Invalid Credentials") {
+              if(typeof error_obj.error !== 'undefined' && error_obj.error.message === 'Invalid Credentials') {
                 google_api_handle_auth_error(account_email, method, url, parameters, callback, fail_on_auth, response, api_google_call);
               } else {
                 response._error = error_obj.error;
@@ -2608,7 +2638,7 @@
           error: function (response) {
             try {
               var error_obj = JSON.parse(response.responseText);
-              if(typeof error_obj.error !== 'undefined' && error_obj.error.message === "Invalid Credentials") {
+              if(typeof error_obj.error !== 'undefined' && error_obj.error.message === 'Invalid Credentials') {
                 google_api_handle_auth_error(account_email, method, resource, parameters, callback, fail_on_auth, response, api_gmail_call, progress, content_type);
               } else {
                 response._error = error_obj.error;
