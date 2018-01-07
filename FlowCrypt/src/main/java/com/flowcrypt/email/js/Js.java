@@ -130,6 +130,13 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .push(armored_key)), this);
     }
 
+    public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
+        V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
+                .push(cb_catch);
+        this.call(void.class, p("crypto", "key", "create"), args);
+        return crypto_key_read((String) cb_last_value[0]);
+    }
+
     public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
         return (V8Object) this.call(Object.class, p("crypto", "key", "decrypt"), new V8Array(v8)
                 .push(private_key.getV8Object()).push(passphrase));
@@ -321,6 +328,7 @@ public class Js { // Create one object per thread and use them separately. Not t
         v8.executeScript(read(context.getAssets().open("js/mnemonic.js")));
         v8.executeScript(read(context.getAssets().open("js/global.js")));
         v8.executeScript(read(context.getAssets().open("js/common.js")));
+        v8.executeScript(read(context.getAssets().open("js/android.js")));
         return v8.getObject("window").getObject("tool");
     }
 
