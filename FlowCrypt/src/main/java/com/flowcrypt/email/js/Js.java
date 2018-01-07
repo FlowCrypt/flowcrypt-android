@@ -328,7 +328,6 @@ public class Js { // Create one object per thread and use them separately. Not t
         v8.executeScript(read(context.getAssets().open("js/mnemonic.js")));
         v8.executeScript(read(context.getAssets().open("js/global.js")));
         v8.executeScript(read(context.getAssets().open("js/common.js")));
-        v8.executeScript(read(context.getAssets().open("js/android.js")));
         return v8.getObject("window").getObject("tool");
     }
 
