@@ -38,7 +38,9 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.security.spec.RSAPrivateKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.crypto.Cipher;
 
@@ -194,6 +196,20 @@ public class Js { // Create one object per thread and use them separately. Not t
         V8Array params = new V8Array(v8).push(NULL).push("").push(uint8(bytes)).push("").push(cb_catch).push(NULL);
         this.call(void.class, p("crypto", "message", "decrypt"), params);
         return new PgpDecrypted((V8Object) cb_last_value[0]);
+    }
+
+    public List<String> crypto_password_weak_words() {
+        V8Array a = ((V8Array) this.call(Object.class, p("crypto", "password", "weak_words"), new V8Array(v8)));
+        List<String> list = new ArrayList<>();
+        for(int i = 0; i < a.length(); i++) {
+            list.add(a.getString(i));
+        }
+        return list;
+    }
+
+    public PasswordStrength crypto_password_estimate_strength(double zxcvbn_guesses) {
+        return new PasswordStrength((V8Object) this.call(Object.class, p("crypto", "password", "estimate_strength"),
+                new V8Array(v8).push(zxcvbn_guesses)));
     }
 
     public String api_gmail_query_backups(String email) {
@@ -572,4 +588,48 @@ class JavaMethodsForJavaScript {
     public void alert(final String message) {
         System.out.println("[JAVASCRIPT.ALERT] " + message);
     }
+}
+
+class PasswordStrength extends MeaningfulV8ObjectContainer {
+
+    private String word;
+    private int bar;
+    private String time;
+    private int seconds;
+    private boolean pass;
+    private String color;
+
+
+    PasswordStrength(V8Object o) {
+        super(o);
+    }
+
+    public String getWord() {
+        return getAttributeAsString("word");
+    }
+
+    public int getBar() {
+        return getAttributeAsInteger("bar");
+    }
+
+
+    public String getTime() {
+        return getAttributeAsString("time");
+    }
+
+
+    public int getSeconds() {
+        return getAttributeAsInteger("seconds");
+    }
+
+
+    public boolean didPass() {
+        return getAttributeAsBoolean("pass");
+    }
+
+
+    public String getColor() {
+        return getAttributeAsString("color");
+    }
+
 }
