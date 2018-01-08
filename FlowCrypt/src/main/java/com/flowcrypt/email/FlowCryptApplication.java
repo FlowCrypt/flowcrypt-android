@@ -70,7 +70,6 @@ public class FlowCryptApplication extends Application {
     public void onCreate() {
         super.onCreate();
         JsForUiManager.init(this);
-        MultiDex.install(this);
         NotificationChannelManager.registerNotificationChannels(this);
 
         intiLeakCanary();
@@ -80,6 +79,7 @@ public class FlowCryptApplication extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
+        MultiDex.install(this);
         if (!BuildConfig.DEBUG || SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
                 (this), Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
             ACRA.init(this);
