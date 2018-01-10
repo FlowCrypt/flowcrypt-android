@@ -2244,12 +2244,12 @@
   // https://www.abuse.ch/?p=3294
   var guesses_per_second = 10000 * 2 * 4000; //(10k ips) * (2 cores p/machine) * (4k guesses p/core)
   var crack_time_words = [
-    ['millenni', 'perfect', 100, 'green', true],
-    ['centu', 'great', 80, 'green', true],
-    ['year', 'good', 60, 'orange', true],
-    ['month', 'reasonable', 40, 'darkorange', true],
-    ['day', 'poor', 20, 'darkred', false],
-    ['', 'weak', 10, 'red', false],
+    ['millenni', 'perfect', 100, '#008000', true],
+    ['centu', 'great', 80, '#008000', true],
+    ['year', 'good', 60, '#FFA500', true],
+    ['month', 'reasonable', 40, '#ff8C00', true],
+    ['day', 'poor', 20, '#8B0000', false],
+    ['', 'weak', 10, '#FF0000', false],
   ]; // word search, word rating, bar percent, color, pass
 
   function crypto_password_estimate_strength(zxcvbn_result_guesses) {
