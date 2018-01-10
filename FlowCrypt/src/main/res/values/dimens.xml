@@ -11,6 +11,7 @@
     <dimen name="default_margin_content">16dp</dimen>
     <dimen name="default_margin_content_small">8dp</dimen>
     <dimen name="default_margin_content_medium">12dp</dimen>
+    <dimen name="default_margin_content_big">32dp</dimen>
     <dimen name="default_single_dip">1dp</dimen>
     <dimen name="default_twice_dip">2dp</dimen>
 

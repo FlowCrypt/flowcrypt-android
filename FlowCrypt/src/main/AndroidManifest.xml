@@ -129,6 +129,10 @@
             android:name=".ui.activity.SelectContactsActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.CreatePrivateKeyActivity"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"

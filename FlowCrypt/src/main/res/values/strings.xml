@@ -247,4 +247,17 @@
         <item quantity="one">You have one backup that was not imported.</item>
         <item quantity="other">You have backups that were not imported.</item>
     </plurals>
+    <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
+    <string name="set_pass_phrase">Set pass phrase</string>
+    <string name="loss_of_this_pass_phrase_cannot_be_recovered">Loss of this pass phrase cannot be recovered.</string>
+    <string name="see_choosing_secure_pass_phrases">See choosing secure pass phrases</string>
+    <string name="select_stronger_pass_phrase">Please select a stronger pass phrase. Combinations of 4 to 5 uncommon
+        words are the best.</string>
+    <string name="password_quality_subtext">(average time to crack:</string>
+    <string name="password_quality_perfect">perfect</string>
+    <string name="password_quality_great">great</string>
+    <string name="password_quality_good">good</string>
+    <string name="password_quality_reasonable">reasonable</string>
+    <string name="password_quality_poor">poor</string>
+    <string name="password_quality_weak">weak</string>
 </resources>

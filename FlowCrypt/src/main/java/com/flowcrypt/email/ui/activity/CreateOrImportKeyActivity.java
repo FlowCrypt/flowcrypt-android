@@ -33,7 +33,8 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity.class);
 
-    private static final int REQUEST_CODE_IMPORT_ACTIVITY = 10;
+    private static final int REQUEST_CODE_IMPORT_ACTIVITY = 11;
+    private static final int REQUEST_CODE_CREATE_KEY_ACTIVITY = 12;
     private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
             GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
                     CreateOrImportKeyActivity.class);
@@ -82,6 +83,11 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.buttonCreateNewKey:
+                startActivityForResult(CreatePrivateKeyActivity.newIntent(this),
+                        REQUEST_CODE_CREATE_KEY_ACTIVITY);
+                break;
+
             case R.id.buttonImportMyKey:
                 KeyDetails keyDetails = null;
                 if (isServiceBound) {
