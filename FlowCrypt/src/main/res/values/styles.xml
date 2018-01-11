@@ -23,6 +23,11 @@
         <item name="colorButtonNormal">@color/light</item>
     </style>
 
+    <style name="AppWidget.Button.SilverWithWhiteText">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="colorButtonNormal">@color/silver</item>
+    </style>
+
     <style name="AppWidget.Button.Transparent">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>

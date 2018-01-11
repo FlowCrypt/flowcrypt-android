@@ -9,11 +9,15 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
@@ -27,6 +31,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
 /**
@@ -38,6 +43,13 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 
 public class CreatePrivateKeyActivity extends BaseBackStackActivity implements View.OnClickListener, TextWatcher {
 
+    private static final String PASSWORD_QUALITY_PERFECT = "perfect";
+    private static final String PASSWORD_QUALITY_GREAT = "great";
+    private static final String PASSWORD_QUALITY_GOOD = "good";
+    private static final String PASSWORD_QUALITY_REASONABLE = "reasonable";
+    private static final String PASSWORD_QUALITY_WEAK = "weak";
+    private static final String PASSWORD_QUALITY_POOR = "poor";
+
     private View progressBar;
     private View buttonSetPassPhrase;
     private EditText editTextKeyPassword;
@@ -46,6 +58,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
     private Js js;
     private Zxcvbn zxcvbn;
+    private PasswordStrength passwordStrength;
 
     public static Intent newIntent(Context context) {
         return new Intent(context, CreatePrivateKeyActivity.class);
@@ -74,11 +87,40 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSetPassPhrase:
+                if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
+                    showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty),
+                            Snackbar.LENGTH_LONG);
+                } else {
+                    if (getSnackBar() != null) {
+                        getSnackBar().dismiss();
+                    }
 
+                    if (passwordStrength != null) {
+                        switch (passwordStrength.getWord()) {
+                            case PASSWORD_QUALITY_WEAK:
+                            case PASSWORD_QUALITY_POOR:
+                                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
+                                        getString(R.string.hint),
+                                        getString(R.string.select_stronger_pass_phrase));
+                                infoDialogFragment.show(getSupportFragmentManager(),
+                                        InfoDialogFragment.class.getSimpleName());
+                                break;
+
+                            default:
+                                /*getSupportLoaderManager().restartLoader(R.id
+                                        .loader_id_, null, this);*/
+                                break;
+                        }
+                    }
+                }
                 break;
 
             case R.id.imageButtonShowPasswordHint:
-
+                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
+                        getString(R.string.hint), getString(R.string.password_recommendation),
+                        null, false, true, true);
+                infoDialogFragment.show(getSupportFragmentManager(),
+                        InfoDialogFragment.class.getSimpleName());
                 break;
         }
     }
@@ -95,11 +137,27 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
     @Override
     public void afterTextChanged(Editable editable) {
-        PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
+        passwordStrength = js.crypto_password_estimate_strength(
                 zxcvbn.measure(editable.toString(), js.crypto_password_weak_words()).getGuesses());
 
         updatePasswordQualityProgressBar(passwordStrength);
         updatePasswordQualityInfo(passwordStrength);
+        updateBackgroundOfSetPassPhraseButton();
+    }
+
+    private void updateBackgroundOfSetPassPhraseButton() {
+        switch (passwordStrength.getWord()) {
+            case PASSWORD_QUALITY_WEAK:
+            case PASSWORD_QUALITY_POOR:
+                buttonSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.silver),
+                        PorterDuff.Mode.MULTIPLY);
+                break;
+
+            default:
+                buttonSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
+                        PorterDuff.Mode.MULTIPLY);
+                break;
+        }
     }
 
     private void initViews() {
@@ -147,27 +205,27 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
         if (qualityValue != null) {
             switch (qualityValue) {
-                case "perfect":
+                case PASSWORD_QUALITY_PERFECT:
                     qualityValue = getString(R.string.password_quality_perfect);
                     break;
 
-                case "great":
+                case PASSWORD_QUALITY_GREAT:
                     qualityValue = getString(R.string.password_quality_great);
                     break;
 
-                case "good":
+                case PASSWORD_QUALITY_GOOD:
                     qualityValue = getString(R.string.password_quality_good);
                     break;
 
-                case "reasonable":
+                case PASSWORD_QUALITY_REASONABLE:
                     qualityValue = getString(R.string.password_quality_reasonable);
                     break;
 
-                case "poor":
+                case PASSWORD_QUALITY_POOR:
                     qualityValue = getString(R.string.password_quality_poor);
                     break;
 
-                case "weak":
+                case PASSWORD_QUALITY_WEAK:
                     qualityValue = getString(R.string.password_quality_weak);
                     break;
             }

@@ -111,7 +111,7 @@
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/default_margin_content_big"
             android:text="@string/set_pass_phrase"
-            android:theme="@style/AppWidget.Button.Green"
+            android:theme="@style/AppWidget.Button.SilverWithWhiteText"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"

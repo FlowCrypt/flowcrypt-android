@@ -14,9 +14,12 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
+import android.text.method.LinkMovementMethod;
+import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
 
 /**
  * This class can be used to show an info dialog to the user.
@@ -38,44 +41,56 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             ("KEY_INFO_IS_POP_BACK_STACK", InfoDialogFragment.class);
     private static final String KEY_INFO_IS_CANCELABLE = GeneralUtil.generateUniqueExtraKey
             ("KEY_INFO_IS_CANCELABLE", InfoDialogFragment.class);
+    private static final String KEY_INFO_IS_MESSAGE_CONTAINS_HTML = GeneralUtil.generateUniqueExtraKey
+            ("KEY_INFO_IS_CANCELABLE", InfoDialogFragment.class);
 
-    private String dialogTitle;
-    private String dialogMessage;
-    private String buttonTitle;
-    private boolean isPopBackStack;
-    private OnInfoDialogButtonClickListener onInfoDialogButtonClickListener;
+    protected String dialogTitle;
+    protected String dialogMessage;
+    protected String buttonTitle;
+    protected boolean isPopBackStack;
+    protected boolean isMessageContainsHtml;
+    protected OnInfoDialogButtonClickListener onInfoDialogButtonClickListener;
 
     public InfoDialogFragment() {
     }
 
     public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage) {
-        return newInstance(dialogTitle, dialogMessage, null, false, false);
+        return newInstance(dialogTitle, dialogMessage, null, false, false, false);
     }
 
     public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
                                                  boolean isCancelable) {
-        return newInstance(dialogTitle, dialogMessage, null, false, isCancelable);
+        return newInstance(dialogTitle, dialogMessage, null, false, isCancelable, false);
     }
 
     public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
                                                  String buttonTitle, boolean isCancelable) {
-        return newInstance(dialogTitle, dialogMessage, buttonTitle, false, isCancelable);
+        return newInstance(dialogTitle, dialogMessage, buttonTitle, false, isCancelable, false);
     }
 
     public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
-                                                 String buttonTitle,
-                                                 boolean isPopBackStack, boolean isCancelable) {
+                                                 String buttonTitle, boolean isPopBackStack,
+                                                 boolean isCancelable, boolean isMessageContainsHtml) {
         InfoDialogFragment infoDialogFragment = new InfoDialogFragment();
 
+        Bundle args = prepareArgs(dialogTitle, dialogMessage, buttonTitle, isPopBackStack, isCancelable,
+                isMessageContainsHtml);
+        infoDialogFragment.setArguments(args);
+
+        return infoDialogFragment;
+    }
+
+    @NonNull
+    public static Bundle prepareArgs(String dialogTitle, String dialogMessage, String buttonTitle, boolean
+            isPopBackStack, boolean isCancelable, boolean isMessageContainsHtml) {
         Bundle args = new Bundle();
         args.putString(KEY_INFO_DIALOG_TITLE, dialogTitle);
         args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMessage);
         args.putString(KEY_INFO_BUTTON_TITLE, buttonTitle);
         args.putBoolean(KEY_INFO_IS_POP_BACK_STACK, isPopBackStack);
         args.putBoolean(KEY_INFO_IS_CANCELABLE, isCancelable);
-        infoDialogFragment.setArguments(args);
-
-        return infoDialogFragment;
+        args.putBoolean(KEY_INFO_IS_MESSAGE_CONTAINS_HTML, isMessageContainsHtml);
+        return args;
     }
 
     @Override
@@ -89,7 +104,17 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             buttonTitle = args.getString(KEY_INFO_BUTTON_TITLE,
                     getString(android.R.string.ok));
             isPopBackStack = args.getBoolean(KEY_INFO_IS_POP_BACK_STACK, false);
+            isMessageContainsHtml = args.getBoolean(KEY_INFO_IS_MESSAGE_CONTAINS_HTML, false);
             setCancelable(args.getBoolean(KEY_INFO_IS_CANCELABLE, false));
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (isMessageContainsHtml) {
+            ((TextView) getDialog().findViewById(android.R.id.message))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
         }
     }
 
@@ -98,7 +123,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
         dialog.setTitle(dialogTitle);
-        dialog.setMessage(dialogMessage);
+        dialog.setMessage(isMessageContainsHtml ? UIUtil.getHtmlSpannedFromText(dialogMessage) : dialogMessage);
         dialog.setPositiveButton(buttonTitle, this);
         return dialog.create();
     }
@@ -114,8 +139,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
                 }
 
                 if (isPopBackStack) {
-                    FragmentManager fragmentManager = getActivity()
-                            .getSupportFragmentManager();
+                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                     fragmentManager.popBackStackImmediate();
                 }
                 break;
