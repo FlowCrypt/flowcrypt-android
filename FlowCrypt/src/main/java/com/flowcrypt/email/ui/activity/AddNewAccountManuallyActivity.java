@@ -204,8 +204,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonTryToConnect:
-                authCredentials = generateAuthCredentials();
                 if (isAllInformationCorrect()) {
+                    authCredentials = generateAuthCredentials();
                     UIUtil.hideSoftInput(this, getRootView());
                     if (isNotDuplicate()) {
                         getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings, null, this);

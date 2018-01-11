@@ -28,7 +28,9 @@ import com.flowcrypt.email.util.GeneralUtil;
 import org.acra.ACRA;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -68,6 +70,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     @Override
     public LoaderResult loadInBackground() {
         boolean isOneOrMoreKeySaved = false;
+        Map<String, String> mapOfAlreadyUsedKey = new HashMap<>();
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
@@ -93,7 +96,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                 V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
                 if (pgpKey.isPrivate()) {
-                    if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
+                    if (!mapOfAlreadyUsedKey.containsKey(pgpKey.getLongid()) &&
+                            v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
                             Uri uri = saveKeyToDatabase(keyStoreCryptoManager, keyDetails,
                                     pgpKey, passphrase);
@@ -109,6 +113,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                                     .string.the_key_already_added)));
                         }
                     }
+                    mapOfAlreadyUsedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
                 } else throw new IllegalArgumentException("This is not a private key");
             }
         } catch (Exception e) {
