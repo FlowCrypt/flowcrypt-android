@@ -249,6 +249,9 @@
     </plurals>
     <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
+    <string name="confirm_pass_phrase">Confirm pass phrase</string>
+    <string name="use_another_pass_phrase">Use another pass phrase</string>
+    <string name="repeat_pass_phrase">Repeat pass phrase</string>
     <string name="loss_of_this_pass_phrase_cannot_be_recovered">Loss of this pass phrase cannot be recovered.</string>
     <string name="see_choosing_secure_pass_phrases">See choosing secure pass phrases</string>
     <string name="select_stronger_pass_phrase">Please select a stronger pass phrase. Combinations of 4 to 5 uncommon
@@ -260,7 +263,8 @@
     <string name="password_quality_reasonable">reasonable</string>
     <string name="password_quality_poor">poor</string>
     <string name="password_quality_weak">weak</string>
-
+    <string name="repeat_passphrase_hint">Please repeat it one more time. Make sure to note the pass phrase down.</string>
+    <string name="pass_phrases_do_not_match">The two pass phrases do not match, please try again.</string>
     <string name="password_recommendation">
         <![CDATA[<p>Choose a VERY long passphrase. For example, combine uncommon words like this:</p>
   <font color="#088447">unconventional blueberry unlike any other<br/>

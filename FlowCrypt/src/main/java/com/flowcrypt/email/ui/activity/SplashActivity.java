@@ -226,8 +226,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 if (loaderResult.getResult() != null) {
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
-                        startActivityForResult(CreateOrImportKeyActivity.newIntent(this, new AccountDaoSource()
-                                .getActiveAccountInformation(this), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
+                        startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
+                                new AccountDao(currentGoogleSignInAccount), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
                     } else {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,

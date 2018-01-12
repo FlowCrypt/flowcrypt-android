@@ -13,7 +13,9 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.Loader;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -25,13 +27,19 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PasswordStrength;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
+import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader;
+import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
 /**
@@ -41,7 +49,11 @@ import com.nulabinc.zxcvbn.Zxcvbn;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CreatePrivateKeyActivity extends BaseBackStackActivity implements View.OnClickListener, TextWatcher {
+public class CreatePrivateKeyActivity extends BaseBackStackActivity implements View.OnClickListener, TextWatcher,
+        LoaderManager.LoaderCallbacks<LoaderResult> {
+
+    public static final String KEY_EXTRA_ACCOUNT_DAO =
+            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", CreatePrivateKeyActivity.class);
 
     private static final String PASSWORD_QUALITY_PERFECT = "perfect";
     private static final String PASSWORD_QUALITY_GREAT = "great";
@@ -50,18 +62,25 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     private static final String PASSWORD_QUALITY_WEAK = "weak";
     private static final String PASSWORD_QUALITY_POOR = "poor";
 
-    private View progressBar;
+    private View layoutProgress;
+    private View layoutContentView;
     private View buttonSetPassPhrase;
+    private View layoutSecondPasswordCheck;
+    private View layoutFirstPasswordCheck;
     private EditText editTextKeyPassword;
+    private EditText editTextKeyPasswordSecond;
     private ProgressBar progressBarPasswordQuality;
     private TextView textViewPasswordQualityInfo;
 
     private Js js;
     private Zxcvbn zxcvbn;
     private PasswordStrength passwordStrength;
+    private AccountDao accountDao;
 
-    public static Intent newIntent(Context context) {
-        return new Intent(context, CreatePrivateKeyActivity.class);
+    public static Intent newIntent(Context context, AccountDao accountDao) {
+        Intent intent = new Intent(context, CreatePrivateKeyActivity.class);
+        intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
+        return intent;
     }
 
     @Override
@@ -71,16 +90,23 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
     @Override
     public View getRootView() {
-        return null;
+        return findViewById(R.id.layoutContent);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (getIntent() == null) {
+            finish();
+        }
+
+        this.accountDao = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO);
+
         initViews();
 
-        js = JsForUiManager.getInstance(this).getJs();
-        zxcvbn = new Zxcvbn();
+        this.js = JsForUiManager.getInstance(this).getJs();
+        this.zxcvbn = new Zxcvbn();
     }
 
     @Override
@@ -88,7 +114,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
         switch (v.getId()) {
             case R.id.buttonSetPassPhrase:
                 if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
-                    showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty),
+                    showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty),
                             Snackbar.LENGTH_LONG);
                 } else {
                     if (getSnackBar() != null) {
@@ -107,8 +133,8 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                                 break;
 
                             default:
-                                /*getSupportLoaderManager().restartLoader(R.id
-                                        .loader_id_, null, this);*/
+                                UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck,
+                                        layoutFirstPasswordCheck);
                                 break;
                         }
                     }
@@ -116,11 +142,45 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                 break;
 
             case R.id.imageButtonShowPasswordHint:
+                if (getSnackBar() != null) {
+                    getSnackBar().dismiss();
+                }
+
                 InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
                         getString(R.string.hint), getString(R.string.password_recommendation),
                         null, false, true, true);
                 infoDialogFragment.show(getSupportFragmentManager(),
                         InfoDialogFragment.class.getSimpleName());
+                break;
+
+            case R.id.buttonSetPassPhrasess:
+                if (getSnackBar() != null) {
+                    getSnackBar().dismiss();
+                }
+
+                editTextKeyPassword.setText(null);
+                UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck,
+                        layoutFirstPasswordCheck);
+                break;
+
+            case R.id.buttonConfirmPassPhrases:
+                if (TextUtils.isEmpty(editTextKeyPasswordSecond.getText().toString())) {
+                    showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty),
+                            Snackbar.LENGTH_LONG);
+                } else {
+                    if (getSnackBar() != null) {
+                        getSnackBar().dismiss();
+                    }
+
+                    if (editTextKeyPassword.getText().toString().equals(
+                            editTextKeyPasswordSecond.getText().toString())) {
+                        getSupportLoaderManager().restartLoader(R.id.loader_id_create_private_key, null, this);
+                    } else {
+                        editTextKeyPasswordSecond.setText(null);
+                        showInfoSnackbar(getRootView(), getString(R.string.pass_phrases_do_not_match),
+                                Snackbar.LENGTH_LONG);
+                    }
+                }
                 break;
         }
     }
@@ -149,6 +209,56 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
         }
     }
 
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_create_private_key:
+                UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
+                return new CreatePrivateKeyAsyncTaskLoader(this, accountDao, editTextKeyPassword.getText().toString());
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        handleLoaderResult(loader, loaderResult);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
+            case R.id.loader_id_create_private_key:
+                UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
+                Toast.makeText(this, "Created", Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
+                break;
+        }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        switch (loaderId) {
+            case R.id.loader_id_create_private_key:
+                UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutSecondPasswordCheck);
+                break;
+
+            default:
+                super.handleFailureLoaderResult(loaderId, e);
+                break;
+        }
+    }
+
     private void updateBackgroundOfSetPassPhraseButton() {
         switch (passwordStrength.getWord()) {
             case PASSWORD_QUALITY_WEAK:
@@ -165,15 +275,21 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     }
 
     private void initViews() {
-        progressBar = findViewById(R.id.progressBar);
+        layoutProgress = findViewById(R.id.layoutProgress);
+        layoutContentView = findViewById(R.id.layoutContentView);
+        layoutFirstPasswordCheck = findViewById(R.id.layoutFirstPasswordCheck);
+        layoutSecondPasswordCheck = findViewById(R.id.layoutSecondPasswordCheck);
+
         editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
+        editTextKeyPassword.addTextChangedListener(this);
+        editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond);
         progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality);
         textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo);
         buttonSetPassPhrase = findViewById(R.id.buttonSetPassPhrase);
-
-        editTextKeyPassword.addTextChangedListener(this);
         buttonSetPassPhrase.setOnClickListener(this);
         findViewById(R.id.imageButtonShowPasswordHint).setOnClickListener(this);
+        findViewById(R.id.buttonConfirmPassPhrases).setOnClickListener(this);
+        findViewById(R.id.buttonSetPassPhrasess).setOnClickListener(this);
     }
 
     private void updatePasswordQualityProgressBar(PasswordStrength passwordStrength) {

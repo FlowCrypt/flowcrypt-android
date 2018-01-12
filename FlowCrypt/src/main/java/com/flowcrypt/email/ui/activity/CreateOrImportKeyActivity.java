@@ -84,7 +84,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonCreateNewKey:
-                startActivityForResult(CreatePrivateKeyActivity.newIntent(this),
+                startActivityForResult(CreatePrivateKeyActivity.newIntent(this, accountDao),
                         REQUEST_CODE_CREATE_KEY_ACTIVITY);
                 break;
 

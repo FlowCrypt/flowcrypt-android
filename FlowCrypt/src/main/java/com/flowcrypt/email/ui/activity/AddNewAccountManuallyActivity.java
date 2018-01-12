@@ -252,7 +252,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
                 AccountDao accountDao = new AccountDao(authCredentials.getEmail(), null
-                        , null, null, null, null, authCredentials);
+                        , authCredentials.getUsername(), null, null, null, authCredentials);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
@@ -289,7 +289,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
                 if (keyDetailsList.isEmpty()) {
                     AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
-                            null, null, null, null, null, authCredentials);
+                            null, authCredentials.getUsername(), null, null, null, authCredentials);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_ADD_NEW_ACCOUNT);
                     UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
