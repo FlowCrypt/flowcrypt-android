@@ -143,6 +143,10 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
         updatePasswordQualityProgressBar(passwordStrength);
         updatePasswordQualityInfo(passwordStrength);
         updateBackgroundOfSetPassPhraseButton();
+
+        if (TextUtils.isEmpty(editable)) {
+            textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty);
+        }
     }
 
     private void updateBackgroundOfSetPassPhraseButton() {
