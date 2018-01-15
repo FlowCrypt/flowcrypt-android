@@ -15,7 +15,9 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 
 import org.acra.ACRA;
@@ -96,6 +98,24 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             }
                         }
                         return postHelpFeedbackResponse;
+
+                    case POST_INITIAL_LEGACY_SUBMIT:
+                        BaseResponse<InitialLegacySubmitResponse> initialLegacySubmitResponse = new BaseResponse<>();
+                        initialLegacySubmitResponse.setApiName(baseRequest.getApiName());
+
+                        if (apiService != null) {
+                            try {
+                                initialLegacySubmitResponse.setResponse(apiService.postInitialLegacySubmit(
+                                        (InitialLegacySubmitModel) baseRequest.getRequestModel()).execute());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(e);
+                                }
+                                initialLegacySubmitResponse.setException(e);
+                            }
+                        }
+                        return initialLegacySubmitResponse;
                 }
             }
         }

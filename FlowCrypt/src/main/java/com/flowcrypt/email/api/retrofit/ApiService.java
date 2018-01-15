@@ -6,10 +6,12 @@
 
 package com.flowcrypt.email.api.retrofit;
 
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
 
@@ -44,6 +46,16 @@ public interface ApiService {
      */
     @POST("/lookup/email")
     Call<LookUpEmailsResponse> postLookUpEmails(@Body PostLookUpEmailsModel postLookUpEmailsModel);
+
+    /**
+     * This method create a Call object for the API "https://attester.flowcrypt.com/initial/legacy_submit"
+     *
+     * @param initialLegacySubmitModel POJO model for requests
+     * @return {@link Call<InitialLegacySubmitResponse>}
+     */
+    @POST("/initial/legacy_submit")
+    Call<InitialLegacySubmitResponse> postInitialLegacySubmit(
+            @Body InitialLegacySubmitModel initialLegacySubmitModel);
 
     /**
      * This method create a Call object for the API "https://api.cryptup.io/help/feedback"
