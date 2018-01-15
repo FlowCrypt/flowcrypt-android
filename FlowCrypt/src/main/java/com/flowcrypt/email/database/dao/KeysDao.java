@@ -7,9 +7,15 @@
 package com.flowcrypt.email.database.dao;
 
 import android.os.Parcel;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
+
+import java.util.UUID;
 
 /**
  * This class describe a key information object.
@@ -62,6 +68,57 @@ public class KeysDao extends BaseDao {
         this.publicKey = in.readString();
         this.privateKey = in.readString();
         this.passphrase = in.readString();
+    }
+
+    /**
+     * Generate {@link KeysDao} using input parameters.
+     * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
+     * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
+     *
+     * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
+     *                              information about a key;
+     * @param keyDetails            The private key details
+     * @param pgpKey                A normalized key;
+     * @param passphrase            A passphrase which user provided;
+     */
+    public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails keyDetails,
+                                          PgpKey pgpKey, String passphrase) throws Exception {
+        KeysDao keysDao = new KeysDao();
+        keysDao.setLongId(pgpKey.getLongid());
+
+        String randomVector;
+
+        if (TextUtils.isEmpty(pgpKey.getLongid())) {
+            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
+                    UUID.randomUUID().toString().substring(0,
+                            KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+        } else {
+            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
+                    (pgpKey.getLongid());
+        }
+
+        switch (keyDetails.getBornType()) {
+            case EMAIL:
+                keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
+                break;
+
+            case FILE:
+            case CLIPBOARD:
+                keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
+                break;
+
+            case NEW:
+                keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
+                break;
+        }
+
+        String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
+        keysDao.setPrivateKey(encryptedPrivateKey);
+        keysDao.setPublicKey(pgpKey.toPublic().armor());
+
+        String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
+        keysDao.setPassphrase(encryptedPassphrase);
+        return keysDao;
     }
 
     @Override

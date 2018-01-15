@@ -7,14 +7,19 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
+import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
@@ -54,36 +59,24 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
     @Override
     public LoaderResult loadInBackground() {
-        PgpContact pgpContactMain = new PgpContact(accountDao.getEmail(), accountDao.getDisplayName());
         try {
-            PgpContact[] pgpContacts;
-            switch (accountDao.getAccountType()) {
-                case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                    List<PgpContact> pgpContactList = new ArrayList<>();
-                    pgpContactList.add(pgpContactMain);
-                    Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-                    ListSendAsResponse aliases = gmail.users().settings().sendAs().list("me").execute();
-                    for (SendAs alias : aliases.getSendAs()) {
-                        if (alias.getVerificationStatus() != null) {
-                            pgpContactList.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));
-                        }
-                    }
-                    pgpContacts = pgpContactList.toArray(new PgpContact[0]);
-                    break;
-
-                default:
-                    pgpContacts = new PgpContact[]{pgpContactMain};
-                    break;
-            }
-
-            PgpKey pgpKey = new Js(getContext(), null).crypto_key_create(pgpContacts, DEFAULT_KEY_SIZE, passphrase);
+            PgpKey pgpKey = createPgpKey();
 
             if (pgpKey == null) {
                 return new LoaderResult(false, new NullPointerException("The generated private key is null!"));
             }
 
+            Uri uri = new KeysDaoSource().addRow(getContext(),
+                    KeysDao.generateKeysDao(new KeyStoreCryptoManager(getContext()),
+                            new KeyDetails(null, pgpKey.armor(), null,
+                                    KeyDetails.Type.NEW, true, pgpKey.getPrimaryUserId()), pgpKey, passphrase));
+
+            if (uri == null) {
+                return new LoaderResult(false, new NullPointerException("Cannot save the generated private key"));
+            }
+
             return new LoaderResult(pgpKey, null);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return new LoaderResult(false, e);
         }
@@ -92,5 +85,36 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     @Override
     public void onStopLoading() {
         cancelLoad();
+    }
+
+    /**
+     * Create a private PGP key.
+     *
+     * @return Generated {@link PgpKey}
+     * @throws IOException Some exceptions can be throw.
+     */
+    private PgpKey createPgpKey() throws Exception {
+        PgpContact pgpContactMain = new PgpContact(accountDao.getEmail(), accountDao.getDisplayName());
+        PgpContact[] pgpContacts;
+        switch (accountDao.getAccountType()) {
+            case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                List<PgpContact> pgpContactList = new ArrayList<>();
+                pgpContactList.add(pgpContactMain);
+                Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
+                ListSendAsResponse aliases = gmail.users().settings().sendAs().list("me").execute();
+                for (SendAs alias : aliases.getSendAs()) {
+                    if (alias.getVerificationStatus() != null) {
+                        pgpContactList.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));
+                    }
+                }
+                pgpContacts = pgpContactList.toArray(new PgpContact[0]);
+                break;
+
+            default:
+                pgpContacts = new PgpContact[]{pgpContactMain};
+                break;
+        }
+
+        return new Js(getContext(), null).crypto_key_create(pgpContacts, DEFAULT_KEY_SIZE, passphrase);
     }
 }

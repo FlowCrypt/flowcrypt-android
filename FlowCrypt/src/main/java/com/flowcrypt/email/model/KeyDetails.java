@@ -126,6 +126,6 @@ public class KeyDetails implements Parcelable {
      * The key available types.
      */
     public enum Type {
-        EMAIL, FILE, CLIPBOARD
+        EMAIL, FILE, CLIPBOARD, NEW
     }
 }
