@@ -409,6 +409,11 @@ public class SecurityContentProvider extends ContentProvider {
                         rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
                         break;
 
+                    case MATCHED_CODE_KEYS_TABLE:
+                        rowsCount = sqLiteDatabase.delete(new KeysDaoSource().getTableName(),
+                                selection, selectionArgs);
+                        break;
+
                     case MATCHED_CODE_CONTACTS_TABLE:
                         rowsCount = sqLiteDatabase.delete(new ContactsDaoSource().getTableName(),
                                 selection, selectionArgs);

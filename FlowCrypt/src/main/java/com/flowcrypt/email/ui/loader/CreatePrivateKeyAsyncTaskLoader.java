@@ -10,7 +10,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -24,9 +27,15 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
 
+import org.acra.ACRA;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
 
 /**
  * This loader does job of creating a private key.
@@ -59,8 +68,9 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
     @Override
     public LoaderResult loadInBackground() {
+        PgpKey pgpKey = null;
         try {
-            PgpKey pgpKey = createPgpKey();
+            pgpKey = createPgpKey();
 
             if (pgpKey == null) {
                 return new LoaderResult(false, new NullPointerException("The generated private key is null!"));
@@ -75,9 +85,19 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                 return new LoaderResult(false, new NullPointerException("Cannot save the generated private key"));
             }
 
+            if (!saveCreatedPrivateKeyAsBackupToInbox(pgpKey)) {
+                new KeysDaoSource().removeKey(getContext(), pgpKey);
+                return new LoaderResult(false, new NullPointerException("Cannot save a copy of the private key in " +
+                        "INBOX"));
+            }
+
             return new LoaderResult(pgpKey, null);
         } catch (Exception e) {
             e.printStackTrace();
+            new KeysDaoSource().removeKey(getContext(), pgpKey);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(false, e);
         }
     }
@@ -85,6 +105,21 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     @Override
     public void onStopLoading() {
         cancelLoad();
+    }
+
+    /**
+     * Perform a backup of the armored key in INBOX.
+     *
+     * @return true if message was send.
+     * @throws Exception Some exceptions can be occurred.
+     */
+    private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) throws Exception {
+        Session session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+        Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
+        Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao.getEmail(),
+                session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey, -1));
+        transport.sendMessage(message, message.getAllRecipients());
+        return true;
     }
 
     /**
