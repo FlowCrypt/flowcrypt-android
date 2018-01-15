@@ -48,10 +48,9 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
     public InitialLegacySubmitModel() {
     }
 
-    public InitialLegacySubmitModel(String email, String pubkey, boolean attest) {
+    public InitialLegacySubmitModel(String email, String pubkey) {
         this.email = email;
         this.pubkey = pubkey;
-        this.attest = attest;
     }
 
     protected InitialLegacySubmitModel(Parcel in) {

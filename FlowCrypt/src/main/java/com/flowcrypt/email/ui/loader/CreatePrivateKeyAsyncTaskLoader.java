@@ -14,6 +14,10 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
+import com.flowcrypt.email.api.retrofit.ApiHelper;
+import com.flowcrypt.email.api.retrofit.ApiService;
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -36,6 +40,8 @@ import java.util.List;
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
+
+import retrofit2.Response;
 
 /**
  * This loader does job of creating a private key.
@@ -90,6 +96,8 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                 return new LoaderResult(false, new NullPointerException("Cannot save a copy of the private key in " +
                         "INBOX"));
             }
+
+            registerUserPublicKey(pgpKey);
 
             return new LoaderResult(pgpKey, null);
         } catch (Exception e) {
@@ -151,5 +159,24 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         }
 
         return new Js(getContext(), null).crypto_key_create(pgpContacts, DEFAULT_KEY_SIZE, passphrase);
+    }
+
+    /**
+     * Registering a key with attester API.
+     * Note: this will only be successful if it's the first time submitting a key for this email address, or if the
+     * key being submitted has the same fingerprint as the one already recorded. If it's an error due to key
+     * conflict, ignore the error.
+     *
+     * @param pgpKey A created PGP key.
+     * @return true if no errors.
+     * @throws IOException
+     */
+    private boolean registerUserPublicKey(PgpKey pgpKey) throws IOException {
+        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+        Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
+                new InitialLegacySubmitModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+
+        InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
+        return initialLegacySubmitResponse != null;
     }
 }
