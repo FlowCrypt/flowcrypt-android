@@ -20,16 +20,10 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
-
-import org.acra.ACRA;
-
-import java.io.IOException;
 
 /**
  * This Activity show information about available keys in the database.
@@ -42,8 +36,8 @@ import java.io.IOException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager
-        .LoaderCallbacks<Cursor>, View.OnClickListener {
+public class KeysSettingsActivity extends BaseBackStackActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        View.OnClickListener {
     private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0;
 
     private View progressBar;
@@ -73,8 +67,7 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
             case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        Toast.makeText(this, R.string.key_successfully_imported, Toast
-                                .LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
                         getSupportLoaderManager().restartLoader(R.id
                                 .loader_id_load_contacts_with_has_pgp_true, null, this);
                         break;
@@ -90,8 +83,7 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_contacts_with_has_pgp_true:
-                return new CursorLoader(this, new KeysDaoSource().
-                        getBaseContentUri(), null, null, null, null);
+                return new CursorLoader(this, new KeysDaoSource().getBaseContentUri(), null, null, null, null);
 
             default:
                 return null;
@@ -132,31 +124,24 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
     }
 
     private void runCreateOrImportKeyActivity() {
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(
-                this, getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
-                REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, getString(R.string.import_private_key),
+                true, ImportPrivateKeyActivity.class), REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
     }
 
     private void initViews() {
-        try {
-            Js js = new Js(this, new SecurityStorageConnector(this));
-            this.progressBar = findViewById(R.id.progressBar);
-            this.layoutContent = findViewById(R.id.layoutContent);
-            this.emptyView = findViewById(R.id.emptyView);
-            this.privateKeysListCursorAdapter = new PrivateKeysListCursorAdapter(this, null, js);
-            ListView listViewKeys = (ListView) findViewById(R.id.listViewKeys);
-            listViewKeys.setAdapter(privateKeysListCursorAdapter);
+        this.progressBar = findViewById(R.id.progressBar);
+        this.layoutContent = findViewById(R.id.layoutContent);
+        this.emptyView = findViewById(R.id.emptyView);
+        this.privateKeysListCursorAdapter = new PrivateKeysListCursorAdapter(this, null);
 
-            if (findViewById(R.id.floatActionButtonAddKey) != null) {
-                findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
-            }
+        ListView listViewKeys = findViewById(R.id.listViewKeys);
+        listViewKeys.setAdapter(privateKeysListCursorAdapter);
 
-            getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
-                    null, this);
-        } catch (IOException e) {
-            e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
-            throw new RuntimeException("Can not load Js util.");
+        if (findViewById(R.id.floatActionButtonAddKey) != null) {
+            findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
         }
+
+        getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+
     }
 }

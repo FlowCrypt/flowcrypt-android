@@ -117,7 +117,9 @@ public class AccountDaoSource extends BaseDaoSource {
             authCredentials = getCurrentAuthCredentialsFromCursor(keyStoreCryptoManager, cursor);
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
 
         return new AccountDao(

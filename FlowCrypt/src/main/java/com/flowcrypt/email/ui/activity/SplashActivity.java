@@ -24,7 +24,7 @@ import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -141,18 +141,20 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                     EmailManagerActivity.runEmailManagerActivity(this, accountDao);
                                     finish();
                                 } else {
-                                    Toast.makeText(this, R.string.error_occured_try_again_later,
+                                    Toast.makeText(this, R.string.error_occurred_try_again_later,
                                             Toast.LENGTH_SHORT).show();
                                 }
                             } else {
                                 ACRA.getErrorReporter().handleException(new NullPointerException("AuthCredentials is " +
                                         "null!"));
-                                Toast.makeText(this, R.string.error_occured_try_again_later,
+                                Toast.makeText(this, R.string.error_occurred_try_again_later,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            ACRA.getErrorReporter().handleException(e);
+                            if (ACRA.isInitialised()) {
+                                ACRA.getErrorReporter().handleException(e);
+                            }
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                         break;
@@ -257,7 +259,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             EmailManagerActivity.runEmailManagerActivity(this, accountDao);
             finish();
         } else {
-            Toast.makeText(this, R.string.error_occured_try_again_later,
+            Toast.makeText(this, R.string.error_occurred_try_again_later,
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -278,7 +280,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         if (googleSignInResult.isSuccess()) {
             currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
 
-            startService(new Intent(this, CheckClipboardToFindPrivateKeyService.class));
+            startService(new Intent(this, CheckClipboardToFindKeyService.class));
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         } else {
             if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {

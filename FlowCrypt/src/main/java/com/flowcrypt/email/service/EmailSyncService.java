@@ -34,12 +34,14 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,6 +83,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
     public static final int REPLY_OK = 0;
     public static final int REPLY_ERROR = 1;
+    public static final int REPLY_ACTION_PROGRESS = 2;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
@@ -150,17 +153,18 @@ public class EmailSyncService extends Service implements SyncListener {
         Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
         isServiceStarted = true;
 
-        if (intent != null) {
+        if (intent != null && intent.getAction() != null) {
             switch (intent.getAction()) {
                 case ACTION_SWITCH_ACCOUNT:
-                    emailSyncManager.setAccount(new AccountDaoSource().getActiveAccountInformation(this));
-                    emailSyncManager.beginSync(true);
+                    emailSyncManager.switchAccount(new AccountDaoSource().getActiveAccountInformation(this));
                     break;
 
                 default:
                     emailSyncManager.beginSync(false);
                     break;
             }
+        } else {
+            emailSyncManager.beginSync(false);
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -214,7 +218,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -224,7 +230,9 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
         } catch (RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -238,7 +246,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -259,7 +269,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -284,7 +296,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -315,7 +329,9 @@ public class EmailSyncService extends Service implements SyncListener {
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -366,8 +382,12 @@ public class EmailSyncService extends Service implements SyncListener {
 
         } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -382,7 +402,9 @@ public class EmailSyncService extends Service implements SyncListener {
                 foldersManager.addFolder(imapFolder, folder.getName());
             } catch (MessagingException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
         }
 
@@ -394,7 +416,9 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
         } catch (RemoteException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -405,10 +429,31 @@ public class EmailSyncService extends Service implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
+                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                    if (ACRA.isInitialised()) {
+                        ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
+                    }
+                }
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode) {
+        Log.d(TAG, "onActionProgress: accountDao" + accountDao + "| ownerKey =" + ownerKey + "| requestCode =" +
+                requestCode);
+        try {
+            if (replyToMessengers.containsKey(ownerKey)) {
+                Messenger messenger = replyToMessengers.get(ownerKey);
+                messenger.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, accountDao));
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -437,7 +482,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
         return updateCandidates.toArray(new javax.mail.Message[0]);
     }
@@ -461,7 +508,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
         return newCandidates.toArray(new javax.mail.Message[0]);
     }
@@ -485,7 +534,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
 
         uidListDeleteCandidates.removeAll(uidList);
@@ -514,7 +565,9 @@ public class EmailSyncService extends Service implements SyncListener {
                         message);
             } catch (IOException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
 
             if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
@@ -647,7 +700,9 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -830,7 +885,9 @@ public class EmailSyncService extends Service implements SyncListener {
                                         REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
                             } catch (RemoteException e) {
                                 e.printStackTrace();
-                                ACRA.getErrorReporter().handleException(e);
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(e);
+                                }
                             }
                         }
                         break;

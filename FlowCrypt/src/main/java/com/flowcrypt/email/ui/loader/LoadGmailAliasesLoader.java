@@ -73,7 +73,9 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
             return new LoaderResult(accountAliasesDaoList, null);
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(null, e);
         }
     }

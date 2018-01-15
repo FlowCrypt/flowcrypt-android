@@ -20,7 +20,6 @@
     <item name="loader_id_check_email_settings" type="id" />
     <item name="loader_id_load_email_aliases" type="id" />
     <item name="loader_id_load_keys_info_from_attester" type="id" />
-    <item name="loader_id_load_own_public_keys_as_attachment_info" type="id" />
 
     <item name="syns_request_code_update_label" type="id" />
     <item name="syns_request_code_load_next_messages" type="id" />
@@ -39,4 +38,18 @@
     <item name="viewIdTextViewStatusInfo" type="id" />
     <item name="viewIdAddNewAccount" type="id" />
 
+
+    <item name="progress_id_start_of_loading_new_messages" type="id" />
+    <item name="progress_id_adding_task_to_queue" type="id" />
+    <item name="progress_id_running_task" type="id" />
+    <item name="progress_id_resetting_connection" type="id" />
+    <item name="progress_id_connecting_to_email_server" type="id" />
+    <item name="progress_id_running_smtp_action" type="id" />
+    <item name="progress_id_running_imap_action" type="id" />
+    <item name="progress_id_opening_store" type="id" />
+    <item name="progress_id_getting_list_of_emails" type="id" />
+    <item name="progress_id_queue_is_not_empty" type="id" />
+    <item name="progress_id_thread_is_cancalled_and_done" type="id" />
+    <item name="progress_id_thread_is_done" type="id" />
+    <item name="progress_id_thread_is_cancalled" type="id" />
 </resources>

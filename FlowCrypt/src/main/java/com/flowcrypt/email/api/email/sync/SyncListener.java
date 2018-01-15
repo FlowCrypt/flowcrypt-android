@@ -154,4 +154,14 @@ public interface SyncListener {
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
     void onError(AccountDao accountDao, int errorType, Exception e, String ownerKey, int requestCode);
+
+    /**
+     * This method can be used for debugging. Using this method we can identify a progress of some operation.
+     *
+     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param resultCode  The unique result code for the reply which identifies the progress of some request.
+     */
+    void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode);
 }

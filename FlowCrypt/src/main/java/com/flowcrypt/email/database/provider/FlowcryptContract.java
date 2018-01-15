@@ -26,5 +26,5 @@ public class FlowcryptContract {
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
 
     public static final String CLEAN_DATABASE = "/clean";
-
+    public static final String ERASE_DATABASE = "/erase";
 }

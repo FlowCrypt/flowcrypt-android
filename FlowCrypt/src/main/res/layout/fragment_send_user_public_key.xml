@@ -20,20 +20,10 @@
         android:gravity="center"
         android:paddingLeft="@dimen/default_margin_content_small"
         android:paddingRight="@dimen/default_margin_content_small"
-        android:text="@string/loading"
+        android:text="@string/tell_sender_to_update_their_settings"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewMessage" />
 
     <ListView
         android:id="@+id/listViewKeys"
@@ -44,7 +34,6 @@
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:divider="@color/aluminum"
         android:dividerHeight="@dimen/default_single_dip"
-        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewMessage"
@@ -60,7 +49,6 @@
         android:layout_marginStart="@dimen/default_margin_content_small"
         android:text="@android:string/ok"
         android:theme="@style/AppWidget.Button.Green"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

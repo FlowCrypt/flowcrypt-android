@@ -123,10 +123,15 @@ public class SendMessageSyncTask extends BaseSyncTask {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         mimeMessage.writeTo(byteArrayOutputStream);
 
-                        MimeMessage originalMimeMessage = new MimeMessage(session,
-                                new ByteArrayInputStream(outgoingMessageInfo.getRawReplyMessage().getBytes()));
+                        String threadId = null;
 
-                        String threadId = getGmailMessageThreadID(gmailApiService, originalMimeMessage.getMessageID());
+                        if (!TextUtils.isEmpty(outgoingMessageInfo.getRawReplyMessage())) {
+                            MimeMessage originalMimeMessage = new MimeMessage(session,
+                                    new ByteArrayInputStream(outgoingMessageInfo.getRawReplyMessage().getBytes()));
+
+                            threadId = getGmailMessageThreadID(gmailApiService, originalMimeMessage.getMessageID());
+                        }
+
                         com.google.api.services.gmail.model.Message sentMessage
                                 = new com.google.api.services.gmail.model.Message();
                         sentMessage.setRaw(Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray()));
@@ -410,8 +415,9 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            InputStream inputStream = attachmentInfo.getUri() == null ? null : context.getContentResolver()
-                    .openInputStream(attachmentInfo.getUri());
+            InputStream inputStream = attachmentInfo.getUri() == null ? (attachmentInfo.getRawData() != null ?
+                    IOUtils.toInputStream(attachmentInfo.getRawData(), StandardCharsets.UTF_8) : null) :
+                    context.getContentResolver().openInputStream(attachmentInfo.getUri());
 
             return inputStream == null ? null : new BufferedInputStream(inputStream);
         }

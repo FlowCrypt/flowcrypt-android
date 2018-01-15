@@ -4841,7 +4841,7 @@ exports.default = {
   tolerant: true, // ignore unsupported/unrecognizable packets instead of throwing an error
   show_version: true,
   show_comment: true,
-  versionstring: "OpenPGP.js v2.5.13",
+  versionstring: "OpenPGP.js v2.5.14",
   commentstring: "https://openpgpjs.org",
   keyserver: "https://keyserver.ubuntu.com",
   node_store: './openpgp.store'
@@ -6887,40 +6887,22 @@ exports.default = {
 
   publicKeyDecrypt: function publicKeyDecrypt(algo, keyIntegers, dataIntegers) {
     var p;
-    var str2bin = function (str) {
-      var result = [];
-      for (var i = 0; i < str.length; i++) {
-        result[i] = str.charCodeAt(i);
-      }
-      return result;
-    };
+
     var bn = function () {
       switch (algo) {
         case 'rsa_encrypt_sign':
         case 'rsa_encrypt':
-            // decrypt in java
-            var encrypted = str2bin(dataIntegers[0].toBytes());
-            var modulus = keyIntegers[0].data.toString();
-            var exponent = keyIntegers[2].data.toString();
-            var r = dataIntegers[0].data.clone();
-            var string_bi = $_HOST_rsa_decrypt(modulus, exponent, encrypted);
-            if(string_bi && string_bi[0] !== '-') { // if java decrypted it successfully
-              r.fromString(string_bi);
-              return r;
-            } else { // fallback on JavaScript
-              console.log('JAVA FAILED TO DECRYPT SESSION KEY FOR THIS MESSAGE: Falling back on JavaScript');
-              var rsa = new _public_key2.default.rsa();
-              // 0 and 1 are the public key.
-              var n = keyIntegers[0].toBigInteger();
-              var e = keyIntegers[1].toBigInteger();
-              // 2 to 5 are the private key.
-              var d = keyIntegers[2].toBigInteger();
-              p = keyIntegers[3].toBigInteger();
-              var q = keyIntegers[4].toBigInteger();
-              var u = keyIntegers[5].toBigInteger();
-              var m = dataIntegers[0].toBigInteger();
-              return rsa.decrypt(m, n, e, d, p, q, u);
-            }
+          var rsa = new _public_key2.default.rsa();
+          // 0 and 1 are the public key.
+          var n = keyIntegers[0].toBigInteger();
+          var e = keyIntegers[1].toBigInteger();
+          // 2 to 5 are the private key.
+          var d = keyIntegers[2].toBigInteger();
+          p = keyIntegers[3].toBigInteger();
+          var q = keyIntegers[4].toBigInteger();
+          var u = keyIntegers[5].toBigInteger();
+          var m = dataIntegers[0].toBigInteger();
+          return rsa.decrypt(m, n, e, d, p, q, u);
         case 'elgamal':
           var elgamal = new _public_key2.default.elgamal();
           var x = keyIntegers[3].toBigInteger();
@@ -11059,83 +11041,80 @@ Barrett.prototype.sqrTo = barrettSqrTo;
 // (public) this^e % m (HAC 14.85)
 
 function bnModPow(e, m) {
-    var bi = nbi();
-    bi.fromString($_HOST_mod_pow(this.toString(), e.toString(), m.toString()));
-    return bi;
-//  var i = e.bitLength(),
-//      k,
-//      r = nbv(1),
-//      z;
-//  if (i <= 0) return r;else if (i < 18) k = 1;else if (i < 48) k = 3;else if (i < 144) k = 4;else if (i < 768) k = 5;else k = 6;
-//  if (i < 8) z = new Classic(m);else if (m.isEven()) z = new Barrett(m);else z = new Montgomery(m);
-//
-//  // precomputation
-//  var g = new Array(),
-//      n = 3,
-//      k1 = k - 1,
-//      km = (1 << k) - 1;
-//  g[1] = z.convert(this);
-//  if (k > 1) {
-//    var g2 = nbi();
-//    z.sqrTo(g[1], g2);
-//    while (n <= km) {
-//      g[n] = nbi();
-//      z.mulTo(g2, g[n - 2], g[n]);
-//      n += 2;
-//    }
-//  }
-//
-//  var j = e.t - 1,
-//      w,
-//      is1 = true,
-//      r2 = nbi(),
-//      t;
-//  i = nbits(e[j]) - 1;
-//  while (j >= 0) {
-//    if (i >= k1) w = e[j] >> i - k1 & km;else {
-//      w = (e[j] & (1 << i + 1) - 1) << k1 - i;
-//      if (j > 0) w |= e[j - 1] >> this.DB + i - k1;
-//    }
-//
-//    n = k;
-//    while ((w & 1) == 0) {
-//      w >>= 1;
-//      --n;
-//    }
-//    if ((i -= n) < 0) {
-//      i += this.DB;
-//      --j;
-//    }
-//    if (is1) {
-//      // ret == 1, don't bother squaring or multiplying it
-//      g[w].copyTo(r);
-//      is1 = false;
-//    } else {
-//      while (n > 1) {
-//        z.sqrTo(r, r2);
-//        z.sqrTo(r2, r);
-//        n -= 2;
-//      }
-//      if (n > 0) z.sqrTo(r, r2);else {
-//        t = r;
-//        r = r2;
-//        r2 = t;
-//      }
-//      z.mulTo(r2, g[w], r);
-//    }
-//
-//    while (j >= 0 && (e[j] & 1 << i) == 0) {
-//      z.sqrTo(r, r2);
-//      t = r;
-//      r = r2;
-//      r2 = t;
-//      if (--i < 0) {
-//        i = this.DB - 1;
-//        --j;
-//      }
-//    }
-//  }
-//  return z.revert(r);
+  var i = e.bitLength(),
+      k,
+      r = nbv(1),
+      z;
+  if (i <= 0) return r;else if (i < 18) k = 1;else if (i < 48) k = 3;else if (i < 144) k = 4;else if (i < 768) k = 5;else k = 6;
+  if (i < 8) z = new Classic(m);else if (m.isEven()) z = new Barrett(m);else z = new Montgomery(m);
+
+  // precomputation
+  var g = new Array(),
+      n = 3,
+      k1 = k - 1,
+      km = (1 << k) - 1;
+  g[1] = z.convert(this);
+  if (k > 1) {
+    var g2 = nbi();
+    z.sqrTo(g[1], g2);
+    while (n <= km) {
+      g[n] = nbi();
+      z.mulTo(g2, g[n - 2], g[n]);
+      n += 2;
+    }
+  }
+
+  var j = e.t - 1,
+      w,
+      is1 = true,
+      r2 = nbi(),
+      t;
+  i = nbits(e[j]) - 1;
+  while (j >= 0) {
+    if (i >= k1) w = e[j] >> i - k1 & km;else {
+      w = (e[j] & (1 << i + 1) - 1) << k1 - i;
+      if (j > 0) w |= e[j - 1] >> this.DB + i - k1;
+    }
+
+    n = k;
+    while ((w & 1) == 0) {
+      w >>= 1;
+      --n;
+    }
+    if ((i -= n) < 0) {
+      i += this.DB;
+      --j;
+    }
+    if (is1) {
+      // ret == 1, don't bother squaring or multiplying it
+      g[w].copyTo(r);
+      is1 = false;
+    } else {
+      while (n > 1) {
+        z.sqrTo(r, r2);
+        z.sqrTo(r2, r);
+        n -= 2;
+      }
+      if (n > 0) z.sqrTo(r, r2);else {
+        t = r;
+        r = r2;
+        r2 = t;
+      }
+      z.mulTo(r2, g[w], r);
+    }
+
+    while (j >= 0 && (e[j] & 1 << i) == 0) {
+      z.sqrTo(r, r2);
+      t = r;
+      r = r2;
+      r2 = t;
+      if (--i < 0) {
+        i = this.DB - 1;
+        --j;
+      }
+    }
+  }
+  return z.revert(r);
 }
 
 // (public) gcd(this,a) (HAC 14.54)
@@ -12214,7 +12193,7 @@ function splitHeaders(text) {
  */
 function verifyHeaders(headers) {
   for (var i = 0; i < headers.length; i++) {
-    if (!/^[^:\s]+: .+$/.test(headers[i])) {
+    if (!/^([^\s:]|[^\s:][^:]*[^\s:]): .+$/.test(headers[i])) {
       throw new Error('Improperly formatted armor header: ' + headers[i]);
     }
     if (_config2.default.debug && !/^(Version|Comment|MessageID|Hash|Charset): .+$/.test(headers[i])) {
@@ -14324,6 +14303,10 @@ function reformat(options) {
       throw new Error('Only RSA Encrypt or Sign supported');
     }
 
+    if (!options.privateKey.decrypt()) {
+      throw new Error('Key not decrypted');
+    }
+
     if (!options.passphrase) {
       // Key without passphrase is unlocked by definition
       options.unlocked = true;
@@ -15822,13 +15805,11 @@ function decrypt(_ref6) {
       if (!publicKeys) {
         publicKeys = [];
       }
-      if(publicKeys.length) { // condition added by Tom for Android compatibility. Makes no sense to verify signatures without pubkeys
-        if (signature) {
-          //detached signature
-          result.signatures = message.verifyDetached(signature, publicKeys);
-        } else {
-          result.signatures = message.verify(publicKeys);
-        }
+      if (signature) {
+        //detached signature
+        result.signatures = message.verifyDetached(signature, publicKeys);
+      } else {
+        result.signatures = message.verify(publicKeys);
       }
     }
     return result;
@@ -16147,8 +16128,11 @@ function onError(message, error) {
   if (_config2.default.debug) {
     console.error(error.stack);
   }
-  // rethrow new high level error for api users
-  throw new Error(message + ': ' + error.message);
+
+  // update error message
+  error.message = message + ': ' + error.message;
+
+  throw error;
 }
 
 /**
@@ -21184,7 +21168,10 @@ AsyncProxy.prototype.onMessage = function (event) {
     case 'method-return':
       if (msg.err) {
         // fail
-        this.tasks[msg.id].reject(new Error(msg.err));
+        var err = new Error(msg.err);
+        // add worker stack
+        err.workerStack = msg.stack;
+        this.tasks[msg.id].reject(err);
       } else {
         // success
         this.tasks[msg.id].resolve(msg.data);

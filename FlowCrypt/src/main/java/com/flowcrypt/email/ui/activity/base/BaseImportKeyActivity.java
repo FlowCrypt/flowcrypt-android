@@ -10,10 +10,13 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -28,7 +31,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.ValidateKeyLoaderResult;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ValidateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -44,8 +47,11 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackActivity
+public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         implements View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+
+    public static final String KEY_EXTRA_IS_SYNC_ENABLE
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity.class);
 
     public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
@@ -63,40 +69,61 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
 
     protected ClipboardManager clipboardManager;
     protected KeyDetails keyDetails;
+    protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
 
     protected View layoutContentView;
     protected View layoutProgress;
+    protected TextView textViewImportKeyTitle;
+    protected View buttonLoadFromFile;
+
     protected boolean isCheckingPrivateKeyNow;
     protected boolean isThrowErrorIfDuplicateFound;
     protected boolean isCheckClipboardFromServiceEnable = true;
+    protected boolean isCheckClipboardServiceBound;
+
     private String title;
 
-    public abstract void onKeyFromFileValidated();
+    private ServiceConnection checkClipboardServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            CheckClipboardToFindKeyService.LocalBinder binder =
+                    (CheckClipboardToFindKeyService.LocalBinder) service;
+            checkClipboardToFindKeyService = binder.getService();
+            checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
+            isCheckClipboardServiceBound = true;
+        }
 
-    public abstract void onKeyFromClipBoardValidated();
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isCheckClipboardServiceBound = false;
+        }
+    };
+
+    public abstract void onKeyValidated(KeyDetails.Type type);
+
+    public abstract boolean isPrivateKeyChecking();
 
     public static Intent newIntent(Context context, String title, Class<?> cls) {
         return newIntent(context, title, false, cls);
     }
 
-    public static Intent newIntent(Context context, String title, boolean
-            isThrowErrorIfDuplicateFound, Class<?> cls) {
+    public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
         return newIntent(context, title, null, isThrowErrorIfDuplicateFound, cls);
     }
 
-    public static Intent newIntent(Context context, String title,
-                                   KeyDetails keyDetails,
+    public static Intent newIntent(Context context, String title, KeyDetails keyDetails,
+                                   boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
+        return newIntent(context, true, title, keyDetails, isThrowErrorIfDuplicateFound, cls);
+    }
+
+    public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyDetails keyDetails,
                                    boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
         Intent intent = new Intent(context, cls);
+        intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
         intent.putExtra(KEY_EXTRA_TITLE, title);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, keyDetails);
         intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
-    }
-
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_import_private_key;
     }
 
     @Override
@@ -105,19 +132,22 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
     }
 
     @Override
+    public boolean isSyncEnable() {
+        return getIntent() == null || getIntent().getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true);
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        bindService(new Intent(this, CheckClipboardToFindPrivateKeyService.class),
-                this, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(this, CheckClipboardToFindKeyService.class),
+                checkClipboardServiceConnection, Context.BIND_AUTO_CREATE);
 
         if (getIntent() != null) {
             this.isThrowErrorIfDuplicateFound =
                     getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
-            this.keyDetails =
-                    getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD);
-            this.title =
-                    getIntent().getStringExtra(KEY_EXTRA_TITLE);
+            this.keyDetails = getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD);
+            this.title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
         }
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -125,7 +155,7 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
         initViews();
 
         if (keyDetails != null) {
-            onKeyFromClipBoardValidated();
+            onKeyValidated(KeyDetails.Type.CLIPBOARD);
         }
     }
 
@@ -133,11 +163,11 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
     public void onResume() {
         super.onResume();
 
-        if (isServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
-            keyDetails = checkClipboardToFindPrivateKeyService.getKeyDetails();
+        if (isCheckClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
+            keyDetails = checkClipboardToFindKeyService.getKeyDetails();
 
             if (keyDetails != null) {
-                onKeyFromClipBoardValidated();
+                onKeyValidated(KeyDetails.Type.CLIPBOARD);
             }
         }
     }
@@ -146,6 +176,15 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
     public void onPause() {
         super.onPause();
         isCheckClipboardFromServiceEnable = true;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (isCheckClipboardServiceBound) {
+            unbindService(checkClipboardServiceConnection);
+            isCheckClipboardServiceBound = false;
+        }
     }
 
     @Override
@@ -163,8 +202,7 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
                                     data.getData(),
                                     KeyDetails.Type.FILE, isPrivateKeyChecking(), null);
 
-                            getSupportLoaderManager().restartLoader(R.id
-                                    .loader_id_validate_key_from_file, null, this);
+                            getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_file, null, this);
                         }
                         break;
                 }
@@ -183,8 +221,7 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
 
         switch (requestCode) {
             case REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE:
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     runSelectFileIntent();
                 } else {
                     UIUtil.showSnackbar(getRootView(),
@@ -204,11 +241,9 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
     public void onBackPressed() {
         if (isCheckingPrivateKeyNow) {
             getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_file);
-            getSupportLoaderManager()
-                    .destroyLoader(R.id.loader_id_validate_key_from_clipboard);
+            getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_clipboard);
             isCheckingPrivateKeyNow = false;
-            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
-                    layoutContentView);
+            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
         } else {
             super.onBackPressed();
         }
@@ -221,8 +256,7 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
                 dismissSnackBar();
                 keyDetails = null;
 
-                if (ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE)
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED) {
                     runSelectFileIntent();
                 } else {
@@ -245,12 +279,10 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
                     ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
                     CharSequence privateKeyFromClipboard = item.getText();
                     if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-                        keyDetails = new KeyDetails(null,
-                                privateKeyFromClipboard.toString(),
+                        keyDetails = new KeyDetails(null, privateKeyFromClipboard.toString(),
                                 KeyDetails.Type.CLIPBOARD, isPrivateKeyChecking());
 
-                        getSupportLoaderManager().restartLoader(R.id
-                                .loader_id_validate_key_from_clipboard, null, this);
+                        getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
                     } else {
                         showClipboardIsEmptyInfoDialog();
                     }
@@ -266,17 +298,13 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
         switch (id) {
             case R.id.loader_id_validate_key_from_file:
                 isCheckingPrivateKeyNow = true;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        true, layoutProgress, layoutContentView);
-                return new ValidateKeyAsyncTaskLoader(getApplicationContext(),
-                        keyDetails, true);
+                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+                return new ValidateKeyAsyncTaskLoader(getApplicationContext(), keyDetails, true);
 
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = true;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        true, layoutProgress, layoutContentView);
-                return new ValidateKeyAsyncTaskLoader(getApplicationContext(),
-                        keyDetails, false);
+                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+                return new ValidateKeyAsyncTaskLoader(getApplicationContext(), keyDetails, false);
 
             default:
                 return null;
@@ -294,8 +322,7 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
             case R.id.loader_id_validate_key_from_file:
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = false;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        false, layoutProgress, layoutContentView);
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
         }
     }
 
@@ -304,38 +331,32 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
         switch (loaderId) {
             case R.id.loader_id_validate_key_from_file:
                 isCheckingPrivateKeyNow = false;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        false, layoutProgress, layoutContentView);
-                ValidateKeyLoaderResult validateKeyLoaderResultForFile =
-                        (ValidateKeyLoaderResult) result;
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+                ValidateKeyLoaderResult validateKeyLoaderResultFromFile = (ValidateKeyLoaderResult) result;
 
-                if (validateKeyLoaderResultForFile.isValidated()) {
-                    keyDetails.setValue(validateKeyLoaderResultForFile.getKey());
-                    keyDetails.setPgpContact(validateKeyLoaderResultForFile.getPgpContact());
-                    onKeyFromFileValidated();
+                if (validateKeyLoaderResultFromFile.isValidated()) {
+                    keyDetails.setValue(validateKeyLoaderResultFromFile.getKey());
+                    keyDetails.setPgpContact(validateKeyLoaderResultFromFile.getPgpContact());
+                    onKeyValidated(KeyDetails.Type.FILE);
                 } else {
-                    showInfoSnackbar(getRootView(),
-                            getString(R.string.file_has_wrong_pgp_structure,
-                                    isPrivateKeyChecking() ? getString(R.string.private_) :
-                                            getString(R.string.public_)));
+                    showInfoSnackbar(getRootView(), getString(R.string.file_has_wrong_pgp_structure,
+                            isPrivateKeyChecking() ? getString(R.string.private_) : getString(R.string.public_)));
                 }
                 break;
 
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = false;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        false, layoutProgress, layoutContentView);
-                ValidateKeyLoaderResult validateKeyLoaderResultForClipboard =
-                        (ValidateKeyLoaderResult) result;
-                if (validateKeyLoaderResultForClipboard.isValidated()) {
-                    keyDetails.setValue(validateKeyLoaderResultForClipboard.getKey());
-                    keyDetails.setPgpContact(validateKeyLoaderResultForClipboard.getPgpContact());
-                    onKeyFromClipBoardValidated();
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+                ValidateKeyLoaderResult validateKeyLoaderResult = (ValidateKeyLoaderResult) result;
+                if (validateKeyLoaderResult.isValidated()) {
+                    keyDetails.setValue(validateKeyLoaderResult.getKey());
+                    keyDetails.setPgpContact(validateKeyLoaderResult.getPgpContact());
+                    onKeyValidated(KeyDetails.Type.CLIPBOARD);
+
                 } else {
-                    showInfoSnackbar(getRootView(),
-                            getString(R.string.clipboard_has_wrong_structure,
-                                    isPrivateKeyChecking() ? getString(R.string.private_) :
-                                            getString(R.string.public_)));
+                    showInfoSnackbar(getRootView(), getString(R.string.clipboard_has_wrong_structure,
+                            isPrivateKeyChecking() ? getString(R.string.private_) :
+                                    getString(R.string.public_)));
                 }
                 break;
 
@@ -350,13 +371,37 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
             case R.id.loader_id_validate_key_from_file:
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = false;
-                UIUtil.exchangeViewVisibility(getApplicationContext(),
-                        false, layoutProgress, layoutContentView);
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                 showInfoSnackbar(getRootView(), e.getMessage());
                 break;
 
             default:
                 super.handleFailureLoaderResult(loaderId, e);
+        }
+    }
+
+    @Override
+    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+
+    }
+
+    @Override
+    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+
+    }
+
+    protected void initViews() {
+        layoutContentView = findViewById(R.id.layoutContentView);
+        layoutProgress = findViewById(R.id.layoutProgress);
+
+        textViewImportKeyTitle = findViewById(R.id.textViewImportKeyTitle);
+        textViewImportKeyTitle.setText(title);
+
+        buttonLoadFromFile = findViewById(R.id.buttonLoadFromFile);
+        buttonLoadFromFile.setOnClickListener(this);
+
+        if (findViewById(R.id.buttonLoadFromClipboard) != null) {
+            findViewById(R.id.buttonLoadFromClipboard).setOnClickListener(this);
         }
     }
 
@@ -386,34 +431,16 @@ public abstract class BaseImportKeyActivity extends BaseCheckClipboardBackStackA
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        startActivityForResult(Intent.createChooser(intent,
-                getString(R.string.select_key_to_import)),
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.select_key_to_import)),
                 REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM);
     }
 
     private void showClipboardIsEmptyInfoDialog() {
-        InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance
-                (getString(R.string.hint), getString(R.string
-                        .hint_clipboard_is_empty, isPrivateKeyChecking() ? getString(R.string
-                        .private_) : getString(R.string.public_), getString(R.string.app_name)));
+        InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint),
+                getString(R.string.hint_clipboard_is_empty, isPrivateKeyChecking() ?
+                        getString(R.string.private_) : getString(R.string.public_), getString(R.string.app_name)));
         infoDialogFragment.show(getSupportFragmentManager(),
                 InfoDialogFragment.class.getSimpleName());
-    }
-
-    private void initViews() {
-        layoutContentView = findViewById(R.id.layoutContentView);
-        layoutProgress = findViewById(R.id.layoutProgress);
-
-        TextView textViewImportKeyTitle = (TextView) findViewById(R.id.textViewImportKeyTitle);
-        textViewImportKeyTitle.setText(title);
-
-        if (findViewById(R.id.buttonLoadFromFile) != null) {
-            findViewById(R.id.buttonLoadFromFile).setOnClickListener(this);
-        }
-
-        if (findViewById(R.id.buttonLoadFromClipboard) != null) {
-            findViewById(R.id.buttonLoadFromClipboard).setOnClickListener(this);
-        }
     }
 
 }

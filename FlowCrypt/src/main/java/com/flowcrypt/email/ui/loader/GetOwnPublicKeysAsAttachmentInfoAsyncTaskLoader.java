@@ -100,7 +100,9 @@ public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLo
             return new LoaderResult(attachmentInfoList, null);
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(null, e);
         }
     }

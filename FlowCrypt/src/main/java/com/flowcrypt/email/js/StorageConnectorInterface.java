@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.js;
 
+import android.content.Context;
+
 public interface StorageConnectorInterface {
 
     PgpContact findPgpContact(String longid);
@@ -22,6 +24,8 @@ public interface StorageConnectorInterface {
     PgpKeyInfo[] getAllPgpPrivateKeys();
 
     String getPassphrase(String longid);
+
+    void refresh(Context context);
 
 }
 

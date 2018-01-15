@@ -83,6 +83,11 @@ public class SampleStorageConnector implements StorageConnectorInterface {
         return null;
     }
 
+    @Override
+    public void refresh(Context context) {
+
+    }
+
     private String read(String file_path) throws IOException {
         return IOUtils.toString(context.getAssets().open(file_path), "UTF-8");
     }

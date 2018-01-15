@@ -12,8 +12,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -40,6 +42,11 @@ public class ImportPublicKeyActivity extends BaseImportKeyActivity {
     }
 
     @Override
+    public int getContentViewResourceId() {
+        return R.layout.activity_import_public_key;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PGP_CONTACT)) {
@@ -50,14 +57,7 @@ public class ImportPublicKeyActivity extends BaseImportKeyActivity {
     }
 
     @Override
-    public void onKeyFromFileValidated() {
-        updateInformationAboutPgpContact();
-        setResult(Activity.RESULT_OK);
-        finish();
-    }
-
-    @Override
-    public void onKeyFromClipBoardValidated() {
+    public void onKeyValidated(KeyDetails.Type type) {
         updateInformationAboutPgpContact();
         setResult(Activity.RESULT_OK);
         finish();

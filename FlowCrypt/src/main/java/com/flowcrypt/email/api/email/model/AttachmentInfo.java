@@ -36,6 +36,11 @@ public class AttachmentInfo implements Parcelable {
             return new AttachmentInfo[size];
         }
     };
+
+    /**
+     * The raw attachment data. Can be less 1MB.
+     */
+    private String rawData;
     private String email;
     private String folder;
     private int uid;
@@ -50,6 +55,7 @@ public class AttachmentInfo implements Parcelable {
     }
 
     protected AttachmentInfo(Parcel in) {
+        this.rawData = in.readString();
         this.email = in.readString();
         this.folder = in.readString();
         this.uid = in.readInt();
@@ -64,6 +70,7 @@ public class AttachmentInfo implements Parcelable {
     @Override
     public String toString() {
         return "AttachmentInfo{" +
+                "rawData='" + rawData + '\'' +
                 "email='" + email + '\'' +
                 ", folder='" + folder + '\'' +
                 ", uid=" + uid +
@@ -83,6 +90,7 @@ public class AttachmentInfo implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.rawData);
         dest.writeString(this.email);
         dest.writeString(this.folder);
         dest.writeInt(this.uid);
@@ -92,6 +100,14 @@ public class AttachmentInfo implements Parcelable {
         dest.writeString(this.id);
         dest.writeParcelable(this.uri, flags);
         dest.writeByte(this.isCanBeDeleted ? (byte) 1 : (byte) 0);
+    }
+
+    public String getRawData() {
+        return rawData;
+    }
+
+    public void setRawData(String rawData) {
+        this.rawData = rawData;
     }
 
     public String getEmail() {

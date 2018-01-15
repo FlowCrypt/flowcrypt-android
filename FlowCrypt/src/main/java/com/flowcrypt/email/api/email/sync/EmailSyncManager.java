@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 
 import android.util.Log;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
@@ -22,16 +23,19 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
+import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -51,26 +55,28 @@ import javax.mail.Store;
  */
 
 public class EmailSyncManager {
+    private static final int MAX_THREADS_COUNT = 3;
     private static final String TAG = EmailSyncManager.class.getSimpleName();
 
-    private BlockingQueue<SyncTask> syncTaskBlockingQueue;
+    private BlockingQueue<SyncTask> activeSyncTaskBlockingQueue;
+    private BlockingQueue<SyncTask> passiveSyncTaskBlockingQueue;
     private ExecutorService executorService;
-    private Future<?> syncTaskRunnableFuture;
+    private Future<?> activeSyncTaskRunnableFuture;
+    private Future<?> passiveSyncTaskRunnableFuture;
 
     /**
      * This fields created as volatile because will be used in different threads.
      */
     private volatile SyncListener syncListener;
-    private volatile Session session;
-    private volatile Store store;
     private volatile AccountDao accountDao;
-    private boolean isNeedToResetConnection;
 
     public EmailSyncManager(AccountDao accountDao) {
         this.accountDao = accountDao;
-        this.syncTaskBlockingQueue = new LinkedBlockingQueue<>();
-        this.executorService = Executors.newSingleThreadExecutor();
-        updateLabels(null, 0);
+        this.activeSyncTaskBlockingQueue = new LinkedBlockingQueue<>();
+        this.passiveSyncTaskBlockingQueue = new LinkedBlockingQueue<>();
+        this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT);
+
+        updateLabels(null, 0, activeSyncTaskBlockingQueue);
     }
 
     /**
@@ -82,21 +88,16 @@ public class EmailSyncManager {
         Log.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
         if (isResetNeeded) {
             resetSync();
+            updateLabels(null, 0, activeSyncTaskBlockingQueue);
         }
 
-        if (!isSyncThreadAlreadyWork()) {
-            syncTaskRunnableFuture = executorService.submit(new SyncTaskRunnable());
+        if (!isThreadAlreadyWork(activeSyncTaskRunnableFuture)) {
+            activeSyncTaskRunnableFuture = executorService.submit(new ActiveSyncTaskRunnable());
         }
-    }
 
-    /**
-     * Check a sync thread state.
-     *
-     * @return true if already work, otherwise false.
-     */
-    public boolean isSyncThreadAlreadyWork() {
-        return syncTaskRunnableFuture != null && !syncTaskRunnableFuture.isCancelled() &&
-                !syncTaskRunnableFuture.isDone();
+        if (!isThreadAlreadyWork(passiveSyncTaskRunnableFuture)) {
+            passiveSyncTaskRunnableFuture = executorService.submit(new PassiveSyncTaskRunnable());
+        }
     }
 
     /**
@@ -114,8 +115,12 @@ public class EmailSyncManager {
      * Clear the queue of sync tasks.
      */
     public void cancelAllSyncTask() {
-        if (syncTaskBlockingQueue != null) {
-            syncTaskBlockingQueue.clear();
+        if (activeSyncTaskBlockingQueue != null) {
+            activeSyncTaskBlockingQueue.clear();
+        }
+
+        if (passiveSyncTaskBlockingQueue != null) {
+            passiveSyncTaskBlockingQueue.clear();
         }
     }
 
@@ -135,12 +140,25 @@ public class EmailSyncManager {
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
      */
     public void updateLabels(String ownerKey, int requestCode) {
+        updateLabels(ownerKey, requestCode, passiveSyncTaskBlockingQueue);
+    }
+
+    /**
+     * Run update a folders list.
+     *
+     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode           The unique request code for the reply to {@link android.os.Messenger}.
+     * @param syncTaskBlockingQueue The queue where {@link UpdateLabelsSyncTask} will be run.
+     */
+    public void updateLabels(String ownerKey, int requestCode, BlockingQueue<SyncTask> syncTaskBlockingQueue) {
         try {
-            removeOldTasks(UpdateLabelsSyncTask.class);
+            removeOldTasksFromBlockingQueue(UpdateLabelsSyncTask.class, syncTaskBlockingQueue);
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -158,11 +176,13 @@ public class EmailSyncManager {
     public void loadMessages(String ownerKey, int requestCode, String folderName, int start, int
             end) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folderName,
+            activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folderName,
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -178,12 +198,14 @@ public class EmailSyncManager {
      */
     public void loadMessageDetails(String ownerKey, int requestCode, String folderName, int uid) {
         try {
-            removeOldTasks(LoadMessageDetailsSyncTask.class);
-            syncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
+            removeOldTasksFromBlockingQueue(LoadMessageDetailsSyncTask.class, activeSyncTaskBlockingQueue);
+            activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
                     folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -201,11 +223,30 @@ public class EmailSyncManager {
     public void loadNextMessages(String ownerKey, int requestCode, String folderName, int
             countOfAlreadyLoadedMessages) {
         try {
-            syncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
+            notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
+            activeSyncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
                     folderName, countOfAlreadyLoadedMessages));
+
+            if (activeSyncTaskBlockingQueue.size() != 1) {
+                notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_queue_is_not_empty);
+            } else {
+                if (activeSyncTaskRunnableFuture.isCancelled() && activeSyncTaskRunnableFuture.isDone()) {
+                    notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled_and_done);
+                } else {
+                    if (activeSyncTaskRunnableFuture.isDone()) {
+                        notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_done);
+                    }
+
+                    if (activeSyncTaskRunnableFuture.isCancelled()) {
+                        notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled);
+                    }
+                }
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -223,12 +264,14 @@ public class EmailSyncManager {
     public void refreshMessages(String ownerKey, int requestCode, String folderName, int lastUIDInCache,
                                 int countOfLoadedMessages) {
         try {
-            removeOldTasks(RefreshMessagesSyncTask.class);
-            syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
+            removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, activeSyncTaskBlockingQueue);
+            activeSyncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
                     folderName, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -245,11 +288,13 @@ public class EmailSyncManager {
     public void moveMessage(String ownerKey, int requestCode, String sourceFolderName, String
             destinationFolderName, int uid) {
         try {
-            syncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode,
+            activeSyncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode,
                     sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -263,10 +308,12 @@ public class EmailSyncManager {
      */
     public void sendMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
         try {
-            syncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
+            activeSyncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -278,10 +325,12 @@ public class EmailSyncManager {
      */
     public void loadPrivateKeys(String ownerKey, int requestCode) {
         try {
-            syncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
+            activeSyncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -294,11 +343,13 @@ public class EmailSyncManager {
      */
     public void sendMessageWithBackup(String ownerKey, int requestCode, String accountName) {
         try {
-            syncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey,
+            activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey,
                     requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -306,8 +357,18 @@ public class EmailSyncManager {
         return accountDao;
     }
 
-    public void setAccount(AccountDao accountDao) {
+    public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
+        beginSync(true);
+    }
+
+    /**
+     * Check a sync thread state.
+     *
+     * @return true if already work, otherwise false.
+     */
+    private boolean isThreadAlreadyWork(Future<?> future) {
+        return future != null && !future.isCancelled() && !future.isDone();
     }
 
     /**
@@ -316,19 +377,22 @@ public class EmailSyncManager {
     private void resetSync() {
         cancelAllSyncTask();
 
-        if (syncTaskRunnableFuture != null) {
-            syncTaskRunnableFuture.cancel(true);
+        if (activeSyncTaskRunnableFuture != null) {
+            activeSyncTaskRunnableFuture.cancel(true);
         }
 
-        isNeedToResetConnection = true;
+        if (passiveSyncTaskRunnableFuture != null) {
+            passiveSyncTaskRunnableFuture.cancel(true);
+        }
     }
 
     /**
      * Remove the old tasks from the queue of synchronization.
      *
-     * @param cls The task type.
+     * @param cls                   The task type.
+     * @param syncTaskBlockingQueue The queue of the tasks.
      */
-    private void removeOldTasks(Class<?> cls) {
+    private void removeOldTasksFromBlockingQueue(Class<?> cls, BlockingQueue<SyncTask> syncTaskBlockingQueue) {
         Iterator<?> syncTaskBlockingQueueIterator = syncTaskBlockingQueue.iterator();
         while (syncTaskBlockingQueueIterator.hasNext()) {
             if (cls.isInstance(syncTaskBlockingQueueIterator.next())) {
@@ -337,64 +401,60 @@ public class EmailSyncManager {
         }
     }
 
-    private class SyncTaskRunnable implements Runnable {
-        private final String TAG = SyncTaskRunnable.class.getSimpleName();
+    /**
+     * This method can be used for debugging. Using this method we can identify a progress of some operation.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param resultCode  The unique result code for the reply which identifies the progress of some request.
+     */
+    private void notifyAboutActionProgress(String ownerKey, int requestCode, int resultCode) {
+        if (syncListener != null) {
+            syncListener.onActionProgress(accountDao, ownerKey, requestCode, resultCode);
+        }
+    }
 
-        @Override
-        public void run() {
-            Log.d(TAG, "SyncTaskRunnable run");
-            Thread.currentThread().setName(SyncTaskRunnable.class.getCanonicalName());
-            while (!Thread.interrupted()) {
-                try {
-                    Log.d(TAG, "SyncTaskBlockingQueue size = " + syncTaskBlockingQueue.size());
-                    SyncTask syncTask = syncTaskBlockingQueue.take();
+    private abstract class BaseSyncRunnable implements Runnable {
+        protected final String TAG;
 
-                    if (syncTask != null) {
-                        try {
-                            if (isNeedToResetConnection) {
-                                isNeedToResetConnection = false;
-                                if (store != null) {
-                                    store.close();
-                                }
-                                session = null;
-                            }
+        protected Session session;
+        protected Store store;
 
-                            if (!isConnected()) {
-                                Log.d(TAG, "Not connected. Start a reconnection ...");
-                                openConnectionToStore();
-                                Log.d(TAG, "Reconnection done");
-                            }
-
-                            Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName());
-                            if (syncTask.isUseSMTP()) {
-                                syncTask.runSMTPAction(accountDao, session, store, syncListener);
-                            } else {
-                                syncTask.runIMAPAction(accountDao, store, syncListener);
-                            }
-                            Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            ACRA.getErrorReporter().handleException(e);
-                            syncTask.handleException(accountDao, e, syncListener);
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            try {
-                store.close();
-            } catch (MessagingException e) {
-                e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
-                Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
-            }
-
-            Log.d(TAG, "SyncTaskRunnable stop");
+        BaseSyncRunnable() {
+            TAG = getClass().getSimpleName();
         }
 
-        private void openConnectionToStore() throws IOException,
+        void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException {
+            if (store != null && accountDao != null) {
+                if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials().getUsername())) {
+                    Log.d(TAG, "Connection was reset!");
+
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_resetting_connection);
+
+                    if (store != null) {
+                        store.close();
+                    }
+                    session = null;
+                }
+            }
+        }
+
+        void closeConnection() {
+            try {
+                if (store != null) {
+                    store.close();
+                }
+            } catch (MessagingException e) {
+                e.printStackTrace();
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
+                Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
+            }
+        }
+
+        void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
             session = OpenStoreHelper.getSessionForAccountDao(accountDao);
             store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
@@ -406,8 +466,105 @@ public class EmailSyncManager {
          *
          * @return trus if connected, false otherwise.
          */
-        private boolean isConnected() {
+        boolean isConnected() {
             return store != null && store.isConnected();
+        }
+
+        /**
+         * Run the incoming {@link SyncTask}
+         *
+         * @param syncTask The incoming {@link SyncTask}
+         */
+        void runSyncTask(SyncTask syncTask) {
+            try {
+                notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                        R.id.progress_id_running_task);
+
+                resetConnectionIfNeed(syncTask);
+
+                if (!isConnected()) {
+                    Log.d(TAG, "Not connected. Start a reconnection ...");
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_connecting_to_email_server);
+                    openConnectionToStore();
+                    Log.d(TAG, "Reconnection done");
+                }
+
+                Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName() + " for store "
+                        + store.toString());
+
+                if (syncTask.isUseSMTP()) {
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_running_smtp_action);
+                    syncTask.runSMTPAction(accountDao, session, store, syncListener);
+                } else {
+                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                            R.id.progress_id_running_imap_action);
+                    syncTask.runIMAPAction(accountDao, store, syncListener);
+                }
+                Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                    if (ACRA.isInitialised()) {
+                        ACRA.getErrorReporter().handleException(e);
+                    }
+                }
+                syncTask.handleException(accountDao, e, syncListener);
+            }
+        }
+    }
+
+    private class PassiveSyncTaskRunnable extends BaseSyncRunnable {
+        private static final int TIMEOUT_WAIT_NEXT_TASK = 30;
+
+        @Override
+        public void run() {
+            Log.d(TAG, " run!");
+            Thread.currentThread().setName(getClass().getSimpleName());
+
+            while (!Thread.interrupted()) {
+                try {
+                    Log.d(TAG, "PassiveSyncTaskBlockingQueue size = " + passiveSyncTaskBlockingQueue.size());
+                    SyncTask syncTask = passiveSyncTaskBlockingQueue.poll(TIMEOUT_WAIT_NEXT_TASK, TimeUnit.SECONDS);
+
+                    if (syncTask == null) {
+                        closeConnection();
+                        Log.d(TAG, "Disconnected. Wait new tasks.");
+                        syncTask = passiveSyncTaskBlockingQueue.take();
+                    }
+
+                    runSyncTask(syncTask);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            closeConnection();
+            Log.d(TAG, " stopped!");
+        }
+    }
+
+    private class ActiveSyncTaskRunnable extends BaseSyncRunnable {
+        @Override
+        public void run() {
+            Log.d(TAG, " run!");
+            Thread.currentThread().setName(getClass().getSimpleName());
+            while (!Thread.interrupted()) {
+                try {
+                    Log.d(TAG, "ActiveSyncTaskBlockingQueue size = " + activeSyncTaskBlockingQueue.size());
+                    SyncTask syncTask = activeSyncTaskBlockingQueue.take();
+
+                    if (syncTask != null) {
+                        runSyncTask(syncTask);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            closeConnection();
+            Log.d(TAG, " stopped!");
         }
     }
 }

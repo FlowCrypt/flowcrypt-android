@@ -7,7 +7,6 @@
 package com.flowcrypt.email.js;
 
 import android.content.Context;
-import com.flowcrypt.email.BuildConfig;
 import android.os.Build;
 import android.text.Html;
 import android.text.TextUtils;
@@ -23,6 +22,7 @@ import com.eclipsesource.v8.V8ResultUndefined;
 import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
 import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
+import com.flowcrypt.email.BuildConfig;
 
 import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
@@ -38,7 +38,9 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.security.spec.RSAPrivateKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.crypto.Cipher;
 
@@ -66,6 +68,10 @@ public class Js { // Create one object per thread and use them separately. Not t
         bindJavaMethods();
         tool = loadJavascriptCode();
         bindCallbackCatcher();
+    }
+
+    public StorageConnectorInterface getStorageConnector() {
+        return storage;
     }
 
     public Boolean str_is_email_valid(String email) {
@@ -124,6 +130,13 @@ public class Js { // Create one object per thread and use them separately. Not t
     public PgpKey crypto_key_read(String armored_key) {
         return new PgpKey((V8Object) this.call(Object.class, p("crypto", "key", "read"), new V8Array(v8)
                 .push(armored_key)), this);
+    }
+
+    public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
+        V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
+                .push(cb_catch);
+        this.call(void.class, p("crypto", "key", "create"), args);
+        return crypto_key_read((String) cb_last_value[0]);
     }
 
     public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
@@ -185,6 +198,20 @@ public class Js { // Create one object per thread and use them separately. Not t
         return new PgpDecrypted((V8Object) cb_last_value[0]);
     }
 
+    public List<String> crypto_password_weak_words() {
+        V8Array a = ((V8Array) this.call(Object.class, p("crypto", "password", "weak_words"), new V8Array(v8)));
+        List<String> list = new ArrayList<>();
+        for(int i = 0; i < a.length(); i++) {
+            list.add(a.getString(i));
+        }
+        return list;
+    }
+
+    public PasswordStrength crypto_password_estimate_strength(double zxcvbn_guesses) {
+        return new PasswordStrength((V8Object) this.call(Object.class, p("crypto", "password", "estimate_strength"),
+                new V8Array(v8).push(zxcvbn_guesses)));
+    }
+
     public String api_gmail_query_backups(String email) {
         return (String) this.call(str, p("api", "gmail", "query", "backups"), new V8Array(v8).push(email));
     }
@@ -228,17 +255,17 @@ public class Js { // Create one object per thread and use them separately. Not t
                 .push(name).push(type).push(uint8(content))));
     }
 
-    private V8TypedArray uint8(byte[] data) {
-        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
-        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
-    }
-
     private static String read(File file) throws IOException {
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
     private static String read(InputStream inputStream) throws IOException {
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    }
+
+    private V8TypedArray uint8(byte[] data) {
+        V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
+        return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
     }
 
     private V8Object mime_reply_headers(MimeMessage m) {
@@ -346,30 +373,6 @@ class MeaningfulV8ObjectContainer {
         v8object = o;
     }
 
-    V8Array getAttributeAsArray(String k) {
-        return getAttributeAsArray(v8object, k);
-    }
-
-    V8Object getAttributeAsObject(String name) {
-        return getAttributeAsObject(v8object, name);
-    }
-
-    Boolean getAttributeAsBoolean(String name) {
-        return getAttributeAsBoolean(v8object, name);
-    }
-
-    Integer getAttributeAsInteger(String name) {
-        return getAttributeAsInteger(v8object, name);
-    }
-
-    String getAttributeAsString(String k) {
-        return getAttributeAsString(v8object, k);
-    }
-
-    byte[] getAttributeAsBytes(String k) {
-        return getAttributeAsBytes(v8object, k);
-    }
-
     static V8Array getAttributeAsArray(V8Object obj, String k) {
         try {
             return obj.getArray(k);
@@ -417,6 +420,30 @@ class MeaningfulV8ObjectContainer {
         } catch (V8ResultUndefined e) {
             return null;
         }
+    }
+
+    V8Array getAttributeAsArray(String k) {
+        return getAttributeAsArray(v8object, k);
+    }
+
+    V8Object getAttributeAsObject(String name) {
+        return getAttributeAsObject(v8object, name);
+    }
+
+    Boolean getAttributeAsBoolean(String name) {
+        return getAttributeAsBoolean(v8object, name);
+    }
+
+    Integer getAttributeAsInteger(String name) {
+        return getAttributeAsInteger(v8object, name);
+    }
+
+    String getAttributeAsString(String k) {
+        return getAttributeAsString(v8object, k);
+    }
+
+    byte[] getAttributeAsBytes(String k) {
+        return getAttributeAsBytes(v8object, k);
     }
 
     V8Object getV8Object() {
@@ -561,4 +588,48 @@ class JavaMethodsForJavaScript {
     public void alert(final String message) {
         System.out.println("[JAVASCRIPT.ALERT] " + message);
     }
+}
+
+class PasswordStrength extends MeaningfulV8ObjectContainer {
+
+    private String word;
+    private int bar;
+    private String time;
+    private int seconds;
+    private boolean pass;
+    private String color;
+
+
+    PasswordStrength(V8Object o) {
+        super(o);
+    }
+
+    public String getWord() {
+        return getAttributeAsString("word");
+    }
+
+    public int getBar() {
+        return getAttributeAsInteger("bar");
+    }
+
+
+    public String getTime() {
+        return getAttributeAsString("time");
+    }
+
+
+    public int getSeconds() {
+        return getAttributeAsInteger("seconds");
+    }
+
+
+    public boolean didPass() {
+        return getAttributeAsBoolean("pass");
+    }
+
+
+    public String getColor() {
+        return getAttributeAsString("color");
+    }
+
 }

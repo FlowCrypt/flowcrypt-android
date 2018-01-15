@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -196,6 +197,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 progressBar.setVisibility(View.GONE);
                 boolean booleanResult = (boolean) result;
                 if (booleanResult) {
+                    JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
                     setResult(Activity.RESULT_OK);
                     finish();
                 } else {

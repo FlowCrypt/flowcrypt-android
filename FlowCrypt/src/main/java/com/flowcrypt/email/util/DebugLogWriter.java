@@ -51,7 +51,9 @@ public class DebugLogWriter {
                 FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
             } catch (IOException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
         }
 
@@ -66,7 +68,9 @@ public class DebugLogWriter {
             FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
         }
     }
 
@@ -76,7 +80,9 @@ public class DebugLogWriter {
                 FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
             } catch (IOException e) {
                 e.printStackTrace();
-                ACRA.getErrorReporter().handleException(e);
+                if (ACRA.isInitialised()) {
+                    ACRA.getErrorReporter().handleException(e);
+                }
             }
         }
     }

@@ -47,6 +47,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
@@ -70,10 +71,8 @@ import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
 import com.hootsuite.nachos.tokenizer.ChipTokenizer;
 import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
-import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -159,13 +158,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         fromAddressesArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         fromAddressesArrayAdapter.add(activeAccountDao.getEmail());
 
-        try {
-            js = new Js(getContext(), null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
-        }
-
+        js = JsForUiManager.getInstance(getContext()).getJs();
         if (getActivity().getIntent() != null) {
             this.serviceInfo = getActivity().getIntent().getParcelableExtra
                     (CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
@@ -712,7 +705,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
                         getString(R.string.prompt_subject)));
                 editTextEmailSubject.requestFocus();
-            } else if (TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
+            } else if ((attachmentInfoList != null && attachmentInfoList.isEmpty())
+                    && TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
                 showInfoSnackbar(editTextEmailMessage, getString(R.string.sending_message_must_not_be_empty));
                 editTextEmailMessage.requestFocus();
             } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==

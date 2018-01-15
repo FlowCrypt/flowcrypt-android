@@ -236,9 +236,15 @@
     <string name="message_was_encrypted_for_wrong_key">Hello,\n\nI was not able to read your encrypted message because
         it was encrypted for a wrong key.\n\nMy current public key is attached below. Please update your records and
         send me a new encrypted message.\n\nThank you</string>
-    <string name="you_should_select_one_or_more_keys">You should select one or more keys</string>
-    <string name="select_keys">Select key(s):</string>
+    <string name="please_select_key">Please select a key</string>
+    <string name="select_key">Select a key</string>
     <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
-    <string name="error_occured_try_again_later">An error occurred. Please try again later.</string>
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
+    <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
+    <string name="progress_message">%1$d\%% %2$s</string>
+    <string name="import_backup">Import backup</string>
+    <plurals name="you_have_backups_that_was_not_imported">
+        <item quantity="one">You have one backup that was not imported.</item>
+        <item quantity="other">You have backups that were not imported.</item>
+    </plurals>
 </resources>

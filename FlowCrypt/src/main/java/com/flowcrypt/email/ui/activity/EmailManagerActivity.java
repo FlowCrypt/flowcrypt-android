@@ -35,7 +35,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -47,12 +46,13 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.GlideApp;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
@@ -86,6 +86,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     private Folder folder;
     private LinearLayout accountManagementLayout;
     private GoogleApiClient googleApiClient;
+    private View currentAccountDetailsItem;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -100,7 +101,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public static void runEmailManagerActivity(Context context, AccountDao accountDao) {
         Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
         intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-        context.stopService(new Intent(context, CheckClipboardToFindPrivateKeyService.class));
+        context.stopService(new Intent(context, CheckClipboardToFindKeyService.class));
         context.startActivity(intentRunEmailManagerActivity);
     }
 
@@ -169,6 +170,73 @@ public class EmailManagerActivity extends BaseSyncActivity
             case R.id.syns_request_code_force_load_new_messages:
                 onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
+        }
+    }
+
+    @Override
+    public boolean isSyncEnable() {
+        return true;
+    }
+
+    @Override
+    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+        switch (requestCode) {
+            case R.id.syns_request_code_load_next_messages:
+                switch (resultCode) {
+                    case R.id.progress_id_start_of_loading_new_messages:
+                        updateActionProgressState(0, "Starting");
+                        break;
+
+                    case R.id.progress_id_adding_task_to_queue:
+                        updateActionProgressState(10, "Queuing");
+                        break;
+
+                    case R.id.progress_id_queue_is_not_empty:
+                        updateActionProgressState(15, "Queue is not empty");
+                        break;
+
+                    case R.id.progress_id_thread_is_cancalled_and_done:
+                        updateActionProgressState(15, "Thread is cancelled and done");
+                        break;
+
+                    case R.id.progress_id_thread_is_done:
+                        updateActionProgressState(15, "Thread is done");
+                        break;
+
+                    case R.id.progress_id_thread_is_cancalled:
+                        updateActionProgressState(15, "Thread is cancelled");
+                        break;
+
+                    case R.id.progress_id_running_task:
+                        updateActionProgressState(20, "Running task");
+                        break;
+
+                    case R.id.progress_id_resetting_connection:
+                        updateActionProgressState(30, "Resetting connection");
+                        break;
+
+                    case R.id.progress_id_connecting_to_email_server:
+                        updateActionProgressState(40, "Connecting");
+                        break;
+
+                    case R.id.progress_id_running_smtp_action:
+                        updateActionProgressState(50, "Running SMTP action");
+                        break;
+
+                    case R.id.progress_id_running_imap_action:
+                        updateActionProgressState(60, "Running IMAP action");
+                        break;
+
+                    case R.id.progress_id_opening_store:
+                        updateActionProgressState(70, "Opening store");
+                        break;
+
+                    case R.id.progress_id_getting_list_of_emails:
+                        updateActionProgressState(80, "Getting list of emails");
+                        break;
+                }
+                break;
+
         }
     }
 
@@ -384,6 +452,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         if (emailListFragment != null) {
             emailListFragment.onErrorOccurred(requestCode, errorType, e);
+            updateActionProgressState(100, null);
         }
     }
 
@@ -412,6 +481,22 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         if (emailListFragment != null) {
             emailListFragment.onNextMessagesLoaded(needToRefreshList);
+            emailListFragment.setActionProgress(100, null);
+        }
+    }
+
+    /**
+     * Update a progress of some action.
+     *
+     * @param progress The action progress.
+     * @param message  The user friendly message.
+     */
+    private void updateActionProgressState(int progress, String message) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.setActionProgress(progress, message);
         }
     }
 
@@ -470,19 +555,17 @@ public class EmailManagerActivity extends BaseSyncActivity
             textViewUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.centerCrop();
-                requestOptions.transform(new CircleTransformation());
-                requestOptions.error(R.mipmap.ic_account_default_photo);
-
-                Glide.with(this)
+                GlideApp.with(this)
                         .load(accountDao.getPhotoUrl())
-                        .apply(requestOptions)
+                        .apply(new RequestOptions()
+                                .centerCrop()
+                                .transform(new CircleTransformation())
+                                .error(R.mipmap.ic_account_default_photo))
                         .into(imageViewUserPhoto);
             }
         }
 
-        View currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
+        currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
         final ImageView imageViewExpandAccountManagement = view.findViewById(R.id.imageViewExpandAccountManagement);
         if (currentAccountDetailsItem != null) {
             handleClickOnAccountManagementButton(currentAccountDetailsItem, imageViewExpandAccountManagement);
@@ -554,14 +637,12 @@ public class EmailManagerActivity extends BaseSyncActivity
             textViewUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.centerCrop();
-                requestOptions.transform(new CircleTransformation());
-                requestOptions.error(R.mipmap.ic_account_default_photo);
-
-                Glide.with(this)
+                GlideApp.with(this)
                         .load(accountDao.getPhotoUrl())
-                        .apply(requestOptions)
+                        .apply(new RequestOptions()
+                                .centerCrop()
+                                .transform(new CircleTransformation())
+                                .error(R.mipmap.ic_account_default_photo))
                         .into(imageViewUserPhoto);
             }
         }
@@ -601,6 +682,14 @@ public class EmailManagerActivity extends BaseSyncActivity
             }
 
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);
+        }
+
+        @Override
+        public void onDrawerClosed(View drawerView) {
+            super.onDrawerClosed(drawerView);
+            if (!navigationView.getMenu().getItem(0).isVisible()) {
+                currentAccountDetailsItem.performClick();
+            }
         }
     }
 }

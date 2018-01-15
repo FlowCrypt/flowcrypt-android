@@ -59,4 +59,18 @@ public interface SyncTask {
      * @param syncListener The listener of synchronization.
      */
     void handleException(AccountDao accountDao, Exception e, SyncListener syncListener);
+
+    /**
+     * Get the task owner key.
+     *
+     * @return The task owner key. Can be used to identify who created this task.
+     */
+    String getOwnerKey();
+
+    /**
+     * Get the task request code.
+     *
+     * @return The task request id. Can be used to identify current task between other.
+     */
+    int getRequestCode();
 }

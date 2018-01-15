@@ -37,17 +37,20 @@ public class ServiceInfo implements Parcelable {
     private boolean isMessageEditEnable;
     private boolean isSubjectEditEnable;
     private boolean isMessageTypeCanBeSwitched;
+    private boolean isAddNewAttachmentsEnable;
     private String systemMessage;
     private List<AttachmentInfo> attachmentInfoList;
 
     public ServiceInfo(boolean isToFieldEditEnable, boolean isFromFieldEditEnable, boolean isMessageEditEnable,
-                       boolean isSubjectEditEnable, boolean isMessageTypeCanBeSwitched,
+                       boolean isSubjectEditEnable, boolean isMessageTypeCanBeSwitched, boolean
+                               isAddNewAttachmentsEnable,
                        String systemMessage, List<AttachmentInfo> attachmentInfoList) {
         this.isToFieldEditEnable = isToFieldEditEnable;
         this.isFromFieldEditEnable = isFromFieldEditEnable;
         this.isMessageEditEnable = isMessageEditEnable;
         this.isSubjectEditEnable = isSubjectEditEnable;
         this.isMessageTypeCanBeSwitched = isMessageTypeCanBeSwitched;
+        this.isAddNewAttachmentsEnable = isAddNewAttachmentsEnable;
         this.systemMessage = systemMessage;
         this.attachmentInfoList = attachmentInfoList;
     }
@@ -58,6 +61,7 @@ public class ServiceInfo implements Parcelable {
         this.isMessageEditEnable = in.readByte() != 0;
         this.isSubjectEditEnable = in.readByte() != 0;
         this.isMessageTypeCanBeSwitched = in.readByte() != 0;
+        this.isAddNewAttachmentsEnable = in.readByte() != 0;
         this.systemMessage = in.readString();
         this.attachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
     }
@@ -74,6 +78,7 @@ public class ServiceInfo implements Parcelable {
         dest.writeByte(this.isMessageEditEnable ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isSubjectEditEnable ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isMessageTypeCanBeSwitched ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isAddNewAttachmentsEnable ? (byte) 1 : (byte) 0);
         dest.writeString(this.systemMessage);
         dest.writeTypedList(this.attachmentInfoList);
     }
@@ -106,6 +111,10 @@ public class ServiceInfo implements Parcelable {
         return isSubjectEditEnable;
     }
 
+    public boolean isAddNewAttachmentsEnable() {
+        return isAddNewAttachmentsEnable;
+    }
+
     public static class Builder {
 
         private boolean isToFieldEditEnable = true;
@@ -113,6 +122,7 @@ public class ServiceInfo implements Parcelable {
         private boolean isMessageEditEnable = true;
         private boolean isSubjectEditEnable = true;
         private boolean isMessageTypeCanBeSwitched = true;
+        private boolean isAddNewAttachmentsEnable = true;
         private String systemMessage;
         private List<AttachmentInfo> attachmentInfoList;
 
@@ -141,6 +151,11 @@ public class ServiceInfo implements Parcelable {
             return this;
         }
 
+        public Builder setIsAddNewAttachmentsEnable(boolean isAddNewAttachmentsEnable) {
+            this.isAddNewAttachmentsEnable = isAddNewAttachmentsEnable;
+            return this;
+        }
+
         public Builder setSystemMessage(String systemMessage) {
             this.systemMessage = systemMessage;
             return this;
@@ -153,7 +168,8 @@ public class ServiceInfo implements Parcelable {
 
         public ServiceInfo createServiceInfo() {
             return new ServiceInfo(isToFieldEditEnable, isFromFieldEditEnable, isMessageEditEnable,
-                    isSubjectEditEnable, isMessageTypeCanBeSwitched, systemMessage, attachmentInfoList);
+                    isSubjectEditEnable, isMessageTypeCanBeSwitched, isAddNewAttachmentsEnable, systemMessage,
+                    attachmentInfoList);
         }
     }
 }

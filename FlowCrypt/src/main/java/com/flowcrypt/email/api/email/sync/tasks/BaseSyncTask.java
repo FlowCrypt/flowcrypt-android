@@ -81,10 +81,12 @@ abstract class BaseSyncTask implements SyncTask {
         }
     }
 
+    @Override
     public String getOwnerKey() {
         return ownerKey;
     }
 
+    @Override
     public int getRequestCode() {
         return requestCode;
     }

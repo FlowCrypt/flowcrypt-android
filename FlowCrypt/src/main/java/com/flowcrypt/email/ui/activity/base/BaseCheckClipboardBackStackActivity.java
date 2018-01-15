@@ -14,7 +14,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 
 /**
  * This activity describes a logic of checking the clipboard in the background and find the private
@@ -30,14 +30,14 @@ import com.flowcrypt.email.service.CheckClipboardToFindPrivateKeyService;
 public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackActivity implements
         ServiceConnection {
     protected boolean isServiceBound;
-    protected CheckClipboardToFindPrivateKeyService checkClipboardToFindPrivateKeyService;
+    protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
 
     public abstract boolean isPrivateKeyChecking();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bindService(new Intent(this, CheckClipboardToFindPrivateKeyService.class),
+        bindService(new Intent(this, CheckClipboardToFindKeyService.class),
                 this, Context.BIND_AUTO_CREATE);
     }
 
@@ -52,10 +52,10 @@ public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackA
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        CheckClipboardToFindPrivateKeyService.LocalBinder binder =
-                (CheckClipboardToFindPrivateKeyService.LocalBinder) service;
-        checkClipboardToFindPrivateKeyService = binder.getService();
-        checkClipboardToFindPrivateKeyService.setMustBePrivateKey(isPrivateKeyChecking());
+        CheckClipboardToFindKeyService.LocalBinder binder =
+                (CheckClipboardToFindKeyService.LocalBinder) service;
+        checkClipboardToFindKeyService = binder.getService();
+        checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
         isServiceBound = true;
     }
 

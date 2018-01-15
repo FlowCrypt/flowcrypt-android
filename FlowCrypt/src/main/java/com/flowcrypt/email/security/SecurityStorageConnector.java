@@ -35,18 +35,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
     private LinkedList<String> passphraseList;
 
     public SecurityStorageConnector(Context context) {
-        this.pgpKeyInfoList = new LinkedList<>();
-        this.passphraseList = new LinkedList<>();
-        try {
-            List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(context);
-            for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
-                pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
-                passphraseList.add(privateKeyInfo.getPassphrase());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
-        }
+        init(context);
     }
 
     @Override
@@ -98,5 +87,27 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
         }
 
         return null;
+    }
+
+    @Override
+    public void refresh(Context context) {
+        init(context);
+    }
+
+    private void init(Context context) {
+        this.pgpKeyInfoList = new LinkedList<>();
+        this.passphraseList = new LinkedList<>();
+        try {
+            List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(context);
+            for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
+                pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
+                passphraseList.add(privateKeyInfo.getPassphrase());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
+        }
     }
 }

@@ -70,6 +70,7 @@ public class ValidateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
                         break;
 
                     case CLIPBOARD:
+                    case EMAIL:
                         armoredKey = keyDetails.getValue();
                         break;
                 }
@@ -93,7 +94,9 @@ public class ValidateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(e);
+            }
             return new LoaderResult(null, e);
         }
 

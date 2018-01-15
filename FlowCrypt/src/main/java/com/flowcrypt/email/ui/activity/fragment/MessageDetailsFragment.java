@@ -47,7 +47,11 @@ import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
@@ -66,6 +70,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -169,29 +174,19 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             case REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        List<AttachmentInfo> attachmentInfoList = null;
+                        List<AttachmentInfo> attachmentInfoList;
                         if (data != null) {
                             attachmentInfoList = data.getParcelableArrayListExtra
                                     (PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
-                            if (attachmentInfoList != null) {
+                            if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
                                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                                     attachmentInfo.setCanBeDeleted(false);
                                 }
+                                sendTemplateMessageWithPublicKey(attachmentInfoList.get(0));
                             }
                         }
 
-                        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails
-                                        .getEmail(),
-                                incomingMessageInfo, MessageEncryptionType.STANDARD,
-                                new ServiceInfo.Builder()
-                                        .setIsFromFieldEditEnable(false)
-                                        .setIsToFieldEditEnable(false)
-                                        .setIsSubjectEditEnable(false)
-                                        .setIsMessageTypeCanBeSwitched(false)
-                                        .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
-                                        .setAttachmentInfoList(attachmentInfoList)
-                                        .createServiceInfo()));
                         break;
                 }
                 break;
@@ -392,6 +387,65 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             updateMessageView();
             showAttachmentsIfTheyExist();
         }
+    }
+
+    /**
+     * Get the matched {@link PgpKey}. If the sender email matched to the email from {@link PgpContact} which got
+     * from the private key than we return a relevant public key.
+     *
+     * @return A matched {@link PgpKey} or null.
+     */
+    private PgpKey getMatchedPublicPgpKey() {
+        Js js = JsForUiManager.getInstance(getContext()).getJs();
+        PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
+        PgpKey matchedPgpKey = null;
+        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+            if (pgpKey != null) {
+                PgpContact primaryUserId = pgpKey.getPrimaryUserId();
+                if (generalMessageDetails.getEmail().equalsIgnoreCase(primaryUserId.getEmail())) {
+                    matchedPgpKey = pgpKey;
+                }
+            }
+        }
+
+        return matchedPgpKey != null ? matchedPgpKey.toPublic() : null;
+    }
+
+    /**
+     * Show a dialog where the user can select some public key which will be attached to a message.
+     */
+    private void showSendersPublicKeyDialog() {
+        PrepareSendUserPublicKeyDialogFragment prepareSendUserPublicKeyDialogFragment
+                = new PrepareSendUserPublicKeyDialogFragment();
+        prepareSendUserPublicKeyDialogFragment.setTargetFragment(MessageDetailsFragment.this,
+                REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
+        prepareSendUserPublicKeyDialogFragment.show(getFragmentManager(),
+                PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
+    }
+
+    /**
+     * Send a template message with a sender public key.
+     *
+     * @param attachmentInfo An {@link AttachmentInfo} object which contains information about a sender public key.
+     */
+    private void sendTemplateMessageWithPublicKey(AttachmentInfo attachmentInfo) {
+        List<AttachmentInfo> attachmentInfoList = null;
+        if (attachmentInfo != null) {
+            attachmentInfoList = new ArrayList<>();
+            attachmentInfoList.add(attachmentInfo);
+        }
+
+        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
+                incomingMessageInfo, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+                        .setIsFromFieldEditEnable(false)
+                        .setIsToFieldEditEnable(false)
+                        .setIsSubjectEditEnable(false)
+                        .setIsMessageTypeCanBeSwitched(false)
+                        .setIsAddNewAttachmentsEnable(false)
+                        .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
+                        .setAttachmentInfoList(attachmentInfoList)
+                        .createServiceInfo()));
     }
 
     /**
@@ -859,12 +913,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         buttonSendOwnPublicKey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PrepareSendUserPublicKeyDialogFragment prepareSendUserPublicKeyDialogFragment
-                        = PrepareSendUserPublicKeyDialogFragment.newInstance(generalMessageDetails.getEmail());
-                prepareSendUserPublicKeyDialogFragment.setTargetFragment(MessageDetailsFragment.this,
-                        REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
-                prepareSendUserPublicKeyDialogFragment.show(getFragmentManager(),
-                        PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
+                PgpKey publicKey = getMatchedPublicPgpKey();
+                if (publicKey == null) {
+                    showSendersPublicKeyDialog();
+                } else {
+                    sendTemplateMessageWithPublicKey(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
+                }
             }
         });
 
