@@ -103,6 +103,10 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
         this.accountDao = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO);
 
+        if (accountDao == null) {
+            finish();
+        }
+
         initViews();
 
         this.js = JsForUiManager.getInstance(this).getJs();
