@@ -17,7 +17,9 @@ import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -98,6 +100,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
             }
 
             registerUserPublicKey(pgpKey);
+            requestingTestMessageWithNewPublicKey(pgpKey);
 
             return new LoaderResult(pgpKey, null);
         } catch (Exception e) {
@@ -178,5 +181,21 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
         InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
         return initialLegacySubmitResponse != null;
+    }
+
+    /**
+     * Request a test email from FlowCrypt.
+     *
+     * @param pgpKey A created PGP key.
+     * @return true if no errors.
+     * @throws IOException
+     */
+    private boolean requestingTestMessageWithNewPublicKey(PgpKey pgpKey) throws IOException {
+        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+        Response<TestWelcomeResponse> response = apiService.postTestWelcome(
+                new TestWelcomeModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+
+        TestWelcomeResponse testWelcomeResponse = response.body();
+        return testWelcomeResponse != null && testWelcomeResponse.isSent();
     }
 }

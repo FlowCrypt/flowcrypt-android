@@ -32,9 +32,11 @@ public class TestWelcomeModel extends BaseRequestModel {
             return new TestWelcomeModel[size];
         }
     };
+
     @SerializedName("email")
     @Expose
     private String email;
+
     @SerializedName("pubkey")
     @Expose
     private String pubkey;
