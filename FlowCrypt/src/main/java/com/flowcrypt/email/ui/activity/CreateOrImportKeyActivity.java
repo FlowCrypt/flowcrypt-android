@@ -117,6 +117,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_IMPORT_ACTIVITY:
+            case REQUEST_CODE_CREATE_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         setResult(Activity.RESULT_OK);

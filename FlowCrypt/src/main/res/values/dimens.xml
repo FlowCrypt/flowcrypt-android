@@ -62,4 +62,6 @@
     <dimen name="first_button_padding">48dp</dimen>
     <dimen name="layout_height_sub_header">48dp</dimen>
     <dimen name="margin_top_password_layout">48dp</dimen>
+    <dimen name="margin_top_you_are_all_set">150dp</dimen>
+    <dimen name="margin_top_button_continue">64dp</dimen>
 </resources>

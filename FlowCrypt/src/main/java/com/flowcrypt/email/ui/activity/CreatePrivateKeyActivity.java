@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -55,6 +56,9 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public static final String KEY_EXTRA_ACCOUNT_DAO =
             GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", CreatePrivateKeyActivity.class);
 
+    private static final String KEY_CREATED_PRIVATE_KEY_LONG_ID =
+            GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity.class);
+
     private static final String PASSWORD_QUALITY_PERFECT = "perfect";
     private static final String PASSWORD_QUALITY_GREAT = "great";
     private static final String PASSWORD_QUALITY_GOOD = "good";
@@ -67,6 +71,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     private View buttonSetPassPhrase;
     private View layoutSecondPasswordCheck;
     private View layoutFirstPasswordCheck;
+    private View layoutSuccess;
     private EditText editTextKeyPassword;
     private EditText editTextKeyPasswordSecond;
     private ProgressBar progressBarPasswordQuality;
@@ -76,6 +81,9 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     private Zxcvbn zxcvbn;
     private PasswordStrength passwordStrength;
     private AccountDao accountDao;
+
+    private String createdPrivateKeyLongId;
+    private boolean isBackEnable = true;
 
     public static Intent newIntent(Context context, AccountDao accountDao) {
         Intent intent = new Intent(context, CreatePrivateKeyActivity.class);
@@ -97,6 +105,10 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (savedInstanceState != null) {
+            this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID);
+        }
+
         if (getIntent() == null) {
             finish();
         }
@@ -111,6 +123,26 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
         this.js = JsForUiManager.getInstance(this).getJs();
         this.zxcvbn = new Zxcvbn();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isBackEnable) {
+            if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
+                super.onBackPressed();
+            } else {
+                setResult(Activity.RESULT_OK);
+                finish();
+            }
+        } else {
+            Toast.makeText(this, R.string.please_wait_while_key_will_be_created, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_CREATED_PRIVATE_KEY_LONG_ID, createdPrivateKeyLongId);
     }
 
     @Override
@@ -186,6 +218,11 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                     }
                 }
                 break;
+
+            case R.id.buttonContinue:
+                setResult(Activity.RESULT_OK);
+                finish();
+                break;
         }
     }
 
@@ -217,8 +254,14 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_create_private_key:
-                UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-                return new CreatePrivateKeyAsyncTaskLoader(this, accountDao, editTextKeyPassword.getText().toString());
+                if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
+                    isBackEnable = false;
+                    UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
+                    return new CreatePrivateKeyAsyncTaskLoader(this, accountDao,
+                            editTextKeyPassword.getText().toString());
+                } else {
+                    return null;
+                }
 
             default:
                 return null;
@@ -232,7 +275,11 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
 
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
-
+        switch (loader.getId()) {
+            case R.id.loader_id_create_private_key:
+                isBackEnable = true;
+                break;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -240,8 +287,11 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_create_private_key:
+                isBackEnable = true;
+                createdPrivateKeyLongId = (String) result;
+                layoutSecondPasswordCheck.setVisibility(View.GONE);
+                layoutSuccess.setVisibility(View.VISIBLE);
                 UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
-                Toast.makeText(this, "Created", Toast.LENGTH_SHORT).show();
                 break;
 
             default:
@@ -254,7 +304,10 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_create_private_key:
-                UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutSecondPasswordCheck);
+                isBackEnable = true;
+                editTextKeyPasswordSecond.setText(null);
+                UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
+                showInfoSnackbar(getRootView(), e.getMessage());
                 break;
 
             default:
@@ -283,6 +336,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
         layoutContentView = findViewById(R.id.layoutContentView);
         layoutFirstPasswordCheck = findViewById(R.id.layoutFirstPasswordCheck);
         layoutSecondPasswordCheck = findViewById(R.id.layoutSecondPasswordCheck);
+        layoutSuccess = findViewById(R.id.layoutSuccess);
 
         editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
         editTextKeyPassword.addTextChangedListener(this);
@@ -294,6 +348,15 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
         findViewById(R.id.imageButtonShowPasswordHint).setOnClickListener(this);
         findViewById(R.id.buttonConfirmPassPhrases).setOnClickListener(this);
         findViewById(R.id.buttonSetPassPhrasess).setOnClickListener(this);
+        findViewById(R.id.buttonContinue).setOnClickListener(this);
+
+        if (!TextUtils.isEmpty(this.createdPrivateKeyLongId)) {
+            layoutProgress.setVisibility(View.GONE);
+            layoutFirstPasswordCheck.setVisibility(View.GONE);
+            layoutSecondPasswordCheck.setVisibility(View.GONE);
+            layoutSuccess.setVisibility(View.VISIBLE);
+            layoutContentView.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updatePasswordQualityProgressBar(PasswordStrength passwordStrength) {

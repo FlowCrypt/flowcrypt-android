@@ -282,6 +282,63 @@
                     android:orientation="vertical"
                     app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
             </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/layoutSuccess"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/textViewYouAreAllSet"
+                    style="@style/ScreenHeading"
+                    android:layout_marginTop="@dimen/margin_top_you_are_all_set"
+                    android:text="@string/you_are_all_set"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textViewSuccessSubHeader"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/layout_height_sub_header"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/default_margin_content_big"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/you_can_send_and_receive_encrypted_emails"
+                    android:textColor="@android:color/black"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRightSuccess"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeftSuccess"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewYouAreAllSet" />
+
+                <Button
+                    android:id="@+id/buttonContinue"
+                    style="@style/AppWidget.Button"
+                    android:layout_width="0dp"
+                    android:layout_marginTop="@dimen/margin_top_button_continue"
+                    android:text="@string/continue_"
+                    android:theme="@style/AppWidget.Button.Green"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSuccess"
+                    app:layout_constraintRight_toLeftOf="@+id/guidelineRightSuccess"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSuccessSubHeader" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/guidelineLeftSuccess"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
+
+                <android.support.constraint.Guideline
+                    android:id="@+id/guidelineRightSuccess"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
+            </android.support.constraint.ConstraintLayout>
+
         </FrameLayout>
     </ScrollView>
 </FrameLayout>

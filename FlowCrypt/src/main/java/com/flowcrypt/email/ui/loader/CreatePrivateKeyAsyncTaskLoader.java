@@ -46,7 +46,7 @@ import javax.mail.Transport;
 import retrofit2.Response;
 
 /**
- * This loader does job of creating a private key.
+ * This loader does job of creating a private key and returns the private key long id as result.
  *
  * @author DenBond7
  *         Date: 12.01.2018.
@@ -102,7 +102,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
             registerUserPublicKey(pgpKey);
             requestingTestMessageWithNewPublicKey(pgpKey);
 
-            return new LoaderResult(pgpKey, null);
+            return new LoaderResult(pgpKey.getLongid(), null);
         } catch (Exception e) {
             e.printStackTrace();
             new KeysDaoSource().removeKey(getContext(), pgpKey);
