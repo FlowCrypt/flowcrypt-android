@@ -6,6 +6,6 @@ android:
                 - android-26
                 - extra-android-m2repository
 script:
-        - ./gradlew build
+        - ./gradlew assembleDebug
 before_install:
         - chmod +x gradlew
