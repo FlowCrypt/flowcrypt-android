@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -59,23 +60,29 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
     private final String passphrase;
     private final AccountDao accountDao;
+    private boolean isActionStarted;
+    private LoaderResult data;
 
     public CreatePrivateKeyAsyncTaskLoader(Context context, AccountDao accountDao, String passphrase) {
         super(context);
         this.accountDao = accountDao;
         this.passphrase = passphrase;
-        onContentChanged();
     }
 
     @Override
     public void onStartLoading() {
-        if (takeContentChanged()) {
-            forceLoad();
+        if (data != null) {
+            deliverResult(data);
+        } else {
+            if (!isActionStarted) {
+                forceLoad();
+            }
         }
     }
 
     @Override
     public LoaderResult loadInBackground() {
+        isActionStarted = true;
         PgpKey pgpKey = null;
         try {
             pgpKey = createPgpKey();
@@ -114,8 +121,9 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     }
 
     @Override
-    public void onStopLoading() {
-        cancelLoad();
+    public void deliverResult(@Nullable LoaderResult data) {
+        this.data = data;
+        super.deliverResult(data);
     }
 
     /**
