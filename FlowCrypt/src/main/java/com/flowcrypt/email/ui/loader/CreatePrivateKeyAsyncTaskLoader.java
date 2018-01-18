@@ -138,7 +138,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao.getEmail(),
                 session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey, -1));
         transport.sendMessage(message, message.getAllRecipients());
-        return false;
+        return true;
     }
 
     /**
