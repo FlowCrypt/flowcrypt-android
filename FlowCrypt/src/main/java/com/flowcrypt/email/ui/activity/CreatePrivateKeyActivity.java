@@ -188,6 +188,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                     getSnackBar().dismiss();
                 }
 
+                editTextKeyPasswordSecond.setText(null);
                 editTextKeyPassword.setText(null);
                 UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck,
                         layoutFirstPasswordCheck);
