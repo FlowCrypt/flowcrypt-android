@@ -473,7 +473,7 @@ public class AttachmentDownloadManagerService extends Service {
             try {
                 checkMaxDecryptedFileSize();
 
-                Session session = OpenStoreHelper.getAttachmentSession(accountDao);
+                Session session = OpenStoreHelper.getAttachmentSession(context, accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
                 IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
                         .getFolderByAlias(context, attachmentInfo.getEmail(), attachmentInfo.getFolder())

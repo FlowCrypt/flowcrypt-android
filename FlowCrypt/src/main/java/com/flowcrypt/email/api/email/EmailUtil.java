@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.Constants;
@@ -24,6 +25,7 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.sun.mail.imap.IMAPFolder;
@@ -248,6 +250,19 @@ public class EmailUtil {
             GoogleAuthException {
         return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailConstants
                 .SCOPE_MAIL_GOOGLE_COM);
+    }
+
+    /**
+     * Check is debug IMAP and SMTP protocols enable.
+     *
+     * @param context Interface to global information about an application environment;
+     * @return true if debug enable, false - otherwise.
+     */
+    public static boolean isDebugEnable(Context context) {
+        Context appContext = context.getApplicationContext();
+
+        return SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(appContext),
+                Constants.PREFERENCES_KEY_IS_JAVA_MAIL_DEBUG_ENABLE, false);
     }
 
     @NonNull

@@ -68,7 +68,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     public LoaderResult loadInBackground() {
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
         try {
-            Session session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
             Store store = OpenStoreHelper.openAndConnectToStore(getContext(), accountDao, session);
 
             Folder[] folders = store.getDefaultFolder().list("*");

@@ -456,7 +456,7 @@ public class EmailSyncManager {
 
         void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
-            session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            session = OpenStoreHelper.getSessionForAccountDao(syncListener.getContext(), accountDao);
             store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
         }
 

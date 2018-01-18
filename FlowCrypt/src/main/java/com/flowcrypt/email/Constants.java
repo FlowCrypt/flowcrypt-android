@@ -41,8 +41,10 @@ public class Constants {
             "preferences_key_is_write_logs_to_file_enable";
     public static final String PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE =
             "preferences_key_is_detect_memory_leak_enable";
-    public static final String PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE =
+    public static final String PREFERENCES_KEY_IS_ACRA_ENABLE =
             "preferences_key_is_acra_enable";
+    public static final String PREFERENCES_KEY_IS_JAVA_MAIL_DEBUG_ENABLE =
+            "preferences_key_is_java_mail_debug_enable";
 
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";

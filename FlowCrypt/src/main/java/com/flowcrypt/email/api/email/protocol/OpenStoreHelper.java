@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.protocol;
 
 import android.content.Context;
 
-import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
@@ -37,15 +37,17 @@ public class OpenStoreHelper {
     /**
      * Open and connect to the store using gimaps protocol.
      *
+     * @param context     Interface to global information about an application environment.
      * @param token       An OAuth2 access token;
      * @param accountName An account name which use to create connection;
      * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
      * gimaps.
      */
 
-    public static GmailSSLStore openAndConnectToGimapsStore(String token, String accountName) throws
+    public static GmailSSLStore openAndConnectToGimapsStore(Context context, String token, String accountName) throws
             MessagingException {
-        GmailSSLStore gmailSSLStore = (GmailSSLStore) getGmailSession().getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
+        GmailSSLStore gmailSSLStore = (GmailSSLStore) getGmailSession(context).getStore(JavaEmailConstants
+                .PROTOCOL_GIMAPS);
         gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token);
         return gmailSSLStore;
     }
@@ -77,29 +79,32 @@ public class OpenStoreHelper {
     /**
      * Generate a session for gimaps protocol.
      *
+     * @param context Interface to global information about an application environment;
      * @return <tt>Session</tt> A new session for gimaps protocol based on properties for gimaps.
      */
-    public static Session getGmailSession() {
+    public static Session getGmailSession(Context context) {
         Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGmail());
-        session.setDebug(BuildConfig.DEBUG);
+        session.setDebug(EmailUtil.isDebugEnable(context));
         return session;
     }
 
     /**
      * Generate a session which will be use for download attachments.
      *
+     * @param context    Interface to global information about an application environment;
+     * @param accountDao An input {@link AccountDao};
      * @return <tt>Session</tt> A new session based on for download attachments.
      */
-    public static Session getAttachmentSession(AccountDao accountDao) {
+    public static Session getAttachmentSession(Context context, AccountDao accountDao) {
         if (accountDao != null) {
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                    return getAttachmentGmailSession();
+                    return getAttachmentGmailSession(context);
 
                 default:
                     Session session = Session.getInstance(
                             PropertiesHelper.generatePropertiesForDownloadAttachments(accountDao.getAuthCredentials()));
-                    session.setDebug(BuildConfig.DEBUG);
+                    session.setDebug(EmailUtil.isDebugEnable(context));
                     return session;
             }
         } else throw new NullPointerException("AccountDao must not be a null!");
@@ -108,24 +113,32 @@ public class OpenStoreHelper {
     /**
      * Generate a session for gimaps protocol which will be use for download attachments.
      *
+     * @param context Interface to global information about an application environment;
      * @return <tt>Session</tt> A new session for gimaps protocol based on properties for gimaps.
      */
-    public static Session getAttachmentGmailSession() {
+    public static Session getAttachmentGmailSession(Context context) {
         Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
-        session.setDebug(BuildConfig.DEBUG);
+        session.setDebug(EmailUtil.isDebugEnable(context));
         return session;
     }
 
-    public static Session getSessionForAccountDao(AccountDao accountDao) {
+    /**
+     * Prepare {@link Session} object for the input {@link AccountDao}.
+     *
+     * @param context    Interface to global information about an application environment;
+     * @param accountDao An input {@link AccountDao};
+     * @return A generated {@link Session}
+     */
+    public static Session getSessionForAccountDao(Context context, AccountDao accountDao) {
         if (accountDao != null) {
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                    return getGmailSession();
+                    return getGmailSession(context);
 
                 default:
                     Session session = Session.getInstance(
                             PropertiesHelper.generatePropertiesFromAuthCredentials(accountDao.getAuthCredentials()));
-                    session.setDebug(BuildConfig.DEBUG);
+                    session.setDebug(EmailUtil.isDebugEnable(context));
                     return session;
             }
         } else throw new NullPointerException("AccountDao must not be a null!");

@@ -9,7 +9,7 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
@@ -51,7 +51,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     public LoaderResult loadInBackground() {
         Session session = Session.getInstance(
                 PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
-        session.setDebug(BuildConfig.DEBUG);
+        session.setDebug(EmailUtil.isDebugEnable(getContext()));
 
         try {
             testImapConnection(session);

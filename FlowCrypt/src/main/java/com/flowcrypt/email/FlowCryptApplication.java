@@ -81,7 +81,7 @@ public class FlowCryptApplication extends Application {
         super.attachBaseContext(base);
         MultiDex.install(this);
         if (!BuildConfig.DEBUG || SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-                (this), Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
+                (this), Constants.PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
             ACRA.init(this);
         }
     }
