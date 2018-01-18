@@ -62,4 +62,15 @@ public class Constants {
 
     public static final String PGP_CACHE_DIR = "PGP";
     public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
+
+
+    /**
+     * The password quality types.
+     */
+    public static final String PASSWORD_QUALITY_PERFECT = "perfect";
+    public static final String PASSWORD_QUALITY_GREAT = "great";
+    public static final String PASSWORD_QUALITY_GOOD = "good";
+    public static final String PASSWORD_QUALITY_REASONABLE = "reasonable";
+    public static final String PASSWORD_QUALITY_WEAK = "weak";
+    public static final String PASSWORD_QUALITY_POOR = "poor";
 }
