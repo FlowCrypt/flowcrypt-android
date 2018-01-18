@@ -88,7 +88,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
             pgpKey = createPgpKey();
 
             if (pgpKey == null) {
-                return new LoaderResult(false, new NullPointerException("The generated private key is null!"));
+                return new LoaderResult(null, new NullPointerException("The generated private key is null!"));
             }
 
             Uri uri = new KeysDaoSource().addRow(getContext(),
@@ -97,12 +97,12 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                                     KeyDetails.Type.NEW, true, pgpKey.getPrimaryUserId()), pgpKey, passphrase));
 
             if (uri == null) {
-                return new LoaderResult(false, new NullPointerException("Cannot save the generated private key"));
+                return new LoaderResult(null, new NullPointerException("Cannot save the generated private key"));
             }
 
             if (!saveCreatedPrivateKeyAsBackupToInbox(pgpKey)) {
                 new KeysDaoSource().removeKey(getContext(), pgpKey);
-                return new LoaderResult(false, new NullPointerException("Cannot save a copy of the private key in " +
+                return new LoaderResult(null, new NullPointerException("Cannot save a copy of the private key in " +
                         "INBOX"));
             }
 
@@ -116,7 +116,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
             if (ACRA.isInitialised()) {
                 ACRA.getErrorReporter().handleException(e);
             }
-            return new LoaderResult(false, e);
+            return new LoaderResult(null, e);
         }
     }
 
@@ -138,7 +138,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao.getEmail(),
                 session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey, -1));
         transport.sendMessage(message, message.getAllRecipients());
-        return true;
+        return false;
     }
 
     /**
