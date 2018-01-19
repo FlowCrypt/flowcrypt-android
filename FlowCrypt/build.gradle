@@ -22,6 +22,12 @@ apply plugin: 'com.github.gfx.ribbonizer'
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
 
 android {
+    if (projects.hasProperty('devBuild')) {
+        splits.abi.enable = false
+        splits.density.enable = false
+        aaptOptions.cruncherEnable = false
+    }
+
     compileSdkVersion COMPILE_SDK_VERSION as int
     buildToolsVersion BUILD_TOOLS_VERSION as String
 
@@ -65,6 +71,30 @@ android {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
+        }
+    }
+
+    flavorDimensions "standard"
+
+    productFlavors {
+        //This flavor must be used only for a development.
+        // It has settings for a fast building (some features are disabled or not included).
+        development {
+            versionNameSuffix "_dev"
+            dimension "standard"
+            minSdkVersion 21
+            resConfigs "en", "xhdpi"
+        }
+
+        //This is a production flavor
+        production {
+            dimension "standard"
+        }
+
+        //This flavor must be used only for a testing
+        devTest {
+            versionNameSuffix "_devTest"
+            dimension "standard"
         }
     }
 
