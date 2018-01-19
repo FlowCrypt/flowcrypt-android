@@ -16,7 +16,7 @@
             android:key="@string/preferences_key_is_detect_memory_leak_enable"
             android:title="@string/preferences_title_enable_detect_memory_leak" />
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="@string/gradle_is_acra_enable"
             android:key="@string/preferences_key_is_acra_enable"
             android:title="@string/preferences_title_enable_acra" />
         <CheckBoxPreference

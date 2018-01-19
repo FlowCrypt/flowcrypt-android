@@ -64,7 +64,9 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
+            resValue 'string', 'gradle_is_acra_enable', 'true'
         }
 
         debug {
@@ -80,6 +82,8 @@ android {
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
         development {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            resValue 'string', 'gradle_is_acra_enable', 'false'
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion 21
@@ -88,11 +92,15 @@ android {
 
         //This is a production flavor
         production {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
+            resValue 'string', 'gradle_is_acra_enable', 'true'
             dimension "standard"
         }
 
         //This flavor must be used only for a testing
         devTest {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            resValue 'string', 'gradle_is_acra_enable', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
         }
