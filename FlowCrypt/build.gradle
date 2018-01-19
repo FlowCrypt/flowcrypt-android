@@ -178,7 +178,7 @@ dependencies {
     annotationProcessor "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
 
     implementation 'com.eclipsesource.j2v8:j2v8:4.8.0@aar'
-    implementation 'commons-io:commons-io:2.5'
+    implementation 'commons-io:commons-io:2.6'
     implementation 'ch.acra:acra:4.9.2'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.3'
