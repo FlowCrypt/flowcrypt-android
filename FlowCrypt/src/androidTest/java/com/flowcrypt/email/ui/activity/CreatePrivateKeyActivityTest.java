@@ -25,6 +25,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.clearText;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
@@ -34,6 +35,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.startsWith;
 
 /**
  * A test for {@link CreatePrivateKeyActivity}
@@ -47,6 +50,11 @@ import static org.hamcrest.Matchers.equalTo;
 @RunWith(AndroidJUnit4.class)
 public class CreatePrivateKeyActivityTest {
 
+    private static final String WEAK_PASSWORD = "weak";
+    private static final String POOR_PASSWORD = "weak, perfect, great";
+    private static final String REASONABLE_PASSWORD = "weak, poor, reasonable";
+    private static final String GOOD_PASSWORD = "weak, poor, good,";
+    private static final String GREAT_PASSWORD = "weak, poor, great, good";
     private static final String PERFECT_PASSWORD = "unconventional blueberry unlike any other";
 
     @Rule
@@ -131,6 +139,59 @@ public class CreatePrivateKeyActivityTest {
         onView(withId(R.id.buttonConfirmPassPhrases)).check(matches(isDisplayed())).perform(click());
 
         onView(withId(R.id.buttonContinue)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testCheckEraseOfRepeatingPassPhrase() {
+        testShowRepeatingPassPhraseScreen();
+
+        onView(withId(R.id.editTextKeyPasswordSecond)).check(
+                matches(isDisplayed())).perform(typeText(PERFECT_PASSWORD), closeSoftKeyboard());
+        onView(withId(R.id.buttonUseAnotherPassPhrase)).check(matches(isDisplayed())).perform(click());
+        onView(withId(R.id.buttonSetPassPhrase)).check(matches(isDisplayed()));
+
+        testShowRepeatingPassPhraseScreen();
+        onView(withId(R.id.editTextKeyPasswordSecond)).check(
+                matches(isDisplayed())).check(matches(withText(isEmptyString())));
+    }
+
+    @Test
+    public void testChangingQualityOfPassPhrase() {
+        String[] passPhrases = {WEAK_PASSWORD, POOR_PASSWORD, REASONABLE_PASSWORD,
+                GOOD_PASSWORD, GREAT_PASSWORD, PERFECT_PASSWORD};
+
+        String[] degreeOfReliabilityOfPassPhrase = {
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_weak),
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_poor),
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_reasonable),
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_good),
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_great),
+                InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_perfect),
+        };
+
+        for (int i = 0; i < passPhrases.length; i++) {
+            onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(typeText
+                    (passPhrases[i]));
+            onView(withId(R.id.textViewPasswordQualityInfo)).check(matches(withText(startsWith
+                    (degreeOfReliabilityOfPassPhrase[i].toUpperCase()))));
+            onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(clearText());
+        }
+    }
+
+    @Test
+    public void testShowDialogAboutBadPassPhrase() {
+        String[] badPassPhrases = {WEAK_PASSWORD, POOR_PASSWORD};
+
+        for (String passPhrase : badPassPhrases) {
+            onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(typeText(passPhrase),
+                    closeSoftKeyboard());
+            onView(withId(R.id.buttonSetPassPhrase)).check(matches(isDisplayed())).perform(click());
+
+            onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.select_stronger_pass_phrase)))
+                    .check(matches(isDisplayed()));
+            onView(withId(android.R.id.button1)).check(matches(isDisplayed())).perform(click());
+            onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(clearText());
+        }
     }
 
     private void checkIsNonEmptyHintShown() {
