@@ -64,7 +64,7 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
                     accountAliasesDao.setAccountType(accountDao.getAccountType());
                     accountAliasesDao.setSendAsEmail(alias.getSendAsEmail());
                     accountAliasesDao.setDisplayName(alias.getDisplayName());
-                    accountAliasesDao.setDefault(alias.getIsDefault());
+                    accountAliasesDao.setDefault(alias.getIsDefault() != null && alias.getIsDefault());
                     accountAliasesDao.setVerificationStatus(alias.getVerificationStatus());
                     accountAliasesDaoList.add(accountAliasesDao);
                 }
