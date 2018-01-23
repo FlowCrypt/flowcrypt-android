@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.api.email.protocol;
 
-import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.protocol.BODY;
@@ -16,6 +15,7 @@ import java.io.InputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.internet.MimePart;
 
 /**
  * This class describes custom realization of some IMAP futures, which not found in JavaMail implementation.
@@ -29,38 +29,26 @@ import javax.mail.Part;
 public class ImapProtocolUtil {
     /**
      * Return the MIME format stream of headers for this body part.
+     * The MIME part specifier refers to the [MIME-IMB] header for this part.
+     * See details here https://tools.ietf.org/html/rfc3501#section-6.4.5.
      *
-     * @param accountDao    The object which contains information about an email account.
      * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
-     * @param messageNumber This number will be used for fetching {@link Part} details;
+     * @param messageNumber This number will be used for fetching {@link MimePart} details;
      * @param sectionId     The {@link Part} section id.
-     * @return
+     * @return A {@link MimePart} header {@link InputStream}
      * @throws MessagingException
      */
-    public static InputStream getHeaderStream(AccountDao accountDao, IMAPFolder imapFolder, final int messageNumber,
-                                              int sectionId) throws MessagingException {
-
-        final String section;
-
-        switch (accountDao.getAccountType()) {
-            case AccountDao.ACCOUNT_TYPE_GOOGLE:
-            case AccountDao.ACCOUNT_TYPE_OUTLOOK:
-                section = sectionId + ".MIME";
-                break;
-
-            default:
-                section = sectionId + ".HEADER";
-                break;
-        }
+    public static InputStream getHeaderStream(IMAPFolder imapFolder, final int messageNumber,
+                                              final int sectionId) throws MessagingException {
 
         return (InputStream) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-            public Object doCommand(IMAPProtocol imapProtocol)
-                    throws ProtocolException {
-
-                BODY body = imapProtocol.peekBody(messageNumber, section);
+            public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+                BODY body = imapProtocol.peekBody(messageNumber, sectionId + ".MIME");
                 if (body != null) {
                     return body.getByteArrayInputStream();
-                } else return null;
+                } else {
+                    return null;
+                }
             }
         });
     }

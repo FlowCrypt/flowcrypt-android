@@ -677,8 +677,8 @@ public class AttachmentDownloadManagerService extends Service {
                             return innerPart;
                         }
                     } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                        InputStream inputStream = ImapProtocolUtil.getHeaderStream(accountDao, imapFolder,
-                                messageNumber, partCount + 1);
+                        InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+                                partCount + 1);
 
                         if (inputStream == null) {
                             throw new MessagingException("Failed to fetch headers");
