@@ -11,6 +11,7 @@ import android.content.Context;
 import android.os.Looper;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -35,7 +36,7 @@ public class JsForUiManager {
             this.js = new Js(context, new SecurityStorageConnector(context));
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
         }
     }
 

@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerS
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.util.MailConnectException;
 
@@ -157,7 +158,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -181,7 +182,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -204,7 +205,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -245,7 +246,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -270,7 +271,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -293,7 +294,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -312,7 +313,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -329,7 +330,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -348,7 +349,7 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -448,7 +449,7 @@ public class EmailSyncManager {
             } catch (MessagingException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
             }
@@ -507,7 +508,7 @@ public class EmailSyncManager {
                 e.printStackTrace();
                 if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 }
                 syncTask.handleException(accountDao, e, syncListener);

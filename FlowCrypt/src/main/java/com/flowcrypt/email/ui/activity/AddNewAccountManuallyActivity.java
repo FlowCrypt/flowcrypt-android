@@ -41,6 +41,7 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -466,7 +467,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             } catch (JsonSyntaxException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }

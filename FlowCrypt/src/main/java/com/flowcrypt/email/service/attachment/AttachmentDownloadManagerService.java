@@ -39,6 +39,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.acra.ACRA;
@@ -351,7 +352,7 @@ public class AttachmentDownloadManagerService extends Service {
                     } catch (Exception e) {
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                         try {
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED,
@@ -387,7 +388,7 @@ public class AttachmentDownloadManagerService extends Service {
                     } catch (RemoteException e) {
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                     }
                     break;
@@ -542,7 +543,7 @@ public class AttachmentDownloadManagerService extends Service {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
                 removeNotCompleteDownloadFile(attachmentFile);
                 if (onDownloadAttachmentListener != null) {

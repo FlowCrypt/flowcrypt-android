@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.acra.ACRA;
@@ -97,7 +98,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
         } catch (Exception e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
             return new LoaderResult(null, e);
         }

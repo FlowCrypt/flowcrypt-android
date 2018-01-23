@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -290,7 +291,7 @@ public class SecurityContentProvider extends ContentProvider {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 } finally {
                     sqLiteDatabase.endTransaction();
@@ -525,7 +526,7 @@ public class SecurityContentProvider extends ContentProvider {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 } finally {
                     sqLiteDatabase.endTransaction();

@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import org.acra.ACRA;
@@ -118,7 +119,7 @@ public class AccountDaoSource extends BaseDaoSource {
         } catch (Exception e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
 

@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
@@ -73,7 +74,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
             } catch (IOException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
                 return new LoaderResult(null, e);
             }
@@ -108,7 +109,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
         } catch (IOException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
 

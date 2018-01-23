@@ -30,6 +30,7 @@ import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -73,7 +74,7 @@ public class DecryptMessageAsyncTaskLoader extends AsyncTaskLoader<LoaderResult>
         } catch (Exception e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
             return new LoaderResult(null, e);
         }

@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -153,7 +154,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -178,7 +179,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -201,7 +202,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -228,7 +229,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -258,7 +259,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -282,7 +283,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -309,7 +310,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -336,7 +337,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -367,7 +368,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -393,7 +394,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -444,7 +445,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -464,7 +465,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         } catch (RemoteException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }

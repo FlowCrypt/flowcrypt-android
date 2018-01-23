@@ -20,6 +20,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -92,7 +93,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             pgpContacts.add(localPgpContact);
                             e.printStackTrace();
                             if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(e);
+                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                             }
                         }
                     } else {
@@ -114,7 +115,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                         pgpContacts.add(newPgpContact);
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                     }
                 }
@@ -124,7 +125,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
         } catch (Exception e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
             return new LoaderResult(null, e);
         }

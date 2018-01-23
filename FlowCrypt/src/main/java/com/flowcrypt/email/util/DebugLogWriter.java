@@ -9,6 +9,7 @@ package com.flowcrypt.email.util;
 import android.os.Environment;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
@@ -52,7 +53,7 @@ public class DebugLogWriter {
             } catch (IOException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }
@@ -69,7 +70,7 @@ public class DebugLogWriter {
         } catch (IOException e) {
             e.printStackTrace();
             if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
             }
         }
     }
@@ -81,7 +82,7 @@ public class DebugLogWriter {
             } catch (IOException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }
