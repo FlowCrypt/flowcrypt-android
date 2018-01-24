@@ -11,6 +11,7 @@ import android.util.Log;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
@@ -65,6 +66,9 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 + " | end = " + end);
 
         if (syncListener != null) {
+            new ImapLabelsDaoSource().updateLabelMessageCount(syncListener.getContext(),
+                    imapFolder.getFullName(), messagesCount);
+
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
             if (end < 1) {
                 syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);

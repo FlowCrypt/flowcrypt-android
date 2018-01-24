@@ -164,6 +164,7 @@ public class EmailManagerActivity extends BaseSyncActivity
                 break;
 
             case R.id.syns_request_code_load_next_messages:
+                refreshFoldersInfoFromCache();
                 onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
 
@@ -403,6 +404,13 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    private void refreshFoldersInfoFromCache() {
+        foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
+        if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
+            folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+        }
     }
 
     private void logout() {

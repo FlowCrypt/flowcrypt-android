@@ -177,6 +177,27 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
         } else return -1;
     }
 
+    /**
+     * Update a message count of some {@link Folder}.
+     *
+     * @param context         Interface to global information about an application environment.
+     * @param folderName      A server folder name. Links to {@link #COL_FOLDER_NAME}
+     * @param newMessageCount A new message count.
+     * @return The count of updated rows. Will be 1 if information about {@link Folder} was
+     * updated or -1 otherwise.
+     */
+    public int updateLabelMessageCount(Context context, String folderName, int newMessageCount) {
+        if (context != null && !TextUtils.isEmpty(folderName)) {
+            ContentResolver contentResolver = context.getContentResolver();
+            if (contentResolver != null) {
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(COL_MESSAGE_COUNT, newMessageCount);
+                return contentResolver.update(getBaseContentUri(),
+                        contentValues, COL_FOLDER_NAME + " = ?", new String[]{folderName});
+            } else return -1;
+        } else return -1;
+    }
+
     @NonNull
     private ContentValues prepareContentValues(String accountName, Folder folder) {
         ContentValues contentValues = new ContentValues();
@@ -192,12 +213,12 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
 
     private String prepareAttributesToSaving(String[] attributes) {
         if (attributes != null && attributes.length > 0) {
-            String result = "";
+            StringBuilder result = new StringBuilder();
             for (String attribute : attributes) {
-                result += attribute + "\t";
+                result.append(attribute).append("\t");
             }
 
-            return result;
+            return result.toString();
         } else {
             return "";
         }
