@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.email.protocol;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -19,6 +20,7 @@ import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
 
+import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -33,6 +35,8 @@ import javax.mail.Store;
  */
 
 public class OpenStoreHelper {
+
+    private static final String TAG = OpenStoreHelper.class.getSimpleName();
 
     /**
      * Open and connect to the store using gimaps protocol.
@@ -55,22 +59,39 @@ public class OpenStoreHelper {
     /**
      * Open and connect to the store using gimaps protocol.
      *
-     * @param context    Interface to global information about an application environment.
-     * @param session    The session which will be used for connection.
-     * @param accountDao The object which contains information about an email account.
+     * @param context            Interface to global information about an application environment.
+     * @param session            The session which will be used for connection.
+     * @param accountDao         The object which contains information about an email account.
+     * @param isResetTokenNeeded True if need reset token.
      * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
      * gimaps.
      */
 
-    public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao accountDao)
+    public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao accountDao,
+                                                            boolean isResetTokenNeeded)
             throws MessagingException, IOException, GoogleAuthException {
         GmailSSLStore gmailSSLStore;
         if (accountDao != null) {
             gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
             if (accountDao.getAccount() != null) {
-                gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.getEmail(),
-                        GoogleAuthUtil.getToken(context, accountDao.getAccount(),
-                                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM));
+                try {
+                    String token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
+                            JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+
+                    if (isResetTokenNeeded) {
+                        Log.d(TAG, "Refresh Gmail token");
+                        GoogleAuthUtil.clearToken(context, token);
+                        token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
+                                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                    }
+
+                    gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.getEmail(), token);
+                } catch (AuthenticationFailedException e) {
+                    e.printStackTrace();
+                    if (!isResetTokenNeeded) {
+                        return openAndConnectToGimapsStore(context, session, accountDao, true);
+                    } else throw e;
+                }
             } else throw new NullPointerException("Account can't be a null!");
         } else throw new NullPointerException("AccountDao can't be a null!");
         return gmailSSLStore;
@@ -149,7 +170,7 @@ public class OpenStoreHelper {
         if (accountDao != null) {
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
-                    return OpenStoreHelper.openAndConnectToGimapsStore(context, session, accountDao);
+                    return openAndConnectToGimapsStore(context, session, accountDao, false);
 
                 default:
                     Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
