@@ -22,14 +22,13 @@ import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerS
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -506,7 +505,7 @@ public class EmailSyncManager {
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
                     if (ACRA.isInitialised()) {
                         ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }

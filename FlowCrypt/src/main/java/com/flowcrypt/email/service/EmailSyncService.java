@@ -33,16 +33,15 @@ import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -430,7 +429,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
                     if (ACRA.isInitialised()) {
                         ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
                     }
