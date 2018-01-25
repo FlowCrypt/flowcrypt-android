@@ -427,9 +427,13 @@ public class SendMessageSyncTask extends BaseSyncTask {
             return null;
         }
 
+        /**
+         * If a content type is unknown we return "application/octet-stream".
+         * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
+         */
         @Override
         public String getContentType() {
-            return attachmentInfo.getType();
+            return TextUtils.isEmpty(attachmentInfo.getType()) ? "application/octet-stream" : attachmentInfo.getType();
         }
 
         @Override

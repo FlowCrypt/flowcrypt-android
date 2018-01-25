@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.email;
 
 import android.accounts.Account;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,6 +26,7 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -108,17 +110,19 @@ public class EmailUtil {
     public static AttachmentInfo getAttachmentInfoFromUri(Context context, Uri uri) {
         if (context != null && uri != null) {
             AttachmentInfo attachmentInfo = new AttachmentInfo();
-            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+            attachmentInfo.setUri(uri);
+            attachmentInfo.setType(GeneralUtil.getFileMimeTypeFromUri(context, uri));
 
+            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
                     attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
-                    attachmentInfo.setType(context.getContentResolver().getType(uri));
-                    attachmentInfo.setUri(uri);
                 }
-
                 cursor.close();
+            } else if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(uri.getScheme())) {
+                attachmentInfo.setName(GeneralUtil.getFileNameFromUri(context, uri));
+                attachmentInfo.setEncodedSize(GeneralUtil.getFileSizeFromUri(context, uri));
             }
 
             return attachmentInfo;
