@@ -13,6 +13,9 @@ import org.acra.ACRA;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import javax.mail.MessagingException;
+import javax.net.ssl.SSLHandshakeException;
+
 /**
  * This class describes methods for a work with {@link Exception}
  *
@@ -36,6 +39,11 @@ public class ExceptionUtil {
         }
 
         if (e instanceof IOException && "NetworkError".equalsIgnoreCase(e.getMessage())) {
+            return false;
+        }
+
+        if ((e instanceof SSLHandshakeException || e instanceof MessagingException)
+                && "Connection closed by peer".equalsIgnoreCase(e.getMessage())) {
             return false;
         }
 
