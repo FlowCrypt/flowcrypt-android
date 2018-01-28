@@ -6,6 +6,7 @@
 
 package com.flowcrypt.email.api.email.sync;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
@@ -25,6 +26,9 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.security.ProviderInstaller;
 
 import org.acra.ACRA;
 
@@ -456,6 +460,7 @@ public class EmailSyncManager {
 
         void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
+            patchingSecurityProvider(syncListener.getContext());
             session = OpenStoreHelper.getSessionForAccountDao(syncListener.getContext(), accountDao);
             store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
         }
@@ -511,6 +516,35 @@ public class EmailSyncManager {
                     }
                 }
                 syncTask.handleException(accountDao, e, syncListener);
+            }
+        }
+
+        /**
+         * To update a device's security provider, use the ProviderInstaller class.
+         * <p>
+         * When you call installIfNeeded(), the ProviderInstaller does the following:
+         * <li>If the device's Provider is successfully updated (or is already up-to-date), the method returns
+         * normally.</li>
+         * <li>If the device's Google Play services library is out of date, the method throws
+         * GooglePlayServicesRepairableException. The app can then catch this exception and show the user an
+         * appropriate dialog box to update Google Play services.</li>
+         * <li>If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
+         * that it is unable to update the Provider. The app can then catch the exception and choose an appropriate
+         * course of action, such as displaying the standard fix-it flow diagram.</li>
+         * <p>
+         * If installIfNeeded() needs to install a new Provider, this can take anywhere from 30-50 milliseconds (on
+         * more recent devices) to 350 ms (on older devices). If the security provider is already up-to-date, the
+         * method takes a negligible amount of time.
+         * <p>
+         * Details here https://developer.android.com/training/articles/security-gms-provider.html#patching
+         *
+         * @param context Interface to global information about an application environment;
+         */
+        private void patchingSecurityProvider(Context context) {
+            try {
+                ProviderInstaller.installIfNeeded(context);
+            } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
             }
         }
     }
