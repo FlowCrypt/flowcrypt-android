@@ -42,9 +42,12 @@ public class ExceptionUtil {
             return false;
         }
 
-        if ((e instanceof SSLHandshakeException || e instanceof MessagingException)
-                && "Connection closed by peer".equalsIgnoreCase(e.getMessage())) {
-            return false;
+        if ((e instanceof SSLHandshakeException || e instanceof MessagingException)) {
+
+            if ("Connection closed by peer".equalsIgnoreCase(e.getMessage())
+                    || e.getMessage().contains("I/O error during system call, Software caused connection abort")) {
+                return false;
+            }
         }
 
         return true;
