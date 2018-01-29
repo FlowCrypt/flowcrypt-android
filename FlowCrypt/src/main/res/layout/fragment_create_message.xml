@@ -45,9 +45,9 @@
                     android:visibility="invisible" />
 
                 <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_bottom_line_gray">
+                    android:layout_height="wrap_content">
 
                     <EditText
                         android:id="@+id/editTextFrom"
@@ -68,9 +68,9 @@
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_bottom_line_gray">
+                    android:layout_height="wrap_content">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipient"
@@ -99,9 +99,9 @@
             </FrameLayout>
 
             <android.support.design.widget.TextInputLayout
+                style="@style/AppWidget.TextInputLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_bottom_line_gray">
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/editTextEmailSubject"
