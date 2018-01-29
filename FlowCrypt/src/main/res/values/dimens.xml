@@ -65,4 +65,8 @@
     <dimen name="margin_top_password_layout">48dp</dimen>
     <dimen name="margin_top_you_are_all_set">150dp</dimen>
     <dimen name="margin_top_button_continue">64dp</dimen>
+    <dimen name="padding_pgp_message_error_small">2dp</dimen>
+    <dimen name="padding_pgp_message_error_big">20dp</dimen>
+    <dimen name="width_pgp_message_type_line">8dp</dimen>
+    <dimen name="width_pgp_message_type_line_inverse">-9dp</dimen>
 </resources>

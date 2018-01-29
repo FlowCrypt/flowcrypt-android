@@ -107,11 +107,32 @@
         <item name="android:layout_marginTop">@dimen/margin_top_screen_heading</item>
     </style>
 
-    <style name="AppWidget.TextInputLayout">
+    <style name="AppWidget.TextInputLayout" />
+
+    <style name="AppWidget.TextInputLayout.GreyBottomLine">
         <item name="android:paddingBottom">@dimen/default_margin_small</item>
         <item name="android:paddingTop">@dimen/default_margin_small</item>
         <item name="android:paddingEnd">@dimen/default_twice_dip</item>
         <item name="android:paddingStart">@dimen/default_twice_dip</item>
         <item name="android:background">@drawable/bg_bottom_line_gray</item>
+    </style>
+
+    <style name="AppWidget.TextInputLayout.PgpBlock">
+        <item name="android:paddingBottom">@dimen/padding_pgp_message_error_small</item>
+        <item name="android:paddingTop">@dimen/padding_pgp_message_error_small</item>
+        <item name="android:paddingEnd">@dimen/padding_pgp_message_error_small</item>
+        <item name="android:paddingStart">@dimen/padding_pgp_message_error_big</item>
+    </style>
+
+    <style name="AppWidget.TextInputLayout.PgpBlock.Error">
+        <item name="android:background">@drawable/bg_message_part_pgp_message_error</item>
+    </style>
+
+    <style name="AppWidget.TextInputLayout.PgpBlock.Message">
+        <item name="android:background">@drawable/bg_message_part_pgp_message</item>
+    </style>
+
+    <style name="AppWidget.TextInputLayout.PgpBlock.Other">
+        <item name="android:background">@drawable/bg_message_part_other</item>
     </style>
 </resources>

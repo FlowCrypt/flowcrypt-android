@@ -6,7 +6,11 @@
 
 <resources>
 
-    <style name="AppWidget.TextInputLayout">
+    <style name="AppWidget.TextInputLayout.GreyBottomLine">
         <item name="android:background">@drawable/bg_bottom_line_gray</item>
+    </style>
+
+    <style name="AppWidget.TextInputLayout.PgpBlock">
+
     </style>
 </resources>

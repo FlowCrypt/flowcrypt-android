@@ -4,7 +4,11 @@
   ~ Contributors: DenBond7
   -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingBottom="@dimen/padding_pgp_message_error_small"
+    android:paddingLeft="@dimen/padding_pgp_message_error_big"
+    android:paddingRight="@dimen/padding_pgp_message_error_small"
+    android:paddingTop="@dimen/padding_pgp_message_error_small">
 
     <item>
         <bitmap
@@ -12,7 +16,7 @@
             android:tileMode="repeat" />
     </item>
 
-    <item>
+    <item android:gravity="left">
         <shape android:shape="rectangle">
             <stroke
                 android:width="@dimen/default_single_dip"
@@ -20,18 +24,10 @@
         </shape>
     </item>
 
-    <item>
-        <inset
-            android:insetBottom="@dimen/width_pgp_message_type_line_inverse"
-            android:insetLeft="0dp"
-            android:insetRight="@dimen/width_pgp_message_type_line_inverse"
-            android:insetTop="@dimen/width_pgp_message_type_line_inverse">
-            <shape>
-                <stroke
-                    android:width="@dimen/width_pgp_message_type_line"
-                    android:color="@color/colorPrimary" />
-            </shape>
-        </inset>
+    <item android:gravity="left">
+        <shape>
+            <size android:width="@dimen/width_pgp_message_type_line" />
+            <solid android:color="@color/red" />
+        </shape>
     </item>
-
 </layer-list>

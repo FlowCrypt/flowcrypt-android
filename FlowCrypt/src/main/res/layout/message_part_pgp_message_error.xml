@@ -6,9 +6,9 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppWidget.TextInputLayout.PgpBlock.Error"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_message_part_pgp_message_error"
     android:orientation="vertical">
 
     <TextView

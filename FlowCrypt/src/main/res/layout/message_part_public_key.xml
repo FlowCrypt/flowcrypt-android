@@ -6,10 +6,10 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppWidget.TextInputLayout.PgpBlock.Other"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginBottom="@dimen/default_margin_medium"
-    android:background="@drawable/bg_message_part_other"
     android:orientation="vertical">
 
     <TextView

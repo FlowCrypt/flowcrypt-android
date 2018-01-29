@@ -45,7 +45,7 @@
                     android:visibility="invisible" />
 
                 <android.support.design.widget.TextInputLayout
-                    style="@style/AppWidget.TextInputLayout"
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputLayout
-                    style="@style/AppWidget.TextInputLayout"
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
@@ -99,7 +99,7 @@
             </FrameLayout>
 
             <android.support.design.widget.TextInputLayout
-                style="@style/AppWidget.TextInputLayout"
+                style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 

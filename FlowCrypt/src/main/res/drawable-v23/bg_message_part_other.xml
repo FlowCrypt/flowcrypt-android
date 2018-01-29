@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
+  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ Contributors: DenBond7
+  -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingBottom="@dimen/padding_pgp_message_error_small"
+    android:paddingLeft="@dimen/padding_pgp_message_error_big"
+    android:paddingRight="@dimen/padding_pgp_message_error_small"
+    android:paddingTop="@dimen/padding_pgp_message_error_small">
+
+    <item android:gravity="left">
+        <shape>
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+
+    <item android:gravity="left">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="@dimen/default_single_dip"
+                android:color="@color/light" />
+        </shape>
+    </item>
+
+    <item android:gravity="left">
+        <shape>
+            <size android:width="@dimen/width_pgp_message_type_line" />
+            <solid android:color="@color/gray" />
+        </shape>
+    </item>
+</layer-list>
