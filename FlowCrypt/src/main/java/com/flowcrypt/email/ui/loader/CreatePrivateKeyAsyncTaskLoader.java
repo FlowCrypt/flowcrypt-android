@@ -137,7 +137,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
         Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
         Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao.getEmail(),
-                session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey, -1));
+                session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey.armor(), -1));
         transport.sendMessage(message, message.getAllRecipients());
         return true;
     }

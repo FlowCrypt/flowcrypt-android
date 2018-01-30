@@ -162,20 +162,20 @@ public class EmailUtil {
     /**
      * Generate a {@link BodyPart} with a private key as an attachment.
      *
-     * @param accountName The account name;
-     * @param pgpKey      The private key.
-     * @param i           The unique index of attachment.
+     * @param accountName       The account name;
+     * @param armoredPrivateKey The  armored private key.
+     * @param i                 The unique index of attachment.
      * @return {@link BodyPart} with private key as an attachment.
      * @throws Exception will occur when generate this {@link BodyPart}.
      */
     @NonNull
     public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(String accountName,
-                                                                        PgpKey pgpKey,
+                                                                        String armoredPrivateKey,
                                                                         int i) throws Exception {
         MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
         String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName + (i >= 0 ? ("_" + i) : ""));
 
-        DataSource dataSource = new ByteArrayDataSource(pgpKey.armor(), JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
+        DataSource dataSource = new ByteArrayDataSource(armoredPrivateKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
         attachmentsBodyPart.setDataHandler(new DataHandler(dataSource));
         attachmentsBodyPart.setFileName(attachmentName);
         return attachmentsBodyPart;
@@ -209,7 +209,7 @@ public class EmailUtil {
             PgpKey pgpKey = js.crypto_key_read(decryptedKeyFromDatabase);
             pgpKey.encrypt(privateKeyInfo.getPassphrase());
 
-            MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountName, pgpKey, i);
+            MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountName, pgpKey.armor(), i);
             attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
             multipart.addBodyPart(attachmentsBodyPart);
         }
