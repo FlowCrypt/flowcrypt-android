@@ -172,7 +172,7 @@ public class ActionQueueDaoSource extends BaseDaoSource {
             return null;
         }
 
-        contentValues.put(COL_ACTION_TYPE, action.getType().getValue());
+        contentValues.put(COL_ACTION_TYPE, action.getActionType().getValue());
         contentValues.put(COL_ACTION_JSON, gson.toJson(action));
         return contentValues;
     }

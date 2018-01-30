@@ -7,7 +7,10 @@
 package com.flowcrypt.email.service.actionqueue.actions;
 
 import android.content.Context;
+import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Must be run in non-UI thread. This class describes an action which will be run on a queue.
@@ -18,16 +21,58 @@ import android.os.Parcelable;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class Action implements Parcelable {
+public class Action implements Parcelable {
 
-    private long id;
+    public static final String TAG_NAME_ACTION_TYPE = "actionType";
 
-    public abstract boolean run(Context context);
+    public static final Creator<Action> CREATOR = new Creator<Action>() {
+        @Override
+        public Action createFromParcel(Parcel source) {
+            return new Action(source);
+        }
 
-    public abstract ActionType getType();
+        @Override
+        public Action[] newArray(int size) {
+            return new Action[size];
+        }
+    };
 
-    public abstract String getEmail();
+    @SerializedName(TAG_NAME_ACTION_TYPE)
+    private final ActionType actionType;
+    protected long id;
+    protected String email;
 
+    public Action(String email, ActionType actionType) {
+        this.email = email;
+        this.actionType = actionType;
+    }
+
+    protected Action(Parcel in) {
+        int tmpActionType = in.readInt();
+        this.actionType = tmpActionType == -1 ? null : ActionType.values()[tmpActionType];
+        this.id = in.readLong();
+        this.email = in.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.actionType == null ? -1 : this.actionType.ordinal());
+        dest.writeLong(this.id);
+        dest.writeString(this.email);
+    }
+
+    public ActionType getActionType() {
+        return actionType;
+    }
+
+    public boolean run(Context context) {
+        return false;
+    }
 
     public long getId() {
         return id;
@@ -35,6 +80,10 @@ public abstract class Action implements Parcelable {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     /**

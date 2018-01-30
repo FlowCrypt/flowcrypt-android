@@ -7,17 +7,18 @@
 package com.flowcrypt.email.util.google.gson;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
+import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
+import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 
 /**
- * //todo-DenBond7 I'll describe details later.
+ * This class describes information how serialize and deserialize {@link Action} objects using {@link Gson} framework.
  *
  * @author Denis Bondarenko
  *         Date: 30.01.2018
@@ -25,15 +26,20 @@ import java.lang.reflect.Type;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ActionSerializerDeserializerAdapter implements JsonSerializer<Action>, JsonDeserializer<Action> {
+public class ActionSerializerDeserializerAdapter implements JsonDeserializer<Action> {
+
     @Override
     public Action deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws
             JsonParseException {
-        return null;
-    }
+        JsonObject jsonObject = json.getAsJsonObject();
+        Action.ActionType type = Action.ActionType.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).getAsString());
 
-    @Override
-    public JsonElement serialize(Action src, Type typeOfSrc, JsonSerializationContext context) {
-        return null;
+        switch (type) {
+            case BACKUP_PRIVATE_KEY_TO_INBOX:
+                return context.deserialize(json, BackupPrivateKeyToInboxAction.class);
+
+            default:
+                throw new IllegalArgumentException("Unknown action type");
+        }
     }
 }
