@@ -26,7 +26,7 @@ import java.lang.reflect.Type;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ActionSerializerDeserializerAdapter implements JsonDeserializer<Action> {
+public class ActionJsonDeserializer implements JsonDeserializer<Action> {
 
     @Override
     public Action deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws

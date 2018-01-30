@@ -15,7 +15,7 @@ import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
-import com.flowcrypt.email.util.google.gson.ActionSerializerDeserializerAdapter;
+import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -49,7 +49,7 @@ public class ActionQueueDaoSource extends BaseDaoSource {
 
     public ActionQueueDaoSource() {
         gson = new GsonBuilder()
-                .registerTypeAdapter(Action.class, new ActionSerializerDeserializerAdapter())
+                .registerTypeAdapter(Action.class, new ActionJsonDeserializer())
                 .create();
     }
 
