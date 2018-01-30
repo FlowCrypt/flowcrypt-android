@@ -90,8 +90,9 @@ public class Action implements Parcelable {
      * This class contains information about all action types.
      */
     public enum ActionType {
-        BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox");
-
+        BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
+        REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
+        SEND_WELCOME_TEST_EMAIL("send_welcome_test_email");
 
         private String value;
 
