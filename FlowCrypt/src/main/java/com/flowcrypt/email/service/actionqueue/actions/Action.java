@@ -41,6 +41,7 @@ public class Action implements Parcelable {
     private final ActionType actionType;
     protected long id;
     protected String email;
+    protected int version = 0;
 
     public Action(String email, ActionType actionType) {
         this.email = email;
@@ -70,8 +71,7 @@ public class Action implements Parcelable {
         return actionType;
     }
 
-    public boolean run(Context context) {
-        return false;
+    public void run(Context context) throws Exception {
     }
 
     public long getId() {

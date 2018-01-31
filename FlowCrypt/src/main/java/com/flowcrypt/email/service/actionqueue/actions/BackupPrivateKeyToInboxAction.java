@@ -58,25 +58,18 @@ public class BackupPrivateKeyToInboxAction extends Action {
     }
 
     @Override
-    public boolean run(Context context) {
+    public void run(Context context) throws Exception {
         AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, email);
         SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
         PgpKeyInfo pgpKeyInfo = securityStorageConnector.getPgpPrivateKey(privateKeyLongId);
         if (accountDao != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
-            try {
-                Session session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
-                Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
-                Message message = EmailUtil.generateMessageWithPrivateKeysBackup(context, accountDao.getEmail(),
-                        session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(
-                                accountDao.getEmail(), pgpKeyInfo.getPrivate(), -1));
-                transport.sendMessage(message, message.getAllRecipients());
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
-            }
+            Session session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
+            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+            Message message = EmailUtil.generateMessageWithPrivateKeysBackup(context, accountDao.getEmail(),
+                    session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(
+                            accountDao.getEmail(), pgpKeyInfo.getPrivate(), -1));
+            transport.sendMessage(message, message.getAllRecipients());
         }
-
-        return true;
     }
 
     @Override

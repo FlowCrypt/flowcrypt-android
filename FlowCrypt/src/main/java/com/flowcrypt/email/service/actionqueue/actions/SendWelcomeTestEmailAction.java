@@ -7,13 +7,13 @@
 package com.flowcrypt.email.service.actionqueue.actions;
 
 import android.content.Context;
+import android.os.Parcel;
 
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
-
-import java.io.IOException;
+import com.flowcrypt.email.util.exception.ApiException;
 
 import retrofit2.Response;
 
@@ -28,6 +28,17 @@ import retrofit2.Response;
  */
 
 public class SendWelcomeTestEmailAction extends Action {
+    public static final Creator<SendWelcomeTestEmailAction> CREATOR = new Creator<SendWelcomeTestEmailAction>() {
+        @Override
+        public SendWelcomeTestEmailAction createFromParcel(Parcel source) {
+            return new SendWelcomeTestEmailAction(source);
+        }
+
+        @Override
+        public SendWelcomeTestEmailAction[] newArray(int size) {
+            return new SendWelcomeTestEmailAction[size];
+        }
+    };
     private String publicKey;
 
     public SendWelcomeTestEmailAction(String email, String publicKey) {
@@ -35,18 +46,37 @@ public class SendWelcomeTestEmailAction extends Action {
         this.publicKey = publicKey;
     }
 
-    @Override
-    public boolean run(Context context) {
-        try {
-            ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-            Response<TestWelcomeResponse> response = apiService.postTestWelcome(new TestWelcomeModel(email,
-                    publicKey)).execute();
 
-            TestWelcomeResponse testWelcomeResponse = response.body();
-            return testWelcomeResponse != null && testWelcomeResponse.isSent();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+    protected SendWelcomeTestEmailAction(Parcel in) {
+        super(in);
+        this.publicKey = in.readString();
+    }
+
+    @Override
+    public void run(Context context) throws Exception {
+        ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
+        Response<TestWelcomeResponse> response = apiService.postTestWelcome(new TestWelcomeModel(email,
+                publicKey)).execute();
+
+        TestWelcomeResponse testWelcomeResponse = response.body();
+
+        if (testWelcomeResponse == null) {
+            throw new IllegalArgumentException("The response is null!");
         }
+
+        if (testWelcomeResponse.getApiError() != null) {
+            throw new ApiException(testWelcomeResponse.getApiError());
+        }
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(this.publicKey);
     }
 }

@@ -48,6 +48,7 @@ import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -78,14 +79,16 @@ public class EmailManagerActivity extends BaseSyncActivity
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
     public static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
 
-    private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle actionBarDrawerToggle;
-    private NavigationView navigationView;
+    private GoogleApiClient googleApiClient;
     private AccountDao accountDao;
     private FoldersManager foldersManager;
     private Folder folder;
+    private ActionManager actionManager;
+
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
     private LinearLayout accountManagementLayout;
-    private GoogleApiClient googleApiClient;
+    private NavigationView navigationView;
     private View currentAccountDetailsItem;
 
     public EmailManagerActivity() {
@@ -108,6 +111,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        actionManager = new ActionManager(this);
 
         googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
                 .generateGoogleSignInOptions());
@@ -117,7 +121,7 @@ public class EmailManagerActivity extends BaseSyncActivity
             if (accountDao == null) {
                 throw new IllegalArgumentException("You must pass an AccountDao to this activity.");
             }
-
+            actionManager.checkAndAddActionsToQueue(accountDao);
             getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
         } else {
             finish();
