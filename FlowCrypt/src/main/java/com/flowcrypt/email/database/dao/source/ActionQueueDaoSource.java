@@ -12,9 +12,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
+import com.flowcrypt.email.service.actionqueue.actions.Action.ActionType;
 import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -107,6 +109,36 @@ public class ActionQueueDaoSource extends BaseDaoSource {
         if (accountDao != null) {
             Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
                     ActionQueueDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
+
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    actions.add(getCurrentAction(context, cursor));
+                }
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return actions;
+    }
+
+    /**
+     * Get the list of {@link Action} object from the local database for some email using some {@link ActionType}.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param accountDao An account information.
+     * @param actionType An action type.
+     * @return The list of {@link Action};
+     */
+    @NonNull
+    public List<Action> getActionsByType(Context context, AccountDao accountDao, ActionType actionType) {
+        List<Action> actions = new ArrayList<>();
+        if (accountDao != null && actionType != null) {
+            Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
+                    ActionQueueDaoSource.COL_EMAIL + " = ? AND " + ActionQueueDaoSource.COL_ACTION_TYPE + " = ?",
+                    new String[]{accountDao.getEmail(), actionType.getValue()}, null);
 
             if (cursor != null) {
                 while (cursor.moveToNext()) {
