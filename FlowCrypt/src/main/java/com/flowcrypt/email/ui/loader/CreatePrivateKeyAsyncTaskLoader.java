@@ -34,7 +34,6 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
-import com.flowcrypt.email.util.exception.ApiException;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
@@ -203,16 +202,9 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
         InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
 
-        if (initialLegacySubmitResponse != null) {
-            if (initialLegacySubmitResponse.getApiError() != null) {
-                if (initialLegacySubmitResponse.getApiError().getCode() >= 400 && initialLegacySubmitResponse
-                        .getApiError().getCode() < 500) {
-                    throw new ApiException(initialLegacySubmitResponse.getApiError());
-                } else return true;
-            } else return true;
-        }
-
-        return false;
+        return initialLegacySubmitResponse != null && (initialLegacySubmitResponse.getApiError() == null || !
+                (initialLegacySubmitResponse.getApiError().getCode() >= 400
+                        && initialLegacySubmitResponse.getApiError().getCode() < 500));
     }
 
     /**
