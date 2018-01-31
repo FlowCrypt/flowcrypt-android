@@ -120,7 +120,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
             if (!requestingTestMessageWithNewPublicKey(pgpKey)) {
                 actionQueueDaoSource.addAction(getContext(), new SendWelcomeTestEmailAction(accountDao.getEmail(),
-                        pgpKey.getLongid()));
+                        pgpKey.toPublic().armor()));
             }
 
             return new LoaderResult(pgpKey.getLongid(), null);
