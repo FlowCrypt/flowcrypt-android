@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
@@ -30,6 +31,10 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
+import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
+import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
+import com.flowcrypt.email.util.exception.ApiException;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
@@ -101,14 +106,22 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                 return new LoaderResult(null, new NullPointerException("Cannot save the generated private key"));
             }
 
+            ActionQueueDaoSource actionQueueDaoSource = new ActionQueueDaoSource();
+
             if (!saveCreatedPrivateKeyAsBackupToInbox(pgpKey)) {
-                new KeysDaoSource().removeKey(getContext(), pgpKey);
-                return new LoaderResult(null, new NullPointerException("Cannot save a copy of the private key in " +
-                        "INBOX"));
+                actionQueueDaoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(accountDao.getEmail(),
+                        pgpKey.getLongid()));
             }
 
-            registerUserPublicKey(pgpKey);
-            requestingTestMessageWithNewPublicKey(pgpKey);
+            if (!registerUserPublicKey(pgpKey)) {
+                actionQueueDaoSource.addAction(getContext(), new RegisterUserPublicKeyAction(accountDao.getEmail(),
+                        pgpKey.toPublic().armor()));
+            }
+
+            if (!requestingTestMessageWithNewPublicKey(pgpKey)) {
+                actionQueueDaoSource.addAction(getContext(), new SendWelcomeTestEmailAction(accountDao.getEmail(),
+                        pgpKey.getLongid()));
+            }
 
             return new LoaderResult(pgpKey.getLongid(), null);
         } catch (Exception e) {
@@ -189,7 +202,17 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                 new InitialLegacySubmitModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
 
         InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
-        return initialLegacySubmitResponse != null;
+
+        if (initialLegacySubmitResponse != null) {
+            if (initialLegacySubmitResponse.getApiError() != null) {
+                if (initialLegacySubmitResponse.getApiError().getCode() >= 400 && initialLegacySubmitResponse
+                        .getApiError().getCode() < 500) {
+                    throw new ApiException(initialLegacySubmitResponse.getApiError());
+                } else return true;
+            } else return true;
+        }
+
+        return false;
     }
 
     /**
