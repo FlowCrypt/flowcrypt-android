@@ -26,6 +26,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
@@ -202,7 +203,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
     private MimeMessage createMimeMessage(Session session, Context context, AccountDao accountDao,
                                           File pgpCacheDirectory) throws IOException, MessagingException {
         Js js = new Js(context, new SecurityStorageConnector(context));
-        String[] pubKeys = getPubKeys(context, js, accountDao);
+        String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
+                getPubKeys(context, js, accountDao) : null;
 
         String rawMessage = generateRawMessageWithoutAttachments(js, pubKeys);
 
