@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -36,6 +37,7 @@ import java.io.OutputStream;
  *         Time: 15:01
  *         E-mail: DenBond7@gmail.com
  */
+@Ignore
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class JsTest {
