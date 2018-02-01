@@ -67,7 +67,10 @@ public class RegisterUserPublicKeyAction extends Action {
         }
 
         if (initialLegacySubmitResponse.getApiError() != null) {
-            throw new ApiException(initialLegacySubmitResponse.getApiError());
+            if (initialLegacySubmitResponse.getApiError().getCode() < 400
+                    || initialLegacySubmitResponse.getApiError().getCode() >= 500) {
+                throw new ApiException(initialLegacySubmitResponse.getApiError());
+            }
         }
     }
 
