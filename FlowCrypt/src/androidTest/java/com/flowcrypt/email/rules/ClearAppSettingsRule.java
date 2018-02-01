@@ -10,9 +10,9 @@ import android.net.Uri;
 import android.support.test.InstrumentationRegistry;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -48,7 +48,7 @@ public class ClearAppSettingsRule implements TestRule {
      */
     private void clearApp() throws IOException {
         SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
-        FileUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
+        FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
         InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
                 .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     }

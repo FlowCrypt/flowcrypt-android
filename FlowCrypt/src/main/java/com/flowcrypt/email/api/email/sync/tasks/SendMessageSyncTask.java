@@ -28,6 +28,7 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -104,7 +105,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             File pgpCacheDirectory = new File(context.getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
             if (pgpCacheDirectory.exists()) {
-                FileUtils.cleanDirectory(pgpCacheDirectory);
+                FileAndDirectoryUtils.cleanDirectory(pgpCacheDirectory);
             } else if (!pgpCacheDirectory.mkdirs()) {
                 Log.d(TAG, "Create cache directory " + pgpCacheDirectory.getName() + " filed!");
             }
@@ -156,7 +157,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                     saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
             }
 
-            FileUtils.cleanDirectory(pgpCacheDirectory);
+            FileAndDirectoryUtils.cleanDirectory(pgpCacheDirectory);
 
             syncListener.onMessageSent(accountDao, ownerKey, requestCode, isMessageSent);
         }

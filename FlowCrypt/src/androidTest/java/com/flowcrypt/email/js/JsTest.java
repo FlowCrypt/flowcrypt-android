@@ -14,6 +14,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -65,7 +66,7 @@ public class JsTest {
     @AfterClass
     public static void cleanCacheDirectory() throws Exception {
         if (parentDirectory != null && parentDirectory.exists()) {
-            FileUtils.cleanDirectory(parentDirectory);
+            FileAndDirectoryUtils.cleanDirectory(parentDirectory);
         }
     }
 
@@ -73,7 +74,7 @@ public class JsTest {
     public static void initCacheDirectory() throws Exception {
         parentDirectory = new File(InstrumentationRegistry.getTargetContext().getCacheDir(), TESTS_DIRECTORY);
         if (parentDirectory.exists()) {
-            FileUtils.cleanDirectory(parentDirectory);
+            FileAndDirectoryUtils.cleanDirectory(parentDirectory);
         } else if (!parentDirectory.mkdirs()) {
             Log.d(TAG, "Create cache directory " + parentDirectory.getName() + " filed!");
         }
