@@ -6,6 +6,12 @@
 
 package com.flowcrypt.email.base;
 
+import com.flowcrypt.email.api.email.model.SecurityType;
+
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+
 /**
  * The base test implementation.
  *
@@ -16,4 +22,28 @@ package com.flowcrypt.email.base;
  */
 
 public class BaseTest {
+    /**
+     * Match the {@link SecurityType.Option}.
+     *
+     * @param option An input {@link SecurityType.Option}.
+     */
+    public static <T> Matcher<T> matchOption(final SecurityType.Option option) {
+        return new BaseMatcher<T>() {
+            @Override
+            public boolean matches(Object item) {
+                if (item instanceof SecurityType) {
+                    SecurityType securityType = (SecurityType) item;
+                    return securityType.getOption() == option;
+                } else {
+                    return false;
+                }
+
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("The input option = " + option);
+            }
+        };
+    }
 }
