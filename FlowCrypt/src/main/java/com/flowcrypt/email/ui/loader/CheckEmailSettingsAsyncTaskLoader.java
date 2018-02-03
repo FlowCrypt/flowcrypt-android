@@ -85,7 +85,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
      */
     private void testImapConnection(Session session) throws MessagingException {
         Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
-        store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
+        store.connect(authCredentials.getImapServer(), authCredentials.getImapPort(), authCredentials.getUsername(),
                 authCredentials.getPassword());
         Folder folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX);
         folder.open(Folder.READ_ONLY);
