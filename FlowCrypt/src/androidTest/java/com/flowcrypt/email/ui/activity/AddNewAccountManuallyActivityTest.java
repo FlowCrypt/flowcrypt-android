@@ -38,10 +38,12 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 
 /**
  * A test for {@link AddNewAccountManuallyActivity}
@@ -220,6 +222,41 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
             onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.error_email_is_not_valid)))
                     .check(matches(isDisplayed()));
             onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
+        }
+    }
+
+    @Test
+    public void testShowWarningIfAuthFail() {
+        fillAllFields();
+        String someFailTextToChangeRightValue = "123";
+
+        int[] fieldIdentifiersWithIncorrectData = {R.id.editTextEmail,
+                R.id.editTextUserName, R.id.editTextPassword,
+                R.id.editTextImapServer, R.id.editTextImapPort,
+                R.id.editTextSmtpServer, R.id.editTextSmtpPort,
+                R.id.editTextSmtpUsername, R.id.editTextSmtpPassword};
+
+        String[] correctData = {authCredentials.getEmail(),
+                authCredentials.getUsername(), authCredentials.getPassword(),
+                authCredentials.getImapServer(), String.valueOf(authCredentials.getImapPort()),
+                authCredentials.getSmtpServer(), String.valueOf(authCredentials.getSmtpPort()),
+                authCredentials.getSmtpSigInUsername(), authCredentials.getSmtpSignInPassword()};
+
+        int numberOfChecks = authCredentials.isUseCustomSignInForSmtp() ?
+                fieldIdentifiersWithIncorrectData.length : fieldIdentifiersWithIncorrectData.length - 2;
+
+        for (int i = 0; i < numberOfChecks; i++) {
+            onView(withId(fieldIdentifiersWithIncorrectData[i])).perform(scrollTo(),
+                    typeText(someFailTextToChangeRightValue), closeSoftKeyboard());
+            onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
+
+            onView(anyOf(withText(startsWith(TestConstants.IMAP)), withText(startsWith(TestConstants.SMTP))))
+                    .check(matches(isDisplayed()));
+            onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+                    .perform(click());
+
+            onView(withId(fieldIdentifiersWithIncorrectData[i])).perform(scrollTo(), clearText(),
+                    typeText(correctData[i]), closeSoftKeyboard());
         }
     }
 
