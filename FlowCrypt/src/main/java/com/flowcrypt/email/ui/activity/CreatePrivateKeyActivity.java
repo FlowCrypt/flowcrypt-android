@@ -287,6 +287,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                 layoutSecondPasswordCheck.setVisibility(View.GONE);
                 layoutSuccess.setVisibility(View.VISIBLE);
                 UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
+                JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
                 break;
 
             default:
