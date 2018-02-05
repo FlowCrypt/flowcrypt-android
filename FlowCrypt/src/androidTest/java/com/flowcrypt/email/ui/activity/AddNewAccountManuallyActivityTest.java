@@ -113,30 +113,22 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
 
     @Test
     public void testChangingImapPortWhenSelectSpinnerItem() throws Exception {
-        String oldValueOfImapPort = String.valueOf(authCredentials.getImapPort());
-        SecurityType.Option oldImapOption = authCredentials.getImapSecurityTypeOption();
-
-        onView(withId(R.id.editTextImapPort)).perform(scrollTo(), clearText(), typeText(oldValueOfImapPort),
-                closeSoftKeyboard());
-        onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
-        onData(allOf(is(instanceOf(SecurityType.class)), matchOption(oldImapOption))).perform(click());
-        onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
-        onData(instanceOf(SecurityType.class)).atPosition(getSpinnerItemPosition(oldImapOption)).perform(click());
-        onView(withId(R.id.editTextImapPort)).check(matches(not(withText(oldValueOfImapPort))));
+        checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+                SecurityType.Option.STARTLS, "143");
+        checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+                SecurityType.Option.SSL_TLS, "993");
+        checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+                SecurityType.Option.NONE, "143");
     }
 
     @Test
     public void testChangingSmtpPortWhenSelectSpinnerItem() throws Exception {
-        String oldValueOfSmtpPort = String.valueOf(authCredentials.getSmtpPort());
-        SecurityType.Option oldSmtpOption = authCredentials.getSmtpSecurityTypeOption();
-
-        onView(withId(R.id.editTextSmtpPort)).perform(scrollTo(), clearText(), typeText(oldValueOfSmtpPort),
-                closeSoftKeyboard());
-        onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
-        onData(allOf(is(instanceOf(SecurityType.class)), matchOption(oldSmtpOption))).perform(click());
-        onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
-        onData(instanceOf(SecurityType.class)).atPosition(getSpinnerItemPosition(oldSmtpOption)).perform(click());
-        onView(withId(R.id.editTextSmtpPort)).check(matches(not(withText(oldValueOfSmtpPort))));
+        checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+                SecurityType.Option.STARTLS, "587");
+        checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+                SecurityType.Option.SSL_TLS, "465");
+        checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+                SecurityType.Option.NONE, "25");
     }
 
     @Test
@@ -265,12 +257,13 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         }
     }
 
-    private int getSpinnerItemPosition(SecurityType.Option option) {
-        if (option == SecurityType.Option.SSL_TLS) {
-            return 0;
-        } else {
-            return 1;
-        }
+    private void checkSecurityTypeOption(int portViewId, int spinnerViewId, SecurityType.Option option,
+                                         String portValue) {
+        String someValue = "111";
+        onView(withId(portViewId)).perform(scrollTo(), clearText(), typeText(someValue), closeSoftKeyboard());
+        onView(withId(spinnerViewId)).perform(scrollTo(), click());
+        onData(allOf(is(instanceOf(SecurityType.class)), matchOption(option))).perform(click());
+        onView(withId(portViewId)).check(matches(withText(portValue)));
     }
 
     private void checkIsFieldEmptyWork(int viewId, int stringIdForError) {
