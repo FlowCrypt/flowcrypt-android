@@ -38,8 +38,13 @@ public class ExceptionUtil {
             return false;
         }
 
-        if (e instanceof IOException && "NetworkError".equalsIgnoreCase(e.getMessage())) {
-            return false;
+        if (e instanceof IOException) {
+            //Google network errors.
+            if ("NetworkError".equalsIgnoreCase(e.getMessage())
+                    || "Error on service connection".equalsIgnoreCase(e.getMessage())) {
+                return false;
+            }
+
         }
 
         if ((e instanceof SSLHandshakeException || e instanceof MessagingException)) {
