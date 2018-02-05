@@ -55,7 +55,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
         try {
             testImapConnection(session);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Exception exception = new Exception("IMAP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
@@ -63,7 +63,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
         try {
             testSmtpConnection(session);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Exception exception = new Exception("SMTP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
