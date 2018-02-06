@@ -39,10 +39,16 @@ import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.nulabinc.zxcvbn.Zxcvbn;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author Denis Bondarenko
@@ -156,7 +162,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                             case Constants.PASSWORD_QUALITY_WEAK:
                             case Constants.PASSWORD_QUALITY_POOR:
                                 InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
-                                        getString(R.string.hint),
+                                        "",
                                         getString(R.string.select_stronger_pass_phrase));
                                 infoDialogFragment.show(getSupportFragmentManager(),
                                         InfoDialogFragment.class.getSimpleName());
@@ -176,11 +182,14 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                     getSnackBar().dismiss();
                 }
 
-                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
-                        getString(R.string.hint), getString(R.string.password_recommendation),
-                        null, false, true, true);
-                infoDialogFragment.show(getSupportFragmentManager(),
-                        InfoDialogFragment.class.getSimpleName());
+                try {
+                    WebViewInfoDialogFragment webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
+                            IOUtils.toString(getAssets().open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8));
+                    webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class
+                            .getSimpleName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
 
             case R.id.buttonUseAnotherPassPhrase:

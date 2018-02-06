@@ -69,4 +69,5 @@
     <dimen name="padding_pgp_message_error_big">20dp</dimen>
     <dimen name="width_pgp_message_type_line">8dp</dimen>
     <dimen name="width_pgp_message_type_line_inverse">-9dp</dimen>
+    <dimen name="height_webview_dialog">480dp</dimen>
 </resources>
