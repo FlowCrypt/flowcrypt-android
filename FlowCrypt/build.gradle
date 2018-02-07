@@ -4,6 +4,7 @@
  * Contributors: DenBond7
  */
 
+import groovy.swing.SwingBuilder
 import java.text.SimpleDateFormat
 
 buildscript {
@@ -20,6 +21,41 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.github.gfx.ribbonizer'
 
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
+
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(project.file("keystore.properties")))
+
+static def inputPassword(String dialogTitle, String dialogMessage) {
+    def console = System.console();
+    if (console != null) {
+        return new String(console.readPassword(dialogMessage)).trim()
+    }
+
+    while (true) {
+        def enteredPassword = null
+        new SwingBuilder().edt {
+            dialog(
+                    modal: true, //Otherwise the build will continue running
+                    title: dialogTitle,
+                    alwaysOnTop: true,
+                    resizable: false,
+                    locationRelativeTo: null, //Place dialog in center of the screen
+                    pack: true, //We need to pack the dialog (so it will take the size of its children
+                    show: true
+            ) {
+                vbox { //Put everything below each other
+                    label(text: dialogMessage)
+                    input = passwordField()
+                    button(defaultButton: true, text: 'OK', actionPerformed: {
+                        enteredPassword = new String(input.password).trim()
+                        dispose();
+                    })
+                }
+            }
+        }
+        return enteredPassword
+    }
+}
 
 android {
     if (projects.hasProperty('devBuild')) {
@@ -44,10 +80,10 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("modified this..")
-            storePassword ""
-            keyAlias ""
-            keyPassword ""
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
         }
 
         debug {
@@ -130,8 +166,29 @@ android {
         }
     }
 
+    task('inputKeyPasswords') {
+        doLast {
+            def keyStorePassword = null
+            while (keyStorePassword == null || ((String) keyStorePassword).isEmpty()) {
+                keyStorePassword = inputPassword('KeyStore password', 'Please enter the password for the keystore:')
+            }
+
+            def keyPassword = null
+            while (keyPassword == null || ((String) keyPassword).isEmpty()) {
+                keyPassword = inputPassword('Key password', 'Please enter the password for the signing key:')
+            }
+            System.out.println()
+
+            android.signingConfigs.release.storePassword = keyStorePassword
+            android.signingConfigs.release.keyPassword = keyPassword
+        }
+    }
+
     tasks.whenTaskAdded { task ->
-        if (task.name == 'assembleRelease') {
+        if (task.name == 'assembleProductionRelease') {
+            if (project.hasProperty('runtimeSetup')) {
+                task.dependsOn inputKeyPasswords
+            }
             task.finalizedBy 'renameReleaseBuild'
         }
     }
@@ -191,5 +248,4 @@ dependencies {
     implementation 'ch.acra:acra:4.9.2'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.3'
-
 }
