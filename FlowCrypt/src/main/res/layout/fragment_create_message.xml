@@ -79,6 +79,7 @@
                         android:background="@android:color/transparent"
                         android:completionThreshold="2"
                         android:hint="@string/prompt_recipient"
+                        android:inputType="textEmailAddress"
                         android:paddingEnd="@dimen/size_of_small_progressbar"
                         android:paddingTop="@dimen/default_margin_medium"
                         android:shrinkColumns="0, true">
