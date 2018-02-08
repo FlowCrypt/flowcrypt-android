@@ -12,7 +12,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.text.Html;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
@@ -34,7 +33,6 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -74,13 +72,8 @@ public class CreatePrivateKeyActivityTest {
     @Test
     public void testShowDialogWithPasswordRecommendation() {
         onView(withId(R.id.imageButtonShowPasswordHint)).check(matches(isDisplayed())).perform(click());
-
-        String messageFromHint = Html.fromHtml(InstrumentationRegistry.getTargetContext()
-                .getString(R.string.password_recommendation)).toString();
-
-        onView(withText(equalTo(messageFromHint))).check(matches(isDisplayed()));
-        onView(withId(android.R.id.button1)).check(matches(isDisplayed())).perform(click());
-
+        onView(withId(R.id.webView)).check(matches(isDisplayed()));
+        onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
         onView(withId(R.id.textViewSetupFlowCrypt)).check(matches(isDisplayed()));
     }
 
