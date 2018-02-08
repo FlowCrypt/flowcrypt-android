@@ -6,6 +6,8 @@
 
 package com.flowcrypt.email.util;
 
+import android.content.Context;
+
 import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
@@ -31,5 +33,9 @@ public class TestGeneralUtil {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String readFileFromAssetsAsString(Context context, String filePath) throws IOException {
+        return IOUtils.toString(context.getAssets().open(filePath), "UTF-8");
     }
 }
