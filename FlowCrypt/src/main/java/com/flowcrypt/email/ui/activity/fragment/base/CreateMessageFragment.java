@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -62,6 +63,7 @@ import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
+import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -87,7 +89,7 @@ import java.util.List;
  */
 
 public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener,
-        AdapterView.OnItemSelectedListener, View.OnClickListener {
+        AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
@@ -98,7 +100,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
     private List<PgpContact> pgpContacts;
     private ArrayList<AttachmentInfo> attachmentInfoList;
-    private NachoTextView editTextRecipients;
+    private PgpContactsNachoTextView editTextRecipients;
     private ContactsDaoSource contactsDaoSource;
     private FoldersManager.FolderType folderType;
     private IncomingMessageInfo incomingMessageInfo;
@@ -517,6 +519,11 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
     }
 
+    @Override
+    public void onChipLongClick(Chip chip, MotionEvent event) {
+        Toast.makeText(getContext(), "onChipLongClick = " + chip, Toast.LENGTH_SHORT).show();
+    }
+
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         String emailMassageHint = null;
         if (messageEncryptionType != null) {
@@ -688,6 +695,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
         editTextRecipients.setAdapter(preparePgpContactAdapter());
         editTextRecipients.setOnFocusChangeListener(this);
+        editTextRecipients.setOnChipLongClickListener(this);
     }
 
     /**
