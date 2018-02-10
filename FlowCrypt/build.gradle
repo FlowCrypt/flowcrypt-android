@@ -23,7 +23,11 @@ apply plugin: 'com.github.gfx.ribbonizer'
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
 
 def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(project.file("keystore.properties")))
+File propertiesFile = project.file("keystore.properties");
+if (propertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(propertiesFile))
+}
+
 
 static def inputPassword(String dialogTitle, String dialogMessage) {
     def console = System.console();
@@ -82,7 +86,8 @@ android {
         release {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
+            storeFile keystoreProperties['storeFile'] != null ?
+                    file(keystoreProperties['storeFile']) : file("change me...")
             storePassword keystoreProperties['storePassword']
         }
 
