@@ -21,10 +21,8 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -118,9 +116,7 @@ public class AccountDaoSource extends BaseDaoSource {
             authCredentials = getCurrentAuthCredentialsFromCursor(keyStoreCryptoManager, cursor);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
 
         return new AccountDao(

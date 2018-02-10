@@ -11,10 +11,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
 
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.hootsuite.nachos.NachoTextView;
-
-import org.acra.ACRA;
 
 /**
  * The custom realization of {@link NachoTextView}.
@@ -53,9 +51,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
             return super.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
         return getText().toString();
     }

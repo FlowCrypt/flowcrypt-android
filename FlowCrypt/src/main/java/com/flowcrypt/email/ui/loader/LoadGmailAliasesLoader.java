@@ -13,12 +13,10 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,9 +72,7 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
             return new LoaderResult(accountAliasesDaoList, null);
         } catch (IOException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }

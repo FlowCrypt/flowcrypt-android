@@ -160,9 +160,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -184,9 +182,7 @@ public class EmailSyncManager {
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -207,9 +203,7 @@ public class EmailSyncManager {
                     folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -248,9 +242,7 @@ public class EmailSyncManager {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -273,9 +265,7 @@ public class EmailSyncManager {
                     folderName, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -296,9 +286,7 @@ public class EmailSyncManager {
                     sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -315,9 +303,7 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -332,9 +318,7 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -351,9 +335,7 @@ public class EmailSyncManager {
                     requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 

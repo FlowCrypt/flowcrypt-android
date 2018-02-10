@@ -57,4 +57,17 @@ public class ExceptionUtil {
 
         return true;
     }
+
+    /**
+     * Handle an input {@link Exception} by {@link ACRA}.
+     *
+     * @param e An input {@link Exception}
+     */
+    public static void handleError(Exception e) {
+        if (ExceptionUtil.isErrorHandleWithACRA(e)) {
+            if (ACRA.isInitialised()) {
+                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
+            }
+        }
+    }
 }

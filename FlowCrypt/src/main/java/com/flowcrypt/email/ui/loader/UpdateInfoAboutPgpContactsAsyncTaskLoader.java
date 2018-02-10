@@ -20,6 +20,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
@@ -124,9 +125,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                     isAllInfoReceived, pgpContacts), null);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }

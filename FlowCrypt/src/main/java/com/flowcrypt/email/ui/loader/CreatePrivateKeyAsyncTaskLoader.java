@@ -34,12 +34,10 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -126,9 +124,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         } catch (Exception e) {
             e.printStackTrace();
             new KeysDaoSource().removeKey(getContext(), pgpKey);
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }

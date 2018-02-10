@@ -22,9 +22,7 @@ import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -117,9 +115,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
         return new LoaderResult(isOneOrMoreKeySaved, null);

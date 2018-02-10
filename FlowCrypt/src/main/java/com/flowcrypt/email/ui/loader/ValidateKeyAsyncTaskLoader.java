@@ -17,9 +17,7 @@ import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.ValidateKeyLoaderResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 /**
  * This loader does the work of checking a received key.
@@ -95,9 +93,7 @@ public class ValidateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
 

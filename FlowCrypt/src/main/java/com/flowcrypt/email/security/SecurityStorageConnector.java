@@ -12,9 +12,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -106,9 +104,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 }

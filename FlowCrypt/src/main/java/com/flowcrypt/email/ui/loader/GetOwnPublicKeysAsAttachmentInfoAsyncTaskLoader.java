@@ -20,9 +20,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -101,9 +99,7 @@ public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLo
             return new LoaderResult(attachmentInfoList, null);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }
