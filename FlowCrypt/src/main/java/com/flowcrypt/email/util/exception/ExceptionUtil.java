@@ -41,7 +41,7 @@ public class ExceptionUtil {
         if (e instanceof IOException) {
             //Google network errors.
             if ("NetworkError".equalsIgnoreCase(e.getMessage())
-                    || "Error on service connection".equalsIgnoreCase(e.getMessage())) {
+                    || "Error on service connection.".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
 
