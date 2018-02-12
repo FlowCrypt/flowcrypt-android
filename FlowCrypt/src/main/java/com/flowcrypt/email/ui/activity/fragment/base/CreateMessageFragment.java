@@ -81,6 +81,8 @@ import org.apache.commons.io.FileUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -839,7 +841,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
             }
             editTextRecipients.chipifyAllUnterminatedTokens();
-            editTextEmailSubject.setText(getString(R.string.template_reply_subject, incomingMessageInfo.getSubject()));
+            editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
             editTextEmailMessage.requestFocus();
         }
 
@@ -863,6 +865,22 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 editTextEmailMessage.setText(serviceInfo.getSystemMessage());
             }
         }
+    }
+
+    @NonNull
+    private String prepareReplySubject(String subject) {
+        if (TextUtils.isEmpty(subject)) {
+            return getString(R.string.template_reply_subject, "");
+        }
+
+        Pattern pattern = Pattern.compile("^(Re: )", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(subject);
+
+        if (matcher.find()) {
+            return subject;
+        }
+
+        return getString(R.string.template_reply_subject, subject);
     }
 
     private String prepareRecipients(List<String> recipients) {
