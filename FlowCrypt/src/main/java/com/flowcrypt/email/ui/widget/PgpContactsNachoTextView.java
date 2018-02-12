@@ -73,13 +73,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
-        Chip touchedChip = findLongClickedChip(event);
-
-        if (touchedChip != null) {
-            chipLongClickOnGestureListener.setChip(touchedChip);
-            gestureDetector.onTouchEvent(event);
-        }
-
+        gestureDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
 
@@ -90,34 +84,6 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     public void setOnChipLongClickListener(OnChipLongClickListener onChipLongClickListener) {
         this.onChipLongClickListener = onChipLongClickListener;
-    }
-
-    private Chip findLongClickedChip(MotionEvent event) {
-        if (getChipTokenizer() == null) {
-            return null;
-        }
-
-        Editable text = getText();
-        int offset = getOffsetForPosition(event.getX(), event.getY());
-        List<Chip> chips = getAllChips();
-        for (Chip chip : chips) {
-            int chipStart = getChipTokenizer().findChipStart(chip, text);
-            int chipEnd = getChipTokenizer().findChipEnd(chip, text); // This is actually the index of the character
-            if (chipStart <= offset && offset <= chipEnd) {
-                float startX = getPrimaryHorizontalForX(chipStart);
-                float endX = getPrimaryHorizontalForX(chipEnd - 1);
-                float eventX = event.getX();
-                if (startX <= eventX && eventX <= endX) {
-                    return chip;
-                }
-            }
-        }
-        return null;
-    }
-
-    private float getPrimaryHorizontalForX(int index) {
-        Layout layout = getLayout();
-        return layout.getPrimaryHorizontal(index);
     }
 
     public interface OnChipLongClickListener {
@@ -131,19 +97,53 @@ public class PgpContactsNachoTextView extends NachoTextView {
     }
 
     private class ChipLongClickOnGestureListener extends GestureDetector.SimpleOnGestureListener {
-        private Chip chip;
-
-        public void onLongPress(MotionEvent e) {
-            super.onLongPress(e);
+        public void onLongPress(MotionEvent event) {
+            super.onLongPress(event);
             performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
 
             if (onChipLongClickListener != null) {
-                onChipLongClickListener.onChipLongClick(chip, e);
+                Chip chip = findLongClickedChip(event);
+
+                if (chip != null) {
+                    onChipLongClickListener.onChipLongClick(chip, event);
+                }
             }
         }
 
-        void setChip(Chip chip) {
-            this.chip = chip;
+        private Chip findLongClickedChip(MotionEvent event) {
+            if (getChipTokenizer() == null) {
+                return null;
+            }
+
+            Editable text = getText();
+            int offset = getOffsetForPosition(event.getX(), event.getY());
+            List<Chip> chips = getAllChips();
+            for (Chip chip : chips) {
+                int chipStart = getChipTokenizer().findChipStart(chip, text);
+                int chipEnd = getChipTokenizer().findChipEnd(chip, text);
+                if (chipStart <= offset && offset <= chipEnd) {
+                    float eventX = event.getX();
+                    float startX = getPrimaryHorizontalForX(chipStart);
+                    float endX = getPrimaryHorizontalForX(chipEnd - 1);
+
+                    int offsetLineNumber = getLineForOffset(offset);
+                    int chipLineNumber = getLineForOffset(chipEnd - 1);
+
+                    if (startX <= eventX && eventX <= endX && offsetLineNumber == chipLineNumber) {
+                        return chip;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private float getPrimaryHorizontalForX(int offset) {
+            Layout layout = getLayout();
+            return layout.getPrimaryHorizontal(offset);
+        }
+
+        private int getLineForOffset(int offset) {
+            return getLayout().getLineForOffset(offset);
         }
     }
 }
