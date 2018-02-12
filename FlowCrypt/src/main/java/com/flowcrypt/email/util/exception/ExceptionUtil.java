@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 
 import javax.mail.MessagingException;
+import javax.mail.StoreClosedException;
 import javax.net.ssl.SSLHandshakeException;
 
 /**
@@ -51,6 +52,13 @@ public class ExceptionUtil {
 
             if ("Connection closed by peer".equalsIgnoreCase(e.getMessage())
                     || e.getMessage().contains("I/O error during system call, Software caused connection abort")) {
+                return false;
+            }
+        }
+
+        if (e instanceof StoreClosedException) {
+            //Connection limit exceeded
+            if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }
