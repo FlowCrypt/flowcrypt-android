@@ -278,4 +278,6 @@ icelanders prefer real sauna</font>
     <string name="you_can_send_and_receive_encrypted_emails">From now on, you can send and receive encrypted emails on
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
+    <string name="copy">Copy</string>
+    <string name="remove">Remove</string>
 </resources>

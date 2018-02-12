@@ -6,7 +6,7 @@
 
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textViewNoPgpFoundDialogItem"
+    android:id="@+id/textViewDialogItem"
     android:layout_width="match_parent"
     android:layout_height="@dimen/default_height_for_click"
     android:drawablePadding="@dimen/default_margin_small"

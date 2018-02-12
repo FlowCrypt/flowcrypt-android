@@ -93,7 +93,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
          * @param chip  the {@link Chip} that was clicked
          * @param event the {@link MotionEvent} that caused the touch
          */
-        void onChipLongClick(Chip chip, MotionEvent event);
+        void onChipLongClick(@NonNull Chip chip, MotionEvent event);
     }
 
     private class ChipLongClickOnGestureListener extends GestureDetector.SimpleOnGestureListener {

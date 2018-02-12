@@ -24,37 +24,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This dialog will be used to show for user different options to resolve a PGP not found situation.
+ * This dialog describes actions which can be used for manage some {@link PgpContact}.
  *
  * @author Denis Bondarenko
- *         Date: 01.08.2017
- *         Time: 10:04
+ *         Date: 12.02.2018
+ *         Time: 13:59
  *         E-mail: DenBond7@gmail.com
  */
 
-public class NoPgpFoundDialogFragment extends BaseDialogFragment implements DialogInterface.OnClickListener {
-    public static final int RESULT_CODE_SWITCH_TO_STANDARD_EMAIL = 10;
-    public static final int RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 11;
-    public static final int RESULT_CODE_COPY_FROM_OTHER_CONTACT = 12;
-    public static final int RESULT_CODE_REMOVE_CONTACT = 13;
+public class PgpContactDialogFragment extends BaseDialogFragment implements DialogInterface.OnClickListener {
+    public static final int RESULT_CODE_COPY_EMAIL = 10;
+    public static final int RESULT_CODE_REMOVE_CONTACT = 11;
 
     public static final String EXTRA_KEY_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment.class);
-
-    private static final String EXTRA_KEY_IS_SHOW_REMOVE_ACTION = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_IS_SHOW_REMOVE_ACTION", NoPgpFoundDialogFragment.class);
+            ("EXTRA_KEY_PGP_CONTACT", PgpContactDialogFragment.class);
 
     private PgpContact pgpContact;
     private List<DialogItem> dialogItemList;
-    private boolean isShowRemoveAction;
 
-    public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact, boolean isShowRemoveAction) {
+    public static PgpContactDialogFragment newInstance(PgpContact pgpContact) {
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact);
-        args.putBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION, isShowRemoveAction);
-        NoPgpFoundDialogFragment noPgpFoundDialogFragment = new NoPgpFoundDialogFragment();
-        noPgpFoundDialogFragment.setArguments(args);
-        return noPgpFoundDialogFragment;
+        PgpContactDialogFragment pgpContactDialogFragment = new PgpContactDialogFragment();
+        pgpContactDialogFragment.setArguments(args);
+        return pgpContactDialogFragment;
     }
 
     @Override
@@ -63,22 +56,14 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
 
         if (getArguments() != null) {
             this.pgpContact = getArguments().getParcelable(EXTRA_KEY_PGP_CONTACT);
-            this.isShowRemoveAction = getArguments().getBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION);
         }
 
         dialogItemList = new ArrayList<>();
 
-        dialogItemList.add(new DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
-                RESULT_CODE_SWITCH_TO_STANDARD_EMAIL));
-        dialogItemList.add(new DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
-                RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY));
-        dialogItemList.add(new DialogItem(R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
-                RESULT_CODE_COPY_FROM_OTHER_CONTACT));
-        if (isShowRemoveAction) {
-            dialogItemList.add(new DialogItem(
-                    R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
-                    pgpContact.getEmail()), RESULT_CODE_REMOVE_CONTACT));
-        }
+        dialogItemList.add(new DialogItem(R.mipmap.ic_content_copy,
+                getString(R.string.copy), RESULT_CODE_COPY_EMAIL));
+        dialogItemList.add(new DialogItem(R.mipmap.ic_delete_grey,
+                getString(R.string.remove), RESULT_CODE_REMOVE_CONTACT));
     }
 
     @NonNull
@@ -87,7 +72,7 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         DialogItemAdapter dialogItemAdapter = new DialogItemAdapter(getContext(), dialogItemList);
 
-        builder.setTitle(R.string.recipient_does_not_use_pgp);
+        builder.setTitle(pgpContact.getEmail());
         builder.setAdapter(dialogItemAdapter, this);
         return builder.create();
     }

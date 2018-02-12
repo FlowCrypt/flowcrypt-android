@@ -10,7 +10,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Simple POJO class which describes an action in the {@link NoPgpFoundDialogAction}
+ * Simple POJO class which describes a dialog item.
  *
  * @author Denis Bondarenko
  *         Date: 01.08.2017
@@ -18,17 +18,17 @@ import android.os.Parcelable;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class NoPgpFoundDialogAction implements Parcelable {
-    public static final Creator<NoPgpFoundDialogAction> CREATOR = new
-            Creator<NoPgpFoundDialogAction>() {
+public class DialogItem implements Parcelable {
+    public static final Creator<DialogItem> CREATOR = new
+            Creator<DialogItem>() {
                 @Override
-                public NoPgpFoundDialogAction createFromParcel(Parcel source) {
-                    return new NoPgpFoundDialogAction(source);
+                public DialogItem createFromParcel(Parcel source) {
+                    return new DialogItem(source);
                 }
 
                 @Override
-                public NoPgpFoundDialogAction[] newArray(int size) {
-                    return new NoPgpFoundDialogAction[size];
+                public DialogItem[] newArray(int size) {
+                    return new DialogItem[size];
                 }
             };
 
@@ -36,16 +36,16 @@ public class NoPgpFoundDialogAction implements Parcelable {
     private String title;
     private int id;
 
-    public NoPgpFoundDialogAction() {
+    public DialogItem() {
     }
 
-    public NoPgpFoundDialogAction(int iconResourceId, String title, int id) {
+    public DialogItem(int iconResourceId, String title, int id) {
         this.iconResourceId = iconResourceId;
         this.title = title;
         this.id = id;
     }
 
-    protected NoPgpFoundDialogAction(Parcel in) {
+    protected DialogItem(Parcel in) {
         this.iconResourceId = in.readInt();
         this.title = in.readString();
         this.id = in.readInt();
