@@ -4,7 +4,9 @@
  * Contributors: DenBond7
  */
 
+
 import groovy.swing.SwingBuilder
+
 import java.text.SimpleDateFormat
 
 buildscript {
@@ -106,8 +108,10 @@ android {
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
             resValue 'string', 'gradle_is_acra_enable', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
         }
 
         debug {
@@ -124,7 +128,9 @@ android {
         // It has settings for a fast building (some features are disabled or not included).
         development {
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
             resValue 'string', 'gradle_is_acra_enable', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'true'
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion 21
@@ -134,14 +140,18 @@ android {
         //This is a production flavor
         production {
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
             dimension "standard"
         }
 
         //This flavor must be used only for a testing
         devTest {
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
         }

@@ -17,6 +17,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
@@ -264,9 +265,8 @@ public class EmailUtil {
      */
     public static boolean isDebugEnable(Context context) {
         Context appContext = context.getApplicationContext();
-
-        return SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(appContext),
-                Constants.PREFERENCES_KEY_IS_JAVA_MAIL_DEBUG_ENABLE, false);
+        return BuildConfig.DEBUG && SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+                (appContext), Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE, BuildConfig.IS_MAIL_DEBUG_ENABLE);
     }
 
     @NonNull
