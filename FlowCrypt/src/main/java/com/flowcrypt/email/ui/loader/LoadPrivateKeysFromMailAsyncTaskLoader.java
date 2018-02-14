@@ -7,6 +7,7 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
@@ -50,22 +51,29 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
      * An user account.
      */
     private AccountDao accountDao;
+    private LoaderResult data;
+    private boolean isActionStarted;
+    private boolean isLoaderReset;
 
     public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao accountDao) {
         super(context);
         this.accountDao = accountDao;
-        onContentChanged();
     }
 
     @Override
     public void onStartLoading() {
-        if (takeContentChanged()) {
-            forceLoad();
+        if (data != null) {
+            deliverResult(data);
+        } else {
+            if (!isActionStarted) {
+                forceLoad();
+            }
         }
     }
 
     @Override
     public LoaderResult loadInBackground() {
+        isActionStarted = true;
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
         try {
             Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
@@ -74,7 +82,8 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
             Folder[] folders = store.getDefaultFolder().list("*");
 
             for (Folder folder : folders) {
-                if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+                if (!isLoadInBackgroundCanceled() && !isLoaderReset
+                        && !EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
                     folder.open(Folder.READ_ONLY);
 
                     Message[] foundMessages = folder.search(
@@ -102,8 +111,15 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     }
 
     @Override
-    public void onStopLoading() {
-        cancelLoad();
+    public void deliverResult(@Nullable LoaderResult data) {
+        this.data = data;
+        super.deliverResult(data);
+    }
+
+    @Override
+    protected void onReset() {
+        super.onReset();
+        this.isLoaderReset = true;
     }
 
     /**
