@@ -487,7 +487,7 @@ public class EmailSyncManager {
                 } else {
                     notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
                             R.id.progress_id_running_imap_action);
-                    syncTask.runIMAPAction(accountDao, store, syncListener);
+                    syncTask.runIMAPAction(accountDao, session, store, syncListener);
                 }
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {

@@ -101,7 +101,8 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
 
         try {
             Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-            ListSendAsResponse aliases = gmail.users().settings().sendAs().list("me").execute();
+            ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
+                    .execute();
             for (SendAs alias : aliases.getSendAs()) {
                 if (alias.getVerificationStatus() != null) {
                     aliasEmails.add(alias.getSendAsEmail());

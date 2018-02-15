@@ -164,7 +164,8 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                 List<PgpContact> pgpContactList = new ArrayList<>();
                 pgpContactList.add(pgpContactMain);
                 Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-                ListSendAsResponse aliases = gmail.users().settings().sendAs().list("me").execute();
+                ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
+                        .execute();
                 for (SendAs alias : aliases.getSendAs()) {
                     if (alias.getVerificationStatus() != null) {
                         pgpContactList.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));

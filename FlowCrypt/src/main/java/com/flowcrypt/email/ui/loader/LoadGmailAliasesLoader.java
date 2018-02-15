@@ -54,7 +54,8 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
     public LoaderResult loadInBackground() {
         try {
             Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-            ListSendAsResponse aliases = mService.users().settings().sendAs().list("me").execute();
+            ListSendAsResponse aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
+                    .execute();
             List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
             for (SendAs alias : aliases.getSendAs()) {
                 if (alias.getVerificationStatus() != null) {

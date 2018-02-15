@@ -22,6 +22,7 @@ import com.sun.mail.util.ASCIIUtility;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Session;
 import javax.mail.Store;
 
 /**
@@ -56,7 +57,8 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
         IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         imapFolder.open(Folder.READ_WRITE);
 

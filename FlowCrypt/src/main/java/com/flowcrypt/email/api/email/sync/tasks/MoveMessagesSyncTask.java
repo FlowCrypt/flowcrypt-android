@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Session;
 import javax.mail.Store;
 
 /**
@@ -52,7 +53,8 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
         IMAPFolder sourceImapFolder = (IMAPFolder) store.getFolder(sourceFolderName);
         IMAPFolder destinationImapFolder = (IMAPFolder) store.getFolder
                 (destinationFolderName);

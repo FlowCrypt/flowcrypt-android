@@ -29,6 +29,8 @@ import com.google.api.services.gmail.Gmail;
  */
 
 public class GmailApiHelper {
+    public static final String DEFAULT_USER_ID = "me";
+    public static final String MESSAGE_RESPONSE_FORMAT_RAW = "raw";
 
     /**
      * Generate {@link Gmail} using incoming {@link AccountDao}. The {@link} Gmail is the main point in using Gmail API.

@@ -142,7 +142,11 @@ public class SendMessageSyncTask extends BaseSyncTask {
                             sentMessage.setThreadId(threadId);
                         }
 
-                        sentMessage = gmailApiService.users().messages().send("me", sentMessage).execute();
+                        sentMessage = gmailApiService
+                                .users()
+                                .messages()
+                                .send(GmailApiHelper.DEFAULT_USER_ID, sentMessage)
+                                .execute();
                         isMessageSent = sentMessage.getId() != null;
                     }
 
@@ -393,7 +397,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @throws IOException
      */
     private String getGmailMessageThreadID(Gmail service, String rfc822msgidValue) throws IOException {
-        ListMessagesResponse response = service.users().messages().list("me").setQ(
+        ListMessagesResponse response = service.users().messages().list(GmailApiHelper.DEFAULT_USER_ID).setQ(
                 "rfc822msgid:" + rfc822msgidValue).execute();
 
         if (response.getMessages() != null && response.getMessages().size() == 1) {

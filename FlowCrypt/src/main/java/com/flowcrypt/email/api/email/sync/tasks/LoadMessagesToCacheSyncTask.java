@@ -17,6 +17,7 @@ import com.sun.mail.imap.IMAPFolder;
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
@@ -43,7 +44,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
         IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         if (syncListener != null) {
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_opening_store);

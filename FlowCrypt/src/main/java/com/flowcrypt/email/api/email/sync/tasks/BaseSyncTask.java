@@ -53,11 +53,6 @@ abstract class BaseSyncTask implements SyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
-
-    }
-
-    @Override
     public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
             throws Exception {
     }
@@ -85,6 +80,12 @@ abstract class BaseSyncTask implements SyncTask {
     @Override
     public int getRequestCode() {
         return requestCode;
+    }
+
+    @Override
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+            throws Exception {
+
     }
 
     @NonNull

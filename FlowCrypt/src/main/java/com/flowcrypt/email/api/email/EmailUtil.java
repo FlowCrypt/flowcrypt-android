@@ -20,10 +20,13 @@ import android.text.TextUtils;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
@@ -31,13 +34,19 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.api.client.util.Base64;
+import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +56,7 @@ import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -269,8 +279,98 @@ public class EmailUtil {
                 (appContext), Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE, BuildConfig.IS_MAIL_DEBUG_ENABLE);
     }
 
+    /**
+     * Get a list of {@link KeyDetails} using the <b>Gmail API</b>
+     *
+     * @param context    context Interface to global information about an application environment;
+     * @param accountDao An {@link AccountDao} object.
+     * @param session    A {@link Session} object.
+     * @return A list of {@link KeyDetails}
+     * @throws MessagingException
+     * @throws IOException
+     */
+    public static Collection<? extends KeyDetails> getPrivateKeyBackupsUsingGmailAPI(Context context,
+                                                                                     AccountDao accountDao,
+                                                                                     Session session)
+            throws IOException, MessagingException {
+        ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+        String search = new Js(context, null).api_gmail_query_backups(accountDao.getEmail());
+        Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
+
+        ListMessagesResponse listMessagesResponse = gmailApiService
+                .users()
+                .messages()
+                .list(GmailApiHelper.DEFAULT_USER_ID)
+                .setQ(search)
+                .execute();
+
+        List<com.google.api.services.gmail.model.Message> messages = new ArrayList<>();
+
+        //Try to load all backups
+        while (listMessagesResponse.getMessages() != null) {
+            messages.addAll(listMessagesResponse.getMessages());
+            if (listMessagesResponse.getNextPageToken() != null) {
+                String pageToken = listMessagesResponse.getNextPageToken();
+                listMessagesResponse = gmailApiService
+                        .users()
+                        .messages()
+                        .list(GmailApiHelper.DEFAULT_USER_ID)
+                        .setQ(search)
+                        .setPageToken(pageToken)
+                        .execute();
+            } else {
+                break;
+            }
+        }
+
+        for (com.google.api.services.gmail.model.Message originalMessage : messages) {
+            com.google.api.services.gmail.model.Message message = gmailApiService
+                    .users()
+                    .messages()
+                    .get(GmailApiHelper.DEFAULT_USER_ID, originalMessage.getId())
+                    .setFormat(GmailApiHelper.MESSAGE_RESPONSE_FORMAT_RAW)
+                    .execute();
+
+            MimeMessage mimeMessage = new MimeMessage(session,
+                    new ByteArrayInputStream(Base64.decodeBase64(message.getRaw())));
+
+            String key = getKeyFromMessageIfItExists(mimeMessage);
+            if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList, key)) {
+                privateKeyDetailsList.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+            }
+        }
+
+        return privateKeyDetailsList;
+    }
+
+    /**
+     * Get a private key from {@link Message}, if it exists in.
+     *
+     * @param message The original {@link Message} object.
+     * @return <tt>String</tt> A private key.
+     * @throws MessagingException
+     * @throws IOException
+     */
+    public static String getKeyFromMessageIfItExists(Message message) throws MessagingException, IOException {
+        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart multiPart = (Multipart) message.getContent();
+            int numberOfParts = multiPart.getCount();
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                if (bodyPart instanceof MimeBodyPart) {
+                    MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
+                    if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
+                        return IOUtils.toString(mimeBodyPart.getInputStream(), StandardCharsets.UTF_8);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     @NonNull
-    private static BodyPart getBodyPartWithBackupText(Context context) throws MessagingException, IOException {
+    public static BodyPart getBodyPartWithBackupText(Context context) throws MessagingException, IOException {
         BodyPart messageBodyPart = new MimeBodyPart();
         messageBodyPart.setContent(IOUtils.toString(
                 context.getAssets().open(HTML_EMAIL_INTRO_TEMPLATE_HTM),
@@ -279,7 +379,7 @@ public class EmailUtil {
     }
 
     @NonNull
-    private static Message generateMessageWithBackupTemplate(Context context, String accountName, Session session)
+    public static Message generateMessageWithBackupTemplate(Context context, String accountName, Session session)
             throws MessagingException {
         Message message = new MimeMessage(session);
 
@@ -287,5 +387,22 @@ public class EmailUtil {
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountName));
         message.setSubject(context.getString(R.string.your_key_backup, context.getString(R.string.app_name)));
         return message;
+    }
+
+    /**
+     * Check is the private key exists in the keys list.
+     *
+     * @param keyDetailsList The list of {@link KeyDetails} objects.
+     * @param key            The private key armored string.
+     * @return true if the key not exists in the list, otherwise false.
+     */
+    public static boolean privateKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList,
+                                                    String key) {
+        for (KeyDetails keyDetails : keyDetailsList) {
+            if (key.equals(keyDetails.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
