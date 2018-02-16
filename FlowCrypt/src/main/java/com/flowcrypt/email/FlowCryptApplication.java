@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
@@ -74,6 +75,8 @@ public class FlowCryptApplication extends Application {
 
         intiLeakCanary();
         FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
+
+        JsBackgroundService.start(this);
     }
 
     @Override
