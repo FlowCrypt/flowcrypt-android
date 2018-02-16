@@ -7,10 +7,8 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +19,6 @@ import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -84,14 +81,10 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
-
-        if (name.getClassName().equalsIgnoreCase(EmailSyncService.class.getName())) {
-            if (!isLoadPrivateKeysRequestSent) {
-                isLoadPrivateKeysRequestSent = true;
-                loadPrivateKeys(R.id.syns_load_private_keys);
-            }
+    public void onSyncServiceConnected() {
+        if (!isLoadPrivateKeysRequestSent) {
+            isLoadPrivateKeysRequestSent = true;
+            loadPrivateKeys(R.id.syns_load_private_keys);
         }
     }
 

@@ -6,12 +6,10 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -120,7 +118,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                     if (cursor != null && cursor.moveToFirst()) {
                         if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex
                                 (MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
-                            if (isBound && !isRequestMessageDetailsStarted) {
+                            if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
                                 this.isRequestMessageDetailsStarted = true;
                                 loadMessageDetails(R.id.syns_request_code_load_message_details,
                                         folder, generalMessageDetails.getUid());
@@ -150,9 +148,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
+
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         if (isNeedToReceiveMessageBody) {
             loadMessageDetails(R.id.syns_request_code_load_message_details, folder, generalMessageDetails.getUid());
         }

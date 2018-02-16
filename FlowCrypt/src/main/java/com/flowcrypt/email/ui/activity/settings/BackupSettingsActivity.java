@@ -7,11 +7,9 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -169,8 +167,8 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         if (!isLoadPrivateKeysRequestSent) {
             isLoadPrivateKeysRequestSent = true;
             requestActiveAccount(R.id.syns_get_active_account);

@@ -6,9 +6,7 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
-import android.content.ComponentName;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -86,8 +84,8 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         requestActiveAccount(R.id.syns_get_active_account);
     }
 

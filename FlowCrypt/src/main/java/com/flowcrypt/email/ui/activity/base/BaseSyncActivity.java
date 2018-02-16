@@ -39,21 +39,39 @@ import java.lang.ref.WeakReference;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSyncActivity extends BaseActivity implements ServiceConnection {
+public abstract class BaseSyncActivity extends BaseActivity {
     /**
      * Messenger for communicating with the service.
      */
     protected Messenger syncServiceMessenger;
-
-    protected Messenger replyMessenger;
+    protected Messenger syncServiceReplyMessenger;
 
     /**
      * Flag indicating whether we have called bind on the service.
      */
-    protected boolean isBound;
+    protected boolean isBoundToSyncService;
+
+    private ServiceConnection serviceConnectionSyncService = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "Activity connected to " + name.getClassName());
+            syncServiceMessenger = new Messenger(service);
+            isBoundToSyncService = true;
+
+            registerReplyMessenger();
+            onSyncServiceConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "Activity disconnected from " + name.getClassName());
+            syncServiceMessenger = null;
+            isBoundToSyncService = false;
+        }
+    };
 
     public BaseSyncActivity() {
-        replyMessenger = new Messenger(new ReplyHandler(this));
+        syncServiceReplyMessenger = new Messenger(new ReplyHandler(this));
     }
 
     /**
@@ -93,38 +111,27 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      */
     public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e);
 
+    public abstract void onSyncServiceConnected();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (isSyncEnable()) {
-            bindService(new Intent(this, EmailSyncService.class), this, Context.BIND_AUTO_CREATE);
-            Log.d(TAG, "bind to " + EmailSyncService.class.getSimpleName());
+            bindToService(EmailSyncService.class, serviceConnectionSyncService);
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (isSyncEnable()) {
-            unbindFromService();
-            Log.d(TAG, "unbind from " + EmailSyncService.class.getSimpleName());
+        if (isSyncEnable() && isBoundToSyncService) {
+            if (syncServiceMessenger != null) {
+                unregisterReplyMessenger();
+            }
+
+            unbindFromService(EmailSyncService.class, serviceConnectionSyncService);
+            isBoundToSyncService = false;
         }
-    }
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        Log.d(TAG, "Activity connected to " + EmailSyncService.class.getSimpleName());
-        syncServiceMessenger = new Messenger(service);
-        isBound = true;
-
-        registerReplyMessenger();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        Log.d(TAG, "Activity disconnected from " + EmailSyncService.class.getSimpleName());
-        syncServiceMessenger = null;
-        isBound = false;
     }
 
     public String getReplyMessengerName() {
@@ -138,7 +145,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param accountName The account name.
      */
     public void sendMessageWithPrivateKeyBackup(int requestCode, String accountName) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, accountName);
@@ -146,7 +153,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP,
                 action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -155,21 +162,20 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         }
     }
 
-
     /**
      * Request the active account
      *
      * @param requestCode The unique request code for identify the current action.
      */
     public void requestActiveAccount(int requestCode) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
         try {
             EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                     requestCode, null);
 
             Message message = Message.obtain(null, EmailSyncService.MESSAGE_GET_ACTIVE_ACCOUNT,
                     action);
-            message.replyTo = replyMessenger;
+            message.replyTo = syncServiceReplyMessenger;
 
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -184,13 +190,13 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identify the current action.
      */
     public void loadPrivateKeys(int requestCode) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
         try {
             EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(), requestCode, null);
 
             Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS,
                     action);
-            message.replyTo = replyMessenger;
+            message.replyTo = syncServiceReplyMessenger;
 
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -208,14 +214,14 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param end         The position of the end.
      */
     public void loadMessages(int requestCode, Folder folder, int start, int end) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
                 action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -232,7 +238,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
      */
     public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         onProgressReplyFromSyncServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
@@ -243,7 +249,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
                 countOfAlreadyLoadedMessages, 0,
                 action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -258,14 +264,14 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identify the current action.
      */
     public void updateLabels(int requestCode) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, null);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0,
                 action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -283,14 +289,14 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
     public void refreshMessages(int requestCode, Folder currentFolder, int lastUIDInCache, int countOfLoadedMessages) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, currentFolder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES,
                 lastUIDInCache, countOfLoadedMessages, action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -307,7 +313,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
      */
     public void loadMessageDetails(int requestCode, Folder folder, int uid) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, folder);
@@ -315,7 +321,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
                 uid, 0, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -335,7 +341,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      */
     public void moveMessage(int requestCode, Folder sourcesFolder,
                             Folder destinationFolder, int uid) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         Folder[] folders = new Folder[]{sourcesFolder, destinationFolder};
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
@@ -344,7 +350,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
                 uid, 0, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -361,14 +367,14 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      *                            message.
      */
     public void sendMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
-        if (checkBound()) return;
+        if (checkIsSyncServiceBound()) return;
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, outgoingMessageInfo);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -382,8 +388,8 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      *
      * @return true if current activity connected to the service, otherwise false.
      */
-    protected boolean checkBound() {
-        if (!isBound) {
+    protected boolean checkIsSyncServiceBound() {
+        if (!isBoundToSyncService) {
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Activity not connected to the service");
             }
@@ -392,19 +398,17 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
         return false;
     }
 
+    private void bindToService(Class<?> cls, ServiceConnection serviceConnection) {
+        bindService(new Intent(this, cls), serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "bind to " + cls.getSimpleName());
+    }
+
     /**
-     * Disconnect from the {@link EmailSyncService}
+     * Disconnect from a service
      */
-    private void unbindFromService() {
-        if (isBound) {
-
-            if (syncServiceMessenger != null) {
-                unregisterReplyMessenger();
-            }
-
-            unbindService(this);
-            isBound = false;
-        }
+    private void unbindFromService(Class<?> cls, ServiceConnection serviceConnection) {
+        unbindService(serviceConnection);
+        Log.d(TAG, "unbind from " + cls.getSimpleName());
     }
 
     /**
@@ -417,7 +421,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
         Message message = Message.obtain(null,
                 EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
@@ -435,7 +439,7 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
 
         Message message = Message.obtain(null,
                 EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
