@@ -381,12 +381,12 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
 
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
 
     }
 

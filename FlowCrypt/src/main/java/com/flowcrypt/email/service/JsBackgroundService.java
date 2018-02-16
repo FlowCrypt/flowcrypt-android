@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.service;
 
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -38,12 +37,8 @@ import java.util.Map;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class JsBackgroundService extends Service implements JsListener {
+public class JsBackgroundService extends BaseService implements JsListener {
     public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
-
-    public static final int REPLY_OK = 0;
-    public static final int REPLY_ERROR = 1;
-    public static final int REPLY_ACTION_PROGRESS = 2;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;

@@ -60,7 +60,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_get_active_account:
                 email = (String) obj;
@@ -69,7 +69,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
 
     }
 

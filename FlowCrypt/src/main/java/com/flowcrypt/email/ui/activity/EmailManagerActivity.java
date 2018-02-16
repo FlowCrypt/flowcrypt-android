@@ -158,7 +158,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_update_label:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
@@ -182,7 +182,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
                 switch (resultCode) {
@@ -244,7 +244,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
@@ -256,6 +256,11 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onSyncServiceConnected() {
         updateLabels(R.id.syns_request_code_update_label);
+    }
+
+    @Override
+    public void onJsServiceConnected() {
+
     }
 
     @Override

@@ -6,7 +6,6 @@
 
 package com.flowcrypt.email.service;
 
-import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -70,7 +69,7 @@ import javax.mail.internet.InternetHeaders;
  *         Time: 12:18
  *         E-mail: DenBond7@gmail.com
  */
-public class EmailSyncService extends Service implements SyncListener {
+public class EmailSyncService extends BaseService implements SyncListener {
     public static final String ACTION_SWITCH_ACCOUNT = "ACTION_SWITCH_ACCOUNT";
     public static final String ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC";
 
@@ -80,10 +79,6 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3;
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS = 4;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
-
-    public static final int REPLY_OK = 0;
-    public static final int REPLY_ERROR = 1;
-    public static final int REPLY_ACTION_PROGRESS = 2;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;

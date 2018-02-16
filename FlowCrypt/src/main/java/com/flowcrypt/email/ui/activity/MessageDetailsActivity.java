@@ -158,7 +158,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 isRequestMessageDetailsStarted = false;
@@ -216,7 +216,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 isRequestMessageDetailsStarted = false;

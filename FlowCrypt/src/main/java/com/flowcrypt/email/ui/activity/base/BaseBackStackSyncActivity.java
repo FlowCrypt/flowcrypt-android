@@ -40,12 +40,17 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
     }
 
     @Override
-    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
 
     }
 
     @Override
     public void onSyncServiceConnected() {
+
+    }
+
+    @Override
+    public void onJsServiceConnected() {
 
     }
 }

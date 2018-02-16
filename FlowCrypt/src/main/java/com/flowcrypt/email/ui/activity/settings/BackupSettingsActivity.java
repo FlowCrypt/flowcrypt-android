@@ -75,7 +75,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_get_active_account:
                 account = (String) obj;
@@ -111,7 +111,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_load_private_keys:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
@@ -365,9 +365,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         this.layoutBackupFound = findViewById(R.id.layoutBackupFound);
         this.layoutBackupNotFound = findViewById(R.id.layoutBackupNotFound);
         this.layoutBackupOptions = findViewById(R.id.layoutBackupOptions);
-        this.textViewBackupFound = (TextView) findViewById(R.id.textViewBackupFound);
-        this.textViewOptionsHint = (TextView) findViewById(R.id.textViewOptionsHint);
-        this.radioGroupBackupsVariants = (RadioGroup) findViewById(R.id.radioGroupBackupsVariants);
+        this.textViewBackupFound = findViewById(R.id.textViewBackupFound);
+        this.textViewOptionsHint = findViewById(R.id.textViewOptionsHint);
+        this.radioGroupBackupsVariants = findViewById(R.id.radioGroupBackupsVariants);
 
         if (radioGroupBackupsVariants != null) {
             radioGroupBackupsVariants.setOnCheckedChangeListener(this);
@@ -377,7 +377,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
             findViewById(R.id.buttonSeeMoreBackupOptions).setOnClickListener(this);
         }
 
-        buttonBackupAction = (Button) findViewById(R.id.buttonBackupAction);
+        buttonBackupAction = findViewById(R.id.buttonBackupAction);
         if (buttonBackupAction != null) {
             buttonBackupAction.setOnClickListener(this);
         }

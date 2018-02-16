@@ -25,7 +25,9 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.lang.ref.WeakReference;
@@ -40,16 +42,20 @@ import java.lang.ref.WeakReference;
  */
 
 public abstract class BaseSyncActivity extends BaseActivity {
-    /**
-     * Messenger for communicating with the service.
-     */
+    // Messengers for communicating with the service.
     protected Messenger syncServiceMessenger;
     protected Messenger syncServiceReplyMessenger;
+    protected Messenger jsServiceMessenger;
+    protected Messenger jsServiceReplyMessenger;
 
     /**
-     * Flag indicating whether we have called bind on the service.
+     * Flag indicating whether we have called bind on the {@link EmailSyncService}.
      */
     protected boolean isBoundToSyncService;
+    /**
+     * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
+     */
+    protected boolean isBoundToJsService;
 
     private ServiceConnection serviceConnectionSyncService = new ServiceConnection() {
         @Override
@@ -58,7 +64,8 @@ public abstract class BaseSyncActivity extends BaseActivity {
             syncServiceMessenger = new Messenger(service);
             isBoundToSyncService = true;
 
-            registerReplyMessenger();
+            registerReplyMessenger(EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, syncServiceMessenger,
+                    syncServiceReplyMessenger);
             onSyncServiceConnected();
         }
 
@@ -70,19 +77,40 @@ public abstract class BaseSyncActivity extends BaseActivity {
         }
     };
 
+    private ServiceConnection serviceConnectionJsService = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "Activity connected to " + name.getClassName());
+            jsServiceMessenger = new Messenger(service);
+            isBoundToJsService = true;
+
+            registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsServiceMessenger,
+                    jsServiceReplyMessenger);
+            onJsServiceConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "Activity disconnected from " + name.getClassName());
+            jsServiceMessenger = null;
+            isBoundToJsService = false;
+        }
+    };
+
     public BaseSyncActivity() {
         syncServiceReplyMessenger = new Messenger(new ReplyHandler(this));
+        jsServiceReplyMessenger = new Messenger(new ReplyHandler(this));
     }
 
     /**
-     * In this method we can handle response after run some action via {@link EmailSyncService}
+     * In this method we can handle response after run some action via {@link BaseService}
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
      *                    over all project.
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
+    public abstract void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
 
     /**
      * Check is a sync enable.
@@ -92,26 +120,28 @@ public abstract class BaseSyncActivity extends BaseActivity {
     public abstract boolean isSyncEnable();
 
     /**
-     * In this method we can handle a progress state after run some action via {@link EmailSyncService}
+     * In this method we can handle a progress state after run some action via {@link BaseService}
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
      *                    over all project.
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    public abstract void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
+    public abstract void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
 
     /**
-     * In this method we can handle en error after run some action via {@link EmailSyncService}
+     * In this method we can handle en error after run some action via {@link BaseService}
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
      *                    over all project.
      * @param errorType   The {@link SyncErrorTypes}.
      * @param e           The exception which occurred.
      */
-    public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e);
+    public abstract void onErrorFromServiceReceived(int requestCode, int errorType, Exception e);
 
     public abstract void onSyncServiceConnected();
+
+    public abstract void onJsServiceConnected();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -119,6 +149,8 @@ public abstract class BaseSyncActivity extends BaseActivity {
         if (isSyncEnable()) {
             bindToService(EmailSyncService.class, serviceConnectionSyncService);
         }
+
+        bindToService(JsBackgroundService.class, serviceConnectionJsService);
     }
 
     @Override
@@ -126,11 +158,22 @@ public abstract class BaseSyncActivity extends BaseActivity {
         super.onDestroy();
         if (isSyncEnable() && isBoundToSyncService) {
             if (syncServiceMessenger != null) {
-                unregisterReplyMessenger();
+                unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncServiceMessenger,
+                        syncServiceReplyMessenger);
             }
 
             unbindFromService(EmailSyncService.class, serviceConnectionSyncService);
             isBoundToSyncService = false;
+        }
+
+        if (isBoundToJsService) {
+            if (jsServiceMessenger != null) {
+                unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsServiceMessenger,
+                        jsServiceReplyMessenger);
+            }
+
+            unbindFromService(JsBackgroundService.class, serviceConnectionJsService);
+            isBoundToJsService = false;
         }
     }
 
@@ -240,7 +283,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
     public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
         if (checkIsSyncServiceBound()) return;
 
-        onProgressReplyFromSyncServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
+        onProgressReplyFromServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
         EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
                 requestCode, folder);
@@ -412,18 +455,19 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
 
     /**
-     * Register a reply {@link Messenger} to receive notifications from the
-     * {@link EmailSyncService}.
+     * Register a reply {@link Messenger} to receive notifications from some service.
+     *
+     * @param what             A {@link Message#what}}
+     * @param serviceMessenger A service {@link Messenger}
+     * @param replyToMessenger A reply to {@link Messenger}
      */
-    private void registerReplyMessenger() {
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                -1, null);
+    private void registerReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(), -1, null);
 
-        Message message = Message.obtain(null,
-                EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, action);
-        message.replyTo = syncServiceReplyMessenger;
+        Message message = Message.obtain(null, what, action);
+        message.replyTo = replyToMessenger;
         try {
-            syncServiceMessenger.send(message);
+            serviceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -431,17 +475,19 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
 
     /**
-     * Unregister a reply {@link Messenger} from the {@link EmailSyncService}.
+     * Unregister a reply {@link Messenger} from some service.
+     *
+     * @param what             A {@link Message#what}}
+     * @param serviceMessenger A service {@link Messenger}
+     * @param replyToMessenger A reply to {@link Messenger}
      */
-    private void unregisterReplyMessenger() {
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                -1, null);
+    private void unregisterReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
+        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(), -1, null);
 
-        Message message = Message.obtain(null,
-                EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, action);
-        message.replyTo = syncServiceReplyMessenger;
+        Message message = Message.obtain(null, what, action);
+        message.replyTo = replyToMessenger;
         try {
-            syncServiceMessenger.send(message);
+            serviceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -449,8 +495,8 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
 
     /**
-     * The incoming handler realization. This handler will be used to communicate with current
-     * service and other Android components.
+     * The incoming handler realization. This handler will be used to communicate with a service and other Android
+     * components.
      */
     private static class ReplyHandler extends Handler {
         private final WeakReference<BaseSyncActivity> baseSyncActivityWeakReference;
@@ -464,23 +510,22 @@ public abstract class BaseSyncActivity extends BaseActivity {
             if (baseSyncActivityWeakReference.get() != null) {
                 BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
                 switch (message.what) {
-                    case EmailSyncService.REPLY_OK:
-                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2, message.obj);
+                    case BaseService.REPLY_OK:
+                        baseSyncActivity.onReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
                         break;
 
-                    case EmailSyncService.REPLY_ERROR:
+                    case BaseService.REPLY_ERROR:
                         Exception exception = null;
 
                         if (message.obj instanceof Exception) {
                             exception = (Exception) message.obj;
                         }
 
-                        baseSyncActivity.onErrorFromSyncServiceReceived(message.arg1, message.arg2, exception);
+                        baseSyncActivity.onErrorFromServiceReceived(message.arg1, message.arg2, exception);
                         break;
 
-                    case EmailSyncService.REPLY_ACTION_PROGRESS:
-                        baseSyncActivity.onProgressReplyFromSyncServiceReceived(message.arg1, message.arg2,
-                                message.obj);
+                    case BaseService.REPLY_ACTION_PROGRESS:
+                        baseSyncActivity.onProgressReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
                         break;
                 }
             }
