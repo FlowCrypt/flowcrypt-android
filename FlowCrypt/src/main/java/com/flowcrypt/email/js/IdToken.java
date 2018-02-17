@@ -1,7 +1,6 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
- * Contributors: Tom James Holub
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.js;

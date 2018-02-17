@@ -1,3 +1,8 @@
+/*
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
