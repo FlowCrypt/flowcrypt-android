@@ -741,7 +741,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                     case MESSAGE_UPDATE_LABELS:
                         if (emailSyncManager != null && action != null) {
-                            emailSyncManager.updateLabels(action.getOwnerKey(), action.requestCode);
+                            emailSyncManager.updateLabels(action.getOwnerKey(), action.getRequestCode());
                         }
                         break;
 
@@ -857,49 +857,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
                         super.handleMessage(message);
                 }
             }
-        }
-    }
-
-    /**
-     * This class can be used to create a new action for {@link EmailSyncService}
-     */
-    public static class Action {
-        private String ownerKey;
-        private int requestCode;
-        private Object object;
-
-        /**
-         * The constructor.
-         *
-         * @param ownerKey    The name of reply to {@link Messenger}
-         * @param requestCode The unique request code which identify some action
-         * @param object      The object which will be passed to {@link EmailSyncService}.
-         */
-        public Action(String ownerKey, int requestCode, Object object) {
-            this.ownerKey = ownerKey;
-            this.requestCode = requestCode;
-            this.object = object;
-        }
-
-        @Override
-        public String toString() {
-            return "Action{" +
-                    "ownerKey='" + ownerKey + '\'' +
-                    ", requestCode=" + requestCode +
-                    ", object=" + object +
-                    '}';
-        }
-
-        public String getOwnerKey() {
-            return ownerKey;
-        }
-
-        public int getRequestCode() {
-            return requestCode;
-        }
-
-        public Object getObject() {
-            return object;
         }
     }
 }

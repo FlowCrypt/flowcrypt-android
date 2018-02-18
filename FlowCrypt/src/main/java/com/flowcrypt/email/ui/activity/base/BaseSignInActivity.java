@@ -98,6 +98,11 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
         showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
     }
 
+    @Override
+    public void onJsServiceConnected() {
+
+    }
+
     /**
      * Do sign in with Gmail account using OAuth2 mechanism.
      */

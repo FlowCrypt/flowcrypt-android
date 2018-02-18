@@ -230,10 +230,10 @@ public class JsBackgroundService extends BaseService implements JsListener {
         public void handleMessage(Message message) {
             if (jsInBackgroundManagerWeakReference.get() != null) {
                 JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakReference.get();
-                JsBackgroundService.Action action = null;
+                BaseService.Action action = null;
 
-                if (message.obj instanceof JsBackgroundService.Action) {
-                    action = (JsBackgroundService.Action) message.obj;
+                if (message.obj instanceof BaseService.Action) {
+                    action = (BaseService.Action) message.obj;
                 }
 
                 switch (message.what) {
@@ -266,49 +266,6 @@ public class JsBackgroundService extends BaseService implements JsListener {
                         super.handleMessage(message);
                 }
             }
-        }
-    }
-
-    /**
-     * This class can be used to create a new action for {@link JsBackgroundService}
-     */
-    public static class Action {
-        private String ownerKey;
-        private int requestCode;
-        private Object object;
-
-        /**
-         * The constructor.
-         *
-         * @param ownerKey    The name of reply to {@link Messenger}
-         * @param requestCode The unique request code which identify some action
-         * @param object      The object which will be passed to {@link JsBackgroundService}.
-         */
-        public Action(String ownerKey, int requestCode, Object object) {
-            this.ownerKey = ownerKey;
-            this.requestCode = requestCode;
-            this.object = object;
-        }
-
-        @Override
-        public String toString() {
-            return "Action{" +
-                    "ownerKey='" + ownerKey + '\'' +
-                    ", requestCode=" + requestCode +
-                    ", object=" + object +
-                    '}';
-        }
-
-        public String getOwnerKey() {
-            return ownerKey;
-        }
-
-        public int getRequestCode() {
-            return requestCode;
-        }
-
-        public Object getObject() {
-            return object;
         }
     }
 }
