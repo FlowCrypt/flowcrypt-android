@@ -299,6 +299,24 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     }
 
     /**
+     * Start a job to decrypt a raw MIME message.
+     */
+    public void restartJsService() {
+        if (checkServiceBound(isBoundToJsService)) return;
+
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
+                R.id.js_refresh_storage_connector, null);
+        Message message = Message.obtain(null, JsBackgroundService.MESSAGE_REFRESH_STORAGE_CONNECTOR, 0, 0, action);
+        message.replyTo = jsServiceReplyMessenger;
+        try {
+            jsServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
      * Check is current {@link Activity} connected to some service.
      *
      * @return true if current activity connected to the service, otherwise false.

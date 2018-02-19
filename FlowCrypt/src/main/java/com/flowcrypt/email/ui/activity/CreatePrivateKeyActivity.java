@@ -296,6 +296,7 @@ public class CreatePrivateKeyActivity extends BaseBackStackActivity implements V
                 layoutSuccess.setVisibility(View.VISIBLE);
                 UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
                 JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+                restartJsService();
                 break;
 
             default:

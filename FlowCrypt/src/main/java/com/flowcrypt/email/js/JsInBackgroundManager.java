@@ -74,7 +74,7 @@ public class JsInBackgroundManager {
      */
     public void stop() {
         Log.d(TAG, "stop");
-        reset();
+        releaseResources();
 
         if (executorService != null) {
             executorService.shutdown();
@@ -117,6 +117,15 @@ public class JsInBackgroundManager {
     }
 
     /**
+     * Restart a current manager.
+     */
+    public void restart() {
+        Log.d(TAG, "restart");
+        releaseResources();
+        init();
+    }
+
+    /**
      * Check a pull thread state.
      *
      * @return true if already work, otherwise false.
@@ -128,7 +137,8 @@ public class JsInBackgroundManager {
     /**
      * Reset a current pull thread.
      */
-    private void reset() {
+    private void releaseResources() {
+        Log.d(TAG, "releaseResources");
         cancelAllTasks();
 
         if (futureFirst != null) {
@@ -178,7 +188,8 @@ public class JsInBackgroundManager {
             Thread.currentThread().setName(workerName);
             try {
                 js = new Js(jsListener.getContext(), new SecurityStorageConnector(jsListener.getContext()));
-                while (!Thread.interrupted()) {
+                boolean isInterrupted = false;
+                while (!isInterrupted) {
                     try {
                         Log.d(TAG, "blockingQueue size = " + blockingQueue.size());
                         JsTask jsTask = blockingQueue.take();
@@ -188,6 +199,8 @@ public class JsInBackgroundManager {
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        isInterrupted = true;
+                        Log.d(TAG, "A task was interrupted!");
                     }
                 }
             } catch (Exception e) {

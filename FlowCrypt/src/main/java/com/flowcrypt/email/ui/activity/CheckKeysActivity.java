@@ -202,6 +202,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 boolean booleanResult = (boolean) result;
                 if (booleanResult) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+                    restartJsService();
                     setResult(Activity.RESULT_OK);
                     finish();
                 } else {

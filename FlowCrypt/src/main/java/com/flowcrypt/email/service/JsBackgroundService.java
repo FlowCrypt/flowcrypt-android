@@ -42,6 +42,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
     public static final int MESSAGE_DECRYPT_MESSAGE = 3;
+    public static final int MESSAGE_REFRESH_STORAGE_CONNECTOR = 4;
 
     private static final String TAG = JsBackgroundService.class.getSimpleName();
     /**
@@ -259,6 +260,12 @@ public class JsBackgroundService extends BaseService implements JsListener {
 
                             jsInBackgroundManager.decryptMessage(action.getOwnerKey(), action.getRequestCode(),
                                     rawMessage);
+                        }
+                        break;
+
+                    case MESSAGE_REFRESH_STORAGE_CONNECTOR:
+                        if (jsInBackgroundManager != null && action != null) {
+                            jsInBackgroundManager.restart();
                         }
                         break;
 
