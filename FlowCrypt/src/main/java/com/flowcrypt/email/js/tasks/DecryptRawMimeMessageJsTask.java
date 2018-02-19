@@ -82,7 +82,8 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
 
             jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMessageInfo);
         } else {
-            jsListener.onError(0, new NullPointerException("The raw MIME message is null!"), ownerKey, requestCode);
+            jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR,
+                    new NullPointerException("The raw MIME message is null!"), ownerKey, requestCode);
         }
     }
 

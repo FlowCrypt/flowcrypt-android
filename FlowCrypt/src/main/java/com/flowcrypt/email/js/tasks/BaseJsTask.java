@@ -5,9 +5,7 @@
 
 package com.flowcrypt.email.js.tasks;
 
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.js.JsListener;
-import com.sun.mail.util.MailConnectException;
 
 /**
  * A base implementation of {@link JsTask}
@@ -30,15 +28,7 @@ public abstract class BaseJsTask implements JsTask {
     @Override
     public void handleException(Exception e, JsListener jsListener) {
         if (jsListener != null) {
-            int errorType;
-
-            if (e instanceof MailConnectException) {
-                errorType = SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST;
-            } else {
-                errorType = SyncErrorTypes.TASK_RUNNING_ERROR;
-            }
-
-            jsListener.onError(errorType, e, ownerKey, requestCode);
+            jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR, e, ownerKey, requestCode);
         }
     }
 
