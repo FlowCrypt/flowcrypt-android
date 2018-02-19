@@ -32,29 +32,40 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 
 public class JsInBackgroundManager {
+    private static final int JS_THREADS_COUNT = 3;
     private static final String TAG = JsInBackgroundManager.class.getSimpleName();
 
-    private BlockingQueue<JsTask> blockingQueue;
     private ExecutorService executorService;
-    private Future<?> future;
+    private Future<?> futureFirst;
+    private Future<?> futureSecond;
+    private Future<?> futureThird;
 
     /**
      * This fields created as volatile because will be used in different threads.
      */
     private volatile JsListener jsListener;
+    private volatile BlockingQueue<JsTask> blockingQueue;
 
     public JsInBackgroundManager() {
         this.blockingQueue = new LinkedBlockingQueue<>();
-        this.executorService = Executors.newSingleThreadExecutor();
+        this.executorService = Executors.newFixedThreadPool(JS_THREADS_COUNT);
     }
 
     /**
-     * Init a current instance.
+     * Init background threads.
      */
     public void init() {
         Log.d(TAG, "init");
-        if (!isThreadAlreadyWork(future)) {
-            future = executorService.submit(new JsRunnable());
+        if (!isThreadAlreadyWork(futureFirst)) {
+            futureFirst = executorService.submit(new JsRunnable("FirstJsWorker"));
+        }
+
+        if (!isThreadAlreadyWork(futureSecond)) {
+            futureSecond = executorService.submit(new JsRunnable("SecondJsWorker"));
+        }
+
+        if (!isThreadAlreadyWork(futureThird)) {
+            futureThird = executorService.submit(new JsRunnable("ThirdJsWorker"));
         }
     }
 
@@ -120,8 +131,16 @@ public class JsInBackgroundManager {
     private void reset() {
         cancelAllTasks();
 
-        if (future != null) {
-            future.cancel(true);
+        if (futureFirst != null) {
+            futureFirst.cancel(true);
+        }
+
+        if (futureSecond != null) {
+            futureSecond.cancel(true);
+        }
+
+        if (futureThird != null) {
+            futureThird.cancel(true);
         }
     }
 
@@ -144,13 +163,19 @@ public class JsInBackgroundManager {
      * An implementation of the worker thread.
      */
     private class JsRunnable implements Runnable {
-        private final String TAG = JsRunnable.class.getSimpleName();
+        private String TAG = JsRunnable.class.getSimpleName();
         private Js js;
+        private String workerName;
+
+        public JsRunnable(String workerName) {
+            this.workerName = workerName;
+            this.TAG += "|" + workerName;
+        }
 
         @Override
         public void run() {
             Log.d(TAG, " run!");
-            Thread.currentThread().setName(getClass().getSimpleName());
+            Thread.currentThread().setName(workerName);
             try {
                 js = new Js(jsListener.getContext(), new SecurityStorageConnector(jsListener.getContext()));
                 while (!Thread.interrupted()) {
