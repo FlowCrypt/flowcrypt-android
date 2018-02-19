@@ -16,7 +16,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
@@ -55,7 +54,7 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
-import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
@@ -63,7 +62,6 @@ import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyDialogFragment;
-import com.flowcrypt.email.ui.loader.DecryptMessageAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -242,43 +240,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_load_message_info_from_database:
-                UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageParts);
-                return new DecryptMessageAsyncTaskLoader(getContext(), generalMessageDetails
-                        .getRawMessageWithoutAttachments());
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_load_message_info_from_database:
-                imageButtonReplyAll.setVisibility(View.VISIBLE);
-                isAdditionalActionEnable = true;
-                getActivity().invalidateOptionsMenu();
-                incomingMessageInfo = (IncomingMessageInfo) result;
-                incomingMessageInfo.setFolder(folder);
-                updateMessageBody();
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
-                break;
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
-        }
-    }
-
-    @Override
-    public void handleFailureLoaderResult(int loaderId, Exception e) {
-        super.handleFailureLoaderResult(loaderId, e);
-        isAdditionalActionEnable = true;
-        getActivity().invalidateOptionsMenu();
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.imageButtonReplyAll:
@@ -291,24 +252,32 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
         super.onErrorOccurred(requestCode, errorType, e);
         isAdditionalActionEnable = true;
-        getActivity().invalidateOptionsMenu();
+        UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
+        if (getActivity() != null) {
+            getActivity().invalidateOptionsMenu();
+        }
 
-        switch (errorType) {
-            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-                showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
-                        getString(R.string.retry), new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                                ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
-                                        R.id.syns_request_code_load_message_details, folder,
-                                        generalMessageDetails.getUid());
-                            }
-                        });
+        switch (requestCode) {
+            case R.id.syns_request_code_load_message_details:
+                switch (errorType) {
+                    case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                        showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
+                                getString(R.string.retry), new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                        ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
+                                                R.id.syns_request_code_load_message_details, folder,
+                                                generalMessageDetails.getUid());
+                                    }
+                                });
+                        return;
+                }
                 break;
 
-            default:
-                UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
+            case R.id.syns_request_archive_message:
+            case R.id.syns_request_delete_message:
+            case R.id.syns_request_move_message_to_inbox:
                 UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageParts);
                 showSnackbar(getView(), e.getMessage(),
                         getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
@@ -350,6 +319,23 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    /**
+     * Show an incoming message info.
+     *
+     * @param incomingMessageInfo An incoming message info which have received from {@link JsBackgroundService}
+     */
+    public void showIncomingMessageInfo(IncomingMessageInfo incomingMessageInfo) {
+        this.incomingMessageInfo = incomingMessageInfo;
+        imageButtonReplyAll.setVisibility(View.VISIBLE);
+        isAdditionalActionEnable = true;
+        if (getActivity() != null) {
+            getActivity().invalidateOptionsMenu();
+        }
+        incomingMessageInfo.setFolder(folder);
+        updateMessageBody();
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
     }
 
     /**

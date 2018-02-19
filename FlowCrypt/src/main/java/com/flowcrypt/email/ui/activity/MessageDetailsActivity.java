@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -132,6 +133,9 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
                             showMessageBody(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+
+                            decryptMessage(R.id.js_decrypt_message, generalMessageDetails
+                                    .getRawMessageWithoutAttachments());
                         }
                     }
                 }
@@ -211,6 +215,26 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         break;
                 }
                 break;
+
+            case R.id.js_decrypt_message:
+                if (obj instanceof IncomingMessageInfo) {
+                    IncomingMessageInfo incomingMessageInfo = (IncomingMessageInfo) obj;
+                    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+                            .findFragmentById(R.id.messageDetailsFragment);
+
+                    if (messageDetailsFragment != null) {
+                        messageDetailsFragment.showIncomingMessageInfo(incomingMessageInfo);
+                    }
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onJsServiceConnected() {
+        super.onJsServiceConnected();
+        if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+            decryptMessage(R.id.js_decrypt_message, generalMessageDetails.getRawMessageWithoutAttachments());
         }
     }
 
