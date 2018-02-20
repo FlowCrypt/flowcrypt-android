@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
@@ -37,7 +38,8 @@ public class ExceptionUtil {
     public static boolean isErrorHandleWithACRA(Exception e) {
         if ((e instanceof MailConnectException)
                 || (e instanceof UnknownHostException)
-                || (e instanceof SocketTimeoutException)) {
+                || (e instanceof SocketTimeoutException)
+                || (e instanceof ConnectionException)) {
             return false;
         }
 
