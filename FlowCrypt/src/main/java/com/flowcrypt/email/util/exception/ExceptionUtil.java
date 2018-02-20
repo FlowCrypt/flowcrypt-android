@@ -10,6 +10,7 @@ import com.sun.mail.util.MailConnectException;
 import org.acra.ACRA;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import javax.mail.MessagingException;
@@ -34,7 +35,9 @@ public class ExceptionUtil {
      * @return true if need to handle such exception with {@link ACRA} and send logs to the backend, false - otherwise.
      */
     public static boolean isErrorHandleWithACRA(Exception e) {
-        if ((e instanceof MailConnectException) || (e instanceof UnknownHostException)) {
+        if ((e instanceof MailConnectException)
+                || (e instanceof UnknownHostException)
+                || (e instanceof SocketTimeoutException)) {
             return false;
         }
 
