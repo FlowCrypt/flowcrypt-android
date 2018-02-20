@@ -130,8 +130,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             MessageDaoSource messageDaoSource = new MessageDaoSource();
                             messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
                                     folder.getFolderAlias(), generalMessageDetails.getUid());
-                            generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                            showMessageBody(generalMessageDetails);
+                            this.generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+                            updateMessageDetails(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
 
                             decryptMessage(R.id.js_decrypt_message, generalMessageDetails
@@ -318,12 +318,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
-    private void showMessageBody(GeneralMessageDetails generalMessageDetails) {
+    private void updateMessageDetails(GeneralMessageDetails generalMessageDetails) {
         MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.messageDetailsFragment);
 
         if (messageDetailsFragment != null) {
-            messageDetailsFragment.showMessageBody(generalMessageDetails);
+            messageDetailsFragment.updateMessageDetails(generalMessageDetails);
         }
     }
 

@@ -149,21 +149,16 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
-            getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
-        }
-    }
-
-    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
+                        getBaseActivity().restartJsService();
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-                        getLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
+                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageParts);
+                        getBaseActivity().decryptMessage(R.id.js_decrypt_message,
+                                generalMessageDetails.getRawMessageWithoutAttachments());
                         break;
                 }
                 break;
@@ -339,13 +334,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     }
 
     /**
-     * Show message details.
+     * Update message details.
      *
      * @param generalMessageDetails This object contains general message details.
      */
-    public void showMessageBody(GeneralMessageDetails generalMessageDetails) {
+    public void updateMessageDetails(GeneralMessageDetails generalMessageDetails) {
         this.generalMessageDetails = generalMessageDetails;
-        getLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
     public void notifyUserAboutActionError(int requestCode) {
