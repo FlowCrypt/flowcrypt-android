@@ -50,7 +50,8 @@ public class ExceptionUtil {
         if ((e instanceof SSLHandshakeException || e instanceof MessagingException)) {
             if ("Connection closed by peer".equalsIgnoreCase(e.getMessage())
                     || e.getMessage().contains("I/O error during system call, Software caused connection abort")
-                    || e.getMessage().contains("I/O error during system call, Connection reset by peer;")) {
+                    || e.getMessage().contains("I/O error during system call, Connection reset by peer;")
+                    || e.getMessage().contains("I/O error during system call, Socket operation on non-socket;")) {
                 return false;
             }
         }
