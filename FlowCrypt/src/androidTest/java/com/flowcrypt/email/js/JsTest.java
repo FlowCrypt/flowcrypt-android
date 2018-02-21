@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -14,12 +13,14 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,6 +36,7 @@ import java.io.OutputStream;
  *         Time: 15:01
  *         E-mail: DenBond7@gmail.com
  */
+@Ignore
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class JsTest {
@@ -65,7 +67,7 @@ public class JsTest {
     @AfterClass
     public static void cleanCacheDirectory() throws Exception {
         if (parentDirectory != null && parentDirectory.exists()) {
-            FileUtils.cleanDirectory(parentDirectory);
+            FileAndDirectoryUtils.cleanDirectory(parentDirectory);
         }
     }
 
@@ -73,7 +75,7 @@ public class JsTest {
     public static void initCacheDirectory() throws Exception {
         parentDirectory = new File(InstrumentationRegistry.getTargetContext().getCacheDir(), TESTS_DIRECTORY);
         if (parentDirectory.exists()) {
-            FileUtils.cleanDirectory(parentDirectory);
+            FileAndDirectoryUtils.cleanDirectory(parentDirectory);
         } else if (!parentDirectory.mkdirs()) {
             Log.d(TAG, "Create cache directory " + parentDirectory.getName() + " filed!");
         }

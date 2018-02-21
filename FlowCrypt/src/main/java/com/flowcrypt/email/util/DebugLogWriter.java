@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -9,6 +8,8 @@ package com.flowcrypt.email.util;
 import android.os.Environment;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
@@ -52,7 +53,7 @@ public class DebugLogWriter {
             } catch (IOException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }
@@ -68,9 +69,7 @@ public class DebugLogWriter {
             FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
         } catch (IOException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -81,7 +80,7 @@ public class DebugLogWriter {
             } catch (IOException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }

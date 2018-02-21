@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingBottom="@dimen/padding_pgp_message_error_small"
+    android:paddingLeft="@dimen/padding_pgp_message_error_big"
+    android:paddingRight="@dimen/padding_pgp_message_error_small"
+    android:paddingTop="@dimen/padding_pgp_message_error_small">
+
+    <item>
+        <bitmap
+            android:src="@drawable/lock_seamless_bg"
+            android:tileMode="repeat" />
+    </item>
+
+    <item android:gravity="left">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="@dimen/default_single_dip"
+                android:color="@color/light" />
+        </shape>
+    </item>
+
+    <item android:gravity="left">
+        <shape>
+            <size android:width="@dimen/width_pgp_message_type_line" />
+            <solid android:color="@color/colorPrimary" />
+        </shape>
+    </item>
+</layer-list>

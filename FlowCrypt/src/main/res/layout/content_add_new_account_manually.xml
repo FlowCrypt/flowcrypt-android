@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -28,9 +27,9 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutEmail"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewAccountInfo">
@@ -49,10 +48,10 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutUsername"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutEmail">
@@ -71,10 +70,10 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutPassword"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutUsername"
@@ -107,9 +106,9 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutImapServer"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewIncomingEmailSettings">
@@ -128,10 +127,10 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutImapPort"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutImapServer">
@@ -181,9 +180,9 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutSmtpServer"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewOutgoingEmailSettings">
@@ -202,10 +201,10 @@
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/layoutSmtpPort"
+            style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            android:background="@drawable/bg_bottom_line_gray"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpServer">
@@ -265,10 +264,10 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/layoutSmtpUserName"
+                style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
-                android:background="@drawable/bg_bottom_line_gray"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -287,10 +286,10 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/layoutSmtpPassword"
+                style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
-                android:background="@drawable/bg_bottom_line_gray"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layoutSmtpUserName"

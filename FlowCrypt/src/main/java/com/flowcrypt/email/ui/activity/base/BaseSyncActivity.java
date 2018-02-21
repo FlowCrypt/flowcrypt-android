@@ -1,18 +1,13 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.base;
 
-import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -20,16 +15,12 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
-
-import org.acra.ACRA;
-
-import java.lang.ref.WeakReference;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 /**
  * This class describes a bind to the email sync service logic.
@@ -40,32 +31,40 @@ import java.lang.ref.WeakReference;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSyncActivity extends BaseActivity implements ServiceConnection {
-    /**
-     * Messenger for communicating with the service.
-     */
+public abstract class BaseSyncActivity extends BaseActivity {
+    // Messengers for communicating with the service.
     protected Messenger syncServiceMessenger;
-
-    protected Messenger replyMessenger;
+    protected Messenger syncServiceReplyMessenger;
 
     /**
-     * Flag indicating whether we have called bind on the service.
+     * Flag indicating whether we have called bind on the {@link EmailSyncService}.
      */
-    protected boolean isBound;
+    protected boolean isBoundToSyncService;
+
+    private ServiceConnection serviceConnectionSyncService = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "Activity connected to " + name.getClassName());
+            syncServiceMessenger = new Messenger(service);
+            isBoundToSyncService = true;
+
+            registerReplyMessenger(EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, syncServiceMessenger,
+                    syncServiceReplyMessenger);
+            onSyncServiceConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "Activity disconnected from " + name.getClassName());
+            syncServiceMessenger = null;
+            isBoundToSyncService = false;
+        }
+    };
 
     public BaseSyncActivity() {
-        replyMessenger = new Messenger(new ReplyHandler(this));
+        super();
+        syncServiceReplyMessenger = new Messenger(new ReplyHandler(this));
     }
-
-    /**
-     * In this method we can handle response after run some action via {@link EmailSyncService}
-     *
-     * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
-     * @param resultCode  The result code of a run action.
-     * @param obj         The object which returned from the service.
-     */
-    public abstract void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
 
     /**
      * Check is a sync enable.
@@ -74,62 +73,33 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      */
     public abstract boolean isSyncEnable();
 
-    /**
-     * In this method we can handle a progress state after run some action via {@link EmailSyncService}
-     *
-     * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
-     * @param resultCode  The result code of a run action.
-     * @param obj         The object which returned from the service.
-     */
-    public abstract void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj);
-
-    /**
-     * In this method we can handle en error after run some action via {@link EmailSyncService}
-     *
-     * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
-     * @param errorType   The {@link SyncErrorTypes}.
-     * @param e           The exception which occurred.
-     */
-    public abstract void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e);
+    public abstract void onSyncServiceConnected();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (isSyncEnable()) {
-            bindService(new Intent(this, EmailSyncService.class), this, Context.BIND_AUTO_CREATE);
-            Log.d(TAG, "bind to " + EmailSyncService.class.getSimpleName());
+            bindToService(EmailSyncService.class, serviceConnectionSyncService);
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (isSyncEnable()) {
-            unbindFromService();
-            Log.d(TAG, "unbind from " + EmailSyncService.class.getSimpleName());
+        if (isSyncEnable() && isBoundToSyncService) {
+            if (syncServiceMessenger != null) {
+                unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncServiceMessenger,
+                        syncServiceReplyMessenger);
+            }
+
+            unbindFromService(EmailSyncService.class, serviceConnectionSyncService);
+            isBoundToSyncService = false;
         }
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        Log.d(TAG, "Activity connected to " + EmailSyncService.class.getSimpleName());
-        syncServiceMessenger = new Messenger(service);
-        isBound = true;
+    public void onJsServiceConnected() {
 
-        registerReplyMessenger();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        Log.d(TAG, "Activity disconnected from " + EmailSyncService.class.getSimpleName());
-        syncServiceMessenger = null;
-        isBound = false;
-    }
-
-    public String getReplyMessengerName() {
-        return getClass().getSimpleName() + "_" + hashCode();
     }
 
     /**
@@ -139,25 +109,22 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param accountName The account name.
      */
     public void sendMessageWithPrivateKeyBackup(int requestCode, String accountName) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, accountName);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP,
                 action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
-
 
     /**
      * Request the active account
@@ -165,21 +132,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identify the current action.
      */
     public void requestActiveAccount(int requestCode) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
         try {
-            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+            BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                     requestCode, null);
 
             Message message = Message.obtain(null, EmailSyncService.MESSAGE_GET_ACTIVE_ACCOUNT,
                     action);
-            message.replyTo = replyMessenger;
+            message.replyTo = syncServiceReplyMessenger;
 
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -189,20 +154,18 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identify the current action.
      */
     public void loadPrivateKeys(int requestCode) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
         try {
-            EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(), requestCode, null);
+            BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
             Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS,
                     action);
-            message.replyTo = replyMessenger;
+            message.replyTo = syncServiceReplyMessenger;
 
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -215,21 +178,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param end         The position of the end.
      */
     public void loadMessages(int requestCode, Folder folder, int start, int end) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
                 action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -241,25 +202,23 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
      */
     public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        onProgressReplyFromSyncServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
+        onProgressReplyFromServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
                 countOfAlreadyLoadedMessages, 0,
                 action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -269,21 +228,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param requestCode The unique request code for identify the current action.
      */
     public void updateLabels(int requestCode) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, null);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0,
                 action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -296,21 +253,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
     public void refreshMessages(int requestCode, Folder currentFolder, int lastUIDInCache, int countOfLoadedMessages) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, currentFolder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES,
                 lastUIDInCache, countOfLoadedMessages, action);
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -322,22 +277,20 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
      */
     public void loadMessageDetails(int requestCode, Folder folder, int uid) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
                 uid, 0, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -352,23 +305,21 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      */
     public void moveMessage(int requestCode, Folder sourcesFolder,
                             Folder destinationFolder, int uid) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
         Folder[] folders = new Folder[]{sourcesFolder, destinationFolder};
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, folders);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
                 uid, 0, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -380,131 +331,19 @@ public abstract class BaseSyncActivity extends BaseActivity implements ServiceCo
      *                            message.
      */
     public void sendMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
-        if (checkBound()) return;
+        if (checkServiceBound(isBoundToSyncService)) return;
 
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, outgoingMessageInfo);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE, action);
 
-        message.replyTo = replyMessenger;
+        message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
-        }
-    }
-
-    /**
-     * Check is current {@link Activity} connected to {@link EmailSyncService}
-     *
-     * @return true if current activity connected to the service, otherwise false.
-     */
-    protected boolean checkBound() {
-        if (!isBound) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Activity not connected to the service");
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Disconnect from the {@link EmailSyncService}
-     */
-    private void unbindFromService() {
-        if (isBound) {
-
-            if (syncServiceMessenger != null) {
-                unregisterReplyMessenger();
-            }
-
-            unbindService(this);
-            isBound = false;
-        }
-    }
-
-    /**
-     * Register a reply {@link Messenger} to receive notifications from the
-     * {@link EmailSyncService}.
-     */
-    private void registerReplyMessenger() {
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                -1, null);
-
-        Message message = Message.obtain(null,
-                EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, action);
-        message.replyTo = replyMessenger;
-        try {
-            syncServiceMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
-        }
-    }
-
-    /**
-     * Unregister a reply {@link Messenger} from the {@link EmailSyncService}.
-     */
-    private void unregisterReplyMessenger() {
-        EmailSyncService.Action action = new EmailSyncService.Action(getReplyMessengerName(),
-                -1, null);
-
-        Message message = Message.obtain(null,
-                EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, action);
-        message.replyTo = replyMessenger;
-        try {
-            syncServiceMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
-        }
-    }
-
-    /**
-     * The incoming handler realization. This handler will be used to communicate with current
-     * service and other Android components.
-     */
-    private static class ReplyHandler extends Handler {
-        private final WeakReference<BaseSyncActivity> baseSyncActivityWeakReference;
-
-        ReplyHandler(BaseSyncActivity baseSyncActivity) {
-            this.baseSyncActivityWeakReference = new WeakReference<>(baseSyncActivity);
-        }
-
-        @Override
-        public void handleMessage(Message message) {
-            if (baseSyncActivityWeakReference.get() != null) {
-                BaseSyncActivity baseSyncActivity = baseSyncActivityWeakReference.get();
-                switch (message.what) {
-                    case EmailSyncService.REPLY_OK:
-                        baseSyncActivity.onReplyFromSyncServiceReceived(message.arg1, message.arg2, message.obj);
-                        break;
-
-                    case EmailSyncService.REPLY_ERROR:
-                        Exception exception = null;
-
-                        if (message.obj instanceof Exception) {
-                            exception = (Exception) message.obj;
-                        }
-
-                        baseSyncActivity.onErrorFromSyncServiceReceived(message.arg1, message.arg2, exception);
-                        break;
-
-                    case EmailSyncService.REPLY_ACTION_PROGRESS:
-                        baseSyncActivity.onProgressReplyFromSyncServiceReceived(message.arg1, message.arg2,
-                                message.obj);
-                        break;
-                }
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 }

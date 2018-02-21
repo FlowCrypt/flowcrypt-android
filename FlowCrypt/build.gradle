@@ -1,8 +1,10 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
+
+
+import groovy.swing.SwingBuilder
 
 import java.text.SimpleDateFormat
 
@@ -21,7 +23,52 @@ apply plugin: 'com.github.gfx.ribbonizer'
 
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
 
+def keystoreProperties = new Properties()
+File propertiesFile = project.file("keystore.properties");
+if (propertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(propertiesFile))
+}
+
+
+static def inputPassword(String dialogTitle, String dialogMessage) {
+    def console = System.console();
+    if (console != null) {
+        return new String(console.readPassword(dialogMessage)).trim()
+    }
+
+    while (true) {
+        def enteredPassword = null
+        new SwingBuilder().edt {
+            dialog(
+                    modal: true, //Otherwise the build will continue running
+                    title: dialogTitle,
+                    alwaysOnTop: true,
+                    resizable: false,
+                    locationRelativeTo: null, //Place dialog in center of the screen
+                    pack: true, //We need to pack the dialog (so it will take the size of its children
+                    show: true
+            ) {
+                vbox { //Put everything below each other
+                    label(text: dialogMessage)
+                    input = passwordField()
+                    button(defaultButton: true, text: 'OK', actionPerformed: {
+                        enteredPassword = new String(input.password).trim()
+                        dispose();
+                    })
+                }
+            }
+        }
+        return enteredPassword
+    }
+}
+
 android {
+    if (projects.hasProperty('devBuild')) {
+        splits.abi.enable = false
+        splits.density.enable = false
+        aaptOptions.cruncherEnable = false
+    }
+
     compileSdkVersion COMPILE_SDK_VERSION as int
     buildToolsVersion BUILD_TOOLS_VERSION as String
 
@@ -38,10 +85,11 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("modified this..")
-            storePassword ""
-            keyAlias ""
-            keyPassword ""
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] != null ?
+                    file(keystoreProperties['storeFile']) : file("change me...")
+            storePassword keystoreProperties['storePassword']
         }
 
         debug {
@@ -58,13 +106,53 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
+            resValue 'string', 'gradle_is_acra_enable', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
         }
 
         debug {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
+        }
+    }
+
+    flavorDimensions "standard"
+
+    productFlavors {
+        //This flavor must be used only for a development.
+        // It has settings for a fast building (some features are disabled or not included).
+        development {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
+            resValue 'string', 'gradle_is_acra_enable', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'true'
+            versionNameSuffix "_dev"
+            dimension "standard"
+            minSdkVersion 21
+            resConfigs "en", "xhdpi"
+        }
+
+        //This is a production flavor
+        production {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
+            resValue 'string', 'gradle_is_acra_enable', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
+            dimension "standard"
+        }
+
+        //This flavor must be used only for a testing
+        devTest {
+            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
+            resValue 'string', 'gradle_is_acra_enable', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
+            versionNameSuffix "_devTest"
+            dimension "standard"
         }
     }
 
@@ -92,8 +180,29 @@ android {
         }
     }
 
+    task('inputKeyPasswords') {
+        doLast {
+            def keyStorePassword = null
+            while (keyStorePassword == null || ((String) keyStorePassword).isEmpty()) {
+                keyStorePassword = inputPassword('KeyStore password', 'Please enter the password for the keystore:')
+            }
+
+            def keyPassword = null
+            while (keyPassword == null || ((String) keyPassword).isEmpty()) {
+                keyPassword = inputPassword('Key password', 'Please enter the password for the signing key:')
+            }
+            System.out.println()
+
+            android.signingConfigs.release.storePassword = keyStorePassword
+            android.signingConfigs.release.keyPassword = keyPassword
+        }
+    }
+
     tasks.whenTaskAdded { task ->
-        if (task.name == 'assembleRelease') {
+        if (task.name == 'assembleProductionRelease') {
+            if (project.hasProperty('runtimeSetup')) {
+                task.dependsOn inputKeyPasswords
+            }
             task.finalizedBy 'renameReleaseBuild'
         }
     }
@@ -106,6 +215,7 @@ dependencies {
 
     androidTestImplementation "com.android.support.test.espresso:espresso-core:${ESPRESSO_VERSION}"
     androidTestImplementation "com.android.support.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
+    androidTestImplementation "com.android.support.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
@@ -147,8 +257,9 @@ dependencies {
     implementation "com.github.bumptech.glide:glide:${GLIDE_VERSION}"
     annotationProcessor "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
 
-    implementation 'com.eclipsesource.j2v8:j2v8:4.8.0@aar'
-    implementation 'commons-io:commons-io:2.5'
+    implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
+    implementation 'commons-io:commons-io:2.6'
     implementation 'ch.acra:acra:4.9.2'
     implementation 'com.hootsuite.android:nachos:1.1.1'
+    implementation 'com.nulab-inc:zxcvbn:1.2.3'
 }

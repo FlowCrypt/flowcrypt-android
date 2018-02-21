@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -16,9 +15,13 @@
             android:key="@string/preferences_key_is_detect_memory_leak_enable"
             android:title="@string/preferences_title_enable_detect_memory_leak" />
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="@string/gradle_is_acra_enable"
             android:key="@string/preferences_key_is_acra_enable"
             android:title="@string/preferences_title_enable_acra" />
+        <CheckBoxPreference
+            android:defaultValue="@string/gradle_is_mail_debug_enable"
+            android:key="@string/preferences_key_is_mail_debug_enable"
+            android:title="@string/preferences_title_enable_mail_debug" />
         <Preference android:title="@string/crash_the_app">
             <intent
                 android:targetClass="com.flowcrypt.email"

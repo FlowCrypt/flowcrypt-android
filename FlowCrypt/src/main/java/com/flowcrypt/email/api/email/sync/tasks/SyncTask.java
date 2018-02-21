@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -34,11 +33,12 @@ public interface SyncTask {
      * Run current task in the separate thread.
      *
      * @param accountDao   The account information which will be used of connection.
+     * @param session      The {@link Session} object.
      * @param store        The connected and opened {@link Store} object.
      * @param syncListener The listener of synchronization.
      * @throws Exception Different exceptions can be throw when we work with {@link Store}
      */
-    void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception;
+    void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws Exception;
 
     /**
      * Run current task in the separate thread.

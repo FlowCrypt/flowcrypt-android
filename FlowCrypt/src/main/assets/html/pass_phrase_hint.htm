@@ -1,0 +1,46 @@
+<!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+<style>
+   .featherlight-content {
+       text-align: justify;
+       vertical-align: middle;
+       display: inline-block;
+       /* dimensions: handling large content */
+       max-height: 100%;
+       max-width: 95%;
+       /* styling */
+       background: #fff;
+       /* reset white-space wrapping */
+       white-space: normal;
+   }
+
+   /* contains the content */
+   .featherlight-inner {
+       /* make sure its visible */
+       display: block;
+   }
+
+   .good { color: #088447; }
+   .bad { color: #A44; }
+
+
+
+</style>
+<div class="featherlight-content">
+    <div class="lightboxed featherlight-inner">
+        <p>Choose a VERY long passphrase. For example, combine uncommon words like this:</p>
+        <pre class="good">cheesy pod unlike any other
+semi automated shiseido mask
+icelanders prefer real sauna</pre>
+        <p>Combinations like that are memorable, easy to type and the most secure.</p>
+        <p>In contrast, pass phrases like <code class="bad">@ut0m4t3d</code>, <code class="bad">Honey167!</code> or
+            <code class="bad">lA45pf8$d</code> are a poor choice when it comes to security. Because they are so short,
+            on a fleet of 10,000 ordinary computers, these <b>can be guessed in 7 seconds</b>.
+        </p>
+        <p>To read more, see <a
+                href="https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation/"
+                target="_blank">zxcvbn article</a> by Dropbox.</p>
+    </div>
+</div>

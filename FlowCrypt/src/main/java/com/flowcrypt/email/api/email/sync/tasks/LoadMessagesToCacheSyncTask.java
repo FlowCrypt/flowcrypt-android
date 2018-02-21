@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -11,11 +10,13 @@ import android.util.Log;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
@@ -42,7 +43,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+            Exception {
         IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
         if (syncListener != null) {
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_opening_store);
@@ -65,6 +67,9 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 + " | end = " + end);
 
         if (syncListener != null) {
+            new ImapLabelsDaoSource().updateLabelMessageCount(syncListener.getContext(),
+                    imapFolder.getFullName(), messagesCount);
+
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
             if (end < 1) {
                 syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);

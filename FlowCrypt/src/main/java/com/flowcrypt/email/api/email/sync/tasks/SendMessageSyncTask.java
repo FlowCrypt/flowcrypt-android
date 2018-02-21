@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -26,7 +25,9 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -103,7 +104,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             File pgpCacheDirectory = new File(context.getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
             if (pgpCacheDirectory.exists()) {
-                FileUtils.cleanDirectory(pgpCacheDirectory);
+                FileAndDirectoryUtils.cleanDirectory(pgpCacheDirectory);
             } else if (!pgpCacheDirectory.mkdirs()) {
                 Log.d(TAG, "Create cache directory " + pgpCacheDirectory.getName() + " filed!");
             }
@@ -140,7 +141,11 @@ public class SendMessageSyncTask extends BaseSyncTask {
                             sentMessage.setThreadId(threadId);
                         }
 
-                        sentMessage = gmailApiService.users().messages().send("me", sentMessage).execute();
+                        sentMessage = gmailApiService
+                                .users()
+                                .messages()
+                                .send(GmailApiHelper.DEFAULT_USER_ID, sentMessage)
+                                .execute();
                         isMessageSent = sentMessage.getId() != null;
                     }
 
@@ -155,7 +160,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                     saveCopyOfSentMessage(accountDao, store, syncListener.getContext(), mimeMessage);
             }
 
-            FileUtils.cleanDirectory(pgpCacheDirectory);
+            FileAndDirectoryUtils.cleanDirectory(pgpCacheDirectory);
 
             syncListener.onMessageSent(accountDao, ownerKey, requestCode, isMessageSent);
         }
@@ -202,7 +207,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
     private MimeMessage createMimeMessage(Session session, Context context, AccountDao accountDao,
                                           File pgpCacheDirectory) throws IOException, MessagingException {
         Js js = new Js(context, new SecurityStorageConnector(context));
-        String[] pubKeys = getPubKeys(context, js, accountDao);
+        String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
+                getPubKeys(context, js, accountDao) : null;
 
         String rawMessage = generateRawMessageWithoutAttachments(js, pubKeys);
 
@@ -390,7 +396,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @throws IOException
      */
     private String getGmailMessageThreadID(Gmail service, String rfc822msgidValue) throws IOException {
-        ListMessagesResponse response = service.users().messages().list("me").setQ(
+        ListMessagesResponse response = service.users().messages().list(GmailApiHelper.DEFAULT_USER_ID).setQ(
                 "rfc822msgid:" + rfc822msgidValue).execute();
 
         if (response.getMessages() != null && response.getMessages().size() == 1) {
@@ -427,9 +433,13 @@ public class SendMessageSyncTask extends BaseSyncTask {
             return null;
         }
 
+        /**
+         * If a content type is unknown we return "application/octet-stream".
+         * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
+         */
         @Override
         public String getContentType() {
-            return attachmentInfo.getType();
+            return TextUtils.isEmpty(attachmentInfo.getType()) ? "application/octet-stream" : attachmentInfo.getType();
         }
 
         @Override

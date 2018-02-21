@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -9,7 +8,7 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper;
@@ -51,11 +50,11 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     public LoaderResult loadInBackground() {
         Session session = Session.getInstance(
                 PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
-        session.setDebug(BuildConfig.DEBUG);
+        session.setDebug(EmailUtil.isDebugEnable(getContext()));
 
         try {
             testImapConnection(session);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Exception exception = new Exception("IMAP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
@@ -63,7 +62,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
         try {
             testSmtpConnection(session);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Exception exception = new Exception("SMTP: " + e.getMessage(), e);
             return new LoaderResult(null, exception);
@@ -85,7 +84,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
      */
     private void testImapConnection(Session session) throws MessagingException {
         Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
-        store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
+        store.connect(authCredentials.getImapServer(), authCredentials.getImapPort(), authCredentials.getUsername(),
                 authCredentials.getPassword());
         Folder folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX);
         folder.open(Folder.READ_ONLY);

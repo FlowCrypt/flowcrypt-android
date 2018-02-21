@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppWidget.TextInputLayout.PgpBlock.Error"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_message_part_pgp_message_error"
     android:orientation="vertical">
 
     <TextView

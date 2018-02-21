@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -13,6 +12,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
@@ -31,7 +31,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 6;
+    public static final int DB_VERSION = 7;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -70,6 +70,8 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
         sqLiteDatabase.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE);
         sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
+
+        sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
     }
 
     @Override
@@ -81,6 +83,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 break;
 
             case 2:
@@ -88,21 +91,29 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 break;
 
             case 3:
                 upgradeDatabaseFrom3To4Version(sqLiteDatabase);
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 break;
 
             case 4:
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 break;
 
             case 5:
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                break;
+
+            case 6:
+                upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 break;
         }
 
@@ -202,6 +213,16 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         try {
             sqLiteDatabase.execSQL("DROP INDEX IF EXISTS email_account_type_in_accounts_aliases");
             sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private void upgradeDatabaseFrom6To7Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();

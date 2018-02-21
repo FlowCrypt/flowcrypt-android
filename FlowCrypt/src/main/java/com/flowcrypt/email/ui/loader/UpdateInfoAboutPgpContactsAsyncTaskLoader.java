@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -20,6 +19,8 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -92,7 +93,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             pgpContacts.add(localPgpContact);
                             e.printStackTrace();
                             if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(e);
+                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                             }
                         }
                     } else {
@@ -114,7 +115,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                         pgpContacts.add(newPgpContact);
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                     }
                 }
@@ -123,9 +124,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                     isAllInfoReceived, pgpContacts), null);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }

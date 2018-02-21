@@ -1,19 +1,16 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -48,6 +45,7 @@ import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -78,14 +76,16 @@ public class EmailManagerActivity extends BaseSyncActivity
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
     public static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
 
-    private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle actionBarDrawerToggle;
-    private NavigationView navigationView;
+    private GoogleApiClient googleApiClient;
     private AccountDao accountDao;
     private FoldersManager foldersManager;
     private Folder folder;
+    private ActionManager actionManager;
+
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
     private LinearLayout accountManagementLayout;
-    private GoogleApiClient googleApiClient;
+    private NavigationView navigationView;
     private View currentAccountDetailsItem;
 
     public EmailManagerActivity() {
@@ -108,6 +108,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        actionManager = new ActionManager(this);
 
         googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
                 .generateGoogleSignInOptions());
@@ -117,7 +118,7 @@ public class EmailManagerActivity extends BaseSyncActivity
             if (accountDao == null) {
                 throw new IllegalArgumentException("You must pass an AccountDao to this activity.");
             }
-
+            actionManager.checkAndAddActionsToQueue(accountDao);
             getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
         } else {
             finish();
@@ -156,7 +157,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_update_label:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
@@ -164,6 +165,7 @@ public class EmailManagerActivity extends BaseSyncActivity
                 break;
 
             case R.id.syns_request_code_load_next_messages:
+                refreshFoldersInfoFromCache();
                 onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 break;
 
@@ -179,7 +181,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onProgressReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
                 switch (resultCode) {
@@ -241,7 +243,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
@@ -251,9 +253,13 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
         updateLabels(R.id.syns_request_code_update_label);
+    }
+
+    @Override
+    public void onJsServiceConnected() {
+
     }
 
     @Override
@@ -403,6 +409,13 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    private void refreshFoldersInfoFromCache() {
+        foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
+        if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
+            folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+        }
     }
 
     private void logout() {

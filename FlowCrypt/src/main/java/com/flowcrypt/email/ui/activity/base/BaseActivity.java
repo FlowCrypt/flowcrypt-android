@@ -1,12 +1,21 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.base;
 
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -18,8 +27,14 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.service.BaseService;
+import com.flowcrypt.email.service.JsBackgroundService;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import java.lang.ref.WeakReference;
 
 /**
  * This is a base activity. This class describes a base logic for all activities.
@@ -29,15 +44,41 @@ import com.flowcrypt.email.model.results.LoaderResult;
  *         Time: 22:21.
  *         E-mail: DenBond7@gmail.com
  */
-public abstract class BaseActivity extends AppCompatActivity {
-    protected static String TAG;
+public abstract class BaseActivity extends AppCompatActivity implements BaseService.OnServiceCallback {
+    protected final String TAG;
 
+    protected Messenger jsServiceMessenger;
+    protected Messenger jsServiceReplyMessenger;
+    /**
+     * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
+     */
+    protected boolean isBoundToJsService;
     private Snackbar snackbar;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
+    private ServiceConnection serviceConnectionJsService = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "Activity connected to " + name.getClassName());
+            jsServiceMessenger = new Messenger(service);
+            isBoundToJsService = true;
+
+            registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsServiceMessenger,
+                    jsServiceReplyMessenger);
+            onJsServiceConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "Activity disconnected from " + name.getClassName());
+            jsServiceMessenger = null;
+            isBoundToJsService = false;
+        }
+    };
 
     public BaseActivity() {
         TAG = getClass().getSimpleName();
+        jsServiceReplyMessenger = new Messenger(new ReplyHandler(this));
     }
 
     /**
@@ -60,12 +101,31 @@ public abstract class BaseActivity extends AppCompatActivity {
      */
     public abstract View getRootView();
 
+    public abstract void onJsServiceConnected();
+
+    @Override
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+
+    }
+
+    @Override
+    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+
+    }
+
+    @Override
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(getContentViewResourceId());
         initScreenViews();
+
+        bindToService(JsBackgroundService.class, serviceConnectionJsService);
     }
 
     @Override
@@ -90,6 +150,16 @@ public abstract class BaseActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+
+        if (isBoundToJsService) {
+            if (jsServiceMessenger != null) {
+                unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsServiceMessenger,
+                        jsServiceReplyMessenger);
+            }
+
+            unbindFromService(JsBackgroundService.class, serviceConnectionJsService);
+            isBoundToJsService = false;
+        }
     }
 
     @Override
@@ -202,6 +272,118 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     }
 
+    public String getReplyMessengerName() {
+        return getClass().getSimpleName() + "_" + hashCode();
+    }
+
+    /**
+     * Start a job to decrypt a raw MIME message.
+     *
+     * @param requestCode    The unique request code for identify the current action.
+     * @param rawMimeMessage The raw MIME message.
+     */
+    public void decryptMessage(int requestCode, String rawMimeMessage) {
+        if (checkServiceBound(isBoundToJsService)) return;
+
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMessage);
+
+        Message message = Message.obtain(null, JsBackgroundService.MESSAGE_DECRYPT_MESSAGE, 0, 0, action);
+
+        message.replyTo = jsServiceReplyMessenger;
+        try {
+            jsServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Start a job to decrypt a raw MIME message.
+     */
+    public void restartJsService() {
+        if (checkServiceBound(isBoundToJsService)) return;
+
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
+                R.id.js_refresh_storage_connector, null);
+        Message message = Message.obtain(null, JsBackgroundService.MESSAGE_REFRESH_STORAGE_CONNECTOR, 0, 0, action);
+        message.replyTo = jsServiceReplyMessenger;
+        try {
+            jsServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Check is current {@link Activity} connected to some service.
+     *
+     * @return true if current activity connected to the service, otherwise false.
+     */
+    protected boolean checkServiceBound(boolean isBound) {
+        if (!isBound) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Activity not connected to the service");
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected void bindToService(Class<?> cls, ServiceConnection serviceConnection) {
+        bindService(new Intent(this, cls), serviceConnection, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "bind to " + cls.getSimpleName());
+    }
+
+    /**
+     * Disconnect from a service
+     */
+    protected void unbindFromService(Class<?> cls, ServiceConnection serviceConnection) {
+        unbindService(serviceConnection);
+        Log.d(TAG, "unbind from " + cls.getSimpleName());
+    }
+
+    /**
+     * Register a reply {@link Messenger} to receive notifications from some service.
+     *
+     * @param what             A {@link Message#what}}
+     * @param serviceMessenger A service {@link Messenger}
+     * @param replyToMessenger A reply to {@link Messenger}
+     */
+    protected void registerReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), -1, null);
+
+        Message message = Message.obtain(null, what, action);
+        message.replyTo = replyToMessenger;
+        try {
+            serviceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Unregister a reply {@link Messenger} from some service.
+     *
+     * @param what             A {@link Message#what}}
+     * @param serviceMessenger A service {@link Messenger}
+     * @param replyToMessenger A reply to {@link Messenger}
+     */
+    protected void unregisterReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), -1, null);
+
+        Message message = Message.obtain(null, what, action);
+        message.replyTo = replyToMessenger;
+        try {
+            serviceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
     private void initScreenViews() {
         appBarLayout = findViewById(R.id.appBarLayout);
         setupToolbarIfItExists();
@@ -215,6 +397,44 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled());
+        }
+    }
+
+    /**
+     * The incoming handler realization. This handler will be used to communicate with a service and other Android
+     * components.
+     */
+    protected static class ReplyHandler extends Handler {
+        private final WeakReference<BaseService.OnServiceCallback> onServiceCallbackWeakReference;
+
+        ReplyHandler(BaseService.OnServiceCallback onServiceCallback) {
+            this.onServiceCallbackWeakReference = new WeakReference<>(onServiceCallback);
+        }
+
+        @Override
+        public void handleMessage(Message message) {
+            if (onServiceCallbackWeakReference.get() != null) {
+                BaseService.OnServiceCallback onServiceCallback = onServiceCallbackWeakReference.get();
+                switch (message.what) {
+                    case BaseService.REPLY_OK:
+                        onServiceCallback.onReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
+                        break;
+
+                    case BaseService.REPLY_ERROR:
+                        Exception exception = null;
+
+                        if (message.obj instanceof Exception) {
+                            exception = (Exception) message.obj;
+                        }
+
+                        onServiceCallback.onErrorFromServiceReceived(message.arg1, message.arg2, exception);
+                        break;
+
+                    case BaseService.REPLY_ACTION_PROGRESS:
+                        onServiceCallback.onProgressReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
+                        break;
+                }
+            }
         }
     }
 }

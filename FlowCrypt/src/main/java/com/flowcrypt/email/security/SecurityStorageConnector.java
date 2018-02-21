@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -12,8 +11,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -105,9 +103,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 }

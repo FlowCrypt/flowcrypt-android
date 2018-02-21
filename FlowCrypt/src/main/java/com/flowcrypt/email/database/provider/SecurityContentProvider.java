@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -17,17 +16,20 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -60,6 +62,8 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_ACCOUNT_ALIASES_TABLE = 14;
     private static final int MATCHED_CODE_ACCOUNT_ALIASES_ROW = 15;
     private static final int MATCHED_CODE_KEY_ERASE_DATABASE = 16;
+    private static final int MATCHED_CODE_ACTION_QUEUE_TABLE = 17;
+    private static final int MATCHED_CODE_ACTION_QUEUE_ROW = 18;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -99,6 +103,10 @@ public class SecurityContentProvider extends ContentProvider {
                 MATCHED_CODE_ACCOUNT_ALIASES_TABLE);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES +
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACCOUNT_ALIASES_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_QUEUE_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE,
+                MATCHED_CODE_ACTION_QUEUE_TABLE);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -162,6 +170,11 @@ public class SecurityContentProvider extends ContentProvider {
                         result = Uri.parse(new AccountAliasesDaoSource().getBaseContentUri() + "/" + id);
                         break;
 
+                    case MATCHED_CODE_ACTION_QUEUE_TABLE:
+                        id = sqLiteDatabase.insert(new ActionQueueDaoSource().getTableName(), null, values);
+                        result = Uri.parse(new ActionQueueDaoSource().getBaseContentUri() + "/" + id);
+                        break;
+
                     default:
                         throw new UnsupportedOperationException("Unknown uri: " + uri);
                 }
@@ -183,47 +196,8 @@ public class SecurityContentProvider extends ContentProvider {
             SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
             if (sqLiteDatabase != null) {
                 sqLiteDatabase.beginTransaction();
-
-                int match = URI_MATCHER.match(uri);
-
                 try {
-                    switch (match) {
-                        case MATCHED_CODE_KEYS_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new KeysDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
-                        case MATCHED_CODE_CONTACTS_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new ContactsDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
-                        case MATCHED_CODE_IMAP_LABELS_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
+                    switch (URI_MATCHER.match(uri)) {
                         case MATCHED_CODE_IMAP_MESSAGES_TABLE:
                             for (ContentValues contentValues : values) {
                                 long id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null,
@@ -242,44 +216,15 @@ public class SecurityContentProvider extends ContentProvider {
                             }
                             break;
 
-                        case MATCHED_CODE_ACCOUNTS_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new AccountDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
-                        case MATCHED_CODE_ATTACHMENT_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new AttachmentDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
-                        case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
-                            for (ContentValues contentValues : values) {
-                                long id = sqLiteDatabase.insert(new AccountAliasesDaoSource().getTableName(), null,
-                                        contentValues);
-                                if (id <= 0) {
-                                    throw new SQLException("Failed to insert row into " + uri);
-                                } else {
-                                    insertedRowsCount++;
-                                }
-                            }
-                            break;
-
                         default:
-                            throw new UnsupportedOperationException("Unknown uri: " + uri);
+                            for (ContentValues contentValues : values) {
+                                long id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues);
+                                if (id <= 0) {
+                                    throw new SQLException("Failed to insert row into " + uri);
+                                } else {
+                                    insertedRowsCount++;
+                                }
+                            }
                     }
 
                     sqLiteDatabase.setTransactionSuccessful();
@@ -290,7 +235,7 @@ public class SecurityContentProvider extends ContentProvider {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 } finally {
                     sqLiteDatabase.endTransaction();
@@ -306,69 +251,12 @@ public class SecurityContentProvider extends ContentProvider {
         int rowsCount = -1;
         if (hotelDBHelper != null) {
             SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
-            int match = URI_MATCHER.match(uri);
-
             if (sqLiteDatabase != null) {
-                switch (match) {
-                    case MATCHED_CODE_KEYS_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new KeysDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_CONTACTS_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new ContactsDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_IMAP_LABELS_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new ImapLabelsDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new MessageDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ACCOUNTS_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new AccountDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ATTACHMENT_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new AttachmentDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
-                        rowsCount = sqLiteDatabase.update(
-                                new AccountAliasesDaoSource().getTableName(),
-                                values,
-                                selection,
-                                selectionArgs);
-                        break;
-
-                    default:
-                        throw new UnsupportedOperationException("Unknown uri: " + uri);
-                }
+                rowsCount = sqLiteDatabase.update(
+                        getMatchedTableName(uri),
+                        values,
+                        selection,
+                        selectionArgs);
 
                 if (getContext() != null && rowsCount != 0) {
                     getContext().getContentResolver().notifyChange(uri, null, false);
@@ -409,38 +297,13 @@ public class SecurityContentProvider extends ContentProvider {
                         rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
                         break;
 
-                    case MATCHED_CODE_CONTACTS_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new ContactsDaoSource().getTableName(),
-                                selection, selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_IMAP_LABELS_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
-                                selection, selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new MessageDaoSource().getTableName(),
-                                selection, selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ACCOUNTS_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(),
-                                selection, selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ATTACHMENT_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
-                                selection, selectionArgs);
-                        break;
-
-                    case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
-                        rowsCount = sqLiteDatabase.delete(new AccountAliasesDaoSource().getTableName(),
-                                selection, selectionArgs);
+                    case MATCHED_CODE_ACTION_QUEUE_ROW:
+                        rowsCount = sqLiteDatabase.delete(new ActionQueueDaoSource().getTableName(),
+                                BaseColumns._ID + " = ?", new String[]{uri.getLastPathSegment()});
                         break;
 
                     default:
-                        throw new UnsupportedOperationException("Unknown uri: " + uri);
+                        rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs);
                 }
 
                 if (getContext() != null && rowsCount != 0) {
@@ -457,46 +320,14 @@ public class SecurityContentProvider extends ContentProvider {
                         String[] selectionArgs, String sortOrder) {
         SQLiteDatabase sqLiteDatabase = hotelDBHelper.getReadableDatabase();
 
-        Cursor cursor;
-        String table;
-        String groupBy = null;
-        String having = null;
-        String limit = null;
-
-        switch (URI_MATCHER.match(uri)) {
-            case MATCHED_CODE_KEYS_TABLE:
-                table = KeysDaoSource.TABLE_NAME_KEYS;
-                break;
-
-            case MATCHED_CODE_CONTACTS_TABLE:
-                table = ContactsDaoSource.TABLE_NAME_CONTACTS;
-                break;
-
-            case MATCHED_CODE_IMAP_LABELS_TABLE:
-                table = ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS;
-                break;
-
-            case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-                table = MessageDaoSource.TABLE_NAME_MESSAGES;
-                break;
-
-            case MATCHED_CODE_ACCOUNTS_TABLE:
-                table = AccountDaoSource.TABLE_NAME_ACCOUNTS;
-                break;
-
-            case MATCHED_CODE_ATTACHMENT_TABLE:
-                table = AttachmentDaoSource.TABLE_NAME_ATTACHMENT;
-                break;
-
-            case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
-                table = AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES;
-                break;
-
-            default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
-        }
-
-        cursor = sqLiteDatabase.query(table, projection, selection, selectionArgs, groupBy, having, sortOrder, limit);
+        Cursor cursor = sqLiteDatabase.query(getMatchedTableName(uri),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder,
+                null);
 
         if (getContext() != null && cursor != null) {
             cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -520,7 +351,7 @@ public class SecurityContentProvider extends ContentProvider {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 } finally {
                     sqLiteDatabase.endTransaction();
@@ -578,8 +409,51 @@ public class SecurityContentProvider extends ContentProvider {
             case MATCHED_CODE_ACCOUNT_ALIASES_ROW:
                 return new AttachmentDaoSource().getSingleRowContentType();
 
+            case MATCHED_CODE_ACTION_QUEUE_TABLE:
+                return new ActionQueueDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_ACTION_QUEUE_ROW:
+                return new ActionQueueDaoSource().getSingleRowContentType();
+
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
+        }
+    }
+
+    /**
+     * Get the matched table name from an input {@link Uri}
+     *
+     * @param uri An input {@link Uri}
+     * @return The matched table name;
+     */
+    private String getMatchedTableName(@NonNull Uri uri) {
+        switch (URI_MATCHER.match(uri)) {
+            case MATCHED_CODE_KEYS_TABLE:
+                return KeysDaoSource.TABLE_NAME_KEYS;
+
+            case MATCHED_CODE_CONTACTS_TABLE:
+                return ContactsDaoSource.TABLE_NAME_CONTACTS;
+
+            case MATCHED_CODE_IMAP_LABELS_TABLE:
+                return ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS;
+
+            case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+                return MessageDaoSource.TABLE_NAME_MESSAGES;
+
+            case MATCHED_CODE_ACCOUNTS_TABLE:
+                return AccountDaoSource.TABLE_NAME_ACCOUNTS;
+
+            case MATCHED_CODE_ATTACHMENT_TABLE:
+                return AttachmentDaoSource.TABLE_NAME_ATTACHMENT;
+
+            case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
+                return AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES;
+
+            case MATCHED_CODE_ACTION_QUEUE_TABLE:
+                return ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE;
+
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
     }
 

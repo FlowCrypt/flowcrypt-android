@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -16,8 +15,8 @@ import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.model.NoPgpFoundDialogAction;
-import com.flowcrypt.email.ui.adapter.NoPgpFoundDialogAdapter;
+import com.flowcrypt.email.model.DialogItem;
+import com.flowcrypt.email.ui.adapter.DialogItemAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 
 import java.util.ArrayList;
@@ -32,8 +31,7 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class NoPgpFoundDialogFragment extends BaseDialogFragment
-        implements DialogInterface.OnClickListener {
+public class NoPgpFoundDialogFragment extends BaseDialogFragment implements DialogInterface.OnClickListener {
     public static final int RESULT_CODE_SWITCH_TO_STANDARD_EMAIL = 10;
     public static final int RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 11;
     public static final int RESULT_CODE_COPY_FROM_OTHER_CONTACT = 12;
@@ -46,11 +44,10 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
             ("EXTRA_KEY_IS_SHOW_REMOVE_ACTION", NoPgpFoundDialogFragment.class);
 
     private PgpContact pgpContact;
-    private List<NoPgpFoundDialogAction> noPgpFoundDialogActionList;
+    private List<DialogItem> dialogItemList;
     private boolean isShowRemoveAction;
 
-    public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact,
-                                                       boolean isShowRemoveAction) {
+    public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact, boolean isShowRemoveAction) {
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact);
         args.putBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION, isShowRemoveAction);
@@ -68,19 +65,16 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
             this.isShowRemoveAction = getArguments().getBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION);
         }
 
-        noPgpFoundDialogActionList = new ArrayList<>();
+        dialogItemList = new ArrayList<>();
 
-        noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
-                R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
+        dialogItemList.add(new DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
                 RESULT_CODE_SWITCH_TO_STANDARD_EMAIL));
-        noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
-                R.mipmap.ic_document, getString(R.string.import_their_public_key),
+        dialogItemList.add(new DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
                 RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY));
-        noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
-                R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
+        dialogItemList.add(new DialogItem(R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
                 RESULT_CODE_COPY_FROM_OTHER_CONTACT));
         if (isShowRemoveAction) {
-            noPgpFoundDialogActionList.add(new NoPgpFoundDialogAction(
+            dialogItemList.add(new DialogItem(
                     R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
                     pgpContact.getEmail()), RESULT_CODE_REMOVE_CONTACT));
         }
@@ -90,18 +84,17 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        NoPgpFoundDialogAdapter noPgpFoundDialogAdapter = new NoPgpFoundDialogAdapter(getContext
-                (), noPgpFoundDialogActionList);
+        DialogItemAdapter dialogItemAdapter = new DialogItemAdapter(getContext(), dialogItemList);
 
         builder.setTitle(R.string.recipient_does_not_use_pgp);
-        builder.setAdapter(noPgpFoundDialogAdapter, this);
+        builder.setAdapter(dialogItemAdapter, this);
         return builder.create();
     }
 
     @Override
     public void onClick(DialogInterface dialog, int which) {
-        NoPgpFoundDialogAction noPgpFoundDialogAction = noPgpFoundDialogActionList.get(which);
-        sendResult(noPgpFoundDialogAction.getId());
+        DialogItem dialogItem = dialogItemList.get(which);
+        sendResult(dialogItem.getId());
     }
 
     private void sendResult(int result) {

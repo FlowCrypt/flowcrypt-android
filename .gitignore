@@ -34,3 +34,6 @@ captures/
 
 # Keystore files
 *.jks
+
+# keystore info
+FlowCrypt/keystore.properties

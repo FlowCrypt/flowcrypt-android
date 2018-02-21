@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -16,6 +15,7 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
 import com.flowcrypt.email.BuildConfig;
 
@@ -198,5 +198,22 @@ public class GeneralUtil {
      */
     public static boolean isEmailValid(CharSequence email) {
         return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    /**
+     * Get a mime type of the input {@link Uri}
+     *
+     * @param context Interface to global information about an application environment.
+     * @param uri     The {@link Uri} of the file.
+     * @return A mime type of of the {@link Uri}.
+     */
+    public static String getFileMimeTypeFromUri(Context context, Uri uri) {
+        if (ContentResolver.SCHEME_CONTENT.equalsIgnoreCase(uri.getScheme())) {
+            ContentResolver contentResolver = context.getContentResolver();
+            return contentResolver.getType(uri);
+        } else {
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+            return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+        }
     }
 }

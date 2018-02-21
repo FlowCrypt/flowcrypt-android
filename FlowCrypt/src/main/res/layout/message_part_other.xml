@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/textViewMessagePartOther"
+    style="@style/AppWidget.TextInputLayout.PgpBlock.Other"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/default_margin_medium"
     android:autoLink="web"
-    android:background="@drawable/bg_message_part_other"
     android:textColor="@color/dark"
     android:textIsSelectable="true"
     android:textSize="@dimen/default_text_size_medium"

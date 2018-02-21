@@ -1,12 +1,13 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -23,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -56,12 +58,14 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.PgpContactDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
+import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -76,6 +80,8 @@ import org.apache.commons.io.FileUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -87,18 +93,19 @@ import java.util.List;
  */
 
 public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener,
-        AdapterView.OnItemSelectedListener, View.OnClickListener {
+        AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
     private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
+    private static final int REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG = 105;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
     private OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
     private List<PgpContact> pgpContacts;
     private ArrayList<AttachmentInfo> attachmentInfoList;
-    private NachoTextView editTextRecipients;
+    private PgpContactsNachoTextView editTextRecipients;
     private ContactsDaoSource contactsDaoSource;
     private FoldersManager.FolderType folderType;
     private IncomingMessageInfo incomingMessageInfo;
@@ -256,6 +263,30 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             }
                         }
 
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG:
+                PgpContact receivedPgpContact = data != null ?
+                        (PgpContact) data.getParcelableExtra(PgpContactDialogFragment.EXTRA_KEY_PGP_CONTACT) : null;
+
+                switch (resultCode) {
+                    case PgpContactDialogFragment.RESULT_CODE_COPY_EMAIL:
+                        if (receivedPgpContact != null) {
+                            ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(
+                                    Context.CLIPBOARD_SERVICE);
+                            ClipData clip = ClipData.newPlainText(null, receivedPgpContact.getEmail());
+                            if (clipboardManager != null) {
+                                clipboardManager.setPrimaryClip(clip);
+                            }
+                        }
+                        break;
+
+                    case PgpContactDialogFragment.RESULT_CODE_REMOVE_CONTACT:
+                        if (receivedPgpContact != null) {
+                            removePgpContactFromRecipientsField(receivedPgpContact);
+                        }
                         break;
                 }
                 break;
@@ -517,6 +548,15 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
     }
 
+    @Override
+    public void onChipLongClick(@NonNull Chip chip, MotionEvent event) {
+        PgpContactDialogFragment pgpContactDialogFragment = PgpContactDialogFragment.newInstance(
+                new PgpContact(chip.getText().toString(), null));
+
+        pgpContactDialogFragment.setTargetFragment(this, REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG);
+        pgpContactDialogFragment.show(getFragmentManager(), NoPgpFoundDialogFragment.class.getSimpleName());
+    }
+
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         String emailMassageHint = null;
         if (messageEncryptionType != null) {
@@ -688,6 +728,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
         editTextRecipients.setAdapter(preparePgpContactAdapter());
         editTextRecipients.setOnFocusChangeListener(this);
+        editTextRecipients.setOnChipLongClickListener(this);
     }
 
     /**
@@ -799,7 +840,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
             }
             editTextRecipients.chipifyAllUnterminatedTokens();
-            editTextEmailSubject.setText(getString(R.string.template_reply_subject, incomingMessageInfo.getSubject()));
+            editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
             editTextEmailMessage.requestFocus();
         }
 
@@ -823,6 +864,22 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 editTextEmailMessage.setText(serviceInfo.getSystemMessage());
             }
         }
+    }
+
+    @NonNull
+    private String prepareReplySubject(String subject) {
+        if (TextUtils.isEmpty(subject)) {
+            return getString(R.string.template_reply_subject, "");
+        }
+
+        Pattern pattern = Pattern.compile("^(Re: )", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(subject);
+
+        if (matcher.find()) {
+            return subject;
+        }
+
+        return getString(R.string.template_reply_subject, subject);
     }
 
     private String prepareRecipients(List<String> recipients) {

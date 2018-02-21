@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -67,7 +66,7 @@ public class SecurityType implements Parcelable {
         ArrayList<SecurityType> securityTypes = new ArrayList<>();
         securityTypes.add(new SecurityType(context.getString(R.string.none), SecurityType.Option.NONE, 143, 25));
         securityTypes.add(new SecurityType(context.getString(R.string.ssl_tls), SecurityType.Option.SSL_TLS, 993, 465));
-        securityTypes.add(new SecurityType(context.getString(R.string.startls), SecurityType.Option.STARTLS, 143, 25));
+        securityTypes.add(new SecurityType(context.getString(R.string.startls), SecurityType.Option.STARTLS, 143, 587));
         return securityTypes;
     }
 

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -13,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 /**
  * The simple POJO object which describes an account information.
@@ -60,6 +60,22 @@ public class AccountDao implements Parcelable {
         this.familyName = familyName;
         this.photoUrl = photoUrl;
         this.authCredentials = authCredentials;
+    }
+
+    public AccountDao(GoogleSignInAccount googleSignInAccount) {
+        this.email = googleSignInAccount.getEmail();
+        Account account = googleSignInAccount.getAccount();
+
+        if (account != null && account.type != null) {
+            this.accountType = account.type.toLowerCase();
+        }
+
+        this.displayName = googleSignInAccount.getDisplayName();
+        this.givenName = googleSignInAccount.getGivenName();
+        this.familyName = googleSignInAccount.getFamilyName();
+        if (googleSignInAccount.getPhotoUrl() != null) {
+            this.photoUrl = googleSignInAccount.getPhotoUrl().toString();
+        }
     }
 
     protected AccountDao(Parcel in) {

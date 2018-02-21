@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -41,6 +40,7 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -103,6 +103,11 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     @Override
     public View getRootView() {
         return contentView;
+    }
+
+    @Override
+    public void onJsServiceConnected() {
+
     }
 
     @Override
@@ -252,7 +257,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
                 AccountDao accountDao = new AccountDao(authCredentials.getEmail(), null
-                        , null, null, null, null, authCredentials);
+                        , authCredentials.getUsername(), null, null, null, authCredentials);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
@@ -289,7 +294,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
                 if (keyDetailsList.isEmpty()) {
                     AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
-                            null, null, null, null, null, authCredentials);
+                            null, authCredentials.getUsername(), null, null, null, authCredentials);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_ADD_NEW_ACCOUNT);
                     UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
@@ -466,7 +471,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             } catch (JsonSyntaxException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }

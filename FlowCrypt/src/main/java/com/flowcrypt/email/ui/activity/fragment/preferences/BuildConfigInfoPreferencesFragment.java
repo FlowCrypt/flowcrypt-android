@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -12,6 +11,7 @@ import android.preference.DialogPreference;
 import android.util.AttributeSet;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -41,7 +41,7 @@ public class BuildConfigInfoPreferencesFragment extends DialogPreference {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }

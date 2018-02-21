@@ -1,17 +1,14 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -23,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
@@ -120,7 +118,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                     if (cursor != null && cursor.moveToFirst()) {
                         if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex
                                 (MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
-                            if (isBound && !isRequestMessageDetailsStarted) {
+                            if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
                                 this.isRequestMessageDetailsStarted = true;
                                 loadMessageDetails(R.id.syns_request_code_load_message_details,
                                         folder, generalMessageDetails.getUid());
@@ -132,9 +130,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             MessageDaoSource messageDaoSource = new MessageDaoSource();
                             messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
                                     folder.getFolderAlias(), generalMessageDetails.getUid());
-                            generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                            showMessageBody(generalMessageDetails);
+                            this.generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+                            updateMessageDetails(generalMessageDetails);
                             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+
+                            decryptMessage(R.id.js_decrypt_message, generalMessageDetails
+                                    .getRawMessageWithoutAttachments());
                         }
                     }
                 }
@@ -150,16 +151,17 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
+
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         if (isNeedToReceiveMessageBody) {
             loadMessageDetails(R.id.syns_request_code_load_message_details, folder, generalMessageDetails.getUid());
         }
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 isRequestMessageDetailsStarted = false;
@@ -213,11 +215,31 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                         break;
                 }
                 break;
+
+            case R.id.js_decrypt_message:
+                if (obj instanceof IncomingMessageInfo) {
+                    IncomingMessageInfo incomingMessageInfo = (IncomingMessageInfo) obj;
+                    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+                            .findFragmentById(R.id.messageDetailsFragment);
+
+                    if (messageDetailsFragment != null) {
+                        messageDetailsFragment.showIncomingMessageInfo(incomingMessageInfo);
+                    }
+                }
+                break;
         }
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onJsServiceConnected() {
+        super.onJsServiceConnected();
+        if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+            decryptMessage(R.id.js_decrypt_message, generalMessageDetails.getRawMessageWithoutAttachments());
+        }
+    }
+
+    @Override
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_message_details:
                 isRequestMessageDetailsStarted = false;
@@ -296,12 +318,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
-    private void showMessageBody(GeneralMessageDetails generalMessageDetails) {
+    private void updateMessageDetails(GeneralMessageDetails generalMessageDetails) {
         MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.messageDetailsFragment);
 
         if (messageDetailsFragment != null) {
-            messageDetailsFragment.showMessageBody(generalMessageDetails);
+            messageDetailsFragment.updateMessageDetails(generalMessageDetails);
         }
     }
 

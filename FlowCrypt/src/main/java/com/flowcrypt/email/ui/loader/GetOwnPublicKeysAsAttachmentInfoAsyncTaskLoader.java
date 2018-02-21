@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -20,8 +19,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -100,9 +98,7 @@ public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLo
             return new LoaderResult(attachmentInfoList, null);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
     }

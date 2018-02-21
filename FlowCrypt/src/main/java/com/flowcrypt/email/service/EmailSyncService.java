@@ -1,12 +1,10 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.service;
 
-import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -33,15 +31,15 @@ import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +68,7 @@ import javax.mail.internet.InternetHeaders;
  *         Time: 12:18
  *         E-mail: DenBond7@gmail.com
  */
-public class EmailSyncService extends Service implements SyncListener {
+public class EmailSyncService extends BaseService implements SyncListener {
     public static final String ACTION_SWITCH_ACCOUNT = "ACTION_SWITCH_ACCOUNT";
     public static final String ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC";
 
@@ -80,10 +78,6 @@ public class EmailSyncService extends Service implements SyncListener {
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3;
     public static final int REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS = 4;
     public static final int REPLY_RESULT_CODE_NEED_UPDATE = 2;
-
-    public static final int REPLY_OK = 0;
-    public static final int REPLY_ERROR = 1;
-    public static final int REPLY_ACTION_PROGRESS = 2;
 
     public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
     public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
@@ -218,9 +212,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -230,9 +222,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -246,9 +236,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -269,9 +257,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -296,9 +282,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -329,9 +313,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -382,12 +364,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
         } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -403,7 +380,7 @@ public class EmailSyncService extends Service implements SyncListener {
             } catch (MessagingException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
             }
         }
@@ -416,9 +393,7 @@ public class EmailSyncService extends Service implements SyncListener {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -429,7 +404,7 @@ public class EmailSyncService extends Service implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
                     if (ACRA.isInitialised()) {
                         ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
                     }
@@ -451,9 +426,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (RemoteException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -482,9 +455,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
         return updateCandidates.toArray(new javax.mail.Message[0]);
     }
@@ -508,9 +479,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
         return newCandidates.toArray(new javax.mail.Message[0]);
     }
@@ -534,9 +503,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
 
         uidListDeleteCandidates.removeAll(uidList);
@@ -553,24 +520,15 @@ public class EmailSyncService extends Service implements SyncListener {
      */
     private void updateAttachmentTable(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
                                        IMAPFolder imapFolder, javax.mail.Message[] messages)
-            throws MessagingException {
+            throws MessagingException, IOException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
         ArrayList<ContentValues> contentValuesList = new ArrayList<>();
 
         for (javax.mail.Message message : messages) {
-            ArrayList<AttachmentInfo> attachmentInfoList = null;
+            ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, message
+                    .getMessageNumber(), message);
 
-            try {
-                attachmentInfoList = getAttachmentsInfoFromPart(accountDao, imapFolder, message.getMessageNumber(),
-                        message);
-            } catch (IOException e) {
-                e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
-                }
-            }
-
-            if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
+            if (!attachmentInfoList.isEmpty()) {
                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                     contentValuesList.add(AttachmentDaoSource.prepareContentValues(accountDao.getEmail(),
                             folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
@@ -584,7 +542,6 @@ public class EmailSyncService extends Service implements SyncListener {
     /**
      * Find attachments in the {@link Part}.
      *
-     * @param accountDao    The object which contains information about an email account.
      * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
      * @param messageNumber This number will be used for fetching {@link Part} details;
      * @param part          The parent part.
@@ -593,8 +550,7 @@ public class EmailSyncService extends Service implements SyncListener {
      * @throws IOException
      */
     @NonNull
-    private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(AccountDao accountDao, IMAPFolder imapFolder, int
-            messageNumber, Part part)
+    private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(IMAPFolder imapFolder, int messageNumber, Part part)
             throws MessagingException, IOException {
         ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
@@ -605,34 +561,32 @@ public class EmailSyncService extends Service implements SyncListener {
             for (int partCount = 0; partCount < numberOfParts; partCount++) {
                 BodyPart bodyPart = multiPart.getBodyPart(partCount);
                 if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfoFromPart(accountDao, imapFolder,
+                    ArrayList<AttachmentInfo> attachmentInfoLists = getAttachmentsInfoFromPart(imapFolder,
                             messageNumber, bodyPart);
                     if (!attachmentInfoLists.isEmpty()) {
                         attachmentInfoList.addAll(attachmentInfoLists);
                     }
                 } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(accountDao, imapFolder, messageNumber,
-                            partCount + 1);
+                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder,
+                            messageNumber, partCount + 1);
 
-                    if (inputStream == null) {
-                        throw new MessagingException("Failed to fetch headers");
-                    }
+                    if (inputStream != null) {
+                        InternetHeaders internetHeaders = new InternetHeaders(inputStream);
+                        headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID);
 
-                    InternetHeaders internetHeaders = new InternetHeaders(inputStream);
-                    headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID);
+                        if (headers == null) {
+                            //try to receive custom Gmail attachments header X-Attachment-Id
+                            headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
+                        }
 
-                    if (headers == null) {
-                        //try to receive custom Gmail attachments header X-Attachment-Id
-                        headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
-                    }
-
-                    if (headers != null && headers.length > 0 && !TextUtils.isEmpty(bodyPart.getFileName())) {
-                        AttachmentInfo attachmentInfo = new AttachmentInfo();
-                        attachmentInfo.setName(bodyPart.getFileName());
-                        attachmentInfo.setEncodedSize(bodyPart.getSize());
-                        attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
-                        attachmentInfo.setId(headers[0]);
-                        attachmentInfoList.add(attachmentInfo);
+                        if (headers != null && headers.length > 0 && !TextUtils.isEmpty(bodyPart.getFileName())) {
+                            AttachmentInfo attachmentInfo = new AttachmentInfo();
+                            attachmentInfo.setName(bodyPart.getFileName());
+                            attachmentInfo.setEncodedSize(bodyPart.getSize());
+                            attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
+                            attachmentInfo.setId(headers[0]);
+                            attachmentInfoList.add(attachmentInfo);
+                        }
                     }
                 }
             }
@@ -700,9 +654,7 @@ public class EmailSyncService extends Service implements SyncListener {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -789,7 +741,7 @@ public class EmailSyncService extends Service implements SyncListener {
 
                     case MESSAGE_UPDATE_LABELS:
                         if (emailSyncManager != null && action != null) {
-                            emailSyncManager.updateLabels(action.getOwnerKey(), action.requestCode);
+                            emailSyncManager.updateLabels(action.getOwnerKey(), action.getRequestCode());
                         }
                         break;
 
@@ -886,7 +838,7 @@ public class EmailSyncService extends Service implements SyncListener {
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                                 if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(e);
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                                 }
                             }
                         }
@@ -905,49 +857,6 @@ public class EmailSyncService extends Service implements SyncListener {
                         super.handleMessage(message);
                 }
             }
-        }
-    }
-
-    /**
-     * This class can be used to create a new action for {@link EmailSyncService}
-     */
-    public static class Action {
-        private String ownerKey;
-        private int requestCode;
-        private Object object;
-
-        /**
-         * The constructor.
-         *
-         * @param ownerKey    The name of reply to {@link Messenger}
-         * @param requestCode The unique request code which identify some action
-         * @param object      The object which will be passed to {@link EmailSyncService}.
-         */
-        public Action(String ownerKey, int requestCode, Object object) {
-            this.ownerKey = ownerKey;
-            this.requestCode = requestCode;
-            this.object = object;
-        }
-
-        @Override
-        public String toString() {
-            return "Action{" +
-                    "ownerKey='" + ownerKey + '\'' +
-                    ", requestCode=" + requestCode +
-                    ", object=" + object +
-                    '}';
-        }
-
-        public String getOwnerKey() {
-            return ownerKey;
-        }
-
-        public int getRequestCode() {
-            return requestCode;
-        }
-
-        public Object getObject() {
-            return object;
         }
     }
 }

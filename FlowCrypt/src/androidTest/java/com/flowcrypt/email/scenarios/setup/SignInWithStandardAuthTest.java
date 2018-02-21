@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -17,9 +16,6 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -58,31 +54,6 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
     protected AuthCredentials authCredentials;
 
     abstract AuthCredentials getAuthCredentials();
-
-    /**
-     * Match the {@link SecurityType.Option}.
-     *
-     * @param option An input {@link SecurityType.Option}.
-     */
-    public static <T> Matcher<T> matchOption(final SecurityType.Option option) {
-        return new BaseMatcher<T>() {
-            @Override
-            public boolean matches(Object item) {
-                if (item instanceof SecurityType) {
-                    SecurityType securityType = (SecurityType) item;
-                    return securityType.getOption() == option;
-                } else {
-                    return false;
-                }
-
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("The input option = " + option);
-            }
-        };
-    }
 
     @Before
     public void setUp() throws Exception {

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -10,9 +9,9 @@ import android.net.Uri;
 import android.support.test.InstrumentationRegistry;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -48,7 +47,7 @@ public class ClearAppSettingsRule implements TestRule {
      */
     private void clearApp() throws IOException {
         SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
-        FileUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
+        FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
         InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
                 .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     }

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -41,8 +40,10 @@ public class Constants {
             "preferences_key_is_write_logs_to_file_enable";
     public static final String PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE =
             "preferences_key_is_detect_memory_leak_enable";
-    public static final String PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE =
+    public static final String PREFERENCES_KEY_IS_ACRA_ENABLE =
             "preferences_key_is_acra_enable";
+    public static final String PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE =
+            "preferences_key_is_mail_debug_enable";
 
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";
@@ -62,4 +63,15 @@ public class Constants {
 
     public static final String PGP_CACHE_DIR = "PGP";
     public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
+
+
+    /**
+     * The password quality types.
+     */
+    public static final String PASSWORD_QUALITY_PERFECT = "perfect";
+    public static final String PASSWORD_QUALITY_GREAT = "great";
+    public static final String PASSWORD_QUALITY_GOOD = "good";
+    public static final String PASSWORD_QUALITY_REASONABLE = "reasonable";
+    public static final String PASSWORD_QUALITY_WEAK = "weak";
+    public static final String PASSWORD_QUALITY_POOR = "poor";
 }

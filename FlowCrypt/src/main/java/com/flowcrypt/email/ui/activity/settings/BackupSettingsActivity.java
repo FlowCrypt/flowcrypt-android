@@ -1,17 +1,14 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -32,6 +29,7 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -76,7 +74,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_get_active_account:
                 account = (String) obj;
@@ -112,7 +110,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_load_private_keys:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
@@ -168,8 +166,8 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         if (!isLoadPrivateKeysRequestSent) {
             isLoadPrivateKeysRequestSent = true;
             requestActiveAccount(R.id.syns_get_active_account);
@@ -287,7 +285,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(e);
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                                 }
                                 UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
                             }
@@ -366,9 +364,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         this.layoutBackupFound = findViewById(R.id.layoutBackupFound);
         this.layoutBackupNotFound = findViewById(R.id.layoutBackupNotFound);
         this.layoutBackupOptions = findViewById(R.id.layoutBackupOptions);
-        this.textViewBackupFound = (TextView) findViewById(R.id.textViewBackupFound);
-        this.textViewOptionsHint = (TextView) findViewById(R.id.textViewOptionsHint);
-        this.radioGroupBackupsVariants = (RadioGroup) findViewById(R.id.radioGroupBackupsVariants);
+        this.textViewBackupFound = findViewById(R.id.textViewBackupFound);
+        this.textViewOptionsHint = findViewById(R.id.textViewOptionsHint);
+        this.radioGroupBackupsVariants = findViewById(R.id.radioGroupBackupsVariants);
 
         if (radioGroupBackupsVariants != null) {
             radioGroupBackupsVariants.setOnCheckedChangeListener(this);
@@ -378,7 +376,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
             findViewById(R.id.buttonSeeMoreBackupOptions).setOnClickListener(this);
         }
 
-        buttonBackupAction = (Button) findViewById(R.id.buttonBackupAction);
+        buttonBackupAction = findViewById(R.id.buttonBackupAction);
         if (buttonBackupAction != null) {
             buttonBackupAction.setOnClickListener(this);
         }

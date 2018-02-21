@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -21,9 +20,8 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -117,9 +115,7 @@ public class AccountDaoSource extends BaseDaoSource {
             authCredentials = getCurrentAuthCredentialsFromCursor(keyStoreCryptoManager, cursor);
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
 
         return new AccountDao(

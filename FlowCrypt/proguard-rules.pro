@@ -30,6 +30,11 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+############################################# Android ##############################################
+-keep class android.support.** { *; }
+-keep interface android.support.** { *; }
+-dontwarn android.support.**
+
 ####################################### Application config #########################################
 -dontobfuscate
 -optimizations !code/simplification/arithmetic,!field/*,!class/merging/*,!code/allocation/variable

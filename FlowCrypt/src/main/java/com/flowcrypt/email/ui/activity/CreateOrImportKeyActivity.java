@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -33,7 +32,8 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity.class);
 
-    private static final int REQUEST_CODE_IMPORT_ACTIVITY = 10;
+    private static final int REQUEST_CODE_IMPORT_ACTIVITY = 11;
+    private static final int REQUEST_CODE_CREATE_KEY_ACTIVITY = 12;
     private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
             GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
                     CreateOrImportKeyActivity.class);
@@ -82,6 +82,11 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.buttonCreateNewKey:
+                startActivityForResult(CreatePrivateKeyActivity.newIntent(this, accountDao),
+                        REQUEST_CODE_CREATE_KEY_ACTIVITY);
+                break;
+
             case R.id.buttonImportMyKey:
                 KeyDetails keyDetails = null;
                 if (isServiceBound) {
@@ -111,6 +116,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_IMPORT_ACTIVITY:
+            case REQUEST_CODE_CREATE_KEY_ACTIVITY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         setResult(Activity.RESULT_OK);

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -110,6 +109,11 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     }
 
     @Override
+    public void onJsServiceConnected() {
+
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
@@ -198,6 +202,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 boolean booleanResult = (boolean) result;
                 if (booleanResult) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+                    restartJsService();
                     setResult(Activity.RESULT_OK);
                     finish();
                 } else {

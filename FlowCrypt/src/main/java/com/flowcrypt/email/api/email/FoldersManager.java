@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -76,9 +75,7 @@ public class FoldersManager {
      */
     public static Folder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
             MessagingException {
-        return new Folder(imapFolder.getFullName(),
-                folderAlias, imapFolder.getMessageCount(),
-                imapFolder.getAttributes(),
+        return new Folder(imapFolder.getFullName(), folderAlias, 0, imapFolder.getAttributes(),
                 isCustomLabels(imapFolder));
     }
 

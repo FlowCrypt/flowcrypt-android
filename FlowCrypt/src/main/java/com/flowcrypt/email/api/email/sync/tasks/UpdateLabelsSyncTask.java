@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -12,6 +11,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 
 import javax.mail.Folder;
+import javax.mail.Session;
 import javax.mail.Store;
 
 /**
@@ -36,8 +36,9 @@ public class UpdateLabelsSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
-        super.runIMAPAction(accountDao, store, syncListener);
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+            throws Exception {
+        super.runIMAPAction(accountDao, session, store, syncListener);
         Folder[] folders = store.getDefaultFolder().list("*");
         if (syncListener != null) {
             syncListener.onFolderInfoReceived(accountDao, folders, ownerKey, requestCode);

@@ -1,11 +1,11 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.api.email.sync;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
@@ -22,13 +22,16 @@ import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerS
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.util.MailConnectException;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.security.ProviderInstaller;
 
 import org.acra.ACRA;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -156,9 +159,7 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -180,9 +181,7 @@ public class EmailSyncManager {
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -203,9 +202,7 @@ public class EmailSyncManager {
                     folderName, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -244,9 +241,7 @@ public class EmailSyncManager {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -269,9 +264,7 @@ public class EmailSyncManager {
                     folderName, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -292,9 +285,7 @@ public class EmailSyncManager {
                     sourceFolderName, destinationFolderName, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -311,9 +302,7 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -328,9 +317,7 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -347,9 +334,7 @@ public class EmailSyncManager {
                     requestCode, accountName));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
         }
     }
 
@@ -448,7 +433,7 @@ public class EmailSyncManager {
             } catch (MessagingException e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
             }
@@ -456,7 +441,8 @@ public class EmailSyncManager {
 
         void openConnectionToStore() throws IOException,
                 GoogleAuthException, MessagingException {
-            session = OpenStoreHelper.getSessionForAccountDao(accountDao);
+            patchingSecurityProvider(syncListener.getContext());
+            session = OpenStoreHelper.getSessionForAccountDao(syncListener.getContext(), accountDao);
             store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
         }
 
@@ -500,17 +486,46 @@ public class EmailSyncManager {
                 } else {
                     notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
                             R.id.progress_id_running_imap_action);
-                    syncTask.runIMAPAction(accountDao, store, syncListener);
+                    syncTask.runIMAPAction(accountDao, session, store, syncListener);
                 }
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                if (!(e instanceof MailConnectException) && !(e instanceof UnknownHostException)) {
+                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
                     if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(e);
+                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                     }
                 }
                 syncTask.handleException(accountDao, e, syncListener);
+            }
+        }
+
+        /**
+         * To update a device's security provider, use the ProviderInstaller class.
+         * <p>
+         * When you call installIfNeeded(), the ProviderInstaller does the following:
+         * <li>If the device's Provider is successfully updated (or is already up-to-date), the method returns
+         * normally.</li>
+         * <li>If the device's Google Play services library is out of date, the method throws
+         * GooglePlayServicesRepairableException. The app can then catch this exception and show the user an
+         * appropriate dialog box to update Google Play services.</li>
+         * <li>If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
+         * that it is unable to update the Provider. The app can then catch the exception and choose an appropriate
+         * course of action, such as displaying the standard fix-it flow diagram.</li>
+         * <p>
+         * If installIfNeeded() needs to install a new Provider, this can take anywhere from 30-50 milliseconds (on
+         * more recent devices) to 350 ms (on older devices). If the security provider is already up-to-date, the
+         * method takes a negligible amount of time.
+         * <p>
+         * Details here https://developer.android.com/training/articles/security-gms-provider.html#patching
+         *
+         * @param context Interface to global information about an application environment;
+         */
+        private void patchingSecurityProvider(Context context) {
+            try {
+                ProviderInstaller.installIfNeeded(context);
+            } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
             }
         }
     }

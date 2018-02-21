@@ -1,37 +1,33 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.Context;
 import android.os.Messenger;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.model.KeyDetails;
+import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.search.SearchTerm;
 
 /**
  * This task load the private keys from the email INBOX folder.
@@ -54,29 +50,28 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Store store, SyncListener syncListener) throws Exception {
-        super.runIMAPAction(accountDao, store, syncListener);
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+            throws Exception {
+        super.runIMAPAction(accountDao, session, store, syncListener);
 
         if (syncListener != null) {
-            Folder[] folders = store.getDefaultFolder().list("*");
+            ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
             List<String> keys = new ArrayList<>();
 
-            for (Folder folder : folders) {
-                if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
-                    folder.open(Folder.READ_ONLY);
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(syncListener.getContext(),
+                            accountDao, session));
+                    break;
 
-                    SearchTerm searchTerm = SearchBackupsUtil.generateSearchTerms(accountDao.getEmail());
-                    Message[] foundMessages = folder.search(searchTerm);
+                default:
+                    keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(syncListener.getContext(),
+                            accountDao, session));
+                    break;
+            }
 
-                    for (Message message : foundMessages) {
-                        String key = getKeyFromMessageIfItExists(message);
-                        if (!TextUtils.isEmpty(key) && !keys.contains(key)) {
-                            keys.add(key);
-                        }
-                    }
-
-                    folder.close(false);
-                }
+            for (KeyDetails keyDetails : keyDetailsList) {
+                keys.add(keyDetails.getValue());
             }
 
             syncListener.onPrivateKeyFound(accountDao, keys, ownerKey, requestCode);
@@ -84,30 +79,51 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
     }
 
     /**
-     * Get a private key from {@link Message}, if it exists in.
+     * Get a list of {@link KeyDetails} using the standard <b>JavaMail API</b>
      *
-     * @param message The original {@link Message} object.
-     * @return <tt>String</tt> A private key.
+     * @param session A {@link Session} object.
+     * @return A list of {@link KeyDetails}
      * @throws MessagingException
      * @throws IOException
+     * @throws GoogleAuthException
      */
-    private String getKeyFromMessageIfItExists(Message message) throws MessagingException,
-            IOException {
-        if (message.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            Multipart multiPart = (Multipart) message.getContent();
-            int numberOfParts = multiPart.getCount();
-            for (int partCount = 0; partCount < numberOfParts; partCount++) {
-                BodyPart bodyPart = multiPart.getBodyPart(partCount);
-                if (bodyPart instanceof MimeBodyPart) {
-                    MimeBodyPart mimeBodyPart = (MimeBodyPart) bodyPart;
-                    if (Part.ATTACHMENT.equalsIgnoreCase(mimeBodyPart.getDisposition())) {
-                        return IOUtils.toString(mimeBodyPart.getInputStream(),
-                                StandardCharsets.UTF_8);
+    private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Context context,
+                                                                                  AccountDao accountDao,
+                                                                                  Session session)
+            throws MessagingException, IOException, GoogleAuthException {
+        ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+        Store store = null;
+        try {
+            store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+            Folder[] folders = store.getDefaultFolder().list("*");
+
+            for (Folder folder : folders) {
+                if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+                    folder.open(Folder.READ_ONLY);
+
+                    Message[] foundMessages = folder.search(
+                            SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
+
+                    for (Message message : foundMessages) {
+                        String key = EmailUtil.getKeyFromMessageIfItExists(message);
+                        if (!TextUtils.isEmpty(key)
+                                && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, key)) {
+                            privateKeyDetailsList.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+                        }
                     }
+
+                    folder.close(false);
                 }
             }
-        }
 
-        return null;
+            store.close();
+        } catch (MessagingException | IOException | GoogleAuthException e) {
+            e.printStackTrace();
+            if (store != null) {
+                store.close();
+            }
+            throw e;
+        }
+        return privateKeyDetailsList;
     }
 }

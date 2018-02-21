@@ -1,6 +1,5 @@
 <!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -9,10 +8,13 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="default_margin_content">16dp</dimen>
+    <dimen name="default_margin_content_middle">24dp</dimen>
     <dimen name="default_margin_content_small">8dp</dimen>
     <dimen name="default_margin_content_medium">12dp</dimen>
+    <dimen name="default_margin_content_big">32dp</dimen>
     <dimen name="default_single_dip">1dp</dimen>
     <dimen name="default_twice_dip">2dp</dimen>
+    <dimen name="default_twice_dip_inverse">-2dp</dimen>
 
     <dimen name="default_button_height">64dp</dimen>
     <dimen name="default_button_width">320dp</dimen>
@@ -58,4 +60,13 @@
     <dimen name="layout_width_attachment_item">320dp</dimen>
     <dimen name="min_height_layout_message_parts">400dp</dimen>
     <dimen name="first_button_padding">48dp</dimen>
+    <dimen name="layout_height_sub_header">48dp</dimen>
+    <dimen name="margin_top_password_layout">48dp</dimen>
+    <dimen name="margin_top_you_are_all_set">150dp</dimen>
+    <dimen name="margin_top_button_continue">64dp</dimen>
+    <dimen name="padding_pgp_message_error_small">2dp</dimen>
+    <dimen name="padding_pgp_message_error_big">20dp</dimen>
+    <dimen name="width_pgp_message_type_line">8dp</dimen>
+    <dimen name="width_pgp_message_type_line_inverse">-9dp</dimen>
+    <dimen name="height_webview_dialog">480dp</dimen>
 </resources>

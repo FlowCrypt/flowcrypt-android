@@ -1,6 +1,5 @@
 <!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -12,6 +11,7 @@
     <string name="preferences_key_get_results_servers">preferences_key_get_results_servers</string>
     <string name="preferences_key_is_detect_memory_leak_enable">preferences_key_is_detect_memory_leak_enable</string>
     <string name="preferences_key_is_acra_enable">preferences_key_is_acra_enable</string>
+    <string name="preferences_key_is_mail_debug_enable">preferences_key_is_mail_debug_enable</string>
 
     <!-- Strings related to Settings -->
     <string name="preferences_title_debugging">Debugging</string>
@@ -21,5 +21,6 @@
     <string name="preferences_title_enable_write_api_logs_to_file">Enable write API logs to the file</string>
     <string name="preferences_title_enable_detect_memory_leak">Enable detect memory leak</string>
     <string name="preferences_title_enable_acra">Enable ACRA(App Crash Reports)</string>
+    <string name="preferences_title_enable_mail_debug">Enable Mail debug</string>
     <string name="action_dev_settings">Dev Settings</string>
 </resources>

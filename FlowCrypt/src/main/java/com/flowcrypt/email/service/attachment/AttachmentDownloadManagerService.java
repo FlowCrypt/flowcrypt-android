@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -39,6 +38,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.acra.ACRA;
@@ -351,7 +351,7 @@ public class AttachmentDownloadManagerService extends Service {
                     } catch (Exception e) {
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                         try {
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED,
@@ -387,7 +387,7 @@ public class AttachmentDownloadManagerService extends Service {
                     } catch (RemoteException e) {
                         e.printStackTrace();
                         if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(e);
+                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                     }
                     break;
@@ -473,7 +473,7 @@ public class AttachmentDownloadManagerService extends Service {
             try {
                 checkMaxDecryptedFileSize();
 
-                Session session = OpenStoreHelper.getAttachmentSession(accountDao);
+                Session session = OpenStoreHelper.getAttachmentSession(context, accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
                 IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
                         .getFolderByAlias(context, attachmentInfo.getEmail(), attachmentInfo.getFolder())
@@ -542,7 +542,7 @@ public class AttachmentDownloadManagerService extends Service {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(e);
+                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                 }
                 removeNotCompleteDownloadFile(attachmentFile);
                 if (onDownloadAttachmentListener != null) {
@@ -676,8 +676,8 @@ public class AttachmentDownloadManagerService extends Service {
                             return innerPart;
                         }
                     } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                        InputStream inputStream = ImapProtocolUtil.getHeaderStream(accountDao, imapFolder,
-                                messageNumber, partCount + 1);
+                        InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+                                partCount + 1);
 
                         if (inputStream == null) {
                             throw new MessagingException("Failed to fetch headers");

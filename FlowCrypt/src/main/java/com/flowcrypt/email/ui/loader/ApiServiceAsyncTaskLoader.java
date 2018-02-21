@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -15,8 +14,11 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -67,7 +69,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(e);
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                                 }
                                 lookUpEmailResponse.setException(e);
                             }
@@ -90,12 +92,30 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(e);
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                                 }
                                 postHelpFeedbackResponse.setException(e);
                             }
                         }
                         return postHelpFeedbackResponse;
+
+                    case POST_INITIAL_LEGACY_SUBMIT:
+                        BaseResponse<InitialLegacySubmitResponse> initialLegacySubmitResponse = new BaseResponse<>();
+                        initialLegacySubmitResponse.setApiName(baseRequest.getApiName());
+
+                        if (apiService != null) {
+                            try {
+                                initialLegacySubmitResponse.setResponse(apiService.postInitialLegacySubmit(
+                                        (InitialLegacySubmitModel) baseRequest.getRequestModel()).execute());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
+                                }
+                                initialLegacySubmitResponse.setException(e);
+                            }
+                        }
+                        return initialLegacySubmitResponse;
                 }
             }
         }

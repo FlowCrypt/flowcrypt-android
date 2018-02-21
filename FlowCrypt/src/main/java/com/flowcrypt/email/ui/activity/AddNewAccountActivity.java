@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -29,6 +28,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -120,7 +120,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                         } catch (Exception e) {
                             e.printStackTrace();
                             if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(e);
+                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                             }
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }

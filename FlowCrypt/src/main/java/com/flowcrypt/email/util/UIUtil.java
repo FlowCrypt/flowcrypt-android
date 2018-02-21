@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -14,6 +13,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -136,6 +136,22 @@ public class UIUtil {
                 textView.setText(Html.fromHtml(text));
             }
         }
+    }
+
+    /**
+     * Get the HTML {@link Spanned} from a text.
+     *
+     * @param text The text which contains HTML.
+     */
+    @SuppressWarnings("deprecation")
+    public static CharSequence getHtmlSpannedFromText(String text) {
+        if (!TextUtils.isEmpty(text)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY);
+            } else {
+                return Html.fromHtml(text);
+            }
+        } else return text;
     }
 
     /**

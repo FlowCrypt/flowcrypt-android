@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -657,30 +656,35 @@ public class MessageDaoSource extends BaseDaoSource {
 
     /**
      * Check is {@link Part} has attachment.
+     * <p>
+     * If the part contains a wrong MIME structure we will receive the exception "Unable to load BODYSTRUCTURE" when
+     * calling {@link Part#isMimeType(String)}
      *
      * @param part The parent part.
-     * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise.
-     * @throws MessagingException
-     * @throws IOException
+     * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise or if an error has occurred.
      */
-    private boolean isMessageHasAttachment(Part part)
-            throws MessagingException, IOException {
-        if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            Multipart multiPart = (Multipart) part.getContent();
-            int numberOfParts = multiPart.getCount();
-            for (int partCount = 0; partCount < numberOfParts; partCount++) {
-                BodyPart bodyPart = multiPart.getBodyPart(partCount);
-                if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-                    boolean isMessageHasAttachment = isMessageHasAttachment(bodyPart);
-                    if (isMessageHasAttachment) {
+    private boolean isMessageHasAttachment(Part part) {
+        try {
+            if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                Multipart multiPart = (Multipart) part.getContent();
+                int numberOfParts = multiPart.getCount();
+                for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                    BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                    if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                        boolean isMessageHasAttachment = isMessageHasAttachment(bodyPart);
+                        if (isMessageHasAttachment) {
+                            return true;
+                        }
+                    } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
                         return true;
                     }
-                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                    return true;
                 }
+                return false;
+            } else {
+                return false;
             }
-            return false;
-        } else {
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
             return false;
         }
     }

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -11,6 +10,7 @@ import android.content.Context;
 import android.os.Looper;
 
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
@@ -35,7 +35,7 @@ public class JsForUiManager {
             this.js = new Js(context, new SecurityStorageConnector(context));
         } catch (IOException e) {
             e.printStackTrace();
-            ACRA.getErrorReporter().handleException(e);
+            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
         }
     }
 

@@ -1,14 +1,11 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.settings;
 
-import android.content.ComponentName;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -62,7 +59,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onReplyFromSyncServiceReceived(int requestCode, int resultCode, Object obj) {
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.syns_get_active_account:
                 email = (String) obj;
@@ -71,7 +68,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onErrorFromSyncServiceReceived(int requestCode, int errorType, Exception e) {
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
 
     }
 
@@ -86,8 +83,8 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        super.onServiceConnected(name, service);
+    public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         requestActiveAccount(R.id.syns_get_active_account);
     }
 

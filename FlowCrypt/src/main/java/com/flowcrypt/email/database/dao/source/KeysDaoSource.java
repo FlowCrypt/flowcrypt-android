@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -14,6 +13,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.flowcrypt.email.database.dao.KeysDao;
+import com.flowcrypt.email.js.PgpKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -124,5 +124,23 @@ public class KeysDaoSource extends BaseDaoSource {
         }
 
         return longIds;
+    }
+
+    /**
+     * Delete information about a private {@link PgpKey}.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param pgpKey  The object which contains information about the private {@link PgpKey}.
+     * @return The count of deleted rows. Will be 1 if information about {@link PgpKey} was deleted or -1 otherwise.
+     */
+    public int removeKey(Context context, PgpKey pgpKey) {
+        if (pgpKey != null) {
+
+            ContentResolver contentResolver = context.getContentResolver();
+            if (contentResolver != null) {
+                return contentResolver.delete(getBaseContentUri(),
+                        COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
+            } else return -1;
+        } else return -1;
     }
 }

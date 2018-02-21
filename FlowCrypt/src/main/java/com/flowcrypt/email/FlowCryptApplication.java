@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -13,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
@@ -74,14 +74,19 @@ public class FlowCryptApplication extends Application {
 
         intiLeakCanary();
         FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
+
+        JsBackgroundService.start(this);
     }
 
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         MultiDex.install(this);
-        if (!BuildConfig.DEBUG || SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-                (this), Constants.PREFERENCES_KEY_PREFERENCES_KEY_IS_ACRA_ENABLE, true)) {
+
+        if (!BuildConfig.DEBUG) {
+            ACRA.init(this);
+        } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
+                Constants.PREFERENCES_KEY_IS_ACRA_ENABLE, BuildConfig.IS_ACRA_ENABLE)) {
             ACRA.init(this);
         }
     }

@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -9,7 +8,6 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
-import android.text.TextUtils;
 
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
@@ -22,16 +20,13 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import com.flowcrypt.email.util.GeneralUtil;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * This loader try to encrypt and save encrypted key with entered password by
@@ -99,8 +94,9 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                     if (!mapOfAlreadyUsedKey.containsKey(pgpKey.getLongid()) &&
                             v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
-                            Uri uri = saveKeyToDatabase(keyStoreCryptoManager, keyDetails,
-                                    pgpKey, passphrase);
+                            Uri uri = keysDaoSource.addRow(getContext(),
+                                    KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
+
                             PgpContact pgpContact = pgpKey.getPrimaryUserId();
                             PgpKey publicKey = pgpKey.toPublic();
                             if (pgpContact != null) {
@@ -118,9 +114,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(e);
-            }
+            ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
         return new LoaderResult(isOneOrMoreKeySaved, null);
@@ -136,54 +130,5 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     @Override
     public void onStopLoading() {
         cancelLoad();
-    }
-
-    /**
-     * Try to decrypt some key with entered password and save it encrypted version by
-     * {@link KeyStoreCryptoManager} to the database. This method use {@link PgpKey#getLongid()}
-     * for generate an algorithm parameter spec String.
-     *
-     * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-     *                              information about a key;
-     * @param keyDetails            The private key details
-     * @param pgpKey                A normalized key;
-     * @param passphrase            A passphrase which user entered;
-     */
-    private Uri saveKeyToDatabase(KeyStoreCryptoManager keyStoreCryptoManager,
-                                  KeyDetails keyDetails, PgpKey pgpKey,
-                                  String passphrase) throws Exception {
-        KeysDao keysDao = new KeysDao();
-        keysDao.setLongId(pgpKey.getLongid());
-
-        String randomVector;
-
-        if (TextUtils.isEmpty(pgpKey.getLongid())) {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-                    UUID.randomUUID().toString().substring(0,
-                            KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
-        } else {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
-                    (pgpKey.getLongid());
-        }
-
-        switch (keyDetails.getBornType()) {
-            case EMAIL:
-                keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
-                break;
-
-            case FILE:
-            case CLIPBOARD:
-                keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
-                break;
-        }
-
-        String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(),
-                randomVector);
-        keysDao.setPrivateKey(encryptedPrivateKey);
-        keysDao.setPublicKey(pgpKey.toPublic().armor());
-
-        String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
-        keysDao.setPassphrase(encryptedPassphrase);
-        return keysDaoSource.addRow(getContext(), keysDao);
     }
 }

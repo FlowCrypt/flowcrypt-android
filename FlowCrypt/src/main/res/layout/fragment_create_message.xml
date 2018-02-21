@@ -1,6 +1,5 @@
 <!--
-  ~ Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-  ~ Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -45,9 +44,9 @@
                     android:visibility="invisible" />
 
                 <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_bottom_line_gray">
+                    android:layout_height="wrap_content">
 
                     <EditText
                         android:id="@+id/editTextFrom"
@@ -68,9 +67,9 @@
                 android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_bottom_line_gray">
+                    android:layout_height="wrap_content">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipient"
@@ -99,9 +98,9 @@
             </FrameLayout>
 
             <android.support.design.widget.TextInputLayout
+                style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_bottom_line_gray">
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/editTextEmailSubject"
