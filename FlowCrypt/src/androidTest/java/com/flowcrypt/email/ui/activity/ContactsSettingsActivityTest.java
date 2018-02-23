@@ -47,7 +47,7 @@ import static org.hamcrest.Matchers.not;
 @RunWith(AndroidJUnit4.class)
 public class ContactsSettingsActivityTest extends BaseTest {
 
-    public static final String[] EMAILS = new String[]{
+    private static final String[] EMAILS = new String[]{
             "contact_0@denbond7.com",
             "contact_1@denbond7.com",
             "contact_2@denbond7.com",
