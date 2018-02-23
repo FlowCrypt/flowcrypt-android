@@ -110,7 +110,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                         }
                     }
                     mapOfAlreadyUsedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
-                } else throw new IllegalArgumentException("This is not a private key");
+                } else return new LoaderResult(null,
+                        new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
             }
         } catch (Exception e) {
             e.printStackTrace();
