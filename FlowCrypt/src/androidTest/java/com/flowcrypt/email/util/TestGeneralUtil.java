@@ -9,10 +9,12 @@ package com.flowcrypt.email.util;
 import android.content.Context;
 import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.internal.runner.junit4.statement.UiThreadStatement;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -25,8 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
-import static android.support.test.InstrumentationRegistry.getContext;
 
 /**
  * @author Denis Bondarenko
@@ -52,7 +52,7 @@ public class TestGeneralUtil {
         return IOUtils.toString(context.getAssets().open(filePath), "UTF-8");
     }
 
-    public static void saveKeyToDatabase(String privetKey, KeyDetails.Type type) throws Exception {
+    public static void saveKeyToDatabase(String privetKey, KeyDetails.Type type) throws Throwable {
         KeysDaoSource keysDaoSource = new KeysDaoSource();
         KeyDetails keyDetails = new KeyDetails(privetKey, type);
         KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry
@@ -73,8 +73,18 @@ public class TestGeneralUtil {
         String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
         PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-        keysDaoSource.addRow(getContext(),
+        keysDaoSource.addRow(InstrumentationRegistry.getTargetContext(),
                 KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, "android"));
+
+        UiThreadStatement.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
+                        .getJs()
+                        .getStorageConnector()
+                        .refresh(InstrumentationRegistry.getTargetContext());
+            }
+        });
     }
 
     public static void deleteFiles(List<File> files) {

@@ -56,7 +56,7 @@ public class KeysSettingsActivityTest extends BaseTest {
             .around(intentsTestRule);
 
     @Test
-    public void testAddNewKeys() throws Exception {
+    public void testAddNewKeys() throws Throwable {
         intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPrivateKeyActivity
                 .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
