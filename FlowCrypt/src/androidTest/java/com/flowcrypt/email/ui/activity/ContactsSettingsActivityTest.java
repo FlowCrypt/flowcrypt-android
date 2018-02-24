@@ -14,7 +14,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.rules.AddAccountDaoToDatabaseRule;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity;
 
@@ -55,7 +55,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountDaoToDatabaseRule())
+            .around(new AddAccountToDatabaseRule())
             .around(new ActivityTestRule<>(ContactsSettingsActivity.class));
 
     @AfterClass

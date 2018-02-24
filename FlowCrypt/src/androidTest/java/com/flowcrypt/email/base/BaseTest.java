@@ -8,6 +8,7 @@ package com.flowcrypt.email.base;
 import android.app.Activity;
 import android.graphics.drawable.ColorDrawable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.Snackbar;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.view.View;
 import android.widget.ListView;
@@ -143,10 +144,24 @@ public class BaseTest {
         };
     }
 
+    /**
+     * Test the app help screen.
+     */
     protected void testHelpScreen() {
         onView(withId(R.id.menuActionHelp)).check(matches(isDisplayed())).perform(click());
         onView(withId(R.id.textViewAuthorHint)).check(matches(isDisplayed()))
                 .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)));
         onView(withText(R.string.help_feedback_or_question)).check(matches(isDisplayed()));
+    }
+
+    /**
+     * Test is a {@link Snackbar} with an input message displayed.
+     *
+     * @param message An input message.
+     */
+    protected void checkIsSnackbarDisplayed(String message) {
+        onView(withText(message)).check(matches(isDisplayed()));
+        onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+                .perform(click());
     }
 }

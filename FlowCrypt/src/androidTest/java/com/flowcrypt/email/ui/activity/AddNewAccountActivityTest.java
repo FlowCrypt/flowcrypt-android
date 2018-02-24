@@ -13,7 +13,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.rules.AddAccountDaoToDatabaseRule;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 
 import org.junit.Before;
@@ -47,7 +47,7 @@ public class AddNewAccountActivityTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountDaoToDatabaseRule())
+            .around(new AddAccountToDatabaseRule())
             .around(new IntentsTestRule<>(AddNewAccountActivity.class));
 
     @Before

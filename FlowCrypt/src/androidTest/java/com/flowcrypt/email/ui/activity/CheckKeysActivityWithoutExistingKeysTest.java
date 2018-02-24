@@ -39,7 +39,6 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 
@@ -120,10 +119,5 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
         Espresso.closeSoftKeyboard();
         onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));
-    }
-
-    private void checkIsSnackbarDisplayed(String message) {
-        onView(withText(message)).check(matches(isDisplayed()));
-        onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
     }
 }

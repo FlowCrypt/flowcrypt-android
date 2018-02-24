@@ -7,6 +7,7 @@
 package com.flowcrypt.email.util;
 
 import android.content.Context;
+import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 
 import com.flowcrypt.email.database.dao.KeysDao;
@@ -19,8 +20,11 @@ import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static android.support.test.InstrumentationRegistry.getContext;
 
@@ -73,4 +77,22 @@ public class TestGeneralUtil {
                 KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, "android"));
     }
 
+    public static void deleteFiles(List<File> files) {
+        for (File file : files) {
+            if (!file.delete()) {
+                System.out.println("Can't delete a file " + file);
+            }
+        }
+    }
+
+    public static File createFile(String fileName, String fileText) {
+        File file = new File(InstrumentationRegistry.getTargetContext().getExternalFilesDir(Environment
+                .DIRECTORY_DOCUMENTS), fileName);
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+            outputStream.write(fileText.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
 }

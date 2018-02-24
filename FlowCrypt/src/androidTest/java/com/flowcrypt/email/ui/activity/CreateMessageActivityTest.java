@@ -11,7 +11,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
@@ -38,8 +37,8 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -111,11 +110,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
     @AfterClass
     public static void cleanResources() {
-        for (File file : attachments) {
-            if (!file.delete()) {
-                System.out.println("Can't delete a file " + file);
-            }
-        }
+        TestGeneralUtil.deleteFiles(Arrays.asList(attachments));
     }
 
     @Before
@@ -289,13 +284,7 @@ public class CreateMessageActivityTest extends BaseTest {
     private static void createFilesForAttachments() {
         attachments = new File[ATTACHMENTS_COUNT];
         for (int i = 0; i < attachments.length; i++) {
-            attachments[i] = new File(InstrumentationRegistry.getTargetContext().getExternalFilesDir(Environment
-                    .DIRECTORY_DOCUMENTS), i + ".txt");
-            try (FileOutputStream outputStream = new FileOutputStream(attachments[i])) {
-                outputStream.write("Text for filling the attached file".getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            attachments[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
         }
     }
 

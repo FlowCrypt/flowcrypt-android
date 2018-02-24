@@ -21,14 +21,14 @@ import org.junit.runners.model.Statement;
  *         Time: 17:54
  *         E-mail: DenBond7@gmail.com
  */
-public class AddAccountDaoToDatabaseRule implements TestRule {
+public class AddAccountToDatabaseRule implements TestRule {
     protected AccountDao accountDao;
 
-    public AddAccountDaoToDatabaseRule() {
+    public AddAccountToDatabaseRule() {
         accountDao = AccountDaoManager.getDefaultAccountDao();
     }
 
-    public AddAccountDaoToDatabaseRule(AccountDao accountDao) {
+    public AddAccountToDatabaseRule(AccountDao accountDao) {
         this.accountDao = accountDao;
     }
 
