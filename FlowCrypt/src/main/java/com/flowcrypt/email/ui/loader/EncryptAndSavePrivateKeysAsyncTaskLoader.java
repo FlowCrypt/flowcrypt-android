@@ -65,7 +65,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     @Override
     public LoaderResult loadInBackground() {
         boolean isOneOrMoreKeySaved = false;
-        Map<String, String> mapOfAlreadyUsedKey = new HashMap<>();
+        Map<String, String> mapOfAlreadyQueuedKey = new HashMap<>();
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
@@ -91,8 +91,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                 V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
                 if (pgpKey.isPrivate()) {
-                    if (!mapOfAlreadyUsedKey.containsKey(pgpKey.getLongid()) &&
-                            v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
+                    if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
                             Uri uri = keysDaoSource.addRow(getContext(),
                                     KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
@@ -104,12 +103,13 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                                 new ContactsDaoSource().addRow(getContext(), pgpContact);
                             }
                             isOneOrMoreKeySaved = uri != null;
-                        } else if (isThrowErrorIfDuplicateFound) {
+                        } else if (!mapOfAlreadyQueuedKey.containsKey(pgpKey.getLongid())
+                                && isThrowErrorIfDuplicateFound) {
                             return new LoaderResult(null, new Exception(getContext().getString(R
                                     .string.the_key_already_added)));
                         }
                     }
-                    mapOfAlreadyUsedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
+                    mapOfAlreadyQueuedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
                 } else return new LoaderResult(null,
                         new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
             }
