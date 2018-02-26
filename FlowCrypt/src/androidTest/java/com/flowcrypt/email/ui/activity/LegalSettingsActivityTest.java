@@ -73,7 +73,9 @@ public class LegalSettingsActivityTest extends BaseTest {
     }
 
     @Test
-    public void testShowHelpScreen() {
+    public void testShowHelpScreen() throws InterruptedException {
+        //Added a timeout because an initialization of WebViews needs more time.
+        Thread.sleep(5000);
         testHelpScreen();
     }
 
