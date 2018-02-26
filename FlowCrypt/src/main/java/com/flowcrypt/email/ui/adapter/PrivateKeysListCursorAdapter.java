@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,9 +56,7 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
         TextView textViewCreationDate = view.findViewById(R.id.textViewCreationDate);
 
         String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
-        Log.d("EEEEEEEEEE", longId);
         PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
-        Log.d("EEEEEEEEEE", "info:" + keyInfo);
         PgpKey pgpKey = js.crypto_key_read(keyInfo.getPrivate());
 
         textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
