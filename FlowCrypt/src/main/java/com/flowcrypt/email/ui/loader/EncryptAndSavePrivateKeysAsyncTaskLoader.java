@@ -64,8 +64,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
 
     @Override
     public LoaderResult loadInBackground() {
-        boolean isOneOrMoreKeySaved = false;
         Map<String, String> mapOfAlreadyQueuedKey = new HashMap<>();
+        List<KeyDetails> acceptedKeysList = new ArrayList<>();
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
@@ -102,7 +102,10 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                                 pgpContact.setPubkey(publicKey.armor());
                                 new ContactsDaoSource().addRow(getContext(), pgpContact);
                             }
-                            isOneOrMoreKeySaved = uri != null;
+
+                            if (uri != null) {
+                                acceptedKeysList.add(keyDetails);
+                            }
                         } else if (!mapOfAlreadyQueuedKey.containsKey(pgpKey.getLongid())
                                 && isThrowErrorIfDuplicateFound) {
                             return new LoaderResult(null, new Exception(getContext().getString(R
@@ -118,7 +121,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
-        return new LoaderResult(isOneOrMoreKeySaved, null);
+        return new LoaderResult(acceptedKeysList, null);
     }
 
     @Override

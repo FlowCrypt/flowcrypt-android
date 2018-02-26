@@ -29,6 +29,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class describes checking the received private keys. Here we validate and save encrypted
@@ -194,13 +195,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
-                boolean booleanResult = (boolean) result;
-                if (booleanResult) {
+                List<KeyDetails> keyDetailsList = (List<KeyDetails>) result;
+                if (keyDetailsList != null && !keyDetailsList.isEmpty()) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
                     restartJsService();
                     setResult(Activity.RESULT_OK);
