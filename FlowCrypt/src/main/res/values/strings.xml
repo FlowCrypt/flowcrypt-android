@@ -39,7 +39,10 @@
     <string name="all_labels">All labels</string>
     <string name="no_results">No results</string>
     <string name="set_up_flow_crypt">Set up FlowCrypt</string>
-    <string name="found_backup_of_your_account_key">Found a backup of your account key</string>
+    <plurals name="found_backup_of_your_account_key">
+        <item quantity="one">Found a backup of your account key</item>
+        <item quantity="other">Found %1$d backups of your account key</item>
+    </plurals>
     <string name="enter_your_pass_phrase">Enter your pass phrase</string>
     <string name="load_account">Load Account</string>
     <string name="loading_account">Loading account</string>
@@ -280,4 +283,12 @@ icelanders prefer real sauna</font>
     <string name="copy">Copy</string>
     <string name="remove">Remove</string>
     <string name="not_private_key">This is not a private key</string>
+    <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
+    <plurals name="not_recovered_all_keys">
+        <item quantity="one">You successfully recovered %1$d of %2$d backups. There is 1 backup left.Try a different
+            pass
+            phrase to unlock all backups.</item>
+        <item quantity="other">You successfully recovered %1$d of %2$d backups. There are %3$d backups left. Try a
+            different pass phrase to unlock all backups.</item>
+    </plurals>
 </resources>

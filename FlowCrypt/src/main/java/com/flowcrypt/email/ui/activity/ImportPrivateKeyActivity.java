@@ -158,9 +158,11 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                     this.keyDetails = new KeyDetails(privateKeys.get(0), KeyDetails.Type.EMAIL);
                     startActivityForResult(CheckKeysActivity.newIntent(this,
                             new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
-                            getString(R.string.found_backup_of_your_account_key),
+                            getResources().getQuantityString(
+                                    R.plurals.found_backup_of_your_account_key,
+                                    1, 1),
                             getString(R.string.continue_),
-                            getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
+                            getString(R.string.choose_another_key)),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 }
                 break;
@@ -197,8 +199,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                         getString(R.string.template_check_key_name,
                                 keyDetails.getKeyName()),
                         getString(R.string.continue_),
-                        getString(R.string.choose_another_key),
-                        isThrowErrorIfDuplicateFound),
+                        getString(R.string.choose_another_key)),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 break;
 
@@ -207,8 +208,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                         new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
                         getString(R.string.loaded_private_key_from_your_clipboard),
                         getString(R.string.continue_),
-                        getString(R.string.choose_another_key),
-                        isThrowErrorIfDuplicateFound),
+                        getString(R.string.choose_another_key)),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 break;
         }

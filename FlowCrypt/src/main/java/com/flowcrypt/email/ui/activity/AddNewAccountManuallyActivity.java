@@ -301,10 +301,12 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 } else {
                     startActivityForResult(CheckKeysActivity.newIntent(this,
                             keyDetailsList,
-                            getString(R.string.found_backup_of_your_account_key),
+                            getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+                                    keyDetailsList.size(),
+                                    keyDetailsList.size()),
                             getString(R.string.continue_),
                             SecurityUtils.isBackupKeysExist(this) ? getString(R.string.use_existing_keys) : null,
-                            getString(R.string.use_another_account), true),
+                            getString(R.string.use_another_account)),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
                 }
                 break;

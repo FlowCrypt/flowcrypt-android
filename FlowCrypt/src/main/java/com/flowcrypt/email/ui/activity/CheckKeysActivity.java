@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.JsForUiManager;
@@ -27,6 +28,7 @@ import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,38 +61,32 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     public static final String KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
             GeneralUtil.generateUniqueExtraKey(
                     "KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
-    public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND =
-            GeneralUtil.generateUniqueExtraKey(
-                    "KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND", CheckKeysActivity.class);
 
     private ArrayList<KeyDetails> privateKeyDetailsList;
     private EditText editTextKeyPassword;
+    private TextView textViewCheckKeysTitle;
     private View progressBar;
     private String bottomTitle;
     private String positiveButtonTitle;
     private String neutralButtonTitle;
     private String negativeButtonTitle;
-    private boolean isThrowErrorIfDuplicateFound;
+    private int originalKeysCount;
 
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String positiveButtonTitle,
-                                   String negativeButtonTitle,
-                                   boolean isThrowErrorIfDuplicateFound) {
-        return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, null, negativeButtonTitle,
-                isThrowErrorIfDuplicateFound);
+                                   String negativeButtonTitle) {
+        return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, null, negativeButtonTitle);
     }
 
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String positiveButtonTitle,
-                                   String neutralButtonTitle, String negativeButtonTitle,
-                                   boolean isThrowErrorIfDuplicateFound) {
+                                   String neutralButtonTitle, String negativeButtonTitle) {
         Intent intent = new Intent(context, CheckKeysActivity.class);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
         intent.putExtra(KEY_EXTRA_BOTTOM_TITLE, bottomTitle);
         intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
         intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralButtonTitle);
         intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
-        intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
     }
 
@@ -123,8 +119,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             this.positiveButtonTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
             this.neutralButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);
             this.negativeButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE);
-            this.isThrowErrorIfDuplicateFound = getIntent().getBooleanExtra
-                    (KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
+
+            if (privateKeyDetailsList != null) {
+                this.originalKeysCount = privateKeyDetailsList.size();
+            }
         }
 
         initViews();
@@ -167,7 +165,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.VISIBLE);
                 return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, privateKeyDetailsList,
-                        editTextKeyPassword.getText().toString(), isThrowErrorIfDuplicateFound);
+                        editTextKeyPassword.getText().toString());
 
             default:
                 return null;
@@ -189,8 +187,20 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
-                showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
-                        ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
+                if (e instanceof KeyAlreadyAddedException) {
+                    if (originalKeysCount > 1 && privateKeyDetailsList.size() == 1) {
+                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        restartJsService();
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    } else {
+                        showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
+                                ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
+                    }
+                } else {
+                    showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
+                            ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
+                }
                 break;
         }
     }
@@ -204,9 +214,20 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 List<KeyDetails> keyDetailsList = (List<KeyDetails>) result;
                 if (keyDetailsList != null && !keyDetailsList.isEmpty()) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
-                    restartJsService();
-                    setResult(Activity.RESULT_OK);
-                    finish();
+                    privateKeyDetailsList.removeAll(keyDetailsList);
+                    if (privateKeyDetailsList.isEmpty()) {
+                        restartJsService();
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    } else {
+                        initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.use_existing_keys));
+                        editTextKeyPassword.setText(null);
+                        textViewCheckKeysTitle.setText(getResources().getQuantityString(
+                                R.plurals.not_recovered_all_keys, privateKeyDetailsList.size(),
+                                keyDetailsList.size(),
+                                keyDetailsList.size() + privateKeyDetailsList.size(),
+                                privateKeyDetailsList.size()));
+                    }
                 } else {
                     showInfoSnackbar(getRootView(), getString(R.string.password_is_incorrect));
                 }
@@ -216,30 +237,30 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     private void initViews() {
         if (findViewById(R.id.buttonPositiveAction) != null) {
-            Button buttonPositiveAction = findViewById(R.id.buttonPositiveAction);
-            buttonPositiveAction.setText(positiveButtonTitle);
-            buttonPositiveAction.setOnClickListener(this);
+            initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveButtonTitle);
         }
 
         if (!TextUtils.isEmpty(neutralButtonTitle) && findViewById(R.id.buttonNeutralAction) != null) {
-            Button buttonNeutralAction = findViewById(R.id.buttonNeutralAction);
-            buttonNeutralAction.setVisibility(View.VISIBLE);
-            buttonNeutralAction.setText(neutralButtonTitle);
-            buttonNeutralAction.setOnClickListener(this);
+            initButton(R.id.buttonNeutralAction, View.VISIBLE, neutralButtonTitle);
         }
 
         if (findViewById(R.id.buttonNegativeAction) != null) {
-            Button buttonNegativeAction = findViewById(R.id.buttonNegativeAction);
-            buttonNegativeAction.setText(negativeButtonTitle);
-            buttonNegativeAction.setOnClickListener(this);
+            initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeButtonTitle);
         }
 
-        TextView textViewCheckKeysTitle = findViewById(R.id.textViewCheckKeysTitle);
+        textViewCheckKeysTitle = findViewById(R.id.textViewCheckKeysTitle);
         if (textViewCheckKeysTitle != null) {
             textViewCheckKeysTitle.setText(bottomTitle);
         }
 
         editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
         progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void initButton(int buttonViewId, int visibility, String text) {
+        Button buttonNeutralAction = findViewById(buttonViewId);
+        buttonNeutralAction.setVisibility(visibility);
+        buttonNeutralAction.setText(text);
+        buttonNeutralAction.setOnClickListener(this);
     }
 }

@@ -22,11 +22,10 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This loader try to encrypt and save encrypted key with entered password by
@@ -43,28 +42,22 @@ import java.util.Map;
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private static final String KEY_SUCCESS = "success";
 
-    private boolean isThrowErrorIfDuplicateFound;
     private List<KeyDetails> privateKeyDetailsList;
     private String passphrase;
 
     private KeysDaoSource keysDaoSource;
 
-    public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
-                                                    ArrayList<KeyDetails>
-                                                            privateKeyDetailsList,
-                                                    String passphrase,
-                                                    boolean isThrowErrorIfDuplicateFound) {
+    public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<KeyDetails> privateKeyDetailsList,
+                                                    String passphrase) {
         super(context);
         this.privateKeyDetailsList = privateKeyDetailsList;
         this.passphrase = passphrase;
         this.keysDaoSource = new KeysDaoSource();
-        this.isThrowErrorIfDuplicateFound = isThrowErrorIfDuplicateFound;
         onContentChanged();
     }
 
     @Override
     public LoaderResult loadInBackground() {
-        Map<String, String> mapOfAlreadyQueuedKey = new HashMap<>();
         List<KeyDetails> acceptedKeysList = new ArrayList<>();
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
@@ -83,7 +76,6 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                         armoredPrivateKey = keyDetails.getValue();
                         break;
                 }
-
 
                 String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
@@ -106,21 +98,28 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                             if (uri != null) {
                                 acceptedKeysList.add(keyDetails);
                             }
-                        } else if (!mapOfAlreadyQueuedKey.containsKey(pgpKey.getLongid())
-                                && isThrowErrorIfDuplicateFound) {
-                            return new LoaderResult(null, new Exception(getContext().getString(R
-                                    .string.the_key_already_added)));
+                        } else if (privateKeyDetailsList.size() == 1) {
+                            return new LoaderResult(null,
+                                    new KeyAlreadyAddedException(keyDetails,
+                                            getContext().getString(R.string.the_key_already_added)));
+                        } else {
+                            acceptedKeysList.add(keyDetails);
                         }
+                    } else if (privateKeyDetailsList.size() == 1) {
+                        return new LoaderResult(null,
+                                new IllegalArgumentException(getContext().getString(R.string.password_is_incorrect)));
                     }
-                    mapOfAlreadyQueuedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
-                } else return new LoaderResult(null,
-                        new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
+                } else if (privateKeyDetailsList.size() == 1) {
+                    return new LoaderResult(null,
+                            new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
+
         return new LoaderResult(acceptedKeysList, null);
     }
 
