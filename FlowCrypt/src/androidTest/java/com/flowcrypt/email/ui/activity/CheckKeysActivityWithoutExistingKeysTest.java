@@ -68,13 +68,12 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
             }
             result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
             result.putExtra(CheckKeysActivity.KEY_EXTRA_BOTTOM_TITLE,
-                    targetContext.getString(R.string.found_backup_of_your_account_key));
+                    targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
             result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE,
                     targetContext.getString(R.string.continue_));
             result.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, (Parcelable) null);
             result.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE,
                     targetContext.getString(R.string.use_another_account));
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, true);
             return result;
         }
     };
