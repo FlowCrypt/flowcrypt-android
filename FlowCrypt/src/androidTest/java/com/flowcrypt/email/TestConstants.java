@@ -19,4 +19,7 @@ public class TestConstants {
 
     public static final String RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER = "test@denbond7.com";
     public static final String RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER = "not_attester_user@denbond7.com";
+
+    public static final String DEFAULT_STRONG_PASSWORD = "My supper strange password 2018";
+    public static final String DEFAULT_PASSWORD = "android";
 }
