@@ -289,6 +289,7 @@ icelanders prefer real sauna</font>
         settings?</string>
     <string name="get_access_to_gmail">Get access to Gmail</string>
     <string name="sign_in">SIGN IN</string>
+    <string name="network_error_please_retry">Network error, please retry</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">You successfully recovered %1$d of %2$d backups. There is 1 backup left.Try a different
             pass
