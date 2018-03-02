@@ -199,6 +199,7 @@
     <string name="expand_an_account_managment">Expand an account management</string>
     <string name="add_account">Add account</string>
     <string name="use_existing_keys">Use existing keys</string>
+    <string name="skip_remaining_backups">Skip remaining backups</string>
     <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>

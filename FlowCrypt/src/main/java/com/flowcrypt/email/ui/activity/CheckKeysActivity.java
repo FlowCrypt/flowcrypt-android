@@ -190,7 +190,6 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 if (e instanceof KeyAlreadyAddedException) {
                     if (originalKeysCount > 1 && privateKeyDetailsList.size() == 1) {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                        restartJsService();
                         setResult(Activity.RESULT_OK);
                         finish();
                     } else {
@@ -214,13 +213,13 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 List<KeyDetails> keyDetailsList = (List<KeyDetails>) result;
                 if (keyDetailsList != null && !keyDetailsList.isEmpty()) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+                    restartJsService();
                     privateKeyDetailsList.removeAll(keyDetailsList);
                     if (privateKeyDetailsList.isEmpty()) {
-                        restartJsService();
                         setResult(Activity.RESULT_OK);
                         finish();
                     } else {
-                        initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.use_existing_keys));
+                        initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups));
                         editTextKeyPassword.setText(null);
                         textViewCheckKeysTitle.setText(getResources().getQuantityString(
                                 R.plurals.not_recovered_all_keys, privateKeyDetailsList.size(),
