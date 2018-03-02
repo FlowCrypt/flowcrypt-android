@@ -6,12 +6,17 @@
 package com.flowcrypt.email.util.google;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -62,5 +67,30 @@ public class GoogleApiClientHelper {
                         }
                     }
                 });
+    }
+
+    /**
+     * Do sign in with Gmail account using OAuth2 mechanism.
+     *
+     * @param baseActivity    An instance of {@link BaseActivity}
+     * @param googleApiClient An instance of {@link GoogleApiClient}
+     * @param rootView        A view which will be used for showing an info {@link Snackbar}
+     * @param requestCode     A request code for handling the result.
+     */
+    public static void signInWithGmailUsingOAuth2(BaseActivity baseActivity, GoogleApiClient googleApiClient,
+                                                  View rootView, int requestCode) {
+        if (GeneralUtil.isInternetConnectionAvailable(baseActivity)) {
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                googleApiClient.clearDefaultAccountAndReconnect();
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+                baseActivity.startActivityForResult(signInIntent, requestCode);
+            } else {
+                baseActivity.showInfoSnackbar(rootView,
+                        baseActivity.getString(R.string.google_api_is_not_available));
+            }
+        } else {
+            baseActivity.showInfoSnackbar(rootView,
+                    baseActivity.getString(R.string.internet_connection_is_not_available));
+        }
     }
 }

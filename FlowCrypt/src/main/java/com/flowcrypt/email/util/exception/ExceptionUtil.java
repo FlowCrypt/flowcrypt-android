@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
@@ -40,7 +41,8 @@ public class ExceptionUtil {
         if ((e instanceof MailConnectException)
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
-                || (e instanceof ConnectionException)) {
+                || (e instanceof ConnectionException)
+                || (e instanceof UserRecoverableAuthException)) {
             return false;
         }
 

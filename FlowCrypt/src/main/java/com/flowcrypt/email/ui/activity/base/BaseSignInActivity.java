@@ -15,7 +15,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -66,7 +65,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSignInWithGmail:
-                signInWithGmailUsingOAuth2();
+                GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
+                        REQUEST_CODE_SIGN_IN);
                 break;
 
             case R.id.buttonOtherEmailProvider:
@@ -84,7 +84,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     public void onConnected(@Nullable Bundle bundle) {
         if (this.isRunSignInWithGmailNeeded) {
             this.isRunSignInWithGmailNeeded = false;
-            signInWithGmailUsingOAuth2();
+            GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
+                    REQUEST_CODE_SIGN_IN);
         }
     }
 
@@ -101,23 +102,6 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     @Override
     public void onJsServiceConnected() {
 
-    }
-
-    /**
-     * Do sign in with Gmail account using OAuth2 mechanism.
-     */
-    protected void signInWithGmailUsingOAuth2() {
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
-            if (googleApiClient != null && googleApiClient.isConnected()) {
-                googleApiClient.clearDefaultAccountAndReconnect();
-                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-                startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN);
-            } else {
-                showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
-            }
-        } else {
-            showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
-        }
     }
 
     protected void initGoogleApiClient() {

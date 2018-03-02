@@ -284,6 +284,10 @@ icelanders prefer real sauna</font>
     <string name="remove">Remove</string>
     <string name="not_private_key">This is not a private key</string>
     <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
+    <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security
+        settings?</string>
+    <string name="get_access_to_gmail">Get access to Gmail</string>
+    <string name="sign_in">SIGN IN</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">You successfully recovered %1$d of %2$d backups. There is 1 backup left.Try a different
             pass
