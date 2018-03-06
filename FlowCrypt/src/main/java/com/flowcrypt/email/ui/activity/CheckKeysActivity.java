@@ -17,10 +17,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -31,7 +32,10 @@ import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class describes checking the received private keys. Here we validate and save encrypted
@@ -63,14 +67,17 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                     "KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
 
     private ArrayList<KeyDetails> privateKeyDetailsList;
+    private Map<KeyDetails, String> mapOfKeyDetailsAndLongIds;
+
     private EditText editTextKeyPassword;
     private TextView textViewCheckKeysTitle;
     private View progressBar;
+
     private String bottomTitle;
     private String positiveButtonTitle;
     private String neutralButtonTitle;
     private String negativeButtonTitle;
-    private int originalKeysCount;
+    private int countOfUniqueKeys;
 
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String positiveButtonTitle,
@@ -121,7 +128,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             this.negativeButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE);
 
             if (privateKeyDetailsList != null) {
-                this.originalKeysCount = privateKeyDetailsList.size();
+                this.mapOfKeyDetailsAndLongIds = prepareMapFromKeyDetailsList(privateKeyDetailsList);
+                this.countOfUniqueKeys = getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds);
+                this.bottomTitle = getResources().getQuantityString(
+                        R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
             }
         }
 
@@ -188,14 +198,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
                 if (e instanceof KeyAlreadyAddedException) {
-                    if (originalKeysCount > 1 && privateKeyDetailsList.size() == 1) {
+                    /*if (getUniqueKeysLongIdsCount.size() > 1 && privateKeyDetailsList.size() == 1) {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
                         setResult(Activity.RESULT_OK);
                         finish();
                     } else {
                         showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
                                 ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
-                    }
+                    }*/
                 } else {
                     showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
                             ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
@@ -210,22 +220,29 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
-                List<KeyDetails> keyDetailsList = (List<KeyDetails>) result;
-                if (keyDetailsList != null && !keyDetailsList.isEmpty()) {
+                ArrayList<KeyDetails> savedKeyDetailsList = (ArrayList<KeyDetails>) result;
+                if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
                     JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
                     restartJsService();
-                    privateKeyDetailsList.removeAll(keyDetailsList);
+
+                    Map<KeyDetails, String> mapOfSavedKeyDetailsBackups
+                            = prepareMapFromKeyDetailsList(savedKeyDetailsList);
+
+                    privateKeyDetailsList.removeAll(generateMatchedKeyDetailsList(mapOfSavedKeyDetailsBackups));
                     if (privateKeyDetailsList.isEmpty()) {
                         setResult(Activity.RESULT_OK);
                         finish();
                     } else {
                         initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups));
                         editTextKeyPassword.setText(null);
+                        Map<KeyDetails, String> mapOfRemainingBackups
+                                = prepareMapFromKeyDetailsList(privateKeyDetailsList);
+                        int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
+
                         textViewCheckKeysTitle.setText(getResources().getQuantityString(
-                                R.plurals.not_recovered_all_keys, privateKeyDetailsList.size(),
-                                originalKeysCount - privateKeyDetailsList.size(),
-                                originalKeysCount,
-                                privateKeyDetailsList.size()));
+                                R.plurals.not_recovered_all_keys, remainingKeyCount,
+                                countOfUniqueKeys - remainingKeyCount,
+                                countOfUniqueKeys, remainingKeyCount));
                     }
                 } else {
                     showInfoSnackbar(getRootView(), getString(R.string.password_is_incorrect));
@@ -261,5 +278,55 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         buttonNeutralAction.setVisibility(visibility);
         buttonNeutralAction.setText(text);
         buttonNeutralAction.setOnClickListener(this);
+    }
+
+    /**
+     * Get a count of unique longIds.
+     *
+     * @param mapOfKeyDetailsAndLongIds An input map of {@link KeyDetails}.
+     * @return A count of unique longIds.
+     */
+    private int getUniqueKeysLongIdsCount(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
+        Set<String> strings = new HashSet<>();
+        strings.addAll(mapOfKeyDetailsAndLongIds.values());
+        return strings.size();
+    }
+
+    /**
+     * Generate a map of incoming list of {@link KeyDetails} objects where values will be a {@link PgpKey} longId.
+     *
+     * @param privateKeyDetailsList An incoming list of {@link KeyDetails} objects.
+     * @return A generated map.
+     */
+    private Map<KeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<KeyDetails> privateKeyDetailsList) {
+        Js js = JsForUiManager.getInstance(this).getJs();
+        Map<KeyDetails, String> keyDetailsStringMap = new HashMap<>();
+
+        for (KeyDetails keyDetails : privateKeyDetailsList) {
+            String normalizedArmoredKey = js.crypto_key_normalize(keyDetails.getValue());
+            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+            keyDetailsStringMap.put(keyDetails, pgpKey.getLongid());
+        }
+        return keyDetailsStringMap;
+    }
+
+    /**
+     * Generate a matched list of the existing keys. It will contain all {@link KeyDetails} which has a right longId.
+     *
+     * @param mapOfSavedKeyDetailsAndLongIds An incoming map of {@link KeyDetails} objects.
+     * @return A matched list.
+     */
+    private ArrayList<KeyDetails> generateMatchedKeyDetailsList(Map<KeyDetails, String>
+                                                                        mapOfSavedKeyDetailsAndLongIds) {
+        ArrayList<KeyDetails> matchedKeyDetails = new ArrayList<>();
+        for (Map.Entry<KeyDetails, String> entry : mapOfSavedKeyDetailsAndLongIds.entrySet()) {
+            for (Map.Entry<KeyDetails, String> innerEntry : mapOfKeyDetailsAndLongIds.entrySet()) {
+                if (innerEntry.getValue().equals(entry.getValue())) {
+                    matchedKeyDetails.add(innerEntry.getKey());
+                }
+            }
+        }
+
+        return matchedKeyDetails;
     }
 }
