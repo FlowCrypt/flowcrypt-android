@@ -223,8 +223,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                         editTextKeyPassword.setText(null);
                         textViewCheckKeysTitle.setText(getResources().getQuantityString(
                                 R.plurals.not_recovered_all_keys, privateKeyDetailsList.size(),
-                                keyDetailsList.size(),
-                                keyDetailsList.size() + privateKeyDetailsList.size(),
+                                originalKeysCount - privateKeyDetailsList.size(),
+                                originalKeysCount,
                                 privateKeyDetailsList.size()));
                     }
                 } else {
