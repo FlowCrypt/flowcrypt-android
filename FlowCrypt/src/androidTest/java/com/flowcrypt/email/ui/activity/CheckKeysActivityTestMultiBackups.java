@@ -97,7 +97,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
     }
 
     /**
-     * There are two keys (the identical keys with different pass phrases). Only one key of two keys will be used.
+     * There are two keys (the identical keys with different pass phrases). A key will be imported using
+     * {@link TestConstants#DEFAULT_PASSWORD}.
      */
     @Test
     public void testUseTwoKeysFourthCombination() throws IOException {
@@ -105,13 +106,13 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
-        typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(1, 2, 1);
-        checkSkipRemainingBackupsButton();
+        typePassword(TestConstants.DEFAULT_PASSWORD);
+        assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
 
     /**
-     * There are two keys (the identical keys with different pass phrases). All keys will be checked.
+     * There are two keys (the identical keys with different pass phrases). A key will be imported using
+     * {@link TestConstants#DEFAULT_STRONG_PASSWORD}
      */
     @Test
     public void testUseTwoKeysFifthCombination() throws IOException {
@@ -120,8 +121,6 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(1, 2, 1);
-        typePassword(TestConstants.DEFAULT_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
 
@@ -203,13 +202,13 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(1, 3, 2);
+        checkKeysTitle(1, 2, 1);
         checkSkipRemainingBackupsButton();
     }
 
     /**
      * There are three keys (one unique and two identical, the unique key and the identical key have the same
-     * pass phrase). Will be used two different keys with the same pass phrase.
+     * pass phrase). All keys will be imported per one transaction using {@link TestConstants#DEFAULT_STRONG_PASSWORD}.
      */
     @Test
     public void testUseThreeKeysSixthCombination() throws IOException {
@@ -219,8 +218,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(2, 3, 1);
-        checkSkipRemainingBackupsButton();
+        assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
 
     /**
@@ -235,25 +233,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(1, 3, 2);
-        typePassword(TestConstants.DEFAULT_PASSWORD);
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
-    }
-
-    /**
-     * There are three keys (one unique and two identical, the unique key and the identical key have the same
-     * pass phrase). First will be used one unique key and one key from the identical keys with the same pass
-     * phrase, and then a remaining key.
-     */
-    @Test
-    public void testUseThreeKeysEighthCombination() throws IOException {
-        String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-                "pgp/default@denbond7.com_keyC_default.key",
-                "pgp/default@denbond7.com_keyC_strong.key"};
-        activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
-
-        typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(2, 3, 1);
+        checkKeysTitle(1, 2, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
@@ -272,7 +252,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(2, 4, 2);
+        checkKeysTitle(2, 3, 1);
         checkSkipRemainingBackupsButton();
     }
 
@@ -290,7 +270,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
-        checkKeysTitle(2, 4, 2);
+        checkKeysTitle(2, 3, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
