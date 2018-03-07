@@ -261,5 +261,5 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
     implementation 'ch.acra:acra:4.9.2'
     implementation 'com.hootsuite.android:nachos:1.1.1'
-    implementation 'com.nulab-inc:zxcvbn:1.2.3'
+    implementation 'com.nulab-inc:zxcvbn:1.2.4'
 }
