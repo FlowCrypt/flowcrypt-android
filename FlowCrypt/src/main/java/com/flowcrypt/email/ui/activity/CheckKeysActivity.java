@@ -22,6 +22,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -29,11 +30,11 @@ import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -130,9 +131,33 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             if (privateKeyDetailsList != null) {
                 this.mapOfKeyDetailsAndLongIds = prepareMapFromKeyDetailsList(privateKeyDetailsList);
                 this.countOfUniqueKeys = getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds);
-                this.bottomTitle = getResources().getQuantityString(
-                        R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
+
+                removeAlreadyImportedKeys();
+
+                if (privateKeyDetailsList.size() != mapOfKeyDetailsAndLongIds.size()) {
+                    this.privateKeyDetailsList = new ArrayList<>(mapOfKeyDetailsAndLongIds.keySet());
+                    if (privateKeyDetailsList.isEmpty()) {
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    } else {
+                        Map<KeyDetails, String> mapOfRemainingBackups
+                                = prepareMapFromKeyDetailsList(privateKeyDetailsList);
+                        int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
+
+                        this.bottomTitle = getResources().getQuantityString(
+                                R.plurals.not_recovered_all_keys, remainingKeyCount,
+                                countOfUniqueKeys - remainingKeyCount, countOfUniqueKeys, remainingKeyCount);
+                    }
+                } else {
+                    this.bottomTitle = getResources().getQuantityString(
+                            R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
+                }
+            } else {
+                setResult(Activity.RESULT_CANCELED);
+                finish();
             }
+        } else {
+            finish();
         }
 
         initViews();
@@ -197,19 +222,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         switch (loaderId) {
             case R.id.loader_id_encrypt_and_save_private_keys_infos:
                 progressBar.setVisibility(View.GONE);
-                if (e instanceof KeyAlreadyAddedException) {
-                    /*if (getUniqueKeysLongIdsCount.size() > 1 && privateKeyDetailsList.size() == 1) {
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                        setResult(Activity.RESULT_OK);
-                        finish();
-                    } else {
-                        showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
-                                ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
-                    }*/
-                } else {
-                    showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
-                            ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
-                }
+                showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
+                        ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
                 break;
         }
     }
@@ -281,6 +295,27 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     }
 
     /**
+     * Remove the already imported keys from the list of found backups.
+     */
+    private void removeAlreadyImportedKeys() {
+        Set<String> longIds = getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds);
+        StorageConnectorInterface storageConnectorInterface
+                = JsForUiManager.getInstance(this).getJs().getStorageConnector();
+
+        for (String longId : longIds) {
+            if (storageConnectorInterface.getPgpPrivateKey(longId) != null) {
+                for (Iterator<Map.Entry<KeyDetails, String>> iterator = mapOfKeyDetailsAndLongIds.entrySet()
+                        .iterator(); iterator.hasNext(); ) {
+                    Map.Entry<KeyDetails, String> entry = iterator.next();
+                    if (longId.equals(entry.getValue())) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Get a count of unique longIds.
      *
      * @param mapOfKeyDetailsAndLongIds An input map of {@link KeyDetails}.
@@ -290,6 +325,18 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         Set<String> strings = new HashSet<>();
         strings.addAll(mapOfKeyDetailsAndLongIds.values());
         return strings.size();
+    }
+
+    /**
+     * Get a set of unique longIds.
+     *
+     * @param mapOfKeyDetailsAndLongIds An input map of {@link KeyDetails}.
+     * @return A list of unique longIds.
+     */
+    private Set<String> getUniqueKeysLongIds(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
+        Set<String> strings = new HashSet<>();
+        strings.addAll(mapOfKeyDetailsAndLongIds.values());
+        return strings;
     }
 
     /**
