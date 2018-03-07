@@ -63,6 +63,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyB_default.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 2, 1);
         checkSkipRemainingBackupsButton();
@@ -76,6 +77,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
                 "pgp/default@denbond7.com_keyB_default.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 2, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -92,6 +95,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
@@ -106,6 +110,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
@@ -120,6 +125,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(1);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
@@ -135,6 +141,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_default.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 3, 2);
         checkSkipRemainingBackupsButton();
@@ -151,6 +158,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(2, 3, 1);
         checkSkipRemainingBackupsButton();
@@ -167,6 +175,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_default.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 3, 2);
         typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -184,6 +193,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(2, 3, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -201,6 +211,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 2, 1);
         checkSkipRemainingBackupsButton();
@@ -217,6 +228,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
     }
@@ -232,6 +244,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(2);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(1, 2, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -251,6 +264,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(2, 3, 1);
         checkSkipRemainingBackupsButton();
@@ -269,6 +283,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 "pgp/default@denbond7.com_keyC_strong.key"};
         activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
 
+        checkKeysTitleAtStart(3);
         typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
         checkKeysTitle(2, 3, 1);
         typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -296,6 +311,13 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
                 .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
                         .getQuantityString(R.plurals.not_recovered_all_keys, quantityOfRemainingKeys,
                                 quantityOfKeysUsed, totalQuantityOfKeys, quantityOfRemainingKeys))));
+    }
+
+    private void checkKeysTitleAtStart(int totalQuantityOfKeys) {
+        onView(withId(R.id.textViewCheckKeysTitle)).check(matches(isDisplayed()))
+                .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
+                        .getQuantityString(R.plurals.found_backup_of_your_account_key, totalQuantityOfKeys,
+                                totalQuantityOfKeys))));
     }
 
     @NonNull
