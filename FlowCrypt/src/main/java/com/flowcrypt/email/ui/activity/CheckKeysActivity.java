@@ -66,6 +66,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     public static final String KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
             GeneralUtil.generateUniqueExtraKey(
                     "KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
+    public static final String KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
+            GeneralUtil.generateUniqueExtraKey(
+                    "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity.class);
 
     private ArrayList<KeyDetails> privateKeyDetailsList;
     private Map<KeyDetails, String> mapOfKeyDetailsAndLongIds;
@@ -83,18 +86,26 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String positiveButtonTitle,
                                    String negativeButtonTitle) {
-        return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, null, negativeButtonTitle);
+        return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, null, negativeButtonTitle, false);
+    }
+
+    public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
+                                   String bottomTitle, String positiveButtonTitle, String neutralButtonTitle,
+                                   String negativeButtonTitle) {
+        return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, neutralButtonTitle,
+                negativeButtonTitle, false);
     }
 
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
                                    String bottomTitle, String positiveButtonTitle,
-                                   String neutralButtonTitle, String negativeButtonTitle) {
+                                   String neutralButtonTitle, String negativeButtonTitle, boolean isExtraImportOption) {
         Intent intent = new Intent(context, CheckKeysActivity.class);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
         intent.putExtra(KEY_EXTRA_BOTTOM_TITLE, bottomTitle);
         intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
         intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralButtonTitle);
         intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
+        intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOption);
         return intent;
     }
 
@@ -132,25 +143,27 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 this.mapOfKeyDetailsAndLongIds = prepareMapFromKeyDetailsList(privateKeyDetailsList);
                 this.countOfUniqueKeys = getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds);
 
-                removeAlreadyImportedKeys();
+                if (!getIntent().getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
+                    removeAlreadyImportedKeys();
 
-                if (privateKeyDetailsList.size() != mapOfKeyDetailsAndLongIds.size()) {
-                    this.privateKeyDetailsList = new ArrayList<>(mapOfKeyDetailsAndLongIds.keySet());
-                    if (privateKeyDetailsList.isEmpty()) {
-                        setResult(Activity.RESULT_OK);
-                        finish();
+                    if (privateKeyDetailsList.size() != mapOfKeyDetailsAndLongIds.size()) {
+                        this.privateKeyDetailsList = new ArrayList<>(mapOfKeyDetailsAndLongIds.keySet());
+                        if (privateKeyDetailsList.isEmpty()) {
+                            setResult(Activity.RESULT_OK);
+                            finish();
+                        } else {
+                            Map<KeyDetails, String> mapOfRemainingBackups
+                                    = prepareMapFromKeyDetailsList(privateKeyDetailsList);
+                            int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
+
+                            this.bottomTitle = getResources().getQuantityString(
+                                    R.plurals.not_recovered_all_keys, remainingKeyCount,
+                                    countOfUniqueKeys - remainingKeyCount, countOfUniqueKeys, remainingKeyCount);
+                        }
                     } else {
-                        Map<KeyDetails, String> mapOfRemainingBackups
-                                = prepareMapFromKeyDetailsList(privateKeyDetailsList);
-                        int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
-
                         this.bottomTitle = getResources().getQuantityString(
-                                R.plurals.not_recovered_all_keys, remainingKeyCount,
-                                countOfUniqueKeys - remainingKeyCount, countOfUniqueKeys, remainingKeyCount);
+                                R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
                     }
-                } else {
-                    this.bottomTitle = getResources().getQuantityString(
-                            R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
                 }
             } else {
                 setResult(Activity.RESULT_CANCELED);
