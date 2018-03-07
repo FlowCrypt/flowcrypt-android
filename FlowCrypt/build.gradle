@@ -248,10 +248,13 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
     implementation "com.squareup.okhttp3:logging-interceptor:${OKHTTP_VERSION}"
 
-    implementation "com.sun.mail:android-mail:${JAVA_MAIL_VERSION}"
-    implementation "com.sun.mail:android-activation:${JAVA_MAIL_VERSION}"
+    implementation ("com.sun.mail:android-mail:${JAVA_MAIL_VERSION}"){
+        exclude group: 'javax.activation'
+    }
+
     implementation("com.sun.mail:gimap:${JAVA_MAIL_VERSION}") {
         exclude group: 'com.sun.mail'
+        exclude group: 'javax.activation'
     }
 
     implementation "com.github.bumptech.glide:glide:${GLIDE_VERSION}"
