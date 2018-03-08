@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
+import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -23,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +48,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *         Time: 16:17
  *         E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
         @Override
@@ -76,7 +81,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
-            .around(new AddPrivateKeyToDatabaseRule())
+            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", KeyDetails.Type
+                    .EMAIL))
             .around(activityTestRule);
 
     @Test
@@ -100,7 +106,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
         onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
                 .perform(typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard());
         onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-        checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string.the_key_already_added));
+        assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
     }
 
     @Test
