@@ -20,12 +20,17 @@ public class JavaEmailConstants {
     public static final String PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable";
     public static final String PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms";
     public static final String PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE = "mail.imap.fetchsize";
+    public static final int DEFAULT_IMAP_PORT = 143;
+    public static final int SSL_IMAP_PORT = 993;
 
     /*SMTP*/
     public static final String PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth";
     public static final String PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable";
     public static final String PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth.mechanisms";
+    public static final int DEFAULT_SMTP_PORT = 25;
+    public static final int SSL_SMTP_PORT = 465;
+    public static final int STARTTLS_SMTP_PORT = 587;
 
     /*AUTH MECHANISMS*/
     public static final String AUTH_MECHANISMS_XOAUTH2 = "XOAUTH2";

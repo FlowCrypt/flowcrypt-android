@@ -26,6 +26,7 @@ import android.widget.Spinner;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
@@ -501,14 +502,20 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
      * @return {@link AuthCredentials}.
      */
     private AuthCredentials generateAuthCredentials() {
+        int imapPort = TextUtils.isEmpty(editTextImapPort.getText()) ? JavaEmailConstants.DEFAULT_IMAP_PORT
+                : Integer.parseInt(editTextImapPort.getText().toString());
+
+        int smtpPort = TextUtils.isEmpty(editTextSmtpPort.getText()) ? JavaEmailConstants.DEFAULT_SMTP_PORT
+                : Integer.parseInt(editTextSmtpPort.getText().toString());
+
         return new AuthCredentials.Builder().setEmail(editTextEmail.getText().toString())
                 .setUsername(editTextUserName.getText().toString())
                 .setPassword(editTextPassword.getText().toString())
                 .setImapServer(editTextImapServer.getText().toString())
-                .setImapPort(Integer.parseInt(editTextImapPort.getText().toString()))
+                .setImapPort(imapPort)
                 .setImapSecurityTypeOption(((SecurityType) spinnerImapSecyrityType.getSelectedItem()).getOption())
                 .setSmtpServer(editTextSmtpServer.getText().toString())
-                .setSmtpPort(Integer.parseInt(editTextSmtpPort.getText().toString()))
+                .setSmtpPort(smtpPort)
                 .setSmtpSecurityTypeOption(((SecurityType) spinnerSmtpSecyrityType.getSelectedItem()).getOption())
                 .setIsUseCustomSignInForSmtp(checkBoxRequireSignInForSmtp.isChecked())
                 .setSmtpSigInUsername(editTextSmtpUsername.getText().toString())
