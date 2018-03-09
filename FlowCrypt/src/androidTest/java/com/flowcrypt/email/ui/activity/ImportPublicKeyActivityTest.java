@@ -15,7 +15,9 @@ import android.net.Uri;
 import android.os.Parcelable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.filters.LargeTest;
 import android.support.test.rule.GrantPermissionRule;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -32,6 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +66,8 @@ import static org.hamcrest.Matchers.is;
  *         Time: 16:53
  *         E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class ImportPublicKeyActivityTest extends BaseTest {
     private static final String SOME_TEXT = "Some text";
     private static File fileWithPublicKey;

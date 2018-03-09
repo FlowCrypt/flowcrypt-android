@@ -10,7 +10,9 @@ import android.content.Intent;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -23,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +47,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *         Time: 19:00
  *         E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class CheckKeysActivityTestMultiBackups extends BaseTest {
     private ActivityTestRule activityTestRule = new ActivityTestRule<>
             (CheckKeysActivity.class, false, false);
