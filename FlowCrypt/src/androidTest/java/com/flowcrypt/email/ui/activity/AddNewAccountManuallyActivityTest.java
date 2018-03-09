@@ -13,6 +13,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.base.BaseTest;
@@ -20,6 +21,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.AuthCredentialsManager;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -113,21 +115,21 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     @Test
     public void testChangingImapPortWhenSelectSpinnerItem() throws Exception {
         checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
-                SecurityType.Option.STARTLS, "143");
+                SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.DEFAULT_IMAP_PORT));
         checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
-                SecurityType.Option.SSL_TLS, "993");
+                SecurityType.Option.SSL_TLS, String.valueOf(JavaEmailConstants.SSL_IMAP_PORT));
         checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
-                SecurityType.Option.NONE, "143");
+                SecurityType.Option.NONE, String.valueOf(JavaEmailConstants.DEFAULT_IMAP_PORT));
     }
 
     @Test
     public void testChangingSmtpPortWhenSelectSpinnerItem() throws Exception {
         checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
-                SecurityType.Option.STARTLS, "587");
+                SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.STARTTLS_SMTP_PORT));
         checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
-                SecurityType.Option.SSL_TLS, "465");
+                SecurityType.Option.SSL_TLS, String.valueOf(JavaEmailConstants.SSL_SMTP_PORT));
         checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
-                SecurityType.Option.NONE, "25");
+                SecurityType.Option.NONE, String.valueOf(JavaEmailConstants.DEFAULT_SMTP_PORT));
     }
 
     @Test
@@ -220,6 +222,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         }
     }
 
+    @Ignore//todo-denbond7 need to think about it
     @Test
     public void testShowWarningIfAuthFail() {
         IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.MINUTES);

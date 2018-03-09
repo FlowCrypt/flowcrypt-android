@@ -64,10 +64,7 @@ public class KeysSettingsActivityTest extends BaseTest {
                 .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), KeyDetails.Type.EMAIL);
 
         onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.listViewKeys)).check(matches(isDisplayed()))
-                .check(matches(matchListSize(2)));
-        checkIsToastDisplayed(intentsTestRule.getActivity(),
-                InstrumentationRegistry.getTargetContext().getString(R.string.key_successfully_imported));
+        onView(withId(R.id.listViewKeys)).check(matches(isDisplayed())).check(matches(matchListSize(2)));
     }
 
     @Test

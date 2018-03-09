@@ -15,6 +15,8 @@ import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.LargeTest;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -23,18 +25,19 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.AccountDaoManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,6 +75,8 @@ import static org.hamcrest.Matchers.not;
  *         Time: 10:11
  *         E-mail: DenBond7@gmail.com
  */
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class CreateMessageActivityTest extends BaseTest {
 
     private static final int ATTACHMENTS_COUNT = 3;
@@ -80,7 +85,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
     private static File[] attachments;
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<EmailManagerActivity>(EmailManagerActivity.class) {
+    private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
         @Override
         protected Intent getActivityIntent() {
             Context targetContext = InstrumentationRegistry.getTargetContext();
@@ -92,9 +97,8 @@ public class CreateMessageActivityTest extends BaseTest {
                 e.printStackTrace();
             }
 
-            Intent intentRunEmailManagerActivity = new Intent(targetContext, EmailManagerActivity.class);
-            intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-            return intentRunEmailManagerActivity;
+            return CreateMessageActivity.generateIntent(targetContext, accountDao.getEmail(), null,
+                    MessageEncryptionType.ENCRYPTED);
         }
     };
 
@@ -111,11 +115,6 @@ public class CreateMessageActivityTest extends BaseTest {
     @AfterClass
     public static void cleanResources() {
         TestGeneralUtil.deleteFiles(Arrays.asList(attachments));
-    }
-
-    @Before
-    public void runCreateMessageActivity() {
-        onView(withId(R.id.floatActionButtonCompose)).check(matches(isDisplayed())).perform(click());
     }
 
     @Test
@@ -245,8 +244,6 @@ public class CreateMessageActivityTest extends BaseTest {
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         savePublicKeyInDatabase();
         onView(withText(R.string.import_their_public_key)).check(matches(isDisplayed())).perform(click());
-        checkIsToastDisplayed(intentsTestRule.getActivity(),
-                InstrumentationRegistry.getTargetContext().getString(R.string.key_successfully_imported));
     }
 
     @Test
@@ -291,7 +288,6 @@ public class CreateMessageActivityTest extends BaseTest {
     private void savePublicKeyInDatabase() throws IOException {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
         PgpContact pgpContact = getPgpContact();
-        contactsDaoSource.updatePgpContact(InstrumentationRegistry.getTargetContext(), pgpContact);
         contactsDaoSource.addRow(InstrumentationRegistry.getTargetContext(), pgpContact);
     }
 
