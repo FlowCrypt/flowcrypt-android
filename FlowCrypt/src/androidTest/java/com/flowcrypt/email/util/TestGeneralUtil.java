@@ -85,6 +85,7 @@ public class TestGeneralUtil {
                         .refresh(InstrumentationRegistry.getTargetContext());
             }
         });
+        Thread.sleep(1000);// Added timeout for a better sync between threads.
     }
 
     public static void deleteFiles(List<File> files) {

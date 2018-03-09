@@ -61,5 +61,6 @@ public class ClearAppSettingsRule implements TestRule {
                         .refresh(InstrumentationRegistry.getTargetContext());
             }
         });
+        Thread.sleep(1000);// Added timeout for a better sync between threads.
     }
 }
