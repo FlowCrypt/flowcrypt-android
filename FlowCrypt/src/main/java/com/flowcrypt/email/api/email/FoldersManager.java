@@ -99,8 +99,7 @@ public class FoldersManager {
             }
         }
 
-        return !FolderType.INBOX.getValue().equals(folder.getFullName());
-
+        return !FolderType.INBOX.getValue().equalsIgnoreCase(folder.getFullName());
     }
 
     /**
@@ -151,7 +150,8 @@ public class FoldersManager {
     }
 
     public Folder getFolderSpam() {
-        return folders.get(FolderType.SPAM.getValue());
+        Folder spam = folders.get(FolderType.JUNK.getValue());
+        return spam != null ? spam : folders.get(FolderType.SPAM.getValue());
     }
 
     public Folder getFolderSent() {
@@ -300,7 +300,8 @@ public class FoldersManager {
         ARCHIVE("\\Archive"),
         DRAFTS("\\Drafts"),
         STARRED("\\Flagged"),
-        SPAM("\\Junk"),
+        JUNK("\\Junk"),
+        SPAM("\\Spam"),
         SENT("\\Sent"),
         TRASH("\\Trash"),
         IMPORTANT("\\Important");

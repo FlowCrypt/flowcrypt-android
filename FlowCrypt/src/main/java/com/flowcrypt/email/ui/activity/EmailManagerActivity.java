@@ -381,8 +381,8 @@ public class EmailManagerActivity extends BaseSyncActivity
                         MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
                         mailLabels.getSubMenu().clear();
 
-                        for (Folder s : foldersManager.getServerFolders()) {
-                            mailLabels.getSubMenu().add(s.getFolderAlias());
+                        for (String label : getSortedServerFolders()) {
+                            mailLabels.getSubMenu().add(label);
                         }
 
                         for (Folder s : foldersManager.getCustomLabels()) {
@@ -451,6 +451,48 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    /**
+     * Sort the server folders for a better user experience.
+     *
+     * @return The sorted labels list.
+     */
+    private String[] getSortedServerFolders() {
+        List<Folder> folders = foldersManager.getServerFolders();
+        int foldersCount = folders.size();
+        String[] serverFolders = new String[foldersCount];
+
+        Folder inbox, spam, trash;
+        inbox = foldersManager.getFolderInbox();
+        spam = foldersManager.getFolderSpam();
+        trash = foldersManager.getFolderTrash();
+
+        if (inbox != null) {
+            folders.remove(inbox);
+            serverFolders[0] = inbox.getFolderAlias();
+        }
+
+        if (trash != null) {
+            folders.remove(trash);
+            serverFolders[folders.size() + 1] = trash.getFolderAlias();
+        }
+
+        if (spam != null) {
+            folders.remove(spam);
+            serverFolders[folders.size() + 1] = spam.getFolderAlias();
+        }
+
+        for (int i = 0; i < folders.size(); i++) {
+            Folder s = folders.get(i);
+            if (inbox == null) {
+                serverFolders[i] = s.getFolderAlias();
+            } else {
+                serverFolders[i + 1] = s.getFolderAlias();
+            }
+        }
+
+        return serverFolders;
     }
 
     private void refreshFoldersInfoFromCache() {
