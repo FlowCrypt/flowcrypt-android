@@ -245,10 +245,13 @@
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
     <string name="progress_message">%1$d\%% %2$s</string>
-    <string name="import_backup">Import backup</string>
     <plurals name="you_have_backups_that_was_not_imported">
-        <item quantity="one">You have one backup that was not imported.</item>
-        <item quantity="other">You have backups that were not imported.</item>
+        <item quantity="one">You have one key that was not imported.</item>
+        <item quantity="other">You have keys that were not imported.</item>
+    </plurals>
+    <plurals name="import_keys">
+        <item quantity="one">Import key</item>
+        <item quantity="other">Import keys</item>
     </plurals>
     <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
