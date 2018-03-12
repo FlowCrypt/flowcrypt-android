@@ -51,6 +51,9 @@ public class MessagePart implements Parcelable {
                     case PGP_PUBLIC_KEY:
                         return new MessagePartPgpPublicKey(source);
 
+                    case PGP_SIGNED_MESSAGE:
+                        return new MessagePartSignedMessage(source);
+
                     default:
                         throw new AssertionError("An unknown " + MessagePart.class.getSimpleName());
                 }

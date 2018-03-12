@@ -24,6 +24,7 @@ import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
+import com.flowcrypt.email.model.messages.MessagePartSignedMessage;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
 
@@ -159,6 +160,10 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
                                 fingerprint, keyOwner, pgpContact);
 
                         messageParts.add(messagePartPgpPublicKey);
+                        break;
+
+                    case MessageBlock.TYPE_PGP_SIGNED_MESSAGE:
+                        messageParts.add(new MessagePartSignedMessage(messageBlock.getContent()));
                         break;
 
                     //Todo-DenBond7 need to describe other types of MessageBlock
