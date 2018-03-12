@@ -247,11 +247,11 @@
     <string name="progress_message">%1$d\%% %2$s</string>
     <plurals name="you_have_backups_that_was_not_imported">
         <item quantity="one">You have one key that was not imported.</item>
-        <item quantity="other">You have keys that were not imported.</item>
+        <item quantity="other">There are key backups that were not imported.</item>
     </plurals>
     <plurals name="import_keys">
-        <item quantity="one">Import key</item>
-        <item quantity="other">Import keys</item>
+        <item quantity="one">Import key backup</item>
+        <item quantity="other">Import key backups</item>
     </plurals>
     <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
