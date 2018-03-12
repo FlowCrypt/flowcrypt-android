@@ -166,7 +166,20 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
                         messageParts.add(new MessagePartSignedMessage(messageBlock.getContent()));
                         break;
 
-                    //Todo-DenBond7 need to describe other types of MessageBlock
+                    case MessageBlock.TYPE_VERIFICATION:
+                        messageParts.add(new MessagePart(MessagePartType.VERIFICATION,
+                                messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_ATTEST_PACKET:
+                        messageParts.add(new MessagePart(MessagePartType.ATTEST_PACKET,
+                                messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_PGP_PASSWORD_MESSAGE:
+                        messageParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE,
+                                messageBlock.getContent()));
+                        break;
                 }
             }
         }
