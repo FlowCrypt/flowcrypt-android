@@ -26,6 +26,7 @@ import android.widget.Spinner;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
@@ -43,9 +44,11 @@ import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import javax.mail.AuthenticationFailedException;
@@ -301,10 +304,12 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 } else {
                     startActivityForResult(CheckKeysActivity.newIntent(this,
                             keyDetailsList,
-                            getString(R.string.found_backup_of_your_account_key),
+                            getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+                                    keyDetailsList.size(),
+                                    keyDetailsList.size()),
                             getString(R.string.continue_),
                             SecurityUtils.isBackupKeysExist(this) ? getString(R.string.use_existing_keys) : null,
-                            getString(R.string.use_another_account), true),
+                            getString(R.string.use_another_account)),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
                 }
                 break;
@@ -321,19 +326,31 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case R.id.loader_id_check_email_settings:
                 UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
                 Throwable original = e != null ? e.getCause() : null;
-                if (original != null && original instanceof AuthenticationFailedException) {
-                    if (editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants.GMAIL_IMAP_SERVER)) {
-                        showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
-                                getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                if (original != null) {
+                    if (original instanceof AuthenticationFailedException) {
+                        if (editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants
+                                .GMAIL_IMAP_SERVER)) {
+                            showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
+                                    getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
+                                            finish();
+                                        }
+                                    });
+                        } else {
+                            showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
+                                    : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+                        }
+                    } else if (original instanceof MailConnectException || original instanceof SocketTimeoutException) {
+                        showSnackbar(getRootView(), getString(R.string.network_error_please_retry),
+                                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
-                                        finish();
+                                        getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings,
+                                                null, AddNewAccountManuallyActivity.this);
                                     }
                                 });
-                    } else {
-                        showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
-                                : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
                     }
                 } else {
                     showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
@@ -485,14 +502,20 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
      * @return {@link AuthCredentials}.
      */
     private AuthCredentials generateAuthCredentials() {
+        int imapPort = TextUtils.isEmpty(editTextImapPort.getText()) ? JavaEmailConstants.DEFAULT_IMAP_PORT
+                : Integer.parseInt(editTextImapPort.getText().toString());
+
+        int smtpPort = TextUtils.isEmpty(editTextSmtpPort.getText()) ? JavaEmailConstants.DEFAULT_SMTP_PORT
+                : Integer.parseInt(editTextSmtpPort.getText().toString());
+
         return new AuthCredentials.Builder().setEmail(editTextEmail.getText().toString())
                 .setUsername(editTextUserName.getText().toString())
                 .setPassword(editTextPassword.getText().toString())
                 .setImapServer(editTextImapServer.getText().toString())
-                .setImapPort(Integer.parseInt(editTextImapPort.getText().toString()))
+                .setImapPort(imapPort)
                 .setImapSecurityTypeOption(((SecurityType) spinnerImapSecyrityType.getSelectedItem()).getOption())
                 .setSmtpServer(editTextSmtpServer.getText().toString())
-                .setSmtpPort(Integer.parseInt(editTextSmtpPort.getText().toString()))
+                .setSmtpPort(smtpPort)
                 .setSmtpSecurityTypeOption(((SecurityType) spinnerSmtpSecyrityType.getSelectedItem()).getOption())
                 .setIsUseCustomSignInForSmtp(checkBoxRequireSignInForSmtp.isChecked())
                 .setSmtpSigInUsername(editTextSmtpUsername.getText().toString())

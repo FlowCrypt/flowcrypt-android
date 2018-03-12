@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -54,6 +55,8 @@ import com.flowcrypt.email.util.GlideApp;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -74,7 +77,8 @@ public class EmailManagerActivity extends BaseSyncActivity
 
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
-    public static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
+    private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
+    private static final int REQUEST_CODE_SIGN_IN = 101;
 
     private GoogleApiClient googleApiClient;
     private AccountDao accountDao;
@@ -147,6 +151,38 @@ public class EmailManagerActivity extends BaseSyncActivity
                             runEmailManagerActivity(EmailManagerActivity.this, accountDao);
                             finish();
                         }
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_SIGN_IN:
+                switch (resultCode) {
+                    case RESULT_OK:
+                        GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                        if (googleSignInResult.isSuccess()) {
+                            EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                                    .findFragmentById(R.id.emailListFragment);
+
+                            if (emailListFragment != null) {
+                                emailListFragment.reloadMessages();
+                            }
+                        } else {
+                            if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
+                                UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
+                                        .getStatusMessage());
+                            }
+                        }
+                        break;
+
+                    case RESULT_CANCELED:
+                        showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string
+                                        .sign_in),
+                                Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        onRetryGoogleAuth();
+                                    }
+                                });
                         break;
                 }
                 break;
@@ -394,6 +430,12 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public Folder getCurrentFolder() {
         return folder;
+    }
+
+    @Override
+    public void onRetryGoogleAuth() {
+        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
+                REQUEST_CODE_SIGN_IN);
     }
 
     @Override

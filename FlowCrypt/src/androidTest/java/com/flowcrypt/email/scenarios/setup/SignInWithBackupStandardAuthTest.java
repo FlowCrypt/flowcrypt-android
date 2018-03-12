@@ -93,6 +93,6 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
     }
 
     private void checkRightHeader() {
-        onView(withText(R.string.found_backup_of_your_account_key)).check(matches(isDisplayed()));
+        onView(withId(R.id.textViewCheckKeysTitle)).check(matches(isDisplayed()));
     }
 }

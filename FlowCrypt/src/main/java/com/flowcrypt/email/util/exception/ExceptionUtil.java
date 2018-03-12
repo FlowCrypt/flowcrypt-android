@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
@@ -17,6 +18,7 @@ import java.net.UnknownHostException;
 import javax.mail.MessagingException;
 import javax.mail.StoreClosedException;
 import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLProtocolException;
 
 /**
  * This class describes methods for a work with {@link Exception}
@@ -39,7 +41,8 @@ public class ExceptionUtil {
         if ((e instanceof MailConnectException)
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
-                || (e instanceof ConnectionException)) {
+                || (e instanceof ConnectionException)
+                || (e instanceof UserRecoverableAuthException)) {
             return false;
         }
 
@@ -52,11 +55,14 @@ public class ExceptionUtil {
 
         }
 
-        if ((e instanceof SSLHandshakeException || e instanceof MessagingException)) {
+        if ((e instanceof SSLHandshakeException
+                || e instanceof SSLProtocolException
+                || e instanceof MessagingException)) {
             if ("Connection closed by peer".equalsIgnoreCase(e.getMessage())
                     || e.getMessage().contains("I/O error during system call, Software caused connection abort")
                     || e.getMessage().contains("I/O error during system call, Connection reset by peer;")
-                    || e.getMessage().contains("I/O error during system call, Socket operation on non-socket;")) {
+                    || e.getMessage().contains("I/O error during system call, Socket operation on non-socket;")
+                    || e.getMessage().contains("Failure in SSL library, usually a protocol error")) {
                 return false;
             }
         }

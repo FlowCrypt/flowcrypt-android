@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.Js;
@@ -24,8 +25,10 @@ import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This activity describes a logic of import private keys.
@@ -46,7 +49,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     private View progressBarLoadingBackups;
     private View layoutContent;
     private View layoutSyncStatus;
-    private View buttonImportBackup;
+    private Button buttonImportBackup;
 
     private boolean isLoadPrivateKeysRequestSent;
 
@@ -102,20 +105,25 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                                     (SecurityStorageConnector) js.getStorageConnector();
 
                             Iterator<String> iterator = privateKeys.iterator();
+                            Set<String> uniqueKeysLongIds = new HashSet<>();
 
                             while (iterator.hasNext()) {
                                 String privateKey = iterator.next();
                                 PgpKey pgpKey = js.crypto_key_read(privateKey);
+                                uniqueKeysLongIds.add(pgpKey.getLongid());
                                 if (securityStorageConnector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
                                     iterator.remove();
+                                    uniqueKeysLongIds.remove(pgpKey.getLongid());
                                 }
                             }
 
                             if (this.privateKeys.isEmpty()) {
                                 hideImportButton();
                             } else {
+                                buttonImportBackup.setText(getResources().getQuantityString(
+                                        R.plurals.import_keys, uniqueKeysLongIds.size()));
                                 textViewImportKeyTitle.setText(getResources().getQuantityString(
-                                        R.plurals.you_have_backups_that_was_not_imported, this.privateKeys.size()));
+                                        R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size()));
                             }
                         } else {
                             hideImportButton();
@@ -155,12 +163,17 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
         switch (v.getId()) {
             case R.id.buttonImportBackup:
                 if (privateKeys != null && !privateKeys.isEmpty()) {
-                    this.keyDetails = new KeyDetails(privateKeys.get(0), KeyDetails.Type.EMAIL);
+                    ArrayList<KeyDetails> keyDetails = new ArrayList<>();
+
+                    for (String key : privateKeys) {
+                        keyDetails.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+                    }
+
                     startActivityForResult(CheckKeysActivity.newIntent(this,
-                            new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
-                            getString(R.string.found_backup_of_your_account_key),
+                            keyDetails,
+                            null,
                             getString(R.string.continue_),
-                            getString(R.string.choose_another_key), isThrowErrorIfDuplicateFound),
+                            getString(R.string.choose_another_key)),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 }
                 break;
@@ -196,9 +209,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                         new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
                         getString(R.string.template_check_key_name,
                                 keyDetails.getKeyName()),
-                        getString(R.string.continue_),
-                        getString(R.string.choose_another_key),
-                        isThrowErrorIfDuplicateFound),
+                        getString(R.string.continue_), null,
+                        getString(R.string.choose_another_key), true),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 break;
 
@@ -206,9 +218,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                 startActivityForResult(CheckKeysActivity.newIntent(this,
                         new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
                         getString(R.string.loaded_private_key_from_your_clipboard),
-                        getString(R.string.continue_),
-                        getString(R.string.choose_another_key),
-                        isThrowErrorIfDuplicateFound),
+                        getString(R.string.continue_), null,
+                        getString(R.string.choose_another_key), true),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
                 break;
         }

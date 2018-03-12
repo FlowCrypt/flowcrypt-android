@@ -8,10 +8,13 @@ package com.flowcrypt.email.base;
 import android.app.Activity;
 import android.graphics.drawable.ColorDrawable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.Snackbar;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.SecurityType;
 
 import org.hamcrest.BaseMatcher;
@@ -19,9 +22,11 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.RootMatchers.withDecorView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -91,5 +96,72 @@ public class BaseTest {
         onView(withText(message))
                 .inRoot(withDecorView(not(is(activity.getWindow().getDecorView()))))
                 .check(matches(isDisplayed()));
+    }
+
+    /**
+     * Match is {@link ListView} empty.
+     */
+    public static <T> Matcher<T> matchEmptyList() {
+        return new BaseMatcher<T>() {
+            @Override
+            public boolean matches(Object item) {
+                if (item instanceof ListView) {
+                    ListView listView = (ListView) item;
+                    return listView.getAdapter().getCount() == 0;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("List is not empty");
+            }
+        };
+    }
+
+    /**
+     * Match the list size.
+     *
+     * @param listSize An incoming list size.
+     */
+    public static <T> Matcher<T> matchListSize(final int listSize) {
+        return new BaseMatcher<T>() {
+            @Override
+            public boolean matches(Object item) {
+                if (item instanceof ListView) {
+                    ListView listView = (ListView) item;
+                    return listView.getAdapter().getCount() == listSize;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("The size of the list is not equal = " + listSize);
+            }
+        };
+    }
+
+    /**
+     * Test the app help screen.
+     */
+    protected void testHelpScreen() {
+        onView(withId(R.id.menuActionHelp)).check(matches(isDisplayed())).perform(click());
+        onView(withId(R.id.textViewAuthorHint)).check(matches(isDisplayed()))
+                .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)));
+        onView(withText(R.string.help_feedback_or_question)).check(matches(isDisplayed()));
+    }
+
+    /**
+     * Test is a {@link Snackbar} with an input message displayed.
+     *
+     * @param message An input message.
+     */
+    protected void checkIsSnackbarDisplayed(String message) {
+        onView(withText(message)).check(matches(isDisplayed()));
+        onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+                .perform(click());
     }
 }

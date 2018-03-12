@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 
 import java.util.ArrayList;
 
@@ -64,9 +65,12 @@ public class SecurityType implements Parcelable {
     @NonNull
     public static ArrayList<SecurityType> generateAvailableSecurityTypes(Context context) {
         ArrayList<SecurityType> securityTypes = new ArrayList<>();
-        securityTypes.add(new SecurityType(context.getString(R.string.none), SecurityType.Option.NONE, 143, 25));
-        securityTypes.add(new SecurityType(context.getString(R.string.ssl_tls), SecurityType.Option.SSL_TLS, 993, 465));
-        securityTypes.add(new SecurityType(context.getString(R.string.startls), SecurityType.Option.STARTLS, 143, 587));
+        securityTypes.add(new SecurityType(context.getString(R.string.none), SecurityType.Option.NONE,
+                JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT));
+        securityTypes.add(new SecurityType(context.getString(R.string.ssl_tls), SecurityType.Option.SSL_TLS,
+                JavaEmailConstants.SSL_IMAP_PORT, JavaEmailConstants.SSL_SMTP_PORT));
+        securityTypes.add(new SecurityType(context.getString(R.string.startls), SecurityType.Option.STARTLS,
+                JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.STARTTLS_SMTP_PORT));
         return securityTypes;
     }
 

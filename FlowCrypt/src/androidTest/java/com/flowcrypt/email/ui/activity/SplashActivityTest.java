@@ -12,6 +12,7 @@ import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 
 import org.junit.Before;
@@ -30,7 +31,9 @@ import static android.support.test.espresso.intent.matcher.IntentMatchers.isInte
 import static android.support.test.espresso.intent.matcher.IntentMatchers.toPackage;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -43,7 +46,7 @@ import static org.hamcrest.Matchers.not;
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class SplashActivityTest {
+public class SplashActivityTest extends BaseTest {
 
     @Rule
     public TestRule ruleChain = RuleChain
@@ -59,7 +62,8 @@ public class SplashActivityTest {
     @Test
     public void testUseOtherEmailProviders() {
         onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed())).perform(click());
-        onView(withText(R.string.adding_new_account)).check(matches(isDisplayed()));
+        onView(allOf(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar)))).check(matches
+                (isDisplayed()));
     }
 
     @Test
@@ -72,18 +76,18 @@ public class SplashActivityTest {
     @Test
     public void testShowPrivacyScreen() {
         onView(withId(R.id.buttonPrivacy)).check(matches(isDisplayed())).perform(click());
-        onView(withText(R.string.privacy)).check(matches(isDisplayed()));
+        onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
     }
 
     @Test
     public void testShowTermsScreen() {
         onView(withId(R.id.buttonTerms)).check(matches(isDisplayed())).perform(click());
-        onView(withText(R.string.terms)).check(matches(isDisplayed()));
+        onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
     }
 
     @Test
     public void testShowSecurityScreen() {
         onView(withId(R.id.buttonSecurity)).check(matches(isDisplayed())).perform(click());
-        onView(withText(R.string.security)).check(matches(isDisplayed()));
+        onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
     }
 }

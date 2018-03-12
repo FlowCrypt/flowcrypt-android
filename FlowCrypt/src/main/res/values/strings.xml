@@ -39,7 +39,10 @@
     <string name="all_labels">All labels</string>
     <string name="no_results">No results</string>
     <string name="set_up_flow_crypt">Set up FlowCrypt</string>
-    <string name="found_backup_of_your_account_key">Found a backup of your account key</string>
+    <plurals name="found_backup_of_your_account_key">
+        <item quantity="one">We found a backup of your key</item>
+        <item quantity="other">We found backups of %1$d keys</item>
+    </plurals>
     <string name="enter_your_pass_phrase">Enter your pass phrase</string>
     <string name="load_account">Load Account</string>
     <string name="loading_account">Loading account</string>
@@ -196,6 +199,7 @@
     <string name="expand_an_account_managment">Expand an account management</string>
     <string name="add_account">Add account</string>
     <string name="use_existing_keys">Use existing keys</string>
+    <string name="skip_remaining_backups">Skip remaining backups</string>
     <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
     <string name="experimental_settings">Experimental Settings</string>
@@ -241,10 +245,13 @@
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
     <string name="progress_message">%1$d\%% %2$s</string>
-    <string name="import_backup">Import backup</string>
     <plurals name="you_have_backups_that_was_not_imported">
-        <item quantity="one">You have one backup that was not imported.</item>
-        <item quantity="other">You have backups that were not imported.</item>
+        <item quantity="one">You have one key that was not imported.</item>
+        <item quantity="other">There are key backups that were not imported.</item>
+    </plurals>
+    <plurals name="import_keys">
+        <item quantity="one">Import key backup</item>
+        <item quantity="other">Import key backups</item>
     </plurals>
     <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
@@ -279,4 +286,15 @@ icelanders prefer real sauna</font>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
     <string name="copy">Copy</string>
     <string name="remove">Remove</string>
+    <string name="not_private_key">This is not a private key</string>
+    <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
+    <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security
+        settings?</string>
+    <string name="get_access_to_gmail">Get access to Gmail</string>
+    <string name="sign_in">SIGN IN</string>
+    <string name="network_error_please_retry">Network error, please retry</string>
+    <plurals name="not_recovered_all_keys">
+        <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
+        <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
+    </plurals>
 </resources>

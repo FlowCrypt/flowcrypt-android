@@ -121,7 +121,7 @@ public class CreatePrivateKeyActivityTest {
     }
 
     @Test
-    public void testUseCorrectPassPhrase() throws Exception {
+    public void testUseCorrectPassPhrase() {
         onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(typeText(PERFECT_PASSWORD),
                 closeSoftKeyboard());
         onView(withId(R.id.buttonSetPassPhrase)).check(matches(isDisplayed())).perform(click());

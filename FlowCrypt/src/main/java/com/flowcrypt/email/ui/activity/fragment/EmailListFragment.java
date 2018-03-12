@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
@@ -37,6 +38,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -169,7 +171,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_email_list, container, false);
     }
 
@@ -297,7 +299,20 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
     @Override
     public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
-        super.onErrorOccurred(requestCode, errorType, e);
+        if (e instanceof UserRecoverableAuthException) {
+            super.onErrorOccurred(requestCode, errorType,
+                    new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
+            showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+                    Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onManageEmailsListener.onRetryGoogleAuth();
+                        }
+                    });
+        } else {
+            super.onErrorOccurred(requestCode, errorType, e);
+        }
+
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
                 footerProgressView.setVisibility(View.GONE);
@@ -410,6 +425,16 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     /**
+     * Reload the folder messages.
+     */
+    public void reloadMessages() {
+        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+        cleanCache();
+        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+        loadNextMessages(0);
+    }
+
+    /**
      * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
      */
     private void showRetrySnackbar() {
@@ -503,5 +528,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         AccountDao getCurrentAccountDao();
 
         Folder getCurrentFolder();
+
+        void onRetryGoogleAuth();
     }
 }

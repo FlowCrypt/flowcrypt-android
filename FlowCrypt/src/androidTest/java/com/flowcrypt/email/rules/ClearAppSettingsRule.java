@@ -7,8 +7,10 @@ package com.flowcrypt.email.rules;
 
 import android.net.Uri;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.internal.runner.junit4.statement.UiThreadStatement;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
+import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -45,10 +47,20 @@ public class ClearAppSettingsRule implements TestRule {
      *
      * @throws IOException Different errors can be occurred.
      */
-    private void clearApp() throws IOException {
+    private void clearApp() throws Throwable {
         SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
         FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
         InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
                 .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+        UiThreadStatement.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
+                        .getJs()
+                        .getStorageConnector()
+                        .refresh(InstrumentationRegistry.getTargetContext());
+            }
+        });
+        Thread.sleep(1000);// Added timeout for a better sync between threads.
     }
 }

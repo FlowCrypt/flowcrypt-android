@@ -22,11 +22,10 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This loader try to encrypt and save encrypted key with entered password by
@@ -43,29 +42,23 @@ import java.util.Map;
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private static final String KEY_SUCCESS = "success";
 
-    private boolean isThrowErrorIfDuplicateFound;
     private List<KeyDetails> privateKeyDetailsList;
     private String passphrase;
 
     private KeysDaoSource keysDaoSource;
 
-    public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context,
-                                                    ArrayList<KeyDetails>
-                                                            privateKeyDetailsList,
-                                                    String passphrase,
-                                                    boolean isThrowErrorIfDuplicateFound) {
+    public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<KeyDetails> privateKeyDetailsList,
+                                                    String passphrase) {
         super(context);
         this.privateKeyDetailsList = privateKeyDetailsList;
         this.passphrase = passphrase;
         this.keysDaoSource = new KeysDaoSource();
-        this.isThrowErrorIfDuplicateFound = isThrowErrorIfDuplicateFound;
         onContentChanged();
     }
 
     @Override
     public LoaderResult loadInBackground() {
-        boolean isOneOrMoreKeySaved = false;
-        Map<String, String> mapOfAlreadyUsedKey = new HashMap<>();
+        List<KeyDetails> acceptedKeysList = new ArrayList<>();
         try {
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
@@ -84,15 +77,13 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                         break;
                 }
 
-
                 String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
                 PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
                 V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
 
                 if (pgpKey.isPrivate()) {
-                    if (!mapOfAlreadyUsedKey.containsKey(pgpKey.getLongid()) &&
-                            v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
+                    if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
                         if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
                             Uri uri = keysDaoSource.addRow(getContext(),
                                     KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
@@ -101,23 +92,39 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                             PgpKey publicKey = pgpKey.toPublic();
                             if (pgpContact != null) {
                                 pgpContact.setPubkey(publicKey.armor());
-                                new ContactsDaoSource().addRow(getContext(), pgpContact);
+                                ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+                                if (contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail()) == null) {
+                                    new ContactsDaoSource().addRow(getContext(), pgpContact);
+                                    //todo-DenBond7 Need to resolve a situation with different public keys.
+                                }
                             }
-                            isOneOrMoreKeySaved = uri != null;
-                        } else if (isThrowErrorIfDuplicateFound) {
-                            return new LoaderResult(null, new Exception(getContext().getString(R
-                                    .string.the_key_already_added)));
+
+                            if (uri != null) {
+                                acceptedKeysList.add(keyDetails);
+                            }
+                        } else if (privateKeyDetailsList.size() == 1) {
+                            return new LoaderResult(null,
+                                    new KeyAlreadyAddedException(keyDetails,
+                                            getContext().getString(R.string.the_key_already_added)));
+                        } else {
+                            acceptedKeysList.add(keyDetails);
                         }
+                    } else if (privateKeyDetailsList.size() == 1) {
+                        return new LoaderResult(null,
+                                new IllegalArgumentException(getContext().getString(R.string.password_is_incorrect)));
                     }
-                    mapOfAlreadyUsedKey.put(pgpKey.getLongid(), pgpKey.getLongid());
-                } else throw new IllegalArgumentException("This is not a private key");
+                } else if (privateKeyDetailsList.size() == 1) {
+                    return new LoaderResult(null,
+                            new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }
-        return new LoaderResult(isOneOrMoreKeySaved, null);
+
+        return new LoaderResult(acceptedKeysList, null);
     }
 
     @Override
