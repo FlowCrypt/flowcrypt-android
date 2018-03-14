@@ -40,6 +40,7 @@ public class MessagePartPgpMessage extends MessagePart {
 
     protected MessagePartPgpMessage(Parcel in) {
         super(in);
+        this.messagePartType = MessagePartType.PGP_MESSAGE;
         this.errorMessage = in.readString();
         int tmpPgpMessageDecryptError = in.readInt();
         this.pgpMessageDecryptError = tmpPgpMessageDecryptError == -1 ? null : PgpMessageDecryptError.values()

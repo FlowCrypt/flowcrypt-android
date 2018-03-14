@@ -55,9 +55,13 @@ public class MessagePart implements Parcelable {
                         return new MessagePartSignedMessage(source);
 
                     case VERIFICATION:
+                        return new MessagePartVerification(source);
+
                     case ATTEST_PACKET:
+                        return new MessagePartAttestPacket(source);
+
                     case PGP_PASSWORD_MESSAGE:
-                        return new MessagePart(source);
+                        return new MessagePartPgpPasswordMessage(source);
 
                     default:
                         throw new AssertionError("An unknown " + MessagePart.class.getSimpleName());
@@ -81,7 +85,6 @@ public class MessagePart implements Parcelable {
     }
 
     protected MessagePart(Parcel in) {
-        this.messagePartType = MessagePartType.values()[in.readInt()];
         this.value = in.readString();
     }
 
