@@ -55,7 +55,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     private View nonEncryptedHintView;
     private View layoutContent;
 
-    private MessageEncryptionType messageEncryptionType;
+    private MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
     private ServiceInfo serviceInfo;
 
     private boolean isMessageSendingNow;
@@ -90,14 +90,12 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
         if (getIntent() != null) {
             serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
-            messageEncryptionType = (MessageEncryptionType) getIntent()
-                    .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
-
-            if (messageEncryptionType == null) {
-                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-            } else {
-                onMessageEncryptionTypeChange(messageEncryptionType);
+            if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
+                messageEncryptionType = (MessageEncryptionType) getIntent()
+                        .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
             }
+
+            onMessageEncryptionTypeChange(messageEncryptionType);
 
             if (getSupportActionBar() != null) {
                 if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
