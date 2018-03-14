@@ -662,6 +662,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                 EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
                         if (isAttachmentCanBeAdded(attachmentInfo)) {
                             attachmentInfoList.add(attachmentInfo);
+                            this.attachmentInfoList.add(attachmentInfo);
                         } else {
                             Toast.makeText(getContext(), maxTotalAttachmentSizeWarning, Toast.LENGTH_SHORT).show();
                         }
@@ -676,6 +677,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                         EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
                                 if (isAttachmentCanBeAdded(attachmentInfo)) {
                                     attachmentInfoList.add(attachmentInfo);
+                                    this.attachmentInfoList.add(attachmentInfo);
                                 } else {
                                     Toast.makeText(getContext(), maxTotalAttachmentSizeWarning,
                                             Toast.LENGTH_SHORT).show();
@@ -687,9 +689,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 }
 
                 extraActionInfo.setAttachmentInfoList(attachmentInfoList);
-                if (!extraActionInfo.getAttachmentInfoList().isEmpty()) {
-                    this.attachmentInfoList.addAll(extraActionInfo.getAttachmentInfoList());
-                }
                 break;
         }
     }
