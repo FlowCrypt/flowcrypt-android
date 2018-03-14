@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -103,6 +107,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
     private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
     private static final int REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG = 105;
+    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 106;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -411,6 +416,24 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
+                if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    sendMessage();
+                } else {
+                    Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -868,11 +891,30 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 } else if (isAllRecipientsHavePGP(true)) {
                     return true;
                 }
+            } else if (!attachmentInfoList.isEmpty() && isMessageHasExternalStorageUriAttachments()) {
+                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+                    return false;
+                } else {
+                    return true;
+                }
             } else {
                 return true;
             }
         }
 
+        return false;
+    }
+
+    private boolean isMessageHasExternalStorageUriAttachments() {
+        for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+            if (attachmentInfo.getUri() != null
+                    && ContentResolver.SCHEME_FILE.equalsIgnoreCase(attachmentInfo.getUri().getScheme())) {
+                return true;
+            }
+        }
         return false;
     }
 

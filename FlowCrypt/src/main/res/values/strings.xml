@@ -298,4 +298,6 @@ icelanders prefer real sauna</font>
         <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
         <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
     </plurals>
+    <string name="cannot_send_attachment_without_read_permission">The attachment cannot be sent without the read external
+        storage permission</string>
 </resources>
