@@ -20,6 +20,8 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -41,9 +43,6 @@ import com.flowcrypt.email.util.UIUtil;
 public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptedTypeListener {
 
-    public static final String EXTRA_KEY_ACCOUNT_EMAIL =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_EMAIL", CreateMessageActivity.class);
-
     public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
 
@@ -56,22 +55,20 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     private View nonEncryptedHintView;
     private View layoutContent;
 
-    private String accountEmail;
     private MessageEncryptionType messageEncryptionType;
     private ServiceInfo serviceInfo;
 
     private boolean isMessageSendingNow;
 
-    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
-        return generateIntent(context, email, incomingMessageInfo, messageEncryptionType, null);
+        return generateIntent(context, incomingMessageInfo, messageEncryptionType, null);
     }
 
-    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType, ServiceInfo serviceInfo) {
 
         Intent intent = new Intent(context, CreateMessageActivity.class);
-        intent.putExtra(EXTRA_KEY_ACCOUNT_EMAIL, email);
         intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
         intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
         intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
@@ -80,18 +77,19 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+        if (accountDao == null) {
+            Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
+            finish();
+        }
+
         super.onCreate(savedInstanceState);
 
         layoutContent = findViewById(R.id.layoutContent);
         initNonEncryptedHintView();
 
         if (getIntent() != null) {
-            if (getIntent().hasExtra(EXTRA_KEY_ACCOUNT_EMAIL)) {
-                this.accountEmail = getIntent().getStringExtra(EXTRA_KEY_ACCOUNT_EMAIL);
-            } else throw new IllegalArgumentException("The account email not specified!");
-
             serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
-
             messageEncryptionType = (MessageEncryptionType) getIntent()
                     .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
 
@@ -214,11 +212,6 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
         isMessageSendingNow = true;
         sendMessage(R.id.syns_request_send_encrypted_message, outgoingMessageInfo);
-    }
-
-    @Override
-    public String getSenderEmail() {
-        return accountEmail;
     }
 
     @Override

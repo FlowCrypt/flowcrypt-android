@@ -415,7 +415,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             attachmentInfoList.add(attachmentInfo);
         }
 
-        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
+        startActivity(CreateMessageActivity.generateIntent(getContext(),
                 incomingMessageInfo, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
                         .setIsFromFieldEditEnable(false)
                         .setIsToFieldEditEnable(false)
@@ -519,8 +519,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             }
         }
 
-        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
-                incomingMessageInfo, messageEncryptionType));
+        startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo, messageEncryptionType));
     }
 
     private void initViews(View view) {

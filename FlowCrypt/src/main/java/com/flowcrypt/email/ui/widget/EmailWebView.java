@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.widget;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -18,6 +19,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 
 /**
  * The custom realization of {@link WebView}
@@ -76,16 +79,39 @@ public class EmailWebView extends WebView {
         @SuppressWarnings("deprecation")
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            showUrlUsingChromeCustomTabs(Uri.parse(url));
-            return true;
+            if (url.startsWith(SCHEME_MAILTO)) {
+                handleEmailLinks(Uri.parse(url));
+                return false;
+            } else {
+                showUrlUsingChromeCustomTabs(Uri.parse(url));
+                return true;
+            }
         }
 
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            showUrlUsingChromeCustomTabs(request.getUrl());
-            return true;
+            if (request.getUrl().getScheme().equalsIgnoreCase("mailto")) {
+                handleEmailLinks(request.getUrl());
+                return true;
+            } else {
+                showUrlUsingChromeCustomTabs(request.getUrl());
+                return true;
+            }
         }
+
+        /**
+         * Handle email links and open the internal compose screen.
+         *
+         * @param uri {@link Uri} with mailto: scheme.
+         */
+        private void handleEmailLinks(Uri uri) {
+            Intent intent = CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED);
+            intent.setAction(Intent.ACTION_SENDTO);
+            intent.setData(uri);
+            context.startActivity(intent);
+        }
+
 
         /**
          * Use {@link CustomTabsIntent} to show some url.

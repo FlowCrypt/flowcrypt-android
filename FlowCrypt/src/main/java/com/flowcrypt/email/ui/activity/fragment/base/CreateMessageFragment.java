@@ -11,7 +11,9 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -40,6 +42,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.ExtraActionInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
@@ -68,6 +71,7 @@ import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.RFC6068Parser;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
@@ -119,7 +123,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private View layoutContent;
     private View progressBarCheckContactsDetails;
     private Spinner spinnerFrom;
-    private AccountDao activeAccountDao;
+    private AccountDao accountDao;
     private ArrayAdapter<String> fromAddressesArrayAdapter;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
@@ -127,16 +131,12 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
     private PgpContact pgpContactWithNoPublicKey;
+    private ExtraActionInfo extraActionInfo;
 
     public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
         attachmentInfoList = new ArrayList<>();
         contactsDaoSource = new ContactsDaoSource();
-    }
-
-    @Override
-    public View getContentView() {
-        return layoutContent;
     }
 
     @Override
@@ -158,26 +158,32 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        activeAccountDao = new AccountDaoSource().getAccountInformation(getContext(),
-                getActivity().getIntent().getStringExtra(CreateMessageActivity.EXTRA_KEY_ACCOUNT_EMAIL));
+        accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
         fromAddressesArrayAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
         fromAddressesArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        fromAddressesArrayAdapter.add(activeAccountDao.getEmail());
+        if (accountDao != null) {
+            fromAddressesArrayAdapter.add(accountDao.getEmail());
+        }
 
         js = JsForUiManager.getInstance(getContext()).getJs();
-        if (getActivity().getIntent() != null) {
-            this.serviceInfo = getActivity().getIntent().getParcelableExtra
-                    (CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
-            this.incomingMessageInfo = getActivity().getIntent().getParcelableExtra
-                    (CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
-            if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
-                this.folderType = FoldersManager.getFolderTypeForImapFolder(
-                        incomingMessageInfo.getFolder());
-            }
 
-            if (this.serviceInfo != null && this.serviceInfo.getAttachmentInfoList() != null) {
-                attachmentInfoList.addAll(this.serviceInfo.getAttachmentInfoList());
+        Intent intent = getActivity().getIntent();
+        if (intent != null) {
+            if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
+                parseExtraActionInfo(intent);
+            } else {
+                this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
+                this.incomingMessageInfo = intent.getParcelableExtra(
+                        CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+
+                if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
+                    this.folderType = FoldersManager.getFolderTypeForImapFolder(incomingMessageInfo.getFolder());
+                }
+
+                if (this.serviceInfo != null && this.serviceInfo.getAttachmentInfoList() != null) {
+                    attachmentInfoList.addAll(this.serviceInfo.getAttachmentInfoList());
+                }
             }
         }
     }
@@ -193,7 +199,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         initViews(view);
         showAttachments();
 
-        if (incomingMessageInfo != null && !isIncomingMessageInfoUsed) {
+        if ((incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMessageInfoUsed) {
             this.isIncomingMessageInfoUsed = true;
             updateViews();
         }
@@ -203,7 +209,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(activeAccountDao.getAccountType())) {
+        if (accountDao != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
             getLoaderManager().restartLoader(R.id.loader_id_load_email_aliases, null, this);
         }
 
@@ -211,6 +217,11 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts, null, this);
         }
+    }
+
+    @Override
+    public View getContentView() {
+        return layoutContent;
     }
 
     @Override
@@ -414,7 +425,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), emails);
 
             case R.id.loader_id_load_email_aliases:
-                return new LoadGmailAliasesLoader(getContext(), activeAccountDao);
+                return new LoadGmailAliasesLoader(getContext(), accountDao);
 
             default:
                 return super.onCreateLoader(id, args);
@@ -450,7 +461,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             case R.id.loader_id_load_email_aliases:
                 List<AccountAliasesDao> accountAliasesDaoList = (List<AccountAliasesDao>) result;
                 List<String> aliases = new ArrayList<>();
-                aliases.add(activeAccountDao.getEmail());
+                aliases.add(accountDao.getEmail());
 
                 for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
                     aliases.add(accountAliasesDao.getSendAsEmail());
@@ -467,7 +478,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                     editTextFrom.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
                 }
 
-                new AccountAliasesDaoSource().updateAliases(getContext(), activeAccountDao, accountAliasesDaoList);
+                new AccountAliasesDaoSource().updateAliases(getContext(), accountDao, accountAliasesDaoList);
                 break;
 
             default:
@@ -595,6 +606,92 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public boolean isMessageSendingNow() {
         return isMessageSendingNow;
+    }
+
+    /**
+     * Parse an incoming information from the intent which has next actions:
+     * <ul>
+     * <li>{@link Intent#ACTION_VIEW}</li>
+     * <li>{@link Intent#ACTION_SENDTO}</li>
+     * <li>{@link Intent#ACTION_SEND}</li>
+     * <li>{@link Intent#ACTION_SEND_MULTIPLE}</li>
+     * </ul>
+     *
+     * @param intent An incoming intent.
+     */
+    private void parseExtraActionInfo(Intent intent) {
+        //parse mailto: URI
+        if (Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_SENDTO.equals(intent.getAction())) {
+            if (intent.getData() != null) {
+                Uri uri = intent.getData();
+                if (RFC6068Parser.isMailTo(uri)) {
+                    extraActionInfo = RFC6068Parser.parse(uri);
+                }
+            }
+        }
+
+        if (extraActionInfo == null) {
+            extraActionInfo = new ExtraActionInfo();
+        }
+
+        switch (intent.getAction()) {
+            case Intent.ACTION_VIEW:
+            case Intent.ACTION_SENDTO:
+            case Intent.ACTION_SEND:
+            case Intent.ACTION_SEND_MULTIPLE:
+
+                CharSequence extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+                // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
+                if (extraText != null && TextUtils.isEmpty(extraActionInfo.getBody())) {
+                    extraActionInfo.setBody(extraText.toString());
+                }
+
+                String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+                // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
+                if (subject != null && TextUtils.isEmpty(extraActionInfo.getSubject())) {
+                    extraActionInfo.setSubject(subject);
+                }
+
+                List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+                String maxTotalAttachmentSizeWarning = getString(R.string.template_warning_max_total_attachments_size,
+                        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
+                if (Intent.ACTION_SEND.equals(intent.getAction())) {
+                    Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    if (stream != null) {
+                        AttachmentInfo attachmentInfo =
+                                EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
+                        if (isAttachmentCanBeAdded(attachmentInfo)) {
+                            attachmentInfoList.add(attachmentInfo);
+                        } else {
+                            Toast.makeText(getContext(), maxTotalAttachmentSizeWarning, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else {
+                    List<Parcelable> list = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+                    if (list != null) {
+                        for (Parcelable parcelable : list) {
+                            Uri stream = (Uri) parcelable;
+                            if (stream != null) {
+                                AttachmentInfo attachmentInfo =
+                                        EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
+                                if (isAttachmentCanBeAdded(attachmentInfo)) {
+                                    attachmentInfoList.add(attachmentInfo);
+                                } else {
+                                    Toast.makeText(getContext(), maxTotalAttachmentSizeWarning,
+                                            Toast.LENGTH_SHORT).show();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                extraActionInfo.setAttachmentInfoList(attachmentInfoList);
+                if (!extraActionInfo.getAttachmentInfoList().isEmpty()) {
+                    this.attachmentInfoList.addAll(extraActionInfo.getAttachmentInfoList());
+                }
+                break;
+        }
     }
 
     /**
@@ -833,35 +930,44 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private void updateViews() {
         onMessageEncryptionTypeChange(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
 
-        if (incomingMessageInfo != null) {
-            if (FoldersManager.FolderType.SENT == folderType) {
-                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getTo()));
-            } else {
-                editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
-            }
+        if (extraActionInfo != null) {
+            editTextRecipients.setText(prepareRecipients(extraActionInfo.getToAddresses()));
             editTextRecipients.chipifyAllUnterminatedTokens();
-            editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
+            editTextRecipients.getOnFocusChangeListener().onFocusChange(editTextRecipients, false);
+            editTextEmailSubject.setText(extraActionInfo.getSubject());
+            editTextEmailMessage.setText(extraActionInfo.getBody());
             editTextEmailMessage.requestFocus();
-        }
-
-        if (serviceInfo != null) {
-            editTextRecipients.setFocusable(serviceInfo.isToFieldEditEnable());
-            editTextRecipients.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
-
-            editTextFrom.setFocusable(serviceInfo.isFromFieldEditEnable());
-            editTextFrom.setFocusableInTouchMode(serviceInfo.isFromFieldEditEnable());
-            if (!serviceInfo.isFromFieldEditEnable()) {
-                editTextFrom.setOnClickListener(null);
+        } else {
+            if (incomingMessageInfo != null) {
+                if (FoldersManager.FolderType.SENT == folderType) {
+                    editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getTo()));
+                } else {
+                    editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                }
+                editTextRecipients.chipifyAllUnterminatedTokens();
+                editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
+                editTextEmailMessage.requestFocus();
             }
 
-            editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
-            editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
+            if (serviceInfo != null) {
+                editTextRecipients.setFocusable(serviceInfo.isToFieldEditEnable());
+                editTextRecipients.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
 
-            editTextEmailMessage.setFocusable(serviceInfo.isMessageEditEnable());
-            editTextEmailMessage.setFocusableInTouchMode(serviceInfo.isMessageEditEnable());
+                editTextFrom.setFocusable(serviceInfo.isFromFieldEditEnable());
+                editTextFrom.setFocusableInTouchMode(serviceInfo.isFromFieldEditEnable());
+                if (!serviceInfo.isFromFieldEditEnable()) {
+                    editTextFrom.setOnClickListener(null);
+                }
 
-            if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
-                editTextEmailMessage.setText(serviceInfo.getSystemMessage());
+                editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
+                editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
+
+                editTextEmailMessage.setFocusable(serviceInfo.isMessageEditEnable());
+                editTextEmailMessage.setFocusableInTouchMode(serviceInfo.isMessageEditEnable());
+
+                if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
+                    editTextEmailMessage.setText(serviceInfo.getSystemMessage());
+                }
             }
         }
     }
@@ -884,8 +990,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
     private String prepareRecipients(List<String> recipients) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (String s : recipients) {
-            stringBuilder.append(s).append(" ");
+        if (recipients != null) {
+            for (String s : recipients) {
+                stringBuilder.append(s).append(" ");
+            }
         }
 
         return stringBuilder.toString();
@@ -1030,7 +1138,5 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     public interface OnMessageSendListener {
         void sendMessage(OutgoingMessageInfo outgoingMessageInfo);
-
-        String getSenderEmail();
     }
 }

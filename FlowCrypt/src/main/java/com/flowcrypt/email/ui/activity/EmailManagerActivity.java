@@ -412,7 +412,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
-                startActivity(CreateMessageActivity.generateIntent(this, accountDao.getEmail(), null,
+                startActivity(CreateMessageActivity.generateIntent(this, null,
                         MessageEncryptionType.ENCRYPTED));
                 break;
 

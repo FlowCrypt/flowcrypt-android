@@ -293,6 +293,7 @@ icelanders prefer real sauna</font>
     <string name="get_access_to_gmail">Get access to Gmail</string>
     <string name="sign_in">SIGN IN</string>
     <string name="network_error_please_retry">Network error, please retry</string>
+    <string name="setup_app">Please set up the app before use this option</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
         <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
