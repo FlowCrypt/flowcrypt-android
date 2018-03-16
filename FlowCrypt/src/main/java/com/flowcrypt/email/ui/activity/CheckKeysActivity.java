@@ -27,6 +27,7 @@ import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -204,6 +205,12 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 setResult(RESULT_NEGATIVE);
                 finish();
                 break;
+
+            case R.id.imageButtonHint:
+                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance("",
+                        getString(R.string.hint_when_found_keys_in_email));
+                infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
+                break;
         }
     }
 
@@ -289,6 +296,16 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
         if (findViewById(R.id.buttonNegativeAction) != null) {
             initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeButtonTitle);
+        }
+
+        if (findViewById(R.id.imageButtonHint) != null) {
+            View imageButtonHint = findViewById(R.id.imageButtonHint);
+            if (privateKeyDetailsList.get(0).getBornType() == KeyDetails.Type.EMAIL) {
+                imageButtonHint.setVisibility(View.VISIBLE);
+                imageButtonHint.setOnClickListener(this);
+            } else {
+                imageButtonHint.setVisibility(View.GONE);
+            }
         }
 
         textViewCheckKeysTitle = findViewById(R.id.textViewCheckKeysTitle);

@@ -300,4 +300,6 @@ icelanders prefer real sauna</font>
     </plurals>
     <string name="cannot_send_attachment_without_read_permission">The attachment cannot be sent without the read external
         storage permission</string>
+    <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\n
+        Please enter pass phrase(s) that you used when the backup was made.</string>
 </resources>

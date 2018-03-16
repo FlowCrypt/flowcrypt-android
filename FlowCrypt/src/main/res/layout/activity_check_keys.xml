@@ -22,18 +22,50 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/textViewCheckKeysTitle"
+        <FrameLayout
+            android:id="@+id/layoutSubTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_found_backup"
-            android:gravity="center"
-            android:textColor="@android:color/black"
-            android:textSize="@dimen/default_text_size_medium"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt"
-            tools:text="Found a backup of your account key" />
+            app:layout_constraintWidth_default="wrap">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt"
+                app:layout_constraintWidth_default="wrap">
+
+                <TextView
+                    android:id="@+id/textViewCheckKeysTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/default_text_size_medium"
+                    tools:text="@string/no_backups_found" />
+
+                <ImageButton
+                    android:id="@+id/imageButtonHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/see_choosing_secure_pass_phrases"
+                    android:padding="@dimen/default_margin_content_small"
+                    app:srcCompat="@mipmap/ic_help_grey" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -46,7 +78,7 @@
             app:layout_constraintBottom_toTopOf="@+id/textInputLayoutKeyPassword"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-            app:layout_constraintTop_toBottomOf="@+id/textViewCheckKeysTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle" />
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/textInputLayoutKeyPassword"
@@ -56,7 +88,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-            app:layout_constraintTop_toBottomOf="@+id/textViewCheckKeysTitle"
+            app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle"
             app:passwordToggleContentDescription="description"
             app:passwordToggleEnabled="true">
 
