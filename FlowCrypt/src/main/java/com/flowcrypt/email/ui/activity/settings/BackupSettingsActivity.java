@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.Menu;
@@ -21,6 +23,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -53,7 +56,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         .LoaderCallbacks<LoaderResult> {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
-
+    private CountingIdlingResource countingIdlingResource;
     private View progressBar;
     private View layoutContent;
     private View layoutSyncStatus;
@@ -64,13 +67,28 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     private TextView textViewOptionsHint;
     private RadioGroup radioGroupBackupsVariants;
     private Button buttonBackupAction;
-
     private List<String> privateKeys;
     private String account;
     private boolean isPrivateKeySendingNow = false;
     private boolean isLoadPrivateKeysRequestSent;
     private Uri destinationUri;
     private boolean isPrivateKeySavingNow;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initViews();
+        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+            UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+        } else {
+            finish();
+            Toast.makeText(this, R.string.internet_connection_is_not_available, Toast
+                    .LENGTH_SHORT).show();
+        }
+        countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                (BackupSettingsActivity.class), BuildConfig.DEBUG);
+        countingIdlingResource.increment();
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -96,6 +114,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                         showNoBackupFoundView();
                     }
                 }
+                countingIdlingResource.decrement();
                 break;
 
             case R.id.syns_send_backup_with_private_key_to_key_owner:
@@ -103,6 +122,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 layoutSyncStatus.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutContent);
+                countingIdlingResource.decrement();
                 Toast.makeText(this, R.string.backup_was_sent_successfully,
                         Toast.LENGTH_SHORT).show();
                 break;
@@ -114,6 +134,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         switch (requestCode) {
             case R.id.syns_load_private_keys:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
+                countingIdlingResource.decrement();
                 UIUtil.showSnackbar(getRootView(),
                         getString(R.string.error_occurred_while_receiving_private_keys),
                         getString(R.string.retry),
@@ -133,7 +154,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 isPrivateKeySendingNow = false;
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutSyncStatus);
-
+                countingIdlingResource.decrement();
                 UIUtil.showSnackbar(getRootView(),
                         getString(R.string.backup_was_not_sent),
                         getString(R.string.retry),
@@ -149,19 +170,6 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                             }
                         });
                 break;
-        }
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initViews();
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
-            UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-        } else {
-            finish();
-            Toast.makeText(this, R.string.internet_connection_is_not_available, Toast
-                    .LENGTH_SHORT).show();
         }
     }
 
@@ -228,6 +236,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                     case R.id.radioButtonEmail:
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
+                            countingIdlingResource.increment();
                             isPrivateKeySendingNow = true;
                             UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
                             sendMessageWithPrivateKeyBackup(R.id
@@ -355,6 +364,11 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
             default:
                 super.handleFailureLoaderResult(loaderId, e);
         }
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResource() {
+        return countingIdlingResource;
     }
 
     private void initViews() {

@@ -97,7 +97,7 @@ public class CreateMessageActivityTest extends BaseTest {
                 e.printStackTrace();
             }
 
-            return CreateMessageActivity.generateIntent(targetContext, accountDao.getEmail(), null,
+            return CreateMessageActivity.generateIntent(targetContext, null,
                     MessageEncryptionType.ENCRYPTED);
         }
     };
