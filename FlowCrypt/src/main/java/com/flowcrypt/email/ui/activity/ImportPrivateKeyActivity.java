@@ -9,10 +9,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
@@ -42,7 +45,7 @@ import java.util.Set;
 public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 100;
-
+    private CountingIdlingResource countingIdlingResource;
     private List<String> privateKeys;
     private Js js;
 
@@ -60,6 +63,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
         if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
             UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
+            countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                    (ImportPrivateKeyActivity.class), BuildConfig.DEBUG);
         } else {
             hideImportButton();
             UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
@@ -87,6 +92,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
         if (!isLoadPrivateKeysRequestSent) {
             isLoadPrivateKeysRequestSent = true;
             loadPrivateKeys(R.id.syns_load_private_keys);
+            countingIdlingResource.increment();
         }
     }
 
@@ -133,6 +139,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                     }
                     UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
                 }
+                countingIdlingResource.decrement();
                 break;
         }
     }
@@ -154,6 +161,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                                         false, progressBarLoadingBackups, layoutContent);
                             }
                         });
+                countingIdlingResource.decrement();
                 break;
         }
     }
@@ -228,6 +236,11 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     @Override
     public boolean isPrivateKeyChecking() {
         return true;
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResource() {
+        return countingIdlingResource;
     }
 
     public void hideImportButton() {

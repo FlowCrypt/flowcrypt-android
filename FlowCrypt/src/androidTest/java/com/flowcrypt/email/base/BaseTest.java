@@ -6,9 +6,13 @@
 package com.flowcrypt.email.base;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.Snackbar;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.view.View;
 import android.widget.ListView;
@@ -28,6 +32,7 @@ import static android.support.test.espresso.matcher.RootMatchers.withDecorView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.support.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -163,5 +168,25 @@ public class BaseTest {
         onView(withText(message)).check(matches(isDisplayed()));
         onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
                 .perform(click());
+    }
+
+    /**
+     * Add some text to the {@link ClipboardManager}
+     *
+     * @param label The clipboard data label.
+     * @param text  The text which will be added to the clipboard.
+     * @throws Throwable
+     */
+    protected void addTextToClipboard(final String label, final String text) throws Throwable {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getTargetContext()
+                        .getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText(label, text);
+                if (clipboard != null) {
+                    clipboard.setPrimaryClip(clip);
+                }
+            }
+        });
     }
 }
