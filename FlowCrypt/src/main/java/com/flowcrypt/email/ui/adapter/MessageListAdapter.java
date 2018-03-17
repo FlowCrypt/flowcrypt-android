@@ -25,6 +25,10 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.DateTimeUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * The MessageListAdapter responsible for displaying the message in the list.
  *
@@ -38,10 +42,12 @@ public class MessageListAdapter extends CursorAdapter {
     private MessageDaoSource messageDaoSource;
     private Folder folder;
     private FoldersManager.FolderType folderType;
+    private Pattern patternSenderName;
 
     public MessageListAdapter(Context context, Cursor c) {
         super(context, c, false);
         this.messageDaoSource = new MessageDaoSource();
+        this.patternSenderName = prepareSenderNamePattern();
     }
 
     @Override
@@ -104,20 +110,12 @@ public class MessageListAdapter extends CursorAdapter {
 
             if (generalMessageDetails.isSeen()) {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
-
-                viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color
-                        .dark));
-                viewHolder.textViewSubject.setTextColor(UIUtil.getColor(context, R.color.gray));
+                viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color.dark));
                 viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, R.color.gray));
             } else {
                 changeViewsTypeface(viewHolder, Typeface.BOLD);
-
-                viewHolder.textViewSenderAddress.setTextColor(
-                        UIUtil.getColor(context, android.R.color.black));
-                viewHolder.textViewSubject.setTextColor(UIUtil.getColor(context, android.R.color
-                        .black));
-                viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color
-                        .black));
+                viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, android.R.color.black));
+                viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
             }
 
             viewHolder.imageViewAttachments.setVisibility(generalMessageDetails
@@ -129,8 +127,47 @@ public class MessageListAdapter extends CursorAdapter {
 
     private void changeViewsTypeface(@NonNull ViewHolder viewHolder, int typeface) {
         viewHolder.textViewSenderAddress.setTypeface(null, typeface);
-        viewHolder.textViewSubject.setTypeface(null, typeface);
         viewHolder.textViewDate.setTypeface(null, typeface);
+    }
+
+    /**
+     * Prepare a {@link Pattern} which will be used for finding some information in the sender name. This pattern is
+     * case insensitive.
+     *
+     * @return A generated {@link Pattern}.
+     */
+    private Pattern prepareSenderNamePattern() {
+        List<String> domains = new ArrayList<>();
+        domains.add("gmail.com");
+        domains.add("yahoo.com");
+        domains.add("live.com");
+        domains.add("outlook.com");
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("@");
+        stringBuilder.append("(");
+        stringBuilder.append(domains.get(0));
+
+        for (int i = 1; i < domains.size(); i++) {
+            stringBuilder.append("|");
+            stringBuilder.append(domains.get(i));
+        }
+        stringBuilder.append(")$");
+
+        return Pattern.compile(stringBuilder.toString(), Pattern.CASE_INSENSITIVE);
+    }
+
+    /**
+     * Prepare the sender name.
+     * <ul>
+     * <li>Remove common mail domains: gmail.com, yahoo.com, live.com, outlook.com</li>
+     * </ul>
+     *
+     * @param name An incoming name
+     * @return A generated sender name.
+     */
+    private String prepareSenderName(String name) {
+        return patternSenderName.matcher(name).replaceFirst("");
     }
 
     /**
@@ -159,7 +196,7 @@ public class MessageListAdapter extends CursorAdapter {
         for (int i = 0; ; i++) {
             b.append(String.valueOf(strings[i]));
             if (i == iMax)
-                return b.toString();
+                return prepareSenderName(b.toString());
             b.append(", ");
         }
     }
