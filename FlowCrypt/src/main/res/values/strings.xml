@@ -302,4 +302,8 @@ icelanders prefer real sauna</font>
         storage permission</string>
     <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\n
         Please enter pass phrase(s) that you used when the backup was made.</string>
+    <string name="forward">Forward</string>
+    <string name="forward_encrypted">Forward Encrypted</string>
+    <string name="reply_encrypted">Reply Encrypted</string>
+    <string name="reply_all_encrypted">Reply all Encrypted</string>
 </resources>

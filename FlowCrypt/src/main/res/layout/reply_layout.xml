@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutReplyButton"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_height_action_button"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toStartOf="@+id/layoutReplyAllButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageViewReply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/reply"
+            app:layout_constraintBottom_toTopOf="@+id/textViewReply"
+            app:layout_constraintEnd_toEndOf="@+id/textViewReply"
+            app:layout_constraintStart_toStartOf="@+id/textViewReply"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:srcCompat="@drawable/ic_reply_green" />
+
+        <TextView
+            android:id="@+id/textViewReply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reply_encrypted"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewReply" />
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutReplyAllButton"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_height_action_button"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toStartOf="@+id/layoutForwardButton"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/layoutReplyButton"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageViewReplyAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@string/reply_all_encrypted"
+            app:layout_constraintBottom_toTopOf="@+id/textViewReplyAll"
+            app:layout_constraintEnd_toEndOf="@+id/textViewReplyAll"
+            app:layout_constraintStart_toStartOf="@+id/textViewReplyAll"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:srcCompat="@drawable/ic_reply_all_green" />
+
+        <TextView
+            android:id="@+id/textViewReplyAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reply_all_encrypted"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewReplyAll" />
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutForwardButton"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_height_action_button"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/layoutReplyAllButton"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageViewForward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/reply"
+            app:layout_constraintBottom_toTopOf="@+id/textViewForward"
+            app:layout_constraintEnd_toEndOf="@+id/textViewForward"
+            app:layout_constraintStart_toStartOf="@+id/textViewForward"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:srcCompat="@drawable/ic_forward_green" />
+
+        <TextView
+            android:id="@+id/textViewForward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/forward_encrypted"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewForward" />
+    </android.support.constraint.ConstraintLayout>
+</android.support.constraint.ConstraintLayout>

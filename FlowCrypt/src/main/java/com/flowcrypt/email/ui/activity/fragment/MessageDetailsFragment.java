@@ -29,6 +29,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -93,6 +94,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private View layoutContent;
     private View imageButtonReplyAll;
     private View progressBarActionRunning;
+    private View layoutMessageContainer;
+    private ScrollView nonLockingScrollView;
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
@@ -156,7 +159,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                     case Activity.RESULT_OK:
                         getBaseActivity().restartJsService();
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageParts);
+                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageContainer);
                         getBaseActivity().decryptMessage(R.id.js_decrypt_message,
                                 generalMessageDetails.getRawMessageWithoutAttachments());
                         break;
@@ -190,7 +193,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     @Override
     public View getContentView() {
-        return layoutMessageParts;
+        return layoutMessageContainer;
     }
 
     @Override
@@ -273,7 +276,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             case R.id.syns_request_archive_message:
             case R.id.syns_request_delete_message:
             case R.id.syns_request_move_message_to_inbox:
-                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageParts);
+                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageContainer);
                 showSnackbar(getView(), e.getMessage(),
                         getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                             @Override
@@ -330,7 +333,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         }
         incomingMessageInfo.setFolder(folder);
         updateMessageBody();
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageContainer);
     }
 
     /**
@@ -528,6 +531,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         textViewSubject = view.findViewById(R.id.textViewSubject);
         viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
         layoutMessageParts = view.findViewById(R.id.layoutMessageParts);
+        layoutMessageContainer = view.findViewById(R.id.layoutMessageContainer);
+        nonLockingScrollView = view.findViewById(R.id.nonLockingScrollView);
         progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
         layoutContent = view.findViewById(R.id.layoutContent);

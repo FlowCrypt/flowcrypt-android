@@ -71,4 +71,5 @@
     <dimen name="height_webview_dialog">480dp</dimen>
     <dimen name="layout_height_message_item">72dp</dimen>
     <dimen name="gone_margin_right_attachment_icon">34dp</dimen>
+    <dimen name="layout_height_action_button">72dp</dimen>
 </resources>
