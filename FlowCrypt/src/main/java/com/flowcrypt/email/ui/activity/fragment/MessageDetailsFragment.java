@@ -29,7 +29,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -95,7 +94,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private View imageButtonReplyAll;
     private View progressBarActionRunning;
     private View layoutMessageContainer;
-    private ScrollView nonLockingScrollView;
+    private View layoutReplyButtons;
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
@@ -532,7 +531,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
         layoutMessageParts = view.findViewById(R.id.layoutMessageParts);
         layoutMessageContainer = view.findViewById(R.id.layoutMessageContainer);
-        nonLockingScrollView = view.findViewById(R.id.nonLockingScrollView);
+        layoutReplyButtons = view.findViewById(R.id.layoutReplyButtons);
         progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
         layoutContent = view.findViewById(R.id.layoutContent);
@@ -611,6 +610,11 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                     StandardCharsets.UTF_8.displayName(), null);
 
             layoutMessageParts.addView(emailWebView);
+            emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
+                public void onPageFinished() {
+                    layoutReplyButtons.setVisibility(View.VISIBLE);
+                }
+            });
         } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
             boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
@@ -642,8 +646,10 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 }
                 isFirstMessagePartIsText = false;
             }
+            layoutReplyButtons.setVisibility(View.VISIBLE);
         } else {
             layoutMessageParts.removeAllViews();
+            layoutReplyButtons.setVisibility(View.VISIBLE);
         }
     }
 

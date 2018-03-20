@@ -13,6 +13,7 @@ import android.support.annotation.RequiresApi;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -32,6 +33,8 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity;
  */
 
 public class EmailWebView extends WebView {
+    private OnPageFinishedListener onPageFinishedListener;
+
     public EmailWebView(Context context) {
         super(context);
     }
@@ -52,6 +55,17 @@ public class EmailWebView extends WebView {
         setScrollBarStyle(SCROLLBARS_INSIDE_OVERLAY);
         setOverScrollMode(OVER_SCROLL_NEVER);
         setWebViewClient(new CustomWebClient(getContext()));
+        setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                if (newProgress == 100) {
+                    if (onPageFinishedListener != null) {
+                        onPageFinishedListener.onPageFinished();
+                    }
+                }
+            }
+        });
 
         WebSettings webSettings = this.getSettings();
 
@@ -64,6 +78,14 @@ public class EmailWebView extends WebView {
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setJavaScriptEnabled(false);
         webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
+    }
+
+    public void setOnPageFinishedListener(OnPageFinishedListener onPageFinishedListener) {
+        this.onPageFinishedListener = onPageFinishedListener;
+    }
+
+    public interface OnPageFinishedListener {
+        void onPageFinished();
     }
 
     /**
