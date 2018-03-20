@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
@@ -52,6 +53,9 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
 
+    public static final String EXTRA_KEY_MESSAGE_TYPE =
+            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity.class);
+
     private View nonEncryptedHintView;
     private View layoutContent;
 
@@ -62,14 +66,22 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
-        return generateIntent(context, incomingMessageInfo, messageEncryptionType, null);
+        return generateIntent(context, incomingMessageInfo, MessageType.NEW, messageEncryptionType);
     }
 
     public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
-                                        MessageEncryptionType messageEncryptionType, ServiceInfo serviceInfo) {
+                                        MessageType messageType,
+                                        MessageEncryptionType messageEncryptionType) {
+        return generateIntent(context, incomingMessageInfo, messageType, messageEncryptionType, null);
+    }
+
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                        MessageType messageType, MessageEncryptionType messageEncryptionType,
+                                        ServiceInfo serviceInfo) {
 
         Intent intent = new Intent(context, CreateMessageActivity.class);
         intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
+        intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
         intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
         intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
         return intent;

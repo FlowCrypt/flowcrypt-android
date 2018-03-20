@@ -59,6 +59,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
@@ -137,6 +138,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private boolean isIncomingMessageInfoUsed;
     private PgpContact pgpContactWithNoPublicKey;
     private ExtraActionInfo extraActionInfo;
+    private MessageType messageType = MessageType.NEW;
 
     public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
@@ -175,6 +177,11 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         Intent intent = getActivity().getIntent();
         if (intent != null) {
+            if (intent.hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
+                this.messageType =
+                        (MessageType) intent.getSerializableExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
+            }
+
             if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
                 parseExtraActionInfo(intent);
             } else {
@@ -983,7 +990,18 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 if (FoldersManager.FolderType.SENT == folderType) {
                     editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getTo()));
                 } else {
-                    editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                    switch (messageType) {
+                        case REPLY:
+                            editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                            break;
+
+                        case REPLY_ALL:
+                            editTextRecipients.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                            ArrayList<String> toRecipients = incomingMessageInfo.getTo();
+                            toRecipients.remove(accountDao.getEmail());
+                            editTextRecipients.append(prepareRecipients(toRecipients));
+                            break;
+                    }
                 }
                 editTextRecipients.chipifyAllUnterminatedTokens();
                 editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));

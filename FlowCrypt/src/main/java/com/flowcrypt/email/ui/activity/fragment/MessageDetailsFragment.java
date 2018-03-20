@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
@@ -108,6 +110,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private boolean isMoveToInboxActionEnable;
     private OnActionListener onActionListener;
     private AttachmentInfo lastClickedAttachmentInfo;
+    private MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
 
     public MessageDetailsFragment() {
     }
@@ -239,8 +242,20 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.layoutReplyButton:
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.REPLY, messageEncryptionType));
+                break;
+
             case R.id.imageButtonReplyAll:
-                runSecurityReplyActivity();
+            case R.id.layoutReplyAllButton:
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.REPLY_ALL, messageEncryptionType));
+                break;
+
+            case R.id.layoutForwardButton:
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.FORWARD, messageEncryptionType));
                 break;
         }
     }
@@ -418,7 +433,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         }
 
         startActivity(CreateMessageActivity.generateIntent(getContext(),
-                incomingMessageInfo, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+                incomingMessageInfo, MessageType.NEW, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
                         .setIsFromFieldEditEnable(false)
                         .setIsToFieldEditEnable(false)
                         .setIsSubjectEditEnable(false)
@@ -505,23 +520,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                         }
                     });
         }
-    }
-
-    /**
-     * Run a screen where the user can start write a reply.
-     */
-    private void runSecurityReplyActivity() {
-        MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
-
-        for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
-            if (messagePart instanceof MessagePartPgpPublicKey
-                    || messagePart instanceof MessagePartPgpMessage) {
-                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-                break;
-            }
-        }
-
-        startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo, messageEncryptionType));
     }
 
     private void initViews(View view) {
@@ -612,7 +610,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             layoutMessageParts.addView(emailWebView);
             emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
                 public void onPageFinished() {
-                    layoutReplyButtons.setVisibility(View.VISIBLE);
+                    updateReplyButtons();
                 }
             });
         } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
@@ -622,6 +620,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 if (messagePart != null) {
                     switch (messagePart.getMessagePartType()) {
                         case PGP_MESSAGE:
+                            messageEncryptionType = MessageEncryptionType.ENCRYPTED;
                             layoutMessageParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart,
                                     layoutInflater));
                             break;
@@ -646,9 +645,48 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 }
                 isFirstMessagePartIsText = false;
             }
-            layoutReplyButtons.setVisibility(View.VISIBLE);
+            updateReplyButtons();
         } else {
             layoutMessageParts.removeAllViews();
+            updateReplyButtons();
+        }
+    }
+
+    /**
+     * Update the reply buttons layout depending on the {@link MessageEncryptionType}
+     */
+    private void updateReplyButtons() {
+        if (layoutReplyButtons != null) {
+            ImageView imageViewReply = layoutReplyButtons.findViewById(R.id.imageViewReply);
+            ImageView imageViewReplyAll = layoutReplyButtons.findViewById(R.id.imageViewReplyAll);
+            ImageView imageViewForward = layoutReplyButtons.findViewById(R.id.imageViewForward);
+
+            TextView textViewReply = layoutReplyButtons.findViewById(R.id.textViewReply);
+            TextView textViewReplyAll = layoutReplyButtons.findViewById(R.id.textViewReplyAll);
+            TextView textViewForward = layoutReplyButtons.findViewById(R.id.textViewForward);
+
+            if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                imageViewReply.setImageResource(R.mipmap.ic_reply_green);
+                imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green);
+                imageViewForward.setImageResource(R.mipmap.ic_forward_green);
+
+                textViewReply.setText(R.string.reply_encrypted);
+                textViewReplyAll.setText(R.string.reply_all_encrypted);
+                textViewForward.setText(R.string.forward_encrypted);
+            } else {
+                imageViewReply.setImageResource(R.mipmap.ic_reply_red);
+                imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red);
+                imageViewForward.setImageResource(R.mipmap.ic_forward_red);
+
+                textViewReply.setText(R.string.reply);
+                textViewReplyAll.setText(R.string.reply_all);
+                textViewForward.setText(R.string.forward);
+            }
+
+            layoutReplyButtons.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
+            layoutReplyButtons.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
+            layoutReplyButtons.findViewById(R.id.layoutForwardButton).setOnClickListener(this);
+
             layoutReplyButtons.setVisibility(View.VISIBLE);
         }
     }

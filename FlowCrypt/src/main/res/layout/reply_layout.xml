@@ -29,7 +29,7 @@
             app:layout_constraintStart_toStartOf="@+id/textViewReply"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@drawable/ic_reply_green" />
+            app:srcCompat="@mipmap/ic_reply_green" />
 
         <TextView
             android:id="@+id/textViewReply"
@@ -65,7 +65,7 @@
             app:layout_constraintStart_toStartOf="@+id/textViewReplyAll"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@drawable/ic_reply_all_green" />
+            app:srcCompat="@mipmap/ic_reply_all_green" />
 
         <TextView
             android:id="@+id/textViewReplyAll"
@@ -99,7 +99,7 @@
             app:layout_constraintStart_toStartOf="@+id/textViewForward"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@drawable/ic_forward_green" />
+            app:srcCompat="@mipmap/ic_forward_green" />
 
         <TextView
             android:id="@+id/textViewForward"
