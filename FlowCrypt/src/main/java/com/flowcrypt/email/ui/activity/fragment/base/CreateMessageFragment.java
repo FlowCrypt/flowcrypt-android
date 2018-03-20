@@ -209,12 +209,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-        showAttachments();
 
         if ((incomingMessageInfo != null || extraActionInfo != null) && !isIncomingMessageInfoUsed) {
             this.isIncomingMessageInfoUsed = true;
             updateViews();
         }
+
+        showAttachments();
     }
 
     @Override
@@ -1001,6 +1002,20 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             toRecipients.remove(accountDao.getEmail());
                             editTextRecipients.append(prepareRecipients(toRecipients));
                             break;
+
+                        case FORWARD:
+                            AttachmentInfo attachmentInfoForwardedMessage = new AttachmentInfo();
+
+                            attachmentInfoForwardedMessage.setName("original message");
+                            attachmentInfoForwardedMessage.setRawData(
+                                    incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
+                            attachmentInfoForwardedMessage.setEncodedSize(-1);
+                            attachmentInfoForwardedMessage.setType(Constants.MIME_TYPE_RFC822);
+                            attachmentInfoForwardedMessage.setEmail(accountDao.getEmail());
+                            attachmentInfoForwardedMessage.setCanBeDeleted(false);
+
+                            attachmentInfoList.add(attachmentInfoForwardedMessage);
+                            break;
                     }
                 }
                 editTextRecipients.chipifyAllUnterminatedTokens();
@@ -1033,18 +1048,35 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
     @NonNull
     private String prepareReplySubject(String subject) {
-        if (TextUtils.isEmpty(subject)) {
-            return getString(R.string.template_reply_subject, "");
+        String prefix = null;
+
+        switch (messageType) {
+            case REPLY:
+            case REPLY_ALL:
+                prefix = "Re";
+                break;
+
+            case FORWARD:
+                prefix = "Fwd";
+                break;
         }
 
-        Pattern pattern = Pattern.compile("^(Re: )", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(subject);
+        if (!TextUtils.isEmpty(prefix)) {
+            if (TextUtils.isEmpty(subject)) {
+                return getString(R.string.template_reply_subject, prefix, "");
+            }
 
-        if (matcher.find()) {
+            Pattern pattern = Pattern.compile("^(" + prefix + ": )", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(subject);
+
+            if (matcher.find()) {
+                return subject;
+            }
+
+            return getString(R.string.template_reply_subject, prefix, subject);
+        } else {
             return subject;
         }
-
-        return getString(R.string.template_reply_subject, subject);
     }
 
     private String prepareRecipients(List<String> recipients) {
@@ -1169,7 +1201,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 textViewAttachmentName.setText(attachmentInfo.getName());
 
                 TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
-                textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
+                if (attachmentInfo.getEncodedSize() > 0) {
+                    textViewAttachmentSize.setVisibility(View.VISIBLE);
+                    textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo
+                            .getEncodedSize()));
+                } else {
+                    textViewAttachmentSize.setVisibility(View.GONE);
+                }
 
                 View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setVisibility(View.GONE);
