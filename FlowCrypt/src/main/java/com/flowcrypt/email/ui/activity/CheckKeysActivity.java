@@ -28,10 +28,15 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -211,6 +216,18 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                         getString(R.string.hint_when_found_keys_in_email));
                 infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
                 break;
+
+            case R.id.imageButtonPasswordHint:
+                try {
+                    WebViewInfoDialogFragment webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
+                            IOUtils.toString(getAssets().open("html/forgotten_pass_phrase_hint.htm"),
+                                    StandardCharsets.UTF_8));
+                    webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class
+                            .getSimpleName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
         }
     }
 
@@ -306,6 +323,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             } else {
                 imageButtonHint.setVisibility(View.GONE);
             }
+        }
+
+        if (findViewById(R.id.imageButtonPasswordHint) != null) {
+            findViewById(R.id.imageButtonPasswordHint).setOnClickListener(this);
         }
 
         textViewCheckKeysTitle = findViewById(R.id.textViewCheckKeysTitle);
