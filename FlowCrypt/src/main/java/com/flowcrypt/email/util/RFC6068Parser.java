@@ -6,13 +6,19 @@
 package com.flowcrypt.email.util;
 
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.ExtraActionInfo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
+ * This class defines the parser of 'mailto' URIs.
+ * It depends on the <a href="https://tools.ietf.org/html/rfc6068">document</a> which defines the format of Uniform
+ * Resource Identifiers (URIs) to identify resources that are reached using Internet mail.
+ * <p>
  * See details here https://github.com/k9mail/k-9/blob/master/k9mail/src/main/java/com/fsck/k9/helper/MailTo.java
  *
  * @author Denis Bondarenko
@@ -59,6 +65,8 @@ public class RFC6068Parser {
             toList.add(0, recipient);
         }
 
+        toList = checkToList(toList);
+
         ArrayList<String> ccList = params.getQueryParameters(CC);
         ArrayList<String> bccList = params.getQueryParameters(BCC);
 
@@ -71,6 +79,23 @@ public class RFC6068Parser {
                 .setBccAddresses(bccList)
                 .setSubject(subject)
                 .setBody(body).create();
+    }
+
+    private static ArrayList<String> checkToList(ArrayList<String> toList) {
+        ArrayList<String> newToList = new ArrayList<>();
+        if (!toList.isEmpty()) {
+            for (String section : toList) {
+                if (!TextUtils.isEmpty(section)) {
+                    if (section.indexOf(',') != -1) {
+                        String[] arraysRecipients = section.split(",");
+                        newToList.addAll(new ArrayList<>(Arrays.asList(arraysRecipients)));
+                    } else {
+                        newToList.add(section);
+                    }
+                }
+            }
+        }
+        return newToList;
     }
 
     private static String getFirstParameterValue(CaseInsensitiveParamWrapper params, String paramName) {
