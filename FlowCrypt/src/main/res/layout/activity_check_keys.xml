@@ -75,10 +75,11 @@
             android:layout_marginBottom="@dimen/default_margin_content"
             android:layout_marginTop="@dimen/default_margin_content"
             android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/textInputLayoutKeyPassword"
+            app:layout_constraintBottom_toTopOf="@+id/layoutPasswordHint"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-            app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle"
+            tools:visibility="visible" />
 
         <LinearLayout
             android:id="@+id/layoutPasswordHint"
