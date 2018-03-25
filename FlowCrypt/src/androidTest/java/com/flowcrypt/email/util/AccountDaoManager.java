@@ -18,4 +18,8 @@ public class AccountDaoManager {
     public static AccountDao getDefaultAccountDao() {
         return TestGeneralUtil.readObjectFromResources("default_account.json", AccountDao.class);
     }
+
+    public static AccountDao getAccountDao(String accountPath) {
+        return TestGeneralUtil.readObjectFromResources(accountPath, AccountDao.class);
+    }
 }

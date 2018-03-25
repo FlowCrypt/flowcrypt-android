@@ -14,8 +14,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -86,6 +88,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     private Folder folder;
     private ActionManager actionManager;
 
+    private CountingIdlingResource countingIdlingResourceForMessages;
+    private CountingIdlingResource countingIdlingResourceForLabel;
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private LinearLayout accountManagementLayout;
@@ -127,7 +131,11 @@ public class EmailManagerActivity extends BaseSyncActivity
         } else {
             finish();
         }
-
+        countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                (EmailManagerActivity.class), BuildConfig.DEBUG);
+        countingIdlingResourceForLabel = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                (EmailManagerActivity.class), BuildConfig.DEBUG);
+        countingIdlingResourceForLabel.increment();
         initViews();
     }
 
@@ -198,15 +206,24 @@ public class EmailManagerActivity extends BaseSyncActivity
             case R.id.syns_request_code_update_label:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
                         EmailManagerActivity.this);
+                if (!countingIdlingResourceForLabel.isIdleNow()) {
+                    countingIdlingResourceForLabel.decrement();
+                }
                 break;
 
             case R.id.syns_request_code_load_next_messages:
                 refreshFoldersInfoFromCache();
                 onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
                 onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 break;
         }
     }
@@ -283,6 +300,7 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
+                countingIdlingResourceForMessages.decrement();
                 notifyEmailListFragmentAboutError(requestCode, errorType, e);
                 break;
         }
@@ -451,6 +469,16 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResourceForMessages() {
+        return countingIdlingResourceForMessages;
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResourceForLabel() {
+        return countingIdlingResourceForLabel;
     }
 
     /**
@@ -775,6 +803,7 @@ public class EmailManagerActivity extends BaseSyncActivity
             super.onDrawerOpened(drawerView);
 
             if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
+                countingIdlingResourceForLabel.increment();
                 updateLabels(R.id.syns_request_code_update_label);
             }
 
