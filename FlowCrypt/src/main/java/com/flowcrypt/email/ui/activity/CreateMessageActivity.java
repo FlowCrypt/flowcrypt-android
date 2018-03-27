@@ -95,18 +95,20 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
             finish();
         }
 
-        super.onCreate(savedInstanceState);
-
-        layoutContent = findViewById(R.id.layoutContent);
-        initNonEncryptedHintView();
-
         if (getIntent() != null) {
             serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
             if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
                 messageEncryptionType = (MessageEncryptionType) getIntent()
                         .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
             }
+        }
 
+        super.onCreate(savedInstanceState);
+
+        layoutContent = findViewById(R.id.layoutContent);
+        initNonEncryptedHintView();
+
+        if (getIntent() != null) {
             onMessageEncryptionTypeChange(messageEncryptionType);
 
             if (getSupportActionBar() != null) {
