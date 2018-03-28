@@ -5,11 +5,15 @@
 
 package com.flowcrypt.email.database.dao.source.imap;
 
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -195,6 +199,71 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
                         contentValues, COL_FOLDER_NAME + " = ?", new String[]{folderName});
             } else return -1;
         } else return -1;
+    }
+
+    /**
+     * This method update the local labels info. Here we will remove deleted and create new folders.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param email      The account email.
+     * @param oldFolders The list of old {@link Folder} object.
+     * @param newFolders The list of new {@link Folder} object.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] updateLabels(Context context, String email,
+                                                Collection<Folder> oldFolders, Collection<Folder> newFolders)
+            throws RemoteException, OperationApplicationException {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && contentResolver != null) {
+
+            ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
+
+            List<Folder> deleteCandidates = new ArrayList<>();
+            for (Folder oldFolder : oldFolders) {
+                boolean isFolderFound = false;
+                for (Folder newFolder : newFolders) {
+                    if (newFolder.getServerFullFolderName().equals(oldFolder.getServerFullFolderName())) {
+                        isFolderFound = true;
+                        break;
+                    }
+                }
+
+                if (!isFolderFound) {
+                    deleteCandidates.add(oldFolder);
+                }
+            }
+
+            List<Folder> newCandidates = new ArrayList<>();
+            for (Folder newFolder : newFolders) {
+                boolean isFolderFound = false;
+                for (Folder oldFolder : oldFolders) {
+                    if (oldFolder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
+                        isFolderFound = true;
+                        break;
+                    }
+                }
+
+                if (!isFolderFound) {
+                    newCandidates.add(newFolder);
+                }
+            }
+
+            for (Folder folder : deleteCandidates) {
+                contentProviderOperations.add(ContentProviderOperation.newDelete(getBaseContentUri())
+                        .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ",
+                                new String[]{email, folder.getServerFullFolderName()})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+
+            for (Folder folder : newCandidates) {
+                contentProviderOperations.add(ContentProviderOperation.newInsert(getBaseContentUri())
+                        .withValues(prepareContentValues(email, folder))
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperations);
+        } else return new ContentProviderResult[0];
     }
 
     @NonNull

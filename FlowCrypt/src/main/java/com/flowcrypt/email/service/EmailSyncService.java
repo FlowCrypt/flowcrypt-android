@@ -386,8 +386,19 @@ public class EmailSyncService extends BaseService implements SyncListener {
         }
 
         ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-        imapLabelsDaoSource.deleteFolders(getApplicationContext(), accountDao.getEmail());
-        imapLabelsDaoSource.addRows(getApplicationContext(), accountDao.getEmail(), foldersManager.getAllFolders());
+        List<com.flowcrypt.email.api.email.Folder> currentFoldersList =
+                imapLabelsDaoSource.getFolders(getApplicationContext(), accountDao.getEmail());
+        if (currentFoldersList.isEmpty()) {
+            imapLabelsDaoSource.addRows(getApplicationContext(), accountDao.getEmail(), foldersManager.getAllFolders());
+        } else {
+            try {
+                imapLabelsDaoSource.updateLabels(getApplicationContext(), accountDao.getEmail(), currentFoldersList,
+                        foldersManager.getAllFolders());
+            } catch (Exception e) {
+                e.printStackTrace();
+                ExceptionUtil.handleError(e);
+            }
+        }
 
         try {
             sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);

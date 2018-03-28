@@ -415,6 +415,11 @@ public class EmailManagerActivity extends BaseSyncActivity
                         }
 
                         updateEmailsListFragmentAfterFolderChange();
+                    } else {
+                        Folder newestFolderInfo = foldersManager.getFolderByAlias(folder.getFolderAlias());
+                        if (newestFolderInfo != null) {
+                            folder = newestFolderInfo;
+                        }
                     }
                 }
                 break;
