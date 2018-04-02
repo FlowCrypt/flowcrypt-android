@@ -71,8 +71,6 @@ import com.flowcrypt.email.util.UIUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This fragment describe details of some message.
@@ -603,7 +601,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             layoutParams.setMargins(margin, 0, margin, 0);
             emailWebView.setLayoutParams(layoutParams);
 
-            emailWebView.loadDataWithBaseURL(null, prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+            emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
                     "text/html",
                     StandardCharsets.UTF_8.displayName(), null);
 
@@ -689,31 +687,6 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
             layoutReplyButtons.setVisibility(View.VISIBLE);
         }
-    }
-
-    /**
-     * Prepare the input HTML to show the user a viewport option.
-     *
-     * @return A generated HTML page which will be more comfortable for user.
-     */
-    @NonNull
-    private String prepareViewportHtml(String incomingHtml) {
-        String body;
-        if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
-            Pattern patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL);
-            Matcher matcherBody = patternBody.matcher(incomingHtml);
-            if (matcherBody.find()) {
-                body = matcherBody.group();
-            } else {
-                body = "<body>" + incomingHtml + "</body>";
-            }
-        } else {
-            body = "<body>" + incomingHtml + "</body>";
-        }
-
-        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
-                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
-                " 100% !important;}</style></head>" + body + "</html>";
     }
 
     /**

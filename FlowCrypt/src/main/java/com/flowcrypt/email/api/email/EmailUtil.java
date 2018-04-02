@@ -48,6 +48,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -403,5 +405,30 @@ public class EmailUtil {
             }
         }
         return true;
+    }
+
+    /**
+     * Prepare the input HTML to show the user a viewport option.
+     *
+     * @return A generated HTML page which will be more comfortable for user.
+     */
+    @NonNull
+    public static String prepareViewportHtml(String incomingHtml) {
+        String body;
+        if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
+            Pattern patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL);
+            Matcher matcherBody = patternBody.matcher(incomingHtml);
+            if (matcherBody.find()) {
+                body = matcherBody.group();
+            } else {
+                body = "<body>" + incomingHtml + "</body>";
+            }
+        } else {
+            body = "<body>" + incomingHtml + "</body>";
+        }
+
+        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
+                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
+                " 100% !important;}</style></head>" + body + "</html>";
     }
 }

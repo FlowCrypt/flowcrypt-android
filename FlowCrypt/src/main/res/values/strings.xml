@@ -305,4 +305,5 @@ icelanders prefer real sauna</font>
     <string name="forward_encrypted">Forward Encrypted</string>
     <string name="reply_encrypted">Reply Encrypted</string>
     <string name="reply_all_encrypted">Reply all Encrypted</string>
+    <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
 </resources>

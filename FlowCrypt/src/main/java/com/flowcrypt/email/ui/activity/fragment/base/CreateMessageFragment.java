@@ -37,6 +37,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,6 +62,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
+import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
@@ -72,6 +74,7 @@ import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
+import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
@@ -86,6 +89,8 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import org.apache.commons.io.FileUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -120,25 +125,26 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private FoldersManager.FolderType folderType;
     private IncomingMessageInfo incomingMessageInfo;
     private ServiceInfo serviceInfo;
+    private AccountDao accountDao;
+    private ArrayAdapter<String> fromAddressesArrayAdapter;
+    private PgpContact pgpContactWithNoPublicKey;
+    private ExtraActionInfo extraActionInfo;
+    private MessageType messageType = MessageType.NEW;
 
     private ViewGroup layoutAttachments;
     private EditText editTextFrom;
     private EditText editTextEmailSubject;
     private EditText editTextEmailMessage;
     private TextInputLayout textInputLayoutEmailMessage;
-    private View layoutContent;
+    private ScrollView layoutContent;
     private View progressBarCheckContactsDetails;
     private Spinner spinnerFrom;
-    private AccountDao accountDao;
-    private ArrayAdapter<String> fromAddressesArrayAdapter;
+    private EmailWebView emailWebView;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdatedInfoAboutContactCompleted = true;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
-    private PgpContact pgpContactWithNoPublicKey;
-    private ExtraActionInfo extraActionInfo;
-    private MessageType messageType = MessageType.NEW;
 
     public CreateMessageFragment() {
         pgpContacts = new ArrayList<>();
@@ -782,6 +788,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     private OutgoingMessageInfo getOutgoingMessageInfo() {
         OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
+        if (incomingMessageInfo != null && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+            //todo-denbond7 Need to think how forward HTML
+        }
         outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
         outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
 
@@ -955,6 +964,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      * @param view The root fragment view.
      */
     private void initViews(View view) {
+        layoutContent = view.findViewById(R.id.scrollView);
         layoutAttachments = view.findViewById(R.id.layoutAttachments);
         initChipsView(view);
 
@@ -968,8 +978,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
         textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
-        layoutContent = view.findViewById(R.id.scrollView);
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
+        emailWebView = view.findViewById(R.id.emailWebView);
     }
 
     /**
@@ -1004,23 +1014,49 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             break;
 
                         case FORWARD:
-                            AttachmentInfo attachmentInfoForwardedMessage = new AttachmentInfo();
+                            editTextEmailMessage.setText(getString(R.string.forward_template,
+                                    incomingMessageInfo.getFrom().get(0),
+                                    DateFormat.getDateTimeInstance().format(incomingMessageInfo.getReceiveDate()),
+                                    incomingMessageInfo.getSubject(),
+                                    prepareRecipientsLineForForwarding(incomingMessageInfo.getTo())));
 
-                            attachmentInfoForwardedMessage.setName("original message");
-                            attachmentInfoForwardedMessage.setRawData(
-                                    incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
-                            attachmentInfoForwardedMessage.setEncodedSize(-1);
-                            attachmentInfoForwardedMessage.setType(Constants.MIME_TYPE_RFC822);
-                            attachmentInfoForwardedMessage.setEmail(accountDao.getEmail());
-                            attachmentInfoForwardedMessage.setCanBeDeleted(false);
+                            if (incomingMessageInfo.getCc() != null && !incomingMessageInfo.getCc().isEmpty()) {
+                                editTextEmailMessage.append("Cc: ");
+                                editTextEmailMessage.append(prepareRecipientsLineForForwarding(incomingMessageInfo
+                                        .getCc()));
+                                editTextEmailMessage.append("\n\n");
+                            }
 
-                            attachmentInfoList.add(attachmentInfoForwardedMessage);
+                            if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+                                emailWebView.configure();
+                                emailWebView.loadDataWithBaseURL(null,
+                                        EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+                                        "text/html", StandardCharsets.UTF_8.displayName(), null);
+                                emailWebView.setVisibility(View.VISIBLE);
+                            } else if (incomingMessageInfo.getMessageParts() != null
+                                    && !incomingMessageInfo.getMessageParts().isEmpty()) {
+                                for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+                                    if (messagePart != null) {
+                                        switch (messagePart.getMessagePartType()) {
+                                            case PGP_MESSAGE:
+                                            case TEXT:
+                                                editTextEmailMessage.append("\n\n");
+                                                editTextEmailMessage.append(messagePart.getValue());
+                                                break;
+
+                                            case PGP_PUBLIC_KEY:
+                                                //add implementation of the public key view
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+
                             break;
                     }
                 }
                 editTextRecipients.chipifyAllUnterminatedTokens();
                 editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
-                editTextEmailMessage.requestFocus();
             }
 
             if (serviceInfo != null) {
@@ -1044,6 +1080,23 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 }
             }
         }
+    }
+
+    private String prepareRecipientsLineForForwarding(ArrayList<String> recipients) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (recipients != null && !recipients.isEmpty()) {
+            stringBuilder.append(recipients.get(0));
+
+            if (recipients.size() > 1) {
+                for (int i = 1; i < recipients.size(); i++) {
+                    String recipient = recipients.get(i);
+                    stringBuilder.append(", ");
+                    stringBuilder.append(recipient);
+                }
+            }
+
+            return stringBuilder.toString();
+        } else return "";
     }
 
     @NonNull

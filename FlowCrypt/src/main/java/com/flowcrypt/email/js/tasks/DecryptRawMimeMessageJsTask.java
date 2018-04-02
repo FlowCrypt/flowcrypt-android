@@ -58,6 +58,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             ProcessedMime processedMime = js.mime_process(rawMimeMessage);
             ArrayList<String> addressesFrom = new ArrayList<>();
             ArrayList<String> addressesTo = new ArrayList<>();
+            ArrayList<String> addressesCc = new ArrayList<>();
 
             for (MimeAddress mimeAddress : processedMime.getAddressHeader("from")) {
                 addressesFrom.add(mimeAddress.getAddress());
@@ -67,8 +68,13 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
                 addressesTo.add(mimeAddress.getAddress());
             }
 
+            for (MimeAddress mimeAddress : processedMime.getAddressHeader("cc")) {
+                addressesCc.add(mimeAddress.getAddress());
+            }
+
             incomingMessageInfo.setFrom(addressesFrom);
             incomingMessageInfo.setTo(addressesTo);
+            incomingMessageInfo.setCc(addressesCc);
             incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
             incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
             incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMimeMessage);

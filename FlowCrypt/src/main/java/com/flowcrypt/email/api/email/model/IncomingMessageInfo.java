@@ -39,6 +39,8 @@ public class IncomingMessageInfo extends MessageInfo {
 
     private ArrayList<String> from;
     private ArrayList<String> to;
+    private ArrayList<String> cc;
+
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
@@ -52,6 +54,7 @@ public class IncomingMessageInfo extends MessageInfo {
         super(in);
         this.from = in.createStringArrayList();
         this.to = in.createStringArrayList();
+        this.cc = in.createStringArrayList();
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.originalRawMessageWithoutAttachments = in.readString();
@@ -65,6 +68,7 @@ public class IncomingMessageInfo extends MessageInfo {
         return "IncomingMessageInfo{" +
                 "from=" + from +
                 "to=" + to +
+                "cc=" + cc +
                 ", receiveDate=" + receiveDate +
                 ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments + '\'' +
                 ", messageParts=" + messageParts +
@@ -83,6 +87,7 @@ public class IncomingMessageInfo extends MessageInfo {
         super.writeToParcel(dest, flags);
         dest.writeStringList(this.from);
         dest.writeStringList(this.to);
+        dest.writeStringList(this.cc);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
@@ -142,6 +147,14 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setTo(ArrayList<String> to) {
         this.to = to;
+    }
+
+    public ArrayList<String> getCc() {
+        return cc;
+    }
+
+    public void setCc(ArrayList<String> cc) {
+        this.cc = cc;
     }
 
     public String getHtmlMessage() {
