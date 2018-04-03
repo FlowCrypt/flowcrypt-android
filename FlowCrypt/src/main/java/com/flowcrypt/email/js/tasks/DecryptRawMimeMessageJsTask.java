@@ -83,8 +83,11 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
 
             MimeMessage mimeMessage = js.mime_decode(rawMimeMessage);
 
-            if (mimeMessage != null && !isMessageContainsPGPBlocks(incomingMessageInfo)) {
-                incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+            if (mimeMessage != null) {
+                if (!isMessageContainsPGPBlocks(incomingMessageInfo)) {
+                    incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+                }
+                incomingMessageInfo.setPlainTextExists(!TextUtils.isEmpty(mimeMessage.getText()));
             }
 
             jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMessageInfo);

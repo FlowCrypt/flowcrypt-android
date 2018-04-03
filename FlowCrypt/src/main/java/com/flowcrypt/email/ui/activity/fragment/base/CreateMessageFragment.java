@@ -74,7 +74,6 @@ import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
-import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
@@ -89,7 +88,6 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import org.apache.commons.io.FileUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -138,7 +136,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private ScrollView layoutContent;
     private View progressBarCheckContactsDetails;
     private Spinner spinnerFrom;
-    private EmailWebView emailWebView;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdatedInfoAboutContactCompleted = true;
@@ -978,7 +975,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
         progressBarCheckContactsDetails = view.findViewById(R.id.progressBarCheckContactsDetails);
-        emailWebView = view.findViewById(R.id.emailWebView);
     }
 
     /**
@@ -1026,13 +1022,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                 editTextEmailMessage.append("\n\n");
                             }
 
-                            if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
-                                emailWebView.configure();
-                                emailWebView.loadDataWithBaseURL(null,
-                                        EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
-                                        "text/html", StandardCharsets.UTF_8.displayName(), null);
-                                emailWebView.setVisibility(View.VISIBLE);
-                            } else if (incomingMessageInfo.getMessageParts() != null
+                            if (incomingMessageInfo.getMessageParts() != null
                                     && !incomingMessageInfo.getMessageParts().isEmpty()) {
                                 for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
                                     if (messagePart != null) {
@@ -1044,11 +1034,15 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                                 break;
 
                                             case PGP_PUBLIC_KEY:
-                                                //add implementation of the public key view
+                                                //TODO-denbond7 add implementation of the public key view
                                                 break;
                                         }
                                     }
                                 }
+                            } else if (!incomingMessageInfo.isPlainTextExists()
+                                    && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+                                Toast.makeText(getContext(), R.string.cannot_forward_html_emails,
+                                        Toast.LENGTH_LONG).show();
                             }
 
                             break;

@@ -40,17 +40,17 @@ public class IncomingMessageInfo extends MessageInfo {
     private ArrayList<String> from;
     private ArrayList<String> to;
     private ArrayList<String> cc;
-
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
     private Folder folder;
     private String htmlMessage;
+    private boolean isPlainTextExists;
 
     public IncomingMessageInfo() {
     }
 
-    public IncomingMessageInfo(Parcel in) {
+    protected IncomingMessageInfo(Parcel in) {
         super(in);
         this.from = in.createStringArrayList();
         this.to = in.createStringArrayList();
@@ -61,19 +61,21 @@ public class IncomingMessageInfo extends MessageInfo {
         this.messageParts = in.createTypedArrayList(MessagePart.CREATOR);
         this.folder = in.readParcelable(Folder.class.getClassLoader());
         this.htmlMessage = in.readString();
+        this.isPlainTextExists = in.readByte() != 0;
     }
 
     @Override
     public String toString() {
         return "IncomingMessageInfo{" +
                 "from=" + from +
-                "to=" + to +
-                "cc=" + cc +
+                ", to=" + to +
+                ", cc=" + cc +
                 ", receiveDate=" + receiveDate +
                 ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments + '\'' +
                 ", messageParts=" + messageParts +
                 ", folder=" + folder +
-                ", htmlMessage=" + htmlMessage +
+                ", htmlMessage='" + htmlMessage + '\'' +
+                ", isPlainTextExists=" + isPlainTextExists +
                 "} " + super.toString();
     }
 
@@ -92,7 +94,8 @@ public class IncomingMessageInfo extends MessageInfo {
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
         dest.writeParcelable(this.folder, flags);
-        dest.writeString(htmlMessage);
+        dest.writeString(this.htmlMessage);
+        dest.writeByte(this.isPlainTextExists ? (byte) 1 : (byte) 0);
     }
 
     /**
@@ -163,5 +166,13 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setHtmlMessage(String htmlMessage) {
         this.htmlMessage = htmlMessage;
+    }
+
+    public boolean isPlainTextExists() {
+        return isPlainTextExists;
+    }
+
+    public void setPlainTextExists(boolean plainTextExists) {
+        isPlainTextExists = plainTextExists;
     }
 }
