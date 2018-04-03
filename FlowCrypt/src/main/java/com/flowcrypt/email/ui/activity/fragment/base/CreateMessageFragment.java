@@ -90,7 +90,6 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 import org.apache.commons.io.FileUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -1016,7 +1015,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                         case FORWARD:
                             editTextEmailMessage.setText(getString(R.string.forward_template,
                                     incomingMessageInfo.getFrom().get(0),
-                                    DateFormat.getDateTimeInstance().format(incomingMessageInfo.getReceiveDate()),
+                                    EmailUtil.prepareDateForForwardedMessage(incomingMessageInfo.getReceiveDate()),
                                     incomingMessageInfo.getSubject(),
                                     prepareRecipientsLineForForwarding(incomingMessageInfo.getTo())));
 
