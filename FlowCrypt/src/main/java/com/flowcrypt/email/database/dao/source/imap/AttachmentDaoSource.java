@@ -173,14 +173,14 @@ public class AttachmentDaoSource extends BaseDaoSource {
      * @param uid   The message UID.
      * @return A  list of {@link AttachmentInfo} objects.
      */
-    public List<AttachmentInfo> getAttachmentInfoList(Context context, String email,
-                                                      String label, long uid) {
+    public ArrayList<AttachmentInfo> getAttachmentInfoList(Context context, String email,
+                                                           String label, long uid) {
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
                 null, COL_EMAIL + " = ?" + " AND " + COL_FOLDER + " = ?" + " AND " + COL_UID +
                         " = ?", new String[]{email, label, String.valueOf(uid)}, null);
 
-        List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+        ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
 
         if (cursor != null) {
             while (cursor.moveToNext()) {

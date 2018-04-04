@@ -307,4 +307,5 @@ icelanders prefer real sauna</font>
     <string name="reply_all_encrypted">Reply all Encrypted</string>
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
     <string name="cannot_forward_html_emails">Cannot forward HTML emails</string>
+    <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
 </resources>

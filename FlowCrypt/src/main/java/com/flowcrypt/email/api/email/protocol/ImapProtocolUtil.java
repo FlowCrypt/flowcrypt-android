@@ -5,15 +5,20 @@
 
 package com.flowcrypt.email.api.email.protocol;
 
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.protocol.BODY;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 
+import java.io.IOException;
 import java.io.InputStream;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimePart;
 
 /**
@@ -50,5 +55,55 @@ public class ImapProtocolUtil {
                 }
             }
         });
+    }
+
+    /**
+     * Get {@link Part} which has an attachment with such attachment id.
+     *
+     * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
+     * @param messageNumber This number will be used for fetching {@link Part} details;
+     * @param part          The parent part.
+     * @return {@link Part} which has attachment or null if message doesn't have such attachment.
+     * @throws MessagingException
+     * @throws IOException
+     */
+    public static BodyPart getAttachmentPartById(IMAPFolder imapFolder, int messageNumber, Part part,
+                                                 String attachmentId) throws MessagingException, IOException {
+        if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+            Multipart multiPart = (Multipart) part.getContent();
+            int numberOfParts = multiPart.getCount();
+            String[] headers;
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+                    BodyPart innerPart = getAttachmentPartById(imapFolder, messageNumber, bodyPart, attachmentId);
+                    if (innerPart != null) {
+                        return innerPart;
+                    }
+                } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                    InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+                            partCount + 1);
+
+                    if (inputStream == null) {
+                        throw new MessagingException("Failed to fetch headers");
+                    }
+
+                    InternetHeaders internetHeaders = new InternetHeaders(inputStream);
+                    headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID);
+
+                    if (headers == null) {
+                        //try to receive custom Gmail attachments header X-Attachment-Id
+                        headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
+                    }
+
+                    if (headers != null && attachmentId.equals(headers[0])) {
+                        return bodyPart;
+                    }
+                }
+            }
+            return null;
+        } else {
+            return null;
+        }
     }
 }

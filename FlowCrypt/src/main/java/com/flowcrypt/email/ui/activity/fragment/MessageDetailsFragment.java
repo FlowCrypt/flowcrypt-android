@@ -109,6 +109,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private OnActionListener onActionListener;
     private AttachmentInfo lastClickedAttachmentInfo;
     private MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
+    private ArrayList<AttachmentInfo> attachmentInfoList;
 
     public MessageDetailsFragment() {
     }
@@ -252,6 +253,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 break;
 
             case R.id.layoutForwardButton:
+                if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                    Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
+                }
                 startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
                         MessageType.FORWARD, messageEncryptionType));
                 break;
@@ -344,6 +351,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             getActivity().invalidateOptionsMenu();
         }
         incomingMessageInfo.setFolder(folder);
+        incomingMessageInfo.setUid(generalMessageDetails.getUid());
         updateMessageBody();
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageContainer);
     }
@@ -554,7 +562,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     private void showAttachmentsIfTheyExist() {
         if (generalMessageDetails != null && generalMessageDetails.isMessageHasAttachment()) {
-            List<AttachmentInfo> attachmentInfoList = new AttachmentDaoSource()
+            attachmentInfoList = new AttachmentDaoSource()
                     .getAttachmentInfoList(getContext(), generalMessageDetails.getEmail(),
                             generalMessageDetails.getLabel(), generalMessageDetails.getUid());
             LayoutInflater layoutInflater = LayoutInflater.from(getContext());

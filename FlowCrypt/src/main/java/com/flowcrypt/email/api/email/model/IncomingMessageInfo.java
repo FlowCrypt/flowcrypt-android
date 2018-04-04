@@ -36,10 +36,11 @@ public class IncomingMessageInfo extends MessageInfo {
             return new IncomingMessageInfo[size];
         }
     };
-
+    private int uid;
     private ArrayList<String> from;
     private ArrayList<String> to;
     private ArrayList<String> cc;
+    private ArrayList<AttachmentInfo> attachmentInfoList;
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
@@ -52,9 +53,11 @@ public class IncomingMessageInfo extends MessageInfo {
 
     protected IncomingMessageInfo(Parcel in) {
         super(in);
+        this.uid = in.readInt();
         this.from = in.createStringArrayList();
         this.to = in.createStringArrayList();
         this.cc = in.createStringArrayList();
+        this.attachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.originalRawMessageWithoutAttachments = in.readString();
@@ -87,9 +90,11 @@ public class IncomingMessageInfo extends MessageInfo {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
+        dest.writeInt(this.uid);
         dest.writeStringList(this.from);
         dest.writeStringList(this.to);
         dest.writeStringList(this.cc);
+        dest.writeTypedList(this.attachmentInfoList);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
@@ -174,5 +179,21 @@ public class IncomingMessageInfo extends MessageInfo {
 
     public void setPlainTextExists(boolean plainTextExists) {
         isPlainTextExists = plainTextExists;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public ArrayList<AttachmentInfo> getAttachmentInfoList() {
+        return attachmentInfoList;
+    }
+
+    public void setAttachmentInfoList(ArrayList<AttachmentInfo> attachmentInfoList) {
+        this.attachmentInfoList = attachmentInfoList;
     }
 }

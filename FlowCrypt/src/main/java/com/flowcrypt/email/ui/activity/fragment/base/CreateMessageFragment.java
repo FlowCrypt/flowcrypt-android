@@ -1009,6 +1009,21 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                             break;
 
                         case FORWARD:
+                            if (incomingMessageInfo.getAttachmentInfoList() != null
+                                    && !incomingMessageInfo.getAttachmentInfoList().isEmpty()) {
+                                for (AttachmentInfo attachmentInfo : incomingMessageInfo.getAttachmentInfoList()) {
+                                    if (isAttachmentCanBeAdded(attachmentInfo)) {
+                                        attachmentInfoList.add(attachmentInfo);
+                                    } else {
+                                        showInfoSnackbar(getView(),
+                                                getString(R.string.template_warning_max_total_attachments_size,
+                                                        FileUtils.byteCountToDisplaySize(
+                                                                Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
+                                                Snackbar.LENGTH_LONG);
+                                    }
+                                }
+                            }
+
                             editTextEmailMessage.setText(getString(R.string.forward_template,
                                     incomingMessageInfo.getFrom().get(0),
                                     EmailUtil.prepareDateForForwardedMessage(incomingMessageInfo.getReceiveDate()),
@@ -1225,12 +1240,36 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
 
         OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
+
+        ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();
+        ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.attachmentInfoList);
+        attachmentInfoList.removeAll(forwardedAttachmentInfoList);
+
         outgoingMessageInfo.setAttachmentInfoArrayList(attachmentInfoList);
+        outgoingMessageInfo.setForwardedAttachmentInfoList(forwardedAttachmentInfoList);
         outgoingMessageInfo.setMessageEncryptionType(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
+        outgoingMessageInfo.setForwarded(messageType == MessageType.FORWARD);
 
         if (onMessageSendListener != null) {
             onMessageSendListener.sendMessage(outgoingMessageInfo);
         }
+    }
+
+    /**
+     * Generate a forwarded attachments list.
+     *
+     * @return The generated list.
+     */
+    private ArrayList<AttachmentInfo> getForwardedAttachments() {
+        ArrayList<AttachmentInfo> forwardedAttachmentInfoList = new ArrayList<>();
+
+        for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+            if (attachmentInfo.getId() != null) {
+                forwardedAttachmentInfoList.add(attachmentInfo);
+            }
+        }
+
+        return forwardedAttachmentInfoList;
     }
 
     /**

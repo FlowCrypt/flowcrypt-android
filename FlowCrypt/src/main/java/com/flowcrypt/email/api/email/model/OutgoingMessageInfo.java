@@ -38,7 +38,9 @@ public class OutgoingMessageInfo extends MessageInfo {
     private PgpContact fromPgpContact;
     private String rawReplyMessage;
     private ArrayList<AttachmentInfo> attachmentInfoArrayList;
+    private ArrayList<AttachmentInfo> forwardedAttachmentInfoList;
     private MessageEncryptionType messageEncryptionType;
+    private boolean isForwarded;
 
     public OutgoingMessageInfo() {
     }
@@ -49,9 +51,11 @@ public class OutgoingMessageInfo extends MessageInfo {
         this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
         this.rawReplyMessage = in.readString();
         this.attachmentInfoArrayList = in.createTypedArrayList(AttachmentInfo.CREATOR);
+        this.forwardedAttachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
         int tmpMessageEncryptionType = in.readInt();
         this.messageEncryptionType = tmpMessageEncryptionType == -1 ? null : MessageEncryptionType.values()
                 [tmpMessageEncryptionType];
+        this.isForwarded = in.readByte() != 0;
     }
 
     @Override
@@ -66,7 +70,9 @@ public class OutgoingMessageInfo extends MessageInfo {
         dest.writeParcelable(this.fromPgpContact, flags);
         dest.writeString(this.rawReplyMessage);
         dest.writeTypedList(this.attachmentInfoArrayList);
+        dest.writeTypedList(this.forwardedAttachmentInfoList);
         dest.writeInt(this.messageEncryptionType == null ? -1 : this.messageEncryptionType.ordinal());
+        dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
     }
 
     public PgpContact[] getToPgpContacts() {
@@ -107,5 +113,21 @@ public class OutgoingMessageInfo extends MessageInfo {
 
     public void setMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
         this.messageEncryptionType = messageEncryptionType;
+    }
+
+    public boolean isForwarded() {
+        return isForwarded;
+    }
+
+    public void setForwarded(boolean forwarded) {
+        isForwarded = forwarded;
+    }
+
+    public ArrayList<AttachmentInfo> getForwardedAttachmentInfoList() {
+        return forwardedAttachmentInfoList;
+    }
+
+    public void setForwardedAttachmentInfoList(ArrayList<AttachmentInfo> forwardedAttachmentInfoList) {
+        this.forwardedAttachmentInfoList = forwardedAttachmentInfoList;
     }
 }
