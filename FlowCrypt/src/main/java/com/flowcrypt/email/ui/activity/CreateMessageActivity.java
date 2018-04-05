@@ -110,14 +110,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
         if (getIntent() != null) {
             onMessageEncryptionTypeChange(messageEncryptionType);
-
-            if (getSupportActionBar() != null) {
-                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
-                    getSupportActionBar().setTitle(R.string.reply);
-                } else {
-                    getSupportActionBar().setTitle(R.string.compose);
-                }
-            }
+            prepareActionBarTitle();
         }
     }
 
@@ -248,6 +241,39 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     @Override
     public MessageEncryptionType getMessageEncryptionType() {
         return messageEncryptionType;
+    }
+
+    private void prepareActionBarTitle() {
+        if (getSupportActionBar() != null) {
+            if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
+                MessageType messageType = (MessageType) getIntent().getSerializableExtra(
+                        CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
+
+                switch (messageType) {
+                    case NEW:
+                        getSupportActionBar().setTitle(R.string.compose);
+                        break;
+
+                    case REPLY:
+                        getSupportActionBar().setTitle(R.string.reply);
+                        break;
+
+                    case REPLY_ALL:
+                        getSupportActionBar().setTitle(R.string.reply_all);
+                        break;
+
+                    case FORWARD:
+                        getSupportActionBar().setTitle(R.string.forward);
+                        break;
+                }
+            } else {
+                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
+                    getSupportActionBar().setTitle(R.string.reply);
+                } else {
+                    getSupportActionBar().setTitle(R.string.compose);
+                }
+            }
+        }
     }
 
     private void notifyUserAboutErrorWhenSendMessage() {
