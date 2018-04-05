@@ -241,17 +241,17 @@ public class SendMessageSyncTask extends BaseSyncTask {
             MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
 
             for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
-                MimeBodyPart bodyPart = generateBodyPartWithAttachment(context, pgpCacheDirectory,
+                BodyPart attachmentBodyPart = generateBodyPartWithAttachment(context, pgpCacheDirectory,
                         js, pubKeys, attachmentInfo);
-                bodyPart.setContentID(EmailUtil.generateContentId());
-                mimeMultipart.addBodyPart(bodyPart);
+                mimeMultipart.addBodyPart(attachmentBodyPart);
             }
 
             for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
-                BodyPart attachment = ImapProtocolUtil.getAttachmentPartById(folderOfForwardedMessage,
-                        forwardedMessage.getMessageNumber(),
-                        forwardedMessage, attachmentInfo.getId());
-                mimeMultipart.addBodyPart(attachment);
+                BodyPart forwardedAttachmentBodyPart = generateBodyPartWithForwardedAttachment(pgpCacheDirectory, js,
+                        pubKeys, attachmentInfo, folderOfForwardedMessage, forwardedMessage);
+                if (forwardedAttachmentBodyPart != null) {
+                    mimeMultipart.addBodyPart(forwardedAttachmentBodyPart);
+                }
             }
 
             mimeMessage.setContent(mimeMultipart);
@@ -274,8 +274,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @throws MessagingException
      */
     @NonNull
-    private MimeBodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
-                                                        String[] pubKeys, AttachmentInfo attachmentInfo)
+    private BodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
+                                                    String[] pubKeys, AttachmentInfo attachmentInfo)
             throws IOException, MessagingException {
         MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
         switch (outgoingMessageInfo.getMessageEncryptionType()) {
@@ -298,8 +298,55 @@ public class SendMessageSyncTask extends BaseSyncTask {
                 attachmentsBodyPart.setFileName(attachmentInfo.getName());
                 break;
         }
+        attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
 
         return attachmentsBodyPart;
+    }
+
+    /**
+     * Generate a {@link BodyPart} with forwarded attachment.
+     *
+     * @param pgpCacheDirectory        The cache directory which contains temp files.
+     * @param js                       The {@link Js} tools.
+     * @param pubKeys                  The public keys which will be used for generate an encrypted attachments.
+     * @param attachmentInfo           The {@link AttachmentInfo} object, which contains general information about
+     *                                 attachment.
+     * @param folderOfForwardedMessage The folder where located our forwarded message
+     * @param forwardedMessage         The original forwarded message.
+     * @return Generated {@link MimeBodyPart} with an attachment.
+     * @throws IOException
+     * @throws MessagingException
+     */
+    @NonNull
+    private BodyPart generateBodyPartWithForwardedAttachment(File pgpCacheDirectory, Js js,
+                                                             String[] pubKeys, AttachmentInfo attachmentInfo,
+                                                             IMAPFolder folderOfForwardedMessage,
+                                                             Message forwardedMessage)
+            throws IOException, MessagingException {
+        switch (outgoingMessageInfo.getMessageEncryptionType()) {
+            case ENCRYPTED:
+                BodyPart originalAttachment = ImapProtocolUtil.getAttachmentPartById(folderOfForwardedMessage,
+                        forwardedMessage.getMessageNumber(), forwardedMessage, attachmentInfo.getId());
+
+                MimeBodyPart mimeBodyPart = new MimeBodyPart();
+                InputStream inputStream = originalAttachment.getInputStream();
+                if (inputStream != null) {
+                    File encryptedTempFile = generateTempFile(pgpCacheDirectory, attachmentInfo.getName());
+                    byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
+                            (inputStream), attachmentInfo.getName());
+                    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+                    mimeBodyPart.setDataHandler(new DataHandler(new FileDataSource(encryptedTempFile)));
+                    mimeBodyPart.setFileName(encryptedTempFile.getName());
+                    mimeBodyPart.setContentID(EmailUtil.generateContentId());
+                }
+                return mimeBodyPart;
+
+            case STANDARD:
+                return ImapProtocolUtil.getAttachmentPartById(folderOfForwardedMessage,
+                        forwardedMessage.getMessageNumber(), forwardedMessage, attachmentInfo.getId());
+        }
+
+        return null;
     }
 
     /**
@@ -336,9 +383,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @param parentDirectory The parent directory where a new file will be created.
      * @param fileName        The name of an the created file
      * @return Generated {@link File}
-     * @throws IOException
      */
-    private File generateTempFile(File parentDirectory, String fileName) throws IOException {
+    private File generateTempFile(File parentDirectory, String fileName) {
         return new File(parentDirectory, fileName + ".pgp");
     }
 
@@ -458,7 +504,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         @Override
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             return null;
         }
 
