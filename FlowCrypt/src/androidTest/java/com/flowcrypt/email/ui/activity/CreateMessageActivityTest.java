@@ -119,16 +119,17 @@ public class CreateMessageActivityTest extends BaseTest {
 
     @Test
     public void testEmptyRecipient() {
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).check(matches(withText(isEmptyString())));
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(matches(withText(isEmptyString()
+        )));
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.text_must_not_be_empty,
-                InstrumentationRegistry.getTargetContext().getString(R.string.prompt_recipient)))).check(matches
+                InstrumentationRegistry.getTargetContext().getString(R.string.prompt_recipients_to)))).check(matches
                 (isDisplayed()));
     }
 
     @Test
     public void testEmptyEmailSubject() {
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).perform(typeText
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
                 (TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER));
         onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
                 .check(matches(withText(isEmptyString())));
@@ -140,7 +141,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
     @Test
     public void testEmptyEmailMessage() {
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).perform(typeText
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
                 (TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER));
         onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed())).perform(typeText(EMAIL_SUBJECT));
         onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
@@ -181,7 +182,8 @@ public class CreateMessageActivityTest extends BaseTest {
     public void testIsScreenOfComposeNewMessage() {
         onView(withText(R.string.compose)).check(matches(isDisplayed()));
         onView(withId(R.id.editTextFrom)).check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))));
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).check(matches(withText(isEmptyString())));
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(matches(withText(isEmptyString()
+        )));
         onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
                 .check(matches(withText(isEmptyString())));
     }
@@ -195,7 +197,7 @@ public class CreateMessageActivityTest extends BaseTest {
                 "@denbond7.com"};
 
         for (String invalidEmailAddress : invalidEmailAddresses) {
-            onView(withId(R.id.editTextRecipient)).perform(clearText(), typeText(invalidEmailAddress),
+            onView(withId(R.id.editTextRecipientTo)).perform(clearText(), typeText(invalidEmailAddress),
                     closeSoftKeyboard());
             onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
 
@@ -211,7 +213,7 @@ public class CreateMessageActivityTest extends BaseTest {
                 closeSoftKeyboard());
         onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed())).perform(typeText(EMAIL_MESSAGE),
                 closeSoftKeyboard());
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).perform(typeText
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
                 (TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER));
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
 
@@ -261,7 +263,7 @@ public class CreateMessageActivityTest extends BaseTest {
         onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.template_remove_recipient,
                 TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))).check(matches(isDisplayed())).perform(click
                 ());
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed())).check(matches(withText(not
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(matches(withText(not
                 (containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))));
     }
 
@@ -326,7 +328,7 @@ public class CreateMessageActivityTest extends BaseTest {
     }
 
     private void fillInAllFields(String recipient) {
-        onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed()))
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
                 .perform(typeText(recipient), closeSoftKeyboard());
         onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
                 .perform(typeText(EMAIL_SUBJECT), closeSoftKeyboard());

@@ -35,6 +35,8 @@ public class OutgoingMessageInfo extends MessageInfo {
         }
     };
     private PgpContact[] toPgpContacts;
+    private PgpContact[] ccPgpContacts;
+    private PgpContact[] bccPgpContacts;
     private PgpContact fromPgpContact;
     private String rawReplyMessage;
     private ArrayList<AttachmentInfo> attachmentInfoArrayList;
@@ -48,6 +50,8 @@ public class OutgoingMessageInfo extends MessageInfo {
     protected OutgoingMessageInfo(Parcel in) {
         super(in);
         this.toPgpContacts = in.createTypedArray(PgpContact.CREATOR);
+        this.ccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
+        this.bccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
         this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
         this.rawReplyMessage = in.readString();
         this.attachmentInfoArrayList = in.createTypedArrayList(AttachmentInfo.CREATOR);
@@ -67,12 +71,30 @@ public class OutgoingMessageInfo extends MessageInfo {
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeTypedArray(this.toPgpContacts, flags);
+        dest.writeTypedArray(this.ccPgpContacts, flags);
+        dest.writeTypedArray(this.bccPgpContacts, flags);
         dest.writeParcelable(this.fromPgpContact, flags);
         dest.writeString(this.rawReplyMessage);
         dest.writeTypedList(this.attachmentInfoArrayList);
         dest.writeTypedList(this.forwardedAttachmentInfoList);
         dest.writeInt(this.messageEncryptionType == null ? -1 : this.messageEncryptionType.ordinal());
         dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
+    }
+
+    public PgpContact[] getCcPgpContacts() {
+        return ccPgpContacts;
+    }
+
+    public void setCcPgpContacts(PgpContact[] ccPgpContacts) {
+        this.ccPgpContacts = ccPgpContacts;
+    }
+
+    public PgpContact[] getBccPgpContacts() {
+        return bccPgpContacts;
+    }
+
+    public void setBccPgpContacts(PgpContact[] bccPgpContacts) {
+        this.bccPgpContacts = bccPgpContacts;
     }
 
     public PgpContact[] getToPgpContacts() {

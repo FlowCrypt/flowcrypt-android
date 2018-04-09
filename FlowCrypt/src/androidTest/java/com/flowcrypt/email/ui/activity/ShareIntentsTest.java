@@ -306,11 +306,11 @@ public class ShareIntentsTest extends BaseTest {
     private void checkRecipients(int recipientsCount) {
         if (recipientsCount > 0) {
             for (int i = 0; i < recipientsCount; i++) {
-                onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed()))
+                onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
                         .check(matches(withText(containsString(recipients[i]))));
             }
         } else {
-            onView(withId(R.id.editTextRecipient)).check(matches(isDisplayed()))
+            onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
                     .check(matches(withText(isEmptyString())));
         }
     }
