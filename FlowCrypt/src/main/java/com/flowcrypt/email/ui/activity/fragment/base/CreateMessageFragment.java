@@ -91,8 +91,10 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 import org.apache.commons.io.FileUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1174,9 +1176,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             updateViewsFromExtraActionInfo();
         } else {
             if (incomingMessageInfo != null) {
-                apdateViewsFromIncomingMessageInfo();
+                updateViewsFromIncomingMessageInfo();
                 editTextRecipientsTo.chipifyAllUnterminatedTokens();
-                //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
+                editTextRecipientsCc.chipifyAllUnterminatedTokens();
                 editTextEmailSubject.setText(prepareReplySubject(incomingMessageInfo.getSubject()));
             }
 
@@ -1218,7 +1220,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         }
     }
 
-    private void apdateViewsFromIncomingMessageInfo() {
+    private void updateViewsFromIncomingMessageInfo() {
         switch (messageType) {
             case REPLY:
                 if (folderType == FoldersManager.FolderType.SENT) {
@@ -1231,11 +1233,32 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             case REPLY_ALL:
                 if (folderType == FoldersManager.FolderType.SENT) {
                     editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
+
+                    if (incomingMessageInfo.getCc() != null && !incomingMessageInfo.getCc().isEmpty()) {
+                        layoutCc.setVisibility(View.VISIBLE);
+                        editTextRecipientsCc.append(prepareRecipients(incomingMessageInfo.getCc()));
+                    }
                 } else {
                     editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
-                    ArrayList<String> toRecipients = incomingMessageInfo.getTo();
-                    toRecipients.remove(accountDao.getEmail());
-                    editTextRecipientsTo.append(prepareRecipients(toRecipients));
+
+                    Set<String> ccSet = new HashSet<>();
+
+                    if (incomingMessageInfo.getTo() != null && !incomingMessageInfo.getTo().isEmpty()) {
+                        ArrayList<String> toRecipients = incomingMessageInfo.getTo();
+                        toRecipients.remove(accountDao.getEmail());
+                        ccSet.addAll(toRecipients);
+                    }
+
+                    if (incomingMessageInfo.getCc() != null) {
+                        ArrayList<String> ccRecipients = incomingMessageInfo.getCc();
+                        ccRecipients.remove(accountDao.getEmail());
+                        ccSet.addAll(ccRecipients);
+                    }
+
+                    if (!ccSet.isEmpty()) {
+                        layoutCc.setVisibility(View.VISIBLE);
+                        editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
+                    }
                 }
                 break;
 
