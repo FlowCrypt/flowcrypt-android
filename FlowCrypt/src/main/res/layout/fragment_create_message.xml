@@ -60,6 +60,7 @@
                         android:focusableInTouchMode="false"
                         android:hint="@string/from"
                         android:inputType="none"
+                        android:longClickable="false"
                         android:paddingEnd="@dimen/drop_down_size"
                         android:paddingTop="@dimen/default_margin_medium" />
 

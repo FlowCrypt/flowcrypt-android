@@ -1146,7 +1146,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         spinnerFrom.setAdapter(fromAddressesArrayAdapter);
 
         editTextFrom = view.findViewById(R.id.editTextFrom);
-        //todo-denbond7 need to disable copy/past functionality
 
         imageButtonAliases = view.findViewById(R.id.imageButtonAliases);
         if (imageButtonAliases != null) {
