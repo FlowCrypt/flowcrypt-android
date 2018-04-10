@@ -154,6 +154,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private int countOfActiveOperations;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
+    private ImageButton imageButtonAliases;
 
     public CreateMessageFragment() {
         pgpContactsTo = new ArrayList<>();
@@ -554,9 +555,11 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 prepareAliasForReplyIfNeed(aliases);
 
                 if (fromAddressesArrayAdapter.getCount() == 1) {
-                    //todo-denbond7 need to hide dropdown button
+                    if (imageButtonAliases.getVisibility() == View.VISIBLE) {
+                        imageButtonAliases.setVisibility(View.INVISIBLE);
+                    }
                 } else {
-                    //show button
+                    imageButtonAliases.setVisibility(View.VISIBLE);
                 }
 
                 new AccountAliasesDaoSource().updateAliases(getContext(), accountDao, accountAliasesDaoList);
@@ -1145,7 +1148,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         editTextFrom = view.findViewById(R.id.editTextFrom);
         //todo-denbond7 need to disable copy/past functionality
 
-        View imageButtonAliases = view.findViewById(R.id.imageButtonAliases);
+        imageButtonAliases = view.findViewById(R.id.imageButtonAliases);
         if (imageButtonAliases != null) {
             imageButtonAliases.setOnClickListener(this);
         }

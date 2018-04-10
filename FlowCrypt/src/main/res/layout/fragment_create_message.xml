@@ -72,7 +72,9 @@
                     android:layout_gravity="top|end"
                     android:background="?selectableItemBackgroundBorderless"
                     android:padding="@dimen/default_margin_content_small"
-                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
+                    android:visibility="invisible"
+                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey"
+                    tools:visibility="visible" />
             </FrameLayout>
 
             <FrameLayout
