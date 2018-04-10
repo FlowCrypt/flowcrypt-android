@@ -89,10 +89,11 @@ public class PgpContactsNachoTextView extends NachoTextView {
         /**
          * Called when a chip in this TextView is long clicked.
          *
-         * @param chip  the {@link Chip} that was clicked
-         * @param event the {@link MotionEvent} that caused the touch
+         * @param nachoTextView A current view
+         * @param chip          the {@link Chip} that was clicked
+         * @param event         the {@link MotionEvent} that caused the touch
          */
-        void onChipLongClick(@NonNull Chip chip, MotionEvent event);
+        void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event);
     }
 
     private class ChipLongClickOnGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -104,7 +105,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
                 Chip chip = findLongClickedChip(event);
 
                 if (chip != null) {
-                    onChipLongClickListener.onChipLongClick(chip, event);
+                    onChipLongClickListener.onChipLongClick(PgpContactsNachoTextView.this, chip, event);
                 }
             }
         }

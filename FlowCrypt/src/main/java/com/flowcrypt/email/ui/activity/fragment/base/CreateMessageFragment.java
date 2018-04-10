@@ -149,12 +149,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private View layoutCc;
     private View layoutBcc;
     private ImageButton imageButtonAdditionalRecipientsVisibility;
+    private ImageButton imageButtonAliases;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private int countOfActiveOperations;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
-    private ImageButton imageButtonAliases;
+    private int activeRecipientsFieldId;
 
     public CreateMessageFragment() {
         pgpContactsTo = new ArrayList<>();
@@ -246,21 +247,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
         if (incomingMessageInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext())
                 && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null, this);
-
-            if (layoutCc.getVisibility() == View.VISIBLE) {
-                getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_cc, null, this);
-            } else {
-                editTextRecipientsCc.setText((CharSequence) null);
-                pgpContactsCc.clear();
-            }
-
-            if (layoutBcc.getVisibility() == View.VISIBLE) {
-                getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_bcc, null, this);
-            } else {
-                editTextRecipientsBcc.setText((CharSequence) null);
-                pgpContactsBcc.clear();
-            }
+            updateRecipientsFields();
         }
     }
 
@@ -285,9 +272,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                     NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
                             if (pgpContact != null) {
-                                startActivityForResult(
-                                        ImportPublicKeyActivity.newIntent(getContext(),
-                                                getString(R.string.import_public_key), pgpContact),
+                                startActivityForResult(ImportPublicKeyActivity.newIntent(getContext(),
+                                        getString(R.string.import_public_key), pgpContact),
                                         REQUEST_CODE_IMPORT_PUBLIC_KEY);
                             }
                         }
@@ -300,9 +286,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                     .EXTRA_KEY_PGP_CONTACT);
 
                             if (pgpContactWithNoPublicKey != null) {
-                                startActivityForResult(
-                                        SelectContactsActivity.newIntent(getContext(),
-                                                getString(R.string.use_public_key_from), false),
+                                startActivityForResult(SelectContactsActivity.newIntent(getContext(),
+                                        getString(R.string.use_public_key_from), false),
                                         REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT);
                             }
                         }
@@ -316,6 +301,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
                             if (pgpContact != null) {
                                 removePgpContactFromRecipientsField(pgpContact, editTextRecipientsTo, pgpContactsTo);
+                                removePgpContactFromRecipientsField(pgpContact, editTextRecipientsCc, pgpContactsCc);
+                                removePgpContactFromRecipientsField(pgpContact, editTextRecipientsBcc, pgpContactsBcc);
                             }
                         }
 
@@ -341,20 +328,34 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
                     case PgpContactDialogFragment.RESULT_CODE_REMOVE_CONTACT:
                         if (receivedPgpContact != null) {
-                            removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsTo,
-                                    pgpContactsTo);
+                            switch (activeRecipientsFieldId) {
+                                case R.id.editTextRecipientTo:
+                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsTo,
+                                            pgpContactsTo);
+                                    break;
+
+                                case R.id.editTextRecipientCc:
+                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsCc,
+                                            pgpContactsCc);
+                                    break;
+
+                                case R.id.editTextRecipientBcc:
+                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsBcc,
+                                            pgpContactsBcc);
+                                    break;
+                            }
                         }
                         break;
                 }
+
+                this.activeRecipientsFieldId = 0;
                 break;
 
             case REQUEST_CODE_IMPORT_PUBLIC_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-
-                        getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null,
-                                CreateMessageFragment.this);
+                        updateRecipientsFields();
                         break;
                 }
                 break;
@@ -370,10 +371,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                 pgpContactWithNoPublicKey.setPubkey(pgpContact.getPubkey());
                                 new ContactsDaoSource().updatePgpContact(getContext(), pgpContactWithNoPublicKey);
 
-                                Toast.makeText(getContext(), R.string.key_successfully_copied, Toast.LENGTH_LONG)
-                                        .show();
-                                getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null,
-                                        CreateMessageFragment.this);
+                                Toast.makeText(getContext(), R.string.key_successfully_copied,
+                                        Toast.LENGTH_LONG).show();
+                                updateRecipientsFields();
                             }
                         }
                         break;
@@ -605,17 +605,17 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void onFocusChange(View v, boolean hasFocus) {
         switch (v.getId()) {
             case R.id.editTextRecipientTo:
-                runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
+                pgpContactsTo = runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
                         R.id.loader_id_update_info_about_pgp_contacts_to, hasFocus);
                 break;
 
             case R.id.editTextRecipientCc:
-                runUpdatePgpContactsAction(pgpContactsCc, progressBarCc,
+                pgpContactsCc = runUpdatePgpContactsAction(pgpContactsCc, progressBarCc,
                         R.id.loader_id_update_info_about_pgp_contacts_cc, hasFocus);
                 break;
 
             case R.id.editTextRecipientBcc:
-                runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
+                pgpContactsBcc = runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
                         R.id.loader_id_update_info_about_pgp_contacts_bcc, hasFocus);
                 break;
         }
@@ -672,12 +672,13 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     }
 
     @Override
-    public void onChipLongClick(@NonNull Chip chip, MotionEvent event) {
+    public void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event) {
+        this.activeRecipientsFieldId = nachoTextView.getId();
         PgpContactDialogFragment pgpContactDialogFragment = PgpContactDialogFragment.newInstance(
                 new PgpContact(chip.getText().toString(), null));
 
         pgpContactDialogFragment.setTargetFragment(this, REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG);
-        pgpContactDialogFragment.show(getFragmentManager(), NoPgpFoundDialogFragment.class.getSimpleName());
+        pgpContactDialogFragment.show(getFragmentManager(), PgpContactDialogFragment.class.getSimpleName());
     }
 
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
@@ -724,6 +725,24 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         return isMessageSendingNow;
     }
 
+    private void updateRecipientsFields() {
+        getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null, this);
+
+        if (layoutCc.getVisibility() == View.VISIBLE) {
+            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_cc, null, this);
+        } else {
+            editTextRecipientsCc.setText((CharSequence) null);
+            pgpContactsCc.clear();
+        }
+
+        if (layoutBcc.getVisibility() == View.VISIBLE) {
+            getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_bcc, null, this);
+        } else {
+            editTextRecipientsBcc.setText((CharSequence) null);
+            pgpContactsBcc.clear();
+        }
+    }
+
     /**
      * Get information about some {@link PgpContact}s.
      *
@@ -757,9 +776,10 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      * @param progressBar A {@link ProgressBar} which is showing an action progress.
      * @param loaderId    A loader id.
      * @param hasFocus    A value which indicates the view focus.
+     * @return A modified contacts list.
      */
-    private void runUpdatePgpContactsAction(List<PgpContact> pgpContacts, View progressBar,
-                                            int loaderId, boolean hasFocus) {
+    private List<PgpContact> runUpdatePgpContactsAction(List<PgpContact> pgpContacts, View progressBar,
+                                                        int loaderId, boolean hasFocus) {
         if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             progressBar.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
             if (hasFocus) {
@@ -774,6 +794,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 }
             }
         }
+
+        return pgpContacts;
     }
 
     /**
@@ -1036,54 +1058,78 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             showInfoSnackbar(editTextRecipientsTo, getString(R.string.text_must_not_be_empty,
                     getString(R.string.prompt_recipients_to)));
             editTextRecipientsTo.requestFocus();
-        } else if (isEmailValid(editTextRecipientsTo)
-                && isEmailValid(editTextRecipientsCc)
+            return false;
+        }
+
+        if (isEmailValid(editTextRecipientsTo) && isEmailValid(editTextRecipientsCc)
                 && isEmailValid(editTextRecipientsBcc)) {
-            if (TextUtils.isEmpty(editTextEmailSubject.getText().toString())) {
-                showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
-                        getString(R.string.prompt_subject)));
-                editTextEmailSubject.requestFocus();
-            } else if ((attachmentInfoList != null && attachmentInfoList.isEmpty())
-                    && TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
-                showInfoSnackbar(editTextEmailMessage, getString(R.string.sending_message_must_not_be_empty));
-                editTextEmailMessage.requestFocus();
-            } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
-                    MessageEncryptionType.ENCRYPTED) {
-                if (pgpContactsTo.isEmpty()) {
-                    showSnackbar(getView(),
-                            getString(R.string.please_update_information_about_contacts),
-                            getString(R.string.update), Snackbar.LENGTH_LONG,
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                                        getLoaderManager().restartLoader(
-                                                R.id.loader_id_update_info_about_pgp_contacts_to, null,
-                                                CreateMessageFragment.this);
-                                    } else {
-                                        showInfoSnackbar(getView(), getString(R.string
-                                                .internet_connection_is_not_available));
-                                    }
-                                }
-                            });
-                } else return isAllRecipientsHavePGP(true, pgpContactsTo)
-                        && isAllRecipientsHavePGP(true, pgpContactsCc)
-                        && isAllRecipientsHavePGP(true, pgpContactsBcc);
-            } else if (!attachmentInfoList.isEmpty() && isMessageHasExternalStorageUriAttachments()) {
-                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+            if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+                if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) && pgpContactsTo.isEmpty()) {
+                    showUpdateInfoAboutPgpContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_to);
                     return false;
-                } else {
-                    return true;
                 }
+
+                if (!TextUtils.isEmpty(editTextRecipientsCc.getText()) && pgpContactsCc.isEmpty()) {
+                    showUpdateInfoAboutPgpContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_cc);
+                    return false;
+                }
+
+                if (!TextUtils.isEmpty(editTextRecipientsBcc.getText()) && pgpContactsBcc.isEmpty()) {
+                    showUpdateInfoAboutPgpContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_bcc);
+                    return false;
+                }
+
+                if (!isAllRecipientsHavePGP(true, pgpContactsTo)
+                        || !isAllRecipientsHavePGP(true, pgpContactsCc)
+                        || !isAllRecipientsHavePGP(true, pgpContactsBcc)) {
+                    return false;
+                }
+            }
+        } else return false;
+
+        if (TextUtils.isEmpty(editTextEmailSubject.getText().toString())) {
+            showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
+                    getString(R.string.prompt_subject)));
+            editTextEmailSubject.requestFocus();
+            return false;
+        }
+
+        if ((attachmentInfoList != null && attachmentInfoList.isEmpty())
+                && TextUtils.isEmpty(editTextEmailMessage.getText().toString())) {
+            showInfoSnackbar(editTextEmailMessage, getString(R.string.sending_message_must_not_be_empty));
+            editTextEmailMessage.requestFocus();
+            return false;
+        }
+
+        if (attachmentInfoList != null && !attachmentInfoList.isEmpty()
+                && isMessageHasExternalStorageUriAttachments()) {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+                return false;
             } else {
                 return true;
             }
+        } else {
+            return true;
         }
+    }
 
-        return false;
+    private void showUpdateInfoAboutPgpContactsSnackBar(final int loaderId) {
+        showSnackbar(getView(),
+                getString(R.string.please_update_information_about_contacts),
+                getString(R.string.update), Snackbar.LENGTH_LONG,
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                            getLoaderManager().restartLoader(loaderId, null, CreateMessageFragment.this);
+                        } else {
+                            showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available));
+                        }
+                    }
+                });
     }
 
     private boolean isMessageHasExternalStorageUriAttachments() {
