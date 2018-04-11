@@ -152,7 +152,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private ImageButton imageButtonAliases;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
-    private int countOfActiveOperations;
+    private boolean isUpdateInfoAboutToCompleted = true;
+    private boolean isUpdateInfoAboutCcCompleted = true;
+    private boolean isUpdateInfoAboutBccCompleted = true;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
     private int activeRecipientsFieldId;
@@ -431,7 +433,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                     getSnackBar().dismiss();
                 }
 
-                if (countOfActiveOperations == 0) {
+                if (isUpdateInfoAboutToCompleted && isUpdateInfoAboutCcCompleted && isUpdateInfoAboutBccCompleted) {
                     UIUtil.hideSoftInput(getContext(), getView());
                     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
                         if (isAllInformationCorrect()) {
@@ -483,21 +485,21 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
             case R.id.loader_id_update_info_about_pgp_contacts_to:
                 pgpContactsTo.clear();
                 progressBarTo.setVisibility(View.VISIBLE);
-                countOfActiveOperations++;
+                isUpdateInfoAboutToCompleted = false;
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
                         selectOnlyValidEmails(editTextRecipientsTo.getChipAndTokenValues()));
 
             case R.id.loader_id_update_info_about_pgp_contacts_cc:
                 pgpContactsCc.clear();
                 progressBarCc.setVisibility(View.VISIBLE);
-                countOfActiveOperations++;
+                isUpdateInfoAboutCcCompleted = false;
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
                         selectOnlyValidEmails(editTextRecipientsCc.getChipAndTokenValues()));
 
             case R.id.loader_id_update_info_about_pgp_contacts_bcc:
                 pgpContactsBcc.clear();
                 progressBarBcc.setVisibility(View.VISIBLE);
-                countOfActiveOperations++;
+                isUpdateInfoAboutBccCompleted = false;
                 return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
                         selectOnlyValidEmails(editTextRecipientsBcc.getChipAndTokenValues()));
 
@@ -514,6 +516,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_update_info_about_pgp_contacts_to:
+                isUpdateInfoAboutToCompleted = true;
                 pgpContactsTo = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result,
                         progressBarTo, R.string.to);
 
@@ -523,6 +526,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_cc:
+                isUpdateInfoAboutCcCompleted = true;
                 pgpContactsCc = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result,
                         progressBarCc, R.string.cc);
 
@@ -532,6 +536,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_bcc:
+                isUpdateInfoAboutBccCompleted = true;
                 pgpContactsBcc = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result,
                         progressBarBcc, R.string.bcc);
 
@@ -575,17 +580,17 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
         super.handleFailureLoaderResult(loaderId, e);
         switch (loaderId) {
             case R.id.loader_id_update_info_about_pgp_contacts_to:
-                countOfActiveOperations--;
+                isUpdateInfoAboutToCompleted = true;
                 progressBarTo.setVisibility(View.INVISIBLE);
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_cc:
-                countOfActiveOperations--;
+                isUpdateInfoAboutCcCompleted = true;
                 progressBarCc.setVisibility(View.INVISIBLE);
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_bcc:
-                countOfActiveOperations--;
+                isUpdateInfoAboutBccCompleted = true;
                 progressBarBcc.setVisibility(View.INVISIBLE);
                 break;
         }
@@ -697,7 +702,9 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                     pgpContactsTo.clear();
                     pgpContactsCc.clear();
                     pgpContactsBcc.clear();
-                    countOfActiveOperations = 0;
+                    isUpdateInfoAboutToCompleted = true;
+                    isUpdateInfoAboutCcCompleted = true;
+                    isUpdateInfoAboutBccCompleted = true;
                     break;
             }
         }
@@ -752,7 +759,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
      */
     private List<PgpContact> getInfoAboutPgpContacts(UpdateInfoAboutPgpContactsResult result,
                                                      View progressBar, int additionalToastStringId) {
-        countOfActiveOperations--;
         progressBar.setVisibility(View.INVISIBLE);
 
         List<PgpContact> pgpContacts = null;
