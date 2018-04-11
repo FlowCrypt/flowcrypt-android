@@ -61,7 +61,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -131,9 +130,6 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory,
                     folderOfForwardedMessage, forwardedMessage);
-
-            addAdditionalRecipients(mimeMessage, Message.RecipientType.CC, outgoingMessageInfo.getCcPgpContacts());
-            addAdditionalRecipients(mimeMessage, Message.RecipientType.BCC, outgoingMessageInfo.getBccPgpContacts());
 
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -376,6 +372,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         return js.mime_encode(messageText,
                 outgoingMessageInfo.getToPgpContacts(),
+                outgoingMessageInfo.getCcPgpContacts(),
+                outgoingMessageInfo.getBccPgpContacts(),
                 outgoingMessageInfo.getFromPgpContact(),
                 outgoingMessageInfo.getSubject(),
                 null,
@@ -508,29 +506,6 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         return null;
-    }
-
-    /**
-     * Add the additional recipients ({@link Message.RecipientType#CC} or {@link Message.RecipientType#BCC}) to the
-     * {@link Message}.
-     *
-     * @param mimeMessage The message
-     * @param type        The recipients type
-     * @param pgpContacts The list of {@link PgpContact}(s)
-     * @throws MessagingException This error can be thrown when we are trying parse addresses or set recipients to
-     *                            the message.
-     */
-    private void addAdditionalRecipients(MimeMessage mimeMessage, Message.RecipientType type, PgpContact[]
-            pgpContacts) throws MessagingException {
-        if (pgpContacts != null && pgpContacts.length > 0) {
-            String[] recipients = new String[pgpContacts.length];
-            for (int i = 0; i < pgpContacts.length; i++) {
-                PgpContact pgpContact = pgpContacts[i];
-                recipients[i] = pgpContact.getEmail();
-            }
-
-            mimeMessage.setRecipients(type, InternetAddress.parse(TextUtils.join(",", recipients)));
-        }
     }
 
     /**
