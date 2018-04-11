@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.activation.DataHandler;
@@ -60,6 +61,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -129,6 +131,9 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory,
                     folderOfForwardedMessage, forwardedMessage);
+
+            addAdditionalRecipients(mimeMessage, Message.RecipientType.CC, outgoingMessageInfo.getCcPgpContacts());
+            addAdditionalRecipients(mimeMessage, Message.RecipientType.BCC, outgoingMessageInfo.getBccPgpContacts());
 
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -396,12 +401,35 @@ public class SendMessageSyncTask extends BaseSyncTask {
     private void updateContactsLastUseDateTime(Context context) {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-        for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
+        for (PgpContact pgpContact : getAllRecipients()) {
             int updateResult = contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
             if (updateResult == -1) {
                 contactsDaoSource.addRow(context, pgpContact);
             }
         }
+    }
+
+    /**
+     * Generate a list of the all recipients.
+     *
+     * @return A list of the all recipients
+     */
+    private PgpContact[] getAllRecipients() {
+        List<PgpContact> pgpContacts = new ArrayList<>();
+
+        if (outgoingMessageInfo.getToPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getToPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getCcPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getCcPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getBccPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getBccPgpContacts()));
+        }
+
+        return pgpContacts.toArray(new PgpContact[0]);
     }
 
     /**
@@ -414,7 +442,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      */
     private String[] getPubKeys(Context context, Js js, AccountDao accountDao) {
         ArrayList<String> publicKeys = new ArrayList<>();
-        for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
+        for (PgpContact pgpContact : getAllRecipients()) {
             if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
                 publicKeys.add(pgpContact.getPubkey());
             }
@@ -480,6 +508,29 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         return null;
+    }
+
+    /**
+     * Add the additional recipients ({@link Message.RecipientType#CC} or {@link Message.RecipientType#BCC}) to the
+     * {@link Message}.
+     *
+     * @param mimeMessage The message
+     * @param type        The recipients type
+     * @param pgpContacts The list of {@link PgpContact}(s)
+     * @throws MessagingException This error can be thrown when we are trying parse addresses or set recipients to
+     *                            the message.
+     */
+    private void addAdditionalRecipients(MimeMessage mimeMessage, Message.RecipientType type, PgpContact[]
+            pgpContacts) throws MessagingException {
+        if (pgpContacts != null && pgpContacts.length > 0) {
+            String[] recipients = new String[pgpContacts.length];
+            for (int i = 0; i < pgpContacts.length; i++) {
+                PgpContact pgpContact = pgpContacts[i];
+                recipients[i] = pgpContact.getEmail();
+            }
+
+            mimeMessage.setRecipients(type, InternetAddress.parse(TextUtils.join(",", recipients)));
+        }
     }
 
     /**
