@@ -44,10 +44,9 @@
 
                 <TextView
                     android:id="@+id/textViewCheckKeysTitle"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
                     android:gravity="center"
                     android:textColor="@android:color/black"
                     android:textSize="@dimen/default_text_size_medium"
@@ -60,7 +59,6 @@
                     android:layout_gravity="center_vertical"
                     android:background="?selectableItemBackgroundBorderless"
                     android:contentDescription="@string/see_choosing_secure_pass_phrases"
-                    android:padding="@dimen/default_margin_content_small"
                     app:srcCompat="@mipmap/ic_help_grey" />
 
             </LinearLayout>
@@ -102,13 +100,11 @@
 
             <ImageButton
                 android:id="@+id/imageButtonPasswordHint"
-                android:layout_width="@dimen/size_small_image_button"
-                android:layout_height="@dimen/size_small_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/default_margin_small"
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/see_choosing_secure_pass_phrases"
-                android:scaleType="centerCrop"
                 app:srcCompat="@mipmap/ic_help_grey" />
         </LinearLayout>
 
