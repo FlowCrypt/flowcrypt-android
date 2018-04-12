@@ -24,6 +24,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -300,50 +301,59 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
     @Override
     public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
-        if (e instanceof UserRecoverableAuthException) {
-            super.onErrorOccurred(requestCode, errorType,
-                    new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
-            showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-                    Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onManageEmailsListener.onRetryGoogleAuth();
-                        }
-                    });
-        } else {
-            super.onErrorOccurred(requestCode, errorType, e);
-        }
-
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
+                if (e instanceof UserRecoverableAuthException) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
+                    showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+                            Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onManageEmailsListener.onRetryGoogleAuth();
+                                }
+                            });
+                } else {
+                    super.onErrorOccurred(requestCode, errorType, e);
+                }
+
                 footerProgressView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.GONE);
+
+                getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+                cleanCache();
+
+                switch (errorType) {
+                    case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                        showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
+                                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                        loadNextMessages(-1);
+                                    }
+                                });
+                        break;
+                }
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
                 swipeRefreshLayout.setRefreshing(false);
-                break;
-        }
+                switch (errorType) {
+                    case SyncErrorTypes.ACTION_FAILED_SHOW_TOAST:
+                        Toast.makeText(getContext(), R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show();
+                        break;
 
-        emptyView.setVisibility(View.GONE);
-
-        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        cleanCache();
-
-        switch (errorType) {
-            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-                showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
-                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                switch (requestCode) {
-                                    case R.id.syns_request_code_load_next_messages:
-                                    case R.id.syns_request_code_force_load_new_messages:
-                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                                        loadNextMessages(-1);
-                                        break;
-                                }
-                            }
-                        });
+                    case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                        showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
+                                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        onRefresh();
+                                    }
+                                });
+                        break;
+                }
                 break;
         }
     }

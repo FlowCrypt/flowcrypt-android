@@ -300,7 +300,9 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
-                countingIdlingResourceForMessages.decrement();
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 notifyEmailListFragmentAboutError(requestCode, errorType, e);
                 break;
         }

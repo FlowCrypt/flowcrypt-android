@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -51,9 +52,11 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Folder;
+import javax.mail.FolderClosedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.StoreClosedException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
@@ -361,10 +364,12 @@ public class EmailSyncService extends BaseService implements SyncListener {
             updateLocalContactsIfMessagesFromSentFolder(imapFolder,
                     messagesNewCandidates);
             updateAttachmentTable(accountDao, folder, imapFolder, messagesNewCandidates);
-
         } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
+                onError(accountDao, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, key, requestCode);
+            }
         }
     }
 
@@ -505,8 +510,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
      */
     private Collection<Long> generateDeleteCandidates(Collection<Long> messagesUIDInLocalDatabase,
                                                       IMAPFolder imapFolder, javax.mail.Message[] messages) {
-        Collection<Long> uidListDeleteCandidates = new HashSet<>();
-        uidListDeleteCandidates.addAll(messagesUIDInLocalDatabase);
+        Collection<Long> uidListDeleteCandidates = new HashSet<>(messagesUIDInLocalDatabase);
         Collection<Long> uidList = new HashSet<>();
         try {
             for (javax.mail.Message message : messages) {

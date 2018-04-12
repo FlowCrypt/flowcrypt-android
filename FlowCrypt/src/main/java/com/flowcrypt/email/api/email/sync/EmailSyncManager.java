@@ -491,11 +491,7 @@ public class EmailSyncManager {
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
-                    if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                    }
-                }
+                ExceptionUtil.handleError(e);
                 syncTask.handleException(accountDao, e, syncListener);
             }
         }

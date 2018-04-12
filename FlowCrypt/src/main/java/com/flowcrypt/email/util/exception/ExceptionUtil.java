@@ -77,6 +77,10 @@ public class ExceptionUtil {
             if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
+
+            if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
+                return false;
+            }
         }
 
         return true;
