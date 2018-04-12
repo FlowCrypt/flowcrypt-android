@@ -314,4 +314,6 @@ icelanders prefer real sauna</font>
     <string name="cc">Cc</string>
     <string name="bcc">Bcc</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
+    <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again
+        later</string>
 </resources>

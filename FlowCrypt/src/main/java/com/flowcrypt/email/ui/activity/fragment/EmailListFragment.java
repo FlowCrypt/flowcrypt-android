@@ -40,6 +40,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 
 /**
@@ -313,6 +314,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                                     onManageEmailsListener.onRetryGoogleAuth();
                                 }
                             });
+                } else if (e instanceof GoogleAuthException || e.getMessage().equalsIgnoreCase("ServiceDisabled")) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.google_auth_exception_service_disabled)));
                 } else {
                     super.onErrorOccurred(requestCode, errorType, e);
                 }
