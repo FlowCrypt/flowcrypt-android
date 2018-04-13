@@ -128,7 +128,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             } else {
                                 textViewStatusInfo.setText(R.string.no_connection);
                                 UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-                                showRetrySnackbar();
+                                showRetrySnackBar();
                             }
                         } else {
                             UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
@@ -247,17 +247,37 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
         emptyView.setVisibility(View.GONE);
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            if (messageListAdapter.getCount() > 0) {
-                swipeRefreshLayout.setRefreshing(true);
-                refreshMessages();
+            if (onManageEmailsListener.getCurrentFolder() != null) {
+                if (messageListAdapter.getCount() > 0) {
+                    swipeRefreshLayout.setRefreshing(true);
+                    refreshMessages();
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
+
+                    if (messageListAdapter.getCount() == 0) {
+                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                    }
+
+                    loadNextMessages(-1);
+                }
             } else {
                 swipeRefreshLayout.setRefreshing(false);
 
                 if (messageListAdapter.getCount() == 0) {
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                    textViewStatusInfo.setText(R.string.server_unavailable);
+                    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
                 }
 
-                loadNextMessages(-1);
+                showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server),
+                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                setSupportActionBarTitle(getString(R.string.loading));
+                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                ((BaseSyncActivity) getActivity()).updateLabels(R.id
+                                        .syns_request_code_update_label_active, false);
+                            }
+                        });
             }
         } else {
             swipeRefreshLayout.setRefreshing(false);
@@ -359,6 +379,15 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                         break;
                 }
                 break;
+
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
+                if (onManageEmailsListener.getCurrentFolder() == null) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.failed_load_labels_from_email_server)));
+                    setSupportActionBarTitle(null);
+                }
+                break;
         }
     }
 
@@ -452,7 +481,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     /**
      * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
      */
-    private void showRetrySnackbar() {
+    private void showRetrySnackBar() {
         showSnackbar(getView(), getString(R.string.no_connection),
                 getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                     @Override
@@ -461,7 +490,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                             loadNextMessages(-1);
                         } else {
-                            showRetrySnackbar();
+                            showRetrySnackBar();
                         }
                     }
                 });

@@ -203,7 +203,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
-            case R.id.syns_request_code_update_label:
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
                         EmailManagerActivity.this);
                 if (!countingIdlingResourceForLabel.isIdleNow()) {
@@ -305,12 +306,20 @@ public class EmailManagerActivity extends BaseSyncActivity
                 }
                 notifyEmailListFragmentAboutError(requestCode, errorType, e);
                 break;
+
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
+                notifyEmailListFragmentAboutError(requestCode, errorType, e);
+                if (!countingIdlingResourceForLabel.isIdleNow()) {
+                    countingIdlingResourceForLabel.decrement();
+                }
+                break;
         }
     }
 
     @Override
     public void onSyncServiceConnected() {
-        updateLabels(R.id.syns_request_code_update_label);
+        updateLabels(R.id.syns_request_code_update_label_passive, true);
     }
 
     @Override
@@ -811,7 +820,7 @@ public class EmailManagerActivity extends BaseSyncActivity
 
             if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
                 countingIdlingResourceForLabel.increment();
-                updateLabels(R.id.syns_request_code_update_label);
+                updateLabels(R.id.syns_request_code_update_label_passive, true);
             }
 
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);

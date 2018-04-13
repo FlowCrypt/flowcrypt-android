@@ -756,7 +756,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                     case MESSAGE_UPDATE_LABELS:
                         if (emailSyncManager != null && action != null) {
-                            emailSyncManager.updateLabels(action.getOwnerKey(), action.getRequestCode());
+                            emailSyncManager.updateLabels(action.getOwnerKey(), action.getRequestCode(),
+                                    message.arg1 == 1);
                         }
                         break;
 

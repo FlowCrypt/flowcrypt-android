@@ -139,11 +139,13 @@ public class EmailSyncManager {
     /**
      * Run update a folders list.
      *
-     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode    The unique request code for the reply to {@link android.os.Messenger}.
+     * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
      */
-    public void updateLabels(String ownerKey, int requestCode) {
-        updateLabels(ownerKey, requestCode, passiveSyncTaskBlockingQueue);
+    public void updateLabels(String ownerKey, int requestCode, boolean isInBackground) {
+        updateLabels(ownerKey, requestCode,
+                isInBackground ? passiveSyncTaskBlockingQueue : activeSyncTaskBlockingQueue);
     }
 
     /**

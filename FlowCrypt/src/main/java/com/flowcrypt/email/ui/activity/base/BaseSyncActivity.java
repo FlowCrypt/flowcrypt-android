@@ -225,16 +225,17 @@ public abstract class BaseSyncActivity extends BaseActivity {
     /**
      * Run update a folders list.
      *
-     * @param requestCode The unique request code for identify the current action.
+     * @param requestCode    The unique request code for identify the current action.
+     * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
      */
-    public void updateLabels(int requestCode) {
+    public void updateLabels(int requestCode, boolean isInBackground) {
         if (checkServiceBound(isBoundToSyncService)) return;
 
         BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, null);
 
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, 0, 0,
-                action);
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS,
+                isInBackground ? 1 : 0, 0, action);
         message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);

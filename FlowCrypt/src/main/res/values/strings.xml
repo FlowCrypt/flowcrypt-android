@@ -316,4 +316,6 @@ icelanders prefer real sauna</font>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
     <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again
         later</string>
+    <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
+    <string name="server_unavailable">Server unavailable</string>
 </resources>
