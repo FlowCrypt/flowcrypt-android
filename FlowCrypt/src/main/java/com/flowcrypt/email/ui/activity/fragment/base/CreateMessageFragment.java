@@ -577,21 +577,26 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
     @Override
     public void handleFailureLoaderResult(int loaderId, Exception e) {
-        super.handleFailureLoaderResult(loaderId, e);
         switch (loaderId) {
             case R.id.loader_id_update_info_about_pgp_contacts_to:
+                super.handleFailureLoaderResult(loaderId, e);
                 isUpdateInfoAboutToCompleted = true;
                 progressBarTo.setVisibility(View.INVISIBLE);
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_cc:
+                super.handleFailureLoaderResult(loaderId, e);
                 isUpdateInfoAboutCcCompleted = true;
                 progressBarCc.setVisibility(View.INVISIBLE);
                 break;
 
             case R.id.loader_id_update_info_about_pgp_contacts_bcc:
+                super.handleFailureLoaderResult(loaderId, e);
                 isUpdateInfoAboutBccCompleted = true;
                 progressBarBcc.setVisibility(View.INVISIBLE);
+                break;
+
+            case R.id.loader_id_load_email_aliases:
                 break;
         }
     }
