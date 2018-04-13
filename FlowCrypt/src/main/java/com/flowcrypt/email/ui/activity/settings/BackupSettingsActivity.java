@@ -114,7 +114,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                         showNoBackupFoundView();
                     }
                 }
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 break;
 
             case R.id.syns_send_backup_with_private_key_to_key_owner:
@@ -122,7 +124,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 layoutSyncStatus.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutContent);
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 Toast.makeText(this, R.string.backup_was_sent_successfully,
                         Toast.LENGTH_SHORT).show();
                 break;
@@ -134,7 +138,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         switch (requestCode) {
             case R.id.syns_load_private_keys:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 UIUtil.showSnackbar(getRootView(),
                         getString(R.string.error_occurred_while_receiving_private_keys),
                         getString(R.string.retry),
@@ -154,7 +160,9 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                 isPrivateKeySendingNow = false;
                 UIUtil.exchangeViewVisibility(
                         BackupSettingsActivity.this, false, progressBar, layoutSyncStatus);
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 UIUtil.showSnackbar(getRootView(),
                         getString(R.string.backup_was_not_sent),
                         getString(R.string.retry),
