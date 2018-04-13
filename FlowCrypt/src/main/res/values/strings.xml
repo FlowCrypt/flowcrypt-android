@@ -54,7 +54,7 @@
     <string name="your_message_must_be_non_empty">Message should not be empty</string>
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
     <string name="use_another_account">Use another account</string>
-    <string name="reply_all">Reply all</string>
+    <string name="reply_all">Reply All</string>
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Error: could not receive message</string>
     <string name="title_activity_test">TestActivity</string>
@@ -304,9 +304,9 @@ icelanders prefer real sauna</font>
         storage permission</string>
     <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
     <string name="forward">Forward</string>
-    <string name="forward_encrypted">Forward Encrypted</string>
-    <string name="reply_encrypted">Reply Encrypted</string>
-    <string name="reply_all_encrypted">Reply all Encrypted</string>
+    <string name="forward_encrypted">Forward\nEncrypted</string>
+    <string name="reply_encrypted">Reply\nEncrypted</string>
+    <string name="reply_all_encrypted">Reply All\nEncrypted</string>
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
     <string name="cannot_forward_html_emails">Cannot forward HTML emails</string>
     <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
