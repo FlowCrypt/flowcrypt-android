@@ -25,6 +25,7 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -63,6 +64,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        JsBackgroundService.start(this);
 
         if (savedInstanceState != null) {
             this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
