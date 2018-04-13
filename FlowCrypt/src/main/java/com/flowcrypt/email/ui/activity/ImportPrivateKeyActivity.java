@@ -139,7 +139,9 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                     }
                     UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
                 }
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 break;
         }
     }
@@ -161,7 +163,9 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                                         false, progressBarLoadingBackups, layoutContent);
                             }
                         });
-                countingIdlingResource.decrement();
+                if (!countingIdlingResource.isIdleNow()) {
+                    countingIdlingResource.decrement();
+                }
                 break;
         }
     }
