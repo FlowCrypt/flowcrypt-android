@@ -300,10 +300,15 @@ public class KeyStoreCryptoManager {
      * @throws InvalidAlgorithmParameterException
      */
     private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
-            InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, NoSuchPaddingException,
-            IllegalBlockSizeException, IOException {
+            InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
+            try {
+                generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
+            } catch (NullPointerException e) {
+                //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
+                e.printStackTrace();
+                generateKeyIfAndroidVersionLessThenMarshmallow();
+            }
         } else {
             generateKeyIfAndroidVersionLessThenMarshmallow();
         }
