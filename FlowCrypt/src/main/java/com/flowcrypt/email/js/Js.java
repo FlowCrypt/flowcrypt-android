@@ -133,7 +133,11 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public String crypto_key_normalize(String armored_key) {
-        return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
+        try {
+            return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
+        } catch (com.eclipsesource.v8.V8ResultUndefined e) {
+            return "";
+        }
     }
 
     public PgpKey crypto_key_read(String armored_key) {
