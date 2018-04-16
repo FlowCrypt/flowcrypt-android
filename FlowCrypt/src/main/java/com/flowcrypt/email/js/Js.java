@@ -384,7 +384,8 @@ class MeaningfulV8ObjectContainer {
 
     static V8Array getAttributeAsArray(V8Object obj, String k) {
         try {
-            return obj.getArray(k);
+            V8Array a = obj.getArray(k);
+            return a.isUndefined() ? null : a;
         } catch (V8ResultUndefined e) {
             return null;
         }
@@ -392,7 +393,8 @@ class MeaningfulV8ObjectContainer {
 
     static V8Object getAttributeAsObject(V8Object obj, String k) {
         try {
-            return obj.getObject(k);
+            V8Object result = obj.getObject(k);
+            return result.isUndefined() ? null : result;
         } catch (V8ResultUndefined e) {
             return null;
         }
