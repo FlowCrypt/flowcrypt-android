@@ -477,6 +477,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                     isDeleteActionEnable = false;
                     break;
 
+                case DRAFTS:
+                    isMoveToInboxActionEnable = false;
+                    isArchiveActionEnable = false;
+                    isDeleteActionEnable = true;
+                    break;
+
                 default:
                     isMoveToInboxActionEnable = true;
                     isArchiveActionEnable = false;
