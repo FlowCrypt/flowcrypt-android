@@ -287,7 +287,6 @@ icelanders prefer real sauna</font>
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
     <string name="copy">Copy</string>
-    <string name="remove">Remove</string>
     <string name="not_private_key">This is not a private key</string>
     <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
     <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security

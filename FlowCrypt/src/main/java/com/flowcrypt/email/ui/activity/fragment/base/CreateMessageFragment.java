@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -70,7 +68,6 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.PgpContactDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
@@ -113,8 +110,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
     private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
-    private static final int REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG = 105;
-    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 106;
+    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 104;
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -157,7 +153,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
     private boolean isUpdateInfoAboutBccCompleted = true;
     private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
-    private int activeRecipientsFieldId;
 
     public CreateMessageFragment() {
         pgpContactsTo = new ArrayList<>();
@@ -307,50 +302,8 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                 removePgpContactFromRecipientsField(pgpContact, editTextRecipientsBcc, pgpContactsBcc);
                             }
                         }
-
                         break;
                 }
-                break;
-
-            case REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG:
-                PgpContact receivedPgpContact = data != null ?
-                        (PgpContact) data.getParcelableExtra(PgpContactDialogFragment.EXTRA_KEY_PGP_CONTACT) : null;
-
-                switch (resultCode) {
-                    case PgpContactDialogFragment.RESULT_CODE_COPY_EMAIL:
-                        if (receivedPgpContact != null) {
-                            ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(
-                                    Context.CLIPBOARD_SERVICE);
-                            ClipData clip = ClipData.newPlainText(null, receivedPgpContact.getEmail());
-                            if (clipboardManager != null) {
-                                clipboardManager.setPrimaryClip(clip);
-                            }
-                        }
-                        break;
-
-                    case PgpContactDialogFragment.RESULT_CODE_REMOVE_CONTACT:
-                        if (receivedPgpContact != null) {
-                            switch (activeRecipientsFieldId) {
-                                case R.id.editTextRecipientTo:
-                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsTo,
-                                            pgpContactsTo);
-                                    break;
-
-                                case R.id.editTextRecipientCc:
-                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsCc,
-                                            pgpContactsCc);
-                                    break;
-
-                                case R.id.editTextRecipientBcc:
-                                    removePgpContactFromRecipientsField(receivedPgpContact, editTextRecipientsBcc,
-                                            pgpContactsBcc);
-                                    break;
-                            }
-                        }
-                        break;
-                }
-
-                this.activeRecipientsFieldId = 0;
                 break;
 
             case REQUEST_CODE_IMPORT_PUBLIC_KEY:
@@ -683,12 +636,6 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
 
     @Override
     public void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event) {
-        this.activeRecipientsFieldId = nachoTextView.getId();
-        PgpContactDialogFragment pgpContactDialogFragment = PgpContactDialogFragment.newInstance(
-                new PgpContact(chip.getText().toString(), null));
-
-        pgpContactDialogFragment.setTargetFragment(this, REQUEST_CODE_SHOW_PGP_CONTACT_DIALOG);
-        pgpContactDialogFragment.show(getFragmentManager(), PgpContactDialogFragment.class.getSimpleName());
     }
 
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
