@@ -144,7 +144,12 @@ public class EmailWebView extends WebView {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
             builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
-            customTabsIntent.launchUrl(context, uri);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            if (intent.resolveActivity(context.getPackageManager()) != null) {
+                customTabsIntent.launchUrl(context, uri);
+            }
         }
     }
 }
