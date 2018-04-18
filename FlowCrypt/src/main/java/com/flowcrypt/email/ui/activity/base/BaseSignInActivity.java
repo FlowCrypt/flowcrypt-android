@@ -15,6 +15,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -32,17 +33,32 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     protected static final int REQUEST_CODE_SIGN_IN = 10;
     protected static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 11;
 
+    private static final String KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
+            GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity.class);
     /**
      * The main entry point for Google Play services integration.
      */
     protected GoogleApiClient googleApiClient;
     protected boolean isRunSignInWithGmailNeeded;
 
+    protected GoogleSignInAccount currentGoogleSignInAccount;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+        }
+
         initGoogleApiClient();
         initViews();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
     }
 
     @Override

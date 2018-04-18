@@ -30,7 +30,6 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -58,7 +57,6 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
 
     private View progressView;
     private View contentView;
-    private GoogleSignInAccount googleSignInAccount;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -88,15 +86,15 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
             case REQUEST_CODE_SIGN_IN:
                 GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
                 if (googleSignInResult.isSuccess()) {
-                    googleSignInAccount = googleSignInResult.getSignInAccount();
-                    if (googleSignInAccount != null) {
+                    currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
+                    if (currentGoogleSignInAccount != null) {
                         if (new AccountDaoSource().getAccountInformation(this,
-                                googleSignInAccount.getEmail()) == null) {
+                                currentGoogleSignInAccount.getEmail()) == null) {
                             getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
                                     null, this);
                         } else {
                             showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
-                                    googleSignInAccount.getEmail()), Snackbar.LENGTH_LONG);
+                                    currentGoogleSignInAccount.getEmail()), Snackbar.LENGTH_LONG);
                         }
                     } else throw new NullPointerException("GoogleSignInAccount is null!");
                 }
@@ -154,7 +152,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
 
                     case Activity.RESULT_CANCELED:
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-                        this.googleSignInAccount = null;
+                        this.currentGoogleSignInAccount = null;
                         break;
                 }
                 break;
@@ -169,7 +167,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
         switch (id) {
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
-                AccountDao accountDao = new AccountDao(googleSignInAccount.getEmail(),
+                AccountDao accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(),
                         AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
@@ -195,7 +193,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
             case R.id.loader_id_load_private_key_backups_from_email:
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
                 if (keyDetailsList.isEmpty()) {
-                    AccountDao accountDao = new AccountDao(googleSignInAccount.getEmail(),
+                    AccountDao accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(),
                             AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL);
@@ -248,8 +246,8 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
     @NonNull
     private AccountDaoSource saveGmailAccountToDatabase() {
         AccountDaoSource accountDaoSource = new AccountDaoSource();
-        accountDaoSource.addRow(this, googleSignInAccount);
-        accountDaoSource.setActiveAccount(this, googleSignInAccount.getEmail());
+        accountDaoSource.addRow(this, currentGoogleSignInAccount);
+        accountDaoSource.setActiveAccount(this, currentGoogleSignInAccount.getEmail());
         return accountDaoSource;
     }
 }
