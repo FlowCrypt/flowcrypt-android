@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.widget;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.Editable;
@@ -82,6 +84,34 @@ public class PgpContactsNachoTextView extends NachoTextView {
     @Override
     public boolean performClick() {
         return super.performClick();
+    }
+
+    @Override
+    public boolean onTextContextMenuItem(int id) {
+        switch (id) {
+            case android.R.id.paste:
+                StringBuilder stringBuilder = new StringBuilder();
+                ClipboardManager clipboardManager =
+                        (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboardManager != null) {
+                    ClipData clip = clipboardManager.getPrimaryClip();
+                    if (clip != null) {
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            stringBuilder.append(clip.getItemAt(i).coerceToStyledText(getContext()));
+                        }
+                    }
+
+                    List<String> emails = getChipValues();
+                    if (emails.contains(stringBuilder.toString())) {
+                        clipboardManager.setPrimaryClip(ClipData.newPlainText(null, " "));
+                    }
+                }
+
+                return super.onTextContextMenuItem(id);
+
+            default:
+                return super.onTextContextMenuItem(id);
+        }
     }
 
     public void setOnChipLongClickListener(OnChipLongClickListener onChipLongClickListener) {
