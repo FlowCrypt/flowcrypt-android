@@ -103,6 +103,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_top_password_layout"
+                    android:hint="@string/enter_new_pass_phrase"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                     app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
@@ -116,7 +117,6 @@
                         android:layout_height="wrap_content"
                         android:background="@null"
                         android:ems="10"
-                        android:hint="@string/enter_new_pass_phrase"
                         android:inputType="textPassword" />
 
                     <ProgressBar
@@ -210,6 +210,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_top_password_layout"
+                    android:hint="@string/repeat_pass_phrase"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSecond"
                     app:layout_constraintRight_toLeftOf="@+id/guidelineRightSecond"
@@ -223,7 +224,6 @@
                         android:layout_height="wrap_content"
                         android:background="@null"
                         android:ems="10"
-                        android:hint="@string/repeat_pass_phrase"
                         android:inputType="textPassword" />
 
                     <ProgressBar
