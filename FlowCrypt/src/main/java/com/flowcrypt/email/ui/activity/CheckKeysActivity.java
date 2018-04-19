@@ -317,7 +317,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
         if (findViewById(R.id.imageButtonHint) != null) {
             View imageButtonHint = findViewById(R.id.imageButtonHint);
-            if (privateKeyDetailsList.get(0).getBornType() == KeyDetails.Type.EMAIL) {
+            if (privateKeyDetailsList != null && !privateKeyDetailsList.isEmpty()
+                    && privateKeyDetailsList.get(0).getBornType() == KeyDetails.Type.EMAIL) {
                 imageButtonHint.setVisibility(View.VISIBLE);
                 imageButtonHint.setOnClickListener(this);
             } else {
