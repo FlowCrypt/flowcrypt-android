@@ -71,7 +71,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="top|end"
-                    android:background="?selectableItemBackgroundBorderless"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:padding="@dimen/default_margin_content_small"
                     android:visibility="invisible"
                     app:srcCompat="@mipmap/ic_arrow_drop_down_grey"
@@ -122,7 +122,7 @@
                         android:id="@+id/imageButtonAdditionalRecipientsVisibility"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?selectableItemBackgroundBorderless"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:padding="@dimen/default_margin_content_small"
                         app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
                 </LinearLayout>
