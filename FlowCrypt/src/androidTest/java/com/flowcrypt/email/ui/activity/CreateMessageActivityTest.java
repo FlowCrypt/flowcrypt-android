@@ -48,6 +48,7 @@ import static android.support.test.espresso.Espresso.openActionBarOverflowOrOpti
 import static android.support.test.espresso.action.ViewActions.clearText;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -131,8 +132,8 @@ public class CreateMessageActivityTest extends BaseTest {
     public void testEmptyEmailSubject() {
         onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
                 (TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER));
-        onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
-                .check(matches(withText(isEmptyString())));
+        onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed())).perform(scrollTo(), typeText
+                ("subject"), clearText()).check(matches(withText(isEmptyString())));
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.text_must_not_be_empty,
                 InstrumentationRegistry.getTargetContext().getString(R.string.prompt_subject))))
