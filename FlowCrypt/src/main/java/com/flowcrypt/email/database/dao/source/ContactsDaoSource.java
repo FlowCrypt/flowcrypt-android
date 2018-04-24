@@ -5,14 +5,19 @@
 
 package com.flowcrypt.email.database.dao.source;
 
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.provider.BaseColumns;
 
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.EmailAndNamePair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,6 +109,31 @@ public class ContactsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * This method add rows per single transaction. This method must be called in the non-UI thread.
+     *
+     * @param context                   Interface to global information about an application environment.
+     * @param emailAndNamePairArrayList A list of {@link EmailAndNamePair} objects which will be wrote to the database.
+     * @return the number of newly created rows.
+     */
+    public int addRows(Context context, ArrayList<EmailAndNamePair> emailAndNamePairArrayList) {
+        if (emailAndNamePairArrayList != null && !emailAndNamePairArrayList.isEmpty()) {
+            ContentResolver contentResolver = context.getContentResolver();
+            ContentValues[] contentValuesArray = new ContentValues[emailAndNamePairArrayList.size()];
+
+            for (int i = 0; i < emailAndNamePairArrayList.size(); i++) {
+                EmailAndNamePair emailAndNamePair = emailAndNamePairArrayList.get(i);
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(COL_EMAIL, emailAndNamePair.getEmail().toLowerCase());
+                contentValues.put(COL_NAME, emailAndNamePair.getName());
+                contentValues.put(COL_HAS_PGP, false);
+                contentValuesArray[i] = contentValues;
+            }
+
+            return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+        } else return 0;
+    }
+
+    /**
      * Generate a {@link PgpContact} object from the current cursor position.
      *
      * @param cursor The {@link Cursor} which contains information about {@link PgpContact}.
@@ -137,7 +167,7 @@ public class ContactsDaoSource extends BaseDaoSource {
 
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
-                null, COL_EMAIL + " = ?", new String[]{email.toLowerCase()}, null);
+                null, COL_EMAIL + " = ?", new String[]{email}, null);
 
         PgpContact pgpContact = null;
 
@@ -149,6 +179,27 @@ public class ContactsDaoSource extends BaseDaoSource {
         }
 
         return pgpContact;
+    }
+
+    /**
+     * Get all {@link PgpContact}s from the database.
+     *
+     * @return A list of {@link PgpContact} objects.
+     */
+    public List<PgpContact> getAllPgpContacts(Context context) {
+        List<PgpContact> pgpContacts = new ArrayList<>();
+
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(), null, null, null, null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                pgpContacts.add(getCurrentPgpContact(cursor));
+            }
+            cursor.close();
+        }
+
+        return pgpContacts;
     }
 
     /**
@@ -213,6 +264,30 @@ public class ContactsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * This method update cached contacts.
+     *
+     * @param context                   Interface to global information about an application environment.
+     * @param emailAndNamePairArrayList A list of {@link EmailAndNamePair} objects.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] updatePgpContacts(Context context,
+                                                     ArrayList<EmailAndNamePair> emailAndNamePairArrayList)
+            throws RemoteException, OperationApplicationException {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (emailAndNamePairArrayList != null && !emailAndNamePairArrayList.isEmpty()) {
+            ArrayList<ContentProviderOperation> contentProviderOperationList = new ArrayList<>();
+            for (EmailAndNamePair emailAndNamePair : emailAndNamePairArrayList) {
+                contentProviderOperationList.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                        .withValue(COL_NAME, emailAndNamePair.getName())
+                        .withSelection(COL_EMAIL + "= ?", new String[]{emailAndNamePair.getEmail().toLowerCase()})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperationList);
+        } else return new ContentProviderResult[0];
+    }
+
+    /**
      * Update a last use entry of {@link PgpContact}.
      *
      * @param context    Interface to global information about an application environment.
@@ -254,7 +329,7 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.update(getBaseContentUri(),
                     contentValues,
                     COL_EMAIL + " = ?",
-                    new String[]{email.toLowerCase()});
+                    new String[]{email});
         } else return -1;
     }
 
@@ -273,7 +348,7 @@ public class ContactsDaoSource extends BaseDaoSource {
         ContentResolver contentResolver = context.getContentResolver();
         if (contentResolver != null) {
             return contentResolver.delete(getBaseContentUri(),
-                    COL_EMAIL + " = ?", new String[]{email.toLowerCase()});
+                    COL_EMAIL + " = ?", new String[]{email});
         } else return -1;
     }
 }

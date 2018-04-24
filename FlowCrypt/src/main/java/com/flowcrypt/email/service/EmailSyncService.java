@@ -677,7 +677,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
      * Generate a list of {@link EmailAndNamePair} objects from the input message.
      * This information will be retrieved from "to" and "cc" headers.
      *
-     * @param message The input {@link Message}.
+     * @param message The input {@link javax.mail.Message}.
      * @return <tt>{@link List}</tt> of EmailAndNamePair objects, which contains information
      * about
      * emails and names.
