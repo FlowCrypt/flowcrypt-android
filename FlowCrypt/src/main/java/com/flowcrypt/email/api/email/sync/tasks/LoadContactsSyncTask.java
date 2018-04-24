@@ -5,12 +5,14 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.ContentValues;
 import android.os.Messenger;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
@@ -49,6 +51,10 @@ public class LoadContactsSyncTask extends BaseSyncTask {
      */
     public LoadContactsSyncTask(String ownerKey, int requestCode) {
         super(ownerKey, requestCode);
+    }
+
+    public LoadContactsSyncTask() {
+        super(null, 0);
     }
 
     @Override
@@ -114,6 +120,12 @@ public class LoadContactsSyncTask extends BaseSyncTask {
 
                     contactsDaoSource.updatePgpContacts(syncListener.getContext(), updateCandidate);
                     contactsDaoSource.addRows(syncListener.getContext(), newCandidate);
+
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
+
+                    new AccountDaoSource().updateAccountInformation(syncListener.getContext(),
+                            accountDao.getAccount(), contentValues);
                 }
 
                 imapFolder.close(false);

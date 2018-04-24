@@ -43,10 +43,15 @@ public class AccountDao implements Parcelable {
     private String givenName;
     private String familyName;
     private String photoUrl;
+    private boolean isContactsLoaded;
     private AuthCredentials authCredentials;
 
+    public AccountDao(String email, String accountType) {
+        this(email, accountType, null, null, null, null, null, false);
+    }
+
     public AccountDao(String email, String accountType, String displayName, String givenName,
-                      String familyName, String photoUrl, AuthCredentials authCredentials) {
+                      String familyName, String photoUrl, AuthCredentials authCredentials, boolean isContactsLoaded) {
         this.email = email;
         if (TextUtils.isEmpty(accountType)) {
             if (!TextUtils.isEmpty(email)) {
@@ -60,6 +65,7 @@ public class AccountDao implements Parcelable {
         this.familyName = familyName;
         this.photoUrl = photoUrl;
         this.authCredentials = authCredentials;
+        this.isContactsLoaded = isContactsLoaded;
     }
 
     public AccountDao(GoogleSignInAccount googleSignInAccount) {
@@ -85,6 +91,7 @@ public class AccountDao implements Parcelable {
         this.givenName = in.readString();
         this.familyName = in.readString();
         this.photoUrl = in.readString();
+        this.isContactsLoaded = in.readByte() != 0;
         this.authCredentials = in.readParcelable(AuthCredentials.class.getClassLoader());
     }
 
@@ -101,6 +108,7 @@ public class AccountDao implements Parcelable {
         dest.writeString(this.givenName);
         dest.writeString(this.familyName);
         dest.writeString(this.photoUrl);
+        dest.writeByte(this.isContactsLoaded ? (byte) 1 : (byte) 0);
         dest.writeParcelable(this.authCredentials, flags);
     }
 
@@ -135,5 +143,9 @@ public class AccountDao implements Parcelable {
 
     public AuthCredentials getAuthCredentials() {
         return authCredentials;
+    }
+
+    public boolean isContactsLoaded() {
+        return isContactsLoaded;
     }
 }

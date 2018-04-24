@@ -210,8 +210,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 AccountDao accountDao = null;
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
                 if (currentGoogleSignInAccount != null) {
-                    accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE,
-                            null, null, null, null, null);
+                    accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
                 }
                 return accountDao != null ? new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao) : null;
 

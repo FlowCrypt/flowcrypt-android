@@ -11,6 +11,7 @@ import android.util.Log;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
@@ -80,6 +81,7 @@ public class EmailSyncManager {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT);
 
         updateLabels(null, 0, activeSyncTaskBlockingQueue);
+        loadContactsInfoIfNeed();
     }
 
     /**
@@ -92,6 +94,7 @@ public class EmailSyncManager {
         if (isResetNeeded) {
             resetSync();
             updateLabels(null, 0, activeSyncTaskBlockingQueue);
+            loadContactsInfoIfNeed();
         }
 
         if (!isThreadAlreadyWork(activeSyncTaskRunnableFuture)) {
@@ -162,6 +165,21 @@ public class EmailSyncManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Load contacts info from the SENT folder.
+     */
+    public void loadContactsInfoIfNeed() {
+        if (accountDao != null && !accountDao.isContactsLoaded()) {
+            //we need to update labels before we can use the SENT folder for retrieve contacts
+            updateLabels(null, 0, passiveSyncTaskBlockingQueue);
+            try {
+                passiveSyncTaskBlockingQueue.put(new LoadContactsSyncTask());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
