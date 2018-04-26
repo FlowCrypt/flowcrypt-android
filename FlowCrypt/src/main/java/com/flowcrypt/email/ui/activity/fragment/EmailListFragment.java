@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -33,7 +34,6 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
@@ -513,7 +513,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
      * Try to load a new messages from an IMAP server.
      */
     private void refreshMessages() {
-        ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
+        onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
         baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
@@ -534,7 +534,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             footerProgressView.setVisibility(View.VISIBLE);
             isNewMessagesLoadingNow = true;
             lastCalledPositionForLoadMore = totalItemsCount;
-            ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
+            onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
             baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
                     onManageEmailsListener.getCurrentFolder(), totalItemsCount);
         } else {
@@ -576,5 +576,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
         Folder getCurrentFolder();
 
         void onRetryGoogleAuth();
+
+        CountingIdlingResource getCountingIdlingResourceForMessages();
     }
 }

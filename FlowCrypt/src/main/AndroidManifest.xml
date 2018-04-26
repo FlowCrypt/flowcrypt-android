@@ -164,6 +164,10 @@
             android:name=".ui.activity.CreatePrivateKeyActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.SearchMessagesActivity"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
