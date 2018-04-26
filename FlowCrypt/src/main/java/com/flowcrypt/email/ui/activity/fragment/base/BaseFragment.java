@@ -87,6 +87,12 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
         } else return null;
     }
 
+    public void setSupportActionBarTitle(String title) {
+        if (((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(title);
+        }
+    }
+
     /**
      * This method returns information about an availability of a "back press action" at the
      * current moment.

@@ -32,6 +32,7 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_EMAIL" />
             </intent-filter>
         </activity>
 
@@ -46,7 +47,38 @@
 
         <activity
             android:name=".ui.activity.CreateMessageActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <!--Handle the clicks on email links in a browser-->
+                <action android:name="android.intent.action.VIEW" />
+                <data android:scheme="mailto" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+
+            <intent-filter>
+                <!--Send a message to someone specified by the data. See RFC 6068 fro more details.
+                 It does not support any attachments-->
+                <action android:name="android.intent.action.SENDTO" />
+                <data android:scheme="mailto" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <!--Deliver some data to someone else. The sharing function with support the attachments-->
+                <action android:name="android.intent.action.SEND" />
+                <data android:mimeType="*/*" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <!--Deliver some multiple data to someone else. The sharing function with support the attachments-->
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <data android:mimeType="*/*" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.activity.CreateOrImportKeyActivity"

@@ -11,9 +11,6 @@ import com.flowcrypt.email.js.tasks.DecryptRawMimeMessageJsTask;
 import com.flowcrypt.email.js.tasks.JsTask;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
 
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
@@ -221,11 +218,7 @@ public class JsInBackgroundManager {
                 Log.d(TAG, "The task = " + jsTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
-                    if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                    }
-                }
+                ExceptionUtil.handleError(e);
                 jsTask.handleException(e, jsListener);
             }
         }

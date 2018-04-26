@@ -43,11 +43,16 @@ import org.apache.commons.io.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -71,6 +76,7 @@ import javax.mail.util.ByteArrayDataSource;
  */
 
 public class EmailUtil {
+    public static final String PATTERN_FORWARDED_DATE = "EEE, MMM d, yyyy HH:mm:ss";
     private static final String HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm";
 
     /**
@@ -403,5 +409,45 @@ public class EmailUtil {
             }
         }
         return true;
+    }
+
+    /**
+     * Prepare the input HTML to show the user a viewport option.
+     *
+     * @return A generated HTML page which will be more comfortable for user.
+     */
+    @NonNull
+    public static String prepareViewportHtml(String incomingHtml) {
+        String body;
+        if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
+            Pattern patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL);
+            Matcher matcherBody = patternBody.matcher(incomingHtml);
+            if (matcherBody.find()) {
+                body = matcherBody.group();
+            } else {
+                body = "<body>" + incomingHtml + "</body>";
+            }
+        } else {
+            body = "<body>" + incomingHtml + "</body>";
+        }
+
+        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
+                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
+                " 100% !important;}</style></head>" + body + "</html>";
+    }
+
+    /**
+     * Prepare a formatted date string for a forwarded message. For example <code>Tue, Apr 3, 2018 at 3:07 PM.</code>
+     *
+     * @return A generated formatted date string.
+     */
+    @NonNull
+    public static String prepareDateForForwardedMessage(Date date) {
+        if (date == null) {
+            return "";
+        }
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN_FORWARDED_DATE, Locale.US);
+        return simpleDateFormat.format(date);
     }
 }

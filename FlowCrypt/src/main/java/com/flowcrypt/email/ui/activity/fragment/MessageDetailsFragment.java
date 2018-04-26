@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
@@ -69,8 +71,6 @@ import com.flowcrypt.email.util.UIUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This fragment describe details of some message.
@@ -93,6 +93,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private View layoutContent;
     private View imageButtonReplyAll;
     private View progressBarActionRunning;
+    private View layoutMessageContainer;
+    private View layoutReplyButtons;
 
     private java.text.DateFormat dateFormat;
     private IncomingMessageInfo incomingMessageInfo;
@@ -106,6 +108,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     private boolean isMoveToInboxActionEnable;
     private OnActionListener onActionListener;
     private AttachmentInfo lastClickedAttachmentInfo;
+    private MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
+    private ArrayList<AttachmentInfo> attachmentInfoList;
 
     public MessageDetailsFragment() {
     }
@@ -156,7 +160,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                     case Activity.RESULT_OK:
                         getBaseActivity().restartJsService();
                         Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageParts);
+                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageContainer);
                         getBaseActivity().decryptMessage(R.id.js_decrypt_message,
                                 generalMessageDetails.getRawMessageWithoutAttachments());
                         break;
@@ -190,7 +194,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     @Override
     public View getContentView() {
-        return layoutMessageParts;
+        return layoutMessageContainer;
     }
 
     @Override
@@ -237,8 +241,26 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.layoutReplyButton:
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.REPLY, messageEncryptionType));
+                break;
+
             case R.id.imageButtonReplyAll:
-                runSecurityReplyActivity();
+            case R.id.layoutReplyAllButton:
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.REPLY_ALL, messageEncryptionType));
+                break;
+
+            case R.id.layoutForwardButton:
+                if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                    Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
+                }
+                startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
+                        MessageType.FORWARD, messageEncryptionType));
                 break;
         }
     }
@@ -273,7 +295,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             case R.id.syns_request_archive_message:
             case R.id.syns_request_delete_message:
             case R.id.syns_request_move_message_to_inbox:
-                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageParts);
+                UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageContainer);
                 showSnackbar(getView(), e.getMessage(),
                         getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                             @Override
@@ -329,8 +351,9 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             getActivity().invalidateOptionsMenu();
         }
         incomingMessageInfo.setFolder(folder);
+        incomingMessageInfo.setUid(generalMessageDetails.getUid());
         updateMessageBody();
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageParts);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageContainer);
     }
 
     /**
@@ -415,8 +438,8 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             attachmentInfoList.add(attachmentInfo);
         }
 
-        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
-                incomingMessageInfo, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+        startActivity(CreateMessageActivity.generateIntent(getContext(),
+                incomingMessageInfo, MessageType.NEW, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
                         .setIsFromFieldEditEnable(false)
                         .setIsToFieldEditEnable(false)
                         .setIsSubjectEditEnable(false)
@@ -452,6 +475,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 case TRASH:
                     isMoveToInboxActionEnable = true;
                     isDeleteActionEnable = false;
+                    break;
+
+                case DRAFTS:
+                    isMoveToInboxActionEnable = false;
+                    isArchiveActionEnable = false;
+                    isDeleteActionEnable = true;
                     break;
 
                 default:
@@ -505,30 +534,14 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         }
     }
 
-    /**
-     * Run a screen where the user can start write a reply.
-     */
-    private void runSecurityReplyActivity() {
-        MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
-
-        for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
-            if (messagePart instanceof MessagePartPgpPublicKey
-                    || messagePart instanceof MessagePartPgpMessage) {
-                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-                break;
-            }
-        }
-
-        startActivity(CreateMessageActivity.generateIntent(getContext(), generalMessageDetails.getEmail(),
-                incomingMessageInfo, messageEncryptionType));
-    }
-
     private void initViews(View view) {
         textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
         textViewDate = view.findViewById(R.id.textViewDate);
         textViewSubject = view.findViewById(R.id.textViewSubject);
         viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
         layoutMessageParts = view.findViewById(R.id.layoutMessageParts);
+        layoutMessageContainer = view.findViewById(R.id.layoutMessageContainer);
+        layoutReplyButtons = view.findViewById(R.id.layoutReplyButtons);
         progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
         layoutContent = view.findViewById(R.id.layoutContent);
@@ -555,7 +568,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
 
     private void showAttachmentsIfTheyExist() {
         if (generalMessageDetails != null && generalMessageDetails.isMessageHasAttachment()) {
-            List<AttachmentInfo> attachmentInfoList = new AttachmentDaoSource()
+            attachmentInfoList = new AttachmentDaoSource()
                     .getAttachmentInfoList(getContext(), generalMessageDetails.getEmail(),
                             generalMessageDetails.getLabel(), generalMessageDetails.getUid());
             LayoutInflater layoutInflater = LayoutInflater.from(getContext());
@@ -602,11 +615,16 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
             layoutParams.setMargins(margin, 0, margin, 0);
             emailWebView.setLayoutParams(layoutParams);
 
-            emailWebView.loadDataWithBaseURL(null, prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+            emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
                     "text/html",
                     StandardCharsets.UTF_8.displayName(), null);
 
             layoutMessageParts.addView(emailWebView);
+            emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
+                public void onPageFinished() {
+                    updateReplyButtons();
+                }
+            });
         } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
             boolean isFirstMessagePartIsText = true;
             for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
@@ -614,6 +632,7 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 if (messagePart != null) {
                     switch (messagePart.getMessagePartType()) {
                         case PGP_MESSAGE:
+                            messageEncryptionType = MessageEncryptionType.ENCRYPTED;
                             layoutMessageParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart,
                                     layoutInflater));
                             break;
@@ -638,34 +657,50 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
                 }
                 isFirstMessagePartIsText = false;
             }
+            updateReplyButtons();
         } else {
             layoutMessageParts.removeAllViews();
+            updateReplyButtons();
         }
     }
 
     /**
-     * Prepare the input HTML to show the user a viewport option.
-     *
-     * @return A generated HTML page which will be more comfortable for user.
+     * Update the reply buttons layout depending on the {@link MessageEncryptionType}
      */
-    @NonNull
-    private String prepareViewportHtml(String incomingHtml) {
-        String body;
-        if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
-            Pattern patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL);
-            Matcher matcherBody = patternBody.matcher(incomingHtml);
-            if (matcherBody.find()) {
-                body = matcherBody.group();
-            } else {
-                body = "<body>" + incomingHtml + "</body>";
-            }
-        } else {
-            body = "<body>" + incomingHtml + "</body>";
-        }
+    private void updateReplyButtons() {
+        if (layoutReplyButtons != null) {
+            ImageView imageViewReply = layoutReplyButtons.findViewById(R.id.imageViewReply);
+            ImageView imageViewReplyAll = layoutReplyButtons.findViewById(R.id.imageViewReplyAll);
+            ImageView imageViewForward = layoutReplyButtons.findViewById(R.id.imageViewForward);
 
-        return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
-                "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
-                " 100% !important;}</style></head>" + body + "</html>";
+            TextView textViewReply = layoutReplyButtons.findViewById(R.id.textViewReply);
+            TextView textViewReplyAll = layoutReplyButtons.findViewById(R.id.textViewReplyAll);
+            TextView textViewForward = layoutReplyButtons.findViewById(R.id.textViewForward);
+
+            if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                imageViewReply.setImageResource(R.mipmap.ic_reply_green);
+                imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green);
+                imageViewForward.setImageResource(R.mipmap.ic_forward_green);
+
+                textViewReply.setText(R.string.reply_encrypted);
+                textViewReplyAll.setText(R.string.reply_all_encrypted);
+                textViewForward.setText(R.string.forward_encrypted);
+            } else {
+                imageViewReply.setImageResource(R.mipmap.ic_reply_red);
+                imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red);
+                imageViewForward.setImageResource(R.mipmap.ic_forward_red);
+
+                textViewReply.setText(R.string.reply);
+                textViewReplyAll.setText(R.string.reply_all);
+                textViewForward.setText(R.string.forward);
+            }
+
+            layoutReplyButtons.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
+            layoutReplyButtons.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
+            layoutReplyButtons.findViewById(R.id.layoutForwardButton).setOnClickListener(this);
+
+            layoutReplyButtons.setVisibility(View.VISIBLE);
+        }
     }
 
     /**

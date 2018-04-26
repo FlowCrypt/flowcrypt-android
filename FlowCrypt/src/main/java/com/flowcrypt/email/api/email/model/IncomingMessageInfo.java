@@ -36,40 +36,49 @@ public class IncomingMessageInfo extends MessageInfo {
             return new IncomingMessageInfo[size];
         }
     };
-
+    private int uid;
     private ArrayList<String> from;
     private ArrayList<String> to;
+    private ArrayList<String> cc;
+    private ArrayList<AttachmentInfo> attachmentInfoList;
     private Date receiveDate;
     private String originalRawMessageWithoutAttachments;
     private List<MessagePart> messageParts;
     private Folder folder;
     private String htmlMessage;
+    private boolean isPlainTextExists;
 
     public IncomingMessageInfo() {
     }
 
-    public IncomingMessageInfo(Parcel in) {
+    protected IncomingMessageInfo(Parcel in) {
         super(in);
+        this.uid = in.readInt();
         this.from = in.createStringArrayList();
         this.to = in.createStringArrayList();
+        this.cc = in.createStringArrayList();
+        this.attachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
         long tmpReceiveDate = in.readLong();
         this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
         this.originalRawMessageWithoutAttachments = in.readString();
         this.messageParts = in.createTypedArrayList(MessagePart.CREATOR);
         this.folder = in.readParcelable(Folder.class.getClassLoader());
         this.htmlMessage = in.readString();
+        this.isPlainTextExists = in.readByte() != 0;
     }
 
     @Override
     public String toString() {
         return "IncomingMessageInfo{" +
                 "from=" + from +
-                "to=" + to +
+                ", to=" + to +
+                ", cc=" + cc +
                 ", receiveDate=" + receiveDate +
                 ", originalRawMessageWithoutAttachments='" + originalRawMessageWithoutAttachments + '\'' +
                 ", messageParts=" + messageParts +
                 ", folder=" + folder +
-                ", htmlMessage=" + htmlMessage +
+                ", htmlMessage='" + htmlMessage + '\'' +
+                ", isPlainTextExists=" + isPlainTextExists +
                 "} " + super.toString();
     }
 
@@ -81,13 +90,17 @@ public class IncomingMessageInfo extends MessageInfo {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
+        dest.writeInt(this.uid);
         dest.writeStringList(this.from);
         dest.writeStringList(this.to);
+        dest.writeStringList(this.cc);
+        dest.writeTypedList(this.attachmentInfoList);
         dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
         dest.writeString(this.originalRawMessageWithoutAttachments);
         dest.writeTypedList(this.messageParts);
         dest.writeParcelable(this.folder, flags);
-        dest.writeString(htmlMessage);
+        dest.writeString(this.htmlMessage);
+        dest.writeByte(this.isPlainTextExists ? (byte) 1 : (byte) 0);
     }
 
     /**
@@ -144,11 +157,43 @@ public class IncomingMessageInfo extends MessageInfo {
         this.to = to;
     }
 
+    public ArrayList<String> getCc() {
+        return cc;
+    }
+
+    public void setCc(ArrayList<String> cc) {
+        this.cc = cc;
+    }
+
     public String getHtmlMessage() {
         return htmlMessage;
     }
 
     public void setHtmlMessage(String htmlMessage) {
         this.htmlMessage = htmlMessage;
+    }
+
+    public boolean isPlainTextExists() {
+        return isPlainTextExists;
+    }
+
+    public void setPlainTextExists(boolean plainTextExists) {
+        isPlainTextExists = plainTextExists;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public ArrayList<AttachmentInfo> getAttachmentInfoList() {
+        return attachmentInfoList;
+    }
+
+    public void setAttachmentInfoList(ArrayList<AttachmentInfo> attachmentInfoList) {
+        this.attachmentInfoList = attachmentInfoList;
     }
 }

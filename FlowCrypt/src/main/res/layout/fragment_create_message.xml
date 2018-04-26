@@ -4,6 +4,8 @@
   -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
@@ -30,6 +32,7 @@
             android:id="@+id/layoutForm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
             android:orientation="vertical">
 
             <FrameLayout
@@ -40,26 +43,39 @@
                     android:id="@+id/spinnerFrom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:dropDownVerticalOffset="@dimen/default_height_for_click"
+                    android:dropDownVerticalOffset="@dimen/drop_down_vertical_offset_spinner_from"
                     android:visibility="invisible" />
 
                 <android.support.design.widget.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:hint="@string/from">
 
                     <EditText
                         android:id="@+id/editTextFrom"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?android:attr/selectableItemBackground"
+                        android:background="@android:color/transparent"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="@string/from"
                         android:inputType="none"
+                        android:longClickable="false"
+                        android:paddingEnd="@dimen/drop_down_size"
                         android:paddingTop="@dimen/default_margin_medium" />
 
                 </android.support.design.widget.TextInputLayout>
+
+                <ImageButton
+                    android:id="@+id/imageButtonAliases"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/default_margin_content_small"
+                    android:visibility="invisible"
+                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey"
+                    tools:visibility="visible" />
             </FrameLayout>
 
             <FrameLayout
@@ -68,18 +84,18 @@
 
                 <android.support.design.widget.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
+                    android:hint="@string/prompt_recipients_to"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
-                        android:id="@+id/editTextRecipient"
+                        android:id="@+id/editTextRecipientTo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
                         android:completionThreshold="2"
-                        android:hint="@string/prompt_recipient"
-                        android:paddingEnd="@dimen/size_of_small_progressbar"
-                        android:paddingTop="@dimen/default_margin_medium"
+                        android:paddingEnd="@dimen/padding_recipients_to"
+                        android:paddingTop="@dimen/default_margin_small"
                         android:shrinkColumns="0, true">
 
                         <requestFocus />
@@ -87,8 +103,92 @@
 
                 </android.support.design.widget.TextInputLayout>
 
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:orientation="horizontal">
+
+                    <ProgressBar
+                        android:id="@+id/progressBarTo"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="@dimen/size_of_small_progressbar"
+                        android:layout_height="@dimen/size_of_small_progressbar"
+                        android:layout_gravity="center_vertical"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <ImageButton
+                        android:id="@+id/imageButtonAdditionalRecipientsVisibility"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:padding="@dimen/default_margin_content_small"
+                        app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutCc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
+                    android:layout_width="match_parent"
+                    android:hint="@string/prompt_recipients_cc"
+                    android:layout_height="wrap_content">
+
+                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
+                        android:id="@+id/editTextRecipientCc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:completionThreshold="2"
+                        android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:paddingTop="@dimen/default_margin_small"
+                        android:shrinkColumns="0, true" />
+
+                </android.support.design.widget.TextInputLayout>
+
                 <ProgressBar
-                    android:id="@+id/progressBarCheckContactsDetails"
+                    android:id="@+id/progressBarCc"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="@dimen/size_of_small_progressbar"
+                    android:layout_height="@dimen/size_of_small_progressbar"
+                    android:layout_gravity="center_vertical|end"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutBcc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <android.support.design.widget.TextInputLayout
+                    style="@style/AppWidget.TextInputLayout.GreyBottomLine"
+                    android:layout_width="match_parent"
+                    android:hint="@string/prompt_recipients_bcc"
+                    android:layout_height="wrap_content">
+
+                    <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
+                        android:id="@+id/editTextRecipientBcc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:completionThreshold="2"
+                        android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:paddingTop="@dimen/default_margin_small"
+                        android:shrinkColumns="0, true" />
+
+                </android.support.design.widget.TextInputLayout>
+
+                <ProgressBar
+                    android:id="@+id/progressBarBcc"
                     style="?android:attr/progressBarStyleSmall"
                     android:layout_width="@dimen/size_of_small_progressbar"
                     android:layout_height="@dimen/size_of_small_progressbar"
@@ -99,6 +199,7 @@
 
             <android.support.design.widget.TextInputLayout
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
+                android:hint="@string/prompt_subject"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -107,10 +208,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:hint="@string/prompt_subject"
                     android:inputType="textEmailSubject|textCapSentences|textAutoCorrect"
                     android:maxLines="1"
-                    android:paddingTop="@dimen/default_margin_medium" />
+                    android:paddingTop="@dimen/default_margin_content" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -118,6 +218,7 @@
                 android:id="@+id/textInputLayoutEmailMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/prompt_compose_security_email"
                 android:background="@drawable/bg_bottom_line_transparent">
 
                 <android.support.design.widget.TextInputEditText
@@ -125,9 +226,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:hint="@string/prompt_compose_security_email"
                     android:inputType="textCapSentences|textMultiLine|textAutoCorrect"
-                    android:paddingTop="@dimen/default_margin_medium" />
+                    android:paddingTop="@dimen/default_margin_small" />
 
             </android.support.design.widget.TextInputLayout>
 

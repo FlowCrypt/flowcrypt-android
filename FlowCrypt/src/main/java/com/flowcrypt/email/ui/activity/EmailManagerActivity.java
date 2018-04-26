@@ -14,8 +14,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -86,6 +88,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     private Folder folder;
     private ActionManager actionManager;
 
+    private CountingIdlingResource countingIdlingResourceForMessages;
+    private CountingIdlingResource countingIdlingResourceForLabel;
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private LinearLayout accountManagementLayout;
@@ -127,7 +131,11 @@ public class EmailManagerActivity extends BaseSyncActivity
         } else {
             finish();
         }
-
+        countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                (EmailManagerActivity.class), BuildConfig.DEBUG);
+        countingIdlingResourceForLabel = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+                (EmailManagerActivity.class), BuildConfig.DEBUG);
+        countingIdlingResourceForLabel.increment();
         initViews();
     }
 
@@ -195,18 +203,28 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
-            case R.id.syns_request_code_update_label:
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
                 getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
                         EmailManagerActivity.this);
+                if (!countingIdlingResourceForLabel.isIdleNow()) {
+                    countingIdlingResourceForLabel.decrement();
+                }
                 break;
 
             case R.id.syns_request_code_load_next_messages:
                 refreshFoldersInfoFromCache();
                 onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
                 onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 break;
         }
     }
@@ -283,14 +301,25 @@ public class EmailManagerActivity extends BaseSyncActivity
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
                 notifyEmailListFragmentAboutError(requestCode, errorType, e);
+                break;
+
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
+                notifyEmailListFragmentAboutError(requestCode, errorType, e);
+                if (!countingIdlingResourceForLabel.isIdleNow()) {
+                    countingIdlingResourceForLabel.decrement();
+                }
                 break;
         }
     }
 
     @Override
     public void onSyncServiceConnected() {
-        updateLabels(R.id.syns_request_code_update_label);
+        updateLabels(R.id.syns_request_code_update_label_passive, true);
     }
 
     @Override
@@ -381,8 +410,8 @@ public class EmailManagerActivity extends BaseSyncActivity
                         MenuItem mailLabels = navigationView.getMenu().findItem(R.id.mailLabels);
                         mailLabels.getSubMenu().clear();
 
-                        for (Folder s : foldersManager.getServerFolders()) {
-                            mailLabels.getSubMenu().add(s.getFolderAlias());
+                        for (String label : getSortedServerFolders()) {
+                            mailLabels.getSubMenu().add(label);
                         }
 
                         for (Folder s : foldersManager.getCustomLabels()) {
@@ -397,6 +426,11 @@ public class EmailManagerActivity extends BaseSyncActivity
                         }
 
                         updateEmailsListFragmentAfterFolderChange();
+                    } else {
+                        Folder newestFolderInfo = foldersManager.getFolderByAlias(folder.getFolderAlias());
+                        if (newestFolderInfo != null) {
+                            folder = newestFolderInfo;
+                        }
                     }
                 }
                 break;
@@ -412,7 +446,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonCompose:
-                startActivity(CreateMessageActivity.generateIntent(this, accountDao.getEmail(), null,
+                startActivity(CreateMessageActivity.generateIntent(this, null,
                         MessageEncryptionType.ENCRYPTED));
                 break;
 
@@ -451,6 +485,58 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResourceForMessages() {
+        return countingIdlingResourceForMessages;
+    }
+
+    @VisibleForTesting
+    public CountingIdlingResource getCountingIdlingResourceForLabel() {
+        return countingIdlingResourceForLabel;
+    }
+
+    /**
+     * Sort the server folders for a better user experience.
+     *
+     * @return The sorted labels list.
+     */
+    private String[] getSortedServerFolders() {
+        List<Folder> folders = foldersManager.getServerFolders();
+        int foldersCount = folders.size();
+        String[] serverFolders = new String[foldersCount];
+
+        Folder inbox, spam, trash;
+        inbox = foldersManager.getFolderInbox();
+        spam = foldersManager.getFolderSpam();
+        trash = foldersManager.getFolderTrash();
+
+        if (inbox != null) {
+            folders.remove(inbox);
+            serverFolders[0] = inbox.getFolderAlias();
+        }
+
+        if (trash != null) {
+            folders.remove(trash);
+            serverFolders[folders.size() + 1] = trash.getFolderAlias();
+        }
+
+        if (spam != null) {
+            folders.remove(spam);
+            serverFolders[folders.size() + 1] = spam.getFolderAlias();
+        }
+
+        for (int i = 0; i < folders.size(); i++) {
+            Folder s = folders.get(i);
+            if (inbox == null) {
+                serverFolders[i] = s.getFolderAlias();
+            } else {
+                serverFolders[i + 1] = s.getFolderAlias();
+            }
+        }
+
+        return serverFolders;
     }
 
     private void refreshFoldersInfoFromCache() {
@@ -733,7 +819,8 @@ public class EmailManagerActivity extends BaseSyncActivity
             super.onDrawerOpened(drawerView);
 
             if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
-                updateLabels(R.id.syns_request_code_update_label);
+                countingIdlingResourceForLabel.increment();
+                updateLabels(R.id.syns_request_code_update_label_passive, true);
             }
 
             getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);

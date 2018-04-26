@@ -12,92 +12,98 @@
     tools:context="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment">
 
     <com.flowcrypt.email.ui.widget.NonLockingScrollView
+        android:id="@+id/nonLockingScrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <android.support.constraint.ConstraintLayout
+        <LinearLayout
             android:id="@+id/layoutContent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textViewSenderAddress"
-                android:layout_width="0dp"
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/layoutHeader"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/gray"
-                android:textSize="@dimen/default_text_size_big"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                app:layout_constraintRight_toLeftOf="@+id/textViewDate"
-                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
-                app:layout_goneMarginLeft="@dimen/default_margin_medium"
-                tools:text="sender@flowcrypt.com" />
+                android:layout_marginLeft="@dimen/default_margin_medium"
+                android:layout_marginRight="@dimen/default_margin_medium"
+                android:layout_marginTop="@dimen/margin_top_bottom_message">
 
-            <ImageButton
-                android:id="@+id/imageButtonReplyAll"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/reply_all"
-                android:visibility="gone"
-                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
-                app:layout_goneMarginRight="@dimen/default_margin_medium"
-                app:srcCompat="@mipmap/ic_action_name"
-                tools:visibility="visible" />
+                <TextView
+                    android:id="@+id/textViewSenderAddress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/gray"
+                    android:textSize="@dimen/default_text_size_big"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@+id/textViewDate"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_goneMarginLeft="@dimen/default_margin_medium"
+                    tools:text="sender@flowcrypt.com" />
 
-            <TextView
-                android:id="@+id/textViewSubject"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/default_margin_medium"
-                android:layout_marginTop="@dimen/margin_top_message_subject"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@color/gray"
-                android:textSize="@dimen/default_text_size_medium"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                app:layout_constraintRight_toLeftOf="@+id/textViewDate"
-                app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
-                app:layout_goneMarginLeft="@dimen/default_margin_medium"
-                tools:text="Lorem ipsum subject subject subject subject subject" />
+                <ImageButton
+                    android:id="@+id/imageButtonReplyAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:contentDescription="@string/reply_all"
+                    android:visibility="gone"
+                    app:layout_constraintRight_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_goneMarginRight="@dimen/default_margin_medium"
+                    app:srcCompat="@mipmap/ic_action_name"
+                    tools:visibility="visible" />
 
-            <TextView
-                android:id="@+id/textViewDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/default_margin_medium"
-                android:textColor="@color/gray"
-                android:textSize="@dimen/default_text_size_medium"
-                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toTopOf="@+id/textViewSubject"
-                tools:text="1:05 PM" />
+                <TextView
+                    android:id="@+id/textViewSubject"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/default_margin_medium"
+                    android:layout_marginTop="@dimen/margin_top_message_subject"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textColor="@color/gray"
+                    android:textSize="@dimen/default_text_size_medium"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@+id/textViewDate"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
+                    app:layout_goneMarginLeft="@dimen/default_margin_medium"
+                    tools:text="Lorem ipsum subject subject subject subject subject" />
+
+                <TextView
+                    android:id="@+id/textViewDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/default_margin_medium"
+                    android:textColor="@color/gray"
+                    android:textSize="@dimen/default_text_size_medium"
+                    app:layout_constraintRight_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textViewSubject"
+                    tools:text="1:05 PM" />
+
+            </android.support.constraint.ConstraintLayout>
 
             <View
                 android:id="@+id/layoutFooterOfHeader"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_gravity="center"
                 android:layout_marginTop="@dimen/default_margin_medium"
                 android:background="@color/aluminum"
                 android:visibility="gone"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewSubject"
                 tools:visibility="visible" />
 
             <FrameLayout
                 android:id="@+id/layoutMessagePartsContainer"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_marginTop="@dimen/default_margin_content_small"
-                android:minHeight="@dimen/min_height_layout_message_parts"
-                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toBottomOf="@+id/layoutFooterOfHeader">
+                android:layout_weight="1">
 
                 <ProgressBar
                     android:id="@id/viewIdProgressView"
@@ -115,37 +121,34 @@
                     android:visibility="gone" />
 
                 <LinearLayout
-                    android:id="@+id/layoutMessageParts"
+                    android:id="@+id/layoutMessageContainer"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:paddingBottom="@dimen/default_margin_small"
-                    android:paddingTop="@dimen/default_margin_small" />
+                    android:paddingTop="@dimen/default_margin_small"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/layoutMessageParts"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingBottom="@dimen/default_margin_small"
+                        android:paddingTop="@dimen/default_margin_small" />
+
+                    <include
+                        android:id="@+id/layoutReplyButtons"
+                        layout="@layout/reply_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="invisible" />
+
+                </LinearLayout>
 
             </FrameLayout>
-
-            <android.support.constraint.Guideline
-                android:id="@+id/guidelineLeft"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_begin="0dp" />
-
-            <android.support.constraint.Guideline
-                android:id="@+id/guidelineTop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintGuide_begin="@dimen/margin_top_bottom_message" />
-
-            <android.support.constraint.Guideline
-                android:id="@+id/guidelineRight"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_end="0dp" />
-
-        </android.support.constraint.ConstraintLayout>
+        </LinearLayout>
     </com.flowcrypt.email.ui.widget.NonLockingScrollView>
 
 
@@ -158,4 +161,3 @@
         android:visibility="gone" />
 
 </FrameLayout>
-

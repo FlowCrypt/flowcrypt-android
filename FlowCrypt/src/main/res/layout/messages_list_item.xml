@@ -7,7 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="@dimen/layout_height_message_item"
     android:orientation="vertical">
 
     <TextView
@@ -19,11 +19,11 @@
         android:textColor="@color/dark"
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="@+id/textViewDate"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/imageViewAttachments"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+        app:layout_goneMarginRight="@dimen/gone_margin_right_attachment_icon"
         tools:text="human@flowcrypt.com" />
 
     <ImageView
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_small"
-        android:layout_marginTop="0dp"
+        android:layout_marginStart="@dimen/default_margin_small"
         android:contentDescription="@string/attachment"
         app:layout_constraintLeft_toRightOf="@+id/textViewSenderAddress"
         app:layout_constraintRight_toLeftOf="@+id/textViewDate"
@@ -42,16 +42,16 @@
         android:id="@+id/textViewSubject"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_message_subject"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
         android:ellipsize="end"
-        android:maxLines="2"
+        android:maxLines="1"
         android:textColor="@color/gray"
         android:textSize="@dimen/default_text_size_medium"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintRight_toLeftOf="@+id/imageViewAttachments"
         app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
-        app:layout_constraintVertical_bias="0.0"
         tools:text="What up man" />
 
     <TextView
@@ -60,9 +60,9 @@
         android:layout_height="wrap_content"
         android:textColor="@color/gray"
         android:textSize="@dimen/default_text_size_medium"
-        app:layout_constraintBottom_toBottomOf="@+id/imageViewAttachments"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-        app:layout_constraintTop_toTopOf="@+id/imageViewAttachments"
+        app:layout_constraintBaseline_toBaselineOf="@id/textViewSenderAddress"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         tools:text="1:05 PM" />
 
     <android.support.constraint.Guideline
@@ -77,7 +77,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="@dimen/margin_top_bottom_message" />
+        app:layout_constraintGuide_begin="@dimen/default_margin_content_small" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineRight"
@@ -91,6 +91,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_end="@dimen/margin_top_bottom_message" />
+        app:layout_constraintGuide_end="@dimen/default_margin_content_small" />
 
 </android.support.constraint.ConstraintLayout>

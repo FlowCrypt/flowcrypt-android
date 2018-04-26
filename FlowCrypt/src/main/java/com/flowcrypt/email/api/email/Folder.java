@@ -9,14 +9,15 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * This is a simple POJO object, which describe information about the email folder.
  *
  * @author DenBond7
- *         Date: 07.06.2017
- *         Time: 14:49
- *         E-mail: DenBond7@gmail.com
+ * Date: 07.06.2017
+ * Time: 14:49
+ * E-mail: DenBond7@gmail.com
  */
 
 public class Folder implements Parcelable {
@@ -83,6 +84,27 @@ public class Folder implements Parcelable {
         dest.writeString(this.userFriendlyName);
         dest.writeStringArray(this.attributes);
         dest.writeByte(this.isCustomLabel ? (byte) 1 : (byte) 0);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Folder folder = (Folder) o;
+        return isCustomLabel == folder.isCustomLabel &&
+                messageCount == folder.messageCount &&
+                Objects.equals(serverFullFolderName, folder.serverFullFolderName) &&
+                Objects.equals(folderAlias, folder.folderAlias) &&
+                Objects.equals(userFriendlyName, folder.userFriendlyName) &&
+                Arrays.equals(attributes, folder.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+
+        int result = Objects.hash(serverFullFolderName, folderAlias, userFriendlyName, isCustomLabel, messageCount);
+        result = 31 * result + Arrays.hashCode(attributes);
+        return result;
     }
 
     public String getFolderAlias() {

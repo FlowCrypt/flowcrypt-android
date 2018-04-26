@@ -20,7 +20,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
@@ -41,9 +44,6 @@ import com.flowcrypt.email.util.UIUtil;
 public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptedTypeListener {
 
-    public static final String EXTRA_KEY_ACCOUNT_EMAIL =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_EMAIL", CreateMessageActivity.class);
-
     public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
             GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
 
@@ -53,26 +53,35 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
 
+    public static final String EXTRA_KEY_MESSAGE_TYPE =
+            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity.class);
+
     private View nonEncryptedHintView;
     private View layoutContent;
 
-    private String accountEmail;
-    private MessageEncryptionType messageEncryptionType;
+    private MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
     private ServiceInfo serviceInfo;
 
     private boolean isMessageSendingNow;
 
-    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
-        return generateIntent(context, email, incomingMessageInfo, messageEncryptionType, null);
+        return generateIntent(context, incomingMessageInfo, MessageType.NEW, messageEncryptionType);
     }
 
-    public static Intent generateIntent(Context context, String email, IncomingMessageInfo incomingMessageInfo,
-                                        MessageEncryptionType messageEncryptionType, ServiceInfo serviceInfo) {
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                        MessageType messageType,
+                                        MessageEncryptionType messageEncryptionType) {
+        return generateIntent(context, incomingMessageInfo, messageType, messageEncryptionType, null);
+    }
+
+    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                        MessageType messageType, MessageEncryptionType messageEncryptionType,
+                                        ServiceInfo serviceInfo) {
 
         Intent intent = new Intent(context, CreateMessageActivity.class);
-        intent.putExtra(EXTRA_KEY_ACCOUNT_EMAIL, email);
         intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
+        intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
         intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
         intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
         return intent;
@@ -80,34 +89,28 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+        if (accountDao == null) {
+            Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
+            finish();
+        }
+
+        if (getIntent() != null) {
+            serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
+            if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
+                messageEncryptionType = (MessageEncryptionType) getIntent()
+                        .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
+            }
+        }
+
         super.onCreate(savedInstanceState);
 
         layoutContent = findViewById(R.id.layoutContent);
         initNonEncryptedHintView();
 
         if (getIntent() != null) {
-            if (getIntent().hasExtra(EXTRA_KEY_ACCOUNT_EMAIL)) {
-                this.accountEmail = getIntent().getStringExtra(EXTRA_KEY_ACCOUNT_EMAIL);
-            } else throw new IllegalArgumentException("The account email not specified!");
-
-            serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
-
-            messageEncryptionType = (MessageEncryptionType) getIntent()
-                    .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
-
-            if (messageEncryptionType == null) {
-                messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-            } else {
-                onMessageEncryptionTypeChange(messageEncryptionType);
-            }
-
-            if (getSupportActionBar() != null) {
-                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
-                    getSupportActionBar().setTitle(R.string.reply);
-                } else {
-                    getSupportActionBar().setTitle(R.string.compose);
-                }
-            }
+            onMessageEncryptionTypeChange(messageEncryptionType);
+            prepareActionBarTitle();
         }
     }
 
@@ -217,11 +220,6 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public String getSenderEmail() {
-        return accountEmail;
-    }
-
-    @Override
     public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
         this.messageEncryptionType = messageEncryptionType;
         switch (messageEncryptionType) {
@@ -243,6 +241,39 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     @Override
     public MessageEncryptionType getMessageEncryptionType() {
         return messageEncryptionType;
+    }
+
+    private void prepareActionBarTitle() {
+        if (getSupportActionBar() != null) {
+            if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
+                MessageType messageType = (MessageType) getIntent().getSerializableExtra(
+                        CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
+
+                switch (messageType) {
+                    case NEW:
+                        getSupportActionBar().setTitle(R.string.compose);
+                        break;
+
+                    case REPLY:
+                        getSupportActionBar().setTitle(R.string.reply);
+                        break;
+
+                    case REPLY_ALL:
+                        getSupportActionBar().setTitle(R.string.reply_all);
+                        break;
+
+                    case FORWARD:
+                        getSupportActionBar().setTitle(R.string.forward);
+                        break;
+                }
+            } else {
+                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
+                    getSupportActionBar().setTitle(R.string.reply);
+                } else {
+                    getSupportActionBar().setTitle(R.string.compose);
+                }
+            }
+        }
     }
 
     private void notifyUserAboutErrorWhenSendMessage() {

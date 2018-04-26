@@ -8,7 +8,9 @@
     <string name="support_email">human@flowcrypt.com</string>
 
     <string name="compose">Compose</string>
-    <string name="prompt_recipient">Add recipient</string>
+    <string name="prompt_recipients_to">Add recipients (To)</string>
+    <string name="prompt_recipients_cc">Add recipients (Cc)</string>
+    <string name="prompt_recipients_bcc">Add recipients (Bcc)</string>
     <string name="prompt_recipients">Recipients</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
@@ -52,7 +54,7 @@
     <string name="your_message_must_be_non_empty">Message should not be empty</string>
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
     <string name="use_another_account">Use another account</string>
-    <string name="reply_all">Reply all</string>
+    <string name="reply_all">Reply All</string>
     <string name="lock">Lock</string>
     <string name="something_wrong_with_receiving_message">Error: could not receive message</string>
     <string name="title_activity_test">TestActivity</string>
@@ -110,7 +112,7 @@
     <string name="error_occurred_while_sending_message">Error occurred while sending the message</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
-    <string name="info_about_some_contacts_not_received">Could not get information about some contacts</string>
+    <string name="info_about_some_contacts_not_received">Could not get information about some %1$s contacts</string>
     <string name="error_occurred_while_this_action_running">Error: could not complete action</string>
     <string name="error_occurred_while_receiving_private_keys">Could not retrieve your private key</string>
     <string name="no_subject">(no subject)</string>
@@ -170,7 +172,7 @@
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
-    <string name="template_reply_subject">Re: %1$s</string>
+    <string name="template_reply_subject">%1$s: %2$s</string>
     <string name="other_email_provider">Other email provider</string>
     <string name="account_info">Account info</string>
     <string name="e_mail">E-mail</string>
@@ -285,7 +287,6 @@ icelanders prefer real sauna</font>
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
     <string name="copy">Copy</string>
-    <string name="remove">Remove</string>
     <string name="not_private_key">This is not a private key</string>
     <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
     <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security
@@ -293,8 +294,27 @@ icelanders prefer real sauna</font>
     <string name="get_access_to_gmail">Get access to Gmail</string>
     <string name="sign_in">SIGN IN</string>
     <string name="network_error_please_retry">Network error, please retry</string>
+    <string name="setup_app">Please set up the app before use this option</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
         <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
     </plurals>
+    <string name="cannot_send_attachment_without_read_permission">The attachment cannot be sent without the read external
+        storage permission</string>
+    <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
+    <string name="forward">Forward</string>
+    <string name="forward_encrypted">Forward\nEncrypted</string>
+    <string name="reply_encrypted">Reply\nEncrypted</string>
+    <string name="reply_all_encrypted">Reply All\nEncrypted</string>
+    <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
+    <string name="cannot_forward_html_emails">Cannot forward HTML emails</string>
+    <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
+    <string name="to">To</string>
+    <string name="cc">Cc</string>
+    <string name="bcc">Bcc</string>
+    <string name="failed_please_try_again_later">Failed. Please try again later</string>
+    <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again
+        later</string>
+    <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
+    <string name="server_unavailable">Server unavailable</string>
 </resources>

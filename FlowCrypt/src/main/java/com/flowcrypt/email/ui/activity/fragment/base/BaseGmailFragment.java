@@ -42,7 +42,7 @@ public abstract class BaseGmailFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         progressView = view.findViewById(R.id.viewIdProgressView);
         statusView = view.findViewById(R.id.viewIdStatusView);
-        textViewStatusInfo = (TextView) view.findViewById(R.id.viewIdTextViewStatusInfo);
+        textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo);
         if (progressView == null || statusView == null || textViewStatusInfo == null) {
             throw new IllegalArgumentException("The layout file of this fragment not contains " +
                     "some needed views");

@@ -104,12 +104,22 @@ public class Js { // Create one object per thread and use them separately. Not t
         }
     }
 
-    public String mime_encode(String body, PgpContact[] to, PgpContact from, String subject, Attachment[] attachments, MimeMessage reply_to) {
+    public String mime_encode(String body, PgpContact[] to, PgpContact[] cc, PgpContact[] bcc,
+                              PgpContact from, String subject, Attachment[] attachments, MimeMessage reply_to) {
         V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
         headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
+
+        if (cc != null && cc.length > 0) {
+            headers.add("cc", PgpContact.arrayAsMime(cc));
+        }
+
+        if (bcc != null && bcc.length > 0) {
+            headers.add("bcc", PgpContact.arrayAsMime(bcc));
+        }
+
         V8Array files = new V8Array(v8);
         if (attachments != null && attachments.length > 0) {
-            for (Attachment attachment: attachments) {
+            for (Attachment attachment : attachments) {
                 files.push(attachment.getV8Object());
             }
         }
@@ -123,7 +133,11 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public String crypto_key_normalize(String armored_key) {
-        return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
+        try {
+            return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
+        } catch (com.eclipsesource.v8.V8ResultUndefined e) {
+            return "";
+        }
     }
 
     public PgpKey crypto_key_read(String armored_key) {
@@ -174,7 +188,7 @@ public class Js { // Create one object per thread and use them separately. Not t
         V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
                 .push(filename).push(false).push(cb_catch);
         this.call(void.class, p("crypto", "message", "encrypt"), params);
-        V8Object packets = (V8Object) ((V8Object)((V8Object) cb_last_value[0]).get("message")).get("packets");
+        V8Object packets = (V8Object) ((V8Object) ((V8Object) cb_last_value[0]).get("message")).get("packets");
         V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
         return data.getBytes(0, data.length());
     }
@@ -200,7 +214,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     public List<String> crypto_password_weak_words() {
         V8Array a = ((V8Array) this.call(Object.class, p("crypto", "password", "weak_words"), new V8Array(v8)));
         List<String> list = new ArrayList<>();
-        for(int i = 0; i < a.length(); i++) {
+        for (int i = 0; i < a.length(); i++) {
             list.add(a.getString(i));
         }
         return list;
@@ -374,7 +388,8 @@ class MeaningfulV8ObjectContainer {
 
     static V8Array getAttributeAsArray(V8Object obj, String k) {
         try {
-            return obj.getArray(k);
+            V8Array a = obj.getArray(k);
+            return a.isUndefined() ? null : a;
         } catch (V8ResultUndefined e) {
             return null;
         }
@@ -382,7 +397,8 @@ class MeaningfulV8ObjectContainer {
 
     static V8Object getAttributeAsObject(V8Object obj, String k) {
         try {
-            return obj.getObject(k);
+            V8Object result = obj.getObject(k);
+            return result.isUndefined() ? null : result;
         } catch (V8ResultUndefined e) {
             return null;
         }
@@ -512,13 +528,13 @@ class JavaMethodsForJavaScript {
     public void report(Boolean isError, String title, String stack_trace, String details) {
         console_error(title);
         console_error(stack_trace);
-        if(details.length() > 0) {
+        if (details.length() > 0) {
             console_error(details);
         }
         ACRA.getErrorReporter().putCustomData("JAVASCRIPT_TITLE", title);
         ACRA.getErrorReporter().putCustomData("JAVASCRIPT_STACK_TRACE", stack_trace);
         ACRA.getErrorReporter().putCustomData("JAVASCRIPT_DETAILS", details);
-        if(isError) {
+        if (isError) {
             ACRA.getErrorReporter().handleSilentException(new JavaScriptError(title));
         } else {
             ACRA.getErrorReporter().handleSilentException(new JavaScriptReport(title));

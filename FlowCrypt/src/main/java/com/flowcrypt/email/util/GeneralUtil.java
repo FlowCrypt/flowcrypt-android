@@ -24,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 /**
  * General util methods.
@@ -215,5 +216,15 @@ public class GeneralUtil {
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
             return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
         }
+    }
+
+    /**
+     * Generate a unique name for {@link android.support.test.espresso.IdlingResource}
+     *
+     * @param aClass The class where we will use {@link android.support.test.espresso.IdlingResource}
+     * @return A generated name.
+     */
+    public static String generateNameForIdlingResources(Class<?> aClass) {
+        return aClass.getClass() + "-" + UUID.randomUUID();
     }
 }

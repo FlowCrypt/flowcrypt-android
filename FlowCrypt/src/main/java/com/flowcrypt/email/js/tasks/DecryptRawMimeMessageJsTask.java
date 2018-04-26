@@ -24,6 +24,7 @@ import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
+import com.flowcrypt.email.model.messages.MessagePartSignedMessage;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
 
@@ -57,6 +58,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             ProcessedMime processedMime = js.mime_process(rawMimeMessage);
             ArrayList<String> addressesFrom = new ArrayList<>();
             ArrayList<String> addressesTo = new ArrayList<>();
+            ArrayList<String> addressesCc = new ArrayList<>();
 
             for (MimeAddress mimeAddress : processedMime.getAddressHeader("from")) {
                 addressesFrom.add(mimeAddress.getAddress());
@@ -66,8 +68,13 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
                 addressesTo.add(mimeAddress.getAddress());
             }
 
+            for (MimeAddress mimeAddress : processedMime.getAddressHeader("cc")) {
+                addressesCc.add(mimeAddress.getAddress());
+            }
+
             incomingMessageInfo.setFrom(addressesFrom);
             incomingMessageInfo.setTo(addressesTo);
+            incomingMessageInfo.setCc(addressesCc);
             incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
             incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
             incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMimeMessage);
@@ -76,8 +83,11 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
 
             MimeMessage mimeMessage = js.mime_decode(rawMimeMessage);
 
-            if (mimeMessage != null && !isMessageContainsPGPBlocks(incomingMessageInfo)) {
-                incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+            if (mimeMessage != null) {
+                if (!isMessageContainsPGPBlocks(incomingMessageInfo)) {
+                    incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+                }
+                incomingMessageInfo.setPlainTextExists(!TextUtils.isEmpty(mimeMessage.getText()));
             }
 
             jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMessageInfo);
@@ -161,7 +171,24 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
                         messageParts.add(messagePartPgpPublicKey);
                         break;
 
-                    //Todo-DenBond7 need to describe other types of MessageBlock
+                    case MessageBlock.TYPE_PGP_SIGNED_MESSAGE:
+                        messageParts.add(new MessagePartSignedMessage(messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_VERIFICATION:
+                        messageParts.add(new MessagePart(MessagePartType.VERIFICATION,
+                                messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_ATTEST_PACKET:
+                        messageParts.add(new MessagePart(MessagePartType.ATTEST_PACKET,
+                                messageBlock.getContent()));
+                        break;
+
+                    case MessageBlock.TYPE_PGP_PASSWORD_MESSAGE:
+                        messageParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE,
+                                messageBlock.getContent()));
+                        break;
                 }
             }
         }

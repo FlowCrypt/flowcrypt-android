@@ -5,13 +5,18 @@
 
 package com.flowcrypt.email.ui.widget;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.Layout;
 import android.util.AttributeSet;
+import android.view.ActionMode;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -38,9 +43,9 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     public PgpContactsNachoTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        this.setLongClickable(false);
         this.chipLongClickOnGestureListener = new ChipLongClickOnGestureListener();
         this.gestureDetector = new GestureDetector(getContext(), chipLongClickOnGestureListener);
+        setCustomSelectionActionModeCallback(new CustomActionModeCallback());
     }
 
     /**
@@ -81,6 +86,34 @@ public class PgpContactsNachoTextView extends NachoTextView {
         return super.performClick();
     }
 
+    @Override
+    public boolean onTextContextMenuItem(int id) {
+        switch (id) {
+            case android.R.id.paste:
+                StringBuilder stringBuilder = new StringBuilder();
+                ClipboardManager clipboardManager =
+                        (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboardManager != null) {
+                    ClipData clip = clipboardManager.getPrimaryClip();
+                    if (clip != null) {
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            stringBuilder.append(clip.getItemAt(i).coerceToStyledText(getContext()));
+                        }
+                    }
+
+                    List<String> emails = getChipValues();
+                    if (emails.contains(stringBuilder.toString())) {
+                        clipboardManager.setPrimaryClip(ClipData.newPlainText(null, " "));
+                    }
+                }
+
+                return super.onTextContextMenuItem(id);
+
+            default:
+                return super.onTextContextMenuItem(id);
+        }
+    }
+
     public void setOnChipLongClickListener(OnChipLongClickListener onChipLongClickListener) {
         this.onChipLongClickListener = onChipLongClickListener;
     }
@@ -89,10 +122,59 @@ public class PgpContactsNachoTextView extends NachoTextView {
         /**
          * Called when a chip in this TextView is long clicked.
          *
-         * @param chip  the {@link Chip} that was clicked
-         * @param event the {@link MotionEvent} that caused the touch
+         * @param nachoTextView A current view
+         * @param chip          the {@link Chip} that was clicked
+         * @param event         the {@link MotionEvent} that caused the touch
          */
-        void onChipLongClick(@NonNull Chip chip, MotionEvent event);
+        void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event);
+    }
+
+    /**
+     * A custom realization of {@link ActionMode.Callback} which describes a logic of the text manipulation.
+     */
+    private class CustomActionModeCallback implements ActionMode.Callback {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            boolean isMenuModified = false;
+            for (int i = 0; i < menu.size(); i++) {
+                MenuItem menuItem = menu.getItem(i);
+                if (menuItem != null) {
+                    switch (menuItem.getItemId()) {
+                        case android.R.id.cut:
+                        case android.R.id.copy:
+                            break;
+
+                        default:
+                            menu.removeItem(menuItem.getItemId());
+                            isMenuModified = true;
+                    }
+                }
+            }
+
+            return isMenuModified;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem menuItem) {
+            switch (menuItem.getItemId()) {
+                case android.R.id.copy:
+                    onTextContextMenuItem(android.R.id.copy);
+                    mode.finish();
+                    return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+
+        }
     }
 
     private class ChipLongClickOnGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -104,7 +186,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
                 Chip chip = findLongClickedChip(event);
 
                 if (chip != null) {
-                    onChipLongClickListener.onChipLongClick(chip, event);
+                    onChipLongClickListener.onChipLongClick(PgpContactsNachoTextView.this, chip, event);
                 }
             }
         }

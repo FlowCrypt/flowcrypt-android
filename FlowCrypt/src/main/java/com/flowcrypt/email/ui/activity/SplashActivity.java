@@ -25,9 +25,9 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.api.Auth;
@@ -48,9 +48,6 @@ import java.util.ArrayList;
  */
 public class SplashActivity extends BaseSignInActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
-    private static final String KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
-            GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", SplashActivity.class);
-
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
     private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;
 
@@ -58,15 +55,11 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     private View splashView;
 
     private AccountDao accountDao;
-    private GoogleSignInAccount currentGoogleSignInAccount;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (savedInstanceState != null) {
-            this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
-        }
+        JsBackgroundService.start(this);
 
         initViews();
 
@@ -78,12 +71,6 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 finish();
             }
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
     }
 
     @Override

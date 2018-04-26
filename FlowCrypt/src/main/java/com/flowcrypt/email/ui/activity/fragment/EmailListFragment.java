@@ -24,6 +24,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -32,12 +33,14 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 
 /**
@@ -125,7 +128,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             } else {
                                 textViewStatusInfo.setText(R.string.no_connection);
                                 UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-                                showRetrySnackbar();
+                                showRetrySnackBar();
                             }
                         } else {
                             UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
@@ -244,17 +247,37 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
         emptyView.setVisibility(View.GONE);
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            if (messageListAdapter.getCount() > 0) {
-                swipeRefreshLayout.setRefreshing(true);
-                refreshMessages();
+            if (onManageEmailsListener.getCurrentFolder() != null) {
+                if (messageListAdapter.getCount() > 0) {
+                    swipeRefreshLayout.setRefreshing(true);
+                    refreshMessages();
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
+
+                    if (messageListAdapter.getCount() == 0) {
+                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                    }
+
+                    loadNextMessages(-1);
+                }
             } else {
                 swipeRefreshLayout.setRefreshing(false);
 
                 if (messageListAdapter.getCount() == 0) {
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                    textViewStatusInfo.setText(R.string.server_unavailable);
+                    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
                 }
 
-                loadNextMessages(-1);
+                showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server),
+                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                setSupportActionBarTitle(getString(R.string.loading));
+                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                ((BaseSyncActivity) getActivity()).updateLabels(R.id
+                                        .syns_request_code_update_label_active, false);
+                            }
+                        });
             }
         } else {
             swipeRefreshLayout.setRefreshing(false);
@@ -299,50 +322,71 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
 
     @Override
     public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
-        if (e instanceof UserRecoverableAuthException) {
-            super.onErrorOccurred(requestCode, errorType,
-                    new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
-            showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-                    Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onManageEmailsListener.onRetryGoogleAuth();
-                        }
-                    });
-        } else {
-            super.onErrorOccurred(requestCode, errorType, e);
-        }
-
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
+                if (e instanceof UserRecoverableAuthException) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
+                    showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+                            Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onManageEmailsListener.onRetryGoogleAuth();
+                                }
+                            });
+                } else if (e instanceof GoogleAuthException || e.getMessage().equalsIgnoreCase("ServiceDisabled")) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.google_auth_exception_service_disabled)));
+                } else {
+                    super.onErrorOccurred(requestCode, errorType, e);
+                }
+
                 footerProgressView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.GONE);
+
+                getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+                cleanCache();
+
+                switch (errorType) {
+                    case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                        showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
+                                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                        loadNextMessages(-1);
+                                    }
+                                });
+                        break;
+                }
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
                 swipeRefreshLayout.setRefreshing(false);
+                switch (errorType) {
+                    case SyncErrorTypes.ACTION_FAILED_SHOW_TOAST:
+                        Toast.makeText(getContext(), R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+                        showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
+                                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        onRefresh();
+                                    }
+                                });
+                        break;
+                }
                 break;
-        }
 
-        emptyView.setVisibility(View.GONE);
-
-        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        cleanCache();
-
-        switch (errorType) {
-            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-                showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server),
-                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                switch (requestCode) {
-                                    case R.id.syns_request_code_load_next_messages:
-                                    case R.id.syns_request_code_force_load_new_messages:
-                                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                                        loadNextMessages(-1);
-                                        break;
-                                }
-                            }
-                        });
+            case R.id.syns_request_code_update_label_passive:
+            case R.id.syns_request_code_update_label_active:
+                if (onManageEmailsListener.getCurrentFolder() == null) {
+                    super.onErrorOccurred(requestCode, errorType,
+                            new Exception(getString(R.string.failed_load_labels_from_email_server)));
+                    setSupportActionBarTitle(null);
+                }
                 break;
         }
     }
@@ -437,7 +481,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     /**
      * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
      */
-    private void showRetrySnackbar() {
+    private void showRetrySnackBar() {
         showSnackbar(getView(), getString(R.string.no_connection),
                 getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                     @Override
@@ -446,7 +490,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                             UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                             loadNextMessages(-1);
                         } else {
-                            showRetrySnackbar();
+                            showRetrySnackBar();
                         }
                     }
                 });
@@ -469,6 +513,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
      * Try to load a new messages from an IMAP server.
      */
     private void refreshMessages() {
+        ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
         baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
@@ -489,6 +534,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             footerProgressView.setVisibility(View.VISIBLE);
             isNewMessagesLoadingNow = true;
             lastCalledPositionForLoadMore = totalItemsCount;
+            ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
             baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
                     onManageEmailsListener.getCurrentFolder(), totalItemsCount);
         } else {

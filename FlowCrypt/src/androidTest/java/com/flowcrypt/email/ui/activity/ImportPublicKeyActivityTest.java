@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
 import android.app.Instrumentation;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -41,7 +39,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.content.Context.CLIPBOARD_SERVICE;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -53,7 +50,6 @@ import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExt
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasType;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
@@ -154,18 +150,5 @@ public class ImportPublicKeyActivityTest extends BaseTest {
         checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
                 R.string.clipboard_has_wrong_structure,
                 InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
-    }
-
-    private void addTextToClipboard(final String label, final String text) throws Throwable {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getTargetContext()
-                        .getSystemService(CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText(label, text);
-                if (clipboard != null) {
-                    clipboard.setPrimaryClip(clip);
-                }
-            }
-        });
     }
 }

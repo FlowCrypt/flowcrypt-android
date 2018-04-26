@@ -6,6 +6,7 @@
 package com.flowcrypt.email.util.exception;
 
 import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import javax.mail.AuthenticationFailedException;
+import javax.mail.FolderClosedException;
 import javax.mail.MessagingException;
 import javax.mail.StoreClosedException;
 import javax.net.ssl.SSLHandshakeException;
@@ -42,7 +45,9 @@ public class ExceptionUtil {
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
                 || (e instanceof ConnectionException)
-                || (e instanceof UserRecoverableAuthException)) {
+                || (e instanceof UserRecoverableAuthException)
+                || (e instanceof AuthenticationFailedException)
+                || (e instanceof UserRecoverableAuthIOException)) {
             return false;
         }
 
@@ -58,18 +63,22 @@ public class ExceptionUtil {
         if ((e instanceof SSLHandshakeException
                 || e instanceof SSLProtocolException
                 || e instanceof MessagingException)) {
-            if ("Connection closed by peer".equalsIgnoreCase(e.getMessage())
-                    || e.getMessage().contains("I/O error during system call, Software caused connection abort")
-                    || e.getMessage().contains("I/O error during system call, Connection reset by peer;")
-                    || e.getMessage().contains("I/O error during system call, Socket operation on non-socket;")
-                    || e.getMessage().contains("Failure in SSL library, usually a protocol error")) {
+            if (e.getMessage().contains("Connection closed by peer")
+                    || e.getMessage().contains("I/O error during system call")
+                    || e.getMessage().contains("Failure in SSL library, usually a protocol error")
+                    || e.getMessage().contains("Handshake failed")
+                    || e.getMessage().contains("Exception reading response")) {
                 return false;
             }
         }
 
-        if (e instanceof StoreClosedException) {
+        if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
             //Connection limit exceeded
             if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
+                return false;
+            }
+
+            if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }

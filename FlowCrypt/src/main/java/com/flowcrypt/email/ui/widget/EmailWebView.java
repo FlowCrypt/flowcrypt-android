@@ -6,18 +6,22 @@
 package com.flowcrypt.email.ui.widget;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 
 /**
  * The custom realization of {@link WebView}
@@ -29,6 +33,8 @@ import com.flowcrypt.email.R;
  */
 
 public class EmailWebView extends WebView {
+    private OnPageFinishedListener onPageFinishedListener;
+
     public EmailWebView(Context context) {
         super(context);
     }
@@ -49,6 +55,17 @@ public class EmailWebView extends WebView {
         setScrollBarStyle(SCROLLBARS_INSIDE_OVERLAY);
         setOverScrollMode(OVER_SCROLL_NEVER);
         setWebViewClient(new CustomWebClient(getContext()));
+        setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                if (newProgress == 100) {
+                    if (onPageFinishedListener != null) {
+                        onPageFinishedListener.onPageFinished();
+                    }
+                }
+            }
+        });
 
         WebSettings webSettings = this.getSettings();
 
@@ -61,6 +78,14 @@ public class EmailWebView extends WebView {
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setJavaScriptEnabled(false);
         webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
+    }
+
+    public void setOnPageFinishedListener(OnPageFinishedListener onPageFinishedListener) {
+        this.onPageFinishedListener = onPageFinishedListener;
+    }
+
+    public interface OnPageFinishedListener {
+        void onPageFinished();
     }
 
     /**
@@ -76,16 +101,39 @@ public class EmailWebView extends WebView {
         @SuppressWarnings("deprecation")
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            showUrlUsingChromeCustomTabs(Uri.parse(url));
-            return true;
+            if (url.startsWith(SCHEME_MAILTO)) {
+                handleEmailLinks(Uri.parse(url));
+                return false;
+            } else {
+                showUrlUsingChromeCustomTabs(Uri.parse(url));
+                return true;
+            }
         }
 
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            showUrlUsingChromeCustomTabs(request.getUrl());
-            return true;
+            if (request.getUrl().getScheme().equalsIgnoreCase("mailto")) {
+                handleEmailLinks(request.getUrl());
+                return true;
+            } else {
+                showUrlUsingChromeCustomTabs(request.getUrl());
+                return true;
+            }
         }
+
+        /**
+         * Handle email links and open the internal compose screen.
+         *
+         * @param uri {@link Uri} with mailto: scheme.
+         */
+        private void handleEmailLinks(Uri uri) {
+            Intent intent = CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED);
+            intent.setAction(Intent.ACTION_SENDTO);
+            intent.setData(uri);
+            context.startActivity(intent);
+        }
+
 
         /**
          * Use {@link CustomTabsIntent} to show some url.
@@ -96,7 +144,12 @@ public class EmailWebView extends WebView {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
             builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
-            customTabsIntent.launchUrl(context, uri);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            if (intent.resolveActivity(context.getPackageManager()) != null) {
+                customTabsIntent.launchUrl(context, uri);
+            }
         }
     }
 }

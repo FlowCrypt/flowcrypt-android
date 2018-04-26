@@ -18,9 +18,11 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -45,6 +47,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.activation.DataHandler;
@@ -66,9 +69,9 @@ import javax.mail.internet.MimeMultipart;
  * This task does job of sending a message.
  *
  * @author DenBond7
- *         Date: 29.06.2017
- *         Time: 11:38
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.06.2017
+ * Time: 11:38
+ * E-mail: DenBond7@gmail.com
  */
 
 public class SendMessageSyncTask extends BaseSyncTask {
@@ -98,7 +101,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
     public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
             throws Exception {
         super.runSMTPAction(accountDao, session, store, syncListener);
-        boolean isMessageSent = false;
+        boolean isMessageSent;
         if (syncListener != null) {
             Context context = syncListener.getContext();
 
@@ -111,7 +114,22 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
             updateContactsLastUseDateTime(context);
 
-            MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory);
+            IMAPFolder folderOfForwardedMessage = null;
+            Message forwardedMessage = null;
+
+            if (outgoingMessageInfo.isForwarded() && !outgoingMessageInfo.getForwardedAttachmentInfoList().isEmpty()) {
+                folderOfForwardedMessage = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
+                        .getFolderByAlias(context,
+                                outgoingMessageInfo.getForwardedAttachmentInfoList().get(0).getEmail(),
+                                outgoingMessageInfo.getForwardedAttachmentInfoList().get(0).getFolder())
+                        .getServerFullFolderName());
+                folderOfForwardedMessage.open(Folder.READ_ONLY);
+                forwardedMessage = folderOfForwardedMessage.getMessageByUID(
+                        outgoingMessageInfo.getForwardedAttachmentInfoList().get(0).getUid());
+            }
+
+            MimeMessage mimeMessage = createMimeMessage(session, context, accountDao, pgpCacheDirectory,
+                    folderOfForwardedMessage, forwardedMessage);
 
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -161,7 +179,9 @@ public class SendMessageSyncTask extends BaseSyncTask {
             }
 
             FileAndDirectoryUtils.cleanDirectory(pgpCacheDirectory);
-
+            if (folderOfForwardedMessage != null && folderOfForwardedMessage.isOpen()) {
+                folderOfForwardedMessage.close(false);
+            }
             syncListener.onMessageSent(accountDao, ownerKey, requestCode, isMessageSent);
         }
     }
@@ -196,16 +216,19 @@ public class SendMessageSyncTask extends BaseSyncTask {
     /**
      * Create {@link MimeMessage} using different parameters.
      *
-     * @param session           Will be used to create {@link MimeMessage}
-     * @param context           Interface to global information about an application environment.
-     * @param accountDao        The {@link AccountDao} which contains information about account.
-     * @param pgpCacheDirectory The cache directory which contains temp files.  @return {@link MimeMessage}
+     * @param session                  Will be used to create {@link MimeMessage}
+     * @param context                  Interface to global information about an application environment.
+     * @param accountDao               The {@link AccountDao} which contains information about account.
+     * @param pgpCacheDirectory        The cache directory which contains temp files.  @return {@link MimeMessage}
+     * @param folderOfForwardedMessage The folder where located our forwarded message
+     * @param forwardedMessage         The original forwarded message.
      * @throws IOException
      * @throws MessagingException
      */
     @NonNull
     private MimeMessage createMimeMessage(Session session, Context context, AccountDao accountDao,
-                                          File pgpCacheDirectory) throws IOException, MessagingException {
+                                          File pgpCacheDirectory, IMAPFolder folderOfForwardedMessage,
+                                          Message forwardedMessage) throws IOException, MessagingException {
         Js js = new Js(context, new SecurityStorageConnector(context));
         String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
                 getPubKeys(context, js, accountDao) : null;
@@ -219,10 +242,17 @@ public class SendMessageSyncTask extends BaseSyncTask {
             MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
 
             for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
-                MimeBodyPart bodyPart = generateBodyPartWithAttachment(context, pgpCacheDirectory,
+                BodyPart attachmentBodyPart = generateBodyPartWithAttachment(context, pgpCacheDirectory,
                         js, pubKeys, attachmentInfo);
-                bodyPart.setContentID(EmailUtil.generateContentId());
-                mimeMultipart.addBodyPart(bodyPart);
+                mimeMultipart.addBodyPart(attachmentBodyPart);
+            }
+
+            for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+                BodyPart forwardedAttachmentBodyPart = generateBodyPartWithForwardedAttachment(pgpCacheDirectory, js,
+                        pubKeys, attachmentInfo, folderOfForwardedMessage, forwardedMessage);
+                if (forwardedAttachmentBodyPart != null) {
+                    mimeMultipart.addBodyPart(forwardedAttachmentBodyPart);
+                }
             }
 
             mimeMessage.setContent(mimeMultipart);
@@ -245,8 +275,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @throws MessagingException
      */
     @NonNull
-    private MimeBodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
-                                                        String[] pubKeys, AttachmentInfo attachmentInfo)
+    private BodyPart generateBodyPartWithAttachment(Context context, File pgpCacheDirectory, Js js,
+                                                    String[] pubKeys, AttachmentInfo attachmentInfo)
             throws IOException, MessagingException {
         MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
         switch (outgoingMessageInfo.getMessageEncryptionType()) {
@@ -269,8 +299,55 @@ public class SendMessageSyncTask extends BaseSyncTask {
                 attachmentsBodyPart.setFileName(attachmentInfo.getName());
                 break;
         }
+        attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
 
         return attachmentsBodyPart;
+    }
+
+    /**
+     * Generate a {@link BodyPart} with forwarded attachment.
+     *
+     * @param pgpCacheDirectory        The cache directory which contains temp files.
+     * @param js                       The {@link Js} tools.
+     * @param pubKeys                  The public keys which will be used for generate an encrypted attachments.
+     * @param attachmentInfo           The {@link AttachmentInfo} object, which contains general information about
+     *                                 attachment.
+     * @param folderOfForwardedMessage The folder where located our forwarded message
+     * @param forwardedMessage         The original forwarded message.
+     * @return Generated {@link MimeBodyPart} with an attachment.
+     * @throws IOException
+     * @throws MessagingException
+     */
+    @NonNull
+    private BodyPart generateBodyPartWithForwardedAttachment(File pgpCacheDirectory, Js js,
+                                                             String[] pubKeys, AttachmentInfo attachmentInfo,
+                                                             IMAPFolder folderOfForwardedMessage,
+                                                             Message forwardedMessage)
+            throws IOException, MessagingException {
+        switch (outgoingMessageInfo.getMessageEncryptionType()) {
+            case ENCRYPTED:
+                BodyPart originalAttachment = ImapProtocolUtil.getAttachmentPartById(folderOfForwardedMessage,
+                        forwardedMessage.getMessageNumber(), forwardedMessage, attachmentInfo.getId());
+
+                MimeBodyPart mimeBodyPart = new MimeBodyPart();
+                InputStream inputStream = originalAttachment.getInputStream();
+                if (inputStream != null) {
+                    File encryptedTempFile = generateTempFile(pgpCacheDirectory, attachmentInfo.getName());
+                    byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
+                            (inputStream), attachmentInfo.getName());
+                    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+                    mimeBodyPart.setDataHandler(new DataHandler(new FileDataSource(encryptedTempFile)));
+                    mimeBodyPart.setFileName(encryptedTempFile.getName());
+                    mimeBodyPart.setContentID(EmailUtil.generateContentId());
+                }
+                return mimeBodyPart;
+
+            case STANDARD:
+                return ImapProtocolUtil.getAttachmentPartById(folderOfForwardedMessage,
+                        forwardedMessage.getMessageNumber(), forwardedMessage, attachmentInfo.getId());
+        }
+
+        return null;
     }
 
     /**
@@ -295,6 +372,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
 
         return js.mime_encode(messageText,
                 outgoingMessageInfo.getToPgpContacts(),
+                outgoingMessageInfo.getCcPgpContacts(),
+                outgoingMessageInfo.getBccPgpContacts(),
                 outgoingMessageInfo.getFromPgpContact(),
                 outgoingMessageInfo.getSubject(),
                 null,
@@ -307,9 +386,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @param parentDirectory The parent directory where a new file will be created.
      * @param fileName        The name of an the created file
      * @return Generated {@link File}
-     * @throws IOException
      */
-    private File generateTempFile(File parentDirectory, String fileName) throws IOException {
+    private File generateTempFile(File parentDirectory, String fileName) {
         return new File(parentDirectory, fileName + ".pgp");
     }
 
@@ -321,12 +399,35 @@ public class SendMessageSyncTask extends BaseSyncTask {
     private void updateContactsLastUseDateTime(Context context) {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-        for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
+        for (PgpContact pgpContact : getAllRecipients()) {
             int updateResult = contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
             if (updateResult == -1) {
                 contactsDaoSource.addRow(context, pgpContact);
             }
         }
+    }
+
+    /**
+     * Generate a list of the all recipients.
+     *
+     * @return A list of the all recipients
+     */
+    private PgpContact[] getAllRecipients() {
+        List<PgpContact> pgpContacts = new ArrayList<>();
+
+        if (outgoingMessageInfo.getToPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getToPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getCcPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getCcPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getBccPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getBccPgpContacts()));
+        }
+
+        return pgpContacts.toArray(new PgpContact[0]);
     }
 
     /**
@@ -339,7 +440,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      */
     private String[] getPubKeys(Context context, Js js, AccountDao accountDao) {
         ArrayList<String> publicKeys = new ArrayList<>();
-        for (PgpContact pgpContact : outgoingMessageInfo.getToPgpContacts()) {
+        for (PgpContact pgpContact : getAllRecipients()) {
             if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
                 publicKeys.add(pgpContact.getPubkey());
             }
@@ -429,7 +530,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         @Override
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             return null;
         }
 

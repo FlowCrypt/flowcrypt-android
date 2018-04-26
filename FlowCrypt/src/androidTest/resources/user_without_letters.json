@@ -1,0 +1,20 @@
+{
+  "email": "user_without_letters@denbond7.com",
+  "accountType": "denbond7.com",
+  "displayName": "displayName",
+  "givenName": "givenName",
+  "familyName": "familyName",
+  "photoUrl": "https://lh3.googleusercontent.com/-KqfTq1IKkhw/AAAAAAAAAAI/AAAAAAAAAAA/ACLGyWBZ5bzZtjs2GmmC1ArEskmiLFQWQQ/mo/photo.jpg?sz=128",
+  "authCredentials": {
+    "email": "user_without_letters@denbond7.com",
+    "imapPort": 143,
+    "imapSecurityTypeOption": "NONE",
+    "imapServer": "imap.denbond7.com",
+    "isUseCustomSignInForSmtp": false,
+    "password": "qwerty1234",
+    "smtpPort": 25,
+    "smtpSecurityTypeOption": "NONE",
+    "smtpServer": "smtp.denbond7.com",
+    "username": "user_without_letters@denbond7.com"
+  }
+}
