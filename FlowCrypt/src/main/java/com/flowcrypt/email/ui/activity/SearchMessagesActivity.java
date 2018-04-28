@@ -20,7 +20,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -28,12 +27,12 @@ import com.flowcrypt.email.util.GeneralUtil;
  * This {@link android.app.Activity} searches and displays messages.
  *
  * @author Denis Bondarenko
- * Date: 26.04.2018
- * Time: 16:23
- * E-mail: DenBond7@gmail.com
+ *         Date: 26.04.2018
+ *         Time: 16:23
+ *         E-mail: DenBond7@gmail.com
  */
-public class SearchMessagesActivity extends BaseEmailListActivity implements SearchView.OnQueryTextListener, MenuItem
-        .OnActionExpandListener {
+public class SearchMessagesActivity extends BaseEmailListActivity implements SearchView.OnQueryTextListener,
+        MenuItem.OnActionExpandListener {
     public static final String SEARCH_FOLDER_NAME = "";
     public static final String EXTRA_KEY_QUERY = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_QUERY", SearchMessagesActivity.class);
@@ -105,11 +104,11 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
             case R.id.sync_request_code_search_messages:
-                refreshFoldersInfoFromCache();
-                onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-                if (!countingIdlingResourceForMessages.isIdleNow()) {
-                    countingIdlingResourceForMessages.decrement();
-                }
+                super.onReplyFromServiceReceived(R.id.syns_request_code_load_next_messages, resultCode, obj);
+                break;
+
+            default:
+                super.onReplyFromServiceReceived(requestCode, resultCode, obj);
                 break;
         }
     }

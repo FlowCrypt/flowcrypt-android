@@ -29,6 +29,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         EmailListFragment.OnManageEmailsListener {
     protected CountingIdlingResource countingIdlingResourceForMessages;
+    protected boolean isMoreMessagesAvailable;
 
     public abstract void refreshFoldersInfoFromCache();
 
@@ -45,7 +46,18 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
                 refreshFoldersInfoFromCache();
-                onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                switch (resultCode) {
+                    case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
+                        isMoreMessagesAvailable = true;
+                        onNextMessagesLoaded(true);
+                        break;
+
+                    default:
+                        isMoreMessagesAvailable = false;
+                        onNextMessagesLoaded(false);
+                        break;
+                }
+
                 if (!countingIdlingResourceForMessages.isIdleNow()) {
                     countingIdlingResourceForMessages.decrement();
                 }
@@ -125,6 +137,11 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
                 break;
 
         }
+    }
+
+    @Override
+    public boolean isMoreMessagesAvailable() {
+        return isMoreMessagesAvailable;
     }
 
     @Override

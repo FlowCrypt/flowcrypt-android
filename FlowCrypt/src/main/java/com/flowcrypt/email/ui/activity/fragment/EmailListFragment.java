@@ -316,8 +316,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public void onScroll(AbsListView view, int firstVisibleItem,
                          int visibleItemCount, int totalItemCount) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
-            boolean isMoreMessageAvailable = messageListAdapter.getCount() <
-                    onManageEmailsListener.getCurrentFolder().getMessageCount();
+            boolean isMoreMessageAvailable = onManageEmailsListener.isMoreMessagesAvailable();
             if (!isNewMessagesLoadingNow
                     && lastPositionOfAlreadyLoaded != messageListAdapter.getCount()
                     && isMoreMessageAvailable
@@ -576,6 +575,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     public interface OnManageEmailsListener {
+        boolean isMoreMessagesAvailable();
+
         AccountDao getCurrentAccountDao();
 
         Folder getCurrentFolder();
