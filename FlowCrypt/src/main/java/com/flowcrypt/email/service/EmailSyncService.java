@@ -267,16 +267,15 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
-    public void onMessageDetailsReceived(AccountDao accountDao, IMAPFolder imapFolder, long uid,
-                                         String rawMessageWithOutAttachments, String ownerKey, int requestCode) {
+    public void onMessageDetailsReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                         IMAPFolder imapFolder, long uid, String rawMessageWithOutAttachments,
+                                         String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
-            com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
-                    imapFolder.getName());
 
             messageDaoSource.updateMessageRawText(getApplicationContext(),
                     accountDao.getEmail(),
-                    folder.getFolderAlias(),
+                    localFolder.getFolderAlias(),
                     uid,
                     rawMessageWithOutAttachments);
 
@@ -285,7 +284,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             } else {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
-        } catch (MessagingException | RemoteException e) {
+        } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
         }
@@ -823,11 +822,11 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                     case MESSAGE_LOAD_MESSAGE_DETAILS:
                         if (emailSyncManager != null && action != null) {
-                            com.flowcrypt.email.api.email.Folder messageFolder =
+                            com.flowcrypt.email.api.email.Folder localFolder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.loadMessageDetails(action.getOwnerKey(),
-                                    action.getRequestCode(), messageFolder.getServerFullFolderName(), message.arg1);
+                                    action.getRequestCode(), localFolder, message.arg1);
                         }
                         break;
 

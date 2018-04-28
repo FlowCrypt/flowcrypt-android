@@ -214,14 +214,14 @@ public class EmailSyncManager {
      *
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName  A server folder name.
+     * @param folder      The local implementation of the remote folder.
      * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
      */
-    public void loadMessageDetails(String ownerKey, int requestCode, String folderName, int uid) {
+    public void loadMessageDetails(String ownerKey, int requestCode, Folder folder, int uid) {
         try {
             removeOldTasksFromBlockingQueue(LoadMessageDetailsSyncTask.class, activeSyncTaskBlockingQueue);
             activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
-                    folderName, uid));
+                    folder, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
