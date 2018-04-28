@@ -43,6 +43,7 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -441,6 +442,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     @Override
     public boolean onQueryTextSubmit(String query) {
         menuItemSearch.collapseActionView();
+        DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
         startActivity(SearchMessagesActivity.newIntent(this, query, folder));
         UIUtil.hideSoftInput(this, getRootView());
         return false;
@@ -551,18 +553,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
         if (emailListFragment != null) {
             emailListFragment.onForceLoadNewMessagesCompleted(needToRefreshList);
-        }
-    }
-
-    /**
-     * Update the list of emails after changing the folder.
-     */
-    private void updateEmailsListFragmentAfterFolderChange() {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.updateList(true);
         }
     }
 

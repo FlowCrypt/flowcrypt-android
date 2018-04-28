@@ -151,6 +151,18 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     }
 
     /**
+     * Update the list of emails after changing the folder.
+     */
+    protected void updateEmailsListFragmentAfterFolderChange() {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.updateList(true);
+        }
+    }
+
+    /**
      * Update a progress of some action.
      *
      * @param progress The action progress.

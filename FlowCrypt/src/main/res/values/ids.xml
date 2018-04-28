@@ -28,6 +28,7 @@
     <item name="syns_request_code_load_next_messages" type="id" />
     <item name="syns_request_code_force_load_new_messages" type="id" />
     <item name="syns_request_code_load_message_details" type="id" />
+    <item name="sync_request_code_search_messages" type="id" />
     <item name="syns_request_archive_message" type="id" />
     <item name="syns_request_delete_message" type="id" />
     <item name="syns_request_move_message_to_inbox" type="id" />

@@ -20,6 +20,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -33,6 +34,7 @@ import com.flowcrypt.email.util.GeneralUtil;
  */
 public class SearchMessagesActivity extends BaseEmailListActivity implements SearchView.OnQueryTextListener, MenuItem
         .OnActionExpandListener {
+    public static final String SEARCH_FOLDER_NAME = "";
     public static final String EXTRA_KEY_QUERY = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_QUERY", SearchMessagesActivity.class);
     public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey(
@@ -79,6 +81,10 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
         if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_FOLDER)) {
             this.initQuery = getIntent().getStringExtra(EXTRA_KEY_QUERY);
             this.folder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
+            if (folder != null) {
+                folder.setFolderAlias(SEARCH_FOLDER_NAME);
+                folder.setSearchQuery(initQuery);
+            }
         } else {
             finish();
         }
@@ -93,6 +99,31 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+        switch (requestCode) {
+            case R.id.sync_request_code_search_messages:
+                refreshFoldersInfoFromCache();
+                onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+        switch (requestCode) {
+            case R.id.sync_request_code_search_messages:
+                if (!countingIdlingResourceForMessages.isIdleNow()) {
+                    countingIdlingResourceForMessages.decrement();
+                }
+                notifyEmailListFragmentAboutError(requestCode, errorType, e);
+                break;
+        }
     }
 
     @Override
@@ -131,11 +162,15 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
 
     @Override
     public boolean onQueryTextSubmit(String query) {
+        this.initQuery = query;
+        folder.setSearchQuery(initQuery);
+        updateEmailsListFragmentAfterFolderChange();
         return false;
     }
 
     @Override
     public boolean onQueryTextChange(String newText) {
+        this.initQuery = newText;
         return false;
     }
 
@@ -146,7 +181,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
 
     @Override
     public Folder getCurrentFolder() {
-        return new Folder("", "", 0, null, true);
+        return folder;
     }
 
     @Override

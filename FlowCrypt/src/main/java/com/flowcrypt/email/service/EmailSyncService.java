@@ -32,6 +32,7 @@ import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
@@ -94,6 +95,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
     public static final int MESSAGE_GET_ACTIVE_ACCOUNT = 11;
     public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 12;
+    public static final int MESSAGE_SEARCH_MESSAGES = 13;
 
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
@@ -309,6 +311,34 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
             } else {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+            }
+
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
+            updateAttachmentTable(accountDao, folder, imapFolder, messages);
+
+        } catch (MessagingException | RemoteException | IOException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    @Override
+    public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
+                                         IMAPFolder imapFolder,
+                                         javax.mail.Message[] messages, String ownerKey, int requestCode) {
+        Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
+        try {
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+            messageDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(),
+                    SearchMessagesActivity.SEARCH_FOLDER_NAME,
+                    imapFolder,
+                    messages);
+
+            if (messages.length > 0) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
@@ -866,6 +896,16 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                             emailSyncManager.sendMessageWithBackup(action.getOwnerKey(), action.getRequestCode(),
                                     account);
+                        }
+                        break;
+
+                    case MESSAGE_SEARCH_MESSAGES:
+                        if (emailSyncManager != null && action != null) {
+                            com.flowcrypt.email.api.email.Folder folderWhereWeDoSearch =
+                                    (com.flowcrypt.email.api.email.Folder) action.getObject();
+
+                            emailSyncManager.searchMessages(action.getOwnerKey(),
+                                    action.getRequestCode(), folderWhereWeDoSearch, message.arg1);
                         }
                         break;
 

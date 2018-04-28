@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
@@ -18,6 +19,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SearchEmailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
@@ -365,6 +367,27 @@ public class EmailSyncManager {
     public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
         beginSync(true);
+    }
+
+    /**
+     * Add the task of load information of the next searched messages. This method create a new
+     * {@link SearchEmailsSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode                  The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folder                       A folder where we do a search.
+     * @param countOfAlreadyLoadedMessages The count of already cached messages in the database.
+     */
+    public void searchMessages(String ownerKey, int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
+        try {
+            removeOldTasksFromBlockingQueue(SearchEmailsSyncTask.class, activeSyncTaskBlockingQueue);
+            activeSyncTaskBlockingQueue.put(new SearchEmailsSyncTask(ownerKey, requestCode,
+                    folder, countOfAlreadyLoadedMessages));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
     }
 
     /**

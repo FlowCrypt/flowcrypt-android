@@ -17,6 +17,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,8 +32,8 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -193,8 +194,14 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (onManageEmailsListener.getCurrentFolder() != null) {
-            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
-                    null, loadCachedMessagesCursorLoaderCallbacks);
+            if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getSearchQuery())) {
+                getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
+                        null, loadCachedMessagesCursorLoaderCallbacks);
+            } else {
+                swipeRefreshLayout.setEnabled(false);
+                getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
+                        null, loadCachedMessagesCursorLoaderCallbacks);
+            }
         }
     }
 
@@ -345,7 +352,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 emptyView.setVisibility(View.GONE);
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                cleanCache();
+                DataBaseUtil.cleanFolderCache(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
 
                 switch (errorType) {
                     case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
@@ -409,7 +418,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                cleanCache();
+                DataBaseUtil.cleanFolderCache(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
             }
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
@@ -473,7 +484,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
      */
     public void reloadMessages() {
         getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        cleanCache();
+        DataBaseUtil.cleanFolderCache(getContext(),
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
         UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
         loadNextMessages(0);
     }
@@ -494,19 +507,6 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                         }
                     }
                 });
-    }
-
-    /**
-     * Clean the cache information about some folder.
-     */
-    private void cleanCache() {
-        new MessageDaoSource().deleteCachedMessagesOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
-
-        new AttachmentDaoSource().deleteCachedAttachmentInfoOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
     }
 
     /**
@@ -535,8 +535,13 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             isNewMessagesLoadingNow = true;
             lastCalledPositionForLoadMore = totalItemsCount;
             onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
-            baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
-                    onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getSearchQuery())) {
+                baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
+                        onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            } else {
+                baseSyncActivity.searchNextMessages(R.id.sync_request_code_search_messages,
+                        onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            }
         } else {
             footerProgressView.setVisibility(View.GONE);
             showSnackbar(getView(), getString(R.string.internet_connection_is_not_available),
