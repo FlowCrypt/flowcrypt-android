@@ -396,6 +396,10 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                     setSupportActionBarTitle(null);
                 }
                 break;
+
+            case R.id.sync_request_code_search_messages:
+                super.onErrorOccurred(requestCode, errorType, e);
+                break;
         }
     }
 

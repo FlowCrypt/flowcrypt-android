@@ -218,6 +218,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
@@ -242,6 +243,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
@@ -263,6 +265,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
@@ -287,12 +290,13 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
     @Override
     public void onMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
-                                   String key, int requestCode) {
+                                   String ownerKey, int requestCode) {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
@@ -307,9 +311,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     messages);
 
             if (messages.length > 0) {
-                sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
             } else {
-                sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
@@ -318,6 +322,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
@@ -346,6 +351,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (MessagingException | RemoteException | IOException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
         }
     }
 
