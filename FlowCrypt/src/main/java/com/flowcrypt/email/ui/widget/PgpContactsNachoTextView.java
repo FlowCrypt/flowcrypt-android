@@ -11,6 +11,10 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.Layout;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.SuggestionSpan;
 import android.util.AttributeSet;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -25,6 +29,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -88,7 +93,21 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     @Override
     public boolean onTextContextMenuItem(int id) {
+        int start = getSelectionStart();
+        int end = getSelectionEnd();
+
         switch (id) {
+            case android.R.id.cut:
+                setClipboardData(ClipData.newPlainText(null,
+                        removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
+                getText().delete(getSelectionStart(), getSelectionEnd());
+                return true;
+
+            case android.R.id.copy:
+                setClipboardData(ClipData.newPlainText(null,
+                        removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
+                return true;
+
             case android.R.id.paste:
                 StringBuilder stringBuilder = new StringBuilder();
                 ClipboardManager clipboardManager =
@@ -116,6 +135,58 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     public void setOnChipLongClickListener(OnChipLongClickListener onChipLongClickListener) {
         this.onChipLongClickListener = onChipLongClickListener;
+    }
+
+    private void setClipboardData(ClipData clip) {
+        ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(clip);
+        }
+    }
+
+    /**
+     * Get a formatted text of a selection.
+     *
+     * @param start The begin position of the selected text.
+     * @param end   The end position of the selected text.
+     * @return A formatted text.
+     */
+    private CharSequence getTextWithPlainTextSpans(int start, int end) {
+        Editable editable = getText();
+
+        if (getChipTokenizer() != null) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            List<Chip> chips = Arrays.asList(getChipTokenizer().findAllChips(start, end, editable));
+            for (int i = 0; i < chips.size(); i++) {
+                Chip chip = chips.get(i);
+                stringBuilder.append(chip.getText());
+                if (i != chips.size() - 1) {
+                    stringBuilder.append(SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE);
+                }
+            }
+
+            return stringBuilder.toString();
+        }
+        return editable.subSequence(start, end).toString();
+    }
+
+    private CharSequence removeSuggestionSpans(CharSequence text) {
+        if (text instanceof Spanned) {
+            Spannable spannable;
+            if (text instanceof Spannable) {
+                spannable = (Spannable) text;
+            } else {
+                spannable = new SpannableString(text);
+                text = spannable;
+            }
+
+            SuggestionSpan[] spans = spannable.getSpans(0, text.length(), SuggestionSpan.class);
+            for (int i = 0; i < spans.length; i++) {
+                spannable.removeSpan(spans[i]);
+            }
+        }
+        return text;
     }
 
     public interface OnChipLongClickListener {
