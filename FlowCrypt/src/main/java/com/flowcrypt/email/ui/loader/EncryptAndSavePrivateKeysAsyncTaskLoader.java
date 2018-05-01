@@ -93,7 +93,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                             if (pgpContact != null) {
                                 pgpContact.setPubkey(publicKey.armor());
                                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                                if (contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail()) == null) {
+                                if (js.str_is_email_valid(pgpContact.getEmail()) &&
+                                        contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail()) == null) {
                                     new ContactsDaoSource().addRow(getContext(), pgpContact);
                                     //todo-DenBond7 Need to resolve a situation with different public keys.
                                 }
