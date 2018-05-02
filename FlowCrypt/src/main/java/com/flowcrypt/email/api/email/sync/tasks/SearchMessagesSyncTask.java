@@ -6,9 +6,11 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
+import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
@@ -17,6 +19,7 @@ import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
 /**
@@ -58,7 +61,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
             countOfAlreadyLoadedMessages = 0;
         }
 
-        Message[] foundMessages = imapFolder.search(new SubjectTerm(folder.getSearchQuery()));
+        Message[] foundMessages = imapFolder.search(generateSearchTerm(accountDao));
 
         int messagesCount = foundMessages.length;
         int end = messagesCount - countOfAlreadyLoadedMessages;
@@ -89,5 +92,20 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
         }
 
         imapFolder.close(false);
+    }
+
+    /**
+     * Generate a {@link SearchTerm} depend on an input {@link AccountDao}.
+     *
+     * @param accountDao An input {@link AccountDao}
+     * @return A generated {@link SearchTerm}.
+     */
+    @NonNull
+    private SearchTerm generateSearchTerm(AccountDao accountDao) {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            return new GmailRawSearchTerm(folder.getSearchQuery());
+        } else {
+            return new SubjectTerm(folder.getSearchQuery());
+        }
     }
 }
