@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.SearchEmailsSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
@@ -371,7 +371,7 @@ public class EmailSyncManager {
 
     /**
      * Add the task of load information of the next searched messages. This method create a new
-     * {@link SearchEmailsSyncTask} object and added it to the current synchronization
+     * {@link SearchMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
      * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
@@ -381,8 +381,8 @@ public class EmailSyncManager {
      */
     public void searchMessages(String ownerKey, int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
         try {
-            removeOldTasksFromBlockingQueue(SearchEmailsSyncTask.class, activeSyncTaskBlockingQueue);
-            activeSyncTaskBlockingQueue.put(new SearchEmailsSyncTask(ownerKey, requestCode,
+            removeOldTasksFromBlockingQueue(SearchMessagesSyncTask.class, activeSyncTaskBlockingQueue);
+            activeSyncTaskBlockingQueue.put(new SearchMessagesSyncTask(ownerKey, requestCode,
                     folder, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();

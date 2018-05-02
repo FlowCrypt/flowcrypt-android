@@ -20,15 +20,15 @@ import javax.mail.UIDFolder;
 import javax.mail.search.SubjectTerm;
 
 /**
- * This task finds emails on some folder.
+ * This task finds messages on some folder.
  *
  * @author DenBond7
- * Date: 26.04.2018
- * Time: 14:20
- * E-mail: DenBond7@gmail.com
+ *         Date: 26.04.2018
+ *         Time: 14:20
+ *         E-mail: DenBond7@gmail.com
  */
 
-public class SearchEmailsSyncTask extends BaseSyncTask {
+public class SearchMessagesSyncTask extends BaseSyncTask {
     private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
     private com.flowcrypt.email.api.email.Folder folder;
     private int countOfAlreadyLoadedMessages;
@@ -39,8 +39,8 @@ public class SearchEmailsSyncTask extends BaseSyncTask {
      * @param ownerKey    The name of the reply to {@link Messenger}.
      * @param requestCode The unique request code for the reply to {@link Messenger}.
      */
-    public SearchEmailsSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
-                                int countOfAlreadyLoadedMessages) {
+    public SearchMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
+                                  int countOfAlreadyLoadedMessages) {
         super(ownerKey, requestCode);
         this.folder = folder;
         this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
