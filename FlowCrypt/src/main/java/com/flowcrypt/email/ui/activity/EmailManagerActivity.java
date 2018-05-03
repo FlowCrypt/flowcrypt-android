@@ -443,7 +443,16 @@ public class EmailManagerActivity extends BaseEmailListActivity
     public boolean onQueryTextSubmit(String query) {
         menuItemSearch.collapseActionView();
         DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
-        startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            Folder allMail = foldersManager.getFolderAll();
+            if (allMail != null) {
+                startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager.getFolderAll()));
+            } else {
+                startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+            }
+        } else {
+            startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+        }
         UIUtil.hideSoftInput(this, getRootView());
         return false;
     }
