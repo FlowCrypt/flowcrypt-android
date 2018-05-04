@@ -44,6 +44,7 @@ import java.util.List;
 import javax.crypto.Cipher;
 
 
+@SuppressWarnings("WeakerAccess")
 public class Js { // Create one object per thread and use them separately. Not thread-safe.
 
     private final StorageConnectorInterface storage;
@@ -80,14 +81,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     public PgpContact str_parse_email(String email) {
         V8Object e = (V8Object) this.call(Object.class, p("str", "parse_email"), new V8Array(v8).push(email));
         return new PgpContact(e.getString("email"), e.getString("name"));
-    }
-
-    public String str_base64url_encode(String string) {
-        return (String) this.call(str, p("str", "base64url_encode"), new V8Array(v8).push(string));
-    }
-
-    public String str_base64url_decode(String string) {
-        return (String) this.call(str, p("str", "base64url_decode"), new V8Array(v8).push(string));
     }
 
     public long time_to_utc_timestamp(String string) {
@@ -130,6 +123,12 @@ public class Js { // Create one object per thread and use them separately. Not t
     public ProcessedMime mime_process(String mime_message) {
         this.call(Object.class, p("mime", "process"), new V8Array(v8).push(mime_message).push(cb_catch));
         return new ProcessedMime((V8Object) cb_last_value[0], this);
+    }
+
+    public MessageBlock[] crypto_armor_detect_blocks(String text) {
+        V8Array blocks = ((V8Array) this.call(Object.class, p("crypto", "armor", "detect_blocks"),
+                new V8Array(v8).push(text)));
+        return MessageBlock.arrayFromV8Array(blocks);
     }
 
     public String crypto_key_normalize(String armored_key) {
@@ -229,11 +228,6 @@ public class Js { // Create one object per thread and use them separately. Not t
         return (String) this.call(str, p("api", "gmail", "query", "backups"), new V8Array(v8).push(email));
     }
 
-    public IdToken api_auth_parse_id_token(String id_token) {
-        return new IdToken((V8Object) this.call(Object.class, p("api", "auth", "parse_id_token"),
-                new V8Array(v8).push(id_token)));
-    }
-
     /**
      * Check that the key has valid structure.
      *
@@ -266,10 +260,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     public Attachment file_attachment(byte[] content, String name, String type) {
         return new Attachment((V8Object) this.call(V8Object.class, p("file", "attachment"), new V8Array(v8)
                 .push(name).push(type).push(uint8(content))));
-    }
-
-    private static String read(File file) throws IOException {
-        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
     private static String read(InputStream inputStream) throws IOException {
@@ -378,6 +368,7 @@ public class Js { // Create one object per thread and use them separately. Not t
 
 }
 
+@SuppressWarnings("WeakerAccess")
 class MeaningfulV8ObjectContainer {
 
     protected V8Object v8object;
