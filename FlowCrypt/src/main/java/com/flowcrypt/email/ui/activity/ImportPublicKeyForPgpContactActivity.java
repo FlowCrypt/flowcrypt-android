@@ -27,22 +27,22 @@ import com.flowcrypt.email.util.GeneralUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class ImportPublicKeyActivity extends BaseImportKeyActivity {
+public class ImportPublicKeyForPgpContactActivity extends BaseImportKeyActivity {
     public static final String KEY_EXTRA_PGP_CONTACT
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
-            ImportPublicKeyActivity.class);
+            ImportPublicKeyForPgpContactActivity.class);
 
     private PgpContact pgpContact;
 
     public static Intent newIntent(Context context, String title, PgpContact pgpContact) {
-        Intent intent = newIntent(context, title, false, ImportPublicKeyActivity.class);
+        Intent intent = newIntent(context, title, false, ImportPublicKeyForPgpContactActivity.class);
         intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact);
         return intent;
     }
 
     @Override
     public int getContentViewResourceId() {
-        return R.layout.activity_import_public_key;
+        return R.layout.activity_import_public_key_for_pgp_contact;
     }
 
     @Override

@@ -68,7 +68,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     public static final int RESULT_CODE_CONTINUE_WITH_GMAIL = 101;
 
     public static final String KEY_EXTRA_AUTH_CREDENTIALS =
-            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", ImportPublicKeyActivity.class);
+            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity.class);
 
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11;

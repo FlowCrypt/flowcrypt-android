@@ -242,7 +242,8 @@ public class CreateMessageActivityTest extends BaseTest {
     @Test
     public void testSelectImportPublicKeyFromPopUp() throws IOException {
         fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
-        intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPublicKeyActivity
+        intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+                ImportPublicKeyForPgpContactActivity
                 .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         savePublicKeyInDatabase();

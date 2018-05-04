@@ -65,7 +65,7 @@ import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
+import com.flowcrypt.email.ui.activity.ImportPublicKeyForPgpContactActivity;
 import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
@@ -269,7 +269,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                                     NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
                             if (pgpContact != null) {
-                                startActivityForResult(ImportPublicKeyActivity.newIntent(getContext(),
+                                startActivityForResult(ImportPublicKeyForPgpContactActivity.newIntent(getContext(),
                                         getString(R.string.import_public_key), pgpContact),
                                         REQUEST_CODE_IMPORT_PUBLIC_KEY);
                             }

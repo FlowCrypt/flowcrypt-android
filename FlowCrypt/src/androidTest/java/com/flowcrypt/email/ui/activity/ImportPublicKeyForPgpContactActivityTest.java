@@ -64,25 +64,25 @@ import static org.hamcrest.Matchers.is;
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class ImportPublicKeyActivityTest extends BaseTest {
+public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
     private static final String SOME_TEXT = "Some text";
     private static File fileWithPublicKey;
     private static File fileWithoutPublicKey;
     private static String publicKey;
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<ImportPublicKeyActivity>
-            (ImportPublicKeyActivity.class) {
+    private IntentsTestRule intentsTestRule = new IntentsTestRule<ImportPublicKeyForPgpContactActivity>
+            (ImportPublicKeyForPgpContactActivity.class) {
         @Override
         protected Intent getActivityIntent() {
             Context targetContext = InstrumentationRegistry.getTargetContext();
             PgpContact pgpContact = new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
                     false, null, false, null, null, null, 0);
-            Intent result = new Intent(targetContext, ImportPublicKeyActivity.class);
+            Intent result = new Intent(targetContext, ImportPublicKeyForPgpContactActivity.class);
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string.import_public_key));
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, (Parcelable) null);
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
-            result.putExtra(ImportPublicKeyActivity.KEY_EXTRA_PGP_CONTACT, pgpContact);
+            result.putExtra(ImportPublicKeyForPgpContactActivity.KEY_EXTRA_PGP_CONTACT, pgpContact);
             return result;
         }
     };
