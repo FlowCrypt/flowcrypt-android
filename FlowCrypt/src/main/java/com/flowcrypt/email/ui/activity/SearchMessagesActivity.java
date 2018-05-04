@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -22,6 +23,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.sun.mail.imap.protocol.SearchSequence;
 
 /**
  * This {@link android.app.Activity} searches and displays messages.
@@ -157,6 +159,13 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     @Override
     public boolean onQueryTextSubmit(String query) {
         this.initQuery = query;
+
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
+                && !SearchSequence.isAscii(query)) {
+            Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
         folder.setSearchQuery(initQuery);
         updateEmailsListFragmentAfterFolderChange();
         return false;

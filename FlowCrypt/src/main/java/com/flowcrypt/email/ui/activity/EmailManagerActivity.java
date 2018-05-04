@@ -37,6 +37,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
@@ -64,6 +65,7 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.sun.mail.imap.protocol.SearchSequence;
 
 import java.util.List;
 
@@ -71,9 +73,9 @@ import java.util.List;
  * This activity used to show messages list.
  *
  * @author DenBond7
- * Date: 27.04.2017
- * Time: 16:12
- * E-mail: DenBond7@gmail.com
+ *         Date: 27.04.2017
+ *         Time: 16:12
+ *         E-mail: DenBond7@gmail.com
  */
 public class EmailManagerActivity extends BaseEmailListActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
@@ -442,6 +444,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     @Override
     public boolean onQueryTextSubmit(String query) {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
+                && !SearchSequence.isAscii(query)) {
+            Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
         menuItemSearch.collapseActionView();
         DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
         if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {

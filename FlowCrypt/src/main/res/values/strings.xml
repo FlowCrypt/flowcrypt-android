@@ -317,4 +317,5 @@ icelanders prefer real sauna</font>
         later</string>
     <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
     <string name="server_unavailable">Server unavailable</string>
+    <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
 </resources>
