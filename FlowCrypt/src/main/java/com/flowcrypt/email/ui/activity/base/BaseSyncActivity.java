@@ -371,4 +371,8 @@ public abstract class BaseSyncActivity extends BaseActivity {
             ExceptionUtil.handleError(e);
         }
     }
+
+    public boolean isSyncServiceConnected() {
+        return isBoundToSyncService;
+    }
 }

@@ -272,6 +272,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     @Override
     public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         updateLabels(R.id.syns_request_code_update_label_passive, true);
     }
 

@@ -62,11 +62,6 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     }
 
     @Override
-    public void onSyncServiceConnected() {
-
-    }
-
-    @Override
     public void refreshFoldersInfoFromCache() {
 
     }

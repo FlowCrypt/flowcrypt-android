@@ -13,10 +13,11 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.util.UIUtil;
 
 /**
- * The base fragment which must used when we will work with Gmail email.
+ * The base fragment which must used when we will work with an email provider.
  *
  * @author DenBond7
  *         Date: 04.05.2017
@@ -24,7 +25,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseGmailFragment extends BaseFragment {
+public abstract class BaseSyncFragment extends BaseFragment {
 
     protected View progressView;
     protected View statusView;
@@ -77,5 +78,17 @@ public abstract class BaseGmailFragment extends BaseFragment {
         if (getSnackBar() != null) {
             getSnackBar().dismiss();
         }
+    }
+
+    /**
+     * Check is we connected to the sync service.
+     *
+     * @return true if we connected, otherwise false.
+     */
+    public boolean isSyncServiceConnected() {
+        BaseSyncActivity baseSyncActivity = (BaseSyncActivity) getActivity();
+        if (baseSyncActivity != null) {
+            return baseSyncActivity.isSyncServiceConnected();
+        } else throw new NullPointerException("BaseSyncActivity is null!");
     }
 }

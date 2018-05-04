@@ -145,9 +145,26 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     }
 
     @Override
+    public void onSyncServiceConnected() {
+        notifyEmailListFragmentSyncServiceConnected();
+    }
+
+    @Override
     @VisibleForTesting
     public CountingIdlingResource getCountingIdlingResourceForMessages() {
         return countingIdlingResourceForMessages;
+    }
+
+    /**
+     * Notify {@link EmailListFragment} that the activity already connected to the {@link EmailSyncService}
+     */
+    protected void notifyEmailListFragmentSyncServiceConnected() {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.onSyncServiceConnected();
+        }
     }
 
     /**

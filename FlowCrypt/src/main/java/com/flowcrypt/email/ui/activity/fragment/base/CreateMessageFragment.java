@@ -104,7 +104,7 @@ import java.util.regex.Pattern;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener,
+public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
