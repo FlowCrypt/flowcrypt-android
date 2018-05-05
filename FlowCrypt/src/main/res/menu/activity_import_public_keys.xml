@@ -1,0 +1,16 @@
+<!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.flowcrypt.email.ui.activity.AddContactActivity">
+    <item
+        android:id="@+id/menuActionHelp"
+        android:icon="@mipmap/ic_help"
+        android:orderInCategory="100"
+        android:title="@string/help"
+        app:showAsAction="always" />
+</menu>

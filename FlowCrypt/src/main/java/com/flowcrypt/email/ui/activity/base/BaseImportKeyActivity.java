@@ -72,7 +72,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
     protected View layoutContentView;
     protected View layoutProgress;
-    protected TextView textViewImportKeyTitle;
+    protected TextView textViewTitle;
     protected View buttonLoadFromFile;
 
     protected boolean isCheckingPrivateKeyNow;
@@ -393,8 +393,8 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         layoutContentView = findViewById(R.id.layoutContentView);
         layoutProgress = findViewById(R.id.layoutProgress);
 
-        textViewImportKeyTitle = findViewById(R.id.textViewImportKeyTitle);
-        textViewImportKeyTitle.setText(title);
+        textViewTitle = findViewById(R.id.textViewTitle);
+        textViewTitle.setText(title);
 
         buttonLoadFromFile = findViewById(R.id.buttonLoadFromFile);
         buttonLoadFromFile.setOnClickListener(this);

@@ -168,6 +168,11 @@
             android:name=".ui.activity.SearchMessagesActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.AddContactActivity"
+            android:label="@string/add_contact"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"

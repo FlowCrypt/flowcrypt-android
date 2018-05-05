@@ -142,7 +142,7 @@
     <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
     <string name="loaded_private_key_from_your_clipboard">Loaded private key from your clipboard</string>
-    <string name="checking_the_private_key">Evaluating…</string>
+    <string name="evaluating">Evaluating…</string>
     <string name="key_successfully_imported">Key successfully imported</string>
     <string name="attach_file">Attach file</string>
     <string name="switch_to_standard_email">Switch to standard email</string>
@@ -318,4 +318,7 @@ icelanders prefer real sauna</font>
     <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
     <string name="server_unavailable">Server unavailable</string>
     <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="add_public_keys_of_your_contacts">Add public keys of your contacts to send them encrypted messages.</string>
+    <string name="search_by_key_id_or_email">Search by key id or email</string>
 </resources>

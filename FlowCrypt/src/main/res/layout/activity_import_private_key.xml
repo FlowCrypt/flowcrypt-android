@@ -46,7 +46,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textViewImportKeyTitle"
+                android:id="@+id/textViewTitle"
                 style="@style/ScreenHeading"
                 android:layout_width="0dp"
                 android:text="@string/import_private_key"
@@ -64,7 +64,7 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                 app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                app:layout_constraintTop_toBottomOf="@+id/textViewImportKeyTitle"
+                app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
                 tools:text="Import keys" />
 
             <Button
@@ -130,7 +130,7 @@
                 android:layout_marginLeft="0dp"
                 android:layout_marginRight="0dp"
                 android:layout_marginTop="@dimen/default_margin_very_big"
-                android:text="@string/checking_the_private_key"
+                android:text="@string/evaluating"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/progressBar" />
