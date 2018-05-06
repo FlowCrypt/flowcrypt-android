@@ -14,11 +14,14 @@ import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 /**
  * A base API interface for RETROFIT.
@@ -75,4 +78,12 @@ public interface ApiService {
     @POST("https://api.cryptup.io/help/feedback")
     Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel
                                                                     postHelpFeedbackModel);
+
+    /**
+     * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup"
+     *
+     * @return {@link Call<LookUpResponse>}
+     */
+    @GET("/lookup/{keyIdOrEmail}")
+    Call<LookUpResponse> getLookUp(@Path("keyIdOrEmail") String keyIdOrEmail);
 }
