@@ -14,10 +14,13 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest;
+import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest;
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
@@ -30,7 +33,7 @@ import org.acra.ACRA;
  *         Time: 13:42
  *         E-mail: DenBond7@gmail.com
  */
-public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
+public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private ApiHelper apiHelper;
     private BaseRequest baseRequest;
     private ApiService apiService;
@@ -49,7 +52,9 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
     }
 
     @Override
-    public BaseResponse loadInBackground() {
+    public LoaderResult loadInBackground() {
+        BaseResponse baseResponse = null;
+
         if (apiHelper != null && apiHelper.getRetrofit() != null) {
             apiService = apiHelper.getRetrofit().create(ApiService.class);
 
@@ -67,22 +72,18 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                 lookUpEmailResponse.setResponse(apiService.postLookUpEmail
                                         (lookUpEmailRequest.getRequestModel()).execute());
                             } catch (Exception e) {
-                                e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
-                                lookUpEmailResponse.setException(e);
+                                lookUpEmailResponse.setException(catchException(e));
                             }
                         }
-                        return lookUpEmailResponse;
+                        baseResponse = lookUpEmailResponse;
+                        break;
 
                     case POST_HELP_FEEDBACK:
                         BaseResponse<PostHelpFeedbackResponse> postHelpFeedbackResponse =
                                 new BaseResponse<>();
                         postHelpFeedbackResponse.setApiName(baseRequest.getApiName());
 
-                        PostHelpFeedbackRequest postHelpFeedbackRequest =
-                                (PostHelpFeedbackRequest) baseRequest;
+                        PostHelpFeedbackRequest postHelpFeedbackRequest = (PostHelpFeedbackRequest) baseRequest;
 
                         if (apiService != null) {
                             try {
@@ -90,14 +91,11 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                         .postHelpFeedbackResponse(postHelpFeedbackRequest
                                                 .getRequestModel()).execute());
                             } catch (Exception e) {
-                                e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
-                                postHelpFeedbackResponse.setException(e);
+                                postHelpFeedbackResponse.setException(catchException(e));
                             }
                         }
-                        return postHelpFeedbackResponse;
+                        baseResponse = postHelpFeedbackResponse;
+                        break;
 
                     case POST_INITIAL_LEGACY_SUBMIT:
                         BaseResponse<InitialLegacySubmitResponse> initialLegacySubmitResponse = new BaseResponse<>();
@@ -108,19 +106,35 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
                                 initialLegacySubmitResponse.setResponse(apiService.postInitialLegacySubmit(
                                         (InitialLegacySubmitModel) baseRequest.getRequestModel()).execute());
                             } catch (Exception e) {
+                                initialLegacySubmitResponse.setException(catchException(e));
+                            }
+                        }
+                        baseResponse = initialLegacySubmitResponse;
+                        break;
+
+                    case GET_LOOKUP:
+                        BaseResponse<LookUpResponse> lookUpResponse = new BaseResponse<>();
+                        lookUpResponse.setApiName(baseRequest.getApiName());
+
+                        if (apiService != null) {
+                            try {
+                                lookUpResponse.setResponse(apiService.getLookUp(
+                                        ((LookUpRequest) baseRequest).getQuery()).execute());
+                            } catch (Exception e) {
                                 e.printStackTrace();
                                 if (ACRA.isInitialised()) {
                                     ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                                 }
-                                initialLegacySubmitResponse.setException(e);
+                                lookUpResponse.setException(e);
                             }
                         }
-                        return initialLegacySubmitResponse;
+                        baseResponse = lookUpResponse;
+                        break;
                 }
             }
         }
 
-        return null;
+        return new LoaderResult(baseResponse, null);
     }
 
     @Override
@@ -151,5 +165,13 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<BaseResponse> {
         result = 31 * result + (baseRequest != null ? baseRequest.hashCode() : 0);
         result = 31 * result + (apiService != null ? apiService.hashCode() : 0);
         return result;
+    }
+
+    private Exception catchException(Exception e) {
+        e.printStackTrace();
+        if (ACRA.isInitialised()) {
+            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
+        }
+        return e;
     }
 }

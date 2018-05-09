@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -37,7 +38,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class FeedbackActivity extends BaseBackStackSyncActivity implements LoaderManager.LoaderCallbacks<BaseResponse> {
+public class FeedbackActivity extends BaseBackStackSyncActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
     private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + ".KEY_IS_MESSAGE_SENT";
 
     private View progressBar;
@@ -126,7 +127,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public Loader<BaseResponse> onCreateLoader(int id, Bundle args) {
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
@@ -141,14 +142,15 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onLoadFinished(Loader<BaseResponse> loader, BaseResponse data) {
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
             case R.id.loader_id_post_help_feedback:
                 UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
-                if (data != null) {
-                    if (data.getResponseModel() != null) {
+                if (loaderResult != null) {
+                    if (loaderResult.getResult() != null) {
+                        BaseResponse baseResponse = (BaseResponse) loaderResult.getResult();
                         PostHelpFeedbackResponse postHelpFeedbackResponse =
-                                (PostHelpFeedbackResponse) data.getResponseModel();
+                                (PostHelpFeedbackResponse) baseResponse.getResponseModel();
                         if (postHelpFeedbackResponse.isSent()) {
                             this.isMessageSent = true;
                             UIUtil.showSnackbar(getRootView(), postHelpFeedbackResponse.getText(),
@@ -161,11 +163,10 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
                         } else if (postHelpFeedbackResponse.getApiError() != null) {
                             UIUtil.showInfoSnackbar(getRootView(), postHelpFeedbackResponse.getApiError().getMessage());
                         } else {
-                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                                    .unknown_error));
+                            UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
                         }
-                    } else if (data.getException() != null) {
-                        UIUtil.showInfoSnackbar(getRootView(), data.getException().getMessage());
+                    } else if (loaderResult.getException() != null) {
+                        UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException().getMessage());
                     } else {
                         UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
                     }
@@ -178,12 +179,12 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onLoaderReset(Loader<BaseResponse> loader) {
+    public void onLoaderReset(Loader<LoaderResult> loader) {
 
     }
 
     private void initViews() {
-        editTextUserMessage = (EditText) findViewById(R.id.editTextUserMessage);
+        editTextUserMessage = findViewById(R.id.editTextUserMessage);
         progressBar = findViewById(R.id.progressBar);
         layoutInput = findViewById(R.id.layoutInput);
         layoutContent = findViewById(R.id.layoutContent);
