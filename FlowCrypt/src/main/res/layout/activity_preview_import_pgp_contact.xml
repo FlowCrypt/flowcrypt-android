@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/toolbar" />
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/buttonImportAll"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginTop="@dimen/default_margin_small"
+            android:text="@string/import_all"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerViewContacts"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="@dimen/default_margin_content_small"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:scrollbars="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonImportAll"
+            tools:listitem="@layout/import_pgp_contact_item" />
+
+    </android.support.constraint.ConstraintLayout>
+
+</LinearLayout>

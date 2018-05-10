@@ -173,6 +173,11 @@
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.PreviewImportPgpContactActivity"
+            android:label="@string/add_contact"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
