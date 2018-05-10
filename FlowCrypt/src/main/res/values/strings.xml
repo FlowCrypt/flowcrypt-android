@@ -325,4 +325,8 @@ icelanders prefer real sauna</font>
     <string name="internal_error">An internal error</string>
     <string name="import_all">Import all</string>
     <string name="public_keys_not_found">Public keys not found</string>
+    <plurals name="found_contacts">
+        <item quantity="one">Found 1 contact</item>
+        <item quantity="other">Found %1$d contacts</item>
+    </plurals>
 </resources>

@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
@@ -41,7 +40,7 @@ public class ImportPgpContactsRecyclerViewAdapter extends
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.message_part_public_key,
+        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.import_pgp_contact_item,
                 parent, false));
     }
 
@@ -49,7 +48,8 @@ public class ImportPgpContactsRecyclerViewAdapter extends
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Context context = viewHolder.itemView.getContext();
         MessagePartPgpPublicKey messagePartPgpPublicKey = messagePartPgpPublicKeyList.get(position);
-        viewHolder.switchShowPublicKey.setVisibility(View.GONE);
+        viewHolder.buttonUpdateContact.setVisibility(View.GONE);
+        viewHolder.buttonSaveContact.setVisibility(View.GONE);
 
         if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
             viewHolder.textViewKeyOwnerTemplate.setText(
@@ -63,10 +63,6 @@ public class ImportPgpContactsRecyclerViewAdapter extends
         UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_fingerprint,
                 GeneralUtil.doSectionsInText(" ", messagePartPgpPublicKey.getFingerprint(), 4)),
                 viewHolder.textViewFingerprintTemplate);
-
-        viewHolder.textViewPgpPublicKey.setText(messagePartPgpPublicKey.getValue());
-        viewHolder.buttonUpdateContact.setVisibility(View.GONE);
-        viewHolder.buttonSaveContact.setVisibility(View.GONE);
 
         if (messagePartPgpPublicKey.isPgpContactExists()) {
             if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
@@ -101,8 +97,6 @@ public class ImportPgpContactsRecyclerViewAdapter extends
         TextView textViewKeyOwnerTemplate;
         TextView textViewKeyWordsTemplate;
         TextView textViewFingerprintTemplate;
-        TextView textViewPgpPublicKey;
-        Switch switchShowPublicKey;
         Button buttonSaveContact;
         Button buttonUpdateContact;
 
@@ -111,8 +105,6 @@ public class ImportPgpContactsRecyclerViewAdapter extends
             textViewKeyOwnerTemplate = itemView.findViewById(R.id.textViewKeyOwnerTemplate);
             textViewKeyWordsTemplate = itemView.findViewById(R.id.textViewKeyWordsTemplate);
             textViewFingerprintTemplate = itemView.findViewById(R.id.textViewFingerprintTemplate);
-            textViewPgpPublicKey = itemView.findViewById(R.id.textViewPgpPublicKey);
-            switchShowPublicKey = itemView.findViewById(R.id.switchShowPublicKey);
             buttonSaveContact = itemView.findViewById(R.id.buttonSaveContact);
             buttonUpdateContact = itemView.findViewById(R.id.buttonUpdateContact);
         }

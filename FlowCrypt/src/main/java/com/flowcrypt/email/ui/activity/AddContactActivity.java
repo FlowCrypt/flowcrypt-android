@@ -49,6 +49,7 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
     private View layoutPublicKeysContainer;
     private EditText editTextEmailOrId;
     private RecyclerView recyclerViewContacts;
+    private TextView textViewFoundContactsCount;
 
     private String publicKeysString;
     private boolean isParsePublicKeysNow;
@@ -230,6 +231,7 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
 
+        this.textViewFoundContactsCount = findViewById(R.id.textViewFoundContactsCount);
         this.recyclerViewContacts = findViewById(R.id.recyclerViewContacts);
         this.recyclerViewContacts.setHasFixedSize(true);
         this.recyclerViewContacts.setLayoutManager(layoutManager);
@@ -244,7 +246,8 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
             Toast.makeText(this, R.string.public_keys_not_found, Toast.LENGTH_SHORT).show();
         } else {
             this.recyclerViewContacts.setAdapter(new ImportPgpContactsRecyclerViewAdapter(messagePartPgpPublicKeys));
-
+            this.textViewFoundContactsCount.setText(getResources().getQuantityString(
+                    R.plurals.found_contacts, messagePartPgpPublicKeys.size(), messagePartPgpPublicKeys.size()));
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutContentView,
                     layoutPublicKeysContainer);
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
