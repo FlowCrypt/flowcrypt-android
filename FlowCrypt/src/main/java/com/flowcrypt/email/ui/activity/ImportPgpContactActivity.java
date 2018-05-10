@@ -51,7 +51,7 @@ import java.util.List;
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-public class AddContactActivity extends BaseImportKeyActivity implements TextView.OnEditorActionListener {
+public class ImportPgpContactActivity extends BaseImportKeyActivity implements TextView.OnEditorActionListener {
     private View layoutPublicKeysContainer;
     private EditText editTextEmailOrId;
     private RecyclerView recyclerViewContacts;
@@ -63,7 +63,7 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
 
     public static Intent newIntent(Context context) {
         return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
-                false, AddContactActivity.class);
+                false, ImportPgpContactActivity.class);
     }
 
     @Override
@@ -247,11 +247,11 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         switch (actionId) {
             case EditorInfo.IME_ACTION_SEARCH:
-                UIUtil.hideSoftInput(AddContactActivity.this, v);
+                UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
 
                 if (GeneralUtil.isInternetConnectionAvailable(this)) {
                     getSupportLoaderManager().restartLoader(R.id.loader_id_search_public_key, null,
-                            AddContactActivity.this);
+                            ImportPgpContactActivity.this);
                 } else {
                     showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
                 }

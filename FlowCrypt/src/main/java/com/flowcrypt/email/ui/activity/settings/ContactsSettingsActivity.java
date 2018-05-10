@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.ui.activity.AddContactActivity;
+import com.flowcrypt.email.ui.activity.ImportPgpContactActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -121,7 +121,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.floatActionButtonImportPublicKey:
-                startActivityForResult(AddContactActivity.newIntent(this), 0);
+                startActivityForResult(ImportPgpContactActivity.newIntent(this), 0);
                 break;
         }
     }

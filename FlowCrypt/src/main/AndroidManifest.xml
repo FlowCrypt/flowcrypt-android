@@ -169,7 +169,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.AddContactActivity"
+            android:name=".ui.activity.ImportPgpContactActivity"
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
