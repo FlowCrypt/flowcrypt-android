@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
@@ -28,9 +29,9 @@ import java.util.ListIterator;
  * {@link ContactsDaoSource#TABLE_NAME_CONTACTS}, add, delete and update rows.
  *
  * @author DenBond7
- *         Date: 17.05.2017
- *         Time: 12:22
- *         E-mail: DenBond7@gmail.com
+ * Date: 17.05.2017
+ * Time: 12:22
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ContactsDaoSource extends BaseDaoSource {
@@ -92,17 +93,7 @@ public class ContactsDaoSource extends BaseDaoSource {
     public Uri addRow(Context context, PgpContact pgpContact) {
         ContentResolver contentResolver = context.getContentResolver();
         if (pgpContact != null && contentResolver != null) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(COL_EMAIL, pgpContact.getEmail().toLowerCase());
-            contentValues.put(COL_NAME, pgpContact.getName());
-            contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
-            contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
-            contentValues.put(COL_CLIENT, pgpContact.getClient());
-            contentValues.put(COL_ATTESTED, pgpContact.getAttested());
-            contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
-            contentValues.put(COL_LONG_ID, pgpContact.getLongid());
-            contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
-            contentValues.put(COL_LAST_USE, pgpContact.getLastUse());
+            ContentValues contentValues = prepareContentValues(pgpContact);
 
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
@@ -127,6 +118,26 @@ public class ContactsDaoSource extends BaseDaoSource {
                 contentValues.put(COL_NAME, emailAndNamePair.getName());
                 contentValues.put(COL_HAS_PGP, false);
                 contentValuesArray[i] = contentValues;
+            }
+
+            return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+        } else return 0;
+    }
+
+    /**
+     * This method add rows per single transaction.
+     *
+     * @param context        Interface to global information about an application environment.
+     * @param pgpContactList A list of {@link PgpContact} objects which will be wrote to the database.
+     * @return the number of newly created rows.
+     */
+    public int addRows(Context context, List<PgpContact> pgpContactList) {
+        if (pgpContactList != null && !pgpContactList.isEmpty()) {
+            ContentResolver contentResolver = context.getContentResolver();
+            ContentValues[] contentValuesArray = new ContentValues[pgpContactList.size()];
+
+            for (int i = 0; i < pgpContactList.size(); i++) {
+                contentValuesArray[i] = prepareContentValues(pgpContactList.get(i));
             }
 
             return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
@@ -288,6 +299,37 @@ public class ContactsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * This method update cached contacts.
+     *
+     * @param context        Interface to global information about an application environment.
+     * @param pgpContactList A list of {@link PgpContact} objects.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] updatePgpContacts(Context context, List<PgpContact> pgpContactList)
+            throws RemoteException, OperationApplicationException {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (pgpContactList != null && !pgpContactList.isEmpty()) {
+            ArrayList<ContentProviderOperation> contentProviderOperationList = new ArrayList<>();
+            for (PgpContact pgpContact : pgpContactList) {
+                contentProviderOperationList.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                        .withValue(COL_NAME, pgpContact.getName())
+                        .withValue(COL_PUBLIC_KEY, pgpContact.getPubkey())
+                        .withValue(COL_HAS_PGP, pgpContact.getHasPgp())
+                        .withValue(COL_CLIENT, pgpContact.getClient())
+                        .withValue(COL_ATTESTED, pgpContact.getAttested())
+                        .withValue(COL_FINGERPRINT, pgpContact.getFingerprint())
+                        .withValue(COL_LONG_ID, pgpContact.getLongid())
+                        .withValue(COL_KEYWORDS, pgpContact.getKeywords())
+                        .withValue(COL_LAST_USE, pgpContact.getLastUse())
+                        .withSelection(COL_EMAIL + "= ?", new String[]{pgpContact.getEmail().toLowerCase()})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperationList);
+        } else return new ContentProviderResult[0];
+    }
+
+    /**
      * Update a last use entry of {@link PgpContact}.
      *
      * @param context    Interface to global information about an application environment.
@@ -350,5 +392,21 @@ public class ContactsDaoSource extends BaseDaoSource {
             return contentResolver.delete(getBaseContentUri(),
                     COL_EMAIL + " = ?", new String[]{email});
         } else return -1;
+    }
+
+    @NonNull
+    private ContentValues prepareContentValues(PgpContact pgpContact) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, pgpContact.getEmail().toLowerCase());
+        contentValues.put(COL_NAME, pgpContact.getName());
+        contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
+        contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
+        contentValues.put(COL_CLIENT, pgpContact.getClient());
+        contentValues.put(COL_ATTESTED, pgpContact.getAttested());
+        contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
+        contentValues.put(COL_LONG_ID, pgpContact.getLongid());
+        contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
+        contentValues.put(COL_LAST_USE, pgpContact.getLastUse());
+        return contentValues;
     }
 }

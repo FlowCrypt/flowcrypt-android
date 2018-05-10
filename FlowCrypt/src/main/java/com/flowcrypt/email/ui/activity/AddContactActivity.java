@@ -5,12 +5,16 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,6 +29,8 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -41,18 +47,19 @@ import java.util.List;
 
 /**
  * @author Denis Bondarenko
- *         Date: 04.05.2018
- *         Time: 17:07
- *         E-mail: DenBond7@gmail.com
+ * Date: 04.05.2018
+ * Time: 17:07
+ * E-mail: DenBond7@gmail.com
  */
 public class AddContactActivity extends BaseImportKeyActivity implements TextView.OnEditorActionListener {
     private View layoutPublicKeysContainer;
     private EditText editTextEmailOrId;
     private RecyclerView recyclerViewContacts;
-    private TextView textViewFoundContactsCount;
+    private TextView buttonImportAll;
 
     private String publicKeysString;
     private boolean isParsePublicKeysNow;
+    private List<MessagePartPgpPublicKey> messagePartPgpPublicKeyList;
 
     public static Intent newIntent(Context context) {
         return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
@@ -81,6 +88,51 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutPublicKeysContainer, layoutContentView);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonImportAll:
+                ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+                List<PgpContact> newCandidates = new ArrayList<>();
+                List<PgpContact> updateCandidates = new ArrayList<>();
+
+                for (MessagePartPgpPublicKey messagePartPgpPublicKey : messagePartPgpPublicKeyList) {
+                    PgpContact pgpContact = new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
+                            null,
+                            messagePartPgpPublicKey.getValue(),
+                            true,
+                            null,
+                            false,
+                            messagePartPgpPublicKey.getFingerprint(),
+                            messagePartPgpPublicKey.getLongId(),
+                            messagePartPgpPublicKey.getKeyWords(), 0);
+
+                    if (messagePartPgpPublicKey.isPgpContactExists()) {
+                        if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
+                            updateCandidates.add(pgpContact);
+                        }
+                    } else {
+                        newCandidates.add(pgpContact);
+                    }
+                }
+
+                try {
+                    contactsDaoSource.addRows(this, newCandidates);
+                    contactsDaoSource.updatePgpContacts(this, updateCandidates);
+                    Toast.makeText(this, R.string.success, Toast.LENGTH_SHORT).show();
+                    setResult(Activity.RESULT_OK);
+                    finish();
+                } catch (RemoteException | OperationApplicationException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            default:
+                super.onClick(v);
         }
     }
 
@@ -182,7 +234,7 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
 
             case R.id.loader_id_parse_public_keys:
                 this.isParsePublicKeysNow = false;
-                List<MessagePartPgpPublicKey> messagePartPgpPublicKeyList = (List<MessagePartPgpPublicKey>) result;
+                this.messagePartPgpPublicKeyList = (List<MessagePartPgpPublicKey>) result;
                 displayPublicKeysViewIfCan(messagePartPgpPublicKeyList);
                 break;
 
@@ -215,7 +267,8 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
             case R.id.loader_id_search_public_key:
             case R.id.loader_id_parse_public_keys:
                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, TextUtils.isEmpty(e.getMessage())
+                        ? getString(R.string.unknown_error) : e.getMessage(), Toast.LENGTH_SHORT).show();
                 break;
 
             default:
@@ -231,7 +284,8 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
 
-        this.textViewFoundContactsCount = findViewById(R.id.textViewFoundContactsCount);
+        this.buttonImportAll = findViewById(R.id.buttonImportAll);
+        this.buttonImportAll.setOnClickListener(this);
         this.recyclerViewContacts = findViewById(R.id.recyclerViewContacts);
         this.recyclerViewContacts.setHasFixedSize(true);
         this.recyclerViewContacts.setLayoutManager(layoutManager);
@@ -243,11 +297,10 @@ public class AddContactActivity extends BaseImportKeyActivity implements TextVie
     private void displayPublicKeysViewIfCan(List<MessagePartPgpPublicKey> messagePartPgpPublicKeys) {
         if (messagePartPgpPublicKeys.isEmpty()) {
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-            Toast.makeText(this, R.string.public_keys_not_found, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
         } else {
             this.recyclerViewContacts.setAdapter(new ImportPgpContactsRecyclerViewAdapter(messagePartPgpPublicKeys));
-            this.textViewFoundContactsCount.setText(getResources().getQuantityString(
-                    R.plurals.found_contacts, messagePartPgpPublicKeys.size(), messagePartPgpPublicKeys.size()));
+            this.buttonImportAll.setVisibility(messagePartPgpPublicKeys.size() > 1 ? View.VISIBLE : View.GONE);
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutContentView,
                     layoutPublicKeysContainer);
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,

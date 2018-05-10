@@ -137,17 +137,18 @@
             android:layout_height="match_parent"
             android:visibility="gone">
 
-            <TextView
-                android:id="@+id/textViewFoundContactsCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <Button
+                android:id="@+id/buttonImportAll"
+                style="@style/AppWidget.Button"
+                android:layout_width="0dp"
                 android:layout_marginEnd="@dimen/default_margin_content_small"
                 android:layout_marginStart="@dimen/default_margin_content_small"
-                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:layout_marginTop="@dimen/default_margin_small"
+                android:text="@string/import_all"
+                android:theme="@style/AppWidget.Button.Green"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Found 12 contacts" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerViewContacts"
@@ -159,7 +160,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewFoundContactsCount"
+                app:layout_constraintTop_toBottomOf="@+id/buttonImportAll"
                 tools:listitem="@layout/import_pgp_contact_item" />
 
         </android.support.constraint.ConstraintLayout>

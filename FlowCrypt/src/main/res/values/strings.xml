@@ -324,9 +324,7 @@ icelanders prefer real sauna</font>
     <string name="api_error">API error</string>
     <string name="internal_error">An internal error</string>
     <string name="import_all">Import all</string>
-    <string name="public_keys_not_found">Public keys not found</string>
-    <plurals name="found_contacts">
-        <item quantity="one">Found 1 contact</item>
-        <item quantity="other">Found %1$d contacts</item>
-    </plurals>
+    <string name="no_public_key_found">No public key found</string>
+    <string name="already_imported">Already imported</string>
+    <string name="success">Success</string>
 </resources>

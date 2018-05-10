@@ -104,6 +104,10 @@ public class MessagePartPgpPublicKey extends MessagePart {
         return pgpContact;
     }
 
+    public void setPgpContact(PgpContact pgpContact) {
+        this.pgpContact = pgpContact;
+    }
+
     public boolean isPgpContactExists() {
         return pgpContact != null;
     }

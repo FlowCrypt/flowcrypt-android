@@ -21,7 +21,6 @@ import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<Lo
         if (!TextUtils.isEmpty(inputString)) {
             try {
                 return new LoaderResult(parsePublicKeysInfo(new Js(getContext(), null), inputString), null);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 if (ACRA.isInitialised()) {
                     ACRA.getErrorReporter().handleException(new ManualHandledException(e));
