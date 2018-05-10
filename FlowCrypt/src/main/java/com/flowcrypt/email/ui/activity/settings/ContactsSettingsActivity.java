@@ -91,6 +91,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
 
                 if (data != null && data.getCount() > 0) {
                     contactsListCursorAdapter.swapCursor(data);
+                    UIUtil.exchangeViewVisibility(this, false, emptyView, listViewContacts);
                 } else {
                     UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
                 }
