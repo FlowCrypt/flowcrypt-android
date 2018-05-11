@@ -14,6 +14,8 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -33,9 +36,9 @@ import java.util.List;
  * This activity displays information about public keys owners and information about keys.
  *
  * @author Denis Bondarenko
- * Date: 10.05.2018
- * Time: 18:01
- * E-mail: DenBond7@gmail.com
+ *         Date: 10.05.2018
+ *         Time: 18:01
+ *         E-mail: DenBond7@gmail.com
  */
 public class PreviewImportPgpContactActivity extends BaseBackStackActivity implements View.OnClickListener {
     public static final String KEY_EXTRA_LIST
@@ -75,6 +78,24 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
         } else {
             setResult(Activity.RESULT_CANCELED);
             finish();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_preview_import_pgp_contact, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuActionHelp:
+                startActivity(new Intent(this, FeedbackActivity.class));
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
