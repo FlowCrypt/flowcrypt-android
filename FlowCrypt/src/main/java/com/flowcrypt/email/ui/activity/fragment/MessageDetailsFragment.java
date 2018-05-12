@@ -435,11 +435,12 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         List<AttachmentInfo> attachmentInfoList = null;
         if (attachmentInfo != null) {
             attachmentInfoList = new ArrayList<>();
+            attachmentInfo.setCanBeDeleted(false);
             attachmentInfoList.add(attachmentInfo);
         }
 
         startActivity(CreateMessageActivity.generateIntent(getContext(),
-                incomingMessageInfo, MessageType.NEW, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+                incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
                         .setIsFromFieldEditEnable(false)
                         .setIsToFieldEditEnable(false)
                         .setIsSubjectEditEnable(false)

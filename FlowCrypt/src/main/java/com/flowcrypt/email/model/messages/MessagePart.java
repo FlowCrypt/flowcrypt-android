@@ -76,6 +76,7 @@ public class MessagePart implements Parcelable {
             return new MessagePart[size];
         }
     };
+
     protected MessagePartType messagePartType;
     private String value;
 
@@ -85,8 +86,6 @@ public class MessagePart implements Parcelable {
     }
 
     protected MessagePart(Parcel in) {
-        int tmpMessagePartType = in.readInt();
-        this.messagePartType = tmpMessagePartType == -1 ? null : MessagePartType.values()[tmpMessagePartType];
         this.value = in.readString();
     }
 
