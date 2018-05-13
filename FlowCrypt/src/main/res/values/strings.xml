@@ -327,4 +327,6 @@ icelanders prefer real sauna</font>
     <string name="no_public_key_found">No public key found</string>
     <string name="already_imported">Already imported</string>
     <string name="success">Success</string>
+    <string name="key_is_empty">The key is empty</string>
+    <string name="parse_public_keys">Parse public keys</string>
 </resources>

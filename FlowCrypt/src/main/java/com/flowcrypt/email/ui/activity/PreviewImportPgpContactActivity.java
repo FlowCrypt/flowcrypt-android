@@ -12,8 +12,11 @@ import android.content.OperationApplicationException;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +26,14 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
+import com.flowcrypt.email.model.PublicKeyInfo;
+import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter;
+import com.flowcrypt.email.ui.loader.ParsePublicKeysFromStringAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,18 +46,23 @@ import java.util.List;
  *         Time: 18:01
  *         E-mail: DenBond7@gmail.com
  */
-public class PreviewImportPgpContactActivity extends BaseBackStackActivity implements View.OnClickListener {
-    public static final String KEY_EXTRA_LIST
-            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_LIST", PreviewImportPgpContactActivity.class);
-
-    private ArrayList<MessagePartPgpPublicKey> messagePartPgpPublicKeyList;
+public class PreviewImportPgpContactActivity extends BaseBackStackActivity implements View.OnClickListener,
+        LoaderManager.LoaderCallbacks<LoaderResult> {
+    public static final String KEY_EXTRA_PUBLIC_KEY_STRING
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity.class);
 
     private RecyclerView recyclerViewContacts;
     private TextView buttonImportAll;
+    private View layoutContentView;
+    private View layoutProgress;
 
-    public static Intent newIntent(Context context, ArrayList<MessagePartPgpPublicKey> messagePartPgpPublicKeyList) {
+    private String publicKeysString;
+    private List<PublicKeyInfo> publicKeyInfoList;
+    private View emptyView;
+
+    public static Intent newIntent(Context context, String publicKeysString) {
         Intent intent = new Intent(context, PreviewImportPgpContactActivity.class);
-        intent.putParcelableArrayListExtra(KEY_EXTRA_LIST, messagePartPgpPublicKeyList);
+        intent.putExtra(KEY_EXTRA_PUBLIC_KEY_STRING, publicKeysString);
         return intent;
     }
 
@@ -68,13 +79,16 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_LIST)) {
-            this.messagePartPgpPublicKeyList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_LIST);
-
+        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)) {
             initViews();
 
-            this.recyclerViewContacts.setAdapter(new ImportPgpContactsRecyclerViewAdapter(messagePartPgpPublicKeyList));
-            this.buttonImportAll.setVisibility(messagePartPgpPublicKeyList.size() > 1 ? View.VISIBLE : View.GONE);
+            publicKeysString = getIntent().getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING);
+            if (TextUtils.isEmpty(publicKeysString)) {
+                setResult(Activity.RESULT_CANCELED);
+                finish();
+            } else {
+                getSupportLoaderManager().initLoader(R.id.loader_id_parse_public_keys, null, this);
+            }
         } else {
             setResult(Activity.RESULT_CANCELED);
             finish();
@@ -107,19 +121,19 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
                 List<PgpContact> newCandidates = new ArrayList<>();
                 List<PgpContact> updateCandidates = new ArrayList<>();
 
-                for (MessagePartPgpPublicKey messagePartPgpPublicKey : messagePartPgpPublicKeyList) {
-                    PgpContact pgpContact = new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
+                for (PublicKeyInfo publicKeyInfo : publicKeyInfoList) {
+                    PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(),
                             null,
-                            messagePartPgpPublicKey.getValue(),
+                            publicKeyInfo.getPublicKey(),
                             true,
                             null,
                             false,
-                            messagePartPgpPublicKey.getFingerprint(),
-                            messagePartPgpPublicKey.getLongId(),
-                            messagePartPgpPublicKey.getKeyWords(), 0);
+                            publicKeyInfo.getFingerprint(),
+                            publicKeyInfo.getLongId(),
+                            publicKeyInfo.getKeyWords(), 0);
 
-                    if (messagePartPgpPublicKey.isPgpContactExists()) {
-                        if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
+                    if (publicKeyInfo.isPgpContactExists()) {
+                        if (publicKeyInfo.isPgpContactCanBeUpdated()) {
                             updateCandidates.add(pgpContact);
                         }
                     } else {
@@ -141,13 +155,73 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
         }
     }
 
+    @Override
+    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case R.id.loader_id_parse_public_keys:
+                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+                return new ParsePublicKeysFromStringAsyncTaskLoader(this, publicKeysString);
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+        handleLoaderResult(loader, loaderResult);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<LoaderResult> loader) {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void handleSuccessLoaderResult(int loaderId, Object result) {
+        switch (loaderId) {
+            case R.id.loader_id_parse_public_keys:
+                publicKeyInfoList = (List<PublicKeyInfo>) result;
+                if (!publicKeyInfoList.isEmpty()) {
+                    UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+                    recyclerViewContacts.setAdapter(new ImportPgpContactsRecyclerViewAdapter(publicKeyInfoList));
+                    buttonImportAll.setVisibility(publicKeyInfoList.size() > 1 ? View.VISIBLE : View.GONE);
+                } else {
+                    UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, emptyView);
+                }
+                break;
+
+            default:
+                super.handleSuccessLoaderResult(loaderId, result);
+        }
+    }
+
+    @Override
+    public void handleFailureLoaderResult(int loaderId, Exception e) {
+        switch (loaderId) {
+            case R.id.loader_id_parse_public_keys:
+                setResult(Activity.RESULT_CANCELED);
+                Toast.makeText(this, TextUtils.isEmpty(e.getMessage())
+                        ? getString(R.string.unknown_error) : e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+
+            default:
+                super.handleFailureLoaderResult(loaderId, e);
+        }
+    }
+
     private void initViews() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
 
-        this.buttonImportAll = findViewById(R.id.buttonImportAll);
-        this.buttonImportAll.setOnClickListener(this);
-        this.recyclerViewContacts = findViewById(R.id.recyclerViewContacts);
-        this.recyclerViewContacts.setHasFixedSize(true);
-        this.recyclerViewContacts.setLayoutManager(layoutManager);
+        layoutContentView = findViewById(R.id.layoutContentView);
+        layoutProgress = findViewById(R.id.layoutProgress);
+        buttonImportAll = findViewById(R.id.buttonImportAll);
+        buttonImportAll.setOnClickListener(this);
+        recyclerViewContacts = findViewById(R.id.recyclerViewContacts);
+        recyclerViewContacts.setHasFixedSize(true);
+        recyclerViewContacts.setLayoutManager(layoutManager);
+        emptyView = findViewById(R.id.emptyView);
     }
 }

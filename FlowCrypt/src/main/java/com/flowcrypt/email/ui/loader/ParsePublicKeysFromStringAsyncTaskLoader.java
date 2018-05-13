@@ -15,7 +15,7 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
+import com.flowcrypt.email.model.PublicKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
@@ -25,12 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This loader parses a list of {@link MessagePartPgpPublicKey} objects from an input string.
+ * This loader parses a list of {@link PublicKeyInfo} objects from an input string.
  *
  * @author Denis Bondarenko
- * Date: 09.05.2018
- * Time: 16:44
- * E-mail: DenBond7@gmail.com
+ *         Date: 09.05.2018
+ *         Time: 16:44
+ *         E-mail: DenBond7@gmail.com
  */
 public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private String inputString;
@@ -70,8 +70,8 @@ public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<Lo
         cancelLoad();
     }
 
-    private List<MessagePartPgpPublicKey> parsePublicKeysInfo(Js js, @NonNull String publicKey) {
-        List<MessagePartPgpPublicKey> messagePartPgpPublicKeys = new ArrayList<>();
+    private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String publicKey) {
+        List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
         MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(publicKey);
         for (MessageBlock messageBlock : messageBlocks) {
             if (messageBlock != null && messageBlock.getType() != null) {
@@ -81,21 +81,21 @@ public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<Lo
                         String fingerprint =
                                 js.crypto_key_fingerprint(js.crypto_key_read(content));
                         String longId = js.crypto_key_longid(fingerprint);
-                        String keywords = js.mnemonic(longId);
+                        String keyWords = js.mnemonic(longId);
                         PgpKey pgpKey = js.crypto_key_read(content);
                         String keyOwner = pgpKey.getPrimaryUserId().getEmail();
 
                         PgpContact pgpContact = new ContactsDaoSource().getPgpContact(getContext(), keyOwner);
 
-                        MessagePartPgpPublicKey messagePartPgpPublicKey = new MessagePartPgpPublicKey(content,
-                                longId, keywords, fingerprint, keyOwner, pgpContact);
+                        PublicKeyInfo messagePartPgpPublicKey = new PublicKeyInfo(keyWords, fingerprint, keyOwner,
+                                longId, pgpContact, publicKey);
 
-                        messagePartPgpPublicKeys.add(messagePartPgpPublicKey);
+                        publicKeyInfoList.add(messagePartPgpPublicKey);
                         break;
                 }
             }
         }
 
-        return messagePartPgpPublicKeys;
+        return publicKeyInfoList;
     }
 }

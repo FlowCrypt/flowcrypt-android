@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,18 +25,19 @@ import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
-import com.flowcrypt.email.ui.loader.ParsePublicKeysFromStringAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
 
 /**
+ * This {@link Activity} retrieves a public keys string from the different sources and sends it to
+ * {@link PreviewImportPgpContactActivity}
+ *
  * @author Denis Bondarenko
  *         Date: 04.05.2018
  *         Time: 17:07
@@ -45,8 +47,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     public static final int REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100;
     private EditText editTextEmailOrId;
 
-    private String publicKeysString;
-    private boolean isParsePublicKeysNow;
+    private boolean isSearchPublicKeysOnAttesterNow;
 
     public static Intent newIntent(Context context) {
         return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
@@ -66,11 +67,9 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
 
     @Override
     public void onBackPressed() {
-        if (isParsePublicKeysNow) {
-            this.publicKeysString = null;
-            this.isParsePublicKeysNow = false;
+        if (isSearchPublicKeysOnAttesterNow) {
+            this.isSearchPublicKeysOnAttesterNow = false;
             getSupportLoaderManager().destroyLoader(R.id.loader_id_search_public_key);
-            getSupportLoaderManager().destroyLoader(R.id.loader_id_parse_public_keys);
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
         } else {
             super.onBackPressed();
@@ -105,8 +104,14 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     @Override
     public void onKeyValidated(KeyDetails.Type type) {
         if (keyDetails != null) {
-            this.publicKeysString = keyDetails.getValue();
-            getSupportLoaderManager().restartLoader(R.id.loader_id_parse_public_keys, null, this);
+            if (!TextUtils.isEmpty(keyDetails.getValue())) {
+                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+                startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyDetails.getValue()),
+                        REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+            } else {
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+                Toast.makeText(this, R.string.key_is_empty, Toast.LENGTH_SHORT).show();
+            }
         } else {
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
@@ -122,27 +127,20 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_search_public_key:
-                this.isParsePublicKeysNow = true;
+                this.isSearchPublicKeysOnAttesterNow = true;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
                 return new ApiServiceAsyncTaskLoader(getApplicationContext(),
                         new LookUpRequest(editTextEmailOrId.getText().toString()));
-
-            case R.id.loader_id_parse_public_keys:
-                this.isParsePublicKeysNow = true;
-                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-                return new ParsePublicKeysFromStringAsyncTaskLoader(this, publicKeysString);
-
             default:
                 return super.onCreateLoader(id, args);
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_search_public_key:
-                this.isParsePublicKeysNow = false;
+                this.isSearchPublicKeysOnAttesterNow = false;
                 BaseResponse baseResponse = (BaseResponse) result;
                 if (baseResponse != null) {
                     if (baseResponse.getResponseModel() != null) {
@@ -163,11 +161,12 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
                                 }
 
                                 if (stringBuilder.length() > 0) {
-                                    this.publicKeysString = stringBuilder.toString();
-                                    getSupportLoaderManager().restartLoader(R.id.loader_id_parse_public_keys,
-                                            null, this);
+                                    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this,
+                                            stringBuilder.toString()), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
                                 } else {
-                                    displayPublicKeysViewIfCan(new ArrayList<MessagePartPgpPublicKey>());
+                                    UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
+                                            layoutContentView);
+                                    Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
                                 }
                             } else {
                                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
@@ -184,11 +183,6 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
                     UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                     UIUtil.showInfoSnackbar(getRootView(), getString(R.string.internal_error));
                 }
-                break;
-
-            case R.id.loader_id_parse_public_keys:
-                this.isParsePublicKeysNow = false;
-                displayPublicKeysViewIfCan((ArrayList<MessagePartPgpPublicKey>) result);
                 break;
 
             default:
@@ -218,7 +212,6 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     public void handleFailureLoaderResult(int loaderId, Exception e) {
         switch (loaderId) {
             case R.id.loader_id_search_public_key:
-            case R.id.loader_id_parse_public_keys:
                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                 Toast.makeText(this, TextUtils.isEmpty(e.getMessage())
                         ? getString(R.string.unknown_error) : e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -234,14 +227,5 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         super.initViews();
         this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail);
         this.editTextEmailOrId.setOnEditorActionListener(this);
-    }
-
-    private void displayPublicKeysViewIfCan(ArrayList<MessagePartPgpPublicKey> messagePartPgpPublicKeys) {
-        if (messagePartPgpPublicKeys.isEmpty()) {
-            Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
-        } else {
-            startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, messagePartPgpPublicKeys),
-                    REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
-        }
     }
 }
