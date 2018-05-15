@@ -7,6 +7,7 @@ package com.flowcrypt.email.util.exception;
 
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
@@ -53,11 +54,14 @@ public class ExceptionUtil {
 
         if (e instanceof IOException) {
             //Google network errors.
-            if ("NetworkError".equalsIgnoreCase(e.getMessage())
-                    || "Error on service connection.".equalsIgnoreCase(e.getMessage())) {
+            if ("NetworkError" .equalsIgnoreCase(e.getMessage())
+                    || "Error on service connection." .equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
 
+            if (e instanceof GoogleJsonResponseException) {
+                return false;
+            }
         }
 
         if ((e instanceof SSLHandshakeException
@@ -74,11 +78,11 @@ public class ExceptionUtil {
 
         if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
             //Connection limit exceeded
-            if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
+            if ("failed to create new store connection" .equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
 
-            if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
+            if ("Lost folder connection to server" .equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }
