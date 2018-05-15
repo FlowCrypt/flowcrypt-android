@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.IdlingRegistry;
@@ -17,9 +16,10 @@ import android.widget.EditText;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
-import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.rules.UpdateAccountRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.util.AccountDaoManager;
 
@@ -61,25 +61,16 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
             .class) {
         @Override
         protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
-            AccountDaoSource accountDaoSource = new AccountDaoSource();
-            try {
-                accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
-                accountDaoSource.updateAccountInformation(targetContext, accountDao.getAccount(), contentValues);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return SearchMessagesActivity.newIntent(targetContext, QUERY, new Folder(FOLDER_NAME, FOLDER_NAME,
-                    0, null, false));
+            return SearchMessagesActivity.newIntent(InstrumentationRegistry.getTargetContext(), QUERY,
+                    new Folder(FOLDER_NAME, FOLDER_NAME, 0, null, false));
         }
     };
+
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
+            .around(new AddAccountToDatabaseRule())
+            .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
             .around(intentsTestRule);
 
     @Before
@@ -135,5 +126,11 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
     @Test
     public void testDownloadAllMessages() {
         testDownloadAllMessages(22);
+    }
+
+    private static ContentValues generateContentValues() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
+        return contentValues;
     }
 }

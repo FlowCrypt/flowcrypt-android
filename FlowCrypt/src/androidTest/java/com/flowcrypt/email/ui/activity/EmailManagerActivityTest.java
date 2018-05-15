@@ -18,6 +18,7 @@ import android.support.test.espresso.intent.rule.IntentsTestRule;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -63,18 +64,10 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     private IntentsTestRule intentsTestRule = new IntentsTestRule<EmailManagerActivity>(EmailManagerActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            AccountDao accountDao =
-                    AccountDaoManager.getAccountDao("user_with_more_than_21_letters_account.json");
-            userWithMoreThan21LettersAccount = accountDao.getEmail();
-            AccountDaoSource accountDaoSource = new AccountDaoSource();
-            try {
-                accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Intent intentRunEmailManagerActivity = new Intent(targetContext, EmailManagerActivity.class);
-            intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
+            Intent intentRunEmailManagerActivity = new Intent(InstrumentationRegistry.getTargetContext(),
+                    EmailManagerActivity.class);
+            intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO,
+                    AccountDaoManager.getUserWitMoreThan21Letters());
             return intentRunEmailManagerActivity;
         }
     };
@@ -82,6 +75,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
+            .around(new AddAccountToDatabaseRule(AccountDaoManager.getUserWitMoreThan21Letters()))
             .around(intentsTestRule);
 
     @Before
@@ -90,6 +84,12 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
                 .getCountingIdlingResourceForMessages());
         IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
                 .getCountingIdlingResourceForLabel());
+    }
+
+    @Before
+    public void setupAccountDao() {
+        AccountDao accountDao = AccountDaoManager.getUserWitMoreThan21Letters();
+        userWithMoreThan21LettersAccount = accountDao.getEmail();
     }
 
     @After
