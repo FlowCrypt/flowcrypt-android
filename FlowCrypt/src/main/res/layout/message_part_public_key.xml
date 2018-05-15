@@ -7,7 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/AppWidget.TextInputLayout.PgpBlock.Other"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/default_margin_medium"
     android:orientation="vertical">
 

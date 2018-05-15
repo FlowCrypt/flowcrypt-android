@@ -31,7 +31,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 7;
+    public static final int DB_VERSION = 8;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -84,6 +84,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
 
             case 2:
@@ -92,6 +93,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
 
             case 3:
@@ -99,21 +101,29 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
 
             case 4:
                 upgradeDatabaseFrom4To5Version(sqLiteDatabase);
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
 
             case 5:
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
 
             case 6:
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                break;
+
+            case 7:
+                upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 break;
         }
 
@@ -223,6 +233,18 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         sqLiteDatabase.beginTransaction();
         try {
             sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private void upgradeDatabaseFrom7To8Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_CONTACTS_LOADED
+                    + " INTEGER DEFAULT 0;");
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();

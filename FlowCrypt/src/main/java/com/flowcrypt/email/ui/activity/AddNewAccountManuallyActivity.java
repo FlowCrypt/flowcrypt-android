@@ -68,7 +68,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     public static final int RESULT_CODE_CONTINUE_WITH_GMAIL = 101;
 
     public static final String KEY_EXTRA_AUTH_CREDENTIALS =
-            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", ImportPublicKeyActivity.class);
+            GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity.class);
 
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
     private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11;
@@ -260,7 +260,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
                 AccountDao accountDao = new AccountDao(authCredentials.getEmail(), null
-                        , authCredentials.getUsername(), null, null, null, authCredentials);
+                        , authCredentials.getUsername(), null, null, null, authCredentials, false);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
@@ -297,7 +297,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
                 if (keyDetailsList.isEmpty()) {
                     AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
-                            null, authCredentials.getUsername(), null, null, null, authCredentials);
+                            null, authCredentials.getUsername(), null, null, null, authCredentials, false);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_ADD_NEW_ACCOUNT);
                     UIUtil.exchangeViewVisibility(this, false, progressView, contentView);

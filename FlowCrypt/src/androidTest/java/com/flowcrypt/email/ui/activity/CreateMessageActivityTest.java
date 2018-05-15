@@ -242,8 +242,9 @@ public class CreateMessageActivityTest extends BaseTest {
     @Test
     public void testSelectImportPublicKeyFromPopUp() throws IOException {
         fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
-        intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPublicKeyActivity
-                .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+        intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+                ImportPublicKeyForPgpContactActivity.class)))
+                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         savePublicKeyInDatabase();
         onView(withText(R.string.import_their_public_key)).check(matches(isDisplayed())).perform(click());
@@ -259,7 +260,11 @@ public class CreateMessageActivityTest extends BaseTest {
 
     @Test
     public void testSelectedRemoveRecipientFromPopUp() {
-        fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
+        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
+                .perform(typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard());
+        //move the focus to the next view
+        onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
+                .perform(typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard());
         onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
         onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.template_remove_recipient,
                 TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))).check(matches(isDisplayed())).perform(click

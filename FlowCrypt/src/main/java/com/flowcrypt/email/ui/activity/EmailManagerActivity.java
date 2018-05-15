@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -24,23 +25,26 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -49,7 +53,7 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.service.actionqueue.ActionManager;
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
+import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -61,6 +65,7 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.sun.mail.imap.protocol.SearchSequence;
 
 import java.util.List;
 
@@ -72,10 +77,10 @@ import java.util.List;
  *         Time: 16:12
  *         E-mail: DenBond7@gmail.com
  */
-public class EmailManagerActivity extends BaseSyncActivity
+public class EmailManagerActivity extends BaseEmailListActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
         View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks {
+        GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
 
     public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
             "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
@@ -86,10 +91,9 @@ public class EmailManagerActivity extends BaseSyncActivity
     private AccountDao accountDao;
     private FoldersManager foldersManager;
     private Folder folder;
-    private ActionManager actionManager;
-
-    private CountingIdlingResource countingIdlingResourceForMessages;
     private CountingIdlingResource countingIdlingResourceForLabel;
+    private MenuItem menuItemSearch;
+
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private LinearLayout accountManagementLayout;
@@ -116,7 +120,7 @@ public class EmailManagerActivity extends BaseSyncActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        actionManager = new ActionManager(this);
+        ActionManager actionManager = new ActionManager(this);
 
         googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
                 .generateGoogleSignInOptions());
@@ -131,8 +135,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         } else {
             finish();
         }
-        countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-                (EmailManagerActivity.class), BuildConfig.DEBUG);
         countingIdlingResourceForLabel = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
                 (EmailManagerActivity.class), BuildConfig.DEBUG);
         countingIdlingResourceForLabel.increment();
@@ -145,6 +147,24 @@ public class EmailManagerActivity extends BaseSyncActivity
         if (drawerLayout != null) {
             drawerLayout.removeDrawerListener(actionBarDrawerToggle);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_email_manager, menu);
+
+        menuItemSearch = menu.findItem(R.id.menuSearch);
+
+        SearchView searchView = (SearchView) menuItemSearch.getActionView();
+        searchView.setOnQueryTextListener(this);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        if (searchManager != null) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
+        return true;
     }
 
     @Override
@@ -212,20 +232,15 @@ public class EmailManagerActivity extends BaseSyncActivity
                 }
                 break;
 
-            case R.id.syns_request_code_load_next_messages:
-                refreshFoldersInfoFromCache();
-                onNextMessagesLoaded(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-                if (!countingIdlingResourceForMessages.isIdleNow()) {
-                    countingIdlingResourceForMessages.decrement();
-                }
-                break;
-
             case R.id.syns_request_code_force_load_new_messages:
                 onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
                 if (!countingIdlingResourceForMessages.isIdleNow()) {
                     countingIdlingResourceForMessages.decrement();
                 }
                 break;
+
+            default:
+                super.onReplyFromServiceReceived(requestCode, resultCode, obj);
         }
     }
 
@@ -235,71 +250,8 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     @Override
-    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
-        switch (requestCode) {
-            case R.id.syns_request_code_load_next_messages:
-                switch (resultCode) {
-                    case R.id.progress_id_start_of_loading_new_messages:
-                        updateActionProgressState(0, "Starting");
-                        break;
-
-                    case R.id.progress_id_adding_task_to_queue:
-                        updateActionProgressState(10, "Queuing");
-                        break;
-
-                    case R.id.progress_id_queue_is_not_empty:
-                        updateActionProgressState(15, "Queue is not empty");
-                        break;
-
-                    case R.id.progress_id_thread_is_cancalled_and_done:
-                        updateActionProgressState(15, "Thread is cancelled and done");
-                        break;
-
-                    case R.id.progress_id_thread_is_done:
-                        updateActionProgressState(15, "Thread is done");
-                        break;
-
-                    case R.id.progress_id_thread_is_cancalled:
-                        updateActionProgressState(15, "Thread is cancelled");
-                        break;
-
-                    case R.id.progress_id_running_task:
-                        updateActionProgressState(20, "Running task");
-                        break;
-
-                    case R.id.progress_id_resetting_connection:
-                        updateActionProgressState(30, "Resetting connection");
-                        break;
-
-                    case R.id.progress_id_connecting_to_email_server:
-                        updateActionProgressState(40, "Connecting");
-                        break;
-
-                    case R.id.progress_id_running_smtp_action:
-                        updateActionProgressState(50, "Running SMTP action");
-                        break;
-
-                    case R.id.progress_id_running_imap_action:
-                        updateActionProgressState(60, "Running IMAP action");
-                        break;
-
-                    case R.id.progress_id_opening_store:
-                        updateActionProgressState(70, "Opening store");
-                        break;
-
-                    case R.id.progress_id_getting_list_of_emails:
-                        updateActionProgressState(80, "Getting list of emails");
-                        break;
-                }
-                break;
-
-        }
-    }
-
-    @Override
     public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
         switch (requestCode) {
-            case R.id.syns_request_code_load_next_messages:
             case R.id.syns_request_code_force_load_new_messages:
                 if (!countingIdlingResourceForMessages.isIdleNow()) {
                     countingIdlingResourceForMessages.decrement();
@@ -314,11 +266,15 @@ public class EmailManagerActivity extends BaseSyncActivity
                     countingIdlingResourceForLabel.decrement();
                 }
                 break;
+
+            default:
+                super.onErrorFromServiceReceived(requestCode, errorType, e);
         }
     }
 
     @Override
     public void onSyncServiceConnected() {
+        super.onSyncServiceConnected();
         updateLabels(R.id.syns_request_code_update_label_passive, true);
     }
 
@@ -351,7 +307,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -487,9 +442,41 @@ public class EmailManagerActivity extends BaseSyncActivity
         UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
     }
 
-    @VisibleForTesting
-    public CountingIdlingResource getCountingIdlingResourceForMessages() {
-        return countingIdlingResourceForMessages;
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
+                && !SearchSequence.isAscii(query)) {
+            Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        menuItemSearch.collapseActionView();
+        DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            Folder allMail = foldersManager.getFolderAll();
+            if (allMail != null) {
+                startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager.getFolderAll()));
+            } else {
+                startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+            }
+        } else {
+            startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+        }
+        UIUtil.hideSoftInput(this, getRootView());
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return false;
+    }
+
+    @Override
+    public void refreshFoldersInfoFromCache() {
+        foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
+        if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
+            folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+        }
     }
 
     @VisibleForTesting
@@ -539,13 +526,6 @@ public class EmailManagerActivity extends BaseSyncActivity
         return serverFolders;
     }
 
-    private void refreshFoldersInfoFromCache() {
-        foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
-        if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
-            folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
-        }
-    }
-
     private void logout() {
         AccountDaoSource accountDaoSource = new AccountDaoSource();
         List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, accountDao.getEmail());
@@ -581,23 +561,6 @@ public class EmailManagerActivity extends BaseSyncActivity
     }
 
     /**
-     * Handle an error from the sync service.
-     *
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param errorType   The {@link SyncErrorTypes}
-     * @param e           The exception which happened.
-     */
-    private void notifyEmailListFragmentAboutError(int requestCode, int errorType, Exception e) {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.onErrorOccurred(requestCode, errorType, e);
-            updateActionProgressState(100, null);
-        }
-    }
-
-    /**
      * Handle a result from the load new messages action.
      *
      * @param needToRefreshList true if we must reload the emails list.
@@ -608,48 +571,6 @@ public class EmailManagerActivity extends BaseSyncActivity
 
         if (emailListFragment != null) {
             emailListFragment.onForceLoadNewMessagesCompleted(needToRefreshList);
-        }
-    }
-
-    /**
-     * Handle a result from the load next messages action.
-     *
-     * @param needToRefreshList true if we must reload the emails list.
-     */
-    private void onNextMessagesLoaded(boolean needToRefreshList) {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.onNextMessagesLoaded(needToRefreshList);
-            emailListFragment.setActionProgress(100, null);
-        }
-    }
-
-    /**
-     * Update a progress of some action.
-     *
-     * @param progress The action progress.
-     * @param message  The user friendly message.
-     */
-    private void updateActionProgressState(int progress, String message) {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.setActionProgress(progress, message);
-        }
-    }
-
-    /**
-     * Update the list of emails after changing the folder.
-     */
-    private void updateEmailsListFragmentAfterFolderChange() {
-        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.emailListFragment);
-
-        if (emailListFragment != null) {
-            emailListFragment.updateList(true);
         }
     }
 

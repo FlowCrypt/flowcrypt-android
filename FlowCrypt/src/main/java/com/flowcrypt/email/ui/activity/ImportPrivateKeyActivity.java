@@ -27,7 +27,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -128,7 +128,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                             } else {
                                 buttonImportBackup.setText(getResources().getQuantityString(
                                         R.plurals.import_keys, uniqueKeysLongIds.size()));
-                                textViewImportKeyTitle.setText(getResources().getQuantityString(
+                                textViewTitle.setText(getResources().getQuantityString(
                                         R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size()));
                             }
                         } else {
@@ -218,7 +218,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
         switch (type) {
             case FILE:
                 startActivityForResult(CheckKeysActivity.newIntent(this,
-                        new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
+                        new ArrayList<>(Collections.singletonList(keyDetails)),
                         getString(R.string.template_check_key_name,
                                 keyDetails.getKeyName()),
                         getString(R.string.continue_), null,
@@ -228,7 +228,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
             case CLIPBOARD:
                 startActivityForResult(CheckKeysActivity.newIntent(this,
-                        new ArrayList<>(Arrays.asList(new KeyDetails[]{keyDetails})),
+                        new ArrayList<>(Collections.singletonList(keyDetails)),
                         getString(R.string.loaded_private_key_from_your_clipboard),
                         getString(R.string.continue_), null,
                         getString(R.string.choose_another_key), true),

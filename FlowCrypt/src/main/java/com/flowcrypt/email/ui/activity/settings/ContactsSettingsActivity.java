@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.ui.activity.ImportPgpContactActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -33,7 +34,8 @@ import com.flowcrypt.email.util.UIUtil;
  */
 
 public class ContactsSettingsActivity extends BaseSettingsActivity implements LoaderManager
-        .LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactButtonClickListener {
+        .LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactButtonClickListener,
+        View.OnClickListener {
     private View progressBar;
     private ListView listViewContacts;
     private View emptyView;
@@ -53,11 +55,15 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.progressBar = findViewById(R.id.progressBar);
-        this.listViewContacts = (ListView) findViewById(R.id.listViewContacts);
+        this.listViewContacts = findViewById(R.id.listViewContacts);
         this.emptyView = findViewById(R.id.emptyView);
         this.contactsListCursorAdapter = new
                 ContactsListCursorAdapter(this, null, false, this);
         listViewContacts.setAdapter(contactsListCursorAdapter);
+
+        if (findViewById(R.id.floatActionButtonImportPublicKey) != null) {
+            findViewById(R.id.floatActionButtonImportPublicKey).setOnClickListener(this);
+        }
 
         getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
                 null, this);
@@ -85,6 +91,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
 
                 if (data != null && data.getCount() > 0) {
                     contactsListCursorAdapter.swapCursor(data);
+                    UIUtil.exchangeViewVisibility(this, false, emptyView, listViewContacts);
                 } else {
                     UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
                 }
@@ -108,5 +115,14 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
                 .LENGTH_SHORT).show();
         getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
                 null, this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.floatActionButtonImportPublicKey:
+                startActivityForResult(ImportPgpContactActivity.newIntent(this), 0);
+                break;
+        }
     }
 }

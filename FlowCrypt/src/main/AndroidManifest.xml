@@ -89,7 +89,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.ImportPublicKeyActivity"
+            android:name=".ui.activity.ImportPublicKeyForPgpContactActivity"
             android:screenOrientation="portrait" />
 
         <activity
@@ -162,6 +162,20 @@
 
         <activity
             android:name=".ui.activity.CreatePrivateKeyActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.SearchMessagesActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.ImportPgpContactActivity"
+            android:label="@string/add_contact"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.PreviewImportPgpContactActivity"
+            android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
         <!-- Providers -->

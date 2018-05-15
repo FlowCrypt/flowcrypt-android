@@ -16,10 +16,10 @@ import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.AccountDaoManager;
 
@@ -47,7 +47,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -57,7 +56,7 @@ import static org.hamcrest.Matchers.not;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailManagerActivityTest extends BaseTest {
+public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     private String userWithMoreThan21LettersAccount;
     private String userWithoutLetters;
 
@@ -102,9 +101,7 @@ public class EmailManagerActivityTest extends BaseTest {
 
     @Test
     public void testDownloadAllMessages() {
-        onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
-        // size of list = number of the letters in the mail + 1 footer.
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(43))).check(matches(isDisplayed()));
+        testDownloadAllMessages(43);
     }
 
     @Test
@@ -116,17 +113,7 @@ public class EmailManagerActivityTest extends BaseTest {
 
     @Test
     public void testRunMessageDetailsActivity() {
-        onData(anything())
-                .inAdapterView(withId(R.id.listViewMessages))
-                .atPosition(20)
-                .perform(click());
-        intended(hasComponent(MessageDetailsActivity.class.getName()));
-        onView(withId(R.id.textViewSenderAddress)).check(matches(isDisplayed()))
-                .check(matches(withText(not(isEmptyString()))));
-        onView(withId(R.id.textViewSubject)).check(matches(isDisplayed()))
-                .check(matches(withText(not(isEmptyString()))));
-        onView(withId(R.id.textViewDate)).check(matches(isDisplayed()))
-                .check(matches(withText(not(isEmptyString()))));
+        testRunMessageDetailsActivity(20);
     }
 
     @Test

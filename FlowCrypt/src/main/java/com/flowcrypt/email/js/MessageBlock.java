@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.js;
 
+import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 
 import java.util.Objects;
@@ -18,7 +19,6 @@ public class MessageBlock extends MeaningfulV8ObjectContainer {
     public static final String TYPE_PGP_PASSWORD_MESSAGE = "password_message";
     public static final String TYPE_ATTEST_PACKET = "attest_packet";
     public static final String TYPE_VERIFICATION = "cryptup_verification";
-
 
     private String type;
     private String content;
@@ -47,5 +47,14 @@ public class MessageBlock extends MeaningfulV8ObjectContainer {
 
     public String getSignature() {
         return signature;
+    }
+
+    public static MessageBlock[] arrayFromV8Array(V8Array blocks) {
+        int length = (blocks != null) ? blocks.length() : 0;
+        MessageBlock[] result = new MessageBlock[length];
+        for(int i = 0; i < length; i++) {
+            result[i] = new MessageBlock(blocks.getObject(i));
+        }
+        return result;
     }
 }

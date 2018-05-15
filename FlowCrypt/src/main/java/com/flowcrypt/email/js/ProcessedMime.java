@@ -42,11 +42,6 @@ public class ProcessedMime extends MeaningfulV8ObjectContainer {
     }
 
     public MessageBlock[] getBlocks() {
-        V8Array blocks = getAttributeAsArray("blocks");
-        MessageBlock[] result = new MessageBlock[blocks.length()];
-        for(int i = 0; i < blocks.length(); i++) {
-            result[i] = new MessageBlock(blocks.getObject(i));
-        }
-        return result;
+        return MessageBlock.arrayFromV8Array(getAttributeAsArray("blocks"));
     }
 }

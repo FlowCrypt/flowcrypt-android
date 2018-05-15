@@ -23,6 +23,7 @@ public enum ApiName {
     POST_LOOKUP_EMAIL_MULTIPLY,
     POST_REPLACE_REQUEST,
     POST_REPLACE_CONFIRM,
+    GET_LOOKUP,
 
     /*api.cryptup.io*/
     POST_HELP_FEEDBACK,

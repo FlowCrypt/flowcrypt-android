@@ -168,7 +168,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
             case R.id.loader_id_load_private_key_backups_from_email:
                 UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
                 AccountDao accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(),
-                        AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
+                        AccountDao.ACCOUNT_TYPE_GOOGLE);
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
@@ -194,7 +194,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
                 if (keyDetailsList.isEmpty()) {
                     AccountDao accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(),
-                            AccountDao.ACCOUNT_TYPE_GOOGLE, null, null, null, null, null);
+                            AccountDao.ACCOUNT_TYPE_GOOGLE);
                     startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
                             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL);
                     UIUtil.exchangeViewVisibility(this, false, progressView, contentView);

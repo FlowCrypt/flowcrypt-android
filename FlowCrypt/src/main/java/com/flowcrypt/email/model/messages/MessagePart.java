@@ -76,6 +76,7 @@ public class MessagePart implements Parcelable {
             return new MessagePart[size];
         }
     };
+
     protected MessagePartType messagePartType;
     private String value;
 

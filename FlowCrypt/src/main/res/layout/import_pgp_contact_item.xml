@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppWidget.TextInputLayout.PgpBlock.Other"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/default_margin_medium"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewKeyOwnerTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textIsSelectable="true"
+        tools:text="Public Key for ..........................." />
+
+    <TextView
+        android:id="@+id/textViewKeyWordsTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:textIsSelectable="true"
+        tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
+
+    <TextView
+        android:id="@+id/textViewFingerprintTemplate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:textIsSelectable="true"
+        tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+    <TextView
+        android:id="@+id/textViewAlreadyImported"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:gravity="center|end"
+        android:text="@string/already_imported"
+        android:textColor="@color/colorPrimary" />
+
+    <Button
+        android:id="@+id/buttonSaveContact"
+        style="@style/AppWidget.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/save_contact"
+        android:theme="@style/AppWidget.Button.Green"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/buttonUpdateContact"
+        style="@style/AppWidget.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:text="@string/update_contact"
+        android:theme="@style/AppWidget.Button.Green"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

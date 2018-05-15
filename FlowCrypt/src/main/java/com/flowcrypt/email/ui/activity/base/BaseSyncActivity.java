@@ -223,6 +223,30 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
 
     /**
+     * Start a job to load searched messages to the cache.
+     *
+     * @param requestCode                  The unique request code for identify the current action.
+     * @param folder                       {@link Folder} object which contains the search query.
+     * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
+     */
+    public void searchNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
+        if (checkServiceBound(isBoundToSyncService)) return;
+
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, folder);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES,
+                countOfAlreadyLoadedMessages, 0, action);
+
+        message.replyTo = syncServiceReplyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
      * Run update a folders list.
      *
      * @param requestCode    The unique request code for identify the current action.
@@ -346,5 +370,9 @@ public abstract class BaseSyncActivity extends BaseActivity {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
         }
+    }
+
+    public boolean isSyncServiceConnected() {
+        return isBoundToSyncService;
     }
 }

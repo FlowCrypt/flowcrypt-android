@@ -62,7 +62,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyDialogFragment;
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -80,7 +80,7 @@ import java.util.List;
  *         Time: 16:29
  *         E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsFragment extends BaseGmailFragment implements View.OnClickListener {
+public class MessageDetailsFragment extends BaseSyncFragment implements View.OnClickListener {
     private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
     private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101;
     private static final int REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102;
@@ -435,11 +435,12 @@ public class MessageDetailsFragment extends BaseGmailFragment implements View.On
         List<AttachmentInfo> attachmentInfoList = null;
         if (attachmentInfo != null) {
             attachmentInfoList = new ArrayList<>();
+            attachmentInfo.setCanBeDeleted(false);
             attachmentInfoList.add(attachmentInfo);
         }
 
         startActivity(CreateMessageActivity.generateIntent(getContext(),
-                incomingMessageInfo, MessageType.NEW, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+                incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
                         .setIsFromFieldEditEnable(false)
                         .setIsToFieldEditEnable(false)
                         .setIsSubjectEditEnable(false)

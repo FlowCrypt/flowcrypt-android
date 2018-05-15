@@ -9,14 +9,17 @@ import android.content.Context;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
@@ -80,6 +83,7 @@ public class EmailSyncManager {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT);
 
         updateLabels(null, 0, activeSyncTaskBlockingQueue);
+        loadContactsInfoIfNeed();
     }
 
     /**
@@ -92,6 +96,7 @@ public class EmailSyncManager {
         if (isResetNeeded) {
             resetSync();
             updateLabels(null, 0, activeSyncTaskBlockingQueue);
+            loadContactsInfoIfNeed();
         }
 
         if (!isThreadAlreadyWork(activeSyncTaskRunnableFuture)) {
@@ -166,6 +171,21 @@ public class EmailSyncManager {
     }
 
     /**
+     * Load contacts info from the SENT folder.
+     */
+    public void loadContactsInfoIfNeed() {
+        if (accountDao != null && !accountDao.isContactsLoaded()) {
+            //we need to update labels before we can use the SENT folder for retrieve contacts
+            updateLabels(null, 0, passiveSyncTaskBlockingQueue);
+            try {
+                passiveSyncTaskBlockingQueue.put(new LoadContactsSyncTask());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Add load a messages information task. This method create a new
      * {@link LoadMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
@@ -194,14 +214,14 @@ public class EmailSyncManager {
      *
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName  A server folder name.
+     * @param folder      The local implementation of the remote folder.
      * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
      */
-    public void loadMessageDetails(String ownerKey, int requestCode, String folderName, int uid) {
+    public void loadMessageDetails(String ownerKey, int requestCode, Folder folder, int uid) {
         try {
             removeOldTasksFromBlockingQueue(LoadMessageDetailsSyncTask.class, activeSyncTaskBlockingQueue);
             activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
-                    folderName, uid));
+                    folder, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -347,6 +367,27 @@ public class EmailSyncManager {
     public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
         beginSync(true);
+    }
+
+    /**
+     * Add the task of load information of the next searched messages. This method create a new
+     * {@link SearchMessagesSyncTask} object and added it to the current synchronization
+     * BlockingQueue.
+     *
+     * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode                  The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folder                       A folder where we do a search.
+     * @param countOfAlreadyLoadedMessages The count of already cached messages in the database.
+     */
+    public void searchMessages(String ownerKey, int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
+        try {
+            removeOldTasksFromBlockingQueue(SearchMessagesSyncTask.class, activeSyncTaskBlockingQueue);
+            activeSyncTaskBlockingQueue.put(new SearchMessagesSyncTask(ownerKey, requestCode,
+                    folder, countOfAlreadyLoadedMessages));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
     }
 
     /**

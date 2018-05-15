@@ -104,13 +104,16 @@ public class MessagePartPgpPublicKey extends MessagePart {
         return pgpContact;
     }
 
+    public void setPgpContact(PgpContact pgpContact) {
+        this.pgpContact = pgpContact;
+    }
+
     public boolean isPgpContactExists() {
         return pgpContact != null;
     }
 
     public boolean isPgpContactCanBeUpdated() {
-        return pgpContact != null
-                && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
+        return pgpContact != null && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
     }
 
     public String getLongId() {

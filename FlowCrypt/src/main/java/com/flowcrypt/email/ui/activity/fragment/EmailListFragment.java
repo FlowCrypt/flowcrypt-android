@@ -12,10 +12,12 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,13 +32,12 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseGmailFragment;
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -53,7 +54,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailListFragment extends BaseGmailFragment implements AdapterView.OnItemClickListener,
+public class EmailListFragment extends BaseSyncFragment implements AdapterView.OnItemClickListener,
         AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
@@ -71,6 +72,8 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     private BaseSyncActivity baseSyncActivity;
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
+    private boolean needForceFirstLoad;
+
     private int lastCalledPositionForLoadMore;
     private int lastPositionOfAlreadyLoaded;
 
@@ -124,7 +127,11 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
                             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                                loadNextMessages(0);
+                                if (isSyncServiceConnected()) {
+                                    loadNextMessages(0);
+                                } else {
+                                    needForceFirstLoad = true;
+                                }
                             } else {
                                 textViewStatusInfo.setText(R.string.no_connection);
                                 UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
@@ -193,6 +200,10 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (onManageEmailsListener.getCurrentFolder() != null) {
+            if (!TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getSearchQuery())) {
+                swipeRefreshLayout.setEnabled(false);
+            }
+
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
                     null, loadCachedMessagesCursorLoaderCallbacks);
         }
@@ -309,8 +320,7 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     public void onScroll(AbsListView view, int firstVisibleItem,
                          int visibleItemCount, int totalItemCount) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
-            boolean isMoreMessageAvailable = messageListAdapter.getCount() <
-                    onManageEmailsListener.getCurrentFolder().getMessageCount();
+            boolean isMoreMessageAvailable = onManageEmailsListener.isMoreMessagesAvailable();
             if (!isNewMessagesLoadingNow
                     && lastPositionOfAlreadyLoaded != messageListAdapter.getCount()
                     && isMoreMessageAvailable
@@ -345,7 +355,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 emptyView.setVisibility(View.GONE);
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                cleanCache();
+                DataBaseUtil.cleanFolderCache(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
 
                 switch (errorType) {
                     case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
@@ -388,6 +400,10 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                     setSupportActionBarTitle(null);
                 }
                 break;
+
+            case R.id.sync_request_code_search_messages:
+                super.onErrorOccurred(requestCode, errorType, e);
+                break;
         }
     }
 
@@ -409,7 +425,9 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                cleanCache();
+                DataBaseUtil.cleanFolderCache(getContext(),
+                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
             }
 
             getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
@@ -473,9 +491,18 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
      */
     public void reloadMessages() {
         getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-        cleanCache();
+        DataBaseUtil.cleanFolderCache(getContext(),
+                onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                onManageEmailsListener.getCurrentFolder().getFolderAlias());
         UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
         loadNextMessages(0);
+    }
+
+    public void onSyncServiceConnected() {
+        if (needForceFirstLoad) {
+            loadNextMessages(0);
+            needForceFirstLoad = false;
+        }
     }
 
     /**
@@ -497,23 +524,10 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     /**
-     * Clean the cache information about some folder.
-     */
-    private void cleanCache() {
-        new MessageDaoSource().deleteCachedMessagesOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
-
-        new AttachmentDaoSource().deleteCachedAttachmentInfoOfFolder(getContext(),
-                onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                onManageEmailsListener.getCurrentFolder().getFolderAlias());
-    }
-
-    /**
      * Try to load a new messages from an IMAP server.
      */
     private void refreshMessages() {
-        ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
+        onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
         baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
                 onManageEmailsListener.getCurrentFolder(),
                 messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
@@ -534,9 +548,14 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
             footerProgressView.setVisibility(View.VISIBLE);
             isNewMessagesLoadingNow = true;
             lastCalledPositionForLoadMore = totalItemsCount;
-            ((EmailManagerActivity) getActivity()).getCountingIdlingResourceForMessages().increment();
-            baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
-                    onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
+            if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getSearchQuery())) {
+                baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,
+                        onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            } else {
+                baseSyncActivity.searchNextMessages(R.id.sync_request_code_search_messages,
+                        onManageEmailsListener.getCurrentFolder(), totalItemsCount);
+            }
         } else {
             footerProgressView.setVisibility(View.GONE);
             showSnackbar(getView(), getString(R.string.internet_connection_is_not_available),
@@ -571,10 +590,14 @@ public class EmailListFragment extends BaseGmailFragment implements AdapterView.
     }
 
     public interface OnManageEmailsListener {
+        boolean isMoreMessagesAvailable();
+
         AccountDao getCurrentAccountDao();
 
         Folder getCurrentFolder();
 
         void onRetryGoogleAuth();
+
+        CountingIdlingResource getCountingIdlingResourceForMessages();
     }
 }

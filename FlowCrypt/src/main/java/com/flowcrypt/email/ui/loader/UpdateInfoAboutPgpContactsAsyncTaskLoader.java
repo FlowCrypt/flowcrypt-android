@@ -75,47 +75,49 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
         try {
             Js js = new Js(getContext(), null);
             for (String email : emails) {
-                if (email != null) {
-                    email = email.toLowerCase();
-                }
+                if (js.str_is_email_valid(email)) {
+                    if (email != null) {
+                        email = email.toLowerCase();
+                    }
 
-                PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
-                if (localPgpContact != null) {
-                    if (!localPgpContact.getHasPgp()) {
+                    PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
+                    if (localPgpContact != null) {
+                        if (!localPgpContact.getHasPgp()) {
+                            try {
+                                PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
+                                if (remotePgpContact != null) {
+                                    pgpContacts.add(remotePgpContact);
+                                    contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                                }
+                            } catch (IOException e) {
+                                isAllInfoReceived = false;
+                                pgpContacts.add(localPgpContact);
+                                e.printStackTrace();
+                                if (ACRA.isInitialised()) {
+                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
+                                }
+                            }
+                        } else {
+                            pgpContacts.add(localPgpContact);
+                        }
+                    } else {
+                        PgpContact newPgpContact = new PgpContact(email, null);
+                        contactsDaoSource.addRow(getContext(), newPgpContact);
                         try {
                             PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
                             if (remotePgpContact != null) {
-                                pgpContacts.add(remotePgpContact);
                                 contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                                pgpContacts.add(remotePgpContact);
+                            } else {
+                                pgpContacts.add(newPgpContact);
                             }
                         } catch (IOException e) {
                             isAllInfoReceived = false;
-                            pgpContacts.add(localPgpContact);
+                            pgpContacts.add(newPgpContact);
                             e.printStackTrace();
                             if (ACRA.isInitialised()) {
                                 ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                             }
-                        }
-                    } else {
-                        pgpContacts.add(localPgpContact);
-                    }
-                } else {
-                    PgpContact newPgpContact = new PgpContact(email, null);
-                    contactsDaoSource.addRow(getContext(), newPgpContact);
-                    try {
-                        PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
-                        if (remotePgpContact != null) {
-                            contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
-                            pgpContacts.add(remotePgpContact);
-                        } else {
-                            pgpContacts.add(newPgpContact);
-                        }
-                    } catch (IOException e) {
-                        isAllInfoReceived = false;
-                        pgpContacts.add(newPgpContact);
-                        e.printStackTrace();
-                        if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
                         }
                     }
                 }

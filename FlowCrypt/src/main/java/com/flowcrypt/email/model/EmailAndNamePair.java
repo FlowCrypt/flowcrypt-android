@@ -54,6 +54,14 @@ public class EmailAndNamePair implements Parcelable {
         dest.writeString(this.name);
     }
 
+    @Override
+    public String toString() {
+        return "EmailAndNamePair{" +
+                "email='" + email + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
     public String getEmail() {
         return email;
     }

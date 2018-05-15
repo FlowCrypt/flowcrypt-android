@@ -65,7 +65,7 @@ import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
+import com.flowcrypt.email.ui.activity.ImportPublicKeyForPgpContactActivity;
 import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
@@ -104,7 +104,7 @@ import java.util.regex.Pattern;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class CreateMessageFragment extends BaseGmailFragment implements View.OnFocusChangeListener,
+public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
     private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
@@ -269,7 +269,7 @@ public class CreateMessageFragment extends BaseGmailFragment implements View.OnF
                                     NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
                             if (pgpContact != null) {
-                                startActivityForResult(ImportPublicKeyActivity.newIntent(getContext(),
+                                startActivityForResult(ImportPublicKeyForPgpContactActivity.newIntent(getContext(),
                                         getString(R.string.import_public_key), pgpContact),
                                         REQUEST_CODE_IMPORT_PUBLIC_KEY);
                             }

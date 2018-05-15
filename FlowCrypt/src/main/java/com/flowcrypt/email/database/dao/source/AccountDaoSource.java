@@ -69,6 +69,7 @@ public class AccountDaoSource extends BaseDaoSource {
     public static final String COL_SMTP_IS_USE_CUSTOM_SIGN = "smtp_is_use_custom_sign";
     public static final String COL_SMTP_USERNAME = "smtp_username";
     public static final String COL_SMTP_PASSWORD = "smtp_password";
+    public static final String COL_IS_CONTACTS_LOADED = "ic_contacts_loaded";
 
     public static final String ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ACCOUNTS + " (" +
@@ -95,7 +96,8 @@ public class AccountDaoSource extends BaseDaoSource {
             COL_SMTP_AUTH_MECHANISMS + " TEXT, " +
             COL_SMTP_IS_USE_CUSTOM_SIGN + " INTEGER DEFAULT 0, " +
             COL_SMTP_USERNAME + " TEXT DEFAULT NULL, " +
-            COL_SMTP_PASSWORD + " TEXT DEFAULT NULL " + ");";
+            COL_SMTP_PASSWORD + " TEXT DEFAULT NULL, " +
+            COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = "CREATE UNIQUE INDEX IF NOT EXISTS "
             + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
@@ -124,7 +126,9 @@ public class AccountDaoSource extends BaseDaoSource {
                 cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)),
                 cursor.getString(cursor.getColumnIndex(COL_GIVEN_NAME)),
                 cursor.getString(cursor.getColumnIndex(COL_FAMILY_NAME)),
-                cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)), authCredentials);
+                cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)),
+                authCredentials,
+                cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1);
     }
 
     /**
@@ -281,12 +285,22 @@ public class AccountDaoSource extends BaseDaoSource {
      */
     public int updateAccountInformation(Context context, GoogleSignInAccount googleSignInAccount) {
         if (googleSignInAccount != null) {
-            Account account = googleSignInAccount.getAccount();
+            return updateAccountInformation(context, googleSignInAccount.getAccount(),
+                    generateContentValues(googleSignInAccount));
+        } else return -1;
+    }
 
-            if (account == null) {
-                return -1;
-            }
-
+    /**
+     * Update information about some {@link AccountDao}.
+     *
+     * @param context       Interface to global information about an application environment.
+     * @param account       An {@link Account} which will be updated
+     * @param contentValues Data fro modification
+     * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
+     * updated or -1 otherwise.
+     */
+    public int updateAccountInformation(Context context, Account account, ContentValues contentValues) {
+        if (account != null) {
             String email = account.name;
             if (email == null) {
                 return -1;
@@ -303,7 +317,6 @@ public class AccountDaoSource extends BaseDaoSource {
 
             ContentResolver contentResolver = context.getContentResolver();
             if (contentResolver != null) {
-                ContentValues contentValues = generateContentValues(googleSignInAccount);
                 return contentResolver.update(getBaseContentUri(),
                         contentValues,
                         COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
