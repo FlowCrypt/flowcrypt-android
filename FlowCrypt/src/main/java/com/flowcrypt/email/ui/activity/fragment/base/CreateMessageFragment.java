@@ -99,9 +99,9 @@ import java.util.regex.Pattern;
  * This fragment describe a logic of sent an encrypted or standard message.
  *
  * @author DenBond7
- *         Date: 10.05.2017
- *         Time: 11:27
- *         E-mail: DenBond7@gmail.com
+ * Date: 10.05.2017
+ * Time: 11:27
+ * E-mail: DenBond7@gmail.com
  */
 
 public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
@@ -517,7 +517,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         imageButtonAliases.setVisibility(View.INVISIBLE);
                     }
                 } else {
-                    imageButtonAliases.setVisibility(View.VISIBLE);
+                    if (serviceInfo == null || serviceInfo.isFromFieldEditEnable()) {
+                        imageButtonAliases.setVisibility(View.VISIBLE);
+                    } else {
+                        imageButtonAliases.setVisibility(View.INVISIBLE);
+                    }
                 }
 
                 new AccountAliasesDaoSource().updateAliases(getContext(), accountDao, accountAliasesDaoList);
@@ -1208,12 +1212,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditEnable());
         editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
         //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
-
-        editTextFrom.setFocusable(serviceInfo.isFromFieldEditEnable());
-        editTextFrom.setFocusableInTouchMode(serviceInfo.isFromFieldEditEnable());
-        if (!serviceInfo.isFromFieldEditEnable()) {
-            editTextFrom.setOnClickListener(null);
-        }
 
         editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
         editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
