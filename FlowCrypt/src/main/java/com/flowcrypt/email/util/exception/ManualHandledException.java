@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.util.exception;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import org.acra.ACRA;
 
 /**
@@ -17,7 +20,22 @@ import org.acra.ACRA;
  */
 
 public class ManualHandledException extends FlowCryptException {
+    public ManualHandledException(String message) {
+        super(message);
+    }
+
+    public ManualHandledException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public ManualHandledException(Throwable cause) {
         super("Handled manually:", cause);
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public ManualHandledException(String message, Throwable cause, boolean enableSuppression, boolean
+            writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

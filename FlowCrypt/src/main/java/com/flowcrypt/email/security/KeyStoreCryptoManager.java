@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -300,14 +301,14 @@ public class KeyStoreCryptoManager {
      * @throws InvalidAlgorithmParameterException
      */
     private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
-            InvalidAlgorithmParameterException {
+            InvalidAlgorithmParameterException, ManualHandledException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
             } catch (NullPointerException e) {
                 //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
                 e.printStackTrace();
-                generateKeyIfAndroidVersionLessThenMarshmallow();
+                throw new ManualHandledException("Sorry, can't create an RSA key pair.");
             }
         } else {
             generateKeyIfAndroidVersionLessThenMarshmallow();

@@ -48,14 +48,15 @@ public class ExceptionUtil {
                 || (e instanceof ConnectionException)
                 || (e instanceof UserRecoverableAuthException)
                 || (e instanceof AuthenticationFailedException)
-                || (e instanceof UserRecoverableAuthIOException)) {
+                || (e instanceof UserRecoverableAuthIOException)
+                || (e instanceof FlowCryptException)) {
             return false;
         }
 
         if (e instanceof IOException) {
             //Google network errors.
-            if ("NetworkError" .equalsIgnoreCase(e.getMessage())
-                    || "Error on service connection." .equalsIgnoreCase(e.getMessage())) {
+            if ("NetworkError".equalsIgnoreCase(e.getMessage())
+                    || "Error on service connection.".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
 
@@ -78,11 +79,11 @@ public class ExceptionUtil {
 
         if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
             //Connection limit exceeded
-            if ("failed to create new store connection" .equalsIgnoreCase(e.getMessage())) {
+            if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
 
-            if ("Lost folder connection to server" .equalsIgnoreCase(e.getMessage())) {
+            if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }
