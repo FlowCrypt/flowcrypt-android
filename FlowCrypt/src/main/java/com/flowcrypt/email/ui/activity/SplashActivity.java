@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
@@ -55,6 +56,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     private View splashView;
 
     private AccountDao accountDao;
+    private boolean isStartCheckKeysActivityEnable;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,6 +99,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 break;
 
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
+                isStartCheckKeysActivityEnable = false;
+
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                     case CheckKeysActivity.RESULT_NEUTRAL:
@@ -203,16 +207,19 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_private_key_backups_from_email:
+                isStartCheckKeysActivityEnable = true;
+
                 AccountDao accountDao = null;
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
                 if (currentGoogleSignInAccount != null) {
                     accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
                 }
-                return accountDao != null ? new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao) : null;
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
                 return null;
@@ -221,7 +228,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
             case R.id.loader_id_load_private_key_backups_from_email:
                 if (loaderResult.getResult() != null) {
@@ -229,7 +236,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                     if (keyDetailsList.isEmpty()) {
                         startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
                                 new AccountDao(currentGoogleSignInAccount), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
-                    } else {
+                    } else if (isStartCheckKeysActivityEnable) {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,
                                 getResources().getQuantityString(

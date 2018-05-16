@@ -20,7 +20,6 @@ import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
@@ -35,6 +34,7 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -268,8 +268,7 @@ public class EmailUtil {
      */
     public static String getTokenForGmailAccount(Context context, @NonNull Account account) throws IOException,
             GoogleAuthException {
-        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailConstants
-                .SCOPE_MAIL_GOOGLE_COM);
+        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
     }
 
     /**

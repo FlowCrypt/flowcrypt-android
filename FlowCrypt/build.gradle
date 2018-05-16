@@ -241,7 +241,7 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }
-    implementation('com.google.apis:google-api-services-gmail:v1-rev72-1.23.0') {
+    implementation('com.google.apis:google-api-services-gmail:v1-rev86-1.23.0') {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }

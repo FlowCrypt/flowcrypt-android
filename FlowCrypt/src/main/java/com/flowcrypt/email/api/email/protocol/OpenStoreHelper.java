@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.api.services.gmail.GmailScopes;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
@@ -75,13 +76,13 @@ public class OpenStoreHelper {
             if (accountDao.getAccount() != null) {
                 try {
                     String token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
-                            JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                            JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
 
                     if (isResetTokenNeeded) {
                         Log.d(TAG, "Refresh Gmail token");
                         GoogleAuthUtil.clearToken(context, token);
                         token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
-                                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                                JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
                     }
 
                     gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.getEmail(), token);
