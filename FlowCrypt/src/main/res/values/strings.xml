@@ -329,4 +329,5 @@ icelanders prefer real sauna</font>
     <string name="success">Success</string>
     <string name="key_is_empty">The key is empty</string>
     <string name="parse_public_keys">Parsing public keys</string>
+    <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
 </resources>

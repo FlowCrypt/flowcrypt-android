@@ -30,8 +30,10 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -245,7 +247,7 @@ public class KeyStoreCryptoManager {
      * @throws IOException
      */
     public String decryptWithRSA(String encryptedData) throws InvalidKeyException, NoSuchPaddingException,
-            NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, IOException {
+            NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
         if (!TextUtils.isEmpty(encryptedData)) {
             Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
@@ -287,7 +289,13 @@ public class KeyStoreCryptoManager {
             createRSAKeyPair();
         }
 
-        this.privateKey = (PrivateKey) keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null);
+        try {
+            this.privateKey = (PrivateKey) keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null);
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+            throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+        }
+
         if (privateKey != null) {
             this.publicKey = keyStore.getCertificate(ANDROID_KEY_STORE_RSA_ALIAS).getPublicKey();
         }
@@ -308,7 +316,7 @@ public class KeyStoreCryptoManager {
             } catch (NullPointerException e) {
                 //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
                 e.printStackTrace();
-                throw new ManualHandledException("Sorry, can't create an RSA key pair.");
+                throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
             }
         } else {
             generateKeyIfAndroidVersionLessThenMarshmallow();
@@ -325,7 +333,7 @@ public class KeyStoreCryptoManager {
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     private KeyPair generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow() throws NoSuchAlgorithmException,
-            NoSuchProviderException, InvalidAlgorithmParameterException {
+            NoSuchProviderException, InvalidAlgorithmParameterException, ManualHandledException {
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
                 KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE);
@@ -337,7 +345,12 @@ public class KeyStoreCryptoManager {
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                         .build());
 
-        return keyPairGenerator.generateKeyPair();
+        try {
+            return keyPairGenerator.generateKeyPair();
+        } catch (ProviderException e) {
+            e.printStackTrace();
+            throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+        }
     }
 
     /**

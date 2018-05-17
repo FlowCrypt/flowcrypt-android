@@ -452,18 +452,26 @@ public class EmailSyncManager {
             TAG = getClass().getSimpleName();
         }
 
-        void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException {
+        void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException, ManualHandledException {
             if (store != null && accountDao != null) {
-                if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials().getUsername())) {
-                    Log.d(TAG, "Connection was reset!");
+                if (accountDao.getAuthCredentials() != null) {
+                    if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
+                            .getUsername())) {
+                        Log.d(TAG, "Connection was reset!");
 
-                    notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
-                            R.id.progress_id_resetting_connection);
+                        notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
+                                R.id.progress_id_resetting_connection);
 
-                    if (store != null) {
-                        store.close();
+                        if (store != null) {
+                            store.close();
+                        }
+                        session = null;
                     }
-                    session = null;
+                } else if (syncListener != null && syncListener.getContext() != null) {
+                    throw new ManualHandledException(syncListener.getContext().getString(R.string
+                            .device_not_supported_key_store_error));
+                } else {
+                    throw new NullPointerException("The context is null");
                 }
             }
         }
