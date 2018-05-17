@@ -72,7 +72,8 @@ public class ExceptionUtil {
                     || e.getMessage().contains("I/O error during system call")
                     || e.getMessage().contains("Failure in SSL library, usually a protocol error")
                     || e.getMessage().contains("Handshake failed")
-                    || e.getMessage().contains("Exception reading response")) {
+                    || e.getMessage().contains("Exception reading response")
+                    || e.getMessage().contains("connection failure")) {
                 return false;
             }
         }
