@@ -197,20 +197,24 @@ public class SendMessageSyncTask extends BaseSyncTask {
      */
     private void saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context, MimeMessage
             mimeMessage) throws MessagingException {
-        FoldersManager foldersManager = FoldersManager.fromDatabase(context,
-                accountDao.getEmail());
-        IMAPFolder sentImapFolder =
-                (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
+        FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
+        com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
 
-        if (sentImapFolder == null || !sentImapFolder.exists()) {
-            throw new IllegalArgumentException("The sent folder doesn't exists. Can't create a copy of " +
-                    "the sent message!");
+        if (sentFolder != null) {
+            IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
+
+            if (sentImapFolder == null || !sentImapFolder.exists()) {
+                throw new IllegalArgumentException("The sent folder doesn't exists. Can't create a copy of " +
+                        "the sent message!");
+            }
+
+            sentImapFolder.open(Folder.READ_WRITE);
+            mimeMessage.setFlag(Flags.Flag.SEEN, true);
+            sentImapFolder.appendMessages(new Message[]{mimeMessage});
+            sentImapFolder.close(false);
+        } else {
+            throw new IllegalArgumentException("The SENT folder is not defined");
         }
-
-        sentImapFolder.open(Folder.READ_WRITE);
-        mimeMessage.setFlag(Flags.Flag.SEEN, true);
-        sentImapFolder.appendMessages(new Message[]{mimeMessage});
-        sentImapFolder.close(false);
     }
 
     /**
