@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -85,6 +86,12 @@ public class ExceptionUtil {
             }
 
             if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
+                return false;
+            }
+        }
+
+        if (e instanceof GoogleAuthException) {
+            if ("InternalError".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }
