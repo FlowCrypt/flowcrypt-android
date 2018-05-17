@@ -32,9 +32,7 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.List;
 
@@ -301,9 +299,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                                         .loader_id_save_private_key_as_file, null, this);
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
+                                ExceptionUtil.handleError(e);
                                 UIUtil.showInfoSnackbar(getRootView(), e.getMessage());
                             }
                         }

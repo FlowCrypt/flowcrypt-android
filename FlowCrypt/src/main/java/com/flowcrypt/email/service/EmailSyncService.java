@@ -888,9 +888,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                         REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
                             } catch (RemoteException e) {
                                 e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
+                                ExceptionUtil.handleError(e);
                             }
                         }
                         break;

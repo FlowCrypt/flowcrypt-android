@@ -57,8 +57,7 @@ import retrofit2.Response;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
-        AsyncTaskLoader<LoaderResult> {
+public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private List<String> emails;
 
     public UpdateInfoAboutPgpContactsAsyncTaskLoader(Context context, List<String> emails) {
@@ -93,9 +92,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                                 isAllInfoReceived = false;
                                 pgpContacts.add(localPgpContact);
                                 e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
+                                ExceptionUtil.handleError(e);
                             }
                         } else {
                             pgpContacts.add(localPgpContact);

@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import org.acra.ACRA;
@@ -122,9 +123,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
                                         ((LookUpRequest) baseRequest).getQuery()).execute());
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
+                                ExceptionUtil.handleError(e);
                                 lookUpResponse.setException(e);
                             }
                         }
