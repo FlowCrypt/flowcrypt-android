@@ -17,9 +17,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.PublicKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,9 +53,7 @@ public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<Lo
                 return new LoaderResult(parsePublicKeysInfo(new Js(getContext(), null), inputString), null);
             } catch (Exception e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
                 return new LoaderResult(null, e);
             }
         } else {

@@ -32,8 +32,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
 
-import org.acra.ACRA;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
@@ -483,9 +481,7 @@ public class EmailSyncManager {
                 }
             } catch (MessagingException e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
                 Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
             }
         }

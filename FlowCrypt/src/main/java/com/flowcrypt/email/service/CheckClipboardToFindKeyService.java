@@ -25,9 +25,7 @@ import android.util.Log;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -201,9 +199,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
                             js = new Js(getApplicationContext(), null);
                         } catch (IOException e) {
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                         }
                     }
 
@@ -224,16 +220,12 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
                                             keyDetails));
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
-                                    if (ACRA.isInitialised()) {
-                                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                    }
+                                    ExceptionUtil.handleError(e);
                                 }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                         }
                     }
                     break;

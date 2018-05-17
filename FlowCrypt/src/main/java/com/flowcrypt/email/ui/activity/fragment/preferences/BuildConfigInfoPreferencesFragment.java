@@ -11,9 +11,7 @@ import android.preference.DialogPreference;
 import android.util.AttributeSet;
 
 import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.lang.reflect.Field;
 import java.util.Formatter;
@@ -40,9 +38,7 @@ public class BuildConfigInfoPreferencesFragment extends DialogPreference {
                 formatter.format("%s: %s\n\n", field.getName(), field.get(null));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
             }
         }
 

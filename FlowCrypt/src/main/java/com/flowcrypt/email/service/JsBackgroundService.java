@@ -20,8 +20,6 @@ import com.flowcrypt.email.js.JsInBackgroundManager;
 import com.flowcrypt.email.js.JsListener;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
-import org.acra.ACRA;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,11 +150,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             if (replyToMessengers.containsKey(ownerKey)) {
                 Messenger messenger = replyToMessengers.get(ownerKey);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
-                    if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(new Exception("JsBackgroundService.onError", e));
-                    }
-                }
+                ExceptionUtil.handleError(e);
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();

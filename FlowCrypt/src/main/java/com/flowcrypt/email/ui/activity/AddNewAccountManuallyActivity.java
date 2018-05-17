@@ -41,12 +41,10 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.mail.util.MailConnectException;
-
-import org.acra.ACRA;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -487,9 +485,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 return new Gson().fromJson(authCredentialsJson, AuthCredentials.class);
             } catch (JsonSyntaxException e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
             }
         }
 

@@ -30,12 +30,10 @@ import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-
-import org.acra.ACRA;
 
 import java.util.ArrayList;
 
@@ -151,16 +149,13 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                             Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                ACRA.getErrorReporter().handleException(new NullPointerException("AuthCredentials is " +
-                                        "null!"));
+                                ExceptionUtil.handleError(new NullPointerException("AuthCredentials is null!"));
                                 Toast.makeText(this, R.string.error_occurred_try_again_later,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                         break;
@@ -313,9 +308,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
      */
     private AccountDao addGmailAccount(GoogleSignInAccount googleSignInAccount) {
         if (googleSignInAccount == null) {
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new NullPointerException("GoogleSignInAccount is null!"));
-            }
+            ExceptionUtil.handleError(new NullPointerException("GoogleSignInAccount is null!"));
             return null;
         }
 

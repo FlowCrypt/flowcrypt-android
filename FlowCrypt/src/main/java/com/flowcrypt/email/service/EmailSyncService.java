@@ -34,10 +34,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.sun.mail.imap.IMAPFolder;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -419,9 +416,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 foldersManager.addFolder(imapFolder, folder.getName());
             } catch (MessagingException e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
             }
         }
 
@@ -455,11 +450,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             if (replyToMessengers.containsKey(key)) {
                 Messenger messenger = replyToMessengers.get(key);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                if (ExceptionUtil.isErrorHandleWithACRA(e)) {
-                    if (ACRA.isInitialised()) {
-                        ACRA.getErrorReporter().handleException(new Exception("EmailSyncService.onError", e));
-                    }
-                }
+                ExceptionUtil.handleError(e);
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();

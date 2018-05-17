@@ -22,9 +22,6 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
 
 /**
  * A basic AsyncTaskLoader who make API calls.
@@ -168,9 +165,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     private Exception catchException(Exception e) {
         e.printStackTrace();
-        if (ACRA.isInitialised()) {
-            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-        }
+        ExceptionUtil.handleError(e);
         return e;
     }
 }
