@@ -234,8 +234,11 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 if (loaderResult.getResult() != null) {
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
-                        startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
-                                new AccountDao(currentGoogleSignInAccount), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
+                        if (currentGoogleSignInAccount != null) {
+                            startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
+                                    new AccountDao(currentGoogleSignInAccount), true),
+                                    REQUEST_CODE_CREATE_OR_IMPORT_KEY);
+                        }
                     } else if (isStartCheckKeysActivityEnable) {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,
@@ -258,7 +261,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
     }
 
