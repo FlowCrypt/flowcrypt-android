@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -44,7 +45,7 @@ import java.util.ArrayList;
  *         E-mail: DenBond7@gmail.com
  */
 public class ImportPgpContactActivity extends BaseImportKeyActivity implements TextView.OnEditorActionListener {
-    public static final int REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100;
+    private static final int REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100;
     private EditText editTextEmailOrId;
 
     private boolean isSearchPublicKeysOnAttesterNow;
@@ -66,6 +67,12 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        isCheckClipboardFromServiceEnable = false;
+    }
+
+    @Override
     public void onBackPressed() {
         if (isSearchPublicKeysOnAttesterNow) {
             this.isSearchPublicKeysOnAttesterNow = false;
@@ -80,7 +87,6 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_RUN_PREVIEW_ACTIVITY:
-                isCheckClipboardFromServiceEnable = false;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                 break;
 
@@ -123,6 +129,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         return false;
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {

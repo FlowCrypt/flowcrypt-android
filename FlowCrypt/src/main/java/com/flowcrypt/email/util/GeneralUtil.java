@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -226,5 +228,17 @@ public class GeneralUtil {
      */
     public static String generateNameForIdlingResources(Class<?> aClass) {
         return aClass.getClass() + "-" + UUID.randomUUID();
+    }
+
+    /**
+     * Clear the {@link ClipData}
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public static void clearClipboard(Context context) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(ClipData.newPlainText(null, ""));
+        }
     }
 }
