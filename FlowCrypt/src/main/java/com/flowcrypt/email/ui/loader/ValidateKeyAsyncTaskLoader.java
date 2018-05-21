@@ -105,11 +105,10 @@ public class ValidateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     }
 
     /**
-     * Check that the key size mot bigger then 1 MB.
+     * Check that the key size not bigger then {@link #MAX_SIZE_IN_BYTES}.
      *
      * @param fileUri The {@link Uri} of the selected file.
-     * @return true if the key size not bigger then
-     * {@link ValidateKeyAsyncTaskLoader#MAX_SIZE_IN_BYTES}, otherwise false
+     * @return true if the key size not bigger then {@link #MAX_SIZE_IN_BYTES}, otherwise false
      */
     private boolean isKeyTooBig(Uri fileUri) {
         long fileSize = GeneralUtil.getFileSizeFromUri(getContext(), fileUri);

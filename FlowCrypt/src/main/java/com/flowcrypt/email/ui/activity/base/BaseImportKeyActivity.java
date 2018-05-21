@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -195,13 +196,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         if (data != null) {
-                            keyDetails = new KeyDetails(
-                                    GeneralUtil.getFileNameFromUri(this, data.getData()),
-                                    null,
-                                    data.getData(),
-                                    KeyDetails.Type.FILE, isPrivateKeyChecking(), null);
-
-                            getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_file, null, this);
+                            handleSelectedFile(data.getData());
                         }
                         break;
                 }
@@ -292,6 +287,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -311,12 +307,12 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         handleLoaderResult(loader, loaderResult);
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
         switch (loader.getId()) {
             case R.id.loader_id_validate_key_from_file:
             case R.id.loader_id_validate_key_from_clipboard:
@@ -387,6 +383,21 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     @Override
     public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
 
+    }
+
+    /**
+     * Handle a selected file.
+     *
+     * @param uri A {@link Uri} of the selected file.
+     */
+    protected void handleSelectedFile(Uri uri) {
+        keyDetails = new KeyDetails(
+                GeneralUtil.getFileNameFromUri(this, uri),
+                null,
+                uri,
+                KeyDetails.Type.FILE, isPrivateKeyChecking(), null);
+
+        getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_file, null, this);
     }
 
     protected void initViews() {

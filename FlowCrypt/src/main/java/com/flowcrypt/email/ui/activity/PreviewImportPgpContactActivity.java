@@ -9,8 +9,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.OperationApplicationException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -51,18 +53,27 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
     public static final String KEY_EXTRA_PUBLIC_KEY_STRING
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity.class);
 
+    public static final String KEY_EXTRA_PUBLIC_KEYS_FILE_URI
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
+            PreviewImportPgpContactActivity.class);
+    List<PublicKeyInfo> publicKeyInfoList;
     private RecyclerView recyclerViewContacts;
     private TextView buttonImportAll;
     private View layoutContentView;
     private View layoutProgress;
-
-    private String publicKeysString;
-    private List<PublicKeyInfo> publicKeyInfoList;
     private View emptyView;
+    private String publicKeysString;
+    private Uri publicKeysFileUri;
 
     public static Intent newIntent(Context context, String publicKeysString) {
         Intent intent = new Intent(context, PreviewImportPgpContactActivity.class);
         intent.putExtra(KEY_EXTRA_PUBLIC_KEY_STRING, publicKeysString);
+        return intent;
+    }
+
+    public static Intent newIntent(Context context, Uri publicKeysFileUri) {
+        Intent intent = new Intent(context, PreviewImportPgpContactActivity.class);
+        intent.putExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, publicKeysFileUri);
         return intent;
     }
 
@@ -79,19 +90,22 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)) {
-            initViews();
-
-            publicKeysString = getIntent().getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING);
-            if (TextUtils.isEmpty(publicKeysString)) {
-                setResult(Activity.RESULT_CANCELED);
-                finish();
-            } else {
-                getSupportLoaderManager().initLoader(R.id.loader_id_parse_public_keys, null, this);
-            }
-        } else {
+        if (getIntent() == null || (!getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)
+                && !getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI))) {
             setResult(Activity.RESULT_CANCELED);
             finish();
+        }
+
+        initViews();
+
+        publicKeysString = getIntent().getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING);
+        publicKeysFileUri = getIntent().getParcelableExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI);
+
+        if (TextUtils.isEmpty(publicKeysString) && publicKeysFileUri == null) {
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+        } else {
+            getSupportLoaderManager().initLoader(R.id.loader_id_parse_public_keys, null, this);
         }
     }
 
@@ -155,12 +169,17 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_parse_public_keys:
                 UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-                return new ParsePublicKeysFromStringAsyncTaskLoader(this, publicKeysString);
+                if (publicKeysFileUri != null) {
+                    return new ParsePublicKeysFromStringAsyncTaskLoader(this, publicKeysFileUri);
+                } else {
+                    return new ParsePublicKeysFromStringAsyncTaskLoader(this, publicKeysString);
+                }
 
             default:
                 return null;
@@ -168,12 +187,12 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity imple
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         handleLoaderResult(loader, loaderResult);
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
     }
 

@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.Loader;
@@ -121,6 +122,15 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         } else {
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void handleSelectedFile(Uri uri) {
+        if (uri != null) {
+            UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+            startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri),
+                    REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
         }
     }
 
