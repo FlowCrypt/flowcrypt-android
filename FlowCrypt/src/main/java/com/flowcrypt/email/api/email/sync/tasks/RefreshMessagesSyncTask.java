@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -27,14 +28,14 @@ import javax.mail.UIDFolder;
  */
 
 public class RefreshMessagesSyncTask extends BaseSyncTask {
-    private String folderName;
+    private com.flowcrypt.email.api.email.Folder localFolder;
     private int lastUID;
     private int countOfLoadedMessages;
 
-    public RefreshMessagesSyncTask(String ownerKey, int requestCode, String folderName,
+    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folderName,
                                    int lastUID, int countOfLoadedMessages) {
         super(ownerKey, requestCode);
-        this.folderName = folderName;
+        this.localFolder = folderName;
         this.lastUID = lastUID;
         this.countOfLoadedMessages = countOfLoadedMessages;
     }
@@ -42,7 +43,7 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
     @Override
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
             Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
         imapFolder.open(Folder.READ_ONLY);
 
         long nextUID = imapFolder.getUIDNext();
@@ -55,19 +56,10 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             }
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
             Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
-            int countOfUpdatedMessages = updatedMessages != null ? updatedMessages.length : 0;
-            Message[] messages = new Message[countOfNewMessages + countOfUpdatedMessages];
 
-            if (newMessages != null) {
-                System.arraycopy(newMessages, 0, messages, 0, newMessages.length);
-            }
-
-            if (updatedMessages != null) {
-                System.arraycopy(updatedMessages, 0, messages, newMessages != null ? newMessages.length : 0,
-                        updatedMessages.length);
-            }
-
-            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
+            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, newMessages,
+                    EmailUtil.getInfoAreMessagesEncrypted(imapFolder, true, lastUID + 1, nextUID - 1),
+                    updatedMessages, ownerKey, requestCode);
         }
 
         imapFolder.close(false);

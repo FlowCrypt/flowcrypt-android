@@ -17,6 +17,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -293,6 +294,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     @Override
     public void onMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                   @NonNull LongSparseArray<Boolean> longSparseArray,
                                    String ownerKey, int requestCode) {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
@@ -305,7 +307,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
-                    messages);
+                    messages,
+                    longSparseArray);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -325,8 +328,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     @Override
     public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
-                                         IMAPFolder imapFolder,
-                                         javax.mail.Message[] messages, String ownerKey, int requestCode) {
+                                         IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                         @NonNull LongSparseArray<Boolean> longSparseArray,
+                                         String ownerKey, int requestCode) {
         Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -334,7 +338,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     SearchMessagesActivity.SEARCH_FOLDER_NAME,
                     imapFolder,
-                    messages);
+                    messages,
+                    longSparseArray);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -353,10 +358,13 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
-    public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+    public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder,
+                                          javax.mail.Message[] newMessages,
+                                          @NonNull LongSparseArray<Boolean> longSparseArray,
+                                          javax.mail.Message[] updateMessages,
                                           String key, int requestCode) {
-        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
-                "count: " + messages.length);
+        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " newMessages " +
+                "count: " + newMessages.length + ", updateMessages count = " + updateMessages.length);
 
         try {
             com.flowcrypt.email.api.email.Folder folder =
@@ -371,23 +379,25 @@ public class EmailSyncService extends BaseService implements SyncListener {
             messageDaoSource.deleteMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
-                    generateDeleteCandidates(messagesUIDsInLocalDatabase, imapFolder, messages));
+                    generateDeleteCandidates(messagesUIDsInLocalDatabase, imapFolder, updateMessages));
 
             javax.mail.Message[] messagesNewCandidates = generateNewCandidates(messagesUIDsInLocalDatabase,
-                    imapFolder, messages);
+                    imapFolder, newMessages);
+
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
-                    messagesNewCandidates);
+                    messagesNewCandidates,
+                    longSparseArray);
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
-                    generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase, imapFolder, messages));
+                    generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase, imapFolder, updateMessages));
 
-            if (messages.length > 0) {
+            if (newMessages.length > 0 || updateMessages.length > 0) {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
             } else {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
@@ -812,8 +822,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.refreshMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), refreshFolder.getServerFullFolderName(),
-                                    message.arg1, message.arg2);
+                                    action.getRequestCode(), refreshFolder, message.arg1, message.arg2);
                         }
                         break;
 

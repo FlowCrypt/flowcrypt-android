@@ -10,6 +10,16 @@
     android:layout_height="@dimen/layout_height_message_item"
     android:orientation="vertical">
 
+    <View
+        android:id="@+id/viewIsEncrypted"
+        android:layout_width="@dimen/layout_width_encrypted_indicator"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/textViewSenderAddress"
         android:layout_width="0dp"

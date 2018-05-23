@@ -6,6 +6,8 @@
 package com.flowcrypt.email.api.email.sync;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -114,38 +116,52 @@ public interface SyncListener {
     /**
      * This method called when a new messages received from the some folder.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
-     * @param folder      The folder where the new messages exist.
-     * @param messages    The new messages.
-     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param accountDao      The {@link AccountDao} object which contains information about an
+     *                        email account.
+     * @param folder          The folder where the new messages exist.
+     * @param messages        The new messages.
+     * @param longSparseArray An array that can be used to check whether the message is encrypted or not
+     * @param ownerKey        The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode     The unique request code for the reply to
+     *                        {@link android.os.Messenger}.
      */
     void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages,
+                            @NonNull LongSparseArray<Boolean> longSparseArray,
                             String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
-     * @param messages    The new messages.
-     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param accountDao      The {@link AccountDao} object which contains information about an
+     *                        email account.
+     * @param messages        The new messages.
+     * @param longSparseArray An array that can be used to check whether the message is encrypted or not
+     * @param ownerKey        The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode     The unique request code for the reply to
+     *                        {@link android.os.Messenger}.
      */
-    void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder, IMAPFolder
-            remoteFolder, Message[] messages, String ownerKey,
-                                  int requestCode);
+    void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
+                                  IMAPFolder remoteFolder, Message[] messages,
+                                  @NonNull LongSparseArray<Boolean> longSparseArray,
+                                  String ownerKey, int requestCode);
 
     /**
      * This method called when received information about messages which already exist in the local database.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
-     * @param folder      The folder where the messages exist.
-     * @param messages    The refreshed messages.
-     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param accountDao      The {@link AccountDao} object which contains information about an
+     *                        email account.
+     * @param folder          The folder where the messages exist.
+     * @param newMessages     The refreshed messages.
+     * @param longSparseArray An array that can be used to check whether the message is encrypted or not
+     * @param updateMessages  The messages which will must be updated.
+     * @param ownerKey        The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode     The unique request code for the reply to
+     *                        {@link android.os.Messenger}.
      */
-    void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey,
-                                   int requestCode);
+    void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] newMessages,
+                                   @NonNull LongSparseArray<Boolean> longSparseArray,
+                                   Message[] updateMessages,
+                                   String ownerKey, int requestCode);
 
     /**
      * This method called when new folders list received.

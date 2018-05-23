@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
@@ -36,7 +37,15 @@ import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.sun.mail.iap.Argument;
+import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.protocol.BODY;
+import com.sun.mail.imap.protocol.FetchResponse;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.util.ASCIIUtility;
 
 import org.apache.commons.io.IOUtils;
 
@@ -448,5 +457,57 @@ public class EmailUtil {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN_FORWARDED_DATE, Locale.US);
         return simpleDateFormat.format(date);
+    }
+
+    /**
+     * Prepare a formatted date string for a forwarded message. For example <code>Tue, Apr 3, 2018 at 3:07 PM.</code>
+     *
+     * @return A generated formatted date string.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, final boolean isUIDCall,
+                                                                       final long start, final long end)
+            throws MessagingException {
+
+        return (LongSparseArray<Boolean>) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+                LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
+
+                Argument args = new Argument();
+                Argument list = new Argument();
+                list.writeString("UID");
+                list.writeString("BODY.PEEK[TEXT]<0.300>");
+                args.writeArgument(list);
+
+                Response[] responses = imapProtocol.command(
+                        (isUIDCall ? "UID FETCH " : "FETCH ") + start + ":" + end, args);
+                Response serverStatusResponse = responses[responses.length - 1];
+
+                if (serverStatusResponse.isOK()) {
+                    for (Response response : responses) {
+                        if (!(response instanceof FetchResponse))
+                            continue;
+
+                        FetchResponse fetchResponse = (FetchResponse) response;
+
+                        UID uid = fetchResponse.getItem(UID.class);
+                        if (uid != null && uid.uid != 0) {
+                            BODY body = fetchResponse.getItem(BODY.class);
+                            if (body != null && body.getByteArrayInputStream() != null) {
+                                String rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+                                booleanLongSparseArray.put(uid.uid,
+                                        rawMessage.contains("-----BEGIN PGP MESSAGE-----"));
+                            }
+                        }
+                    }
+                }
+
+                imapProtocol.notifyResponseHandlers(responses);
+                imapProtocol.handleResult(serverStatusResponse);
+
+                return booleanLongSparseArray;
+            }
+        });
     }
 }

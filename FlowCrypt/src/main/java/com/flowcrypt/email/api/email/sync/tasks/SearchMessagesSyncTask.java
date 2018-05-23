@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 import android.support.annotation.NonNull;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -69,8 +70,8 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
         if (syncListener != null) {
             if (end < 1) {
-                syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, new Message[]{},
-                        ownerKey, requestCode);
+                syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, new
+                        LongSparseArray<Boolean>(), ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -86,7 +87,9 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(bufferedMessages, fetchProfile);
 
+                //todo-denbond7 need to improve it
                 syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, bufferedMessages,
+                        new LongSparseArray<Boolean>(),
                         ownerKey, requestCode);
             }
         }

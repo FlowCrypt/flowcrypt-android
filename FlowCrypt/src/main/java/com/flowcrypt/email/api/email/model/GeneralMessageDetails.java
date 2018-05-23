@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.text.TextUtils;
 
 import java.util.Arrays;
 
@@ -46,6 +45,7 @@ public class GeneralMessageDetails implements Parcelable {
     private String[] flags;
     private String rawMessageWithoutAttachments;
     private boolean isMessageHasAttachment;
+    private boolean isEncrypted;
 
     public GeneralMessageDetails() {
     }
@@ -62,6 +62,7 @@ public class GeneralMessageDetails implements Parcelable {
         this.flags = in.createStringArray();
         this.rawMessageWithoutAttachments = in.readString();
         this.isMessageHasAttachment = in.readByte() != 0;
+        this.isEncrypted = in.readByte() != 0;
     }
 
     @Override
@@ -76,8 +77,9 @@ public class GeneralMessageDetails implements Parcelable {
                 ", to=" + Arrays.toString(to) +
                 ", subject='" + subject + '\'' +
                 ", flags=" + Arrays.toString(flags) +
-                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
-                (rawMessageWithoutAttachments) +
+                ", rawMessageWithoutAttachments='" + rawMessageWithoutAttachments + '\'' +
+                ", isMessageHasAttachment=" + isMessageHasAttachment +
+                ", isEncrypted=" + isEncrypted +
                 '}';
     }
 
@@ -99,6 +101,7 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeStringArray(this.flags);
         dest.writeString(this.rawMessageWithoutAttachments);
         dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
     }
 
     public String getEmail() {
@@ -191,5 +194,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public void setMessageHasAttachment(boolean messageHasAttachment) {
         isMessageHasAttachment = messageHasAttachment;
+    }
+
+    public boolean isEncrypted() {
+        return isEncrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        isEncrypted = encrypted;
     }
 }

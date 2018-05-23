@@ -65,6 +65,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
         viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject);
         viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
+        viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
         updateItem(context, generalMessageDetails, viewHolder);
     }
@@ -120,6 +121,7 @@ public class MessageListAdapter extends CursorAdapter {
 
             viewHolder.imageViewAttachments.setVisibility(generalMessageDetails
                     .isMessageHasAttachment() ? View.VISIBLE : View.GONE);
+            viewHolder.viewIsEncrypted.setVisibility(generalMessageDetails.isEncrypted() ? View.VISIBLE : View.GONE);
         } else {
             clearItem(viewHolder);
         }
@@ -209,5 +211,6 @@ public class MessageListAdapter extends CursorAdapter {
         TextView textViewDate;
         TextView textViewSubject;
         ImageView imageViewAttachments;
+        View viewIsEncrypted;
     }
 }

@@ -6,8 +6,10 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.util.Log;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -72,7 +74,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
             if (end < 1) {
-                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, new LongSparseArray<Boolean>
+                        (), ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -87,7 +90,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 imapFolder.fetch(messages, fetchProfile);
 
-                syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, imapFolder, messages,
+                        EmailUtil.getInfoAreMessagesEncrypted(imapFolder, false, start, end), ownerKey, requestCode);
             }
         }
 
