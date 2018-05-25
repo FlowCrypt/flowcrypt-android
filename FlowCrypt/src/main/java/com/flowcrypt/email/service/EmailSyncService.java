@@ -269,7 +269,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     @Override
     public void onMessageDetailsReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
-                                         IMAPFolder imapFolder, long uid, String rawMessageWithOutAttachments,
+                                         IMAPFolder imapFolder, long uid, javax.mail.Message message, String
+                                                 rawMessageWithOutAttachments,
                                          String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -284,8 +285,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND);
             } else {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+                updateAttachmentTable(accountDao, localFolder, imapFolder, message);
             }
-        } catch (RemoteException e) {
+        } catch (RemoteException | MessagingException | IOException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
@@ -317,9 +319,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
-            updateAttachmentTable(accountDao, folder, imapFolder, messages);
-
-        } catch (MessagingException | RemoteException | IOException e) {
+        } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
@@ -348,9 +348,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
-            updateAttachmentTable(accountDao, folder, imapFolder, messages);
-
-        } catch (MessagingException | RemoteException | IOException e) {
+        } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
@@ -403,9 +401,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(imapFolder,
-                    messagesNewCandidates);
-            updateAttachmentTable(accountDao, folder, imapFolder, messagesNewCandidates);
+            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messagesNewCandidates);
         } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -565,25 +561,23 @@ public class EmailSyncService extends BaseService implements SyncListener {
      * @param accountDao The object which contains information about an email account.
      * @param folder     The local reflection of the remote folder.
      * @param imapFolder The folder where the new messages exist.
-     * @param messages   The new messages.
+     * @param message    The new messages.
      * @throws MessagingException This exception meybe happen when we try to call {@code
      *                            {@link IMAPFolder#getUID(javax.mail.Message)}}
      */
     private void updateAttachmentTable(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
-                                       IMAPFolder imapFolder, javax.mail.Message[] messages)
+                                       IMAPFolder imapFolder, javax.mail.Message message)
             throws MessagingException, IOException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
         ArrayList<ContentValues> contentValuesList = new ArrayList<>();
 
-        for (javax.mail.Message message : messages) {
-            ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, message
-                    .getMessageNumber(), message);
+        ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, message
+                .getMessageNumber(), message);
 
-            if (!attachmentInfoList.isEmpty()) {
-                for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                    contentValuesList.add(AttachmentDaoSource.prepareContentValues(accountDao.getEmail(),
-                            folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
-                }
+        if (!attachmentInfoList.isEmpty()) {
+            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                contentValuesList.add(AttachmentDaoSource.prepareContentValues(accountDao.getEmail(),
+                        folder.getFolderAlias(), imapFolder.getUID(message), attachmentInfo));
             }
         }
 
