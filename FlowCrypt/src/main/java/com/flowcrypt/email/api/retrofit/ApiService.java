@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
@@ -64,20 +65,19 @@ public interface ApiService {
      * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/test/welcome"
      *
      * @param testWelcomeModel POJO model for requests
-     * @return {@link Call< TestWelcomeResponse >}
+     * @return {@link Call<TestWelcomeResponse>}
      */
     @POST("/test/welcome")
     Call<TestWelcomeResponse> postTestWelcome(@Body TestWelcomeModel testWelcomeModel);
 
     /**
-     * This method create a {@link Call} object for the API "https://api.cryptup.io/help/feedback"
+     * This method create a {@link Call} object for the API "https://flowcrypt.com/api/help/feedback"
      *
      * @param postHelpFeedbackModel POJO model for requests
      * @return {@link Call<PostHelpFeedbackResponse>}
      */
-    @POST("https://api.cryptup.io/help/feedback")
-    Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel
-                                                                    postHelpFeedbackModel);
+    @POST(Constants.FLOWCRYPT_API_URL + "/help/feedback")
+    Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel postHelpFeedbackModel);
 
     /**
      * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup"

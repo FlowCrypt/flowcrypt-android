@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 /**
- * This class describes a response from the https://api.cryptup.io/message/reply API.
+ * This class describes a response from the https://flowcrypt.com/api/message/reply API.
  * <p>
  * <code>POST /message/reply
  * response(200): {

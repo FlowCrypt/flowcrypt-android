@@ -3322,7 +3322,7 @@
 
   function api_cryptup_url(type, variable) {
     return {
-      'api': 'https://api.cryptup.io/',
+      'api': 'https://flowcrypt.com/api/',
       'me': 'https://flowcrypt.com/me/' + variable,
       'pubkey': 'https://flowcrypt.com/pub/' + variable,
       'decrypt': 'https://flowcrypt.com/' + variable,
@@ -3671,7 +3671,7 @@
     }
     try {
       $.ajax({
-        url: 'https://api.cryptup.io/help/error',
+        url: 'https://flowcrypt.com/api/help/error',
         method: 'POST',
         data: JSON.stringify({
           name: (error.name || '').substring(0, 50),

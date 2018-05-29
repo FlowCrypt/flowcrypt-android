@@ -11,7 +11,7 @@ import com.google.gson.annotations.Expose;
 
 /**
  * This is a POJO object which used to make a request
- * to the API "https://attester.cryptup.io/initial/legacy_submit"
+ * to the API "https://flowcrypt.com/api/initial/legacy_submit"
  *
  * @author DenBond7
  *         Date: 15.01.2018

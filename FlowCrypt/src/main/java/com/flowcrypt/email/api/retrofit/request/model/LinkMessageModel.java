@@ -11,7 +11,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * The request model for the https://api.cryptup.io/link/message API.
+ * The request model for the https://flowcrypt.com/api/link/message API.
  *
  * @author Denis Bondarenko
  *         Date: 13.07.2017

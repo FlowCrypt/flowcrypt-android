@@ -30,7 +30,7 @@ import org.acra.sender.HttpSender;
  *         E-mail: DenBond7@gmail.com
  */
 @ReportsCrashes(
-        formUri = "https://api.cryptup.io/help/acra",
+        formUri = "https://flowcrypt.com/api/help/acra",
         customReportContent = {
                 ReportField.ANDROID_VERSION,
                 ReportField.APP_VERSION_CODE,
