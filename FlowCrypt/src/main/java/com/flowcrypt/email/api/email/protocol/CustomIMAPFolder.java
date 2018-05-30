@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.protocol;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.ProtocolException;
@@ -31,30 +30,30 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 
 /**
- * A custom implementation of the {@link GmailFolder}
+ * A custom implementation of the {@link IMAPFolder}
  *
  * @author Denis Bondarenko
- * Date: 29.05.2018
- * Time: 12:26
+ * Date: 30.05.2018
+ * Time: 15:05
  * E-mail: DenBond7@gmail.com
  */
-public class CustomGmailFolder extends GmailFolder implements FlowCryptIMAPFolder {
+public class CustomIMAPFolder extends IMAPFolder implements FlowCryptIMAPFolder {
 
-    protected CustomGmailFolder(String fullName, char separator, IMAPStore store, Boolean isNamespace) {
+    protected CustomIMAPFolder(String fullName, char separator, IMAPStore store, Boolean isNamespace) {
         super(fullName, separator, store, isNamespace);
     }
 
-    protected CustomGmailFolder(ListInfo li, IMAPStore store) {
+    protected CustomIMAPFolder(ListInfo li, IMAPStore store) {
         super(li, store);
     }
 
     @Override
     protected IMAPMessage newIMAPMessage(int msgnum) {
-        return new CustomGmailMessage(this, msgnum);
+        return new CustomIMAPMessage(this, msgnum);
     }
 
     @Override
-    public synchronized void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException {
+    public void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException {
         // cache this information in case connection is closed and
         // protocol is set to null
         boolean isRev1;
@@ -113,7 +112,7 @@ public class CustomGmailFolder extends GmailFolder implements FlowCryptIMAPFolde
                 // Got a FetchResponse.
                 FetchResponse fetchResponse = (FetchResponse) response;
                 // Get the corresponding message.
-                CustomGmailMessage msg = (CustomGmailMessage) getMessageBySeqNumber(fetchResponse.getNumber());
+                CustomIMAPMessage msg = (CustomIMAPMessage) getMessageBySeqNumber(fetchResponse.getNumber());
 
                 int count = fetchResponse.getItemCount();
                 boolean unsolicitedFlags = false;

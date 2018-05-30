@@ -9,7 +9,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
-import com.flowcrypt.email.api.email.protocol.FlowCryptImapFolder;
+import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -89,8 +89,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
 
-                FlowCryptImapFolder flowCryptImapFolder = (FlowCryptImapFolder) imapFolder;
-                flowCryptImapFolder.fetchGeneralInfo(messages, fetchProfile);
+                FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
+                flowCryptIMAPFolder.fetchGeneralInfo(messages, fetchProfile);
 
                 syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
             }

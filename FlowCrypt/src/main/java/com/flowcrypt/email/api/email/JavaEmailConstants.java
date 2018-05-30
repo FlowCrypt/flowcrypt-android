@@ -39,6 +39,7 @@ public class JavaEmailConstants {
 
     /*PROTOCOLS*/
     public static final String PROTOCOL_IMAP = "imap";
+    public static final String PROTOCOL_IMAPS = "imaps";
     public static final String PROTOCOL_SMTP = "smtp";
     public static final String PROTOCOL_GIMAPS = "gimaps";
     public static final String OAUTH2 = "oauth2:";

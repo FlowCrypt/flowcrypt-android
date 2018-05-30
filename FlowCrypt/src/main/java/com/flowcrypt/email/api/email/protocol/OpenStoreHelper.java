@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -177,8 +178,16 @@ public class OpenStoreHelper {
                     return openAndConnectToGimapsStore(context, session, accountDao, false);
 
                 default:
-                    Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
+                    session.setProvider(new Provider(Provider.Type.STORE, JavaEmailConstants.PROTOCOL_IMAP,
+                            CustomIMAPStore.class.getCanonicalName(), "FlowCrypt", "1.0"));
+                    session.setProvider(new Provider(Provider.Type.STORE, JavaEmailConstants.PROTOCOL_IMAPS,
+                            CustomIMAPSSLStore.class.getCanonicalName(), "FlowCrypt", "1.0"));
+
                     AuthCredentials authCredentials = accountDao.getAuthCredentials();
+                    Store store = authCredentials.getImapSecurityTypeOption() == SecurityType.Option.NONE
+                            ? session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
+                            : session.getStore(JavaEmailConstants.PROTOCOL_IMAPS);
+
                     store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
                             authCredentials.getPassword());
                     return store;

@@ -18,12 +18,12 @@ import javax.mail.FetchProfile;
 public class CustomFetchProfileItem extends FetchProfile.Item {
 
     /**
-     * This item is for fetching only first 300 characters of the body<p>
+     * This item is for fetching only first 2k characters of the body<p>
      * <p>
      * Information which received helps to understand is the message has an encrypted content or not
      */
     public static final CustomFetchProfileItem BODY_FISRT_CHARACTERS =
-            new CustomFetchProfileItem("BODY.PEEK[TEXT]<0.300>", "BODY.PEEK[TEXT]<0.300>");
+            new CustomFetchProfileItem("BODY.PEEK[TEXT]<0.2048>", "BODY.PEEK[TEXT]<0.2048>");
 
     private String value;
 
