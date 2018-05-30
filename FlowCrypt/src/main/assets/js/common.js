@@ -1860,7 +1860,9 @@
         return armored;
       }
     } catch(error) {
-      catcher.handle_exception(error);
+      if(error.message !== 'Invalid key: need at least key and user ID packet') {
+        catcher.handle_exception(error);
+      }
     }
   }
 
