@@ -17,12 +17,12 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
-import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
+import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPMessage;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.sun.mail.imap.IMAPFolder;
@@ -104,19 +104,18 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * Add a new message details to the database. This method must be called in the non-UI thread.
      *
-     * @param context     Interface to global information about an application environment.
-     * @param email       The email that the message linked.
-     * @param label       The folder label.
-     * @param uid         The message UID.
-     * @param message     The message which will be added to the database.
-     * @param isEncrypted true - if the message has an encrypted part, otherwise - false;
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @param message The message which will be added to the database.
      * @return A {@link Uri} of the created row.
      */
-    public Uri addRow(Context context, String email, String label, long uid, Message message, boolean isEncrypted)
+    public Uri addRow(Context context, String email, String label, long uid, Message message)
             throws MessagingException {
         ContentResolver contentResolver = context.getContentResolver();
         if (message != null && label != null && contentResolver != null) {
-            ContentValues contentValues = prepareContentValues(email, label, message, uid, isEncrypted);
+            ContentValues contentValues = prepareContentValues(email, label, message, uid);
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
     }
@@ -124,28 +123,25 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * This method add rows per single transaction. This method must be called in the non-UI thread.
      *
-     * @param context         Interface to global information about an application environment.
-     * @param email           The email that the message linked.
-     * @param label           The folder label.
-     * @param imapFolder      The {@link IMAPFolder} object which contains information about a
-     *                        remote folder.
-     * @param messages        The messages array.
-     * @param longSparseArray An array that can be used to check whether the message is encrypted or not
+     * @param context    Interface to global information about an application environment.
+     * @param email      The email that the message linked.
+     * @param label      The folder label.
+     * @param imapFolder The {@link IMAPFolder} object which contains information about a
+     *                   remote folder.
+     * @param messages   The messages array.
      * @return the number of newly created rows.
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
-    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
-                       LongSparseArray<Boolean> longSparseArray) throws MessagingException {
+    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages) throws
+            MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
 
             for (int i = 0; i < messages.length; i++) {
                 Message message = messages[i];
-                long uid = imapFolder.getUID(message);
-                ContentValues contentValues = prepareContentValues(email, label,
-                        message, imapFolder.getUID(message), longSparseArray.get(uid, false));
+                ContentValues contentValues = prepareContentValues(email, label, message, imapFolder.getUID(message));
 
                 contentValuesArray[i] = contentValues;
             }
@@ -597,18 +593,17 @@ public class MessageDaoSource extends BaseDaoSource {
      * Prepare the content values for insert to the database. This method must be called in the
      * non-UI thread.
      *
-     * @param email       The email that the message linked.
-     * @param label       The folder label.
-     * @param message     The message which will be added to the database.
-     * @param uid         The message UID.
-     * @param isEncrypted true - if the message has an encrypted part, otherwise - false;
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param message The message which will be added to the database.
+     * @param uid     The message UID.
      * @return generated {@link ContentValues}
      * @throws MessagingException This exception may be occured when we call methods of thr
      *                            {@link Message} object</code>
      */
     @NonNull
-    private ContentValues prepareContentValues(String email, String label, Message message, long uid,
-                                               boolean isEncrypted) throws MessagingException {
+    private ContentValues prepareContentValues(String email, String label, Message message, long uid)
+            throws MessagingException {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, email);
         contentValues.put(COL_FOLDER, label);
@@ -623,7 +618,8 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-        contentValues.put(COL_IS_ENCRYPTED, isEncrypted);
+        contentValues.put(COL_IS_ENCRYPTED, ((FlowCryptIMAPMessage) message).getBodyAsString().contains
+                ("-----BEGIN PGP MESSAGE-----"));
         return contentValues;
     }
 

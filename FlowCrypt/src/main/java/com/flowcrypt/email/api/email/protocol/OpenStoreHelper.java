@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
+import javax.mail.Provider;
 import javax.mail.Session;
 import javax.mail.Store;
 
@@ -67,12 +68,15 @@ public class OpenStoreHelper {
      * gimaps.
      */
 
-    public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao accountDao,
-                                                            boolean isResetTokenNeeded)
+    public static CustomGmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao
+            accountDao,
+                                                                  boolean isResetTokenNeeded)
             throws MessagingException, IOException, GoogleAuthException {
-        GmailSSLStore gmailSSLStore;
+        CustomGmailSSLStore gmailSSLStore;
         if (accountDao != null) {
-            gmailSSLStore = (GmailSSLStore) session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
+            session.setProvider(new Provider(Provider.Type.STORE, JavaEmailConstants.PROTOCOL_GIMAPS,
+                    CustomGmailSSLStore.class.getCanonicalName(), "FlowCrypt", "1.0"));
+            gmailSSLStore = (CustomGmailSSLStore) session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
             if (accountDao.getAccount() != null) {
                 try {
                     String token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),

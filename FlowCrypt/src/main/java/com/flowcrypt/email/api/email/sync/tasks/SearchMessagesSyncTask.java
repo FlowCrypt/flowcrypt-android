@@ -7,8 +7,9 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 import android.support.annotation.NonNull;
-import android.util.LongSparseArray;
 
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
+import com.flowcrypt.email.api.email.protocol.FlowCryptImapFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.gimap.GmailRawSearchTerm;
@@ -70,8 +71,8 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
         if (syncListener != null) {
             if (end < 1) {
-                syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, new
-                        LongSparseArray<Boolean>(), ownerKey, requestCode);
+                syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey,
+                        requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -85,11 +86,12 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
                 fetchProfile.add(FetchProfile.Item.FLAGS);
                 fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-                imapFolder.fetch(bufferedMessages, fetchProfile);
+                fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
 
-                //todo-denbond7 need to improve it
+                FlowCryptImapFolder flowCryptImapFolder = (FlowCryptImapFolder) imapFolder;
+                flowCryptImapFolder.fetchGeneralInfo(bufferedMessages, fetchProfile);
+
                 syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, bufferedMessages,
-                        new LongSparseArray<Boolean>(),
                         ownerKey, requestCode);
             }
         }

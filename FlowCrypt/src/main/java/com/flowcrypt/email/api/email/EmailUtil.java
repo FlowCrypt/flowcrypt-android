@@ -15,13 +15,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.LongSparseArray;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
@@ -37,15 +37,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
-import com.sun.mail.iap.Argument;
-import com.sun.mail.iap.ProtocolException;
-import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.protocol.BODY;
-import com.sun.mail.imap.protocol.FetchResponse;
-import com.sun.mail.imap.protocol.IMAPProtocol;
-import com.sun.mail.imap.protocol.UID;
-import com.sun.mail.util.ASCIIUtility;
 
 import org.apache.commons.io.IOUtils;
 
@@ -66,11 +58,13 @@ import java.util.regex.Pattern;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
+import javax.mail.FetchProfile;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
+import javax.mail.UIDFolder;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -79,9 +73,9 @@ import javax.mail.util.ByteArrayDataSource;
 
 /**
  * @author Denis Bondarenko
- *         Date: 29.09.2017
- *         Time: 15:31
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.09.2017
+ * Time: 15:31
+ * E-mail: DenBond7@gmail.com
  */
 
 public class EmailUtil {
@@ -460,54 +454,76 @@ public class EmailUtil {
     }
 
     /**
-     * Prepare a formatted date string for a forwarded message. For example <code>Tue, Apr 3, 2018 at 3:07 PM.</code>
+     * Prepare a fetch command from the given {@link FetchProfile}
      *
-     * @return A generated formatted date string.
+     * @param fetchProfile    The given {@link FetchProfile}
+     * @param isRev1          The protocol revision number
+     * @param envelopeCommand The envelope command
+     * @return A generated fetch command
      */
-    @SuppressWarnings("unchecked")
-    @NonNull
-    public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, final boolean isUIDCall,
-                                                                       final long start, final long end)
-            throws MessagingException {
+    public static StringBuilder prepareFetchCommand(FetchProfile fetchProfile, boolean isRev1, String envelopeCommand) {
+        StringBuilder command = new StringBuilder();
+        boolean first = true;
 
-        return (LongSparseArray<Boolean>) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-            public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
-                LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
+        if (fetchProfile.contains(FetchProfile.Item.ENVELOPE)) {
+            command.append(envelopeCommand);
+            first = false;
+        }
 
-                Argument args = new Argument();
-                Argument list = new Argument();
-                list.writeString("UID");
-                list.writeString("BODY.PEEK[TEXT]<0.300>");
-                args.writeArgument(list);
+        if (fetchProfile.contains(FetchProfile.Item.FLAGS)) {
+            command.append(first ? "FLAGS" : " FLAGS");
+            first = false;
+        }
 
-                Response[] responses = imapProtocol.command(
-                        (isUIDCall ? "UID FETCH " : "FETCH ") + start + ":" + end, args);
-                Response serverStatusResponse = responses[responses.length - 1];
+        if (fetchProfile.contains(FetchProfile.Item.CONTENT_INFO)) {
+            command.append(first ? "BODYSTRUCTURE" : " BODYSTRUCTURE");
+            first = false;
+        }
 
-                if (serverStatusResponse.isOK()) {
-                    for (Response response : responses) {
-                        if (!(response instanceof FetchResponse))
-                            continue;
+        if (fetchProfile.contains(UIDFolder.FetchProfileItem.UID)) {
+            command.append(first ? "UID" : " UID");
+            first = false;
+        }
 
-                        FetchResponse fetchResponse = (FetchResponse) response;
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
+            if (isRev1)
+                command.append(first ?
+                        "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
+            else
+                command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
+            first = false;
+        }
 
-                        UID uid = fetchResponse.getItem(UID.class);
-                        if (uid != null && uid.uid != 0) {
-                            BODY body = fetchResponse.getItem(BODY.class);
-                            if (body != null && body.getByteArrayInputStream() != null) {
-                                String rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
-                                booleanLongSparseArray.put(uid.uid,
-                                        rawMessage.contains("-----BEGIN PGP MESSAGE-----"));
-                            }
-                        }
-                    }
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
+            if (isRev1)
+                command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
+            else
+                command.append(first ? "RFC822" : " RFC822");
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.SIZE) ||
+                fetchProfile.contains(IMAPFolder.FetchProfileItem.SIZE)) {
+            command.append(first ? "RFC822.SIZE" : " RFC822.SIZE");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.INTERNALDATE)) {
+            command.append(first ? "INTERNALDATE" : " INTERNALDATE");
+            first = false;
+        }
+
+        for (FetchProfile.Item item : fetchProfile.getItems()) {
+            if (item instanceof CustomFetchProfileItem) {
+                CustomFetchProfileItem customFetchProfileItem = (CustomFetchProfileItem) item;
+                if (!first) {
+                    command.append(" ");
                 }
 
-                imapProtocol.notifyResponseHandlers(responses);
-                imapProtocol.handleResult(serverStatusResponse);
-
-                return booleanLongSparseArray;
+                command.append(customFetchProfileItem.getValue());
             }
-        });
+        }
+
+        return command;
     }
 }

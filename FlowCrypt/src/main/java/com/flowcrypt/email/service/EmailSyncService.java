@@ -17,7 +17,6 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -296,7 +295,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     @Override
     public void onMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
-                                   @NonNull LongSparseArray<Boolean> longSparseArray,
                                    String ownerKey, int requestCode) {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
@@ -309,8 +307,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
-                    messages,
-                    longSparseArray);
+                    messages);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -329,7 +326,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
     @Override
     public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
                                          IMAPFolder imapFolder, javax.mail.Message[] messages,
-                                         @NonNull LongSparseArray<Boolean> longSparseArray,
                                          String ownerKey, int requestCode) {
         Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
         try {
@@ -338,8 +334,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     SearchMessagesActivity.SEARCH_FOLDER_NAME,
                     imapFolder,
-                    messages,
-                    longSparseArray);
+                    messages);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -358,7 +353,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
     @Override
     public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder,
                                           javax.mail.Message[] newMessages,
-                                          @NonNull LongSparseArray<Boolean> longSparseArray,
                                           javax.mail.Message[] updateMessages,
                                           String key, int requestCode) {
         Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " newMessages " +
@@ -386,8 +380,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
                     imapFolder,
-                    messagesNewCandidates,
-                    longSparseArray);
+                    messagesNewCandidates);
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),

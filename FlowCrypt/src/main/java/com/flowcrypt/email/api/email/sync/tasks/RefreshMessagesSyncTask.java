@@ -5,7 +5,8 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import com.flowcrypt.email.api.email.EmailUtil;
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
+import com.flowcrypt.email.api.email.protocol.FlowCryptImapFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -58,7 +59,6 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
 
             syncListener.onRefreshMessagesReceived(accountDao, imapFolder, newMessages,
-                    EmailUtil.getInfoAreMessagesEncrypted(imapFolder, true, lastUID + 1, nextUID - 1),
                     updatedMessages, ownerKey, requestCode);
         }
 
@@ -80,8 +80,12 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             FetchProfile fetchProfile = new FetchProfile();
             fetchProfile.add(FetchProfile.Item.ENVELOPE);
             fetchProfile.add(FetchProfile.Item.FLAGS);
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
             fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-            imapFolder.fetch(messages, fetchProfile);
+            fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
+
+            FlowCryptImapFolder flowCryptImapFolder = (FlowCryptImapFolder) imapFolder;
+            flowCryptImapFolder.fetchGeneralInfo(messages, fetchProfile);
         }
         return messages;
     }
