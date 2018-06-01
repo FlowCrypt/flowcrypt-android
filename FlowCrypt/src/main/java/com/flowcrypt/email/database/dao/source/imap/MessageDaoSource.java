@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
+import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPMessage;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.sun.mail.imap.IMAPFolder;
@@ -67,6 +68,7 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS =
             "raw_message_without_attachments";
     public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
+    public static final String COL_IS_ENCRYPTED = "is_encrypted";
 
     public static final String IMAP_MESSAGES_INFO_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_MESSAGES + " (" +
@@ -81,7 +83,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_SUBJECT + " TEXT DEFAULT NULL, " +
             COL_FLAGS + " TEXT DEFAULT NULL, " +
             COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
-            COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0 " + ");";
+            COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
+            COL_IS_ENCRYPTED + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -109,7 +112,7 @@ public class MessageDaoSource extends BaseDaoSource {
      * @return A {@link Uri} of the created row.
      */
     public Uri addRow(Context context, String email, String label, long uid, Message message)
-            throws MessagingException, IOException {
+            throws MessagingException {
         ContentResolver contentResolver = context.getContentResolver();
         if (message != null && label != null && contentResolver != null) {
             ContentValues contentValues = prepareContentValues(email, label, message, uid);
@@ -130,16 +133,15 @@ public class MessageDaoSource extends BaseDaoSource {
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
-    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages)
-            throws MessagingException, IOException {
+    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages) throws
+            MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
 
             for (int i = 0; i < messages.length; i++) {
                 Message message = messages[i];
-                ContentValues contentValues = prepareContentValues(email, label,
-                        message, imapFolder.getUID(message));
+                ContentValues contentValues = prepareContentValues(email, label, message, imapFolder.getUID(message));
 
                 contentValuesArray[i] = contentValues;
             }
@@ -278,6 +280,8 @@ public class MessageDaoSource extends BaseDaoSource {
                 cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
         generalMessageDetails.setMessageHasAttachment(cursor.getInt(cursor.getColumnIndex
                 (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
+        generalMessageDetails.setEncrypted(cursor.getInt(cursor.getColumnIndex
+                (COL_IS_ENCRYPTED)) == 1);
 
         return generalMessageDetails;
     }
@@ -598,8 +602,8 @@ public class MessageDaoSource extends BaseDaoSource {
      *                            {@link Message} object</code>
      */
     @NonNull
-    private ContentValues prepareContentValues(String email, String label, Message message, long
-            uid) throws MessagingException, IOException {
+    private ContentValues prepareContentValues(String email, String label, Message message, long uid)
+            throws MessagingException {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, email);
         contentValues.put(COL_FOLDER, label);
@@ -614,6 +618,8 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
+        contentValues.put(COL_IS_ENCRYPTED, ((FlowCryptIMAPMessage) message).getBodyAsString().contains
+                ("-----BEGIN PGP MESSAGE-----"));
         return contentValues;
     }
 

@@ -102,8 +102,8 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
                 message.setFlag(Flags.Flag.SEEN, true);
             }
 
-            syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, rawMessage, ownerKey,
-                    requestCode);
+            syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, message, rawMessage,
+                    ownerKey, requestCode);
         }
 
         imapFolder.close(false);

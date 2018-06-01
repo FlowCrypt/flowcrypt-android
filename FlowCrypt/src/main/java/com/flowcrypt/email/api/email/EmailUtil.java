@@ -21,6 +21,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
@@ -57,11 +58,13 @@ import java.util.regex.Pattern;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
+import javax.mail.FetchProfile;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
+import javax.mail.UIDFolder;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -70,9 +73,9 @@ import javax.mail.util.ByteArrayDataSource;
 
 /**
  * @author Denis Bondarenko
- *         Date: 29.09.2017
- *         Time: 15:31
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.09.2017
+ * Time: 15:31
+ * E-mail: DenBond7@gmail.com
  */
 
 public class EmailUtil {
@@ -448,5 +451,79 @@ public class EmailUtil {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN_FORWARDED_DATE, Locale.US);
         return simpleDateFormat.format(date);
+    }
+
+    /**
+     * Prepare a fetch command from the given {@link FetchProfile}
+     *
+     * @param fetchProfile    The given {@link FetchProfile}
+     * @param isRev1          The protocol revision number
+     * @param envelopeCommand The envelope command
+     * @return A generated fetch command
+     */
+    public static StringBuilder prepareFetchCommand(FetchProfile fetchProfile, boolean isRev1, String envelopeCommand) {
+        StringBuilder command = new StringBuilder();
+        boolean first = true;
+
+        if (fetchProfile.contains(FetchProfile.Item.ENVELOPE)) {
+            command.append(envelopeCommand);
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.FLAGS)) {
+            command.append(first ? "FLAGS" : " FLAGS");
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.CONTENT_INFO)) {
+            command.append(first ? "BODYSTRUCTURE" : " BODYSTRUCTURE");
+            first = false;
+        }
+
+        if (fetchProfile.contains(UIDFolder.FetchProfileItem.UID)) {
+            command.append(first ? "UID" : " UID");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
+            if (isRev1)
+                command.append(first ?
+                        "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
+            else
+                command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
+            if (isRev1)
+                command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
+            else
+                command.append(first ? "RFC822" : " RFC822");
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.SIZE) ||
+                fetchProfile.contains(IMAPFolder.FetchProfileItem.SIZE)) {
+            command.append(first ? "RFC822.SIZE" : " RFC822.SIZE");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.INTERNALDATE)) {
+            command.append(first ? "INTERNALDATE" : " INTERNALDATE");
+            first = false;
+        }
+
+        for (FetchProfile.Item item : fetchProfile.getItems()) {
+            if (item instanceof CustomFetchProfileItem) {
+                CustomFetchProfileItem customFetchProfileItem = (CustomFetchProfileItem) item;
+                if (!first) {
+                    command.append(" ");
+                }
+
+                command.append(customFetchProfileItem.getValue());
+            }
+        }
+
+        return command;
     }
 }

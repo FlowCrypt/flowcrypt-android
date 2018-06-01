@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
+import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -27,14 +29,14 @@ import javax.mail.UIDFolder;
  */
 
 public class RefreshMessagesSyncTask extends BaseSyncTask {
-    private String folderName;
+    private com.flowcrypt.email.api.email.Folder localFolder;
     private int lastUID;
     private int countOfLoadedMessages;
 
-    public RefreshMessagesSyncTask(String ownerKey, int requestCode, String folderName,
+    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folderName,
                                    int lastUID, int countOfLoadedMessages) {
         super(ownerKey, requestCode);
-        this.folderName = folderName;
+        this.localFolder = folderName;
         this.lastUID = lastUID;
         this.countOfLoadedMessages = countOfLoadedMessages;
     }
@@ -42,7 +44,7 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
     @Override
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
             Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
         imapFolder.open(Folder.READ_ONLY);
 
         long nextUID = imapFolder.getUIDNext();
@@ -55,19 +57,9 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             }
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
             Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
-            int countOfUpdatedMessages = updatedMessages != null ? updatedMessages.length : 0;
-            Message[] messages = new Message[countOfNewMessages + countOfUpdatedMessages];
 
-            if (newMessages != null) {
-                System.arraycopy(newMessages, 0, messages, 0, newMessages.length);
-            }
-
-            if (updatedMessages != null) {
-                System.arraycopy(updatedMessages, 0, messages, newMessages != null ? newMessages.length : 0,
-                        updatedMessages.length);
-            }
-
-            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
+            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, newMessages,
+                    updatedMessages, ownerKey, requestCode);
         }
 
         imapFolder.close(false);
@@ -88,8 +80,12 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             FetchProfile fetchProfile = new FetchProfile();
             fetchProfile.add(FetchProfile.Item.ENVELOPE);
             fetchProfile.add(FetchProfile.Item.FLAGS);
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
             fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-            imapFolder.fetch(messages, fetchProfile);
+            fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
+
+            FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
+            flowCryptIMAPFolder.fetchGeneralInfo(messages, fetchProfile);
         }
         return messages;
     }

@@ -98,27 +98,30 @@ public interface SyncListener {
      * This method called when a new messages received from the some folder.
      *
      * @param accountDao                   The {@link AccountDao} object which contains information about an email
-     *                                     account.
-     * @param localFolder                  The local implementation of the remote folder.
-     * @param imapFolder                   The folder where the new messages exist.
-     * @param uid                          The UID of the message.
-     * @param rawMessageWithOutAttachments The raw message without attachments.
-     * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
+     *                                     account;
+     * @param localFolder                  The local implementation of the remote folder;
+     * @param imapFolder                   The folder where the new messages exist;
+     * @param uid                          The UID of the message;
+     * @param message                      The received message;
+     * @param rawMessageWithOutAttachments The raw message without attachments;
+     * @param ownerKey                     The name of the reply to {@link android.os.Messenger};
      * @param requestCode                  The unique request code for the reply to
      *                                     {@link android.os.Messenger}.
      */
     void onMessageDetailsReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
-                                  IMAPFolder imapFolder, long uid, String rawMessageWithOutAttachments,
+                                  IMAPFolder imapFolder, long uid, Message message, String rawMessageWithOutAttachments,
                                   String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
+     * @param accountDao  The {@link AccountDao} object which contains information about an
+     *                    email account.
      * @param folder      The folder where the new messages exist.
      * @param messages    The new messages.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to
+     *                    {@link android.os.Messenger}.
      */
     void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages,
                             String ownerKey, int requestCode);
@@ -126,26 +129,30 @@ public interface SyncListener {
     /**
      * This method called when a new messages received from the some folder.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
+     * @param accountDao  The {@link AccountDao} object which contains information about an
+     *                    email account.
      * @param messages    The new messages.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to
+     *                    {@link android.os.Messenger}.
      */
-    void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder, IMAPFolder
-            remoteFolder, Message[] messages, String ownerKey,
-                                  int requestCode);
+    void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
+                                  IMAPFolder remoteFolder, Message[] messages, String ownerKey, int requestCode);
 
     /**
      * This method called when received information about messages which already exist in the local database.
      *
-     * @param accountDao  The {@link AccountDao} object which contains information about an email account.
-     * @param folder      The folder where the messages exist.
-     * @param messages    The refreshed messages.
-     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param accountDao     The {@link AccountDao} object which contains information about an
+     *                       email account.
+     * @param folder         The folder where the messages exist.
+     * @param newMessages    The refreshed messages.
+     * @param updateMessages The messages which will must be updated.
+     * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode    The unique request code for the reply to
+     *                       {@link android.os.Messenger}.
      */
-    void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages, String ownerKey,
-                                   int requestCode);
+    void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] newMessages,
+                                   Message[] updateMessages, String ownerKey, int requestCode);
 
     /**
      * This method called when new folders list received.

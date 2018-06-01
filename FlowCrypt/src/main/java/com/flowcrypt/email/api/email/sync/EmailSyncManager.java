@@ -272,11 +272,11 @@ public class EmailSyncManager {
      *
      * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
      * @param requestCode           The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName            A server folder name.
+     * @param folderName            A local implementation of the remote folder.
      * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
      * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
-    public void refreshMessages(String ownerKey, int requestCode, String folderName, int lastUIDInCache,
+    public void refreshMessages(String ownerKey, int requestCode, Folder folderName, int lastUIDInCache,
                                 int countOfLoadedMessages) {
         try {
             removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, activeSyncTaskBlockingQueue);
