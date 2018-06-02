@@ -22,7 +22,6 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
-import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPMessage;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.sun.mail.imap.IMAPFolder;
@@ -190,7 +189,7 @@ public class MessageDaoSource extends BaseDaoSource {
      */
     public ContentProviderResult[] updateMessagesByUID(Context context, String email, String label,
                                                        IMAPFolder imapFolder, Message[] messages)
-            throws IOException, RemoteException, OperationApplicationException, MessagingException {
+            throws RemoteException, OperationApplicationException, MessagingException {
         ContentResolver contentResolver = context.getContentResolver();
         if (email != null && label != null && contentResolver != null && messages != null && messages.length > 0) {
 
@@ -618,8 +617,6 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-        contentValues.put(COL_IS_ENCRYPTED, ((FlowCryptIMAPMessage) message).getBodyAsString().contains
-                ("-----BEGIN PGP MESSAGE-----"));
         return contentValues;
     }
 

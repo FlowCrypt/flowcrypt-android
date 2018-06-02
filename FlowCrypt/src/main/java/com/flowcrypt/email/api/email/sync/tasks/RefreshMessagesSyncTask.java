@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
-import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -84,8 +83,7 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             fetchProfile.add(UIDFolder.FetchProfileItem.UID);
             fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
 
-            FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
-            flowCryptIMAPFolder.fetchGeneralInfo(messages, fetchProfile);
+            imapFolder.fetch(messages, fetchProfile);
         }
         return messages;
     }

@@ -9,7 +9,6 @@ import android.os.Messenger;
 import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
-import com.flowcrypt.email.api.email.protocol.FlowCryptIMAPFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.gimap.GmailRawSearchTerm;
@@ -88,8 +87,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
                 fetchProfile.add(UIDFolder.FetchProfileItem.UID);
                 fetchProfile.add(CustomFetchProfileItem.BODY_FISRT_CHARACTERS);
 
-                FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
-                flowCryptIMAPFolder.fetchGeneralInfo(bufferedMessages, fetchProfile);
+                imapFolder.fetch(bufferedMessages, fetchProfile);
 
                 syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, bufferedMessages,
                         ownerKey, requestCode);
