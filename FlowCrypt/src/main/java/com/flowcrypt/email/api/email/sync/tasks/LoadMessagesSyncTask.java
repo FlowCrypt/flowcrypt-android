@@ -28,14 +28,14 @@ import javax.mail.UIDFolder;
  */
 
 public class LoadMessagesSyncTask extends BaseSyncTask {
-    private String folderName;
+    private com.flowcrypt.email.api.email.Folder folder;
     private int start;
     private int end;
 
     public LoadMessagesSyncTask(String ownerKey, int requestCode,
-                                String folderName, int start, int end) {
+                                com.flowcrypt.email.api.email.Folder folder, int start, int end) {
         super(ownerKey, requestCode);
-        this.folderName = folderName;
+        this.folder = folder;
         this.start = start;
         this.end = end;
     }
@@ -43,14 +43,14 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
     @Override
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
             Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
         imapFolder.open(Folder.READ_ONLY);
 
         int messagesCount = imapFolder.getMessageCount();
 
         if (syncListener != null) {
             if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
             } else {
                 Message[] messages;
 
@@ -70,7 +70,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
                 FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
                 flowCryptIMAPFolder.fetchGeneralInfo(messages, fetchProfile);
 
-                syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, folder, imapFolder, messages, ownerKey, requestCode);
             }
         }
 

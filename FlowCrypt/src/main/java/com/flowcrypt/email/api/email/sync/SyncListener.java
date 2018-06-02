@@ -117,14 +117,15 @@ public interface SyncListener {
      *
      * @param accountDao  The {@link AccountDao} object which contains information about an
      *                    email account.
-     * @param folder      The folder where the new messages exist.
+     * @param localFolder The local implementation of the remote folder
+     * @param folder      The remote folder where the new messages exist.
      * @param messages    The new messages.
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to
      *                    {@link android.os.Messenger}.
      */
-    void onMessagesReceived(AccountDao accountDao, IMAPFolder folder, Message[] messages,
-                            String ownerKey, int requestCode);
+    void onMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder folder,
+                            Message[] messages, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.

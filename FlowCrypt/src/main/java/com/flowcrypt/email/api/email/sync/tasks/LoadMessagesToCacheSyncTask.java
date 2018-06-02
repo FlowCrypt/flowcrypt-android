@@ -34,20 +34,21 @@ import javax.mail.UIDFolder;
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
     private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
-    private String folderName;
+    private com.flowcrypt.email.api.email.Folder localFolder;
     private int countOfAlreadyLoadedMessages;
 
-    public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode, String folderName,
+    public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder
+            localFolder,
                                        int countOfAlreadyLoadedMessages) {
         super(ownerKey, requestCode);
-        this.folderName = folderName;
+        this.localFolder = localFolder;
         this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
     }
 
     @Override
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
             Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
         if (syncListener != null) {
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_opening_store);
         }
@@ -62,7 +63,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
         int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
         Log.d(TAG, "Run LoadMessagesToCacheSyncTask with parameters:"
-                + " folderName = " + folderName
+                + " localFolder = " + localFolder
                 + " | countOfAlreadyLoadedMessages = " + countOfAlreadyLoadedMessages
                 + " | messagesCount = " + messagesCount
                 + " | start = " + start
@@ -74,7 +75,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
             if (end < 1) {
-                syncListener.onMessagesReceived(accountDao, imapFolder, new Message[]{}, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, localFolder, imapFolder, new Message[]{},
+                        ownerKey, requestCode);
             } else {
                 if (start < 1) {
                     start = 1;
@@ -92,7 +94,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                 FlowCryptIMAPFolder flowCryptIMAPFolder = (FlowCryptIMAPFolder) imapFolder;
                 flowCryptIMAPFolder.fetchGeneralInfo(messages, fetchProfile);
 
-                syncListener.onMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
+                syncListener.onMessagesReceived(accountDao, localFolder, imapFolder, messages, ownerKey, requestCode);
             }
         }
 

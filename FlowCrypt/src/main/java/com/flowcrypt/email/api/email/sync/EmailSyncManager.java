@@ -190,14 +190,14 @@ public class EmailSyncManager {
      *
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName  A server folder name.
+     * @param folder      A local implementation of the remote folder.
      * @param start       The position of the start.
      * @param end         The position of the end.
      */
-    public void loadMessages(String ownerKey, int requestCode, String folderName, int start, int
+    public void loadMessages(String ownerKey, int requestCode, Folder folder, int start, int
             end) {
         try {
-            activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folderName,
+            activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder,
                     start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -234,15 +234,15 @@ public class EmailSyncManager {
      * @param ownerKey                     The name of the reply to {@link android.os.Messenger}.
      * @param requestCode                  The unique request code for the reply to
      *                                     {@link android.os.Messenger}.
-     * @param folderName                   A server folder name.
+     * @param folder                       A local implementation of the remote folder.
      * @param countOfAlreadyLoadedMessages The count of already cached messages in the folder.
      */
-    public void loadNextMessages(String ownerKey, int requestCode, String folderName, int
+    public void loadNextMessages(String ownerKey, int requestCode, Folder folder, int
             countOfAlreadyLoadedMessages) {
         try {
             notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
             activeSyncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
-                    folderName, countOfAlreadyLoadedMessages));
+                    folder, countOfAlreadyLoadedMessages));
 
             if (activeSyncTaskBlockingQueue.size() != 1) {
                 notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_queue_is_not_empty);
@@ -272,16 +272,16 @@ public class EmailSyncManager {
      *
      * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
      * @param requestCode           The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folderName            A local implementation of the remote folder.
+     * @param folder                A local implementation of the remote folder.
      * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
      * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
-    public void refreshMessages(String ownerKey, int requestCode, Folder folderName, int lastUIDInCache,
+    public void refreshMessages(String ownerKey, int requestCode, Folder folder, int lastUIDInCache,
                                 int countOfLoadedMessages) {
         try {
             removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, activeSyncTaskBlockingQueue);
             activeSyncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
-                    folderName, lastUIDInCache, countOfLoadedMessages));
+                    folder, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -291,18 +291,18 @@ public class EmailSyncManager {
     /**
      * Move the message to an another folder.
      *
-     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode           The unique request code for identify the current action.
-     * @param sourceFolderName      The source folder name.
-     * @param destinationFolderName The destination folder name.
-     * @param uid                   The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
-     *                              .Message ).
+     * @param ownerKey          The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode       The unique request code for identify the current action.
+     * @param sourceFolder      A local implementation of the remote folder which is the source.
+     * @param destinationFolder A local implementation of the remote folder which is the destination.
+     * @param uid               The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
+     *                          .Message ).
      */
-    public void moveMessage(String ownerKey, int requestCode, String sourceFolderName, String
-            destinationFolderName, int uid) {
+    public void moveMessage(String ownerKey, int requestCode, Folder sourceFolder, Folder
+            destinationFolder, int uid) {
         try {
-            activeSyncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode,
-                    sourceFolderName, destinationFolderName, new long[]{uid}));
+            activeSyncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode, sourceFolder,
+                    destinationFolder, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

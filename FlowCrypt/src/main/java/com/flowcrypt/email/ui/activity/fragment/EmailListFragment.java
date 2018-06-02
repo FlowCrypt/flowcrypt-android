@@ -428,10 +428,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 DataBaseUtil.cleanFolderCache(getContext(),
                         onManageEmailsListener.getCurrentAccountDao().getEmail(),
                         onManageEmailsListener.getCurrentFolder().getFolderAlias());
-            }
 
-            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
-                    loadCachedMessagesCursorLoaderCallbacks);
+                getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
+                        loadCachedMessagesCursorLoaderCallbacks);
+            }
         }
     }
 

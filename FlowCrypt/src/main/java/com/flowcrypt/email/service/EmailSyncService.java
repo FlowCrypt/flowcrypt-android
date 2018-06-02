@@ -294,18 +294,16 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
-    public void onMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder, javax.mail.Message[] messages,
+    public void onMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                   IMAPFolder imapFolder, javax.mail.Message[] messages,
                                    String ownerKey, int requestCode) {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
-            com.flowcrypt.email.api.email.Folder folder = FoldersManager.generateFolder(imapFolder,
-                    imapFolder.getName());
-
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
-                    folder.getFolderAlias(),
+                    localFolder.getFolderAlias(),
                     imapFolder,
                     messages);
 
@@ -789,7 +787,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                             com.flowcrypt.email.api.email.Folder folder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
                             emailSyncManager.loadMessages(action.getOwnerKey(), action.getRequestCode(),
-                                    folder.getServerFullFolderName(), message.arg1, message.arg2);
+                                    folder, message.arg1, message.arg2);
                         }
                         break;
 
@@ -799,7 +797,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.loadNextMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), folderOfMessages.getServerFullFolderName(), message.arg1);
+                                    action.getRequestCode(), folderOfMessages, message.arg1);
                         }
                         break;
 
@@ -846,8 +844,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                             }
 
                             emailSyncManager.moveMessage(action.getOwnerKey(), action.getRequestCode(),
-                                    folders[0].getServerFullFolderName(), folders[1].getServerFullFolderName(),
-                                    message.arg1);
+                                    folders[0], folders[1], message.arg1);
                         }
                         break;
 
