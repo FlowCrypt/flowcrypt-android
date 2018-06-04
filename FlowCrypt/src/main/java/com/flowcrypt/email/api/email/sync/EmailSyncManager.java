@@ -12,6 +12,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
@@ -31,6 +32,7 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
+import com.sun.mail.imap.Utility;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -352,6 +354,27 @@ public class EmailSyncManager {
         try {
             activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey,
                     requestCode, accountName));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Identify encrypted messages.
+     *
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for identify the current action.
+     * @param messages    The input messages which will be checked.
+     * @param localFolder The local implementation of the remote folder
+     */
+    public void identifyEncryptedMessages(String ownerKey, int requestCode, Message[] messages, Folder localFolder) {
+        try {
+            removeOldTasksFromBlockingQueue(CheckIsLoadedMessagesEncryptedSyncTask.class, passiveSyncTaskBlockingQueue);
+            if (messages != null && messages.length > 0) {
+                passiveSyncTaskBlockingQueue.put(new CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode,
+                        Utility.toMessageSetSorted(messages, null), localFolder));
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

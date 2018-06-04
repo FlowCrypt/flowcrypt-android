@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -534,6 +535,36 @@ public class MessageDaoSource extends BaseDaoSource {
             return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
                     + COL_FOLDER + " = ?", new String[]{email, label});
         } else return -1;
+    }
+
+    /**
+     * @param context                Interface to global information about an application environment.
+     * @param email                  The email that the message linked.
+     * @param label                  The folder label.
+     * @param booleanLongSparseArray The array which contains information about an encrypted state of some messages
+     * @return the {@link ContentProviderResult} array.
+     * @throws RemoteException
+     * @throws OperationApplicationException
+     */
+    public ContentProviderResult[] updateMessagesEncryptionStateByUID(Context context, String email, String label,
+                                                                      LongSparseArray<Boolean> booleanLongSparseArray)
+            throws RemoteException, OperationApplicationException {
+        ContentResolver contentResolver = context.getContentResolver();
+
+        if (booleanLongSparseArray != null && booleanLongSparseArray.size() > 0) {
+            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            for (int i = 0, arraySize = booleanLongSparseArray.size(); i < arraySize; i++) {
+                long uid = booleanLongSparseArray.keyAt(i);
+                Boolean b = booleanLongSparseArray.get(uid);
+                ops.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                        .withValue(COL_IS_ENCRYPTED, b)
+                        .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ",
+                                new String[]{email, label, String.valueOf(uid)})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), ops);
+        } else return new ContentProviderResult[0];
     }
 
     private static String prepareArrayToSaving(String[] attributes) {

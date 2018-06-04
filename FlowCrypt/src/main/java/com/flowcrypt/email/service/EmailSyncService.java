@@ -18,6 +18,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -307,6 +308,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     imapFolder,
                     messages);
 
+            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, messages,
+                    localFolder);
+
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
             } else {
@@ -333,6 +337,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     SearchMessagesActivity.SEARCH_FOLDER_NAME,
                     imapFolder,
                     messages);
+
+            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, messages,
+                    folder);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -380,6 +387,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     imapFolder,
                     messagesNewCandidates);
 
+            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages,
+                    messagesNewCandidates, folder);
+
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
                     folder.getFolderAlias(),
@@ -393,7 +403,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             }
 
             updateLocalContactsIfMessagesFromSentFolder(imapFolder, messagesNewCandidates);
-        } catch (RemoteException | MessagingException | IOException | OperationApplicationException e) {
+        } catch (RemoteException | MessagingException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
