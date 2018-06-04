@@ -13,6 +13,7 @@ import android.util.SparseArray;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.google.android.gms.common.util.ArrayUtils;
 import com.sun.mail.iap.Argument;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
@@ -20,9 +21,11 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.protocol.BODY;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
-import com.sun.mail.imap.protocol.MessageSet;
 import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.imap.protocol.UIDSet;
 import com.sun.mail.util.ASCIIUtility;
+
+import java.util.List;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
@@ -38,7 +41,6 @@ import javax.mail.Store;
  * E-mail: DenBond7@gmail.com
  */
 public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
-    private MessageSet[] messageSets;
     private com.flowcrypt.email.api.email.Folder localFolder;
 
     /**
@@ -46,14 +48,11 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
      *
      * @param ownerKey    The name of the reply to {@link Messenger}.
      * @param requestCode The unique request code for the reply to {@link Messenger}.
-     * @param messageSets The array of {@link MessageSet} which contains information which messages will be checked
-     *                    for decryption.
      * @param localFolder The local implementation of the remote folder
      */
-    public CheckIsLoadedMessagesEncryptedSyncTask(String ownerKey, int requestCode, MessageSet[] messageSets,
+    public CheckIsLoadedMessagesEncryptedSyncTask(String ownerKey, int requestCode,
                                                   com.flowcrypt.email.api.email.Folder localFolder) {
         super(ownerKey, requestCode);
-        this.messageSets = messageSets;
         this.localFolder = localFolder;
     }
 
@@ -62,17 +61,31 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
             throws Exception {
         super.runIMAPAction(accountDao, session, store, syncListener);
 
-        if (messageSets == null || messageSets.length == 0) {
+        if (localFolder == null) {
+            return;
+        }
+
+        MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+        List<Long> uidList = messageDaoSource.getUIDsOfMessagesWhichWereNotCheckedToEncryption(syncListener
+                .getContext(), accountDao.getEmail(), localFolder.getFolderAlias());
+
+        if (uidList == null || uidList.isEmpty()) {
+            return;
+        }
+
+        UIDSet[] uidSets = UIDSet.createUIDSets(ArrayUtils.toLongArray(uidList));
+
+        if (uidSets == null || uidSets.length == 0) {
             return;
         }
 
         IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
         imapFolder.open(Folder.READ_ONLY);
 
-        LongSparseArray<Boolean> booleanLongSparseArray = getInfoAreMessagesEncrypted(imapFolder, messageSets);
+        LongSparseArray<Boolean> booleanLongSparseArray = getInfoAreMessagesEncrypted(imapFolder, uidSets);
 
         if (booleanLongSparseArray.size() > 0) {
-            MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.updateMessagesEncryptionStateByUID(syncListener.getContext(), accountDao.getEmail(),
                     localFolder.getFolderAlias(), booleanLongSparseArray);
         }
@@ -84,13 +97,13 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
      * Check is input messages are encrypted.
      *
      * @param imapFolder The localFolder which contains messages which will be checked.
-     * @param messageSet The array of {@link MessageSet} which contains information which messages will be checked
+     * @param uidSets    The array of {@link UIDSet} which contains information which messages will be checked
      *                   for decryption.
      * @return {@link SparseArray} as results of the checking.
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    private LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, final MessageSet[] messageSet)
+    private LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, final UIDSet[] uidSets)
             throws MessagingException {
 
         return (LongSparseArray<Boolean>) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
@@ -104,7 +117,7 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
                 args.writeArgument(list);
 
                 Response[] responses = imapProtocol.command(
-                        ("FETCH ") + MessageSet.toString(messageSet), args);
+                        ("UID FETCH ") + UIDSet.toString(uidSets), args);
                 Response serverStatusResponse = responses[responses.length - 1];
 
                 if (serverStatusResponse.isOK()) {

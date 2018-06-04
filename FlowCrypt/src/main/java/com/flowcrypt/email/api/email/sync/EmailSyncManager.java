@@ -32,7 +32,6 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
-import com.sun.mail.imap.Utility;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -365,16 +364,13 @@ public class EmailSyncManager {
      *
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for identify the current action.
-     * @param messages    The input messages which will be checked.
      * @param localFolder The local implementation of the remote folder
      */
-    public void identifyEncryptedMessages(String ownerKey, int requestCode, Message[] messages, Folder localFolder) {
+    public void identifyEncryptedMessages(String ownerKey, int requestCode, Folder localFolder) {
         try {
             removeOldTasksFromBlockingQueue(CheckIsLoadedMessagesEncryptedSyncTask.class, passiveSyncTaskBlockingQueue);
-            if (messages != null && messages.length > 0) {
-                passiveSyncTaskBlockingQueue.put(new CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode,
-                        Utility.toMessageSetSorted(messages, null), localFolder));
-            }
+            passiveSyncTaskBlockingQueue.put(new CheckIsLoadedMessagesEncryptedSyncTask(ownerKey,
+                    requestCode, localFolder));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

@@ -308,8 +308,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     imapFolder,
                     messages);
 
-            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, messages,
-                    localFolder);
+            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -338,8 +337,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     imapFolder,
                     messages);
 
-            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, messages,
-                    folder);
+            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, folder);
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -387,8 +385,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     imapFolder,
                     messagesNewCandidates);
 
-            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages,
-                    messagesNewCandidates, folder);
+            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, folder);
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),

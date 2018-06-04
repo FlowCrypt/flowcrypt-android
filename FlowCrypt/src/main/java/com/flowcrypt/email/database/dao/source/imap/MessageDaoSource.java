@@ -70,6 +70,8 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
     public static final String COL_IS_ENCRYPTED = "is_encrypted";
 
+    public static final int ENCRYPTED_STATE_UNDEFINED = -1;
+
     public static final String IMAP_MESSAGES_INFO_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_MESSAGES + " (" +
             BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -84,7 +86,7 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_FLAGS + " TEXT DEFAULT NULL, " +
             COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
             COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
-            COL_IS_ENCRYPTED + " INTEGER DEFAULT 0 " + ");";
+            COL_IS_ENCRYPTED + " INTEGER DEFAULT -1 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -437,6 +439,36 @@ public class MessageDaoSource extends BaseDaoSource {
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 uidList.add(cursor.getString(cursor.getColumnIndex(COL_UID)));
+            }
+            cursor.close();
+        }
+
+        return uidList;
+    }
+
+    /**
+     * Get the list of UID of all messages in the database which were not checked to encryption.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The list of UID of selected messages in the database for some label.
+     */
+    public List<Long> getUIDsOfMessagesWhichWereNotCheckedToEncryption(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        List<Long> uidList = new ArrayList<>();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{COL_UID},
+                COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?" + " AND " + COL_IS_ENCRYPTED + " = " +
+                        ENCRYPTED_STATE_UNDEFINED,
+                new String[]{email, label},
+                null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                uidList.add(cursor.getLong(cursor.getColumnIndex(COL_UID)));
             }
             cursor.close();
         }
