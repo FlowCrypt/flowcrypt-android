@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -30,7 +31,6 @@ import javax.mail.UIDFolder;
  */
 
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
-    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
     private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
     private com.flowcrypt.email.api.email.Folder localFolder;
     private int countOfAlreadyLoadedMessages;
@@ -58,7 +58,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
 
         int messagesCount = imapFolder.getMessageCount();
         int end = messagesCount - countOfAlreadyLoadedMessages;
-        int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
+        int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
         Log.d(TAG, "Run LoadMessagesToCacheSyncTask with parameters:"
                 + " localFolder = " + localFolder

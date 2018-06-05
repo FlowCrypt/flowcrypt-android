@@ -15,6 +15,8 @@ package com.flowcrypt.email.api.email;
  */
 
 public class JavaEmailConstants {
+    public static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
+
     /*IMAP*/
     public static final String PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable";

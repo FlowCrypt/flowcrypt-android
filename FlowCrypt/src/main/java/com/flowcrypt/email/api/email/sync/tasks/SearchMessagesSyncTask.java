@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.os.Messenger;
 import android.support.annotation.NonNull;
 
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.gimap.GmailRawSearchTerm;
@@ -32,7 +33,6 @@ import javax.mail.search.SubjectTerm;
  */
 
 public class SearchMessagesSyncTask extends BaseSyncTask {
-    private static final int COUNT_OF_LOADED_EMAILS_BY_STEP = 20;
     private com.flowcrypt.email.api.email.Folder folder;
     private int countOfAlreadyLoadedMessages;
 
@@ -65,7 +65,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
         int messagesCount = foundMessages.length;
         int end = messagesCount - countOfAlreadyLoadedMessages;
-        int start = end - COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
+        int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
         if (syncListener != null) {
             if (end < 1) {
