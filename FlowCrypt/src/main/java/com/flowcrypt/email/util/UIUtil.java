@@ -89,6 +89,10 @@ public class UIUtil {
      */
     public static void exchangeViewVisibility(Context context, final boolean show,
                                               final View firstView, final View secondView) {
+        if (context == null) {
+            return;
+        }
+
         int shortAnimTime = context.getResources().getInteger(android.R.integer
                 .config_shortAnimTime);
 
