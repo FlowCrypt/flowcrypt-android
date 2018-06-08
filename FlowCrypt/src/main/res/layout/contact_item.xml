@@ -26,11 +26,12 @@
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/constraintLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="@dimen/default_button_height"
-        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonDeleteContact"
         app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -38,6 +39,8 @@
             android:id="@+id/textViewName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textSize="@dimen/default_text_size_big"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/textViewEmail"
@@ -47,23 +50,29 @@
 
         <TextView
             android:id="@+id/textViewEmail"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewName"
             tools:text="denbond7@gmail.com" />
 
         <TextView
             android:id="@+id/textViewOnlyEmail"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/default_margin_content_small"
             android:layout_marginTop="@dimen/default_margin_content_small"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textSize="@dimen/default_text_size_big"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="denbond7@gmail.com" />

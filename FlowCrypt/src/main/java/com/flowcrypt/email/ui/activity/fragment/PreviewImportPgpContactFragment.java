@@ -6,10 +6,12 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.app.Activity;
+import android.content.OperationApplicationException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -63,6 +65,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     private List<PublicKeyInfo> publicKeyInfoList;
     private RecyclerView recyclerViewContacts;
     private TextView buttonImportAll;
+    private TextView textViewProgressTitle;
     private ProgressBar progressBar;
     private View layoutContentView;
     private View layoutProgress;
@@ -127,6 +130,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonImportAll:
+                new SaveAllContactsAsyncTask(this, publicKeyInfoList).execute();
                 break;
         }
     }
@@ -174,6 +178,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
         layoutContentView = root.findViewById(R.id.layoutContentView);
         layoutProgress = root.findViewById(R.id.layoutProgress);
         buttonImportAll = root.findViewById(R.id.buttonImportAll);
+        textViewProgressTitle = root.findViewById(R.id.textViewProgressTitle);
         progressBar = root.findViewById(R.id.progressBar);
         buttonImportAll.setOnClickListener(this);
         recyclerViewContacts = root.findViewById(R.id.recyclerViewContacts);
@@ -182,25 +187,30 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
         emptyView = root.findViewById(R.id.emptyView);
     }
 
-    private static class PublicKeysParserAsyncTask extends AsyncTask<Void, Integer, LoaderResult> {
-        private final WeakReference<PreviewImportPgpContactFragment> weakReference;
+    private void handleImportAllResult(Boolean b) {
+        if (isAdded()) {
+            if (b) {
+                Toast.makeText(getContext(), R.string.success, Toast.LENGTH_SHORT).show();
+                if (getActivity() != null) {
+                    getActivity().setResult(Activity.RESULT_OK);
+                    getActivity().finish();
+                }
+            } else {
+                UIUtil.exchangeViewVisibility(getContext(), false, layoutProgress, layoutContentView);
+                Toast.makeText(getContext(), R.string.unknown_error, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private static class PublicKeysParserAsyncTask extends BaseAsyncTask<Void, Integer, LoaderResult> {
         private final String publicKeysString;
         private final Uri publicKeysFileUri;
 
         PublicKeysParserAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment,
                                   String publicKeysString, Uri publicKeysFileUri) {
-            this.weakReference = new WeakReference<>(previewImportPgpContactFragment);
+            super(previewImportPgpContactFragment);
             this.publicKeysString = publicKeysString;
             this.publicKeysFileUri = publicKeysFileUri;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            if (weakReference.get() != null) {
-                UIUtil.exchangeViewVisibility(weakReference.get().getContext(), true,
-                        weakReference.get().layoutProgress, weakReference.get().layoutContentView);
-            }
         }
 
         @Override
@@ -226,9 +236,15 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
                     if (js.is_valid_key(pgpKey, false)) {
                         return new LoaderResult(parsePublicKeysInfo(js, armoredKeys), null);
                     } else {
-                        return new LoaderResult(null, new IllegalArgumentException(
-                                weakReference.get().getContext().getString(R.string.clipboard_has_wrong_structure,
-                                        weakReference.get().getContext().getString(R.string.public_))));
+                        if (weakReference.get() != null) {
+                            return new LoaderResult(null, new IllegalArgumentException(
+                                    weakReference.get().getContext().getString(R.string.clipboard_has_wrong_structure,
+                                            weakReference.get().getContext().getString(R.string.public_))));
+                        } else {
+                            return new LoaderResult(null,
+                                    new IllegalArgumentException("The content of your clipboard does not look like a " +
+                                            "valid PGP public Key."));
+                        }
                     }
 
                 } catch (Exception e) {
@@ -250,20 +266,21 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
+        public int getProgressTitleResourcesId() {
+            return R.string.parsing_public_keys;
+        }
+
+        @Override
+        public void updateProgress(Integer integer) {
             if (weakReference.get() != null) {
-                if (weakReference.get().progressBar.isIndeterminate()) {
-                    weakReference.get().progressBar.setIndeterminate(false);
-                }
-                weakReference.get().progressBar.setProgress(values[0]);
+                weakReference.get().progressBar.setProgress(integer);
             }
         }
 
-        private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String publicKey) {
+        private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String armoredKeys) {
             List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
             Set<String> emails = new HashSet<>();
-            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(publicKey);
+            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(armoredKeys);
 
             int blocksCount = messageBlocks.length;
             float progress;
@@ -281,20 +298,24 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
                             PgpKey pgpKey = js.crypto_key_read(content);
                             String keyOwner = pgpKey.getPrimaryUserId().getEmail();
 
-                            if (emails.contains(keyOwner)) {
-                                continue;
-                            }
+                            if (keyOwner != null) {
+                                keyOwner = keyOwner.toLowerCase();
 
-                            emails.add(keyOwner);
+                                if (emails.contains(keyOwner)) {
+                                    continue;
+                                }
 
-                            if (weakReference.get() != null) {
-                                PgpContact pgpContact = new ContactsDaoSource().getPgpContact(weakReference.get()
-                                        .getContext(), keyOwner);
+                                emails.add(keyOwner);
 
-                                PublicKeyInfo messagePartPgpPublicKey = new PublicKeyInfo(keyWords, fingerprint,
-                                        keyOwner, longId, pgpContact, publicKey);
+                                if (weakReference.get() != null) {
+                                    PgpContact pgpContact = new ContactsDaoSource().getPgpContact(weakReference.get()
+                                            .getContext(), keyOwner);
 
-                                publicKeyInfoList.add(messagePartPgpPublicKey);
+                                    PublicKeyInfo messagePartPgpPublicKey = new PublicKeyInfo(keyWords, fingerprint,
+                                            keyOwner, longId, pgpContact, content);
+
+                                    publicKeyInfoList.add(messagePartPgpPublicKey);
+                                }
                             }
                             break;
                     }
@@ -310,6 +331,152 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
             publishProgress(100);
 
             return publicKeyInfoList;
+        }
+    }
+
+    private static class SaveAllContactsAsyncTask extends BaseAsyncTask<Void, Integer, Boolean> {
+        private static final int STEP_AMOUNT = 50;
+
+        private final List<PublicKeyInfo> publicKeyInfoList;
+
+        SaveAllContactsAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment,
+                                 List<PublicKeyInfo> publicKeyInfoList) {
+            super(previewImportPgpContactFragment);
+            this.publicKeyInfoList = publicKeyInfoList;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... uris) {
+            ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+            List<PgpContact> newCandidates = new ArrayList<>();
+            List<PgpContact> updateCandidates = new ArrayList<>();
+
+            for (PublicKeyInfo publicKeyInfo : publicKeyInfoList) {
+                PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(),
+                        null,
+                        publicKeyInfo.getPublicKey(),
+                        true,
+                        null,
+                        false,
+                        publicKeyInfo.getFingerprint(),
+                        publicKeyInfo.getLongId(),
+                        publicKeyInfo.getKeyWords(), 0);
+
+                if (publicKeyInfo.isPgpContactExists()) {
+                    if (publicKeyInfo.isPgpContactCanBeUpdated()) {
+                        updateCandidates.add(pgpContact);
+                    }
+                } else {
+                    newCandidates.add(pgpContact);
+                }
+            }
+
+            try {
+                float progress;
+                float lastProgress = 0f;
+                int totalOperationsCount = newCandidates.size() + updateCandidates.size();
+
+                for (int i = 0; i < newCandidates.size(); i++) {
+                    int start = i;
+                    int end = newCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : newCandidates.size();
+
+                    if (weakReference.get() != null) {
+                        contactsDaoSource.addRowsUsingApplyBatch(weakReference.get().getContext(),
+                                newCandidates.subList(start, end));
+                    }
+                    i = end;
+
+                    progress = i * 100f / totalOperationsCount;
+                    if (progress - lastProgress >= 1) {
+                        publishProgress((int) progress);
+                        lastProgress = progress;
+                    }
+
+                    if (i != newCandidates.size() - 1) {
+                        i--;
+                    }
+                }
+
+                for (int i = 0; i < updateCandidates.size(); i++) {
+                    int start = i;
+                    int end = updateCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : updateCandidates.size() - 1;
+
+                    if (weakReference.get() != null) {
+                        contactsDaoSource.updatePgpContacts(weakReference.get().getContext(),
+                                updateCandidates.subList(start, end + 1));
+                    }
+                    i = end + 1;
+
+                    progress = i * 100f / totalOperationsCount;
+                    if (progress - lastProgress >= 1) {
+                        publishProgress((int) progress);
+                        lastProgress = progress;
+                    }
+                }
+
+            } catch (RemoteException | OperationApplicationException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            publishProgress(100);
+            return true;
+        }
+
+
+        @Override
+        protected void onPostExecute(Boolean b) {
+            super.onPostExecute(b);
+            if (b != null && weakReference.get() != null) {
+                weakReference.get().handleImportAllResult(b);
+            }
+        }
+
+        @Override
+        public int getProgressTitleResourcesId() {
+            return R.string.importing_public_keys;
+        }
+
+        @Override
+        public void updateProgress(Integer integer) {
+            if (weakReference.get() != null) {
+                weakReference.get().progressBar.setProgress(integer);
+            }
+        }
+    }
+
+    private static abstract class BaseAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
+        final WeakReference<PreviewImportPgpContactFragment> weakReference;
+
+        BaseAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment) {
+            this.weakReference = new WeakReference<>(previewImportPgpContactFragment);
+        }
+
+        public abstract int getProgressTitleResourcesId();
+
+        public abstract void updateProgress(Progress progress);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if (weakReference.get() != null) {
+                weakReference.get().progressBar.setIndeterminate(true);
+                weakReference.get().textViewProgressTitle.setText(getProgressTitleResourcesId());
+                UIUtil.exchangeViewVisibility(weakReference.get().getContext(), true,
+                        weakReference.get().layoutProgress, weakReference.get().layoutContentView);
+            }
+        }
+
+        @SafeVarargs
+        @Override
+        protected final void onProgressUpdate(Progress... values) {
+            super.onProgressUpdate(values);
+            if (weakReference.get() != null) {
+                if (weakReference.get().progressBar.isIndeterminate()) {
+                    weakReference.get().progressBar.setIndeterminate(false);
+                }
+                updateProgress(values[0]);
+            }
         }
     }
 }
