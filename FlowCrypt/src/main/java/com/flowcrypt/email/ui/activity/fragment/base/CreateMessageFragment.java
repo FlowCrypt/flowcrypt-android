@@ -1238,8 +1238,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                     Set<String> ccSet = new HashSet<>();
 
                     if (incomingMessageInfo.getTo() != null && !incomingMessageInfo.getTo().isEmpty()) {
-                        ArrayList<String> toRecipients = incomingMessageInfo.getTo();
+                        ArrayList<String> toRecipients = new ArrayList<>(incomingMessageInfo.getTo());
                         toRecipients.remove(accountDao.getEmail());
+
+                        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+                            List<AccountAliasesDao> accountAliasesDaoList =
+                                    new AccountAliasesDaoSource().getAliases(getContext(), accountDao);
+                            for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
+                                toRecipients.remove(accountAliasesDao.getSendAsEmail());
+                            }
+                        }
+
                         ccSet.addAll(toRecipients);
                     }
 
