@@ -24,6 +24,7 @@ import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,7 +36,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -144,7 +147,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private View progressBarBcc;
     private View layoutCc;
     private View layoutBcc;
-    private ImageButton imageButtonAdditionalRecipientsVisibility;
+    private LinearLayout progressBarAndButtonLayout;
     private ImageButton imageButtonAliases;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
@@ -612,28 +615,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                 break;
 
             case R.id.imageButtonAdditionalRecipientsVisibility:
-                int iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                if (layoutCc.getVisibility() == View.VISIBLE) {
-                    if (TextUtils.isEmpty(editTextRecipientsCc.getText())) {
-                        layoutCc.setVisibility(View.GONE);
-                        iconResources = R.mipmap.ic_arrow_drop_down_grey;
-                    }
-                } else {
-                    layoutCc.setVisibility(View.VISIBLE);
-                    iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                }
+                layoutCc.setVisibility(View.VISIBLE);
+                layoutBcc.setVisibility(View.VISIBLE);
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT);
+                layoutParams.gravity = Gravity.TOP | Gravity.END;
 
-                if (layoutBcc.getVisibility() == View.VISIBLE) {
-                    if (TextUtils.isEmpty(editTextRecipientsBcc.getText())) {
-                        layoutBcc.setVisibility(View.GONE);
-                        iconResources = R.mipmap.ic_arrow_drop_down_grey;
-                    }
-                } else {
-                    layoutBcc.setVisibility(View.VISIBLE);
-                    iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                }
-
-                imageButtonAdditionalRecipientsVisibility.setImageResource(iconResources);
+                progressBarAndButtonLayout.setLayoutParams(layoutParams);
+                v.setVisibility(View.GONE);
                 break;
         }
     }
@@ -1140,6 +1129,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         layoutAttachments = view.findViewById(R.id.layoutAttachments);
         layoutCc = view.findViewById(R.id.layoutCc);
         layoutBcc = view.findViewById(R.id.layoutBcc);
+        progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
 
         editTextRecipientsTo = view.findViewById(R.id.editTextRecipientTo);
         editTextRecipientsCc = view.findViewById(R.id.editTextRecipientCc);
@@ -1160,7 +1150,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             imageButtonAliases.setOnClickListener(this);
         }
 
-        imageButtonAdditionalRecipientsVisibility =
+        ImageButton imageButtonAdditionalRecipientsVisibility =
                 view.findViewById(R.id.imageButtonAdditionalRecipientsVisibility);
         if (imageButtonAdditionalRecipientsVisibility != null) {
             imageButtonAdditionalRecipientsVisibility.setOnClickListener(this);
