@@ -392,9 +392,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
                         lastProgress = progress;
                     }
 
-                    if (i != newCandidates.size() - 1) {
-                        i--;
-                    }
+                    i--;
                 }
 
                 for (int i = 0; i < updateCandidates.size(); i++) {
