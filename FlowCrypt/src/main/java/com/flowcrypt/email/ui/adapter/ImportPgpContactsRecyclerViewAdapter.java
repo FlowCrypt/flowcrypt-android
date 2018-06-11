@@ -75,7 +75,7 @@ public class ImportPgpContactsRecyclerViewAdapter extends
                 viewHolder.buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        updateContact(viewHolder.getAdapterPosition(), context, publicKeyInfo);
+                        updateContact(viewHolder.getAdapterPosition(), v, context, publicKeyInfo);
                     }
                 });
             } else {
@@ -121,20 +121,23 @@ public class ImportPgpContactsRecyclerViewAdapter extends
         }
     }
 
-    private void updateContact(int position, Context context, PublicKeyInfo publicKeyInfo) {
-        boolean isUpdated = new ContactsDaoSource().updatePgpContact
-                (context, new PgpContact(publicKeyInfo.getKeyOwner(),
-                        null,
-                        publicKeyInfo.getPublicKey(),
-                        true,
-                        null,
-                        false,
-                        publicKeyInfo.getFingerprint(),
-                        publicKeyInfo.getLongId(),
-                        publicKeyInfo.getKeyWords(), 0)) > 0;
+    private void updateContact(int position, View v, Context context, PublicKeyInfo publicKeyInfo) {
+        PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(),
+                null,
+                publicKeyInfo.getPublicKey(),
+                true,
+                null,
+                false,
+                publicKeyInfo.getFingerprint(),
+                publicKeyInfo.getLongId(),
+                publicKeyInfo.getKeyWords(), 0);
+
+        boolean isUpdated = new ContactsDaoSource().updatePgpContact(context, pgpContact) > 0;
         if (isUpdated) {
             Toast.makeText(context, R.string.contact_successfully_updated,
                     Toast.LENGTH_SHORT).show();
+            v.setVisibility(View.GONE);
+            publicKeyInfo.setPgpContact(pgpContact);
             notifyItemChanged(position);
         } else {
             Toast.makeText(context, R.string.error_occurred_while_updating_contact,
