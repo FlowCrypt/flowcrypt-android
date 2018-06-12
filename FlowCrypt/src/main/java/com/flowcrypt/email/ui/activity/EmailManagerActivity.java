@@ -34,8 +34,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -162,6 +164,18 @@ public class EmailManagerActivity extends BaseEmailListActivity
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         if (searchManager != null) {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
+        MenuItem item = menu.findItem(R.id.menuSwitch);
+        Switch switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
+
+        if (switchView != null) {
+            switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    onShowOnlyEncryptedMessages(isChecked);
+                }
+            });
         }
 
         return true;
@@ -571,6 +585,21 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
         if (emailListFragment != null) {
             emailListFragment.onForceLoadNewMessagesCompleted(needToRefreshList);
+        }
+    }
+
+    /**
+     * Change messages displaying.
+     *
+     * @param isShowOnlyEncryptedMessages true if we want ot show only encrypted messages, false if we want to show
+     *                                    all messages.
+     */
+    private void onShowOnlyEncryptedMessages(boolean isShowOnlyEncryptedMessages) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.onFilterMessages(isShowOnlyEncryptedMessages);
         }
     }
 

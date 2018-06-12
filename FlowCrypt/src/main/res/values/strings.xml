@@ -331,4 +331,7 @@ icelanders prefer real sauna</font>
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
     <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
+    <string name="show_only_encrypted_messages">Show only encrypted messages</string>
+    <string name="show_all_messages">Show all messages</string>
+    <string name="no_encrypted_messages">No encrypted messages</string>
 </resources>
