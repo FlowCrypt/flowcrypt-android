@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.DataBaseUtil;
@@ -439,10 +440,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
-                DataBaseUtil.cleanFolderCache(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
+                if (!isItSyncFolder(onManageEmailsListener.getCurrentFolder())) {
+                    DataBaseUtil.cleanFolderCache(getContext(),
+                            onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                            onManageEmailsListener.getCurrentFolder().getFolderAlias());
+                }
+            }
 
+            if (messageListAdapter.getCount() == 0) {
                 getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache, null,
                         loadCachedMessagesCursorLoaderCallbacks);
             }
@@ -472,6 +477,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
             updateList(false);
+        } else if (messageListAdapter.getCount() == 0) {
+            emptyView.setText(isShowOnlyEncryptedMessages ?
+                    R.string.no_encrypted_messages : R.string.no_results);
+            UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
         }
 
         isNewMessagesLoadingNow = false;
@@ -529,6 +538,12 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache,
                 null, loadCachedMessagesCursorLoaderCallbacks);
+    }
+
+    private boolean isItSyncFolder(Folder folder) {
+        if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+            return true;
+        } else return false;
     }
 
     /**
