@@ -814,7 +814,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.refreshMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), refreshFolder, message.arg1, message.arg2);
+                                    action.getRequestCode(), refreshFolder, message.arg1, message.arg2, true);
                         }
                         break;
 

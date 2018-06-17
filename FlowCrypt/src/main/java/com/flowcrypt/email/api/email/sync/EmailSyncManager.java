@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
@@ -26,12 +27,14 @@ import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerS
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
+import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -46,6 +49,10 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.event.MessageChangedEvent;
+import javax.mail.event.MessageChangedListener;
+import javax.mail.event.MessageCountEvent;
+import javax.mail.event.MessageCountListener;
 
 /**
  * This class describes a logic of work with {@link Store} for the single account. Via
@@ -68,6 +75,7 @@ public class EmailSyncManager {
     private ExecutorService executorService;
     private Future<?> activeSyncTaskRunnableFuture;
     private Future<?> passiveSyncTaskRunnableFuture;
+    private Future<?> idleSyncRunnableFuture;
 
     /**
      * This fields created as volatile because will be used in different threads.
@@ -104,6 +112,10 @@ public class EmailSyncManager {
 
         if (!isThreadAlreadyWork(passiveSyncTaskRunnableFuture)) {
             passiveSyncTaskRunnableFuture = executorService.submit(new PassiveSyncTaskRunnable());
+        }
+
+        if (!isThreadAlreadyWork(idleSyncRunnableFuture)) {
+            idleSyncRunnableFuture = executorService.submit(new IdleSyncRunnable());
         }
     }
 
@@ -276,12 +288,16 @@ public class EmailSyncManager {
      * @param folder                A local implementation of the remote folder.
      * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
      * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
+     * @param isUseActiveQueue      true if the current call will be ran in the active queue, otherwise false.
      */
     public void refreshMessages(String ownerKey, int requestCode, Folder folder, int lastUIDInCache,
-                                int countOfLoadedMessages) {
+                                int countOfLoadedMessages, boolean isUseActiveQueue) {
         try {
-            removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, activeSyncTaskBlockingQueue);
-            activeSyncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
+            BlockingQueue<SyncTask> syncTaskBlockingQueue = isUseActiveQueue ? activeSyncTaskBlockingQueue :
+                    passiveSyncTaskBlockingQueue;
+
+            removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, syncTaskBlockingQueue);
+            syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
                     folder, lastUIDInCache, countOfLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -428,6 +444,10 @@ public class EmailSyncManager {
 
         if (passiveSyncTaskRunnableFuture != null) {
             passiveSyncTaskRunnableFuture.cancel(true);
+        }
+
+        if (idleSyncRunnableFuture != null) {
+            idleSyncRunnableFuture.cancel(true);
         }
     }
 
@@ -642,6 +662,129 @@ public class EmailSyncManager {
 
             closeConnection();
             Log.d(TAG, " stopped!");
+        }
+    }
+
+    /**
+     * This is a thread where we do a sync of some IMAP folder.
+     * <p>
+     * P.S. Currently we support only "INBOX" folder.
+     */
+    private class IdleSyncRunnable extends BaseSyncRunnable implements MessageCountListener, MessageChangedListener {
+        private Folder localFolder;
+        private com.sun.mail.imap.IMAPFolder remoteFolder;
+        private MessageDaoSource messageDaoSource;
+
+        IdleSyncRunnable() {
+            this.messageDaoSource = new MessageDaoSource();
+        }
+
+        @Override
+        public void run() {
+            Log.d(TAG, " run!");
+            Thread.currentThread().setName(getClass().getSimpleName());
+
+            FoldersManager foldersManager = FoldersManager.fromDatabase(syncListener.getContext(),
+                    accountDao.getEmail());
+            localFolder = foldersManager.findInboxFolder();
+
+            try {
+                resetConnectionIfNeed();
+
+                if (!isConnected()) {
+                    Log.d(TAG, "Not connected. Start a reconnection ...");
+                    openConnectionToStore();
+                    Log.d(TAG, "Reconnection done");
+                }
+
+                Log.d(TAG, "Start idling for store " + store.toString());
+
+                remoteFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+                remoteFolder.open(javax.mail.Folder.READ_ONLY);
+
+                syncFolderState();
+
+                remoteFolder.addMessageCountListener(this);
+                remoteFolder.addMessageChangedListener(this);
+
+                while (!Thread.interrupted() && isIdlingAvailable()) {
+                    remoteFolder.idle();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                ExceptionUtil.handleError(e);
+            }
+
+            closeConnection();
+            Log.d(TAG, " stopped!");
+        }
+
+        @Override
+        public void messagesAdded(MessageCountEvent e) {
+            Log.d(TAG, "messagesAdded: " + e.getMessages().length);
+            if (syncListener != null) {
+                syncListener.onMessagesReceived(accountDao, localFolder, remoteFolder, e.getMessages(), null, 0);
+            }
+        }
+
+        @Override
+        public void messagesRemoved(MessageCountEvent e) {
+            Log.d(TAG, "messagesRemoved");
+            syncFolderState();
+        }
+
+        @Override
+        public void messageChanged(MessageChangedEvent e) {
+            Log.d(TAG, "messageChanged");
+            Message message = e.getMessage();
+            if (message != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
+                try {
+                    messageDaoSource.updateFlagsForLocalMessage(syncListener.getContext(),
+                            accountDao.getEmail(),
+                            localFolder.getFolderAlias(),
+                            remoteFolder.getUID(message),
+                            message.getFlags());
+                } catch (MessagingException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+
+        void resetConnectionIfNeed() throws MessagingException, ManualHandledException {
+            if (store != null && accountDao != null) {
+                if (accountDao.getAuthCredentials() != null) {
+                    if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
+                            .getUsername())) {
+                        Log.d(TAG, "Connection was reset!");
+                        if (store != null) {
+                            store.close();
+                        }
+                        session = null;
+                    }
+                } else if (syncListener != null && syncListener.getContext() != null) {
+                    throw new ManualHandledException(syncListener.getContext().getString(R.string
+                            .device_not_supported_key_store_error));
+                } else {
+                    throw new NullPointerException("The context is null");
+                }
+            }
+        }
+
+        private boolean isIdlingAvailable() {
+            //here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and
+            // etc.)
+            return true;
+        }
+
+        private void syncFolderState() {
+            refreshMessages("", 0, localFolder,
+                    messageDaoSource.getLastUIDOfMessageInLabel(
+                            syncListener.getContext(),
+                            accountDao.getEmail(),
+                            localFolder.getFolderAlias()),
+                    messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
+                            accountDao.getEmail(),
+                            localFolder.getFolderAlias()), false);
         }
     }
 }

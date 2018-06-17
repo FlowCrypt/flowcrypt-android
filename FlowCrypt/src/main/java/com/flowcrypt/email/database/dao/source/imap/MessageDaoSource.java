@@ -256,6 +256,28 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Update the message flags in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @param flags   The message flags.
+     * @return The count of the updated row or -1 up.
+     */
+    public int updateFlagsForLocalMessage(Context context, String email, String label, long uid, @NonNull Flags flags) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_FLAGS, flags.toString().toUpperCase());
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
+
+    /**
      * Generate a {@link Folder} object from the current cursor position.
      *
      * @param cursor The {@link Cursor} which contains information about {@link Folder}.
