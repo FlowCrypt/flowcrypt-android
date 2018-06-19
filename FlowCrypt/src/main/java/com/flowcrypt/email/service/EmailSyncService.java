@@ -5,10 +5,14 @@
 
 package com.flowcrypt.email.service;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.OperationApplicationException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -107,6 +111,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     private EmailSyncManager emailSyncManager;
 
     private boolean isServiceStarted;
+    private BroadcastReceiver connectionBroadcastReceiver;
 
     public EmailSyncService() {
         this.replyToMessengers = new HashMap<>();
@@ -143,6 +148,15 @@ public class EmailSyncService extends BaseService implements SyncListener {
         emailSyncManager.setSyncListener(this);
 
         messenger = new Messenger(new IncomingHandler(this, emailSyncManager, replyToMessengers));
+
+        connectionBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                handleConnectivityAction(context, intent);
+            }
+        };
+
+        registerReceiver(connectionBroadcastReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     @Override
@@ -175,6 +189,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
         if (emailSyncManager != null) {
             emailSyncManager.stopSync();
         }
+
+        unregisterReceiver(connectionBroadcastReceiver);
     }
 
     @Override
@@ -473,6 +489,26 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+        }
+    }
+
+    protected void handleConnectivityAction(Context context, Intent intent) {
+        if (ConnectivityManager.CONNECTIVITY_ACTION.equalsIgnoreCase(intent.getAction())) {
+            ConnectivityManager connectivityManager =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            if (connectivityManager != null) {
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                boolean isInternetConnectionAvailable = networkInfo != null && networkInfo
+                        .isConnectedOrConnecting();
+
+                if (isInternetConnectionAvailable) {
+                    Log.d(TAG, "networkInfo = " + networkInfo);
+                    if (emailSyncManager != null) {
+                        emailSyncManager.beginSync(false);
+                    }
+                }
+            }
         }
     }
 

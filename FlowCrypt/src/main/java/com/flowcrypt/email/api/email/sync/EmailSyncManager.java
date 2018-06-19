@@ -45,6 +45,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.mail.FolderClosedException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -101,7 +102,7 @@ public class EmailSyncManager {
     public void beginSync(boolean isResetNeeded) {
         Log.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
         if (isResetNeeded) {
-            resetSync();
+            cancelAllSyncTask();
             updateLabels(null, 0, activeSyncTaskBlockingQueue);
             loadContactsInfoIfNeed();
         }
@@ -123,7 +124,19 @@ public class EmailSyncManager {
      * Stop a synchronization.
      */
     public void stopSync() {
-        resetSync();
+        cancelAllSyncTask();
+
+        if (activeSyncTaskRunnableFuture != null) {
+            activeSyncTaskRunnableFuture.cancel(true);
+        }
+
+        if (passiveSyncTaskRunnableFuture != null) {
+            passiveSyncTaskRunnableFuture.cancel(true);
+        }
+
+        if (idleSyncRunnableFuture != null) {
+            idleSyncRunnableFuture.cancel(true);
+        }
 
         if (executorService != null) {
             executorService.shutdown();
@@ -433,25 +446,6 @@ public class EmailSyncManager {
     }
 
     /**
-     * Reset a synchronization.
-     */
-    private void resetSync() {
-        cancelAllSyncTask();
-
-        if (activeSyncTaskRunnableFuture != null) {
-            activeSyncTaskRunnableFuture.cancel(true);
-        }
-
-        if (passiveSyncTaskRunnableFuture != null) {
-            passiveSyncTaskRunnableFuture.cancel(true);
-        }
-
-        if (idleSyncRunnableFuture != null) {
-            idleSyncRunnableFuture.cancel(true);
-        }
-    }
-
-    /**
      * Remove the old tasks from the queue of synchronization.
      *
      * @param cls                   The task type.
@@ -688,32 +682,7 @@ public class EmailSyncManager {
                     accountDao.getEmail());
             localFolder = foldersManager.findInboxFolder();
 
-            try {
-                resetConnectionIfNeed();
-
-                if (!isConnected()) {
-                    Log.d(TAG, "Not connected. Start a reconnection ...");
-                    openConnectionToStore();
-                    Log.d(TAG, "Reconnection done");
-                }
-
-                Log.d(TAG, "Start idling for store " + store.toString());
-
-                remoteFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
-                remoteFolder.open(javax.mail.Folder.READ_ONLY);
-
-                syncFolderState();
-
-                remoteFolder.addMessageCountListener(this);
-                remoteFolder.addMessageChangedListener(this);
-
-                while (!Thread.interrupted() && isIdlingAvailable()) {
-                    remoteFolder.idle();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-            }
+            idle(3);
 
             closeConnection();
             Log.d(TAG, " stopped!");
@@ -746,6 +715,48 @@ public class EmailSyncManager {
                             message.getFlags());
                 } catch (MessagingException e1) {
                     e1.printStackTrace();
+                }
+            }
+        }
+
+        void idle(int reconnectionAttemptsCount) {
+            try {
+                resetConnectionIfNeed();
+
+                if (!isConnected()) {
+                    Log.d(TAG, "Not connected. Start a reconnection ...");
+                    openConnectionToStore();
+                    Log.d(TAG, "Reconnection done");
+                }
+
+                Log.d(TAG, "Start idling for store " + store.toString());
+
+                remoteFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+                remoteFolder.open(javax.mail.Folder.READ_ONLY);
+
+                syncFolderState();
+
+                remoteFolder.addMessageCountListener(this);
+                remoteFolder.addMessageChangedListener(this);
+
+                while (!Thread.interrupted() && isIdlingAvailable()) {
+                    remoteFolder.idle();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (e instanceof FolderClosedException) {
+                    if (reconnectionAttemptsCount != 0) {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(1000);
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        }
+                        Log.d(TAG, "reconnection, step = " + reconnectionAttemptsCount);
+                        reconnectionAttemptsCount--;
+                        idle(reconnectionAttemptsCount);
+                    }
+                } else {
+                    ExceptionUtil.handleError(e);
                 }
             }
         }
