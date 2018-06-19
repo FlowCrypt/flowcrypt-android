@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -35,6 +36,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.util.MailConnectException;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -76,11 +78,12 @@ public class EmailSyncManager {
     private ExecutorService executorService;
     private Future<?> activeSyncTaskRunnableFuture;
     private Future<?> passiveSyncTaskRunnableFuture;
-    private Future<?> idleSyncRunnableFuture;
 
     /**
      * This fields created as volatile because will be used in different threads.
      */
+
+    private volatile Future<?> idleSyncRunnableFuture;
     private volatile SyncListener syncListener;
     private volatile AccountDao accountDao;
 
@@ -115,9 +118,7 @@ public class EmailSyncManager {
             passiveSyncTaskRunnableFuture = executorService.submit(new PassiveSyncTaskRunnable());
         }
 
-        if (!isThreadAlreadyWork(idleSyncRunnableFuture)) {
-            idleSyncRunnableFuture = executorService.submit(new IdleSyncRunnable());
-        }
+        runIdleInboxIfNeed();
     }
 
     /**
@@ -437,6 +438,15 @@ public class EmailSyncManager {
     }
 
     /**
+     * Run a thread where we will idle INBOX folder.
+     */
+    private void runIdleInboxIfNeed() {
+        if (!isThreadAlreadyWork(idleSyncRunnableFuture)) {
+            idleSyncRunnableFuture = executorService.submit(new IdleSyncRunnable());
+        }
+    }
+
+    /**
      * Check a sync thread state.
      *
      * @return true if already work, otherwise false.
@@ -625,6 +635,8 @@ public class EmailSyncManager {
                         syncTask = passiveSyncTaskBlockingQueue.take();
                     }
 
+                    runIdleInboxIfNeed();
+
                     runSyncTask(syncTask);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -645,6 +657,8 @@ public class EmailSyncManager {
                 try {
                     Log.d(TAG, "ActiveSyncTaskBlockingQueue size = " + activeSyncTaskBlockingQueue.size());
                     SyncTask syncTask = activeSyncTaskBlockingQueue.take();
+
+                    runIdleInboxIfNeed();
 
                     if (syncTask != null) {
                         runSyncTask(syncTask);
@@ -682,9 +696,9 @@ public class EmailSyncManager {
                     accountDao.getEmail());
             localFolder = foldersManager.findInboxFolder();
 
-            idle(3);
-
+            idle();
             closeConnection();
+
             Log.d(TAG, " stopped!");
         }
 
@@ -719,9 +733,18 @@ public class EmailSyncManager {
             }
         }
 
-        void idle(int reconnectionAttemptsCount) {
+        void idle() {
             try {
                 resetConnectionIfNeed();
+
+                while (!GeneralUtil.isInternetConnectionAvailable(syncListener.getContext())) {
+                    try {
+                        //wait while a connection will be established
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
 
                 if (!isConnected()) {
                     Log.d(TAG, "Not connected. Start a reconnection ...");
@@ -744,17 +767,10 @@ public class EmailSyncManager {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                if (e instanceof FolderClosedException) {
-                    if (reconnectionAttemptsCount != 0) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(1000);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
-                        }
-                        Log.d(TAG, "reconnection, step = " + reconnectionAttemptsCount);
-                        reconnectionAttemptsCount--;
-                        idle(reconnectionAttemptsCount);
-                    }
+                if (e instanceof FolderClosedException
+                        || e instanceof MailConnectException
+                        || e instanceof IOException) {
+                    idle();
                 } else {
                     ExceptionUtil.handleError(e);
                 }
