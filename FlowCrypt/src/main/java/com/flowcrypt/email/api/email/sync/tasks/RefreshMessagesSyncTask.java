@@ -31,10 +31,10 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
     private int lastUID;
     private int countOfLoadedMessages;
 
-    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folderName,
+    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder,
                                    int lastUID, int countOfLoadedMessages) {
         super(ownerKey, requestCode);
-        this.localFolder = folderName;
+        this.localFolder = localFolder;
         this.lastUID = lastUID;
         this.countOfLoadedMessages = countOfLoadedMessages;
     }
@@ -56,7 +56,7 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
             Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
 
-            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, newMessages,
+            syncListener.onRefreshMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
                     updatedMessages, ownerKey, requestCode);
         }
 

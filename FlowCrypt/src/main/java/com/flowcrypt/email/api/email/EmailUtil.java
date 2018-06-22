@@ -31,6 +31,7 @@ import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.api.client.util.Base64;
@@ -49,8 +50,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -525,5 +528,84 @@ public class EmailUtil {
         }
 
         return command;
+    }
+
+    /**
+     * Generated a list of UID of the local messages which will be removed.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return A list of UID of the local messages which will be removed.
+     */
+    public static Collection<Long> generateDeleteCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                            IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<Long> uidListDeleteCandidates = new HashSet<>(messagesUIDInLocalDatabase);
+        Collection<Long> uidList = new HashSet<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                uidList.add(imapFolder.getUID(message));
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+
+        uidListDeleteCandidates.removeAll(uidList);
+        return uidListDeleteCandidates;
+    }
+
+    /**
+     * Generate an array of {@link javax.mail.Message} which contains candidates for insert.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return The generated array.
+     */
+    public static javax.mail.Message[] generateNewCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                             IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        List<javax.mail.Message> newCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                if (!messagesUIDInLocalDatabase.contains(imapFolder.getUID(message))) {
+                    newCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+        return newCandidates.toArray(new javax.mail.Message[0]);
+    }
+
+    /**
+     * Generate an array of the messages which will be updated.
+     *
+     * @param messagesUIDWithFlagsInLocalDatabase The map of UID and flags of the local messages.
+     * @param imapFolder                          The remote {@link IMAPFolder}.
+     * @param messages                            The array of incoming messages.
+     * @return An array of the messages which are candidates for updating iin the local database.
+     */
+    public static javax.mail.Message[] generateUpdateCandidates(
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase,
+            IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<javax.mail.Message> updateCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                String flags = messagesUIDWithFlagsInLocalDatabase.get(imapFolder.getUID(message));
+                if (flags == null) {
+                    flags = "";
+                }
+
+                if (!flags.equalsIgnoreCase(message.getFlags().toString())) {
+                    updateCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+        return updateCandidates.toArray(new javax.mail.Message[0]);
     }
 }

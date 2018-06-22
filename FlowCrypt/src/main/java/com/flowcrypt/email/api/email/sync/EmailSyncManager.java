@@ -525,7 +525,7 @@ public class EmailSyncManager {
             } catch (MessagingException e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
-                Log.d(TAG, "This exception occurred when we try disconnect from the GMAIL store.");
+                Log.d(TAG, "This exception occurred when we try disconnect from the store.");
             }
         }
 

@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -312,16 +313,16 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     @Override
     public void onMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
-                                   IMAPFolder imapFolder, javax.mail.Message[] messages,
+                                   IMAPFolder remoteFolder, javax.mail.Message[] messages,
                                    String ownerKey, int requestCode) {
-        Log.d(TAG, "onMessagesReceived: imapFolder = " + imapFolder.getFullName() + " message " +
+        Log.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
-                    imapFolder,
+                    remoteFolder,
                     messages);
 
             emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
@@ -332,7 +333,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messages);
+            updateLocalContactsIfMessagesFromSentFolder(remoteFolder, messages);
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -370,44 +371,43 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
-    public void onRefreshMessagesReceived(AccountDao accountDao, IMAPFolder imapFolder,
-                                          javax.mail.Message[] newMessages,
+    public void onRefreshMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                          IMAPFolder remoteFolder, javax.mail.Message[] newMessages,
                                           javax.mail.Message[] updateMessages,
                                           String key, int requestCode) {
-        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + imapFolder.getFullName() + " newMessages " +
+        Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " newMessages " +
                 "count: " + newMessages.length + ", updateMessages count = " + updateMessages.length);
 
         try {
-            com.flowcrypt.email.api.email.Folder folder =
-                    FoldersManager.generateFolder(imapFolder, imapFolder.getName());
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
             Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
-                    (getApplicationContext(), accountDao.getEmail(), folder.getFolderAlias());
+                    (getApplicationContext(), accountDao.getEmail(), localFolder.getFolderAlias());
 
             Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
 
             messageDaoSource.deleteMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
-                    folder.getFolderAlias(),
-                    generateDeleteCandidates(messagesUIDsInLocalDatabase, imapFolder, updateMessages));
+                    localFolder.getFolderAlias(),
+                    EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase, remoteFolder, updateMessages));
 
-            javax.mail.Message[] messagesNewCandidates = generateNewCandidates(messagesUIDsInLocalDatabase,
-                    imapFolder, newMessages);
+            javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
+                    remoteFolder, newMessages);
 
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
-                    folder.getFolderAlias(),
-                    imapFolder,
+                    localFolder.getFolderAlias(),
+                    remoteFolder,
                     messagesNewCandidates);
 
-            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, folder);
+            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, localFolder);
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
-                    folder.getFolderAlias(),
-                    imapFolder,
-                    generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase, imapFolder, updateMessages));
+                    localFolder.getFolderAlias(),
+                    remoteFolder,
+                    EmailUtil.generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase, remoteFolder,
+                            updateMessages));
 
             if (newMessages.length > 0 || updateMessages.length > 0) {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -415,7 +415,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(key, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            updateLocalContactsIfMessagesFromSentFolder(imapFolder, messagesNewCandidates);
+            updateLocalContactsIfMessagesFromSentFolder(remoteFolder, messagesNewCandidates);
         } catch (RemoteException | MessagingException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -510,85 +510,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 }
             }
         }
-    }
-
-    /**
-     * Generate an array of the messages which will be updated.
-     *
-     * @param messagesUIDWithFlagsInLocalDatabase The map of UID and flags of the local messages.
-     * @param imapFolder                          The remote {@link IMAPFolder}.
-     * @param messages                            The array of incoming messages.
-     * @return
-     */
-    private javax.mail.Message[] generateUpdateCandidates(
-            Map<Long, String> messagesUIDWithFlagsInLocalDatabase,
-            IMAPFolder imapFolder, javax.mail.Message[] messages) {
-        Collection<javax.mail.Message> updateCandidates = new ArrayList<>();
-        try {
-            for (javax.mail.Message message : messages) {
-                String flags = messagesUIDWithFlagsInLocalDatabase.get(imapFolder.getUID(message));
-                if (flags == null) {
-                    flags = "";
-                }
-
-                if (!flags.equalsIgnoreCase(message.getFlags().toString())) {
-                    updateCandidates.add(message);
-                }
-            }
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-        return updateCandidates.toArray(new javax.mail.Message[0]);
-    }
-
-    /**
-     * Generate an array of {@link javax.mail.Message} which contains candidates for insert.
-     *
-     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
-     * @param imapFolder                 The remote {@link IMAPFolder}.
-     * @param messages                   The array of incoming messages.
-     * @return The generated array.
-     */
-    private javax.mail.Message[] generateNewCandidates(Collection<Long> messagesUIDInLocalDatabase,
-                                                       IMAPFolder imapFolder, javax.mail.Message[] messages) {
-        List<javax.mail.Message> newCandidates = new ArrayList<>();
-        try {
-            for (javax.mail.Message message : messages) {
-                if (!messagesUIDInLocalDatabase.contains(imapFolder.getUID(message))) {
-                    newCandidates.add(message);
-                }
-            }
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-        return newCandidates.toArray(new javax.mail.Message[0]);
-    }
-
-    /**
-     * Generated a list of UID of the local messages which will be removed.
-     *
-     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
-     * @param imapFolder                 The remote {@link IMAPFolder}.
-     * @param messages                   The array of incoming messages.
-     * @return A list of UID of the local messages which will be removed.
-     */
-    private Collection<Long> generateDeleteCandidates(Collection<Long> messagesUIDInLocalDatabase,
-                                                      IMAPFolder imapFolder, javax.mail.Message[] messages) {
-        Collection<Long> uidListDeleteCandidates = new HashSet<>(messagesUIDInLocalDatabase);
-        Collection<Long> uidList = new HashSet<>();
-        try {
-            for (javax.mail.Message message : messages) {
-                uidList.add(imapFolder.getUID(message));
-            }
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-
-        uidListDeleteCandidates.removeAll(uidList);
-        return uidListDeleteCandidates;
     }
 
     /**
