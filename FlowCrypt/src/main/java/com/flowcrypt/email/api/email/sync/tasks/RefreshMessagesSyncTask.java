@@ -18,7 +18,8 @@ import javax.mail.Store;
 import javax.mail.UIDFolder;
 
 /**
- * This task does job to load all new messages which not exist in the cache but exist on the server.
+ * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
+ * existing messages in the local database.
  *
  * @author DenBond7
  *         Date: 22.06.2017
@@ -26,16 +27,12 @@ import javax.mail.UIDFolder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class RefreshMessagesSyncTask extends BaseSyncTask {
-    private com.flowcrypt.email.api.email.Folder localFolder;
-    private int lastUID;
+public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
     private int countOfLoadedMessages;
 
     public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder,
                                    int lastUID, int countOfLoadedMessages) {
-        super(ownerKey, requestCode);
-        this.localFolder = localFolder;
-        this.lastUID = lastUID;
+        super(ownerKey, requestCode, localFolder, lastUID);
         this.countOfLoadedMessages = countOfLoadedMessages;
     }
 
@@ -53,6 +50,7 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
             if (lastUID < nextUID - 1) {
                 newMessages = getNewMessages(imapFolder, nextUID);
             }
+
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
             Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
 
@@ -61,29 +59,6 @@ public class RefreshMessagesSyncTask extends BaseSyncTask {
         }
 
         imapFolder.close(false);
-    }
-
-    /**
-     * Load new messages using the next UID for fetching.
-     *
-     * @param imapFolder The folder which contains messages.
-     * @param nextUID    The next UID.
-     * @return New messages from a server which not exist in a local database.
-     * @throws MessagingException for other failures.
-     */
-    private Message[] getNewMessages(IMAPFolder imapFolder, long nextUID) throws MessagingException {
-        Message[] messages = imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1);
-
-        if (messages.length > 0) {
-            FetchProfile fetchProfile = new FetchProfile();
-            fetchProfile.add(FetchProfile.Item.ENVELOPE);
-            fetchProfile.add(FetchProfile.Item.FLAGS);
-            fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
-            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-
-            imapFolder.fetch(messages, fetchProfile);
-        }
-        return messages;
     }
 
     /**

@@ -145,15 +145,13 @@ public interface SyncListener {
     /**
      * This method called when received information about messages which already exist in the local database.
      *
-     * @param accountDao     The {@link AccountDao} object which contains information about an
-     *                       email account.
+     * @param accountDao     The {@link AccountDao} object which contains information about an email account.
      * @param localFolder    The local implementation of the remote folder.
      * @param remoteFolder   The folder where the messages exist.
      * @param newMessages    The refreshed messages.
      * @param updateMessages The messages which will must be updated.
      * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode    The unique request code for the reply to
-     *                       {@link android.os.Messenger}.
+     * @param requestCode    The unique request code for the reply to {@link android.os.Messenger}.
      */
     void onRefreshMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                                    IMAPFolder remoteFolder, Message[] newMessages, Message[] updateMessages,
@@ -189,4 +187,17 @@ public interface SyncListener {
      * @param resultCode  The unique result code for the reply which identifies the progress of some request.
      */
     void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode);
+
+    /**
+     * This method called when received information about new messages in some folder.
+     *
+     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
+     * @param localFolder  The local implementation of the remote folder.
+     * @param remoteFolder The folder where the new  messages exist.
+     * @param newMessages  The new messages.
+     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
+     */
+    void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder
+            remoteFolder, Message[] newMessages, String ownerKey, int requestCode);
 }

@@ -11,9 +11,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.os.AsyncTask;
-import android.os.RemoteException;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -22,7 +20,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -42,19 +40,20 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 /**
- * This is an implementation of {@link JobService}. Here we are going to do sync INBOX folder of an active account.
+ * This is an implementation of {@link JobService}. Here we are going to do receiving of the new messages of INBOX
+ * folder of an active account.
  *
  * @author Denis Bondarenko
- *         Date: 20.06.2018
- *         Time: 12:40
- *         E-mail: DenBond7@gmail.com
+ * Date: 20.06.2018
+ * Time: 12:40
+ * E-mail: DenBond7@gmail.com
  */
-public class SyncJobService extends JobService implements SyncListener {
+public class CheckNewMessagesJobService extends JobService implements SyncListener {
     private static final long INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(15);
-    private static final String TAG = SyncJobService.class.getSimpleName();
+    private static final String TAG = CheckNewMessagesJobService.class.getSimpleName();
 
     public static void schedule(Context context) {
-        ComponentName serviceName = new ComponentName(context, SyncJobService.class);
+        ComponentName serviceName = new ComponentName(context, CheckNewMessagesJobService.class);
         JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(JobIdManager.JOB_TYPE_SYNC, serviceName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPeriodic(INTERVAL_MILLIS)
@@ -80,7 +79,7 @@ public class SyncJobService extends JobService implements SyncListener {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
         Log.d(TAG, "onStartJob");
-        new SyncJobTask(this).execute(jobParameters);
+        new CheckNewMessagesJobTask(this).execute(jobParameters);
         return true;
     }
 
@@ -148,40 +147,6 @@ public class SyncJobService extends JobService implements SyncListener {
     public void onRefreshMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                                           IMAPFolder remoteFolder, Message[] newMessages,
                                           Message[] updateMessages, String ownerKey, int requestCode) {
-        try {
-            MessageDaoSource messageDaoSource = new MessageDaoSource();
-
-            Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
-                    (getApplicationContext(), accountDao.getEmail(), localFolder.getFolderAlias());
-
-            Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
-
-            messageDaoSource.deleteMessagesByUID(getApplicationContext(),
-                    accountDao.getEmail(),
-                    localFolder.getFolderAlias(),
-                    EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase, remoteFolder, updateMessages));
-
-            javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
-                    remoteFolder, newMessages);
-
-            messageDaoSource.addRows(getApplicationContext(),
-                    accountDao.getEmail(),
-                    localFolder.getFolderAlias(),
-                    remoteFolder,
-                    messagesNewCandidates);
-
-            messageDaoSource.updateMessagesByUID(getApplicationContext(),
-                    accountDao.getEmail(),
-                    localFolder.getFolderAlias(),
-                    remoteFolder,
-                    EmailUtil.generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase,
-                            remoteFolder,
-                            updateMessages));
-        } catch (RemoteException | MessagingException | OperationApplicationException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-
     }
 
     @Override
@@ -200,19 +165,44 @@ public class SyncJobService extends JobService implements SyncListener {
 
     }
 
+    @Override
+    public void onNewMessagesReceived(AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
+                                      Message[] newMessages, String ownerKey, int requestCode) {
+        try {
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
+                    (getApplicationContext(), accountDao.getEmail(), localFolder.getFolderAlias());
+
+            Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
+
+            javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
+                    remoteFolder, newMessages);
+
+            messageDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(),
+                    localFolder.getFolderAlias(),
+                    remoteFolder,
+                    messagesNewCandidates);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
     /**
      * This is a worker. Here we will do sync in the background thread. If the sync will be failed we'll schedule it
      * again.
      */
-    private static class SyncJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-        private final WeakReference<SyncJobService> syncJobServiceWeakReference;
+    private static class CheckNewMessagesJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
+        private final WeakReference<CheckNewMessagesJobService> syncJobServiceWeakReference;
 
         private Session session;
         private Store store;
         private boolean isFailed;
 
-        SyncJobTask(SyncJobService syncJobService) {
-            this.syncJobServiceWeakReference = new WeakReference<>(syncJobService);
+        CheckNewMessagesJobTask(CheckNewMessagesJobService checkNewMessagesJobService) {
+            this.syncJobServiceWeakReference = new WeakReference<>(checkNewMessagesJobService);
         }
 
         @Override
@@ -233,13 +223,9 @@ public class SyncJobService extends JobService implements SyncListener {
                             session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
                             store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
 
-                            int lastUID = messageDaoSource.getLastUIDOfMessageInLabel(context,
-                                    accountDao.getEmail(), localFolder.getFolderAlias());
-                            int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(context,
-                                    accountDao.getEmail(), localFolder.getFolderAlias());
-
-                            new RefreshMessagesSyncTask(
-                                    "", 0, localFolder, lastUID, countOfLoadedMessages)
+                            new CheckNewMessagesSyncTask("", 0, localFolder,
+                                    messageDaoSource.getLastUIDOfMessageInLabel(context, accountDao.getEmail(),
+                                            localFolder.getFolderAlias()))
                                     .runIMAPAction(accountDao, session, store, syncJobServiceWeakReference.get());
 
                             new CheckIsLoadedMessagesEncryptedSyncTask("", 0, localFolder)

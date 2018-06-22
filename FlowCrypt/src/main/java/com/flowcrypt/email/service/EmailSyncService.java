@@ -492,6 +492,13 @@ public class EmailSyncService extends BaseService implements SyncListener {
         }
     }
 
+    @Override
+    public void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                      IMAPFolder remoteFolder, javax.mail.Message[] newMessages,
+                                      String ownerKey, int requestCode) {
+
+    }
+
     protected void handleConnectivityAction(Context context, Intent intent) {
         if (ConnectivityManager.CONNECTIVITY_ACTION.equalsIgnoreCase(intent.getAction())) {
             ConnectivityManager connectivityManager =

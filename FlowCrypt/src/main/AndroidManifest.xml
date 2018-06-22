@@ -224,7 +224,7 @@
 
         <!--This service will be used for syncing (JobScheduler logic)-->
         <service
-            android:name=".jobscheduler.SyncJobService"
+            android:name=".jobscheduler.CheckNewMessagesJobService"
             android:exported="false"
             android:label="Sync service"
             android:permission="android.permission.BIND_JOB_SERVICE" />
