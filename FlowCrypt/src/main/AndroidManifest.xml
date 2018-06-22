@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".FlowCryptApplication"
@@ -219,6 +221,13 @@
         <service
             android:name=".service.JsBackgroundService"
             android:exported="false" />
+
+        <!--This service will be used for syncing (JobScheduler logic)-->
+        <service
+            android:name=".jobscheduler.SyncJobService"
+            android:exported="false"
+            android:label="Sync service"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>
