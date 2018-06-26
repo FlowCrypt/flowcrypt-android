@@ -54,7 +54,7 @@ public class NotificationChannelManager {
     private static NotificationChannel generateMessagesNotificationChannel(Context context) {
         CharSequence name = context.getString(R.string.messages);
         String description = context.getString(R.string.messages_notification_channel);
-        int importance = NotificationManager.IMPORTANCE_HIGH;
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
 
         NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID_MESSAGES, name, importance);
         notificationChannel.setDescription(description);

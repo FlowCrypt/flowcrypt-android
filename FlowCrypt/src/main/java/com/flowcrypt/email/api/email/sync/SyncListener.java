@@ -128,6 +128,19 @@ public interface SyncListener {
                             IMAPFolder remoteFolder, Message[] messages, String ownerKey, int requestCode);
 
     /**
+     * This method called when received information about new messages in some folder.
+     *
+     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
+     * @param localFolder  The local implementation of the remote folder.
+     * @param remoteFolder The folder where the new  messages exist.
+     * @param newMessages  The new messages.
+     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
+     */
+    void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder
+            remoteFolder, Message[] newMessages, String ownerKey, int requestCode);
+
+    /**
      * This method called when a new messages received from the some folder.
      *
      * @param accountDao   The {@link AccountDao} object which contains information about an
@@ -187,17 +200,4 @@ public interface SyncListener {
      * @param resultCode  The unique result code for the reply which identifies the progress of some request.
      */
     void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode);
-
-    /**
-     * This method called when received information about new messages in some folder.
-     *
-     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
-     * @param localFolder  The local implementation of the remote folder.
-     * @param remoteFolder The folder where the new  messages exist.
-     * @param newMessages  The new messages.
-     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
-     */
-    void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder
-            remoteFolder, Message[] newMessages, String ownerKey, int requestCode);
 }

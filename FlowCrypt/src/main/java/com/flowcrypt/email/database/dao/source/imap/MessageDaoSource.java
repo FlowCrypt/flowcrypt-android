@@ -355,6 +355,35 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get new messages.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param email       The user email.
+     * @param label       The label name.
+     * @param firstNewUid The uid of the first new message.
+     * @return A  list of {@link GeneralMessageDetails} objects.
+     */
+    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label, long firstNewUid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_UID + " > ? ",
+                new String[]{email, label, String.valueOf(firstNewUid)}, null);
+
+        List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                generalMessageDetailsList.add(getMessageInfo(cursor));
+            }
+            cursor.close();
+        }
+
+        return generalMessageDetailsList;
+    }
+
+    /**
      * Get all {@link Folder} objects from the database by an email.
      *
      * @param context Interface to global information about an application environment.

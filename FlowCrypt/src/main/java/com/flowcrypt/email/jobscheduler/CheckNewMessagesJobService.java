@@ -12,7 +12,6 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -32,6 +31,7 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -195,14 +195,13 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     remoteFolder,
                     messagesNewCandidates);
 
-            if (newMessages.length > 0) {
-                new Handler(CheckNewMessagesJobService.this.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        messagesNotificationManager.newMessagesReceived(CheckNewMessagesJobService.this,
-                                accountDao, new GeneralMessageDetails());
-                    }
-                });
+            List<GeneralMessageDetails> generalMessageDetailsList =
+                    messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
+                            localFolder.getFolderAlias(), Collections.max(messagesUIDsInLocalDatabase));
+
+            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                messagesNotificationManager.newMessagesReceived(
+                        CheckNewMessagesJobService.this, accountDao, generalMessageDetails);
             }
         } catch (MessagingException e) {
             e.printStackTrace();

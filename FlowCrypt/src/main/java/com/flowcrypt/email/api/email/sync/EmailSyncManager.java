@@ -706,14 +706,14 @@ public class EmailSyncManager {
         public void messagesAdded(MessageCountEvent e) {
             Log.d(TAG, "messagesAdded: " + e.getMessages().length);
             if (syncListener != null) {
-                syncListener.onMessagesReceived(accountDao, localFolder, remoteFolder, e.getMessages(), null, 0);
+                syncListener.onNewMessagesReceived(accountDao, localFolder, remoteFolder, e.getMessages(), null, 0);
             }
         }
 
         @Override
         public void messagesRemoved(MessageCountEvent e) {
             Log.d(TAG, "messagesRemoved");
-            syncFolderState();
+            syncFolderState();//todo-denbond7 need to improve this + need to add removing notifications
         }
 
         @Override

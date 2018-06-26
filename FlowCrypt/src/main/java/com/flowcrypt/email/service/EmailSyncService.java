@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
@@ -113,6 +114,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     private boolean isServiceStarted;
     private BroadcastReceiver connectionBroadcastReceiver;
+    private MessagesNotificationManager messagesNotificationManager;
 
     public EmailSyncService() {
         this.replyToMessengers = new HashMap<>();
@@ -145,6 +147,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
+
+        this.messagesNotificationManager = new MessagesNotificationManager(this);
+
         emailSyncManager = new EmailSyncManager(new AccountDaoSource().getActiveAccountInformation(this));
         emailSyncManager.setSyncListener(this);
 
@@ -342,6 +347,45 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
+    public void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                      IMAPFolder remoteFolder, javax.mail.Message[] newMessages,
+                                      String ownerKey, int requestCode) {
+        Log.d(TAG, "onMessagesReceived:message count: " + newMessages.length);
+        try {
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            long lastUid = messageDaoSource.getLastUIDOfMessageInLabel(this, accountDao.getEmail(),
+                    localFolder.getFolderAlias());
+
+            messageDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(),
+                    localFolder.getFolderAlias(),
+                    remoteFolder,
+                    newMessages);
+
+            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
+
+            if (newMessages.length > 0) {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+            } else {
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+            }
+
+            List<GeneralMessageDetails> generalMessageDetailsList =
+                    messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
+                            localFolder.getFolderAlias(), lastUid);
+
+            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                messagesNotificationManager.newMessagesReceived(this, accountDao, generalMessageDetails);
+            }
+        } catch (MessagingException | RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+            onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);
+        }
+    }
+
+    @Override
     public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
                                          IMAPFolder imapFolder, javax.mail.Message[] messages,
                                          String ownerKey, int requestCode) {
@@ -490,13 +534,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
         }
-    }
-
-    @Override
-    public void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
-                                      IMAPFolder remoteFolder, javax.mail.Message[] newMessages,
-                                      String ownerKey, int requestCode) {
-
     }
 
     protected void handleConnectivityAction(Context context, Intent intent) {
