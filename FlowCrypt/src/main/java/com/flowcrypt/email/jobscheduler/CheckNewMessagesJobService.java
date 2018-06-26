@@ -12,11 +12,13 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
@@ -24,6 +26,7 @@ import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -51,6 +54,7 @@ import javax.mail.Store;
 public class CheckNewMessagesJobService extends JobService implements SyncListener {
     private static final long INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(15);
     private static final String TAG = CheckNewMessagesJobService.class.getSimpleName();
+    private MessagesNotificationManager messagesNotificationManager;
 
     public static void schedule(Context context) {
         ComponentName serviceName = new ComponentName(context, CheckNewMessagesJobService.class);
@@ -74,6 +78,12 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                 ExceptionUtil.handleError(new IllegalStateException(errorMessage));
             }
         }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        this.messagesNotificationManager = new MessagesNotificationManager(this);
     }
 
     @Override
@@ -166,7 +176,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
     }
 
     @Override
-    public void onNewMessagesReceived(AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
+    public void onNewMessagesReceived(final AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
                                       Message[] newMessages, String ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -184,6 +194,16 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     localFolder.getFolderAlias(),
                     remoteFolder,
                     messagesNewCandidates);
+
+            if (newMessages.length > 0) {
+                new Handler(CheckNewMessagesJobService.this.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        messagesNotificationManager.newMessagesReceived(CheckNewMessagesJobService.this,
+                                accountDao, new GeneralMessageDetails());
+                    }
+                });
+            }
         } catch (MessagingException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

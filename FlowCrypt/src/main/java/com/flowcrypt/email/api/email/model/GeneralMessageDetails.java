@@ -10,6 +10,8 @@ import android.os.Parcelable;
 
 import java.util.Arrays;
 
+import javax.mail.internet.InternetAddress;
+
 /**
  * Simple POJO class which describe a general message details.
  *
@@ -21,26 +23,25 @@ import java.util.Arrays;
 
 public class GeneralMessageDetails implements Parcelable {
 
-    public static final Creator<GeneralMessageDetails> CREATOR = new
-            Creator<GeneralMessageDetails>() {
-                @Override
-                public GeneralMessageDetails createFromParcel(Parcel source) {
-                    return new GeneralMessageDetails(source);
-                }
+    public static final Creator<GeneralMessageDetails> CREATOR = new Creator<GeneralMessageDetails>() {
+        @Override
+        public GeneralMessageDetails createFromParcel(Parcel source) {
+            return new GeneralMessageDetails(source);
+        }
 
-                @Override
-                public GeneralMessageDetails[] newArray(int size) {
-                    return new GeneralMessageDetails[size];
-                }
-            };
-
+        @Override
+        public GeneralMessageDetails[] newArray(int size) {
+            return new GeneralMessageDetails[size];
+        }
+    };
     private String email;
     private String label;
     private int uid;
     private long receivedDateInMillisecond;
     private long sentDateInMillisecond;
-    private String[] from;
-    private String[] to;
+    private InternetAddress[] from;
+    private InternetAddress[] to;
+    private InternetAddress[] cc;
     private String subject;
     private String[] flags;
     private String rawMessageWithoutAttachments;
@@ -56,8 +57,9 @@ public class GeneralMessageDetails implements Parcelable {
         this.uid = in.readInt();
         this.receivedDateInMillisecond = in.readLong();
         this.sentDateInMillisecond = in.readLong();
-        this.from = in.createStringArray();
-        this.to = in.createStringArray();
+        this.from = (InternetAddress[]) in.readSerializable();
+        this.to = (InternetAddress[]) in.readSerializable();
+        this.cc = (InternetAddress[]) in.readSerializable();
         this.subject = in.readString();
         this.flags = in.createStringArray();
         this.rawMessageWithoutAttachments = in.readString();
@@ -75,6 +77,7 @@ public class GeneralMessageDetails implements Parcelable {
                 ", sentDateInMillisecond=" + sentDateInMillisecond +
                 ", from=" + Arrays.toString(from) +
                 ", to=" + Arrays.toString(to) +
+                ", cc=" + Arrays.toString(cc) +
                 ", subject='" + subject + '\'' +
                 ", flags=" + Arrays.toString(flags) +
                 ", rawMessageWithoutAttachments='" + rawMessageWithoutAttachments + '\'' +
@@ -95,8 +98,9 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeInt(this.uid);
         dest.writeLong(this.receivedDateInMillisecond);
         dest.writeLong(this.sentDateInMillisecond);
-        dest.writeStringArray(this.from);
-        dest.writeStringArray(this.to);
+        dest.writeSerializable(this.from);
+        dest.writeSerializable(this.to);
+        dest.writeSerializable(this.cc);
         dest.writeString(this.subject);
         dest.writeStringArray(this.flags);
         dest.writeString(this.rawMessageWithoutAttachments);
@@ -144,20 +148,28 @@ public class GeneralMessageDetails implements Parcelable {
         this.sentDateInMillisecond = sentDateInMillisecond;
     }
 
-    public String[] getFrom() {
+    public InternetAddress[] getFrom() {
         return from;
     }
 
-    public void setFrom(String[] from) {
+    public void setFrom(InternetAddress[] from) {
         this.from = from;
     }
 
-    public String[] getTo() {
+    public InternetAddress[] getTo() {
         return to;
     }
 
-    public void setTo(String[] to) {
+    public void setTo(InternetAddress[] to) {
         this.to = to;
+    }
+
+    public InternetAddress[] getCc() {
+        return cc;
+    }
+
+    public void setCc(InternetAddress[] cc) {
+        this.cc = cc;
     }
 
     public String getSubject() {

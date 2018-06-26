@@ -29,13 +29,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.mail.internet.InternetAddress;
+
 /**
  * The MessageListAdapter responsible for displaying the message in the list.
  *
  * @author DenBond7
- *         Date: 28.04.2017
- *         Time: 10:29
- *         E-mail: DenBond7@gmail.com
+ * Date: 28.04.2017
+ * Time: 10:29
+ * E-mail: DenBond7@gmail.com
  */
 
 public class MessageListAdapter extends CursorAdapter {
@@ -98,11 +100,9 @@ public class MessageListAdapter extends CursorAdapter {
                     generalMessageDetails.getSubject();
 
             if (folderType == FoldersManager.FolderType.SENT) {
-                viewHolder.textViewSenderAddress.setText(
-                        generateAddresses(generalMessageDetails.getTo()));
+                viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
             } else {
-                viewHolder.textViewSenderAddress.setText(
-                        generateAddresses(generalMessageDetails.getFrom()));
+                viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
             }
 
             viewHolder.textViewSubject.setText(subject);
@@ -186,17 +186,20 @@ public class MessageListAdapter extends CursorAdapter {
         changeViewsTypeface(viewHolder, Typeface.NORMAL);
     }
 
-    private String generateAddresses(String[] strings) {
-        if (strings == null)
+    private String generateAddresses(InternetAddress[] internetAddresses) {
+        if (internetAddresses == null)
             return "null";
 
-        int iMax = strings.length - 1;
+        int iMax = internetAddresses.length - 1;
         if (iMax == -1)
             return "";
 
         StringBuilder b = new StringBuilder();
         for (int i = 0; ; i++) {
-            b.append(String.valueOf(strings[i]));
+            InternetAddress internetAddress = internetAddresses[i];
+            String displayName = TextUtils.isEmpty(internetAddress.getPersonal()) ? internetAddress.getAddress() :
+                    internetAddress.getPersonal();
+            b.append(displayName);
             if (i == iMax)
                 return prepareSenderName(b.toString());
             b.append(", ");

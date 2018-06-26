@@ -334,4 +334,6 @@ icelanders prefer real sauna</font>
     <string name="show_only_encrypted_messages">Show only encrypted messages</string>
     <string name="show_all_messages">Show all messages</string>
     <string name="no_encrypted_messages">No encrypted messages</string>
+    <string name="messages">Messages</string>
+    <string name="messages_notification_channel">The messages notification channel</string>
 </resources>

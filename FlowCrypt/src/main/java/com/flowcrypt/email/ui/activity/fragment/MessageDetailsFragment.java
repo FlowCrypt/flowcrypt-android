@@ -556,9 +556,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     generalMessageDetails.getSubject();
 
             if (folderType == FoldersManager.FolderType.SENT) {
-                textViewSenderAddress.setText(generalMessageDetails.getTo()[0]);
+                textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getTo()));
             } else {
-                textViewSenderAddress.setText(generalMessageDetails.getFrom()[0]);
+                textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()));
             }
             textViewSubject.setText(subject);
             textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));

@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.Folder;
@@ -35,13 +36,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 /**
@@ -63,6 +64,7 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_SENT_DATE = "sent_date";
     public static final String COL_FROM_ADDRESSES = "from_address";
     public static final String COL_TO_ADDRESSES = "to_address";
+    public static final String COL_CC_ADDRESSES = "cc_address";
     public static final String COL_SUBJECT = "subject";
     public static final String COL_FLAGS = "flags";
     public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS =
@@ -82,6 +84,7 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_SENT_DATE + " INTEGER DEFAULT NULL, " +
             COL_FROM_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_TO_ADDRESSES + " TEXT DEFAULT NULL, " +
+            COL_CC_ADDRESSES + " TEXT DEFAULT NULL, " +
             COL_SUBJECT + " TEXT DEFAULT NULL, " +
             COL_FLAGS + " TEXT DEFAULT NULL, " +
             COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
@@ -293,10 +296,6 @@ public class MessageDaoSource extends BaseDaoSource {
                 cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
         generalMessageDetails.setSentDateInMillisecond(
                 cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)));
-        generalMessageDetails.setFrom(
-                parseEmails(cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES))));
-        generalMessageDetails.setTo(
-                parseEmails(cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES))));
         generalMessageDetails.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
         generalMessageDetails.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex
                 (COL_FLAGS))));
@@ -306,6 +305,28 @@ public class MessageDaoSource extends BaseDaoSource {
                 (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
         generalMessageDetails.setEncrypted(cursor.getInt(cursor.getColumnIndex
                 (COL_IS_ENCRYPTED)) == 1);
+
+        try {
+            String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));
+            generalMessageDetails.setFrom(TextUtils.isEmpty(fromAddresses) ? null
+                    : InternetAddress.parse(fromAddresses));
+        } catch (AddressException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            String toAddresses = cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES));
+            generalMessageDetails.setTo(TextUtils.isEmpty(toAddresses) ? null : InternetAddress.parse(toAddresses));
+        } catch (AddressException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            String ccAddresses = cursor.getString(cursor.getColumnIndex(COL_CC_ADDRESSES));
+            generalMessageDetails.setCc(TextUtils.isEmpty(ccAddresses) ? null : InternetAddress.parse(ccAddresses));
+        } catch (AddressException e) {
+            e.printStackTrace();
+        }
 
         return generalMessageDetails;
     }
@@ -696,9 +717,9 @@ public class MessageDaoSource extends BaseDaoSource {
         if (message.getSentDate() != null) {
             contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
         }
-        contentValues.put(COL_FROM_ADDRESSES, prepareAddressesForSaving(message.getFrom()));
-        contentValues.put(COL_TO_ADDRESSES,
-                prepareAddressesForSaving(message.getRecipients(Message.RecipientType.TO)));
+        contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(message.getFrom()));
+        contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.TO)));
+        contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.CC)));
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
@@ -716,20 +737,6 @@ public class MessageDaoSource extends BaseDaoSource {
             }
 
             return prepareArrayToSaving(stringsOfFlags);
-        }
-        return null;
-    }
-
-    private String prepareAddressesForSaving(Address[] from) {
-        if (from != null) {
-            String[] emails = new String[from.length];
-
-            for (int i = 0; i < from.length; i++) {
-                InternetAddress internetAddress = (InternetAddress) from[i];
-                emails[i] = internetAddress.getAddress();
-            }
-
-            return prepareArrayToSaving(emails);
         }
         return null;
     }

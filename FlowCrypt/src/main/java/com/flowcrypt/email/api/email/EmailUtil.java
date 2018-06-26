@@ -608,4 +608,16 @@ public class EmailUtil {
         }
         return updateCandidates.toArray(new javax.mail.Message[0]);
     }
+
+    public static String getFirstAddressString(InternetAddress[] internetAddresses) {
+        if (internetAddresses == null || internetAddresses.length == 0) {
+            return "";
+        }
+
+        if (TextUtils.isEmpty(internetAddresses[0].getPersonal())) {
+            return internetAddresses[0].getAddress();
+        } else {
+            return internetAddresses[0].getPersonal();
+        }
+    }
 }
