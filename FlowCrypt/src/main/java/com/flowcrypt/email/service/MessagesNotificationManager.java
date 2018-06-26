@@ -13,9 +13,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.ui.NotificationChannelManager;
@@ -50,16 +50,6 @@ public class MessagesNotificationManager {
             return;
         }
 
-        String contentTitle = null;
-
-        if (generalMessageDetails.getFrom() != null && generalMessageDetails.getFrom().length > 0) {
-            if (TextUtils.isEmpty(generalMessageDetails.getFrom()[0].getPersonal())) {
-                contentTitle = generalMessageDetails.getFrom()[0].getAddress();
-            } else {
-                contentTitle = generalMessageDetails.getFrom()[0].getPersonal();
-            }
-        }
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context,
                 NotificationChannelManager.CHANNEL_ID_MESSAGES)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -67,7 +57,7 @@ public class MessagesNotificationManager {
                 .setSmallIcon(R.drawable.ic_email_encrypted)
                 .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
                 .setColor(context.getResources().getColor(R.color.colorPrimary))
-                .setContentTitle(contentTitle)
+                .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
                 .addAction(generateReplyAction(context))
                 .setContentText(generalMessageDetails.getSubject());

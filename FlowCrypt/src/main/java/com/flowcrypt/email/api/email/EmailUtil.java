@@ -609,6 +609,13 @@ public class EmailUtil {
         return updateCandidates.toArray(new javax.mail.Message[0]);
     }
 
+    /**
+     * Get the personal name of the first address from an array. If the given name is null we will return the email
+     * address.
+     *
+     * @param internetAddresses An array of {@link InternetAddress}
+     * @return The first address as a human readable string or email.
+     */
     public static String getFirstAddressString(InternetAddress[] internetAddresses) {
         if (internetAddresses == null || internetAddresses.length == 0) {
             return "";
