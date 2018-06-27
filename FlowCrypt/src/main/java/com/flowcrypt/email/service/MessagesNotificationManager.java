@@ -14,12 +14,14 @@ import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.ui.activity.SplashActivity;
+import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 
 /**
  * This manager is responsible for displaying messages notifications.
@@ -29,7 +31,8 @@ import com.flowcrypt.email.ui.activity.SplashActivity;
  * Time: 12:10
  * E-mail: DenBond7@gmail.com
  */
-public class MessagesNotificationManager {
+public class MessagesNotificationManager extends CustomNotificationManager {
+    public static final String GROUP_NAME_FLOWCRYPT_MESSAGES = BuildConfig.APPLICATION_ID + ".MESSAGES";
     private NotificationManagerCompat notificationManager;
 
     public MessagesNotificationManager(Context context) {
@@ -50,19 +53,30 @@ public class MessagesNotificationManager {
             return;
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context,
-                NotificationChannelManager.CHANNEL_ID_MESSAGES)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setCategory(NotificationCompat.CATEGORY_EMAIL)
-                .setSmallIcon(R.drawable.ic_email_encrypted)
-                .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
-                .setColor(context.getResources().getColor(R.color.colorPrimary))
-                .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
-                .addAction(generateReplyAction(context))
-                .setContentText(generalMessageDetails.getSubject());
+        NotificationCompat.Builder groupBuilder =
+                new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
+                        .setSmallIcon(R.drawable.ic_email_encrypted)
+                        .setContentInfo(accountDao.getEmail())
+                        .setColor(context.getResources().getColor(R.color.colorPrimary))
+                        .setSubText(accountDao.getEmail())
+                        .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
+                        .setGroupSummary(true);
 
-        builder.setSubText(accountDao.getEmail());
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setCategory(NotificationCompat.CATEGORY_EMAIL)
+                        .setSmallIcon(R.drawable.ic_email_encrypted)
+                        .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
+                        .setColor(context.getResources().getColor(R.color.colorPrimary))
+                        .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
+                        .addAction(generateReplyAction(context))
+                        .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
+                        .setContentText(generalMessageDetails.getSubject())
+                        .setSubText(accountDao.getEmail());
+
+        notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
         notificationManager.notify(generalMessageDetails.getUid(), builder.build());
     }
 
