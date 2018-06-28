@@ -6,13 +6,16 @@
 package com.flowcrypt.email.service;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.service.notification.StatusBarNotification;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -27,16 +30,16 @@ import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
  * This manager is responsible for displaying messages notifications.
  *
  * @author Denis Bondarenko
- * Date: 23.06.2018
- * Time: 12:10
- * E-mail: DenBond7@gmail.com
+ *         Date: 23.06.2018
+ *         Time: 12:10
+ *         E-mail: DenBond7@gmail.com
  */
 public class MessagesNotificationManager extends CustomNotificationManager {
     public static final String GROUP_NAME_FLOWCRYPT_MESSAGES = BuildConfig.APPLICATION_ID + ".MESSAGES";
-    private NotificationManagerCompat notificationManager;
+    private NotificationManager notificationManager;
 
     public MessagesNotificationManager(Context context) {
-        this.notificationManager = NotificationManagerCompat.from(context);
+        this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     /**
@@ -53,11 +56,22 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             return;
         }
 
+        int groupResourceId = R.drawable.ic_email_encrypted;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
+                if (GROUP_NAME_FLOWCRYPT_MESSAGES.equals(statusBarNotification.getNotification().getGroup())) {
+                    groupResourceId = R.drawable.ic_email_multiply_encrypted;
+                    break;
+                }
+            }
+        }
+
         NotificationCompat.Builder groupBuilder =
                 new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
-                        .setSmallIcon(R.drawable.ic_email_encrypted)
+                        .setSmallIcon(groupResourceId)
                         .setContentInfo(accountDao.getEmail())
-                        .setColor(context.getResources().getColor(R.color.colorPrimary))
+                        .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setSubText(accountDao.getEmail())
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                         .setGroupSummary(true);
@@ -68,7 +82,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setCategory(NotificationCompat.CATEGORY_EMAIL)
                         .setSmallIcon(R.drawable.ic_email_encrypted)
                         .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
-                        .setColor(context.getResources().getColor(R.color.colorPrimary))
+                        .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                         .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
                         .addAction(generateReplyAction(context))
