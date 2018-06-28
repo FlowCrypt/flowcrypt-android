@@ -67,6 +67,11 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             }
         }
 
+        Intent inboxIntent = new Intent(context, SplashActivity.class);
+        inboxIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent inboxPendingIntent = PendingIntent.getActivity(
+                context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder groupBuilder =
                 new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
                         .setSmallIcon(groupResourceId)
@@ -74,6 +79,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setSubText(accountDao.getEmail())
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
+                        .setAutoCancel(true)
+                        .setContentIntent(inboxPendingIntent)
                         .setGroupSummary(true);
 
         NotificationCompat.Builder builder =
@@ -88,6 +95,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .addAction(generateReplyAction(context))
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                         .setContentText(generalMessageDetails.getSubject())
+                        .setAutoCancel(true)
+                        .setContentIntent(inboxPendingIntent)
                         .setSubText(accountDao.getEmail());
 
         notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
