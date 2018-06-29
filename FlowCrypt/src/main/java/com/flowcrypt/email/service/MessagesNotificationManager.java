@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.ui.NotificationChannelManager;
+import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 
@@ -67,7 +68,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             }
         }
 
-        Intent inboxIntent = new Intent(context, SplashActivity.class);
+        Intent inboxIntent = new Intent(context, EmailManagerActivity.class);
+        inboxIntent.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
         inboxIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent inboxPendingIntent = PendingIntent.getActivity(
                 context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT);

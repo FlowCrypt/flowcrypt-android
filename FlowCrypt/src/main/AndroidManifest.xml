@@ -41,6 +41,7 @@
         <activity
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/loading"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait" />
 
         <activity
