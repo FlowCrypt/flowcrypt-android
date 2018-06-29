@@ -26,6 +26,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.MessagesNotificationManager;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -199,9 +200,11 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
                             localFolder.getFolderAlias(), Collections.max(messagesUIDsInLocalDatabase));
 
-            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                messagesNotificationManager.newMessagesReceived(
-                        CheckNewMessagesJobService.this, accountDao, generalMessageDetails);
+            if (!GeneralUtil.isAppForegrounded()) {
+                for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                    messagesNotificationManager.newMessagesReceived(
+                            CheckNewMessagesJobService.this, accountDao, generalMessageDetails);
+                }
             }
         } catch (MessagingException e) {
             e.printStackTrace();

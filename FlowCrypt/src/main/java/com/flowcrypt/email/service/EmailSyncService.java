@@ -40,6 +40,7 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -375,8 +376,10 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
                             localFolder.getFolderAlias(), lastUid);
 
-            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                messagesNotificationManager.newMessagesReceived(this, accountDao, generalMessageDetails);
+            if (!GeneralUtil.isAppForegrounded()) {
+                for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                    messagesNotificationManager.newMessagesReceived(this, accountDao, generalMessageDetails);
+                }
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
