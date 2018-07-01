@@ -201,10 +201,8 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                             localFolder.getFolderAlias(), Collections.max(messagesUIDsInLocalDatabase));
 
             if (!GeneralUtil.isAppForegrounded()) {
-                for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                    messagesNotificationManager.newMessagesReceived(
-                            CheckNewMessagesJobService.this, accountDao, generalMessageDetails);
-                }
+                messagesNotificationManager.notify(CheckNewMessagesJobService.this, accountDao,
+                        generalMessageDetailsList);
             }
         } catch (MessagingException e) {
             e.printStackTrace();

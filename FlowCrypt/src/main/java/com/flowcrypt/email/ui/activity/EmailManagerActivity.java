@@ -54,6 +54,7 @@ import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
@@ -141,6 +142,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 (EmailManagerActivity.class), BuildConfig.DEBUG);
         countingIdlingResourceForLabel.increment();
         initViews();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        new MessagesNotificationManager(this).cancelAll(this, accountDao);
     }
 
     @Override

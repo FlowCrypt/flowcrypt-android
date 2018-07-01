@@ -579,6 +579,37 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get a map of UID and flags of all messages in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The map of UID and flags of all messages in the database for some label.
+     */
+    @SuppressLint("UseSparseArrays")
+    public List<Integer> getUIDOfUnseenMessages(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        List<Integer> uidList = new ArrayList<>();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{COL_UID},
+                MessageDaoSource.COL_EMAIL + " = ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_FLAGS + " NOT LIKE '%\\SEEN%'",
+                new String[]{email, label}, null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                uidList.add(cursor.getInt(cursor.getColumnIndex(COL_UID)));
+            }
+            cursor.close();
+        }
+
+        return uidList;
+    }
+
+    /**
      * Get the count of messages in the database for some label.
      *
      * @param context Interface to global information about an application environment.

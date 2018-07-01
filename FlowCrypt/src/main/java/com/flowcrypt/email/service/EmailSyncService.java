@@ -377,9 +377,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                             localFolder.getFolderAlias(), lastUid);
 
             if (!GeneralUtil.isAppForegrounded()) {
-                for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                    messagesNotificationManager.newMessagesReceived(this, accountDao, generalMessageDetails);
-                }
+                messagesNotificationManager.notify(this, accountDao, generalMessageDetailsList);
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
