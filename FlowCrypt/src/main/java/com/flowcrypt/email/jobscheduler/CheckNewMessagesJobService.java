@@ -31,6 +31,7 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +199,8 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                 String folderAlias = localFolder.getFolderAlias();
 
                 messagesNotificationManager.notify(this, accountDao,
-                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias,
+                                Collections.max(messagesUIDsInLocalDatabase)),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
         } catch (MessagingException e) {

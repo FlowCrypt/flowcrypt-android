@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
@@ -377,18 +378,30 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * Get new messages.
      *
-     * @param context Interface to global information about an application environment.
-     * @param email   The user email.
-     * @param label   The label name.
+     * @param context     Interface to global information about an application environment.
+     * @param email       The user email.
+     * @param label       The label name.
+     * @param firstNewUid The uid of the first new message.
      * @return A  list of {@link GeneralMessageDetails} objects.
      */
-    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label) {
+    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label, long firstNewUid) {
         ContentResolver contentResolver = context.getContentResolver();
-        Cursor cursor = contentResolver.query(getBaseContentUri(),
-                null, MessageDaoSource.COL_EMAIL + "= ? AND "
-                        + MessageDaoSource.COL_FOLDER + " = ? AND "
-                        + MessageDaoSource.COL_IS_NEW + " = 1 ",
-                new String[]{email, label}, MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+
+        Cursor cursor;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            cursor = contentResolver.query(getBaseContentUri(),
+                    null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                            + MessageDaoSource.COL_FOLDER + " = ? AND "
+                            + MessageDaoSource.COL_UID + " > ? ",
+                    new String[]{email, label, String.valueOf(firstNewUid)},
+                    MessageDaoSource.COL_RECEIVED_DATE + " ASC");
+        } else {
+            cursor = contentResolver.query(getBaseContentUri(),
+                    null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                            + MessageDaoSource.COL_FOLDER + " = ? AND "
+                            + MessageDaoSource.COL_IS_NEW + " = 1 ",
+                    new String[]{email, label}, MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+        }
 
         List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 

@@ -354,6 +354,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
+            long lastUid = messageDaoSource.getLastUIDOfMessageInLabel(this, accountDao.getEmail(),
+                    localFolder.getFolderAlias());
+
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
@@ -372,7 +375,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 String folderAlias = localFolder.getFolderAlias();
 
                 messagesNotificationManager.notify(this, accountDao,
-                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
+                        messageDaoSource.getNewMessages(getApplicationContext(),
+                                accountDao.getEmail(), folderAlias, lastUid),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
         } catch (MessagingException | RemoteException e) {

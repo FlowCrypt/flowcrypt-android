@@ -57,7 +57,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
      * @param context                   Interface to global information about an application environment.
      * @param accountDao                An {@link AccountDao} object which contains information about an email account.
      * @param generalMessageDetailsList A list of models which consists information about some messages.
-     * @param uidListOfUnseenMessages       A list of UID of unseen messages.
+     * @param uidListOfUnseenMessages   A list of UID of unseen messages.
      */
     public void notify(Context context, AccountDao accountDao, List<GeneralMessageDetails> generalMessageDetailsList,
                        List<Integer> uidListOfUnseenMessages) {
@@ -151,6 +151,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NotificationChannelManager
                     .CHANNEL_ID_MESSAGES)
+                    .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setCategory(NotificationCompat.CATEGORY_EMAIL)
                     .setSmallIcon(R.drawable.ic_email_encrypted)
@@ -189,7 +190,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setSubText(accountDao.getEmail())
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-                        .setAutoCancel(true)
+                        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
                         .setContentIntent(getInboxPendingIntent(context, accountDao))
                         .setGroupSummary(true);
         notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
