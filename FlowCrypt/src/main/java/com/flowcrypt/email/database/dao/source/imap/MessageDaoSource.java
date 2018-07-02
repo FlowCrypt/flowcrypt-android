@@ -71,6 +71,7 @@ public class MessageDaoSource extends BaseDaoSource {
             "raw_message_without_attachments";
     public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
     public static final String COL_IS_ENCRYPTED = "is_encrypted";
+    public static final String COL_IS_NEW = "is_new";
 
     public static final int ENCRYPTED_STATE_UNDEFINED = -1;
 
@@ -89,7 +90,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_FLAGS + " TEXT DEFAULT NULL, " +
             COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
             COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
-            COL_IS_ENCRYPTED + " INTEGER DEFAULT -1 " + ");";
+            COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
+            COL_IS_NEW + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -259,6 +261,24 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Mark messages as old in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @return The count of the updated row or -1 up.
+     */
+    public int setOldStatusForLocalMessages(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_IS_NEW, false);
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?", new String[]{email, label});
+        } else return -1;
+    }
+
+    /**
      * Update the message flags in the local database.
      *
      * @param context Interface to global information about an application environment.
@@ -357,19 +377,18 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * Get new messages.
      *
-     * @param context     Interface to global information about an application environment.
-     * @param email       The user email.
-     * @param label       The label name.
-     * @param firstNewUid The uid of the first new message.
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
      * @return A  list of {@link GeneralMessageDetails} objects.
      */
-    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label, long firstNewUid) {
+    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label) {
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
                 null, MessageDaoSource.COL_EMAIL + "= ? AND "
                         + MessageDaoSource.COL_FOLDER + " = ? AND "
-                        + MessageDaoSource.COL_UID + " > ? ",
-                new String[]{email, label, String.valueOf(firstNewUid)}, null);
+                        + MessageDaoSource.COL_IS_NEW + " = 1 ",
+                new String[]{email, label}, MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
         List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 
@@ -579,12 +598,12 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Get a map of UID and flags of all messages in the database for some label.
+     * Get a list of UID and flags of all unseen messages in the database for some label.
      *
      * @param context Interface to global information about an application environment.
      * @param email   The user email.
      * @param label   The label name.
-     * @return The map of UID and flags of all messages in the database for some label.
+     * @return The list of UID and flags of all unseen messages in the database for some label.
      */
     @SuppressLint("UseSparseArrays")
     public List<Integer> getUIDOfUnseenMessages(Context context, String email, String label) {
@@ -596,7 +615,7 @@ public class MessageDaoSource extends BaseDaoSource {
                 new String[]{COL_UID},
                 MessageDaoSource.COL_EMAIL + " = ? AND "
                         + MessageDaoSource.COL_FOLDER + " = ? AND "
-                        + MessageDaoSource.COL_FLAGS + " NOT LIKE '%\\SEEN%'",
+                        + MessageDaoSource.COL_FLAGS + " NOT LIKE '%" + MessageFlag.SEEN + "%'",
                 new String[]{email, label}, null);
 
         if (cursor != null) {
@@ -783,6 +802,7 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
+        contentValues.put(COL_IS_NEW, true);
         return contentValues;
     }
 

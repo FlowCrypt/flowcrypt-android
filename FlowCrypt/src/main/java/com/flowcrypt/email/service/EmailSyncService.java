@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
@@ -355,9 +354,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-            long lastUid = messageDaoSource.getLastUIDOfMessageInLabel(this, accountDao.getEmail(),
-                    localFolder.getFolderAlias());
-
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
@@ -372,12 +368,12 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
 
-            List<GeneralMessageDetails> generalMessageDetailsList =
-                    messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
-                            localFolder.getFolderAlias(), lastUid);
-
             if (!GeneralUtil.isAppForegrounded()) {
-                messagesNotificationManager.notify(this, accountDao, generalMessageDetailsList);
+                String folderAlias = localFolder.getFolderAlias();
+
+                messagesNotificationManager.notify(this, accountDao,
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
+                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();

@@ -17,7 +17,6 @@ import android.util.Log;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
@@ -32,7 +31,6 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -196,13 +194,12 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     remoteFolder,
                     messagesNewCandidates);
 
-            List<GeneralMessageDetails> generalMessageDetailsList =
-                    messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
-                            localFolder.getFolderAlias(), Collections.max(messagesUIDsInLocalDatabase));
-
             if (!GeneralUtil.isAppForegrounded()) {
-                messagesNotificationManager.notify(CheckNewMessagesJobService.this, accountDao,
-                        generalMessageDetailsList);
+                String folderAlias = localFolder.getFolderAlias();
+
+                messagesNotificationManager.notify(this, accountDao,
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
+                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
         } catch (MessagingException e) {
             e.printStackTrace();
