@@ -63,6 +63,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                        List<Integer> uidListOfUnseenMessages) {
 
         if (accountDao == null || generalMessageDetailsList == null || generalMessageDetailsList.isEmpty()) {
+            notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
             return;
         }
 
@@ -73,8 +74,25 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         }
     }
 
-    public void cancel(int messageUID) {
+    public void cancel(Context context, int messageUID) {
         notificationManagerCompat.cancel(messageUID);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            NotificationManager notificationManager =
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (notificationManager != null) {
+                int messageCount = 0;
+                for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
+                    if (GROUP_NAME_FLOWCRYPT_MESSAGES.equals(statusBarNotification.getNotification().getGroup())) {
+                        messageCount++;
+                    }
+                }
+
+                if (messageCount == 1) {
+                    notificationManager.cancel(NOTIFICATIONS_GROUP_MESSAGES);
+                }
+            }
+        }
     }
 
     public void cancelAll(Context context, AccountDao accountDao) {

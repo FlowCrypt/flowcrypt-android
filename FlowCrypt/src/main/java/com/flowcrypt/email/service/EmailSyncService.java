@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.OperationApplicationException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -431,10 +432,27 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
             Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
 
+            Collection<Long> deleteCandidatesUIDList = EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase,
+                    remoteFolder, updateMessages);
+
             messageDaoSource.deleteMessagesByUID(getApplicationContext(),
-                    accountDao.getEmail(),
-                    localFolder.getFolderAlias(),
-                    EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase, remoteFolder, updateMessages));
+                    accountDao.getEmail(), localFolder.getFolderAlias(), deleteCandidatesUIDList);
+
+            if (!GeneralUtil.isAppForegrounded() &&
+                    FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    for (long uid : deleteCandidatesUIDList) {
+                        messagesNotificationManager.cancel(this, (int) uid);
+                    }
+                } else {
+                    String folderAlias = localFolder.getFolderAlias();
+
+                    messagesNotificationManager.notify(this, accountDao,
+                            messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
+                                    folderAlias, -1),
+                            messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
+                }
+            }
 
             javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
                     remoteFolder, newMessages);

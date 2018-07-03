@@ -711,9 +711,9 @@ public class EmailSyncManager {
         }
 
         @Override
-        public void messagesRemoved(MessageCountEvent e) {
+        public void messagesRemoved(MessageCountEvent messageCountEvent) {
             Log.d(TAG, "messagesRemoved");
-            syncFolderState();//todo-denbond7 need to improve this + need to add removing notifications
+            syncFolderState();
         }
 
         @Override
