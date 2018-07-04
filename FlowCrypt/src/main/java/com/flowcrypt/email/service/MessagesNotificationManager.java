@@ -124,6 +124,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setAutoCancel(true)
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
+                        .setDefaults(Notification.DEFAULT_ALL)
                         .setSubText(accountDao.getEmail());
 
         if (uidOfUnseenMessages.size() > 1) {
@@ -192,6 +193,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                     .setContentText(generalMessageDetails.getSubject())
                     .setContentIntent(getInboxPendingIntent(context, accountDao))
+                    .setDefaults(Notification.DEFAULT_ALL)
                     .setSubText(accountDao.getEmail());
 
             notificationManagerCompat.notify(generalMessageDetails.getUid(), builder.build());
@@ -222,6 +224,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setContentIntent(getInboxPendingIntent(context, accountDao))
                         .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
                                 accountDao, localFolder, generalMessageDetailsList))
+                        .setDefaults(Notification.DEFAULT_ALL)
                         .setGroupSummary(true);
         notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
     }

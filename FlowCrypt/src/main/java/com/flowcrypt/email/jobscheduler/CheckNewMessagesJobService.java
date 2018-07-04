@@ -193,7 +193,8 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    messagesNewCandidates);
+                    messagesNewCandidates,
+                    !GeneralUtil.isAppForegrounded());
 
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();

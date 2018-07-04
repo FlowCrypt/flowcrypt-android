@@ -118,13 +118,14 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param label   The folder label.
      * @param uid     The message UID.
      * @param message The message which will be added to the database.
+     * @param isNew   true if need to mark a given message as new.
      * @return A {@link Uri} of the created row.
      */
-    public Uri addRow(Context context, String email, String label, long uid, Message message)
+    public Uri addRow(Context context, String email, String label, long uid, Message message, boolean isNew)
             throws MessagingException {
         ContentResolver contentResolver = context.getContentResolver();
         if (message != null && label != null && contentResolver != null) {
-            ContentValues contentValues = prepareContentValues(email, label, message, uid);
+            ContentValues contentValues = prepareContentValues(email, label, message, uid, isNew);
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
     }
@@ -138,19 +139,21 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param imapFolder The {@link IMAPFolder} object which contains information about a
      *                   remote folder.
      * @param messages   The messages array.
+     * @param isNew      true if need to mark messages as new.
      * @return the number of newly created rows.
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
-    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages) throws
-            MessagingException {
+    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
+                       boolean isNew) throws MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
 
             for (int i = 0; i < messages.length; i++) {
                 Message message = messages[i];
-                ContentValues contentValues = prepareContentValues(email, label, message, imapFolder.getUID(message));
+                ContentValues contentValues = prepareContentValues(email, label, message,
+                        imapFolder.getUID(message), isNew);
 
                 contentValuesArray[i] = contentValues;
             }
@@ -823,12 +826,13 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param label   The folder label.
      * @param message The message which will be added to the database.
      * @param uid     The message UID.
+     * @param isNew   true if need to mark a given message as new
      * @return generated {@link ContentValues}
      * @throws MessagingException This exception may be occured when we call methods of thr
      *                            {@link Message} object</code>
      */
     @NonNull
-    private ContentValues prepareContentValues(String email, String label, Message message, long uid)
+    private ContentValues prepareContentValues(String email, String label, Message message, long uid, boolean isNew)
             throws MessagingException {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, email);
@@ -844,7 +848,7 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-        contentValues.put(COL_IS_NEW, true);
+        contentValues.put(COL_IS_NEW, isNew);
         return contentValues;
     }
 

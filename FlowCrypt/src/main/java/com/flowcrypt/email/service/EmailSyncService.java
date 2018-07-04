@@ -329,7 +329,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    messages);
+                    messages, false);
 
             emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
 
@@ -362,7 +362,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    newMessages);
+                    newMessages, !GeneralUtil.isAppForegrounded() &&
+                            FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
 
             emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
 
@@ -398,7 +399,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     SearchMessagesActivity.SEARCH_FOLDER_NAME,
                     imapFolder,
-                    messages);
+                    messages, false);
 
             emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, folder);
 
@@ -461,7 +462,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    messagesNewCandidates);
+                    messagesNewCandidates,
+                    !GeneralUtil.isAppForegrounded() &&
+                            FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
 
             emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, localFolder);
 
