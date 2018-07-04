@@ -198,9 +198,9 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();
 
-                messagesNotificationManager.notify(this, accountDao,
-                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias,
-                                Collections.max(messagesUIDsInLocalDatabase)),
+                messagesNotificationManager.notify(this, accountDao, localFolder,
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
+                                folderAlias, Collections.max(messagesUIDsInLocalDatabase)),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
         } catch (MessagingException e) {

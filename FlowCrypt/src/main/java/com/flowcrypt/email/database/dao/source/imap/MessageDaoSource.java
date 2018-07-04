@@ -32,6 +32,7 @@ import com.sun.mail.imap.IMAPFolder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -276,6 +277,34 @@ public class MessageDaoSource extends BaseDaoSource {
             contentValues.put(COL_IS_NEW, false);
             return contentResolver.update(getBaseContentUri(), contentValues,
                     COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?", new String[]{email, label});
+        } else return -1;
+    }
+
+    /**
+     * Mark messages as old in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uidList The list of the UIDs.
+     * @return The count of the updated row or -1 up.
+     */
+    public int setOldStatusForLocalMessages(Context context, String email, String label, List<String> uidList) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver != null && email != null && label != null && uidList != null && !uidList.isEmpty()) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_IS_NEW, false);
+
+            List<String> args = new ArrayList<>();
+            args.add(0, email);
+            args.add(1, label);
+            args.addAll(uidList);
+
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " IN (" + TextUtils.join(",", Collections.nCopies(uidList.size(), "?")) + ")",
+                    args.toArray(new String[]{}));
         } else return -1;
     }
 

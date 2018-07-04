@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -26,6 +27,7 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.NotificationChannelManager;
@@ -33,6 +35,7 @@ import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.SplashActivity;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,11 +59,12 @@ public class MessagesNotificationManager extends CustomNotificationManager {
      *
      * @param context                   Interface to global information about an application environment.
      * @param accountDao                An {@link AccountDao} object which contains information about an email account.
+     * @param localFolder               A local implementation of a remote folder.
      * @param generalMessageDetailsList A list of models which consists information about some messages.
      * @param uidListOfUnseenMessages   A list of UID of unseen messages.
      */
-    public void notify(Context context, AccountDao accountDao, List<GeneralMessageDetails> generalMessageDetailsList,
-                       List<Integer> uidListOfUnseenMessages) {
+    public void notify(Context context, AccountDao accountDao, Folder localFolder, List<GeneralMessageDetails>
+            generalMessageDetailsList, List<Integer> uidListOfUnseenMessages) {
 
         if (accountDao == null || generalMessageDetailsList == null || generalMessageDetailsList.isEmpty()) {
             notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
@@ -68,9 +72,10 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            notifyWithGroupSupport(context, accountDao, generalMessageDetailsList);
+            notifyWithGroupSupport(context, accountDao, localFolder, generalMessageDetailsList);
         } else {
-            notifyWithSingleNotification(context, accountDao, generalMessageDetailsList, uidListOfUnseenMessages);
+            notifyWithSingleNotification(context, accountDao, localFolder, generalMessageDetailsList,
+                    uidListOfUnseenMessages);
         }
     }
 
@@ -108,7 +113,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
 
     private void notifyWithSingleNotification(Context context, AccountDao accountDao,
-                                              List<GeneralMessageDetails> generalMessageDetailsList,
+                                              Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList,
                                               List<Integer> uidOfUnseenMessages) {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
@@ -136,7 +141,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             builder.setStyle(inboxStyle)
                     .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
                     .setContentIntent(getInboxPendingIntent(context, accountDao))
-                    //.setDeleteIntent()
+                    .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
+                            localFolder, generalMessageDetailsList))
                     .setContentTitle(context.getString(R.string.incoming_message,
                             generalMessageDetailsList.size()));
         } else {
@@ -148,7 +154,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(
                             formatText(generalMessageDetails.getSubject(),
                                     ContextCompat.getColor(context, android.R.color.black))))
-                    //.setDeleteIntent()
+                    .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
+                            localFolder, generalMessageDetailsList))
                     .setSmallIcon(R.drawable.ic_email_encrypted)
                     .addAction(generateReplyAction(context));
         }
@@ -158,12 +165,13 @@ public class MessagesNotificationManager extends CustomNotificationManager {
 
     @TargetApi(Build.VERSION_CODES.M)
     private void notifyWithGroupSupport(Context context, AccountDao accountDao,
-                                        List<GeneralMessageDetails> generalMessageDetailsList) {
+                                        Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
-            prepareAndShowMessageGroup(context, accountDao, notificationManager);
+            prepareAndShowMessageGroup(context, accountDao, localFolder, notificationManager,
+                    generalMessageDetailsList);
         }
 
         for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
@@ -175,7 +183,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setSmallIcon(R.drawable.ic_email_encrypted)
                     .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
                     .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
-                    //.setDeleteIntent()
+                    .setDeleteIntent(generateDeletePendingIntent(context,
+                            generalMessageDetails.getUid(), accountDao, localFolder, generalMessageDetails))
                     .setAutoCancel(true)
                     .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
@@ -190,8 +199,9 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private void prepareAndShowMessageGroup(Context context, AccountDao accountDao,
-                                            NotificationManager notificationManager) {
+    private void prepareAndShowMessageGroup(Context context, AccountDao accountDao, Folder localFolder,
+                                            NotificationManager notificationManager,
+                                            List<GeneralMessageDetails> generalMessageDetailsList) {
         int groupResourceId = R.drawable.ic_email_encrypted;
 
         for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
@@ -210,6 +220,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
                         .setContentIntent(getInboxPendingIntent(context, accountDao))
+                        .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
+                                accountDao, localFolder, generalMessageDetailsList))
                         .setGroupSummary(true);
         notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
     }
@@ -219,6 +231,26 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         inboxIntent.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
         inboxIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return PendingIntent.getActivity(context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent generateDeletePendingIntent(Context context, int requestCode,
+                                                      AccountDao accountDao, Folder localFolder,
+                                                      GeneralMessageDetails generalMessageDetails) {
+        List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+        generalMessageDetailsList.add(generalMessageDetails);
+        return generateDeletePendingIntent(context, requestCode, accountDao, localFolder, generalMessageDetailsList);
+    }
+
+    private PendingIntent generateDeletePendingIntent(Context context, int requestCode,
+                                                      AccountDao accountDao, Folder localFolder,
+                                                      List<GeneralMessageDetails> generalMessageDetailsList) {
+        Intent intent = new Intent(context, MarkMessagesAsOldBroadcastReceiver.class);
+        intent.setAction(MarkMessagesAsOldBroadcastReceiver.ACTION_MARK_MESSAGES_AS_OLD);
+        intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, accountDao.getEmail());
+        intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.getFolderAlias());
+        intent.putParcelableArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST,
+                (ArrayList<? extends Parcelable>) generalMessageDetailsList);
+        return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private Bitmap generateLargeIcon(Context context, GeneralMessageDetails generalMessageDetails) {

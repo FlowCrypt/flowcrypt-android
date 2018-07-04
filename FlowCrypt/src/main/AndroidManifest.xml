@@ -229,6 +229,8 @@
             android:exported="false"
             android:label="Sync service"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
     </application>
 
 </manifest>

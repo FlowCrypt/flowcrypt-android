@@ -376,7 +376,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 String folderAlias = localFolder.getFolderAlias();
 
                 messagesNotificationManager.notify(this, accountDao,
-                        messageDaoSource.getNewMessages(getApplicationContext(),
+                        localFolder, messageDaoSource.getNewMessages(getApplicationContext(),
                                 accountDao.getEmail(), folderAlias, lastUid),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
             }
@@ -447,9 +447,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 } else {
                     String folderAlias = localFolder.getFolderAlias();
 
-                    messagesNotificationManager.notify(this, accountDao,
-                            messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
-                                    folderAlias, -1),
+                    messagesNotificationManager.notify(this, accountDao, localFolder,
+                            messageDaoSource.getNewMessages(getApplicationContext(),
+                                    accountDao.getEmail(), folderAlias, -1),
                             messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
                 }
             }
