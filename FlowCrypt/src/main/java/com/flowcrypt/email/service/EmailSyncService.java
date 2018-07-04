@@ -57,6 +57,7 @@ import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.BodyPart;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.FolderClosedException;
 import javax.mail.MessagingException;
@@ -379,7 +380,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 messagesNotificationManager.notify(this, accountDao,
                         localFolder, messageDaoSource.getNewMessages(getApplicationContext(),
                                 accountDao.getEmail(), folderAlias, lastUid),
-                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
+                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
         } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
@@ -451,7 +452,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     messagesNotificationManager.notify(this, accountDao, localFolder,
                             messageDaoSource.getNewMessages(getApplicationContext(),
                                     accountDao.getEmail(), folderAlias, -1),
-                            messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
+                            messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
                 }
             }
 
@@ -555,6 +556,31 @@ public class EmailSyncService extends BaseService implements SyncListener {
         } catch (RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
+        }
+    }
+
+    @Override
+    public void onMessageChanged(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder
+            remoteFolder, javax.mail.Message message, String ownerKey, int requestCode) {
+        if (!GeneralUtil.isAppForegrounded() &&
+                FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                try {
+                    if (message.getFlags().contains(Flags.Flag.SEEN)) {
+                        messagesNotificationManager.cancel(this, (int) remoteFolder.getUID(message));
+                    }
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                String folderAlias = localFolder.getFolderAlias();
+                MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+                messagesNotificationManager.notify(this, accountDao, localFolder,
+                        messageDaoSource.getNewMessages(getApplicationContext(),
+                                accountDao.getEmail(), folderAlias, -1),
+                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), true);
+            }
         }
     }
 

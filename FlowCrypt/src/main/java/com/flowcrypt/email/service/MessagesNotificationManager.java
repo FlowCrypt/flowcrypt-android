@@ -62,9 +62,10 @@ public class MessagesNotificationManager extends CustomNotificationManager {
      * @param localFolder               A local implementation of a remote folder.
      * @param generalMessageDetailsList A list of models which consists information about some messages.
      * @param uidListOfUnseenMessages   A list of UID of unseen messages.
+     * @param isSilent                  true if we don't need sound and vibration for Android 7.0 and below.
      */
     public void notify(Context context, AccountDao accountDao, Folder localFolder, List<GeneralMessageDetails>
-            generalMessageDetailsList, List<Integer> uidListOfUnseenMessages) {
+            generalMessageDetailsList, List<Integer> uidListOfUnseenMessages, boolean isSilent) {
 
         if (accountDao == null || generalMessageDetailsList == null || generalMessageDetailsList.isEmpty()) {
             notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
@@ -75,7 +76,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             notifyWithGroupSupport(context, accountDao, localFolder, generalMessageDetailsList);
         } else {
             notifyWithSingleNotification(context, accountDao, localFolder, generalMessageDetailsList,
-                    uidListOfUnseenMessages);
+                    uidListOfUnseenMessages, isSilent);
         }
     }
 
@@ -114,7 +115,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
 
     private void notifyWithSingleNotification(Context context, AccountDao accountDao,
                                               Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList,
-                                              List<Integer> uidOfUnseenMessages) {
+                                              List<Integer> uidOfUnseenMessages, boolean isSilent) {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -124,8 +125,11 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setAutoCancel(true)
                         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-                        .setDefaults(Notification.DEFAULT_ALL)
                         .setSubText(accountDao.getEmail());
+
+        if (!isSilent) {
+            builder.setDefaults(Notification.DEFAULT_ALL);
+        }
 
         if (uidOfUnseenMessages.size() > 1) {
             builder.setNumber(uidOfUnseenMessages.size());

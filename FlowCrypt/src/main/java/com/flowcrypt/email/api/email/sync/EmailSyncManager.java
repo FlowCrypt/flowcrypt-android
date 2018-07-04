@@ -727,6 +727,10 @@ public class EmailSyncManager {
                             localFolder.getFolderAlias(),
                             remoteFolder.getUID(message),
                             message.getFlags());
+
+                    if (syncListener != null) {
+                        syncListener.onMessageChanged(accountDao, localFolder, remoteFolder, message, null, 0);
+                    }
                 } catch (MessagingException e1) {
                     e1.printStackTrace();
                 }

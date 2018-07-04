@@ -326,6 +326,9 @@ public class MessageDaoSource extends BaseDaoSource {
         if (email != null && label != null && contentResolver != null) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COL_FLAGS, flags.toString().toUpperCase());
+            if (flags.contains(Flags.Flag.SEEN)) {
+                contentValues.put(COL_IS_NEW, false);
+            }
             return contentResolver.update(getBaseContentUri(), contentValues,
                     COL_EMAIL + "= ? AND "
                             + COL_FOLDER + " = ? AND "

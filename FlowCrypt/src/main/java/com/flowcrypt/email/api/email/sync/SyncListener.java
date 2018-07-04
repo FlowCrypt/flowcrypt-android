@@ -200,4 +200,17 @@ public interface SyncListener {
      * @param resultCode  The unique result code for the reply which identifies the progress of some request.
      */
     void onActionProgress(AccountDao accountDao, String ownerKey, int requestCode, int resultCode);
+
+    /**
+     * This method will be called when some message was changed.
+     *
+     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
+     * @param localFolder  The local implementation of the remote folder
+     * @param remoteFolder The remote folder where the new messages exist.
+     * @param message      The message which was changed.
+     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
+     */
+    void onMessageChanged(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                          IMAPFolder remoteFolder, Message message, String ownerKey, int requestCode);
 }

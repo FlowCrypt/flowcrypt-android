@@ -176,6 +176,12 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
     }
 
     @Override
+    public void onMessageChanged(AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder, Message message,
+                                 String ownerKey, int requestCode) {
+
+    }
+
+    @Override
     public void onNewMessagesReceived(final AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
                                       Message[] newMessages, String ownerKey, int requestCode) {
         try {
@@ -202,7 +208,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                 messagesNotificationManager.notify(this, accountDao, localFolder,
                         messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
                                 folderAlias, Collections.max(messagesUIDsInLocalDatabase)),
-                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias));
+                        messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
         } catch (MessagingException e) {
             e.printStackTrace();
