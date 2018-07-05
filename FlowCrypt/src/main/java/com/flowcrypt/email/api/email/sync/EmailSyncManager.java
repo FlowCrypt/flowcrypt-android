@@ -86,6 +86,7 @@ public class EmailSyncManager {
     private volatile Future<?> idleSyncRunnableFuture;
     private volatile SyncListener syncListener;
     private volatile AccountDao accountDao;
+    private volatile boolean isIdleSupport = true;
 
     public EmailSyncManager(AccountDao accountDao) {
         this.accountDao = accountDao;
@@ -413,6 +414,7 @@ public class EmailSyncManager {
 
     public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
+        this.isIdleSupport = true;
         beginSync(true);
     }
 
@@ -441,7 +443,7 @@ public class EmailSyncManager {
      * Run a thread where we will idle INBOX folder.
      */
     private void runIdleInboxIfNeed() {
-        if (!isThreadAlreadyWork(idleSyncRunnableFuture)) {
+        if (isIdleSupport && !isThreadAlreadyWork(idleSyncRunnableFuture)) {
             idleSyncRunnableFuture = executorService.submit(new IdleSyncRunnable());
         }
     }
@@ -744,7 +746,7 @@ public class EmailSyncManager {
                 while (!GeneralUtil.isInternetConnectionAvailable(syncListener.getContext())) {
                     try {
                         //wait while a connection will be established
-                        TimeUnit.MILLISECONDS.sleep(500);
+                        TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30));
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -775,6 +777,11 @@ public class EmailSyncManager {
                         || e instanceof MailConnectException
                         || e instanceof IOException) {
                     idle();
+                } else if (e instanceof MessagingException) {
+                    if ("IDLE not supported".equals(e.getMessage())) {
+                        Log.d(TAG, "IDLE not supported!");
+                        isIdleSupport = false;
+                    }
                 } else {
                     ExceptionUtil.handleError(e);
                 }
