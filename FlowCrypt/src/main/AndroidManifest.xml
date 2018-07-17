@@ -46,6 +46,7 @@
 
         <activity
             android:name=".ui.activity.MessageDetailsActivity"
+            android:parentActivityName=".ui.activity.EmailManagerActivity"
             android:screenOrientation="portrait" />
 
         <activity

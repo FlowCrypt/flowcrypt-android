@@ -67,7 +67,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         if (accountDao != null) {
             if (SecurityUtils.isBackupKeysExist(this)) {
                 EmailSyncService.startEmailSyncService(this);
-                EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                EmailManagerActivity.runEmailManagerActivity(this);
                 finish();
             }
         }
@@ -142,7 +142,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                         accountDaoSource.getAccountInformation(this, authCredentials.getEmail());
 
                                 if (accountDao != null) {
-                                    EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                                    EmailManagerActivity.runEmailManagerActivity(this);
                                     finish();
                                 } else {
                                     Toast.makeText(this, R.string.error_occurred_try_again_later,
@@ -265,7 +265,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
         AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
         if (accountDao != null) {
-            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+            EmailManagerActivity.runEmailManagerActivity(this);
             finish();
         } else {
             Toast.makeText(this, R.string.error_occurred_try_again_later,

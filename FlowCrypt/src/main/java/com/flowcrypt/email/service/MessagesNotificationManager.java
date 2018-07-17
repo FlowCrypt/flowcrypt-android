@@ -9,6 +9,7 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -32,7 +33,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
-import com.flowcrypt.email.ui.activity.SplashActivity;
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 
 import java.util.ArrayList;
@@ -154,7 +155,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
             builder.setContentText(formatText(generalMessageDetails.getSubject(),
                     ContextCompat.getColor(context, android.R.color.black)))
-                    .setContentIntent(getInboxPendingIntent(context, accountDao))
+                    .setContentIntent(getMessageDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
+                            localFolder, generalMessageDetails))
                     .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(
                             formatText(generalMessageDetails.getSubject(),
@@ -162,7 +164,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
                             localFolder, generalMessageDetailsList))
                     .setSmallIcon(R.drawable.ic_email_encrypted)
-                    .addAction(generateReplyAction(context));
+                    .addAction(generateReplyAction(context, localFolder, generalMessageDetails));
         }
 
         notificationManagerCompat.notify(NOTIFICATIONS_GROUP_MESSAGES, builder.build());
@@ -193,10 +195,11 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setAutoCancel(true)
                     .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
-                    .addAction(generateReplyAction(context))
+                    .addAction(generateReplyAction(context, localFolder, generalMessageDetails))
                     .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                     .setContentText(generalMessageDetails.getSubject())
-                    .setContentIntent(getInboxPendingIntent(context, accountDao))
+                    .setContentIntent(getMessageDetailsPendingIntent(context, generalMessageDetails.getUid(),
+                            localFolder, generalMessageDetails))
                     .setDefaults(Notification.DEFAULT_ALL)
                     .setSubText(accountDao.getEmail());
 
@@ -235,7 +238,6 @@ public class MessagesNotificationManager extends CustomNotificationManager {
 
     private PendingIntent getInboxPendingIntent(Context context, AccountDao accountDao) {
         Intent inboxIntent = new Intent(context, EmailManagerActivity.class);
-        inboxIntent.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
         inboxIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return PendingIntent.getActivity(context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
@@ -264,11 +266,23 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         return BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
     }
 
-    private NotificationCompat.Action generateReplyAction(Context context) {
-        Intent intent = new Intent(context, SplashActivity.class);
+    private PendingIntent getMessageDetailsPendingIntent(Context context, int requestCode, Folder folder,
+                                                         GeneralMessageDetails generalMessageDetails) {
+        Intent intent = MessageDetailsActivity.getIntent(context, folder, generalMessageDetails);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        stackBuilder.addParentStack(MessageDetailsActivity.class);
+        stackBuilder.addNextIntent(intent);
+
+        return stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private NotificationCompat.Action generateReplyAction(Context context, Folder folder,
+                                                          GeneralMessageDetails generalMessageDetails) {
+        Intent intent = MessageDetailsActivity.getIntent(context, folder, generalMessageDetails);
 
         PendingIntent cancelDownloadPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-        return new NotificationCompat.Action.Builder(R.mipmap.ic_reply_green, context.getString(R.string
-                .reply), cancelDownloadPendingIntent).build();
+        return new NotificationCompat.Action.Builder(R.mipmap.ic_reply_green,
+                context.getString(R.string.reply), cancelDownloadPendingIntent).build();
     }
 }

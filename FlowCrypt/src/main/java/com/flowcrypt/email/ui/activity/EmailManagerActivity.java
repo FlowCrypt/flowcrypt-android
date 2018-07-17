@@ -85,8 +85,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
         View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
 
-    public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey(
-            "EXTRA_KEY_ACCOUNT_DAO", EmailManagerActivity.class);
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
     private static final int REQUEST_CODE_SIGN_IN = 101;
 
@@ -110,12 +108,10 @@ public class EmailManagerActivity extends BaseEmailListActivity
     /**
      * This method can bu used to start {@link EmailManagerActivity}.
      *
-     * @param context    Interface to global information about an application environment.
-     * @param accountDao The object which contains information about an email account.
+     * @param context Interface to global information about an application environment.
      */
-    public static void runEmailManagerActivity(Context context, AccountDao accountDao) {
+    public static void runEmailManagerActivity(Context context) {
         Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
-        intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
         context.stopService(new Intent(context, CheckClipboardToFindKeyService.class));
         context.startActivity(intentRunEmailManagerActivity);
     }
@@ -123,25 +119,24 @@ public class EmailManagerActivity extends BaseEmailListActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActionManager actionManager = new ActionManager(this);
+        accountDao = new AccountDaoSource().getActiveAccountInformation(this);
 
-        googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
-                .generateGoogleSignInOptions());
+        if (accountDao != null) {
+            googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this,
+                    GoogleApiClientHelper
+                            .generateGoogleSignInOptions());
 
-        if (getIntent() != null) {
-            accountDao = getIntent().getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO);
-            if (accountDao == null) {
-                throw new IllegalArgumentException("You must pass an AccountDao to this activity.");
-            }
-            actionManager.checkAndAddActionsToQueue(accountDao);
+            new ActionManager(this).checkAndAddActionsToQueue(accountDao);
             getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
+
+            countingIdlingResourceForLabel = new CountingIdlingResource(
+                    GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), BuildConfig.DEBUG);
+            countingIdlingResourceForLabel.increment();
+
+            initViews();
         } else {
             finish();
         }
-        countingIdlingResourceForLabel = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-                (EmailManagerActivity.class), BuildConfig.DEBUG);
-        countingIdlingResourceForLabel.increment();
-        initViews();
     }
 
     @Override
@@ -195,11 +190,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 switch (resultCode) {
                     case RESULT_OK:
                         EmailSyncService.switchAccount(EmailManagerActivity.this);
-                        AccountDao accountDao = data.getParcelableExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT);
-                        if (accountDao != null) {
-                            runEmailManagerActivity(EmailManagerActivity.this, accountDao);
-                            finish();
-                        }
+                        runEmailManagerActivity(EmailManagerActivity.this);
+                        finish();
                         break;
                 }
                 break;
@@ -570,7 +562,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
             AccountDao newActiveAccount = accountDaoList.get(0);
             new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, newActiveAccount.getEmail());
             EmailSyncService.switchAccount(EmailManagerActivity.this);
-            runEmailManagerActivity(EmailManagerActivity.this, newActiveAccount);
+            runEmailManagerActivity(EmailManagerActivity.this);
         } else {
             stopService(new Intent(this, EmailSyncService.class));
             Intent intent = new Intent(this, SplashActivity.class);
@@ -752,7 +744,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 if (accountDao != null) {
                     new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, accountDao.getEmail());
                     EmailSyncService.switchAccount(EmailManagerActivity.this);
-                    runEmailManagerActivity(EmailManagerActivity.this, accountDao);
+                    runEmailManagerActivity(EmailManagerActivity.this);
                 }
             }
         });
