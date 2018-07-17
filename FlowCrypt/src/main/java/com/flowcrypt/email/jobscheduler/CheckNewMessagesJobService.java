@@ -12,6 +12,7 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -83,7 +84,14 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate");
         this.messagesNotificationManager = new MessagesNotificationManager(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
     }
 
     @Override
@@ -204,6 +212,10 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
 
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && messagesNewCandidates.length == 0) {
+                    return;
+                }
 
                 messagesNotificationManager.notify(this, accountDao, localFolder,
                         messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
