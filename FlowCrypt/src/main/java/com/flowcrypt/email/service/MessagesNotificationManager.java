@@ -163,8 +163,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                                     ContextCompat.getColor(context, android.R.color.black))))
                     .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
                             localFolder, generalMessageDetailsList))
-                    .setSmallIcon(R.drawable.ic_email_encrypted)
-                    .addAction(generateReplyAction(context, localFolder, generalMessageDetails));
+                    .setSmallIcon(R.drawable.ic_email_encrypted);
         }
 
         notificationManagerCompat.notify(NOTIFICATIONS_GROUP_MESSAGES, builder.build());
@@ -195,7 +194,6 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setAutoCancel(true)
                     .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
-                    .addAction(generateReplyAction(context, localFolder, generalMessageDetails))
                     .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
                     .setContentText(generalMessageDetails.getSubject())
                     .setContentIntent(getMessageDetailsPendingIntent(context, generalMessageDetails.getUid(),
@@ -275,14 +273,5 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         stackBuilder.addNextIntent(intent);
 
         return stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    private NotificationCompat.Action generateReplyAction(Context context, Folder folder,
-                                                          GeneralMessageDetails generalMessageDetails) {
-        Intent intent = MessageDetailsActivity.getIntent(context, folder, generalMessageDetails);
-
-        PendingIntent cancelDownloadPendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-        return new NotificationCompat.Action.Builder(R.mipmap.ic_reply_green,
-                context.getString(R.string.reply), cancelDownloadPendingIntent).build();
     }
 }
