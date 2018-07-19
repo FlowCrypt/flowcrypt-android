@@ -32,6 +32,12 @@
             android:targetPackage="@string/application_id" />
     </Preference>
 
+    <Preference android:title="@string/notifications">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.settings.NotificationsSettingsActivity"
+            android:targetPackage="@string/application_id" />
+    </Preference>
+
     <Preference android:title="@string/legal">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity"

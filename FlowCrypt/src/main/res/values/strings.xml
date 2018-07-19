@@ -337,4 +337,8 @@ icelanders prefer real sauna</font>
     <string name="messages">Messages</string>
     <string name="messages_notification_channel">The messages notification channel</string>
     <string name="incoming_message">%1$d incoming messages</string>
+    <string name="notifications">Notifications</string>
+    <string name="manage_notifications">Manage notifications</string>
+    <string name="notification_level">Notification level</string>
+    <string name="receive_notifications_for">Receive notifications for:</string>
 </resources>

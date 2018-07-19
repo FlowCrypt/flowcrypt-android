@@ -182,6 +182,16 @@
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.settings.NotificationsSettingsActivity"
+            android:label="@string/notifications"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
+            </intent-filter>
+        </activity>
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
