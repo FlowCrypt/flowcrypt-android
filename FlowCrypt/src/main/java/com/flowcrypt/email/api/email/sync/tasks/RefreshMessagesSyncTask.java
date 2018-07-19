@@ -48,7 +48,7 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
             Message[] newMessages = new Message[0];
 
             if (lastUID < nextUID - 1) {
-                newMessages = getNewMessages(imapFolder, nextUID);
+                newMessages = fetchMessagesInfo(imapFolder, imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1));
             }
 
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;

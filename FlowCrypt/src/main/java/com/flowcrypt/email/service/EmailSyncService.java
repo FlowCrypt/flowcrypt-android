@@ -22,6 +22,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -351,7 +352,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
     @Override
     public void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                                       IMAPFolder remoteFolder, javax.mail.Message[] newMessages,
-                                      String ownerKey, int requestCode) {
+                                      LongSparseArray<Boolean> isMessageEncryptedInfo, String ownerKey, int
+                                              requestCode) {
         Log.d(TAG, "onMessagesReceived:message count: " + newMessages.length);
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -366,7 +368,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     newMessages, !GeneralUtil.isAppForegrounded() &&
                             FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
 
-            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
+            messageDaoSource.updateMessagesEncryptionStateByUID(getApplicationContext(), accountDao.getEmail(),
+                    localFolder.getFolderAlias(), isMessageEncryptedInfo);
 
             if (newMessages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -382,7 +385,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                 accountDao.getEmail(), folderAlias, lastUid),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
-        } catch (MessagingException | RemoteException e) {
+        } catch (MessagingException | RemoteException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);

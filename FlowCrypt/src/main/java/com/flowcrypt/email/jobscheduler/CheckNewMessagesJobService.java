@@ -11,16 +11,18 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.RemoteException;
 import android.util.Log;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -191,7 +193,8 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
 
     @Override
     public void onNewMessagesReceived(final AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
-                                      Message[] newMessages, String ownerKey, int requestCode) {
+                                      Message[] newMessages, LongSparseArray<Boolean> isMessageEncryptedInfo, String
+                                              ownerKey, int requestCode) {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
@@ -210,6 +213,10 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     messagesNewCandidates,
                     !GeneralUtil.isAppForegrounded());
 
+            messageDaoSource.updateMessagesEncryptionStateByUID(getApplicationContext(), accountDao.getEmail(),
+                    localFolder.getFolderAlias(),
+                    isMessageEncryptedInfo);
+
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();
 
@@ -222,7 +229,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                                 folderAlias, Collections.max(messagesUIDsInLocalDatabase)),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
-        } catch (MessagingException e) {
+        } catch (MessagingException | RemoteException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
         }
@@ -264,9 +271,6 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                             new CheckNewMessagesSyncTask("", 0, localFolder,
                                     messageDaoSource.getLastUIDOfMessageInLabel(context, accountDao.getEmail(),
                                             localFolder.getFolderAlias()))
-                                    .runIMAPAction(accountDao, session, store, syncJobServiceWeakReference.get());
-
-                            new CheckIsLoadedMessagesEncryptedSyncTask("", 0, localFolder)
                                     .runIMAPAction(accountDao, session, store, syncJobServiceWeakReference.get());
 
                             if (store != null) {

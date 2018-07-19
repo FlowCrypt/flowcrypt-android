@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email.sync;
 
 import android.content.Context;
+import android.util.LongSparseArray;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -130,15 +131,17 @@ public interface SyncListener {
     /**
      * This method called when received information about new messages in some folder.
      *
-     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
-     * @param localFolder  The local implementation of the remote folder.
-     * @param remoteFolder The folder where the new  messages exist.
-     * @param newMessages  The new messages.
-     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
+     * @param accountDao             The {@link AccountDao} object which contains information about an email account.
+     * @param localFolder            The local implementation of the remote folder.
+     * @param remoteFolder           The folder where the new  messages exist.
+     * @param newMessages            The new messages.
+     * @param isMessageEncryptedInfo An array which contains info about a message encryption state
+     * @param ownerKey               The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode            The unique request code for the reply to {@link android.os.Messenger}.
      */
-    void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder, IMAPFolder
-            remoteFolder, Message[] newMessages, String ownerKey, int requestCode);
+    void onNewMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                               IMAPFolder remoteFolder, Message[] newMessages,
+                               LongSparseArray<Boolean> isMessageEncryptedInfo, String ownerKey, int requestCode);
 
     /**
      * This method called when a new messages received from the some folder.

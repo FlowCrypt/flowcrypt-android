@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
@@ -227,6 +228,26 @@ public class EmailSyncManager {
         try {
             activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder,
                     start, end));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
+    /**
+     * Start loading new messages to the local cache. This method create a new
+     * {@link CheckNewMessagesSyncTask} object and add it to the passive BlockingQueue.
+     *
+     * @param ownerKey      The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode   The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folder        A local implementation of the remote folder.
+     * @param lastCachedUID The last UID in the local database.
+     */
+    public void loadNewMessages(String ownerKey, int requestCode, Folder folder, int lastCachedUID) {
+        try {
+            //passiveSyncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode, folder, messages));
+            passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder,
+                    lastCachedUID));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -707,9 +728,10 @@ public class EmailSyncManager {
         @Override
         public void messagesAdded(MessageCountEvent e) {
             Log.d(TAG, "messagesAdded: " + e.getMessages().length);
-            if (syncListener != null) {
-                syncListener.onNewMessagesReceived(accountDao, localFolder, remoteFolder, e.getMessages(), null, 0);
-            }
+            loadNewMessages(null, 0, localFolder, messageDaoSource.getLastUIDOfMessageInLabel(
+                    syncListener.getContext(), accountDao.getEmail(), localFolder.getFolderAlias()));
+            //loadNewMessages(null, 0, localFolder, e.getMessages());
+            //todo-denbond7 Look at https://github.com/javaee/javamail/issues/319
         }
 
         @Override

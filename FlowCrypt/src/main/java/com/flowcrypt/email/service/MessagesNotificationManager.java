@@ -163,6 +163,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                                     ContextCompat.getColor(context, android.R.color.black))))
                     .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
                             localFolder, generalMessageDetailsList))
+                    .setColor(ContextCompat.getColor(context, generalMessageDetails.isEncrypted()
+                            ? R.color.colorPrimary : R.color.red))
                     .setSmallIcon(R.drawable.ic_email_encrypted);
         }
 
@@ -188,7 +190,8 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                     .setCategory(NotificationCompat.CATEGORY_EMAIL)
                     .setSmallIcon(R.drawable.ic_email_encrypted)
                     .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
-                    .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                    .setColor(ContextCompat.getColor(context, generalMessageDetails.isEncrypted()
+                            ? R.color.colorPrimary : R.color.red))
                     .setDeleteIntent(generateDeletePendingIntent(context,
                             generalMessageDetails.getUid(), accountDao, localFolder, generalMessageDetails))
                     .setAutoCancel(true)
