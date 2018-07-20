@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -23,6 +24,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
@@ -34,7 +36,9 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +74,14 @@ public class MessagesNotificationManager extends CustomNotificationManager {
 
         if (accountDao == null || generalMessageDetailsList == null || generalMessageDetailsList.isEmpty()) {
             notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
+            return;
+        }
+
+        boolean isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER.equals
+                (SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
+        if (isNotificationDisabled) {
             return;
         }
 
@@ -117,6 +129,10 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     private void notifyWithSingleNotification(Context context, AccountDao accountDao,
                                               Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList,
                                               List<Integer> uidOfUnseenMessages, boolean isSilent) {
+        boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+                .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -137,11 +153,22 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         }
 
         if (generalMessageDetailsList.size() > 1) {
+            boolean isAllowedNotificationsExist = false;
+
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
             for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+                    continue;
+                }
+
+                isAllowedNotificationsExist = true;
                 inboxStyle.addLine(formatInboxStyleLine(context,
                         EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()),
                         generalMessageDetails.getSubject()));
+            }
+
+            if (!isAllowedNotificationsExist) {
+                return;
             }
 
             builder.setStyle(inboxStyle)
@@ -153,6 +180,11 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                             generalMessageDetailsList.size()));
         } else {
             GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
+
+            if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+                return;
+            }
+
             builder.setContentText(formatText(generalMessageDetails.getSubject(),
                     ContextCompat.getColor(context, android.R.color.black)))
                     .setContentIntent(getMessageDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
@@ -174,6 +206,11 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     @TargetApi(Build.VERSION_CODES.M)
     private void notifyWithGroupSupport(Context context, AccountDao accountDao,
                                         Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList) {
+
+        boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+                .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -183,6 +220,10 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         }
 
         for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+            if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+                continue;
+            }
+
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NotificationChannelManager
                     .CHANNEL_ID_MESSAGES)
                     .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
@@ -212,6 +253,24 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     private void prepareAndShowMessageGroup(Context context, AccountDao accountDao, Folder localFolder,
                                             NotificationManager notificationManager,
                                             List<GeneralMessageDetails> generalMessageDetailsList) {
+        boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+                .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
+        if (isEncryptedMessagesOnly) {
+            boolean isEncryptedMessageFound = false;
+            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                if (generalMessageDetails.isEncrypted()) {
+                    isEncryptedMessageFound = true;
+                    break;
+                }
+            }
+
+            if (!isEncryptedMessageFound) {
+                return;
+            }
+        }
+
         int groupResourceId = R.drawable.ic_email_encrypted;
 
         for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
