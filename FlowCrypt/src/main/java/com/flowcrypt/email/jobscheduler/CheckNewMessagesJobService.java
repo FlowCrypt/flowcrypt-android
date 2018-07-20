@@ -11,10 +11,8 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.RemoteException;
 import android.util.Log;
 import android.util.LongSparseArray;
 
@@ -211,11 +209,8 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     localFolder.getFolderAlias(),
                     remoteFolder,
                     messagesNewCandidates,
+                    isMessageEncryptedInfo,
                     !GeneralUtil.isAppForegrounded());
-
-            messageDaoSource.updateMessagesEncryptionStateByUID(getApplicationContext(), accountDao.getEmail(),
-                    localFolder.getFolderAlias(),
-                    isMessageEncryptedInfo);
 
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();
@@ -229,7 +224,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                                 folderAlias, Collections.max(messagesUIDsInLocalDatabase)),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
-        } catch (MessagingException | RemoteException | OperationApplicationException e) {
+        } catch (MessagingException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
         }

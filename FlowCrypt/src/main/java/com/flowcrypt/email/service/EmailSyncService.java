@@ -365,11 +365,10 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    newMessages, !GeneralUtil.isAppForegrounded() &&
+                    newMessages,
+                    isMessageEncryptedInfo,
+                    !GeneralUtil.isAppForegrounded() &&
                             FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
-
-            messageDaoSource.updateMessagesEncryptionStateByUID(getApplicationContext(), accountDao.getEmail(),
-                    localFolder.getFolderAlias(), isMessageEncryptedInfo);
 
             if (newMessages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -385,7 +384,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                 accountDao.getEmail(), folderAlias, lastUid),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
-        } catch (MessagingException | RemoteException | OperationApplicationException e) {
+        } catch (MessagingException | RemoteException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
             onError(accountDao, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode);

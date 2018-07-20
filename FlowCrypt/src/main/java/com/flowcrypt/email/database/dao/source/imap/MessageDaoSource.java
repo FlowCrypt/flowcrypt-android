@@ -16,17 +16,21 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.LongSparseArray;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
@@ -146,14 +150,55 @@ public class MessageDaoSource extends BaseDaoSource {
      */
     public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
                        boolean isNew) throws MessagingException {
+        return addRows(context, email, label, imapFolder, messages, new LongSparseArray<Boolean>(), isNew);
+    }
+
+    /**
+     * This method add rows per single transaction. This method must be called in the non-UI thread.
+     *
+     * @param context                Interface to global information about an application environment.
+     * @param email                  The email that the message linked.
+     * @param label                  The folder label.
+     * @param imapFolder             The {@link IMAPFolder} object which contains information about a
+     *                               remote folder.
+     * @param messages               The messages array.
+     * @param isMessageEncryptedInfo An array which contains info about a message encryption state
+     * @return the number of newly created rows.
+     * @throws MessagingException This exception may be occured when we call <code>mapFolder
+     *                            .getUID(message)</code>
+     */
+    public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
+                       LongSparseArray<Boolean> isMessageEncryptedInfo, boolean isNew) throws MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
 
+            boolean isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER.equals
+                    (SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
+            boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+                    .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
+
             for (int i = 0; i < messages.length; i++) {
                 Message message = messages[i];
+
                 ContentValues contentValues = prepareContentValues(email, label, message,
                         imapFolder.getUID(message), isNew);
+
+                if (isNotificationDisabled) {
+                    contentValues.put(COL_IS_NEW, false);
+                }
+
+                Boolean isEncrypted = isMessageEncryptedInfo.get(imapFolder.getUID(message));
+                if (isEncrypted != null) {
+                    contentValues.put(COL_IS_ENCRYPTED, isEncrypted);
+
+                    if (isEncryptedMessagesOnly && !isEncrypted) {
+                        contentValues.put(COL_IS_NEW, false);
+                    }
+                }
 
                 contentValuesArray[i] = contentValues;
             }
