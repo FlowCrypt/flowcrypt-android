@@ -214,26 +214,51 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param email       The email that the message linked.
      * @param label       The folder label.
      * @param messagesUID The list of messages UID.
-     * @return the number of deleted rows.
      */
-    public int deleteMessagesByUID(Context context, String email, String label, Collection<Long> messagesUID) {
+    public void deleteMessagesByUID(Context context, String email, String label, Collection<Long> messagesUID) throws
+            RemoteException, OperationApplicationException {
         ContentResolver contentResolver = context.getContentResolver();
         if (email != null && label != null && contentResolver != null) {
+            int numberOfMaxInPerStep = 50;
+
             List<String> selectionArgs = new LinkedList<>();
             selectionArgs.add(email);
             selectionArgs.add(label);
 
-            for (Long uid : messagesUID) {
-                selectionArgs.add(String.valueOf(uid));
-            }
-            //todo-denbond7 Need to fix too many SQL variables (code 1): , while compiling: DELETE FROM messages
-            // WHERE email= ? AND folder = ? AND uid IN (?,?,?,?,?
+            ArrayList<Long> list = new ArrayList<>(messagesUID);
 
-            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
-                            + COL_FOLDER + " = ? AND "
-                            + COL_UID + " IN (" + prepareSelectionArgsString(messagesUID.toArray()) + ");",
-                    selectionArgs.toArray(new String[0]));
-        } else return -1;
+            if (messagesUID.size() <= numberOfMaxInPerStep) {
+                for (Long uid : messagesUID) {
+                    selectionArgs.add(String.valueOf(uid));
+                }
+
+                contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                                + COL_FOLDER + " = ? AND "
+                                + COL_UID + " IN (" + prepareSelectionArgsString(messagesUID.toArray()) + ");",
+                        selectionArgs.toArray(new String[0]));
+            } else {
+                ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+                for (int i = 0; i < list.size(); i += numberOfMaxInPerStep) {
+                    List<Long> stepUIDs = (list.size() - i > numberOfMaxInPerStep) ? list.subList(i, i +
+                            numberOfMaxInPerStep) : list.subList(i, list.size());
+                    List<String> selectionArgsForStep = new LinkedList<>(selectionArgs);
+
+                    for (Long uid : stepUIDs) {
+                        selectionArgsForStep.add(String.valueOf(uid));
+                    }
+
+                    ops.add(ContentProviderOperation.newDelete(getBaseContentUri())
+                            .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID
+                                            + " IN (" + prepareSelectionArgsString(stepUIDs.toArray()) + ");",
+                                    selectionArgsForStep.toArray(new String[0]))
+                            .withYieldAllowed(true)
+                            .build());
+                }
+
+                contentResolver.applyBatch(getBaseContentUri().getAuthority(), ops);
+            }
+        }
     }
 
     /**
@@ -460,9 +485,9 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * Get new messages.
      *
-     * @param context     Interface to global information about an application environment.
-     * @param email       The user email.
-     * @param label       The label name.
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
      * @return A  list of {@link GeneralMessageDetails} objects.
      */
     public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label) {
