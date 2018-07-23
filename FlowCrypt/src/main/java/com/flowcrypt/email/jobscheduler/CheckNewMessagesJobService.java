@@ -32,7 +32,6 @@ import com.sun.mail.imap.IMAPFolder;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -190,6 +189,12 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
     }
 
     @Override
+    public void onIdentificationToEncryptionCompleted(AccountDao accountDao, Folder localFolder, IMAPFolder
+            remoteFolder, String ownerKey, int requestCode) {
+
+    }
+
+    @Override
     public void onNewMessagesReceived(final AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder,
                                       Message[] newMessages, LongSparseArray<Boolean> isMessageEncryptedInfo, String
                                               ownerKey, int requestCode) {
@@ -220,8 +225,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                 }
 
                 messagesNotificationManager.notify(this, accountDao, localFolder,
-                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(),
-                                folderAlias, Collections.max(messagesUIDsInLocalDatabase)),
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
         } catch (MessagingException e) {

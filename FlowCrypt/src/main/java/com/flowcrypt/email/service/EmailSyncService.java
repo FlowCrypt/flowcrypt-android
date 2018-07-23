@@ -358,9 +358,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
         try {
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-            long lastUid = messageDaoSource.getLastUIDOfMessageInLabel(this, accountDao.getEmail(),
-                    localFolder.getFolderAlias());
-
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
@@ -379,9 +376,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();
 
-                messagesNotificationManager.notify(this, accountDao,
-                        localFolder, messageDaoSource.getNewMessages(getApplicationContext(),
-                                accountDao.getEmail(), folderAlias, lastUid),
+                messagesNotificationManager.notify(this, accountDao, localFolder,
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
             }
         } catch (MessagingException | RemoteException e) {
@@ -452,9 +448,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     String folderAlias = localFolder.getFolderAlias();
 
                     messagesNotificationManager.notify(this, accountDao, localFolder,
-                            messageDaoSource.getNewMessages(getApplicationContext(),
-                                    accountDao.getEmail(), folderAlias, -1),
-                            messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
+                            messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias)
+                            , messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
                 }
             }
 
@@ -579,10 +574,23 @@ public class EmailSyncService extends BaseService implements SyncListener {
                 MessageDaoSource messageDaoSource = new MessageDaoSource();
 
                 messagesNotificationManager.notify(this, accountDao, localFolder,
-                        messageDaoSource.getNewMessages(getApplicationContext(),
-                                accountDao.getEmail(), folderAlias, -1),
+                        messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
                         messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), true);
             }
+        }
+    }
+
+    @Override
+    public void onIdentificationToEncryptionCompleted(AccountDao accountDao, com.flowcrypt.email.api.email.Folder
+            localFolder, IMAPFolder remoteFolder, String ownerKey, int requestCode) {
+        if (FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX
+                && !GeneralUtil.isAppForegrounded()) {
+            String folderAlias = localFolder.getFolderAlias();
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            messagesNotificationManager.notify(this, accountDao, localFolder,
+                    messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias),
+                    messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
         }
     }
 

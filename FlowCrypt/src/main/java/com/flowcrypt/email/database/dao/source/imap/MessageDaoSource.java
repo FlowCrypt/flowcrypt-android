@@ -226,6 +226,8 @@ public class MessageDaoSource extends BaseDaoSource {
             for (Long uid : messagesUID) {
                 selectionArgs.add(String.valueOf(uid));
             }
+            //todo-denbond7 Need to fix too many SQL variables (code 1): , while compiling: DELETE FROM messages
+            // WHERE email= ? AND folder = ? AND uid IN (?,?,?,?,?
 
             return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
                             + COL_FOLDER + " = ? AND "
@@ -461,27 +463,23 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param context     Interface to global information about an application environment.
      * @param email       The user email.
      * @param label       The label name.
-     * @param firstNewUid The uid of the first new message.
      * @return A  list of {@link GeneralMessageDetails} objects.
      */
-    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label, long firstNewUid) {
+    public List<GeneralMessageDetails> getNewMessages(Context context, String email, String label) {
         ContentResolver contentResolver = context.getContentResolver();
 
-        Cursor cursor;
+        String orderType;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            cursor = contentResolver.query(getBaseContentUri(),
-                    null, MessageDaoSource.COL_EMAIL + "= ? AND "
-                            + MessageDaoSource.COL_FOLDER + " = ? AND "
-                            + MessageDaoSource.COL_UID + " > ? ",
-                    new String[]{email, label, String.valueOf(firstNewUid)},
-                    MessageDaoSource.COL_RECEIVED_DATE + " ASC");
+            orderType = "ASC";
         } else {
-            cursor = contentResolver.query(getBaseContentUri(),
-                    null, MessageDaoSource.COL_EMAIL + "= ? AND "
-                            + MessageDaoSource.COL_FOLDER + " = ? AND "
-                            + MessageDaoSource.COL_IS_NEW + " = 1 ",
-                    new String[]{email, label}, MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+            orderType = "DESC";
         }
+
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ? AND "
+                        + MessageDaoSource.COL_IS_NEW + " = 1 ",
+                new String[]{email, label}, MessageDaoSource.COL_RECEIVED_DATE + " " + orderType);
 
         List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 

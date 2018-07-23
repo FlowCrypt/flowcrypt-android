@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 import android.content.Context;
 import android.util.LongSparseArray;
 
+import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -216,4 +217,17 @@ public interface SyncListener {
      */
     void onMessageChanged(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                           IMAPFolder remoteFolder, Message message, String ownerKey, int requestCode);
+
+    /**
+     * This method called when {@link CheckIsLoadedMessagesEncryptedSyncTask} was completed.
+     *
+     * @param accountDao   The {@link AccountDao} object which contains information about an email account.
+     * @param localFolder  The local implementation of the remote folder
+     * @param remoteFolder The remote folder where the new messages exist.
+     * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode  The unique request code for the reply to
+     *                     {@link android.os.Messenger}.
+     */
+    void onIdentificationToEncryptionCompleted(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
+                                               IMAPFolder remoteFolder, String ownerKey, int requestCode);
 }

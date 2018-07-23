@@ -87,6 +87,8 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
                     localFolder.getFolderAlias(), booleanLongSparseArray);
         }
 
+        syncListener.onIdentificationToEncryptionCompleted(accountDao, localFolder, imapFolder, ownerKey, requestCode);
+
         imapFolder.close(false);
     }
 

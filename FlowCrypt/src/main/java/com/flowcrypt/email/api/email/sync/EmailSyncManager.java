@@ -719,6 +719,10 @@ public class EmailSyncManager {
                     accountDao.getEmail());
             localFolder = foldersManager.findInboxFolder();
 
+            if (localFolder == null) {
+                return;
+            }
+
             idle();
             closeConnection();
 
@@ -730,8 +734,6 @@ public class EmailSyncManager {
             Log.d(TAG, "messagesAdded: " + e.getMessages().length);
             loadNewMessages(null, 0, localFolder, messageDaoSource.getLastUIDOfMessageInLabel(
                     syncListener.getContext(), accountDao.getEmail(), localFolder.getFolderAlias()));
-            //loadNewMessages(null, 0, localFolder, e.getMessages());
-            //todo-denbond7 Look at https://github.com/javaee/javamail/issues/319
         }
 
         @Override

@@ -273,10 +273,14 @@ public class MessagesNotificationManager extends CustomNotificationManager {
 
         int groupResourceId = R.drawable.ic_email_encrypted;
 
-        for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
-            if (GROUP_NAME_FLOWCRYPT_MESSAGES.equals(statusBarNotification.getNotification().getGroup())) {
-                groupResourceId = R.drawable.ic_email_multiply_encrypted;
-                break;
+        if (generalMessageDetailsList.size() > 1) {
+            groupResourceId = R.drawable.ic_email_multiply_encrypted;
+        } else {
+            for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
+                if (GROUP_NAME_FLOWCRYPT_MESSAGES.equals(statusBarNotification.getNotification().getGroup())) {
+                    groupResourceId = R.drawable.ic_email_multiply_encrypted;
+                    break;
+                }
             }
         }
 
