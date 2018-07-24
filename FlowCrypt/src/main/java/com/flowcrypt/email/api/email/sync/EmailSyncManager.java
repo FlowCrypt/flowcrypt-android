@@ -245,7 +245,7 @@ public class EmailSyncManager {
      */
     public void loadNewMessages(String ownerKey, int requestCode, Folder folder, int lastCachedUID) {
         try {
-            //passiveSyncTaskBlockingQueue.put(new LoadNewMessagesSyncTask(ownerKey, requestCode, folder, messages));
+            removeOldTasksFromBlockingQueue(CheckNewMessagesSyncTask.class, passiveSyncTaskBlockingQueue);
             passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder,
                     lastCachedUID));
         } catch (InterruptedException e) {
