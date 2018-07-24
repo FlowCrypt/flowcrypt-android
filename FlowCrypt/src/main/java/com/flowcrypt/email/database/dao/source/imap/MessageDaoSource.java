@@ -837,56 +837,12 @@ public class MessageDaoSource extends BaseDaoSource {
         } else return new ContentProviderResult[0];
     }
 
-    private static String prepareArrayToSaving(String[] attributes) {
-        if (attributes != null && attributes.length > 0) {
-            StringBuilder result = new StringBuilder();
-            for (String attribute : attributes) {
-                result.append(attribute).append("\t");
-            }
-
-            return result.toString();
-        } else {
-            return null;
-        }
-    }
-
-    private static String[] parseArray(String attributesAsString) {
-        return parseArray(attributesAsString, "\t");
-    }
-
     private static String[] parseArray(String attributesAsString, String regex) {
         if (attributesAsString != null && attributesAsString.length() > 0) {
             return attributesAsString.split(regex);
         } else {
             return null;
         }
-    }
-
-    private static String getStringEquivalentForFlag(Flags.Flag flag) {
-        if (flag == Flags.Flag.ANSWERED) {
-            return MessageFlag.ANSWERED;
-        }
-
-        if (flag == Flags.Flag.DELETED) {
-            return MessageFlag.DELETED;
-        }
-
-        if (flag == Flags.Flag.DRAFT) {
-            return MessageFlag.DRAFT;
-        }
-
-        if (flag == Flags.Flag.FLAGGED) {
-            return MessageFlag.FLAGGED;
-        }
-
-        if (flag == Flags.Flag.RECENT) {
-            return MessageFlag.RECENT;
-        }
-
-        if (flag == Flags.Flag.SEEN) {
-            return MessageFlag.SEEN;
-        }
-        return null;
     }
 
     /**
@@ -919,31 +875,14 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_SUBJECT, message.getSubject());
         contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-        contentValues.put(COL_IS_NEW, isNew);
-        return contentValues;
-    }
-
-    private String prepareFlagsToSave(Flags flags) {
-        if (flags != null) {
-            Flags.Flag[] systemFlags = flags.getSystemFlags();
-
-            String[] stringsOfFlags = new String[systemFlags.length];
-
-            for (int i = 0; i < systemFlags.length; i++) {
-                stringsOfFlags[i] = getStringEquivalentForFlag(systemFlags[i]);
-            }
-
-            return prepareArrayToSaving(stringsOfFlags);
+        if (!message.getFlags().contains(Flags.Flag.SEEN)) {
+            contentValues.put(COL_IS_NEW, isNew);
         }
-        return null;
+        return contentValues;
     }
 
     private String[] parseFlags(String string) {
         return parseArray(string, "\\s");
-    }
-
-    private String[] parseEmails(String string) {
-        return parseArray(string);
     }
 
     /**
