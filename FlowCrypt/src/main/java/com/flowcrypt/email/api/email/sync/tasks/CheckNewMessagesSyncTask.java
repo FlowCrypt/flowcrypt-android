@@ -5,8 +5,10 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;
@@ -27,13 +29,11 @@ import javax.mail.Store;
  */
 public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncTask {
     protected com.flowcrypt.email.api.email.Folder localFolder;
-    protected int lastUID;
 
-    public CheckNewMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder,
-                                    int lastUID) {
+    public CheckNewMessagesSyncTask(String ownerKey, int requestCode,
+                                    com.flowcrypt.email.api.email.Folder localFolder) {
         super(ownerKey, requestCode, localFolder);
         this.localFolder = localFolder;
-        this.lastUID = lastUID;
     }
 
     @Override
@@ -47,8 +47,12 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
         if (syncListener != null) {
             Message[] messages = new Message[0];
 
-            if (lastUID < nextUID - 1) {
-                messages = fetchMessagesInfo(imapFolder, imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1));
+            int lastCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(syncListener.getContext(), accountDao
+                    .getEmail(), localFolder.getFolderAlias());
+
+            if (lastCachedUID < nextUID - 1) {
+                messages = EmailUtil.fetchMessagesInfo(imapFolder,
+                        imapFolder.getMessagesByUID(lastCachedUID + 1, nextUID - 1));
             }
 
             List<Long> uidList = new ArrayList<>();
@@ -58,7 +62,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
             }
 
             syncListener.onNewMessagesReceived(accountDao, localFolder, imapFolder, messages,
-                    getInfoAreMessagesEncrypted(imapFolder, uidList), ownerKey, requestCode);
+                    EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList), ownerKey, requestCode);
         }
 
         imapFolder.close(false);

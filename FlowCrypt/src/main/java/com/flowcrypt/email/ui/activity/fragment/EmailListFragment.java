@@ -571,13 +571,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         isNewMessagesLoadingNow = false;
         onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
         baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
-                onManageEmailsListener.getCurrentFolder(),
-                messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias()),
-                messageDaoSource.getCountOfMessagesForLabel(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias()));
+                onManageEmailsListener.getCurrentFolder());
     }
 
     /**

@@ -11,8 +11,10 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.RemoteException;
 import android.util.Log;
 import android.util.LongSparseArray;
 
@@ -21,7 +23,7 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
+import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -43,24 +45,24 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 /**
- * This is an implementation of {@link JobService}. Here we are going to do receiving of the new messages of INBOX
- * folder of an active account.
+ * This is an implementation of {@link JobService}. Here we are going to do syncing INBOX folder of an active account.
  *
  * @author Denis Bondarenko
- * Date: 20.06.2018
- * Time: 12:40
- * E-mail: DenBond7@gmail.com
+ *         Date: 20.06.2018
+ *         Time: 12:40
+ *         E-mail: DenBond7@gmail.com
  */
-public class CheckNewMessagesJobService extends JobService implements SyncListener {
+public class SyncJobService extends JobService implements SyncListener {
     private static final long INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(15);
-    private static final String TAG = CheckNewMessagesJobService.class.getSimpleName();
+    private static final String TAG = SyncJobService.class.getSimpleName();
     private MessagesNotificationManager messagesNotificationManager;
 
     public static void schedule(Context context) {
-        ComponentName serviceName = new ComponentName(context, CheckNewMessagesJobService.class);
+        ComponentName serviceName = new ComponentName(context, SyncJobService.class);
         JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(JobIdManager.JOB_TYPE_SYNC, serviceName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(INTERVAL_MILLIS)
+                //.setPeriodic(INTERVAL_MILLIS)
+                .setMinimumLatency(TimeUnit.SECONDS.toMillis(30))
                 .setPersisted(true);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -164,6 +166,45 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
     public void onRefreshMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                                           IMAPFolder remoteFolder, Message[] newMessages,
                                           Message[] updateMessages, String ownerKey, int requestCode) {
+        try {
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
+                    (getApplicationContext(), accountDao.getEmail(), localFolder.getFolderAlias());
+
+            Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
+
+            Collection<Long> deleteCandidatesUIDList = EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase,
+                    remoteFolder, updateMessages);
+
+            messageDaoSource.deleteMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(), localFolder.getFolderAlias(), deleteCandidatesUIDList);
+
+            if (!GeneralUtil.isAppForegrounded() &&
+                    FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    for (long uid : deleteCandidatesUIDList) {
+                        messagesNotificationManager.cancel(this, (int) uid);
+                    }
+                } else {
+                    String folderAlias = localFolder.getFolderAlias();
+
+                    messagesNotificationManager.notify(this, accountDao, localFolder,
+                            messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias)
+                            , messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
+                }
+            }
+
+            messageDaoSource.updateMessagesByUID(getApplicationContext(),
+                    accountDao.getEmail(),
+                    localFolder.getFolderAlias(),
+                    remoteFolder,
+                    EmailUtil.generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase,
+                            remoteFolder, updateMessages));
+        } catch (RemoteException | MessagingException | OperationApplicationException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
     }
 
     @Override
@@ -239,14 +280,14 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
      * again.
      */
     private static class CheckNewMessagesJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-        private final WeakReference<CheckNewMessagesJobService> syncJobServiceWeakReference;
+        private final WeakReference<SyncJobService> syncJobServiceWeakReference;
 
         private Session session;
         private Store store;
         private boolean isFailed;
 
-        CheckNewMessagesJobTask(CheckNewMessagesJobService checkNewMessagesJobService) {
-            this.syncJobServiceWeakReference = new WeakReference<>(checkNewMessagesJobService);
+        CheckNewMessagesJobTask(SyncJobService syncJobService) {
+            this.syncJobServiceWeakReference = new WeakReference<>(syncJobService);
         }
 
         @Override
@@ -261,15 +302,12 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
                     if (accountDao != null) {
                         FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
                         Folder localFolder = foldersManager.findInboxFolder();
-                        MessageDaoSource messageDaoSource = new MessageDaoSource();
 
                         if (localFolder != null) {
                             session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
                             store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
 
-                            new CheckNewMessagesSyncTask("", 0, localFolder,
-                                    messageDaoSource.getLastUIDOfMessageInLabel(context, accountDao.getEmail(),
-                                            localFolder.getFolderAlias()))
+                            new SyncFolderSyncTask("", 0, localFolder)
                                     .runIMAPAction(accountDao, session, store, syncJobServiceWeakReference.get());
 
                             if (store != null) {
@@ -293,6 +331,7 @@ public class CheckNewMessagesJobService extends JobService implements SyncListen
             try {
                 if (syncJobServiceWeakReference.get() != null) {
                     syncJobServiceWeakReference.get().jobFinished(jobParameters, isFailed);
+                    schedule(syncJobServiceWeakReference.get());
                 }
             } catch (NullPointerException e) {
                 e.printStackTrace();

@@ -15,6 +15,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.LongSparseArray;
+import android.util.SparseArray;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
@@ -34,11 +36,21 @@ import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.common.util.ArrayUtils;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.sun.mail.iap.Argument;
+import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.protocol.BODY;
+import com.sun.mail.imap.protocol.FetchResponse;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.imap.protocol.UIDSet;
+import com.sun.mail.util.ASCIIUtility;
 
 import org.apache.commons.io.IOUtils;
 
@@ -76,9 +88,9 @@ import javax.mail.util.ByteArrayDataSource;
 
 /**
  * @author Denis Bondarenko
- * Date: 29.09.2017
- * Time: 15:31
- * E-mail: DenBond7@gmail.com
+ *         Date: 29.09.2017
+ *         Time: 15:31
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class EmailUtil {
@@ -626,5 +638,122 @@ public class EmailUtil {
         } else {
             return internetAddresses[0].getPersonal();
         }
+    }
+
+    /**
+     * Get updated information about messages in the local database.
+     *
+     * @param imapFolder            The folder which contains messages.
+     * @param countOfLoadedMessages The count of already loaded messages.
+     * @param countOfNewMessages    The count of new messages (offset value).
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages, int countOfNewMessages)
+            throws MessagingException {
+        int end = imapFolder.getMessageCount() - countOfNewMessages;
+        int start = end - countOfLoadedMessages + 1;
+
+        if (end < 1) {
+            return new Message[]{};
+        } else {
+            if (start < 1) {
+                start = 1;
+            }
+
+            Message[] messages = imapFolder.getMessages(start, end);
+
+            if (messages.length > 0) {
+                FetchProfile fetchProfile = new FetchProfile();
+                fetchProfile.add(FetchProfile.Item.FLAGS);
+                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+                imapFolder.fetch(messages, fetchProfile);
+            }
+            return messages;
+        }
+    }
+
+    /**
+     * Load messages info.
+     *
+     * @param imapFolder The folder which contains messages.
+     * @param messages   The array of {@link Message}.
+     * @return New messages from a server which not exist in a local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] fetchMessagesInfo(IMAPFolder imapFolder, Message[] messages) throws MessagingException {
+        if (messages.length > 0) {
+            FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(FetchProfile.Item.ENVELOPE);
+            fetchProfile.add(FetchProfile.Item.FLAGS);
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
+            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+
+            imapFolder.fetch(messages, fetchProfile);
+        }
+
+        return messages;
+    }
+
+    /**
+     * Check is input messages are encrypted.
+     *
+     * @param imapFolder The localFolder which contains messages which will be checked.
+     * @param uidList    The array of messages {@link UID} values.
+     * @return {@link SparseArray} as results of the checking.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, List<Long> uidList)
+            throws MessagingException {
+        if (uidList.isEmpty()) {
+            return new LongSparseArray<>();
+        }
+
+        final UIDSet[] uidSets = UIDSet.createUIDSets(ArrayUtils.toLongArray(uidList));
+
+        if (uidSets == null || uidSets.length == 0) {
+            return new LongSparseArray<>();
+        }
+
+        return (LongSparseArray<Boolean>) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+                LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
+
+                Argument args = new Argument();
+                Argument list = new Argument();
+                list.writeString("UID");
+                list.writeString("BODY.PEEK[TEXT]<0.2048>");
+                args.writeArgument(list);
+
+                Response[] responses = imapProtocol.command(
+                        ("UID FETCH ") + UIDSet.toString(uidSets), args);
+                Response serverStatusResponse = responses[responses.length - 1];
+
+                if (serverStatusResponse.isOK()) {
+                    for (Response response : responses) {
+                        if (!(response instanceof FetchResponse))
+                            continue;
+
+                        FetchResponse fetchResponse = (FetchResponse) response;
+
+                        UID uid = fetchResponse.getItem(UID.class);
+                        if (uid != null && uid.uid != 0) {
+                            BODY body = fetchResponse.getItem(BODY.class);
+                            if (body != null && body.getByteArrayInputStream() != null) {
+                                String rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+                                booleanLongSparseArray.put(uid.uid,
+                                        rawMessage.contains("-----BEGIN PGP MESSAGE-----"));
+                            }
+                        }
+                    }
+                }
+
+                imapProtocol.notifyResponseHandlers(responses);
+                imapProtocol.handleResult(serverStatusResponse);
+
+                return booleanLongSparseArray;
+            }
+        });
     }
 }

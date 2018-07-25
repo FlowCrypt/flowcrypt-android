@@ -274,17 +274,14 @@ public abstract class BaseSyncActivity extends BaseActivity {
      *
      * @param requestCode           The unique request code for identify the current action.
      * @param currentFolder         {@link Folder} object.
-     * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
-     * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
      */
-    public void refreshMessages(int requestCode, Folder currentFolder, int lastUIDInCache, int countOfLoadedMessages) {
+    public void refreshMessages(int requestCode, Folder currentFolder) {
         if (checkServiceBound(isBoundToSyncService)) return;
 
         BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
                 requestCode, currentFolder);
 
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES,
-                lastUIDInCache, countOfLoadedMessages, action);
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action);
         message.replyTo = syncServiceReplyMessenger;
         try {
             syncServiceMessenger.send(message);

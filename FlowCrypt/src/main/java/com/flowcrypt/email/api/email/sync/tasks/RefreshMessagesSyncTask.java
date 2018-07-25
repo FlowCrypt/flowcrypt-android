@@ -5,17 +5,16 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
-import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.UIDFolder;
 
 /**
  * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
@@ -28,12 +27,8 @@ import javax.mail.UIDFolder;
  */
 
 public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
-    private int countOfLoadedMessages;
-
-    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder,
-                                   int lastUID, int countOfLoadedMessages) {
-        super(ownerKey, requestCode, localFolder, lastUID);
-        this.countOfLoadedMessages = countOfLoadedMessages;
+    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder) {
+        super(ownerKey, requestCode, localFolder);
     }
 
     @Override
@@ -47,50 +42,28 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
         if (syncListener != null) {
             Message[] newMessages = new Message[0];
 
-            if (lastUID < nextUID - 1) {
-                newMessages = fetchMessagesInfo(imapFolder, imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1));
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+
+            int cachedUID = messageDaoSource.getLastUIDOfMessageInLabel(syncListener.getContext(), accountDao
+                    .getEmail(), localFolder.getFolderAlias());
+
+            int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
+                    accountDao.getEmail(),
+                    localFolder.getFolderAlias());
+
+            if (cachedUID > 1 && cachedUID < nextUID - 1) {
+                newMessages = EmailUtil.fetchMessagesInfo(imapFolder,
+                        imapFolder.getMessagesByUID(cachedUID + 1, nextUID - 1));
             }
 
             int countOfNewMessages = newMessages != null ? newMessages.length : 0;
-            Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
+            Message[] updatedMessages = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages,
+                    countOfNewMessages);
 
             syncListener.onRefreshMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
                     updatedMessages, ownerKey, requestCode);
         }
 
         imapFolder.close(false);
-    }
-
-    /**
-     * Get updated information about messages in the local database.
-     *
-     * @param imapFolder            The folder which contains messages.
-     * @param countOfLoadedMessages The count of already loaded messages.
-     * @param countOfNewMessages    The count of new messages (offset value).
-     * @return A list of messages which already exist in the local database.
-     * @throws MessagingException for other failures.
-     */
-    private Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages, int countOfNewMessages)
-            throws MessagingException {
-        int end = imapFolder.getMessageCount() - countOfNewMessages;
-        int start = end - countOfLoadedMessages + 1;
-
-        if (end < 1) {
-            return new Message[]{};
-        } else {
-            if (start < 1) {
-                start = 1;
-            }
-
-            Message[] messages = imapFolder.getMessages(start, end);
-
-            if (messages.length > 0) {
-                FetchProfile fetchProfile = new FetchProfile();
-                fetchProfile.add(FetchProfile.Item.FLAGS);
-                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-                imapFolder.fetch(messages, fetchProfile);
-            }
-            return messages;
-        }
     }
 }

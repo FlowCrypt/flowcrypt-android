@@ -187,7 +187,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             emailSyncManager.beginSync(false);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -873,7 +873,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
                             emailSyncManager.refreshMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), refreshFolder, message.arg1, message.arg2, true);
+                                    action.getRequestCode(), refreshFolder, true);
                         }
                         break;
 

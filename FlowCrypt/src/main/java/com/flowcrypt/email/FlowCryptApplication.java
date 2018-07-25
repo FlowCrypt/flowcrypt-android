@@ -11,7 +11,7 @@ import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
-import com.flowcrypt.email.jobscheduler.CheckNewMessagesJobService;
+import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -75,7 +75,7 @@ public class FlowCryptApplication extends Application {
         intiLeakCanary();
         FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
 
-        CheckNewMessagesJobService.schedule(this);
+        SyncJobService.schedule(this);
     }
 
     @Override

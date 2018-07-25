@@ -238,16 +238,14 @@ public class EmailSyncManager {
      * Start loading new messages to the local cache. This method create a new
      * {@link CheckNewMessagesSyncTask} object and add it to the passive BlockingQueue.
      *
-     * @param ownerKey      The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode   The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folder        A local implementation of the remote folder.
-     * @param lastCachedUID The last UID in the local database.
+     * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folder      A local implementation of the remote folder.
      */
-    public void loadNewMessages(String ownerKey, int requestCode, Folder folder, int lastCachedUID) {
+    public void loadNewMessages(String ownerKey, int requestCode, Folder folder) {
         try {
             removeOldTasksFromBlockingQueue(CheckNewMessagesSyncTask.class, passiveSyncTaskBlockingQueue);
-            passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder,
-                    lastCachedUID));
+            passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -319,22 +317,18 @@ public class EmailSyncManager {
      * {@link RefreshMessagesSyncTask} object and added it to the current synchronization
      * BlockingQueue.
      *
-     * @param ownerKey              The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode           The unique request code for the reply to {@link android.os.Messenger}.
-     * @param folder                A local implementation of the remote folder.
-     * @param lastUIDInCache        The UID of the last message of the current folder in the local cache.
-     * @param countOfLoadedMessages The UID of the last message of the current folder in the local cache.
-     * @param isUseActiveQueue      true if the current call will be ran in the active queue, otherwise false.
+     * @param ownerKey         The name of the reply to {@link android.os.Messenger}.
+     * @param requestCode      The unique request code for the reply to {@link android.os.Messenger}.
+     * @param folder           A local implementation of the remote folder.
+     * @param isUseActiveQueue true if the current call will be ran in the active queue, otherwise false.
      */
-    public void refreshMessages(String ownerKey, int requestCode, Folder folder, int lastUIDInCache,
-                                int countOfLoadedMessages, boolean isUseActiveQueue) {
+    public void refreshMessages(String ownerKey, int requestCode, Folder folder, boolean isUseActiveQueue) {
         try {
             BlockingQueue<SyncTask> syncTaskBlockingQueue = isUseActiveQueue ? activeSyncTaskBlockingQueue :
                     passiveSyncTaskBlockingQueue;
 
             removeOldTasksFromBlockingQueue(RefreshMessagesSyncTask.class, syncTaskBlockingQueue);
-            syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode,
-                    folder, lastUIDInCache, countOfLoadedMessages));
+            syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -732,8 +726,7 @@ public class EmailSyncManager {
         @Override
         public void messagesAdded(MessageCountEvent e) {
             Log.d(TAG, "messagesAdded: " + e.getMessages().length);
-            loadNewMessages(null, 0, localFolder, messageDaoSource.getLastUIDOfMessageInLabel(
-                    syncListener.getContext(), accountDao.getEmail(), localFolder.getFolderAlias()));
+            loadNewMessages(null, 0, localFolder);
         }
 
         @Override
@@ -839,14 +832,7 @@ public class EmailSyncManager {
         }
 
         private void syncFolderState() {
-            refreshMessages("", 0, localFolder,
-                    messageDaoSource.getLastUIDOfMessageInLabel(
-                            syncListener.getContext(),
-                            accountDao.getEmail(),
-                            localFolder.getFolderAlias()),
-                    messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
-                            accountDao.getEmail(),
-                            localFolder.getFolderAlias()), false);
+            refreshMessages("", 0, localFolder, false);
         }
     }
 }
