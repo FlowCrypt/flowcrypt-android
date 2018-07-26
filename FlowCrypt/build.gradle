@@ -14,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.gfx.ribbonizer:plugin:1.0.0'
+        classpath 'com.github.gfx.ribbonizer:ribbonizer-plugin:2.1.0'
     }
 }
 
