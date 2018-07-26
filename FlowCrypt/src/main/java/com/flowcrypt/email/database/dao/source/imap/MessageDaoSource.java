@@ -280,14 +280,19 @@ public class MessageDaoSource extends BaseDaoSource {
 
             ArrayList<ContentProviderOperation> ops = new ArrayList<>();
             for (Message message : messages) {
-                ops.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                ContentProviderOperation.Builder builder = ContentProviderOperation.newUpdate(getBaseContentUri())
                         .withValue(COL_FLAGS, message.getFlags().toString().toUpperCase())
                         .withSelection(COL_EMAIL + "= ? AND "
                                         + COL_FOLDER + " = ? AND "
                                         + COL_UID + " = ? ",
                                 new String[]{email, label, String.valueOf(imapFolder.getUID(message))})
-                        .withYieldAllowed(true)
-                        .build());
+                        .withYieldAllowed(true);
+
+                if (message.getFlags().contains(Flags.Flag.SEEN)) {
+                    builder.withValue(COL_IS_NEW, false);
+                }
+
+                ops.add(builder.build());
             }
             return contentResolver.applyBatch(getBaseContentUri().getAuthority(), ops);
         } else return new ContentProviderResult[0];

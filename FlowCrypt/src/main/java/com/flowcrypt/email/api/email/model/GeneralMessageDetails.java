@@ -9,6 +9,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import javax.mail.internet.InternetAddress;
 
@@ -84,6 +85,37 @@ public class GeneralMessageDetails implements Parcelable {
                 ", isMessageHasAttachment=" + isMessageHasAttachment +
                 ", isEncrypted=" + isEncrypted +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GeneralMessageDetails that = (GeneralMessageDetails) o;
+        return uid == that.uid &&
+                receivedDateInMillisecond == that.receivedDateInMillisecond &&
+                sentDateInMillisecond == that.sentDateInMillisecond &&
+                isMessageHasAttachment == that.isMessageHasAttachment &&
+                isEncrypted == that.isEncrypted &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(label, that.label) &&
+                Arrays.equals(from, that.from) &&
+                Arrays.equals(to, that.to) &&
+                Arrays.equals(cc, that.cc) &&
+                Objects.equals(subject, that.subject) &&
+                Arrays.equals(flags, that.flags) &&
+                Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
+                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted);
+        result = 31 * result + Arrays.hashCode(from);
+        result = 31 * result + Arrays.hashCode(to);
+        result = 31 * result + Arrays.hashCode(cc);
+        result = 31 * result + Arrays.hashCode(flags);
+        return result;
     }
 
     @Override

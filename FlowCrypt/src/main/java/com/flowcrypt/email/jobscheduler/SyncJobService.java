@@ -21,6 +21,7 @@ import android.util.LongSparseArray;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask;
@@ -35,6 +36,7 @@ import com.sun.mail.imap.IMAPFolder;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -177,23 +179,12 @@ public class SyncJobService extends JobService implements SyncListener {
             Collection<Long> deleteCandidatesUIDList = EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase,
                     remoteFolder, updateMessages);
 
+            String folderAlias = localFolder.getFolderAlias();
+            List<GeneralMessageDetails> generalMessageDetailsBeforeUpdate = messageDaoSource.getNewMessages
+                    (getApplicationContext(), accountDao.getEmail(), folderAlias);
+
             messageDaoSource.deleteMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(), localFolder.getFolderAlias(), deleteCandidatesUIDList);
-
-            if (!GeneralUtil.isAppForegrounded() &&
-                    FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    for (long uid : deleteCandidatesUIDList) {
-                        messagesNotificationManager.cancel(this, (int) uid);
-                    }
-                } else {
-                    String folderAlias = localFolder.getFolderAlias();
-
-                    messagesNotificationManager.notify(this, accountDao, localFolder,
-                            messageDaoSource.getNewMessages(getApplicationContext(), accountDao.getEmail(), folderAlias)
-                            , messageDaoSource.getUIDOfUnseenMessages(this, accountDao.getEmail(), folderAlias), false);
-                }
-            }
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),
@@ -201,6 +192,26 @@ public class SyncJobService extends JobService implements SyncListener {
                     remoteFolder,
                     EmailUtil.generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase,
                             remoteFolder, updateMessages));
+
+            List<GeneralMessageDetails> generalMessageDetailsAfterUpdate = messageDaoSource.getNewMessages
+                    (getApplicationContext(), accountDao.getEmail(), folderAlias);
+
+            List<GeneralMessageDetails> generalMessageDetailsDeleteCandidate = new LinkedList<>
+                    (generalMessageDetailsBeforeUpdate);
+            generalMessageDetailsDeleteCandidate.removeAll(generalMessageDetailsAfterUpdate);
+
+            if (!GeneralUtil.isAppForegrounded() &&
+                    FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsDeleteCandidate) {
+                        messagesNotificationManager.cancel(this, generalMessageDetails.getUid());
+                    }
+                } else {
+                    messagesNotificationManager.notify(this, accountDao, localFolder,
+                            generalMessageDetailsAfterUpdate, messageDaoSource.getUIDOfUnseenMessages(this,
+                                    accountDao.getEmail(), folderAlias), false);
+                }
+            }
         } catch (RemoteException | MessagingException | OperationApplicationException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
