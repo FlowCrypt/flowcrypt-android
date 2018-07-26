@@ -187,7 +187,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             emailSyncManager.beginSync(false);
         }
 
-        return START_NOT_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override

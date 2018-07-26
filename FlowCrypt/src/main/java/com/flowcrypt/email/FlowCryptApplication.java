@@ -6,11 +6,13 @@
 package com.flowcrypt.email;
 
 import android.app.Application;
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
+import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
@@ -75,6 +77,10 @@ public class FlowCryptApplication extends Application {
         intiLeakCanary();
         FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
 
+        JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        if (scheduler != null) {
+            scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
+        }
         SyncJobService.schedule(this);
     }
 

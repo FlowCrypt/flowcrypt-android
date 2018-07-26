@@ -63,8 +63,7 @@ public class SyncJobService extends JobService implements SyncListener {
         ComponentName serviceName = new ComponentName(context, SyncJobService.class);
         JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(JobIdManager.JOB_TYPE_SYNC, serviceName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                //.setPeriodic(INTERVAL_MILLIS)
-                .setMinimumLatency(TimeUnit.SECONDS.toMillis(30))
+                .setPeriodic(INTERVAL_MILLIS)
                 .setPersisted(true);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -342,7 +341,6 @@ public class SyncJobService extends JobService implements SyncListener {
             try {
                 if (syncJobServiceWeakReference.get() != null) {
                     syncJobServiceWeakReference.get().jobFinished(jobParameters, isFailed);
-                    schedule(syncJobServiceWeakReference.get());
                 }
             } catch (NullPointerException e) {
                 e.printStackTrace();
