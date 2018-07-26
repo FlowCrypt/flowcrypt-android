@@ -206,9 +206,11 @@ public class SyncJobService extends JobService implements SyncListener {
                         messagesNotificationManager.cancel(this, generalMessageDetails.getUid());
                     }
                 } else {
-                    messagesNotificationManager.notify(this, accountDao, localFolder,
-                            generalMessageDetailsAfterUpdate, messageDaoSource.getUIDOfUnseenMessages(this,
-                                    accountDao.getEmail(), folderAlias), false);
+                    if (!generalMessageDetailsDeleteCandidate.isEmpty()) {
+                        messagesNotificationManager.notify(this, accountDao, localFolder,
+                                generalMessageDetailsAfterUpdate, messageDaoSource.getUIDOfUnseenMessages(this,
+                                        accountDao.getEmail(), folderAlias), true);
+                    }
                 }
             }
         } catch (RemoteException | MessagingException | OperationApplicationException e) {
