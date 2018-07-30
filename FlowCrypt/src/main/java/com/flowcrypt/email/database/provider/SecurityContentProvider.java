@@ -26,6 +26,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -39,9 +40,9 @@ import java.util.ArrayList;
  * {@link ContentResolver} interface.
  *
  * @author Denis Bondarenko
- *         Date: 13.05.2017
- *         Time: 10:32
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.05.2017
+ * Time: 10:32
+ * E-mail: DenBond7@gmail.com
  */
 public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_KEYS_TABLE = 1;
@@ -62,6 +63,8 @@ public class SecurityContentProvider extends ContentProvider {
     private static final int MATCHED_CODE_KEY_ERASE_DATABASE = 16;
     private static final int MATCHED_CODE_ACTION_QUEUE_TABLE = 17;
     private static final int MATCHED_CODE_ACTION_QUEUE_ROW = 18;
+    private static final int MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE = 19;
+    private static final int MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW = 20;
 
     private static final String SINGLE_APPENDED_SUFFIX = "/#";
     private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -105,6 +108,10 @@ public class SecurityContentProvider extends ContentProvider {
                 SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_QUEUE_ROW);
         URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE,
                 MATCHED_CODE_ACTION_QUEUE_TABLE);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS +
+                SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW);
+        URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS,
+                MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE);
     }
 
     private FlowCryptSQLiteOpenHelper hotelDBHelper;
@@ -171,6 +178,11 @@ public class SecurityContentProvider extends ContentProvider {
                     case MATCHED_CODE_ACTION_QUEUE_TABLE:
                         id = sqLiteDatabase.insert(new ActionQueueDaoSource().getTableName(), null, values);
                         result = Uri.parse(new ActionQueueDaoSource().getBaseContentUri() + "/" + id);
+                        break;
+
+                    case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE:
+                        id = sqLiteDatabase.insert(new UserIdEmailsKeysDaoSource().getTableName(), null, values);
+                        result = Uri.parse(new UserIdEmailsKeysDaoSource().getBaseContentUri() + "/" + id);
                         break;
 
                     default:
@@ -290,6 +302,7 @@ public class SecurityContentProvider extends ContentProvider {
                         rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(), null, null);
                         rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(), null, null);
                         rowsCount += sqLiteDatabase.delete(new KeysDaoSource().getTableName(), null, null);
+                        rowsCount += sqLiteDatabase.delete(new UserIdEmailsKeysDaoSource().getTableName(), null, null);
                         rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
                         break;
 
@@ -409,6 +422,12 @@ public class SecurityContentProvider extends ContentProvider {
             case MATCHED_CODE_ACTION_QUEUE_ROW:
                 return new ActionQueueDaoSource().getSingleRowContentType();
 
+            case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE:
+                return new UserIdEmailsKeysDaoSource().getRowsContentType();
+
+            case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW:
+                return new UserIdEmailsKeysDaoSource().getSingleRowContentType();
+
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
@@ -445,6 +464,9 @@ public class SecurityContentProvider extends ContentProvider {
 
             case MATCHED_CODE_ACTION_QUEUE_TABLE:
                 return ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE;
+
+            case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE:
+                return UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS;
 
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
