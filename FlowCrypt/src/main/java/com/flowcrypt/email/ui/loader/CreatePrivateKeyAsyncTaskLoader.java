@@ -24,6 +24,7 @@ import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -101,6 +102,9 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
             if (uri == null) {
                 return new LoaderResult(null, new NullPointerException("Cannot save the generated private key"));
             }
+
+            new UserIdEmailsKeysDaoSource().addRow(getContext(), pgpKey.getLongid(), pgpKey.getPrimaryUserId()
+                    .getEmail());
 
             ActionQueueDaoSource actionQueueDaoSource = new ActionQueueDaoSource();
 

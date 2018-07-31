@@ -8,12 +8,14 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
+import android.util.Pair;
 
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -88,20 +90,30 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                             Uri uri = keysDaoSource.addRow(getContext(),
                                     KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
 
-                            PgpContact pgpContact = pgpKey.getPrimaryUserId();
-                            PgpKey publicKey = pgpKey.toPublic();
-                            if (pgpContact != null) {
-                                pgpContact.setPubkey(publicKey.armor());
+                            PgpContact[] pgpContacts = pgpKey.getUserIds();
+                            List<Pair<String, String>> pairs = new ArrayList<>();
+                            if (pgpContacts != null) {
                                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                                if (js.str_is_email_valid(pgpContact.getEmail()) &&
-                                        contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail()) == null) {
-                                    new ContactsDaoSource().addRow(getContext(), pgpContact);
-                                    //todo-DenBond7 Need to resolve a situation with different public keys.
+
+                                for (PgpContact pgpContact : pgpContacts) {
+                                    if (pgpContact != null) {
+                                        PgpKey publicKey = pgpKey.toPublic();
+                                        pgpContact.setPubkey(publicKey.armor());
+                                        if (js.str_is_email_valid(pgpContact.getEmail()) &&
+                                                contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail())
+                                                        == null) {
+                                            new ContactsDaoSource().addRow(getContext(), pgpContact);
+                                            //todo-DenBond7 Need to resolve a situation with different public keys.
+                                        }
+
+                                        pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
+                                    }
                                 }
                             }
 
                             if (uri != null) {
                                 acceptedKeysList.add(keyDetails);
+                                new UserIdEmailsKeysDaoSource().addRows(getContext(), pairs);
                             }
                         } else if (privateKeyDetailsList.size() == 1) {
                             return new LoaderResult(null,
