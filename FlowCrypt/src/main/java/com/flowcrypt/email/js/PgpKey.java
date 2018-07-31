@@ -74,10 +74,6 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
      */
     public PgpContact[] getUserIds() {
         V8Array users = getAttributeAsArray("users");
-        if (users.length() == 0) { // could happen to some keys. But will not happen to keys that are saved because
-            // we will check keys before saving
-            return null;
-        }
 
         PgpContact[] pgpContacts = new PgpContact[users.length()];
 
