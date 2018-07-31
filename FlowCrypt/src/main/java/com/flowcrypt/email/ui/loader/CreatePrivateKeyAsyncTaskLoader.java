@@ -127,6 +127,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         } catch (Exception e) {
             e.printStackTrace();
             new KeysDaoSource().removeKey(getContext(), pgpKey);
+            new UserIdEmailsKeysDaoSource().removeKey(getContext(), pgpKey);
             ExceptionUtil.handleError(e);
             return new LoaderResult(null, e);
         }

@@ -13,15 +13,17 @@ import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.flowcrypt.email.js.PgpKey;
+
 import java.util.List;
 
 /**
  * This class describe table {@link UserIdEmailsKeysDaoSource#TABLE_NAME_USER_ID_EMAILS_AND_KEYS} and operations with it
  *
  * @author Denis Bondarenko
- * Date: 30.07.2018
- * Time: 10:16
- * E-mail: DenBond7@gmail.com
+ *         Date: 30.07.2018
+ *         Time: 10:16
+ *         E-mail: DenBond7@gmail.com
  */
 public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
     public static final String TABLE_NAME_USER_ID_EMAILS_AND_KEYS = "user_id_emails_and_keys";
@@ -87,5 +89,23 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
 
             return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
         } else return 0;
+    }
+
+    /**
+     * Delete information about a private {@link PgpKey}.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param pgpKey  The object which contains information about the private {@link PgpKey}.
+     * @return The count of deleted rows. Will be 1 if information about {@link PgpKey} was deleted or -1 otherwise.
+     */
+    public int removeKey(Context context, PgpKey pgpKey) {
+        if (pgpKey != null) {
+
+            ContentResolver contentResolver = context.getContentResolver();
+            if (contentResolver != null) {
+                return contentResolver.delete(getBaseContentUri(),
+                        COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
+            } else return -1;
+        } else return -1;
     }
 }
