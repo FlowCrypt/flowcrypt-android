@@ -19,6 +19,7 @@ import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction;
 
 
 /**
@@ -37,8 +38,11 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
 
+    private Context context;
+
     public FlowCryptSQLiteOpenHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        this.context = context;
     }
 
     public static void dropTable(SQLiteDatabase sqLiteDatabase, String tableName) {
@@ -280,6 +284,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
             sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
             sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+            new ActionQueueDaoSource().addAction(sqLiteDatabase, new FillUserIdEmailsKeysTableAction());
 
             sqLiteDatabase.setTransactionSuccessful();
         } finally {

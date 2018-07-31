@@ -23,6 +23,7 @@ import com.google.gson.annotations.SerializedName;
 public class Action implements Parcelable {
 
     public static final String TAG_NAME_ACTION_TYPE = "actionType";
+    public static final String USER_SYSTEM = "system";
 
     public static final Creator<Action> CREATOR = new Creator<Action>() {
         @Override
@@ -91,7 +92,8 @@ public class Action implements Parcelable {
     public enum ActionType {
         BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
         REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
-        SEND_WELCOME_TEST_EMAIL("send_welcome_test_email");
+        SEND_WELCOME_TEST_EMAIL("send_welcome_test_email"),
+        FILL_USER_ID_EMAILS_KEYS_TABLE("fill_user_id_emails_keys_table");
 
         private String value;
 
