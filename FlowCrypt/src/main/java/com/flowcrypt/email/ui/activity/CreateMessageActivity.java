@@ -280,7 +280,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
                 ().findFragmentById(R.id.composeFragment);
         if (composeFragment != null) {
-            composeFragment.notifyUserAboutErrorWhenSendMessage();
+            composeFragment.notifyUserAboutErrorWhenSendMessage(null);
         }
     }
 

@@ -104,6 +104,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                                                         == null) {
                                             new ContactsDaoSource().addRow(getContext(), pgpContact);
                                             //todo-DenBond7 Need to resolve a situation with different public keys.
+                                            //For example we can have a situation when we have to different public
+                                            // keys with the same email
                                         }
 
                                         pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));

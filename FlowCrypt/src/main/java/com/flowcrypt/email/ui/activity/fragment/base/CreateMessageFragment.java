@@ -82,6 +82,7 @@ import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.RFC6068Parser;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.FlowCryptException;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
@@ -568,7 +569,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     @Override
     public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-        notifyUserAboutErrorWhenSendMessage();
+        notifyUserAboutErrorWhenSendMessage(e);
     }
 
     @Override
@@ -658,14 +659,23 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     /**
      * Notify the user about an error which occurred when we send a message.
+     *
+     * @param e An occurred error.
      */
-    public void notifyUserAboutErrorWhenSendMessage() {
+    public void notifyUserAboutErrorWhenSendMessage(Exception e) {
         isMessageSendingNow = false;
         if (getActivity() != null) {
             getActivity().invalidateOptionsMenu();
         }
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
-        showInfoSnackbar(getView(), getString(R.string.error_occurred_while_sending_message));
+
+        String errorMessage = getString(R.string.error_occurred_while_sending_message);
+
+        if (e != null && e instanceof FlowCryptException) {
+            errorMessage = e.getMessage();
+        }
+
+        showInfoSnackbar(getView(), errorMessage);
     }
 
     /**

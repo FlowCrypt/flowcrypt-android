@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.dao.source;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
@@ -15,6 +16,7 @@ import android.util.Pair;
 
 import com.flowcrypt.email.js.PgpKey;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -61,7 +63,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
         if (!TextUtils.isEmpty(longId) && !TextUtils.isEmpty(email) && contentResolver != null) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COL_LONG_ID, longId);
-            contentValues.put(COL_USER_ID_EMAIL, email);
+            contentValues.put(COL_USER_ID_EMAIL, email.toLowerCase());
             return contentResolver.insert(getBaseContentUri(), contentValues);
         } else return null;
     }
@@ -83,7 +85,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
                 Pair<String, String> pair = pairs.get(i);
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(COL_LONG_ID, pair.first);
-                contentValues.put(COL_USER_ID_EMAIL, pair.second);
+                contentValues.put(COL_USER_ID_EMAIL, pair.second.toLowerCase());
                 contentValuesArray[i] = contentValues;
             }
 
@@ -107,5 +109,32 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
                         COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
             } else return -1;
         } else return -1;
+    }
+
+    /**
+     * Get a list of longId using a given email.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   An email which will be used for searching.
+     * @return A list of found longId.
+     */
+    public List<String> getLongIdsByEmail(Context context, String email) {
+        List<String> longIdsList = new ArrayList<>();
+        if (!TextUtils.isEmpty(email)) {
+            Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
+                    COL_USER_ID_EMAIL + " = ?", new String[]{email.toLowerCase()}, null);
+
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    longIdsList.add(cursor.getString(cursor.getColumnIndex(COL_LONG_ID)));
+                }
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return longIdsList;
     }
 }
