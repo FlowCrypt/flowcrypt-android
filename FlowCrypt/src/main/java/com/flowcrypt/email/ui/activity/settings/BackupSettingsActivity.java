@@ -26,6 +26,8 @@ import android.widget.Toast;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -65,17 +67,22 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     private TextView textViewOptionsHint;
     private RadioGroup radioGroupBackupsVariants;
     private Button buttonBackupAction;
+
     private List<String> privateKeys;
-    private String account;
+    private Uri destinationUri;
+    private AccountDao accountDao;
+
     private boolean isPrivateKeySendingNow = false;
     private boolean isLoadPrivateKeysRequestSent;
-    private Uri destinationUri;
     private boolean isPrivateKeySavingNow;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initViews();
+
+        accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+
         if (GeneralUtil.isInternetConnectionAvailable(this)) {
             UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
         } else {
@@ -92,11 +99,6 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
         switch (requestCode) {
-            case R.id.syns_get_active_account:
-                account = (String) obj;
-                loadPrivateKeys(R.id.syns_load_private_keys);
-                break;
-
             case R.id.syns_load_private_keys:
                 if (privateKeys == null) {
                     UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
@@ -171,8 +173,8 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                                 UIUtil.exchangeViewVisibility(
                                         BackupSettingsActivity.this, true,
                                         progressBar, layoutContent);
-                                sendMessageWithPrivateKeyBackup(R.id
-                                        .syns_send_backup_with_private_key_to_key_owner, account);
+                                sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner,
+                                        accountDao.getEmail());
                             }
                         });
                 break;
@@ -184,7 +186,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         super.onSyncServiceConnected();
         if (!isLoadPrivateKeysRequestSent) {
             isLoadPrivateKeysRequestSent = true;
-            requestActiveAccount(R.id.syns_get_active_account);
+            loadPrivateKeys(R.id.syns_load_private_keys);
         }
     }
 
@@ -245,8 +247,8 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                             countingIdlingResource.increment();
                             isPrivateKeySendingNow = true;
                             UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                            sendMessageWithPrivateKeyBackup(R.id
-                                    .syns_send_backup_with_private_key_to_key_owner, account);
+                            sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner,
+                                    accountDao.getEmail());
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                                     .internet_connection_is_not_available));
@@ -315,7 +317,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
             case R.id.loader_id_save_private_key_as_file:
                 isPrivateKeySavingNow = true;
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(),
+                return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(), accountDao,
                         destinationUri);
             default:
                 return null;
@@ -420,7 +422,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(Constants.MIME_TYPE_PGP_KEY);
-        intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account));
+        intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(accountDao.getEmail()));
         startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
     }
 }

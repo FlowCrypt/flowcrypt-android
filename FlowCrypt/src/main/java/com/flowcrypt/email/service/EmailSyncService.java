@@ -100,9 +100,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
     public static final int MESSAGE_MOVE_MESSAGE = 8;
     public static final int MESSAGE_SEND_MESSAGE = 9;
     public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
-    public static final int MESSAGE_GET_ACTIVE_ACCOUNT = 11;
-    public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 12;
-    public static final int MESSAGE_SEARCH_MESSAGES = 13;
+    public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 11;
+    public static final int MESSAGE_SEARCH_MESSAGES = 12;
 
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
@@ -926,20 +925,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     case MESSAGE_LOAD_PRIVATE_KEYS:
                         if (emailSyncManager != null && action != null) {
                             emailSyncManager.loadPrivateKeys(action.getOwnerKey(), action.getRequestCode());
-                        }
-                        break;
-
-                    case MESSAGE_GET_ACTIVE_ACCOUNT:
-                        EmailSyncService emailSyncService = syncServiceWeakReference.get();
-
-                        if (emailSyncService != null && action != null) {
-                            try {
-                                emailSyncService.sendReply(action.getOwnerKey(), action.getRequestCode(),
-                                        REPLY_RESULT_CODE_ACTION_OK, emailSyncManager.getAccountDao().getEmail());
-                            } catch (RemoteException e) {
-                                e.printStackTrace();
-                                ExceptionUtil.handleError(e);
-                            }
                         }
                         break;
 

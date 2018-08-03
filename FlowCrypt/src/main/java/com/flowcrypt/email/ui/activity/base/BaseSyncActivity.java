@@ -127,28 +127,6 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
 
     /**
-     * Request the active account
-     *
-     * @param requestCode The unique request code for identify the current action.
-     */
-    public void requestActiveAccount(int requestCode) {
-        if (checkServiceBound(isBoundToSyncService)) return;
-        try {
-            BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-                    requestCode, null);
-
-            Message message = Message.obtain(null, EmailSyncService.MESSAGE_GET_ACTIVE_ACCOUNT,
-                    action);
-            message.replyTo = syncServiceReplyMessenger;
-
-            syncServiceMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-    }
-
-    /**
      * Load the user private keys.
      *
      * @param requestCode The unique request code for identify the current action.

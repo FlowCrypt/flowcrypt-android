@@ -22,6 +22,8 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
@@ -46,7 +48,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     private View layoutContent;
     private EditText editTextUserMessage;
 
-    private String email;
+    private AccountDao accountDao;
     private boolean isMessageSent;
 
     @Override
@@ -60,20 +62,6 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     }
 
     @Override
-    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
-        switch (requestCode) {
-            case R.id.syns_get_active_account:
-                email = (String) obj;
-                break;
-        }
-    }
-
-    @Override
-    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
-
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
@@ -81,12 +69,8 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
         }
 
         initViews();
-    }
 
-    @Override
-    public void onSyncServiceConnected() {
-        super.onSyncServiceConnected();
-        requestActiveAccount(R.id.syns_get_active_account);
+        accountDao = new AccountDaoSource().getActiveAccountInformation(this);
     }
 
     @Override
@@ -135,7 +119,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
                         + BuildConfig.VERSION_CODE;
 
                 return new ApiServiceAsyncTaskLoader(getApplicationContext(),
-                        new PostHelpFeedbackRequest(new PostHelpFeedbackModel(email, text)));
+                        new PostHelpFeedbackRequest(new PostHelpFeedbackModel(accountDao.getEmail(), text)));
             default:
                 return null;
         }
