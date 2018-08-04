@@ -393,12 +393,10 @@ public class EmailSyncManager {
      *
      * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
      * @param requestCode The unique request code for identify the current action.
-     * @param accountName The account name.
      */
-    public void sendMessageWithBackup(String ownerKey, int requestCode, String accountName) {
+    public void sendMessageWithBackup(String ownerKey, int requestCode) {
         try {
-            activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey,
-                    requestCode, accountName));
+            activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

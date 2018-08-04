@@ -148,8 +148,8 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) throws Exception {
         Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
         Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
-        Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao.getEmail(),
-                session, EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao.getEmail(), pgpKey.armor(), -1));
+        Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao, session,
+                EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKey.armor()));
         transport.sendMessage(message, message.getAllRecipients());
         return true;
     }

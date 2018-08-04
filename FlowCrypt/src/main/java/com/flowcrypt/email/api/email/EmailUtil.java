@@ -30,7 +30,6 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -196,18 +195,16 @@ public class EmailUtil {
     /**
      * Generate a {@link BodyPart} with a private key as an attachment.
      *
-     * @param accountName       The account name;
-     * @param armoredPrivateKey The  armored private key.
-     * @param i                 The unique index of attachment.
+     * @param accountDao        The given account;
+     * @param armoredPrivateKey The armored private key.
      * @return {@link BodyPart} with private key as an attachment.
      * @throws Exception will occur when generate this {@link BodyPart}.
      */
     @NonNull
-    public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(String accountName,
-                                                                        String armoredPrivateKey,
-                                                                        int i) throws Exception {
+    public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(AccountDao accountDao,
+                                                                        String armoredPrivateKey) throws Exception {
         MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
-        String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName + (i >= 0 ? ("_" + i) : ""));
+        String attachmentName = SecurityUtils.generateNameForPrivateKey(accountDao.getEmail());
 
         DataSource dataSource = new ByteArrayDataSource(armoredPrivateKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
         attachmentsBodyPart.setDataHandler(new DataHandler(dataSource));
@@ -218,35 +215,27 @@ public class EmailUtil {
     /**
      * Generate a message with the html pattern and the private key(s) as an attachment.
      *
-     * @param context     Interface to global information about an application environment;
-     * @param accountName The account name;
-     * @param session     The current session.
+     * @param context    Interface to global information about an application environment;
+     * @param accountDao The given account;
+     * @param session    The current session.
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
     @NonNull
-    public static Message generateMessageWithAllPrivateKeysBackups(Context context, String accountName, Session session)
+    public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao, Session
+            session)
             throws Exception {
-        Message message = generateMessageWithBackupTemplate(context, accountName, session);
+        Message message = generateMessageWithBackupTemplate(context, accountDao, session);
 
         Multipart multipart = new MimeMultipart();
         BodyPart messageBodyPart = getBodyPartWithBackupText(context);
         multipart.addBodyPart(messageBodyPart);
 
-        List<PrivateKeyInfo> privateKeyInfoList = SecurityUtils.getPrivateKeysInfo(context);
-        Js js = new Js(context, new SecurityStorageConnector(context));
-
-        for (int i = 0; i < privateKeyInfoList.size(); i++) {
-            PrivateKeyInfo privateKeyInfo = privateKeyInfoList.get(i);
-
-            String decryptedKeyFromDatabase = privateKeyInfo.getPgpKeyInfo().getPrivate();
-            PgpKey pgpKey = js.crypto_key_read(decryptedKeyFromDatabase);
-            pgpKey.encrypt(privateKeyInfo.getPassphrase());
-
-            MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountName, pgpKey.armor(), i);
-            attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
-            multipart.addBodyPart(attachmentsBodyPart);
-        }
+        MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountDao,
+                SecurityUtils.generatePrivateKeysBackup(context, new Js(context,
+                        new SecurityStorageConnector(context)), accountDao));
+        attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
+        multipart.addBodyPart(attachmentsBodyPart);
 
         message.setContent(multipart);
         return message;
@@ -256,16 +245,16 @@ public class EmailUtil {
      * Generate a message with the html pattern and the private key as an attachment.
      *
      * @param context     Interface to global information about an application environment;
-     * @param accountName The account name;
+     * @param accountDao The given account;
      * @param session     The current session.
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
     @NonNull
-    public static Message generateMessageWithPrivateKeysBackup(Context context, String accountName, Session session,
+    public static Message generateMessageWithPrivateKeysBackup(Context context, AccountDao accountDao, Session session,
                                                                MimeBodyPart mimeBodyPartPrivateKey)
             throws Exception {
-        Message message = generateMessageWithBackupTemplate(context, accountName, session);
+        Message message = generateMessageWithBackupTemplate(context, accountDao, session);
         Multipart multipart = new MimeMultipart();
         BodyPart messageBodyPart = getBodyPartWithBackupText(context);
         multipart.addBodyPart(messageBodyPart);
@@ -401,12 +390,12 @@ public class EmailUtil {
     }
 
     @NonNull
-    public static Message generateMessageWithBackupTemplate(Context context, String accountName, Session session)
+    public static Message generateMessageWithBackupTemplate(Context context, AccountDao accountDao, Session session)
             throws MessagingException {
         Message message = new MimeMessage(session);
 
-        message.setFrom(new InternetAddress(accountName));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountName));
+        message.setFrom(new InternetAddress(accountDao.getEmail()));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountDao.getEmail()));
         message.setSubject(context.getString(R.string.your_key_backup, context.getString(R.string.app_name)));
         return message;
     }

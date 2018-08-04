@@ -106,13 +106,11 @@ public abstract class BaseSyncActivity extends BaseActivity {
      * Send a message with a backup to the key owner.
      *
      * @param requestCode The unique request code for identify the current action.
-     * @param accountName The account name.
      */
-    public void sendMessageWithPrivateKeyBackup(int requestCode, String accountName) {
+    public void sendMessageWithPrivateKeyBackup(int requestCode) {
         if (checkServiceBound(isBoundToSyncService)) return;
 
-        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-                requestCode, accountName);
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP,
                 action);
@@ -250,8 +248,8 @@ public abstract class BaseSyncActivity extends BaseActivity {
     /**
      * Load the last messages which not exist in the database.
      *
-     * @param requestCode           The unique request code for identify the current action.
-     * @param currentFolder         {@link Folder} object.
+     * @param requestCode   The unique request code for identify the current action.
+     * @param currentFolder {@link Folder} object.
      */
     public void refreshMessages(int requestCode, Folder currentFolder) {
         if (checkServiceBound(isBoundToSyncService)) return;

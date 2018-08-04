@@ -930,10 +930,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                     case MESSAGE_SEND_MESSAGE_WITH_BACKUP:
                         if (emailSyncManager != null && action != null) {
-                            String account = (String) action.getObject();
-
-                            emailSyncManager.sendMessageWithBackup(action.getOwnerKey(), action.getRequestCode(),
-                                    account);
+                            emailSyncManager.sendMessageWithBackup(action.getOwnerKey(), action.getRequestCode());
                         }
                         break;
 

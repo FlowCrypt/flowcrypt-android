@@ -8,7 +8,11 @@ package com.flowcrypt.email.security;
 import android.content.Context;
 import android.database.Cursor;
 
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 
@@ -95,5 +99,36 @@ public class SecurityUtils {
     public static String generateNameForPrivateKey(String email) {
         String sanitizedEmail = email.replaceAll("[^a-z0-9]", "");
         return "flowcrypt-backup-" + sanitizedEmail + ".key";
+    }
+
+    /**
+     * Generate a private keys backup for the given account.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param js         An instance of {@link Js}
+     * @param accountDao The given account
+     * @return A string which includes private keys
+     */
+    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao) {
+        StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
+
+        List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
+                (context, accountDao.getEmail());
+
+        PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
+                (longIdListOfAccountPrivateKeys.toArray(new String[0]));
+
+        if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+            throw new IllegalArgumentException("There are no private keys for " + accountDao.getEmail());
+        }
+
+        for (int i = 0; i < pgpKeyInfoArray.length; i++) {
+            PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+            pgpKey.encrypt(js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid()));
+            armoredPrivateKeysBackupStringBuilder.append(i > 0 ? "\n" + pgpKey.armor() : pgpKey.armor());
+        }
+
+        return armoredPrivateKeysBackupStringBuilder.toString();
     }
 }

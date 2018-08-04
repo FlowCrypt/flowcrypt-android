@@ -52,8 +52,7 @@ import java.util.List;
  */
 
 public class BackupSettingsActivity extends BaseBackStackSyncActivity implements View
-        .OnClickListener, RadioGroup.OnCheckedChangeListener, LoaderManager
-        .LoaderCallbacks<LoaderResult> {
+        .OnClickListener, RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
     private CountingIdlingResource countingIdlingResource;
@@ -173,8 +172,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                                 UIUtil.exchangeViewVisibility(
                                         BackupSettingsActivity.this, true,
                                         progressBar, layoutContent);
-                                sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner,
-                                        accountDao.getEmail());
+                                sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
                             }
                         });
                 break;
@@ -247,8 +245,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
                             countingIdlingResource.increment();
                             isPrivateKeySendingNow = true;
                             UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                            sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner,
-                                    accountDao.getEmail());
+                            sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
                         } else {
                             UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                                     .internet_connection_is_not_available));
@@ -317,8 +314,7 @@ public class BackupSettingsActivity extends BaseBackStackSyncActivity implements
             case R.id.loader_id_save_private_key_as_file:
                 isPrivateKeySavingNow = true;
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(), accountDao,
-                        destinationUri);
+                return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(), accountDao, destinationUri);
             default:
                 return null;
         }
