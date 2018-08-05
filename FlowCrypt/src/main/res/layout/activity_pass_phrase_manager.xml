@@ -60,12 +60,12 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:id="@+id/textViewSetupFlowCrypt"
+                    android:id="@+id/textViewFirstPasswordCheckTitle"
                     style="@style/ScreenHeading"
-                    android:text="@string/set_up_flow_crypt"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="@string/set_up_flow_crypt" />
 
                 <LinearLayout
                     android:id="@+id/layoutPasswordHint"
@@ -75,7 +75,7 @@
                     android:orientation="horizontal"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                     app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCrypt">
+                    app:layout_constraintTop_toBottomOf="@+id/textViewFirstPasswordCheckTitle">
 
                     <TextView
                         android:layout_width="0dp"
@@ -184,12 +184,12 @@
                 android:visibility="gone">
 
                 <TextView
-                    android:id="@+id/textViewSetupFlowCryptSecond"
+                    android:id="@+id/textViewSecondPasswordCheckTitle"
                     style="@style/ScreenHeading"
-                    android:text="@string/set_up_flow_crypt"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="@string/set_up_flow_crypt" />
 
                 <TextView
                     android:id="@+id/layoutPasswordHintSecond"
@@ -203,7 +203,7 @@
                     android:textColor="@android:color/black"
                     app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewSetupFlowCryptSecond" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSecondPasswordCheckTitle" />
 
                 <android.support.design.widget.TextInputLayout
                     android:id="@+id/textInputLayoutKeyPasswordSecond"
@@ -289,39 +289,39 @@
                 android:visibility="gone">
 
                 <TextView
-                    android:id="@+id/textViewYouAreAllSet"
+                    android:id="@+id/textViewSuccessTitle"
                     style="@style/ScreenHeading"
                     android:layout_marginTop="@dimen/margin_top_you_are_all_set"
-                    android:text="@string/you_are_all_set"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="@string/you_are_all_set" />
 
                 <TextView
-                    android:id="@+id/textViewSuccessSubHeader"
+                    android:id="@+id/textViewSuccessSubTitle"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/layout_height_sub_header"
                     android:layout_gravity="center_vertical"
                     android:layout_marginTop="@dimen/default_margin_content_big"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/you_can_send_and_receive_encrypted_emails"
                     android:textColor="@android:color/black"
                     app:layout_constraintEnd_toStartOf="@+id/guidelineRightSuccess"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeftSuccess"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewYouAreAllSet" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSuccessTitle"
+                    tools:text="@string/you_can_send_and_receive_encrypted_emails" />
 
                 <Button
-                    android:id="@+id/buttonContinue"
+                    android:id="@+id/buttonSuccess"
                     style="@style/AppWidget.Button"
                     android:layout_width="0dp"
                     android:layout_marginTop="@dimen/margin_top_button_continue"
-                    android:text="@string/continue_"
                     android:theme="@style/AppWidget.Button.Green"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSuccess"
                     app:layout_constraintRight_toLeftOf="@+id/guidelineRightSuccess"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewSuccessSubHeader" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSuccessSubTitle"
+                    tools:text="@string/continue_" />
 
                 <android.support.constraint.Guideline
                     android:id="@+id/guidelineLeftSuccess"

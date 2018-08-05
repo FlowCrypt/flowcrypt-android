@@ -73,7 +73,7 @@ public class CreatePrivateKeyActivityTest {
         onView(withId(R.id.imageButtonShowPasswordHint)).check(matches(isDisplayed())).perform(click());
         onView(withId(R.id.webView)).check(matches(isDisplayed()));
         onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.textViewSetupFlowCrypt)).check(matches(isDisplayed()));
+        onView(withId(R.id.textViewFirstPasswordCheckTitle)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -130,7 +130,7 @@ public class CreatePrivateKeyActivityTest {
                 closeSoftKeyboard());
         onView(withId(R.id.buttonConfirmPassPhrases)).check(matches(isDisplayed())).perform(click());
 
-        onView(withId(R.id.buttonContinue)).check(matches(isDisplayed()));
+        onView(withId(R.id.buttonSuccess)).check(matches(isDisplayed()));
     }
 
     @Test

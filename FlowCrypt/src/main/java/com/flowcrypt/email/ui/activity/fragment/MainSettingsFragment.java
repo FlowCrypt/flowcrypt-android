@@ -7,10 +7,11 @@ package com.flowcrypt.email.ui.activity.fragment;
 
 import android.os.Bundle;
 import android.support.v7.preference.Preference;
-import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 
 /**
@@ -39,8 +40,8 @@ public class MainSettingsFragment extends BasePreferenceFragment implements Pref
     public boolean onPreferenceClick(Preference preference) {
         switch (preference.getKey()) {
             case Constants.PREFERENCES_KEY_SETTINGS_SECURITY:
-                Toast.makeText(getContext(), R.string.security_settings_were_not_implemented_yet,
-                        Toast.LENGTH_SHORT).show();
+                startActivity(ChangePassPhraseActivity.newIntent(getContext(), new AccountDaoSource()
+                        .getActiveAccountInformation(getContext())));
                 return true;
 
             default:

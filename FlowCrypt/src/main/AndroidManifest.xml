@@ -192,6 +192,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.activity.ChangePassPhraseActivity"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
