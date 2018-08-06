@@ -10,6 +10,8 @@ import android.os.Messenger;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import javax.mail.Message;
 import javax.mail.Session;
@@ -50,7 +52,8 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
             Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
 
             Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
-                    accountDao, session);
+                    accountDao, session, new Js(syncListener.getContext(),
+                            new SecurityStorageConnector(syncListener.getContext())));
             transport.sendMessage(message, message.getAllRecipients());
 
             syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);

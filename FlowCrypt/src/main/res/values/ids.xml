@@ -24,6 +24,7 @@
     <item name="loader_id_create_private_key" type="id" />
     <item name="loader_id_search_public_key" type="id" />
     <item name="loader_id_parse_public_keys" type="id" />
+    <item name="loader_id_change_pass_phrase" type="id" />
 
     <item name="syns_request_code_update_label_passive" type="id" />
     <item name="syns_request_code_update_label_active" type="id" />

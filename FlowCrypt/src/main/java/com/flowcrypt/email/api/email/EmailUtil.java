@@ -28,7 +28,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -218,13 +217,13 @@ public class EmailUtil {
      * @param context    Interface to global information about an application environment;
      * @param accountDao The given account;
      * @param session    The current session.
+     * @param js         An instance of {@link Js}
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
     @NonNull
-    public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao, Session
-            session)
-            throws Exception {
+    public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao,
+                                                                   Session session, Js js) throws Exception {
         Message message = generateMessageWithBackupTemplate(context, accountDao, session);
 
         Multipart multipart = new MimeMultipart();
@@ -232,8 +231,7 @@ public class EmailUtil {
         multipart.addBodyPart(messageBodyPart);
 
         MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountDao,
-                SecurityUtils.generatePrivateKeysBackup(context, new Js(context,
-                        new SecurityStorageConnector(context)), accountDao));
+                SecurityUtils.generatePrivateKeysBackup(context, js, accountDao));
         attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
         multipart.addBodyPart(attachmentsBodyPart);
 
@@ -244,9 +242,9 @@ public class EmailUtil {
     /**
      * Generate a message with the html pattern and the private key as an attachment.
      *
-     * @param context     Interface to global information about an application environment;
+     * @param context    Interface to global information about an application environment;
      * @param accountDao The given account;
-     * @param session     The current session.
+     * @param session    The current session.
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
