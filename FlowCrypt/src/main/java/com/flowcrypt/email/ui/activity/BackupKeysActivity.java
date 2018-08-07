@@ -77,12 +77,9 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         switch (requestCode) {
             case R.id.syns_send_backup_with_private_key_to_key_owner:
                 isPrivateKeySendingNow = false;
-                layoutSyncStatus.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
                 if (!countingIdlingResource.isIdleNow()) {
                     countingIdlingResource.decrement();
                 }
-                Toast.makeText(this, R.string.backup_was_sent_successfully, Toast.LENGTH_SHORT).show();
                 setResult(Activity.RESULT_OK);
                 finish();
                 break;
@@ -244,12 +241,11 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         switch (loaderId) {
             case R.id.loader_id_save_private_key_as_file:
                 isPrivateKeySavingNow = false;
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
                 if ((boolean) result) {
-                    Toast.makeText(this, R.string.key_successfully_saved, Toast.LENGTH_SHORT).show();
                     setResult(Activity.RESULT_OK);
                     finish();
                 } else {
+                    UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
                     showInfoSnackbar(getRootView(), getString(R.string.error_occurred_please_try_again));
                 }
                 break;

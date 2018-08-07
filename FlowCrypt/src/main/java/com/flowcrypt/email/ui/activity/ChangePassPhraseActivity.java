@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -38,6 +39,9 @@ import java.util.ArrayList;
  */
 public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         implements LoaderManager.LoaderCallbacks<LoaderResult> {
+
+    public static final int REQUEST_CODE_BACKUP_WITH_OPTION = 100;
+
     public static Intent newIntent(Context context, AccountDao accountDao) {
         Intent intent = new Intent(context, ChangePassPhraseActivity.class);
         intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
@@ -74,6 +78,22 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
             default:
                 super.onClick(v);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_BACKUP_WITH_OPTION:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(this, R.string.backed_up_successfully, Toast.LENGTH_SHORT).show();
+                        break;
+                }
+                finish();
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -138,9 +158,8 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
             case R.id.loader_id_load_private_key_backups_from_email:
                 ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
-                if (keyDetailsList.isEmpty()) {
-                    isBackEnable = true;
-                    //show options
+                if (keyDetailsList.isEmpty()) {//need to remove "!"
+                    runBackupKeysActivity();
                 } else {
                     getSupportLoaderManager().initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
                 }
@@ -148,9 +167,8 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
             case R.id.loader_id_save_backup_to_inbox:
                 isBackEnable = true;
-                layoutSecondPasswordCheck.setVisibility(View.GONE);
-                layoutSuccess.setVisibility(View.VISIBLE);
-                UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
+                Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
+                finish();
                 break;
 
             default:
@@ -170,17 +188,18 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
                 break;
 
             case R.id.loader_id_load_private_key_backups_from_email:
-                isBackEnable = true;
-                //show options
-                break;
-
             case R.id.loader_id_save_backup_to_inbox:
-                isBackEnable = true;
-                //show options
+                runBackupKeysActivity();
                 break;
 
             default:
                 super.handleFailureLoaderResult(loaderId, e);
         }
+    }
+
+    protected void runBackupKeysActivity() {
+        isBackEnable = true;
+        Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
+        startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
     }
 }

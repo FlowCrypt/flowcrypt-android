@@ -19,7 +19,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.settings.BackupSettingsActivity;
+import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity;
 import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
@@ -55,9 +55,9 @@ import static org.hamcrest.Matchers.not;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class BackupSettingsActivityTest extends BaseTest {
+public class SearchBackupsInEmailActivityTest extends BaseTest {
 
-    private IntentsTestRule activityTestRule = new IntentsTestRule<>(BackupSettingsActivity.class);
+    private IntentsTestRule activityTestRule = new IntentsTestRule<>(SearchBackupsInEmailActivity.class);
 
     @Rule
     public TestRule ruleChain = RuleChain
@@ -68,13 +68,13 @@ public class BackupSettingsActivityTest extends BaseTest {
 
     @Before
     public void registerIdling() {
-        IdlingRegistry.getInstance().register(((BackupSettingsActivity) activityTestRule.getActivity())
+        IdlingRegistry.getInstance().register(((SearchBackupsInEmailActivity) activityTestRule.getActivity())
                 .getCountingIdlingResource());
     }
 
     @After
     public void unregisterIdling() {
-        IdlingRegistry.getInstance().unregister(((BackupSettingsActivity) activityTestRule.getActivity())
+        IdlingRegistry.getInstance().unregister(((SearchBackupsInEmailActivity) activityTestRule.getActivity())
                 .getCountingIdlingResource());
     }
 
@@ -125,7 +125,7 @@ public class BackupSettingsActivityTest extends BaseTest {
         testSelectEmailForSavingBackup();
         onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
         checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getTargetContext()
-                .getString(R.string.backup_was_sent_successfully));
+                .getString(R.string.backed_up_successfully));
     }
 
     @Test

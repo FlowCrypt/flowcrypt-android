@@ -127,7 +127,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.BackupSettingsActivity"
+            android:name=".ui.activity.settings.SearchBackupsInEmailActivity"
             android:label="@string/backups"
             android:screenOrientation="portrait" />
 

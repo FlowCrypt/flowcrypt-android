@@ -98,7 +98,7 @@
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
     <string name="key_successfully_saved">Key successfully saved</string>
     <string name="your_key_backup">Your %1$s Backup</string>
-    <string name="backup_was_sent_successfully">Backed up successfully</string>
+    <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
     <string name="please_wait_while_action_will_be_completed">Still working, please wait</string>

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.settings;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -36,7 +37,9 @@ import java.util.List;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class BackupSettingsActivity extends BaseSettingsBackStackSyncActivity implements View.OnClickListener {
+public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActivity implements View.OnClickListener {
+    public static final int REQUEST_CODE_BACKUP_WITH_OPTION = 100;
+
     private CountingIdlingResource countingIdlingResource;
     private View progressBar;
     private View layoutContent;
@@ -61,8 +64,24 @@ public class BackupSettingsActivity extends BaseSettingsBackStackSyncActivity im
             finish();
         }
         countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-                (BackupSettingsActivity.class), BuildConfig.DEBUG);
+                (SearchBackupsInEmailActivity.class), BuildConfig.DEBUG);
         countingIdlingResource.increment();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_BACKUP_WITH_OPTION:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(this, R.string.backed_up_successfully, Toast.LENGTH_SHORT).show();
+                        finish();
+                        break;
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -106,8 +125,7 @@ public class BackupSettingsActivity extends BaseSettingsBackStackSyncActivity im
                             @Override
                             public void onClick(View v) {
                                 layoutSyncStatus.setVisibility(View.GONE);
-                                UIUtil.exchangeViewVisibility(
-                                        BackupSettingsActivity.this, true,
+                                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true,
                                         progressBar, layoutContent);
                                 loadPrivateKeys(R.id.syns_load_private_keys);
                             }
@@ -139,8 +157,7 @@ public class BackupSettingsActivity extends BaseSettingsBackStackSyncActivity im
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSeeMoreBackupOptions:
-                startActivity(new Intent(this, BackupKeysActivity.class));
-                finish();
+                startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
                 break;
         }
     }
