@@ -196,6 +196,11 @@
             android:name=".ui.activity.ChangePassPhraseActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.BackupKeysActivity"
+            android:label="@string/backup_options"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"

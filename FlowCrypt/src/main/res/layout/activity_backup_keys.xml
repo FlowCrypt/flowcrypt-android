@@ -23,7 +23,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <ProgressBar
                 style="?android:attr/progressBarStyle"
@@ -37,7 +38,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/default_margin_big"
                 android:fontFamily="sans-serif-light"
-                android:text="@string/loading_backups"
+                android:text="@string/loading"
                 android:textColor="@color/dark"
                 android:textSize="@dimen/default_text_size_big" />
         </LinearLayout>
@@ -46,33 +47,19 @@
         <ScrollView
             android:id="@+id/layoutContent"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone">
+            android:layout_height="match_parent">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <include
-                    android:id="@+id/layoutBackupFound"
-                    layout="@layout/backup_found"
+                    android:id="@+id/layoutBackupOptions"
+                    layout="@layout/backup_options"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                    app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
-
-                <include
-                    android:id="@+id/layoutBackupNotFound"
-                    layout="@layout/backup_not_found"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-                    app:layout_constraintTop_toBottomOf="@+id/layoutBackupFound" />
+                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight" />
 
                 <android.support.constraint.Guideline
                     android:id="@+id/guidelineLeft"

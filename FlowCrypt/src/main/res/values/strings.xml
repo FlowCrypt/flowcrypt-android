@@ -91,8 +91,10 @@
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
     <string name="backup_as_email">backup as email</string>
-    <string name="backup_as_download_hint">This will download your key as a file. Very secure option if your device is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
-    <string name="backup_as_email_hint">This will back up private key in your Email Inbox. The security depends on the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
+    <string name="backup_as_download_hint">This will download your key(s) as a file. Very secure option if your device
+        is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
+    <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
+        the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
     <string name="key_successfully_saved">Key successfully saved</string>
     <string name="your_key_backup">Your %1$s Backup</string>
@@ -346,4 +348,5 @@ icelanders prefer real sauna</font>
     <string name="done">Done!</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed!</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
+    <string name="backup_options">Backup options</string>
 </resources>
