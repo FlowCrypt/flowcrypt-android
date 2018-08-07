@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,10 +18,15 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity;
 import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
+
+import java.util.ArrayList;
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -34,8 +38,6 @@ import com.flowcrypt.email.util.UIUtil;
  */
 public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         implements LoaderManager.LoaderCallbacks<LoaderResult> {
-    private boolean isPassPhraseChanged;
-
     public static Intent newIntent(Context context, AccountDao accountDao) {
         Intent intent = new Intent(context, ChangePassPhraseActivity.class);
         intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
@@ -44,7 +46,9 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
     @Override
     public void onConfirmPassPhraseSuccess() {
-        getSupportLoaderManager().restartLoader(R.id.loader_id_change_pass_phrase, null, this);
+        getSupportLoaderManager().initLoader(R.id.loader_id_change_pass_phrase, null, this);
+        editTextKeyPassword.setText(null);
+        editTextKeyPasswordSecond.setText(null);
     }
 
     @Override
@@ -55,12 +59,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     @Override
     public void onBackPressed() {
         if (isBackEnable) {
-            if (!isPassPhraseChanged) {
-                super.onBackPressed();
-            } else {
-                setResult(Activity.RESULT_OK);
-                finish();
-            }
+            super.onBackPressed();
         } else {
             Toast.makeText(this, R.string.please_wait_while_pass_phrase_will_be_changed, Toast.LENGTH_SHORT).show();
         }
@@ -95,14 +94,16 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_change_pass_phrase:
-                if (!isPassPhraseChanged) {
-                    isBackEnable = false;
-                    UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-                    return new ChangePassPhraseAsyncTaskLoader(this, accountDao,
-                            editTextKeyPassword.getText().toString());
-                } else {
-                    return new Loader<>(this);
-                }
+                isBackEnable = false;
+                UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
+                return new ChangePassPhraseAsyncTaskLoader(this, accountDao,
+                        editTextKeyPassword.getText().toString());
+
+            case R.id.loader_id_load_private_key_backups_from_email:
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+
+            case R.id.loader_id_save_backup_to_inbox:
+                return new SaveBackupToInboxAsyncTaskLoader(this, accountDao);
 
             default:
                 return new Loader<>(this);
@@ -118,6 +119,8 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
         switch (loader.getId()) {
             case R.id.loader_id_change_pass_phrase:
+            case R.id.loader_id_load_private_key_backups_from_email:
+            case R.id.loader_id_save_backup_to_inbox:
                 isBackEnable = true;
                 break;
         }
@@ -128,13 +131,26 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_change_pass_phrase:
+                JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+                restartJsService();
+                getSupportLoaderManager().initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
+                break;
+
+            case R.id.loader_id_load_private_key_backups_from_email:
+                ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
+                if (keyDetailsList.isEmpty()) {
+                    isBackEnable = true;
+                    //show options
+                } else {
+                    getSupportLoaderManager().initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
+                }
+                break;
+
+            case R.id.loader_id_save_backup_to_inbox:
                 isBackEnable = true;
-                isPassPhraseChanged = (boolean) result;
                 layoutSecondPasswordCheck.setVisibility(View.GONE);
                 layoutSuccess.setVisibility(View.VISIBLE);
                 UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
-                JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
-                restartJsService();
                 break;
 
             default:
@@ -153,9 +169,18 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
                 showInfoSnackbar(getRootView(), e.getMessage());
                 break;
 
+            case R.id.loader_id_load_private_key_backups_from_email:
+                isBackEnable = true;
+                //show options
+                break;
+
+            case R.id.loader_id_save_backup_to_inbox:
+                isBackEnable = true;
+                //show options
+                break;
+
             default:
                 super.handleFailureLoaderResult(loaderId, e);
-                break;
         }
     }
 }
