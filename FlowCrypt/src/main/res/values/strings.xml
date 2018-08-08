@@ -350,4 +350,5 @@ icelanders prefer real sauna</font>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
     <string name="backup_options">Backup options</string>
     <string name="change_pass_phrase">Change pass phrase</string>
+    <string name="account_has_no_associated_keys">This account has no associated keys. Write us at %1$s if you need help</string>
 </resources>
