@@ -201,6 +201,11 @@
             android:label="@string/backup_options"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.settings.SecuritySettingsActivity"
+            android:label="@string/security"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"

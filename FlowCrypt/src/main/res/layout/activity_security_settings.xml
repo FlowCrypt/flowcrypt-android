@@ -11,8 +11,8 @@
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/experimentalSettingsFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.ExperimentalSettingsFragment"
+        android:id="@+id/securitySettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.SecuritySettingsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />

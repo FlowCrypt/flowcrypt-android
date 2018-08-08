@@ -6,12 +6,8 @@
 package com.flowcrypt.email.ui.activity.fragment;
 
 import android.os.Bundle;
-import android.support.v7.preference.Preference;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 
 /**
@@ -24,28 +20,10 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
  */
 
 
-public class MainSettingsFragment extends BasePreferenceFragment implements Preference.OnPreferenceClickListener {
+public class MainSettingsFragment extends BasePreferenceFragment {
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.preferences_main_settings);
-
-        Preference preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_SETTINGS_SECURITY);
-        if (preferenceSettingsSecurity != null) {
-            preferenceSettingsSecurity.setOnPreferenceClickListener(this);
-        }
-    }
-
-    @Override
-    public boolean onPreferenceClick(Preference preference) {
-        switch (preference.getKey()) {
-            case Constants.PREFERENCES_KEY_SETTINGS_SECURITY:
-                startActivity(ChangePassPhraseActivity.newIntent(getContext(), new AccountDaoSource()
-                        .getActiveAccountInformation(getContext())));
-                return true;
-
-            default:
-                return false;
-        }
     }
 }

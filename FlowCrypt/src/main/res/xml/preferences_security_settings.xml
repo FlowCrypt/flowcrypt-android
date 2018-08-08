@@ -5,10 +5,6 @@
 
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <android.support.v7.preference.Preference
-        android:layout="@layout/preference_item"
-        android:title="@string/simulate_app_crash">
-        <intent
-            android:targetClass="com.flowcrypt.email"
-            android:targetPackage="@string/application_id" />
-    </android.support.v7.preference.Preference>
+        android:key="@string/preferences_key_security_change_pass_phrase"
+        android:title="@string/change_pass_phrase" />
 </android.support.v7.preference.PreferenceScreen>

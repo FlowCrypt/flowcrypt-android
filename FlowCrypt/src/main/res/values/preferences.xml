@@ -7,4 +7,6 @@
     <string name="preferences_key_settings_security">preferences_key_settings_security</string>
     <string name="preferences_key_messages_notification_filter">preferences_key_messages_notification_filter</string>
     <string name="preferences_key_manage_notifications">preferences_key_manage_notifications</string>
+    <string name="preferences_key_security_change_pass_phrase">preferences_key_security_change_pass_phrase</string>
+
 </resources>

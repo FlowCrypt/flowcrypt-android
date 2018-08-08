@@ -12,7 +12,11 @@
 
     <android.support.v7.preference.Preference
         android:key="@string/preferences_key_settings_security"
-        android:title="@string/security" />
+        android:title="@string/security">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.settings.SecuritySettingsActivity"
+            android:targetPackage="@string/application_id" />
+    </android.support.v7.preference.Preference>
 
     <android.support.v7.preference.Preference android:title="@string/contacts">
         <intent
