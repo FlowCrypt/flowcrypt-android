@@ -24,10 +24,8 @@ import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 import com.flowcrypt.email.BuildConfig;
 
 import org.acra.ACRA;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;

@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -294,16 +295,17 @@ public class EmailUtil {
      * @param context    context Interface to global information about an application environment;
      * @param accountDao An {@link AccountDao} object.
      * @param session    A {@link Session} object.
+     * @param js         An instance of {@link Js}
      * @return A list of {@link KeyDetails}
      * @throws MessagingException
      * @throws IOException
      */
     public static Collection<? extends KeyDetails> getPrivateKeyBackupsUsingGmailAPI(Context context,
                                                                                      AccountDao accountDao,
-                                                                                     Session session)
+                                                                                     Session session, Js js)
             throws IOException, MessagingException {
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
-        String search = new Js(context, null).api_gmail_query_backups(accountDao.getEmail());
+        String search = js.api_gmail_query_backups(accountDao.getEmail());
         Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
 
         ListMessagesResponse listMessagesResponse = gmailApiService
@@ -343,9 +345,18 @@ public class EmailUtil {
             MimeMessage mimeMessage = new MimeMessage(session,
                     new ByteArrayInputStream(Base64.decodeBase64(message.getRaw())));
 
-            String key = getKeyFromMessageIfItExists(mimeMessage);
-            if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList, key)) {
-                privateKeyDetailsList.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+            String backup = getKeyFromMessageIfItExists(mimeMessage);
+
+            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
+
+            for (MessageBlock messageBlock : messageBlocks) {
+                if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+                    if (!TextUtils.isEmpty(messageBlock.getContent())
+                            && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, backup)) {
+                        privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
+                                KeyDetails.Type.EMAIL));
+                    }
+                }
             }
         }
 

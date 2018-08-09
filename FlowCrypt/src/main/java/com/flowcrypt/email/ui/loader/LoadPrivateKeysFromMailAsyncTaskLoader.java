@@ -14,8 +14,11 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
@@ -68,17 +71,20 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     public LoaderResult loadInBackground() {
         isActionStarted = true;
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+
         try {
+            Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
+
             Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
 
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
                     privateKeyDetailsList.addAll(
-                            EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), accountDao, session));
+                            EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), accountDao, session, js));
                     break;
 
                 default:
-                    privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session));
+                    privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, js));
                     break;
             }
             return new LoaderResult(privateKeyDetailsList, null);
@@ -105,12 +111,13 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
      * Get a list of {@link KeyDetails} using the standard <b>JavaMail API</b>
      *
      * @param session A {@link Session} object.
+     * @param js      An instance of {@link Js}
      * @return A list of {@link KeyDetails}
      * @throws MessagingException
      * @throws IOException
      * @throws GoogleAuthException
      */
-    private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Session session)
+    private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Session session, Js js)
             throws MessagingException, IOException, GoogleAuthException {
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
         Store store = null;
@@ -127,10 +134,18 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
                             SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
 
                     for (Message message : foundMessages) {
-                        String key = EmailUtil.getKeyFromMessageIfItExists(message);
-                        if (!TextUtils.isEmpty(key)
-                                && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, key)) {
-                            privateKeyDetailsList.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+                        String backup = EmailUtil.getKeyFromMessageIfItExists(message);
+
+                        MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
+
+                        for (MessageBlock messageBlock : messageBlocks) {
+                            if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+                                if (!TextUtils.isEmpty(messageBlock.getContent())
+                                        && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, backup)) {
+                                    privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
+                                            KeyDetails.Type.EMAIL));
+                                }
+                            }
                         }
                     }
 
