@@ -18,6 +18,7 @@ import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
+import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
@@ -115,7 +116,7 @@ public class SecurityUtils {
      * @return A string which includes private keys
      */
     public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao) throws
-            PrivateKeyStrengthException {
+            PrivateKeyStrengthException, DifferentPassPhrasesException {
         StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
         Zxcvbn zxcvbn = new Zxcvbn();
         List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
@@ -128,10 +129,18 @@ public class SecurityUtils {
             throw new IllegalArgumentException("There are no private keys for " + accountDao.getEmail());
         }
 
+        String firstPassPhrase = null;
+
         for (int i = 0; i < pgpKeyInfoArray.length; i++) {
             PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
 
             String passPhrase = js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid());
+
+            if (i == 0) {
+                firstPassPhrase = passPhrase;
+            } else if (!passPhrase.equals(firstPassPhrase)) {
+                throw new DifferentPassPhrasesException("The keys have different pass phrase!");
+            }
 
             if (TextUtils.isEmpty(passPhrase)) {
                 throw new PrivateKeyStrengthException("The pass phrase of some of your key(s) is empty!");

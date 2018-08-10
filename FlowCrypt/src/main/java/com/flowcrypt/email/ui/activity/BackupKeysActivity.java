@@ -33,6 +33,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity;
 import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
 
@@ -102,6 +103,17 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 if (e instanceof PrivateKeyStrengthException) {
                     showSnackbar(getRootView(),
                             getString(R.string.pass_phrase_is_too_weak),
+                            getString(R.string.fix),
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
+                                            accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                                }
+                            });
+                } else if (e instanceof DifferentPassPhrasesException) {
+                    showSnackbar(getRootView(),
+                            getString(R.string.different_pass_phrases),
                             getString(R.string.fix),
                             new View.OnClickListener() {
                                 @Override
@@ -289,6 +301,17 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 if (e instanceof PrivateKeyStrengthException) {
                     showSnackbar(getRootView(),
                             getString(R.string.pass_phrase_is_too_weak),
+                            getString(R.string.fix),
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
+                                            accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                                }
+                            });
+                } else if (e instanceof DifferentPassPhrasesException) {
+                    showSnackbar(getRootView(),
+                            getString(R.string.different_pass_phrases),
                             getString(R.string.fix),
                             new View.OnClickListener() {
                                 @Override
