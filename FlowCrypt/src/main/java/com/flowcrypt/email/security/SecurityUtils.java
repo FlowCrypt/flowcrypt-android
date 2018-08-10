@@ -7,14 +7,19 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.text.TextUtils;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
+import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
+import com.nulabinc.zxcvbn.Zxcvbn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,9 +114,10 @@ public class SecurityUtils {
      * @param accountDao The given account
      * @return A string which includes private keys
      */
-    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao) {
+    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao) throws
+            PrivateKeyStrengthException {
         StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
-
+        Zxcvbn zxcvbn = new Zxcvbn();
         List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
                 (context, accountDao.getEmail());
 
@@ -124,8 +130,26 @@ public class SecurityUtils {
 
         for (int i = 0; i < pgpKeyInfoArray.length; i++) {
             PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
+
+            String passPhrase = js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid());
+
+            if (TextUtils.isEmpty(passPhrase)) {
+                throw new PrivateKeyStrengthException("The pass phrase of some of your key(s) is empty!");
+            }
+
+            PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
+                    zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
+
+            if (passwordStrength != null) {
+                switch (passwordStrength.getWord()) {
+                    case Constants.PASSWORD_QUALITY_WEAK:
+                    case Constants.PASSWORD_QUALITY_POOR:
+                        throw new PrivateKeyStrengthException("The pass phrase of some of your key(s) is too weak!");
+                }
+            }
+
             PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-            pgpKey.encrypt(js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid()));
+            pgpKey.encrypt(passPhrase);
             armoredPrivateKeysBackupStringBuilder.append(i > 0 ? "\n" + pgpKey.armor() : pgpKey.armor());
         }
 

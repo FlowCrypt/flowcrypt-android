@@ -73,6 +73,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSuccess:
+                setResult(Activity.RESULT_OK);
                 finish();
                 break;
 
@@ -90,6 +91,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
                         Toast.makeText(this, R.string.backed_up_successfully, Toast.LENGTH_SHORT).show();
                         break;
                 }
+                setResult(Activity.RESULT_OK);
                 finish();
                 break;
             default:
@@ -168,6 +170,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
             case R.id.loader_id_save_backup_to_inbox:
                 isBackEnable = true;
                 Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
+                setResult(Activity.RESULT_OK);
                 finish();
                 break;
 

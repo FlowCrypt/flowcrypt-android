@@ -351,4 +351,6 @@ icelanders prefer real sauna</font>
     <string name="backup_options">Backup options</string>
     <string name="change_pass_phrase">Change pass phrase</string>
     <string name="account_has_no_associated_keys">This account has no associated keys. Write us at %1$s if you need help</string>
+    <string name="pass_phrase_is_too_weak">The pass phrase of some of your key(s) is too weak</string>
+    <string name="fix">fix</string>
 </resources>

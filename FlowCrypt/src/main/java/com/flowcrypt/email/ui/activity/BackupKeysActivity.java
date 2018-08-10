@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
 
 /**
  * This activity helps to backup private keys
@@ -47,6 +48,8 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         .OnClickListener, RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
     private static final int REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY = 10;
+    private static final int REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY = 11;
+
     private CountingIdlingResource countingIdlingResource;
     private View progressBar;
     private View layoutContent;
@@ -91,24 +94,39 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         switch (requestCode) {
             case R.id.syns_send_backup_with_private_key_to_key_owner:
                 isPrivateKeySendingNow = false;
-                UIUtil.exchangeViewVisibility(
-                        BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+                UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
                 if (!countingIdlingResource.isIdleNow()) {
                     countingIdlingResource.decrement();
                 }
-                UIUtil.showSnackbar(getRootView(),
-                        getString(R.string.backup_was_not_sent),
-                        getString(R.string.retry),
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                layoutSyncStatus.setVisibility(View.GONE);
-                                UIUtil.exchangeViewVisibility(
-                                        BackupKeysActivity.this, true,
-                                        progressBar, layoutContent);
-                                sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
-                            }
-                        });
+
+                if (e instanceof PrivateKeyStrengthException) {
+                    showSnackbar(getRootView(),
+                            getString(R.string.pass_phrase_is_too_weak),
+                            getString(R.string.fix),
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
+                                            accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                                }
+                            });
+                } else {
+                    showSnackbar(getRootView(),
+                            getString(R.string.backup_was_not_sent),
+                            getString(R.string.retry),
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    layoutSyncStatus.setVisibility(View.GONE);
+                                    UIUtil.exchangeViewVisibility(
+                                            BackupKeysActivity.this, true,
+                                            progressBar, layoutContent);
+                                    sendMessageWithPrivateKeyBackup(R.id
+                                            .syns_send_backup_with_private_key_to_key_owner);
+                                }
+                            });
+                }
+
                 break;
         }
     }
@@ -142,6 +160,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             case R.id.buttonBackupAction:
                 switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                     case R.id.radioButtonEmail:
+                        dismissSnackBar();
                         if (GeneralUtil.isInternetConnectionAvailable(this)) {
                             countingIdlingResource.increment();
                             isPrivateKeySendingNow = true;
@@ -154,6 +173,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                         break;
 
                     case R.id.radioButtonDownload:
+                        dismissSnackBar();
                         destinationUri = null;
                         runActivityToChooseDestinationForExportedKey();
                         break;
@@ -205,6 +225,11 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                         }
                         break;
                 }
+                break;
+
+            case REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY:
+                layoutSyncStatus.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
                 break;
         }
     }
@@ -260,8 +285,23 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         switch (loaderId) {
             case R.id.loader_id_save_private_key_as_file:
                 isPrivateKeySavingNow = false;
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                showInfoSnackbar(getRootView(), e.getMessage());
+                UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+                if (e instanceof PrivateKeyStrengthException) {
+                    showSnackbar(getRootView(),
+                            getString(R.string.pass_phrase_is_too_weak),
+                            getString(R.string.fix),
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
+                                            accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                                }
+                            });
+                } else {
+                    UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+                    showInfoSnackbar(getRootView(), e.getMessage());
+                }
+
                 break;
 
             default:
