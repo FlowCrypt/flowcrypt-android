@@ -143,14 +143,18 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
      * Perform a backup of the armored key in INBOX.
      *
      * @return true if message was send.
-     * @throws Exception Some exceptions can be occurred.
      */
-    private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) throws Exception {
-        Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
-        Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
-        Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao, session,
-                EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKey.armor()));
-        transport.sendMessage(message, message.getAllRecipients());
+    private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) {
+        try {
+            Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
+            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
+            Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao, session,
+                    EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKey.armor()));
+            transport.sendMessage(message, message.getAllRecipients());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
         return true;
     }
 
@@ -194,18 +198,22 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
      *
      * @param pgpKey A created PGP key.
      * @return true if no errors.
-     * @throws IOException
      */
-    private boolean registerUserPublicKey(PgpKey pgpKey) throws IOException {
-        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-        Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
-                new InitialLegacySubmitModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+    private boolean registerUserPublicKey(PgpKey pgpKey) {
+        try {
+            ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+            Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
+                    new InitialLegacySubmitModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
 
-        InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
+            InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
 
-        return initialLegacySubmitResponse != null && (initialLegacySubmitResponse.getApiError() == null || !
-                (initialLegacySubmitResponse.getApiError().getCode() >= 400
-                        && initialLegacySubmitResponse.getApiError().getCode() < 500));
+            return initialLegacySubmitResponse != null && (initialLegacySubmitResponse.getApiError() == null || !
+                    (initialLegacySubmitResponse.getApiError().getCode() >= 400
+                            && initialLegacySubmitResponse.getApiError().getCode() < 500));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -213,14 +221,18 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
      *
      * @param pgpKey A created PGP key.
      * @return true if no errors.
-     * @throws IOException
      */
-    private boolean requestingTestMessageWithNewPublicKey(PgpKey pgpKey) throws IOException {
-        ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-        Response<TestWelcomeResponse> response = apiService.postTestWelcome(
-                new TestWelcomeModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+    private boolean requestingTestMessageWithNewPublicKey(PgpKey pgpKey) {
+        try {
+            ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+            Response<TestWelcomeResponse> response = apiService.postTestWelcome(
+                    new TestWelcomeModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
 
-        TestWelcomeResponse testWelcomeResponse = response.body();
-        return testWelcomeResponse != null && testWelcomeResponse.isSent();
+            TestWelcomeResponse testWelcomeResponse = response.body();
+            return testWelcomeResponse != null && testWelcomeResponse.isSent();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

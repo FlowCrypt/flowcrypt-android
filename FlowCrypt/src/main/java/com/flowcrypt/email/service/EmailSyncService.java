@@ -751,7 +751,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     emailAndNamePairs.addAll(getEmailAndNamePairsFromMessage(message));
                 }
 
-                startService(EmailAndNameUpdaterService.getStartIntent(this, emailAndNamePairs));
+                EmailAndNameUpdaterService.enqueueWork(this, emailAndNamePairs);
             }
         } catch (MessagingException e) {
             e.printStackTrace();
