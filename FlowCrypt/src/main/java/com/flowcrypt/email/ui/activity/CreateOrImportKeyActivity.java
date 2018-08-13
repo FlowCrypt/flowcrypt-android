@@ -14,7 +14,7 @@ import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -88,13 +88,13 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
                 break;
 
             case R.id.buttonImportMyKey:
-                KeyDetails keyDetails = null;
+                KeyImportModel keyImportModel = null;
                 if (isServiceBound) {
-                    keyDetails = checkClipboardToFindKeyService.getKeyDetails();
+                    keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
                 }
 
                 startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,
-                        getString(R.string.import_private_key), keyDetails, true,
+                        getString(R.string.import_private_key), keyImportModel, true,
                         ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
                 break;
 

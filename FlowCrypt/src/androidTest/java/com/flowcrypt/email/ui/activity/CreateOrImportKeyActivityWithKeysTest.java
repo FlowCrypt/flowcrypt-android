@@ -89,7 +89,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
                         ImportPrivateKeyActivity.class)),
                 hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
                 hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),
-                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD),
+                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD),
                 hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)))
                 .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
         onView(withId(R.id.buttonImportMyKey)).check(matches(isDisplayed())).perform(click());

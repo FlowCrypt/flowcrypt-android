@@ -57,9 +57,17 @@ public class ImportPublicKeyForPgpContactActivity extends BaseImportKeyActivity 
 
     @Override
     public void onKeyValidated(KeyDetails.Type type) {
-        updateInformationAboutPgpContact();
-        setResult(Activity.RESULT_OK);
-        finish();
+        if (!keyDetailsList.isEmpty()) {
+            if (keyDetailsList.size() == 1) {
+                updateInformationAboutPgpContact();
+                setResult(Activity.RESULT_OK);
+                finish();
+            } else {
+                showInfoSnackbar(getRootView(), getString(R.string.select_only_one_key));
+            }
+        } else {
+            showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+        }
     }
 
     @Override
@@ -69,6 +77,8 @@ public class ImportPublicKeyForPgpContactActivity extends BaseImportKeyActivity 
 
     protected void updateInformationAboutPgpContact() {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+        KeyDetails keyDetails = keyDetailsList.get(0);
+
         if (pgpContact.getEmail().equalsIgnoreCase(keyDetails.getPgpContact().getEmail())) {
             pgpContact.setPubkey(keyDetails.getValue());
             contactsDaoSource.updatePgpContact(this, pgpContact);

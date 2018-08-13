@@ -110,18 +110,17 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
 
     @Override
     public void onKeyValidated(KeyDetails.Type type) {
-        if (keyDetails != null) {
-            if (!TextUtils.isEmpty(keyDetails.getValue())) {
-                UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-                startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyDetails.getValue()),
-                        REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
-            } else {
-                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                Toast.makeText(this, R.string.key_is_empty, Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-            Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+        switch (type) {
+            case CLIPBOARD:
+                if (!keyDetailsList.isEmpty()) {
+                    UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+                    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel
+                            .getKeyString()), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+                } else {
+                    UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+                    Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
     }
 

@@ -141,7 +141,8 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
                         for (MessageBlock messageBlock : messageBlocks) {
                             if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
                                 if (!TextUtils.isEmpty(messageBlock.getContent())
-                                        && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, backup)) {
+                                        && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock
+                                        .getContent())) {
                                     privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
                                             KeyDetails.Type.EMAIL));
                                 }

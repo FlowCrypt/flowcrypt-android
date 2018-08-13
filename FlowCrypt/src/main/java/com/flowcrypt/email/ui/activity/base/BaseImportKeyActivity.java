@@ -29,13 +29,15 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.ValidateKeyLoaderResult;
+import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
-import com.flowcrypt.email.ui.loader.ValidateKeyAsyncTaskLoader;
+import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import java.util.ArrayList;
 
 /**
  * The base import key activity. This activity defines a logic of import a key (private or
@@ -57,8 +59,8 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
             = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
             BaseImportKeyActivity.class);
 
-    public static final String KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD
-            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD",
+    public static final String KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD
+            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
             BaseImportKeyActivity.class);
 
     public static final String KEY_EXTRA_TITLE
@@ -68,7 +70,8 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11;
 
     protected ClipboardManager clipboardManager;
-    protected KeyDetails keyDetails;
+    protected ArrayList<KeyDetails> keyDetailsList;
+    protected KeyImportModel keyImportModel;
     protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
 
     protected View layoutContentView;
@@ -111,17 +114,17 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         return newIntent(context, title, null, isThrowErrorIfDuplicateFound, cls);
     }
 
-    public static Intent newIntent(Context context, String title, KeyDetails keyDetails,
+    public static Intent newIntent(Context context, String title, KeyImportModel keyImportModel,
                                    boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
-        return newIntent(context, true, title, keyDetails, isThrowErrorIfDuplicateFound, cls);
+        return newIntent(context, true, title, keyImportModel, isThrowErrorIfDuplicateFound, cls);
     }
 
-    public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyDetails keyDetails,
+    public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyImportModel keyImportModel,
                                    boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
         Intent intent = new Intent(context, cls);
         intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
         intent.putExtra(KEY_EXTRA_TITLE, title);
-        intent.putExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, keyDetails);
+        intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, keyImportModel);
         intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
         return intent;
     }
@@ -146,28 +149,27 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         if (getIntent() != null) {
             this.isThrowErrorIfDuplicateFound =
                     getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
-            this.keyDetails = getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD);
+            this.keyImportModel = getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD);
             this.title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
         }
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        keyDetailsList = new ArrayList<>();
 
         initViews();
 
-        if (keyDetails != null) {
-            onKeyValidated(KeyDetails.Type.CLIPBOARD);
+        if (keyImportModel != null) {
+            getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
         if (isCheckClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
-            keyDetails = checkClipboardToFindKeyService.getKeyDetails();
-
-            if (keyDetails != null) {
-                onKeyValidated(KeyDetails.Type.CLIPBOARD);
+            keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
+            if (keyImportModel != null) {
+                getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
             }
         }
     }
@@ -248,7 +250,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         switch (v.getId()) {
             case R.id.buttonLoadFromFile:
                 dismissSnackBar();
-                keyDetails = null;
+                keyDetailsList.clear();
 
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED) {
@@ -267,14 +269,14 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
             case R.id.buttonLoadFromClipboard:
                 dismissSnackBar();
-                keyDetails = null;
+                keyDetailsList.clear();
 
                 if (clipboardManager.hasPrimaryClip()) {
                     ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
                     CharSequence privateKeyFromClipboard = item.getText();
                     if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-                        keyDetails = new KeyDetails(null, privateKeyFromClipboard.toString(),
-                                KeyDetails.Type.CLIPBOARD, isPrivateKeyChecking());
+                        keyImportModel = new KeyImportModel(null, privateKeyFromClipboard.toString(),
+                                isPrivateKeyChecking(), KeyDetails.Type.CLIPBOARD);
 
                         getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
                     } else {
@@ -294,15 +296,15 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
             case R.id.loader_id_validate_key_from_file:
                 isCheckingPrivateKeyNow = true;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-                return new ValidateKeyAsyncTaskLoader(getApplicationContext(), keyDetails, true);
+                return new ParseKeysFromResourceAsyncTaskLoader(getApplicationContext(), keyImportModel, true);
 
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = true;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-                return new ValidateKeyAsyncTaskLoader(getApplicationContext(), keyDetails, false);
+                return new ParseKeysFromResourceAsyncTaskLoader(getApplicationContext(), keyImportModel, false);
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 
@@ -321,17 +323,16 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleSuccessLoaderResult(int loaderId, Object result) {
         switch (loaderId) {
             case R.id.loader_id_validate_key_from_file:
                 isCheckingPrivateKeyNow = false;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                ValidateKeyLoaderResult validateKeyLoaderResultFromFile = (ValidateKeyLoaderResult) result;
+                keyDetailsList = (ArrayList<KeyDetails>) result;
 
-                if (validateKeyLoaderResultFromFile.isValidated()) {
-                    keyDetails.setValue(validateKeyLoaderResultFromFile.getKey());
-                    keyDetails.setPgpContact(validateKeyLoaderResultFromFile.getPgpContact());
+                if (!keyDetailsList.isEmpty()) {
                     onKeyValidated(KeyDetails.Type.FILE);
                 } else {
                     showInfoSnackbar(getRootView(), getString(R.string.file_has_wrong_pgp_structure,
@@ -342,16 +343,12 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
             case R.id.loader_id_validate_key_from_clipboard:
                 isCheckingPrivateKeyNow = false;
                 UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                ValidateKeyLoaderResult validateKeyLoaderResult = (ValidateKeyLoaderResult) result;
-                if (validateKeyLoaderResult.isValidated()) {
-                    keyDetails.setValue(validateKeyLoaderResult.getKey());
-                    keyDetails.setPgpContact(validateKeyLoaderResult.getPgpContact());
+                keyDetailsList = (ArrayList<KeyDetails>) result;
+                if (!keyDetailsList.isEmpty()) {
                     onKeyValidated(KeyDetails.Type.CLIPBOARD);
-
                 } else {
                     showInfoSnackbar(getRootView(), getString(R.string.clipboard_has_wrong_structure,
-                            isPrivateKeyChecking() ? getString(R.string.private_) :
-                                    getString(R.string.public_)));
+                            isPrivateKeyChecking() ? getString(R.string.private_) : getString(R.string.public_)));
                 }
                 break;
 
@@ -391,12 +388,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
      * @param uri A {@link Uri} of the selected file.
      */
     protected void handleSelectedFile(Uri uri) {
-        keyDetails = new KeyDetails(
-                GeneralUtil.getFileNameFromUri(this, uri),
-                null,
-                uri,
-                KeyDetails.Type.FILE, isPrivateKeyChecking(), null);
-
+        keyImportModel = new KeyImportModel(uri, null, isPrivateKeyChecking(), KeyDetails.Type.FILE);
         getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_file, null, this);
     }
 

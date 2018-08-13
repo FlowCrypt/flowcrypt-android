@@ -143,9 +143,9 @@
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
     <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
-    <string name="loaded_private_key_from_your_clipboard">Loaded private key from your clipboard</string>
     <string name="evaluating">Evaluating…</string>
-    <string name="key_successfully_imported">Key successfully imported</string>
+    <string name="key_successfully_imported">Key(s) successfully imported</string>
+    <string name="the_key_successfully_imported">Key successfully imported</string>
     <string name="attach_file">Attach file</string>
     <string name="switch_to_standard_email">Switch to standard email</string>
     <string name="switch_to_secure_email">Switch to secure email</string>
@@ -354,4 +354,13 @@ icelanders prefer real sauna</font>
     <string name="pass_phrase_is_too_weak">The pass phrase of some of your key(s) is too weak</string>
     <string name="fix">fix</string>
     <string name="different_pass_phrases">Your private keys have different pass phrases</string>
+    <plurals name="file_contains_some_amount_of_keys">
+        <item quantity="one">[%1$s]</item>
+        <item quantity="other">[%1$s] contains %2$d keys</item>
+    </plurals>
+    <plurals name="loaded_private_keys_from_clipboard">
+        <item quantity="one">Loaded private key from your clipboard</item>
+        <item quantity="other">Loaded %1$d private keys from your clipboard</item>
+    </plurals>
+    <string name="select_only_one_key">Select a source that stores only one key</string>
 </resources>

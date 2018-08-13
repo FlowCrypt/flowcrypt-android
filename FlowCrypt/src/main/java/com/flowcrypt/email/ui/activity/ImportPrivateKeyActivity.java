@@ -27,7 +27,6 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -217,10 +216,10 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     public void onKeyValidated(KeyDetails.Type type) {
         switch (type) {
             case FILE:
-                startActivityForResult(CheckKeysActivity.newIntent(this,
-                        new ArrayList<>(Collections.singletonList(keyDetails)),
-                        getString(R.string.template_check_key_name,
-                                keyDetails.getKeyName()),
+                startActivityForResult(CheckKeysActivity.newIntent(this, keyDetailsList,
+                        getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
+                                keyDetailsList.size(), GeneralUtil.getFileNameFromUri(this,
+                                        keyImportModel.getFileUri()), keyDetailsList.size()),
                         getString(R.string.continue_), null,
                         getString(R.string.choose_another_key), true),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);
@@ -228,8 +227,9 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
             case CLIPBOARD:
                 startActivityForResult(CheckKeysActivity.newIntent(this,
-                        new ArrayList<>(Collections.singletonList(keyDetails)),
-                        getString(R.string.loaded_private_key_from_your_clipboard),
+                        keyDetailsList,
+                        getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
+                                keyDetailsList.size(), keyDetailsList.size()),
                         getString(R.string.continue_), null,
                         getString(R.string.choose_another_key), true),
                         REQUEST_CODE_CHECK_PRIVATE_KEYS);

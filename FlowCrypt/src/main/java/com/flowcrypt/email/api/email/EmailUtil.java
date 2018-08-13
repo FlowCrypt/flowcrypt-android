@@ -352,7 +352,7 @@ public class EmailUtil {
             for (MessageBlock messageBlock : messageBlocks) {
                 if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
                     if (!TextUtils.isEmpty(messageBlock.getContent())
-                            && EmailUtil.privateKeyNotExistsInList(privateKeyDetailsList, backup)) {
+                            && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock.getContent())) {
                         privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
                                 KeyDetails.Type.EMAIL));
                     }
@@ -416,8 +416,7 @@ public class EmailUtil {
      * @param key            The private key armored string.
      * @return true if the key not exists in the list, otherwise false.
      */
-    public static boolean privateKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList,
-                                                    String key) {
+    public static boolean isKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList, String key) {
         for (KeyDetails keyDetails : keyDetailsList) {
             if (key.equals(keyDetails.getValue())) {
                 return false;

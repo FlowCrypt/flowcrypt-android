@@ -313,7 +313,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             case REQUEST_CODE_IMPORT_PUBLIC_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show();
                         updateRecipientsFields();
                         break;
                 }
