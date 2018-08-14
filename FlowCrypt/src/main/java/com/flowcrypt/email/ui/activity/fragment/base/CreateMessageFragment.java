@@ -150,6 +150,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private View layoutBcc;
     private LinearLayout progressBarAndButtonLayout;
     private ImageButton imageButtonAliases;
+    private View imageButtonAdditionalRecipientsVisibility;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdateInfoAboutToCompleted = true;
@@ -588,6 +589,30 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             case R.id.editTextRecipientBcc:
                 pgpContactsBcc = runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
                         R.id.loader_id_update_info_about_pgp_contacts_bcc, hasFocus);
+                break;
+
+            case R.id.editTextEmailSubject:
+            case R.id.editTextEmailMessage:
+                if (hasFocus) {
+                    boolean isNeedToShowExpandButton = false;
+                    if (TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+                        layoutCc.setVisibility(View.GONE);
+                        isNeedToShowExpandButton = true;
+                    }
+
+                    if (TextUtils.isEmpty(editTextRecipientsBcc.getText())) {
+                        layoutBcc.setVisibility(View.GONE);
+                        isNeedToShowExpandButton = true;
+                    }
+
+                    if (isNeedToShowExpandButton) {
+                        imageButtonAdditionalRecipientsVisibility.setVisibility(View.VISIBLE);
+                        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                        layoutParams.gravity = Gravity.TOP | Gravity.END;
+                        progressBarAndButtonLayout.setLayoutParams(layoutParams);
+                    }
+                }
                 break;
         }
     }
@@ -1160,14 +1185,16 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             imageButtonAliases.setOnClickListener(this);
         }
 
-        ImageButton imageButtonAdditionalRecipientsVisibility =
+        imageButtonAdditionalRecipientsVisibility =
                 view.findViewById(R.id.imageButtonAdditionalRecipientsVisibility);
         if (imageButtonAdditionalRecipientsVisibility != null) {
             imageButtonAdditionalRecipientsVisibility.setOnClickListener(this);
         }
 
         editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
+        editTextEmailSubject.setOnFocusChangeListener(this);
         editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
+        editTextEmailMessage.setOnFocusChangeListener(this);
         textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
         progressBarTo = view.findViewById(R.id.progressBarTo);
