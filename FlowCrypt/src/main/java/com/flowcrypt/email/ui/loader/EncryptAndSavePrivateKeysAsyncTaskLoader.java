@@ -22,7 +22,6 @@ import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
@@ -65,20 +64,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
             for (KeyDetails keyDetails : privateKeyDetailsList) {
-                String armoredPrivateKey = null;
-
-                switch (keyDetails.getBornType()) {
-                    case FILE:
-                        armoredPrivateKey = GeneralUtil.readFileFromUriToString(getContext(),
-                                keyDetails.getUri());
-                        break;
-
-                    case EMAIL:
-                    case CLIPBOARD:
-                        armoredPrivateKey = keyDetails.getValue();
-                        break;
-                }
-
+                String armoredPrivateKey = keyDetails.getValue();
                 String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
                 PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);

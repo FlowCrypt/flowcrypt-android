@@ -96,8 +96,8 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
             Uri uri = new KeysDaoSource().addRow(getContext(),
                     KeysDao.generateKeysDao(new KeyStoreCryptoManager(getContext()),
-                            new KeyDetails(null, pgpKey.armor(), null,
-                                    KeyDetails.Type.NEW, true, pgpKey.getPrimaryUserId()), pgpKey, passphrase));
+                            new KeyDetails(null, pgpKey.armor(), KeyDetails.Type.NEW, true,
+                                    pgpKey.getPrimaryUserId()), pgpKey, passphrase));
 
             if (uri == null) {
                 return new LoaderResult(null, new NullPointerException("Cannot save the generated private key"));
