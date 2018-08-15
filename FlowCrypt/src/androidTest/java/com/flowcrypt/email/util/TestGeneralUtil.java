@@ -57,18 +57,8 @@ public class TestGeneralUtil {
         KeyDetails keyDetails = new KeyDetails(privetKey, type);
         KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry
                 .getTargetContext());
-        String armoredPrivateKey = null;
+        String armoredPrivateKey = keyDetails.getValue();
 
-        switch (keyDetails.getBornType()) {
-            case FILE:
-                armoredPrivateKey = GeneralUtil.readFileFromUriToString(InstrumentationRegistry.getTargetContext(),
-                        keyDetails.getUri());
-                break;
-            case EMAIL:
-            case CLIPBOARD:
-                armoredPrivateKey = keyDetails.getValue();
-                break;
-        }
         Js js = new Js(InstrumentationRegistry.getTargetContext(), null);
         String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 

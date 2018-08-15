@@ -61,16 +61,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     private String userWithMoreThan21LettersAccount;
     private String userWithoutLetters;
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<EmailManagerActivity>(EmailManagerActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            Intent intentRunEmailManagerActivity = new Intent(InstrumentationRegistry.getTargetContext(),
-                    EmailManagerActivity.class);
-            intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO,
-                    AccountDaoManager.getUserWitMoreThan21Letters());
-            return intentRunEmailManagerActivity;
-        }
-    };
+    private IntentsTestRule intentsTestRule = new IntentsTestRule<>(EmailManagerActivity.class);
 
     @Rule
     public TestRule ruleChain = RuleChain

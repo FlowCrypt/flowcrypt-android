@@ -345,7 +345,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         ArrayList<KeyDetails> privateKeys = new ArrayList<>();
         for (String path : keysPaths) {
             KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-                    (InstrumentationRegistry.getContext(), path), null, KeyDetails.Type.EMAIL,
+                    (InstrumentationRegistry.getContext(), path), KeyDetails.Type.EMAIL,
                     true, null);
             privateKeys.add(keyDetails);
         }
