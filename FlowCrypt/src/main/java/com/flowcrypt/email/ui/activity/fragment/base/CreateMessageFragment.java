@@ -649,6 +649,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
                 progressBarAndButtonLayout.setLayoutParams(layoutParams);
                 v.setVisibility(View.GONE);
+                editTextRecipientsCc.requestFocus();
                 break;
         }
     }
