@@ -76,9 +76,9 @@ import java.util.List;
  * This activity used to show messages list.
  *
  * @author DenBond7
- *         Date: 27.04.2017
- *         Time: 16:12
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.04.2017
+ * Time: 16:12
+ * E-mail: DenBond7@gmail.com
  */
 public class EmailManagerActivity extends BaseEmailListActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
@@ -190,8 +190,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 switch (resultCode) {
                     case RESULT_OK:
                         EmailSyncService.switchAccount(EmailManagerActivity.this);
-                        runEmailManagerActivity(EmailManagerActivity.this);
                         finish();
+                        runEmailManagerActivity(EmailManagerActivity.this);
                         break;
                 }
                 break;
@@ -562,15 +562,15 @@ public class EmailManagerActivity extends BaseEmailListActivity
             AccountDao newActiveAccount = accountDaoList.get(0);
             new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, newActiveAccount.getEmail());
             EmailSyncService.switchAccount(EmailManagerActivity.this);
+            finish();
             runEmailManagerActivity(EmailManagerActivity.this);
         } else {
             stopService(new Intent(this, EmailSyncService.class));
             Intent intent = new Intent(this, SplashActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         }
-
-        finish();
     }
 
     /**
