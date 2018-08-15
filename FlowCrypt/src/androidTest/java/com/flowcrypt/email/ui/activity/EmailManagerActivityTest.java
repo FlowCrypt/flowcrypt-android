@@ -59,13 +59,14 @@ import static org.hamcrest.Matchers.not;
 
 public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     private String userWithMoreThan21LettersAccount;
-    private String userWithoutLetters;
+    private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
 
     private IntentsTestRule intentsTestRule = new IntentsTestRule<>(EmailManagerActivity.class);
 
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
+            .around(new AddAccountToDatabaseRule(userWithoutLetters))
             .around(new AddAccountToDatabaseRule(AccountDaoManager.getUserWitMoreThan21Letters()))
             .around(intentsTestRule);
 
@@ -158,9 +159,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     @Test
     public void testAddNewAccount() {
         Context targetContext = InstrumentationRegistry.getTargetContext();
-        AccountDao accountDao = AccountDaoManager.getAccountDao("user_without_letters.json");
-        userWithoutLetters = accountDao.getEmail();
-
+        AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
         Intent result = new Intent();
         result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, accountDao);
         intending(hasComponent(new ComponentName(targetContext, AddNewAccountActivity.class)))
@@ -168,29 +167,32 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
         onView(withId(R.id.drawer_layout)).perform(open());
         onView(withId(R.id.imageViewExpandAccountManagement)).check(matches(isDisplayed())).perform(click());
+
         try {
             AccountDaoSource accountDaoSource = new AccountDaoSource();
             accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-            accountDaoSource.setActiveAccount(targetContext, userWithoutLetters);
+            accountDaoSource.setActiveAccount(targetContext, accountDao.getEmail());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         onView(withId(R.id.viewIdAddNewAccount)).check(matches(isDisplayed())).perform(click());
 
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(1))).check(matches(not(isDisplayed())));
-        onView(withId(R.id.emptyView)).check(matches(isDisplayed()));
+        onView(withId(R.id.drawer_layout)).perform(open());
+        onView(allOf(withId(R.id.textViewUserEmail), withParent(withParent(withId(R.id.layoutUserDetails)))))
+                .check(matches(isDisplayed())).check(matches(withText(accountDao.getEmail())));
     }
 
     @Test
     public void testChooseAnotherAccount() {
-        testAddNewAccount();
         onView(withId(R.id.drawer_layout)).perform(open());
         onView(withId(R.id.imageViewExpandAccountManagement)).check(matches(isDisplayed())).perform(click());
         onView(allOf(withId(R.id.textViewUserEmail), withParent(withParent(withId(R.id.layoutUserDetails)))))
-                .check(matches(isDisplayed())).check(matches(withText(userWithoutLetters)));
+                .check(matches(isDisplayed())).check(matches(withText(userWithoutLetters.getEmail())));
         onView(withText(userWithMoreThan21LettersAccount)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(21))).check(matches(isDisplayed()));
+        onView(withId(R.id.drawer_layout)).perform(open());
+        onView(allOf(withId(R.id.textViewUserEmail), withParent(withParent(withId(R.id.layoutUserDetails)))))
+                .check(matches(isDisplayed())).check(matches(not(withText(userWithoutLetters.getEmail()))));
     }
 
     private void clickLogOut() {
