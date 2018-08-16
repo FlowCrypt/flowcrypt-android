@@ -9,10 +9,12 @@
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
+    android:id="@+id/viewIdAddNewAccount"
+    android:focusable="true"
     android:orientation="vertical">
 
     <ImageView
-        android:id="@+id/imageViewUserPhoto"
+        android:id="@+id/imageViewActiveUserPhoto"
         android:layout_width="@dimen/user_photo_size"
         android:layout_height="@dimen/user_photo_size"
         android:layout_margin="@dimen/default_margin_content"
@@ -29,9 +31,9 @@
         android:layout_marginStart="@dimen/default_margin_content_small"
         android:text="@string/add_account"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        app:layout_constraintBottom_toBottomOf="@+id/imageViewUserPhoto"
-        app:layout_constraintLeft_toRightOf="@+id/imageViewUserPhoto"
-        app:layout_constraintTop_toTopOf="@+id/imageViewUserPhoto"
+        app:layout_constraintBottom_toBottomOf="@+id/imageViewActiveUserPhoto"
+        app:layout_constraintLeft_toRightOf="@+id/imageViewActiveUserPhoto"
+        app:layout_constraintTop_toTopOf="@+id/imageViewActiveUserPhoto"
         app:layout_constraintVertical_bias="0.5" />
 
 

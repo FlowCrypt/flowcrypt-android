@@ -47,8 +47,6 @@
     <item name="viewIdProgressView" type="id" />
     <item name="viewIdStatusView" type="id" />
     <item name="viewIdTextViewStatusInfo" type="id" />
-    <item name="viewIdAddNewAccount" type="id" />
-
 
     <item name="progress_id_start_of_loading_new_messages" type="id" />
     <item name="progress_id_adding_task_to_queue" type="id" />

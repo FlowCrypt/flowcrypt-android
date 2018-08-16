@@ -632,9 +632,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
      * @param view The view which contains user profile views.
      */
     private void initUserProfileView(View view) {
-        ImageView imageViewUserPhoto = view.findViewById(R.id.imageViewUserPhoto);
-        TextView textViewUserDisplayName = view.findViewById(R.id.textViewUserDisplayName);
-        TextView textViewUserEmail = view.findViewById(R.id.textViewUserEmail);
+        ImageView imageViewUserPhoto = view.findViewById(R.id.imageViewActiveUserPhoto);
+        TextView textViewUserDisplayName = view.findViewById(R.id.textViewActiveUserDisplayName);
+        TextView textViewUserEmail = view.findViewById(R.id.textViewActiveUserEmail);
 
         if (accountDao != null) {
             if (TextUtils.isEmpty(accountDao.getDisplayName())) {
@@ -702,7 +702,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
         View addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account,
                 accountManagementLayout, false);
-        addNewAccountView.setId(R.id.viewIdAddNewAccount);
         addNewAccountView.setOnClickListener(this);
         accountManagementLayout.addView(addNewAccountView);
 
@@ -714,17 +713,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 accountManagementLayout, false);
         accountItemView.setTag(accountDao);
 
-        ImageView imageViewUserPhoto = accountItemView.findViewById(R.id.imageViewUserPhoto);
-        TextView textViewUserDisplayName = accountItemView.findViewById(R.id.textViewUserDisplayName);
-        TextView textViewUserEmail = accountItemView.findViewById(R.id.textViewUserEmail);
+        ImageView imageViewActiveUserPhoto = accountItemView.findViewById(R.id.imageViewActiveUserPhoto);
+        TextView textViewActiveUserDisplayName = accountItemView.findViewById(R.id.textViewUserDisplayName);
+        TextView textViewActiveUserEmail = accountItemView.findViewById(R.id.textViewUserEmail);
 
         if (accountDao != null) {
             if (TextUtils.isEmpty(accountDao.getDisplayName())) {
-                textViewUserDisplayName.setVisibility(View.GONE);
+                textViewActiveUserDisplayName.setVisibility(View.GONE);
             } else {
-                textViewUserDisplayName.setText(accountDao.getDisplayName());
+                textViewActiveUserDisplayName.setText(accountDao.getDisplayName());
             }
-            textViewUserEmail.setText(accountDao.getEmail());
+            textViewActiveUserEmail.setText(accountDao.getEmail());
 
             if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
                 GlideApp.with(this)
@@ -733,7 +732,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                                 .centerCrop()
                                 .transform(new CircleTransformation())
                                 .error(R.mipmap.ic_account_default_photo))
-                        .into(imageViewUserPhoto);
+                        .into(imageViewActiveUserPhoto);
             }
         }
 
