@@ -7,6 +7,7 @@ package com.flowcrypt.email.rules;
 
 import android.support.test.InstrumentationRegistry;
 
+import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.util.TestGeneralUtil;
 
@@ -23,15 +24,18 @@ import org.junit.runners.model.Statement;
 public class AddPrivateKeyToDatabaseRule implements TestRule {
 
     private String keyPath;
+    private String passphrase;
     private KeyDetails.Type keyDetailsType;
 
-    public AddPrivateKeyToDatabaseRule(String keyPath, KeyDetails.Type keyDetailsType) {
+    public AddPrivateKeyToDatabaseRule(String keyPath, String passphrase, KeyDetails.Type keyDetailsType) {
         this.keyPath = keyPath;
+        this.passphrase = passphrase;
         this.keyDetailsType = keyDetailsType;
     }
 
     public AddPrivateKeyToDatabaseRule() {
-        this.keyPath = "pgp/default@denbond7.com_sec.asc";
+        this.keyPath = "pgp/default@denbond7.com_strong_password-sec.key";
+        this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD;
         this.keyDetailsType = KeyDetails.Type.EMAIL;
     }
 
@@ -41,7 +45,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString
-                        (InstrumentationRegistry.getContext(), keyPath), keyDetailsType);
+                        (InstrumentationRegistry.getContext(), keyPath), passphrase, keyDetailsType);
                 base.evaluate();
             }
         };

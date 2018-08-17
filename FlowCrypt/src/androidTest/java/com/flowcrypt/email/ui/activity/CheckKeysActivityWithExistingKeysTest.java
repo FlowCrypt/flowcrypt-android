@@ -81,8 +81,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
-            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", KeyDetails.Type
-                    .EMAIL))
+            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", TestConstants
+                    .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
             .around(activityTestRule);
 
     @Test

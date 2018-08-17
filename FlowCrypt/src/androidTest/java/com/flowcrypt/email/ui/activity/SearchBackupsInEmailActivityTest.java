@@ -5,22 +5,17 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.Intent;
-import android.net.Uri;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.IdlingRegistry;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity;
-import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,24 +23,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
-
-import java.io.File;
-import java.util.Collections;
+import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasCategories;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasType;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -54,7 +40,8 @@ import static org.hamcrest.Matchers.not;
  *         Time: 12:39
  *         E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class SearchBackupsInEmailActivityTest extends BaseTest {
 
     private IntentsTestRule activityTestRule = new IntentsTestRule<>(SearchBackupsInEmailActivity.class);
@@ -118,30 +105,5 @@ public class SearchBackupsInEmailActivityTest extends BaseTest {
         onView(withId(R.id.buttonBackupAction)).check(matches(withText(R.string.backup_as_a_file)));
         onView(withId(R.id.radioButtonEmail)).check(matches(isDisplayed()))
                 .check(matches(not(isChecked())));
-    }
-
-    @Test
-    public void testUseEmailForSavingBackup() {
-        testSelectEmailForSavingBackup();
-        onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-        checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getTargetContext()
-                .getString(R.string.backed_up_successfully));
-    }
-
-    @Test
-    public void testUseDownloadToFileForSavingBackup() {
-        Intent resultData = new Intent();
-        File file = TestGeneralUtil.createFile("key.asc", "");
-        resultData.setData(Uri.fromFile(file));
-        intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
-                hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
-                hasType(Constants.MIME_TYPE_PGP_KEY)))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-
-        testSelectDownloadToFileForSavingBackup();
-        onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-        checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getTargetContext()
-                .getString(R.string.key_successfully_saved));
-        TestGeneralUtil.deleteFiles(Collections.singletonList(file));
     }
 }
