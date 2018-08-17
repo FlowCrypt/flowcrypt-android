@@ -33,6 +33,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -68,7 +69,10 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
         new ContactsDaoSource().addRow(InstrumentationRegistry.getTargetContext(), pgpContact);
         activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(InstrumentationRegistry
                 .getTargetContext(), getSinglePublicKeyForUnsavedContact()));
-        onView(withId(R.id.textViewAlreadyImported)).check(matches(isDisplayed()));
+        onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(1));
+        onView(withText(InstrumentationRegistry.getTargetContext().getString(
+                R.string.template_message_part_public_key_owner, "default@denbond7.com")))
+                .check(matches(isDisplayed()));
     }
 
     @Test
@@ -84,8 +88,8 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
                 .getTargetContext(), getSinglePublicKeyForUnsavedContact()));
         onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(1));
         onView(withId(R.id.buttonSaveContact)).check(matches(isDisplayed())).perform(click());
-        checkIsToastDisplayed(activityTestRule.getActivity(),
-                InstrumentationRegistry.getTargetContext().getString(R.string.contact_successfully_saved));
+        onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.already_imported)))
+                .check(matches(isDisplayed()));
         onView(withId(R.id.buttonSaveContact)).check(matches(not(isDisplayed())));
         onView(withId(R.id.textViewAlreadyImported)).check(matches(isDisplayed()));
     }
