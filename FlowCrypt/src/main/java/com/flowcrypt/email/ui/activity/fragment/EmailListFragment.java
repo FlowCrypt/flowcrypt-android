@@ -440,7 +440,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 }
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
-                if (!isItSyncFolder(onManageEmailsListener.getCurrentFolder())) {
+                if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
+                        !isItSyncFolder(onManageEmailsListener.getCurrentFolder())) {
                     DataBaseUtil.cleanFolderCache(getContext(),
                             onManageEmailsListener.getCurrentAccountDao().getEmail(),
                             onManageEmailsListener.getCurrentFolder().getFolderAlias());
