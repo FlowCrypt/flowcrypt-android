@@ -58,6 +58,11 @@ public class SettingsActivityTest extends BaseTest {
     }
 
     @Test
+    public void testShowSecurityScreen() {
+        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+    }
+
+    @Test
     public void testShowContactsScreen() {
         checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.contacts));
     }
