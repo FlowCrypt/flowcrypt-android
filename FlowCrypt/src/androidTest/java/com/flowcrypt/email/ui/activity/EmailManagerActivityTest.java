@@ -16,10 +16,13 @@ import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.matchers.ToolBarTitleMatcher;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddLabelsToDatabaseRule;
+import com.flowcrypt.email.rules.AddMessageToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
@@ -32,6 +35,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -66,11 +72,26 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     private IntentsTestRule intentsTestRule = new IntentsTestRule<>(EmailManagerActivity.class);
 
+    private static final List<Folder> folders;
+    private static final Folder INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT =
+            new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false);
+
+    static {
+        folders = new ArrayList<>();
+        folders.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
+        folders.add(new Folder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
+        folders.add(new Folder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
+        folders.add(new Folder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
+    }
+
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
             .around(new AddAccountToDatabaseRule(userWithoutLetters))
             .around(new AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
+            .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, folders))
+            .around(new AddMessageToDatabaseRule(userWithMoreThan21LettersAccount,
+                    INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
             .around(intentsTestRule);
 
     @Before
@@ -97,7 +118,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     @Test
     public void testRunMessageDetailsActivity() {
-        testRunMessageDetailsActivity(20);
+        testRunMessageDetailsActivity(0);
     }
 
     @Test
@@ -111,7 +132,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     }
 
     @Test
-    public void testSwipeNavigationView() {
+    public void testOpenAndSwipeNavigationView() {
         onView(withId(R.id.drawer_layout)).perform(open());
         onView(withId(R.id.navigationView)).perform(swipeUp());
     }
@@ -143,8 +164,6 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
         onView(withId(R.id.toolbar)).check(matches(anyOf(
                 ToolBarTitleMatcher.withText("INBOX"),
                 ToolBarTitleMatcher.withText(InstrumentationRegistry.getTargetContext().getString(R.string.loading)))));
-
-
 
         onView(withId(R.id.drawer_layout)).perform(open());
         onView(withId(R.id.navigationView)).perform(CustomNavigationViewActions.navigateTo(menuItem));
