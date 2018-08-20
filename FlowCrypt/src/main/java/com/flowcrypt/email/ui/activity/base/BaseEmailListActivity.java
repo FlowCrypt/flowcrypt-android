@@ -193,6 +193,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
 
         if (emailListFragment != null) {
             emailListFragment.updateList(true);
+            updateActionProgressState(100, null);
         }
     }
 

@@ -176,8 +176,8 @@ public class EmailSyncManager {
      * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
      */
     public void updateLabels(String ownerKey, int requestCode, boolean isInBackground) {
-        updateLabels(ownerKey, requestCode,
-                isInBackground ? passiveSyncTaskBlockingQueue : activeSyncTaskBlockingQueue);
+        updateLabels(ownerKey, requestCode, isInBackground ? passiveSyncTaskBlockingQueue :
+                activeSyncTaskBlockingQueue);
     }
 
     /**
@@ -223,11 +223,9 @@ public class EmailSyncManager {
      * @param start       The position of the start.
      * @param end         The position of the end.
      */
-    public void loadMessages(String ownerKey, int requestCode, Folder folder, int start, int
-            end) {
+    public void loadMessages(String ownerKey, int requestCode, Folder folder, int start, int end) {
         try {
-            activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder,
-                    start, end));
+            activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder, start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -265,8 +263,7 @@ public class EmailSyncManager {
     public void loadMessageDetails(String ownerKey, int requestCode, Folder folder, int uid) {
         try {
             removeOldTasksFromBlockingQueue(LoadMessageDetailsSyncTask.class, activeSyncTaskBlockingQueue);
-            activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode,
-                    folder, uid));
+            activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode, folder, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
@@ -284,10 +281,10 @@ public class EmailSyncManager {
      * @param folder                       A local implementation of the remote folder.
      * @param countOfAlreadyLoadedMessages The count of already cached messages in the folder.
      */
-    public void loadNextMessages(String ownerKey, int requestCode, Folder folder, int
-            countOfAlreadyLoadedMessages) {
+    public void loadNextMessages(String ownerKey, int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
         try {
             notifyAboutActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
+            removeOldTasksFromBlockingQueue(LoadMessagesToCacheSyncTask.class, activeSyncTaskBlockingQueue);
             activeSyncTaskBlockingQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode,
                     folder, countOfAlreadyLoadedMessages));
 
