@@ -36,8 +36,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
     private int countOfAlreadyLoadedMessages;
 
     public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder
-            localFolder,
-                                       int countOfAlreadyLoadedMessages) {
+            localFolder, int countOfAlreadyLoadedMessages) {
         super(ownerKey, requestCode);
         this.localFolder = localFolder;
         this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;

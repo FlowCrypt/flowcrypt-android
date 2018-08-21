@@ -182,12 +182,10 @@ public abstract class BaseSyncActivity extends BaseActivity {
 
         onProgressReplyFromServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
-        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-                requestCode, folder);
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, folder);
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
-                countOfAlreadyLoadedMessages, 0,
-                action);
+                countOfAlreadyLoadedMessages, 0, action);
 
         message.replyTo = syncServiceReplyMessenger;
         try {

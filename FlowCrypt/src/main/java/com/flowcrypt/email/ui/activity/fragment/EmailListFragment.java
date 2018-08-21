@@ -72,7 +72,6 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
-    private MessageDaoSource messageDaoSource;
     private BaseSyncActivity baseSyncActivity;
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
@@ -169,10 +168,6 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             }
         }
     };
-
-    public EmailListFragment() {
-        this.messageDaoSource = new MessageDaoSource();
-    }
 
     @Override
     public void onAttach(Context context) {

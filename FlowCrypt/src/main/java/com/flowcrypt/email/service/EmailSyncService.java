@@ -335,9 +335,9 @@ public class EmailSyncService extends BaseService implements SyncListener {
             emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
 
             if (messages.length > 0) {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE, localFolder);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, localFolder);
             }
 
             updateLocalContactsIfMessagesFromSentFolder(remoteFolder, messages);
@@ -858,11 +858,11 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                     case MESSAGE_LOAD_NEXT_MESSAGES:
                         if (emailSyncManager != null && action != null) {
-                            com.flowcrypt.email.api.email.Folder folderOfMessages =
+                            com.flowcrypt.email.api.email.Folder folder =
                                     (com.flowcrypt.email.api.email.Folder) action.getObject();
 
-                            emailSyncManager.loadNextMessages(action.getOwnerKey(),
-                                    action.getRequestCode(), folderOfMessages, message.arg1);
+                            emailSyncManager.loadNextMessages(action.getOwnerKey(), action.getRequestCode(),
+                                    folder, message.arg1);
                         }
                         break;
 

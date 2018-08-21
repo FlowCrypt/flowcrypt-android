@@ -33,7 +33,7 @@ public abstract class BaseService extends Service {
          * @param resultCode  The result code of a run action.
          * @param obj         The object which returned from the service.
          */
-        public abstract void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
+        void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
 
         /**
          * In this method we can handle a progress state after run some action via {@link BaseService}
@@ -43,7 +43,7 @@ public abstract class BaseService extends Service {
          * @param resultCode  The result code of a run action.
          * @param obj         The object which returned from the service.
          */
-        public abstract void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
+        void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj);
 
         /**
          * In this method we can handle en error after run some action via {@link BaseService}
@@ -53,7 +53,7 @@ public abstract class BaseService extends Service {
          * @param errorType   The {@link SyncErrorTypes}.
          * @param e           The exception which occurred.
          */
-        public abstract void onErrorFromServiceReceived(int requestCode, int errorType, Exception e);
+        void onErrorFromServiceReceived(int requestCode, int errorType, Exception e);
     }
 
     /**
