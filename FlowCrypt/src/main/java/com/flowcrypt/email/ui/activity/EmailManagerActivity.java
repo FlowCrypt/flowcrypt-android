@@ -25,6 +25,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -43,6 +44,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -61,6 +63,7 @@ import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.GlideApp;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
@@ -172,9 +175,14 @@ public class EmailManagerActivity extends BaseEmailListActivity
         Switch switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
         if (switchView != null) {
+            switchView.setChecked(SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+                    (EmailManagerActivity.this), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false));
+
             switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SharedPreferencesHelper.setBoolean(PreferenceManager.getDefaultSharedPreferences
+                            (EmailManagerActivity.this), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, isChecked);
                     onShowOnlyEncryptedMessages(isChecked);
                 }
             });

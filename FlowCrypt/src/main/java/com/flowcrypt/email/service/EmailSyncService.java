@@ -20,10 +20,12 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -42,6 +44,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -325,14 +328,21 @@ public class EmailSyncService extends BaseService implements SyncListener {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
+            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                    .getDefaultSharedPreferences(getApplicationContext()), Constants
+                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
-                    messages, false);
+                    messages, false, isShowOnlyEncryptedMessages);
 
-            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, localFolder);
+            if (!isShowOnlyEncryptedMessages) {
+                emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages,
+                        localFolder);
+            }
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE, localFolder);
@@ -363,8 +373,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     remoteFolder,
                     newMessages,
                     isMessageEncryptedInfo,
-                    !GeneralUtil.isAppForegrounded() &&
-                            FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
+                    !GeneralUtil.isAppForegrounded() && FoldersManager.getFolderTypeForImapFolder(localFolder) ==
+                            FoldersManager.FolderType.INBOX, false);
 
             if (newMessages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -387,19 +397,26 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
 
     @Override
-    public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder folder,
+    public void onSearchMessagesReceived(AccountDao accountDao, com.flowcrypt.email.api.email.Folder localFolder,
                                          IMAPFolder imapFolder, javax.mail.Message[] messages,
                                          String ownerKey, int requestCode) {
         Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
         try {
+            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                    .getDefaultSharedPreferences(getApplicationContext()), Constants
+                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     SearchMessagesActivity.SEARCH_FOLDER_NAME,
                     imapFolder,
-                    messages, false);
+                    messages, false, isShowOnlyEncryptedMessages);
 
-            emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages, folder);
+            if (!isShowOnlyEncryptedMessages) {
+                emailSyncManager.identifyEncryptedMessages(ownerKey, R.id.syns_identify_encrypted_messages,
+                        localFolder);
+            }
 
             if (messages.length > 0) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE);
@@ -455,15 +472,21 @@ public class EmailSyncService extends BaseService implements SyncListener {
             javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
                     remoteFolder, newMessages);
 
+            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                    .getDefaultSharedPreferences(getApplicationContext()), Constants
+                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
                     localFolder.getFolderAlias(),
                     remoteFolder,
                     messagesNewCandidates,
-                    !GeneralUtil.isAppForegrounded() &&
-                            FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX);
+                    !GeneralUtil.isAppForegrounded() && FoldersManager.getFolderTypeForImapFolder(localFolder) ==
+                            FoldersManager.FolderType.INBOX, isShowOnlyEncryptedMessages);
 
-            emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, localFolder);
+            if (!isShowOnlyEncryptedMessages) {
+                emailSyncManager.identifyEncryptedMessages(key, R.id.syns_identify_encrypted_messages, localFolder);
+            }
 
             messageDaoSource.updateMessagesByUID(getApplicationContext(),
                     accountDao.getEmail(),

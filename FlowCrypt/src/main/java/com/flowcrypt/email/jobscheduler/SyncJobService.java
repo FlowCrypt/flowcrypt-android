@@ -15,9 +15,11 @@ import android.content.OperationApplicationException;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.RemoteException;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.util.LongSparseArray;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -30,6 +32,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -252,6 +255,10 @@ public class SyncJobService extends JobService implements SyncListener {
                                       Message[] newMessages, LongSparseArray<Boolean> isMessageEncryptedInfo, String
                                               ownerKey, int requestCode) {
         try {
+            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                    .getDefaultSharedPreferences(getApplicationContext()), Constants
+                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
             MessageDaoSource messageDaoSource = new MessageDaoSource();
 
             Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
@@ -268,7 +275,7 @@ public class SyncJobService extends JobService implements SyncListener {
                     remoteFolder,
                     messagesNewCandidates,
                     isMessageEncryptedInfo,
-                    !GeneralUtil.isAppForegrounded());
+                    !GeneralUtil.isAppForegrounded(), isShowOnlyEncryptedMessages);
 
             if (!GeneralUtil.isAppForegrounded()) {
                 String folderAlias = localFolder.getFolderAlias();

@@ -192,7 +192,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.updateList(true);
+            emailListFragment.updateList(true, false);
             updateActionProgressState(100, null);
         }
     }

@@ -17,6 +17,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -41,6 +43,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -188,6 +191,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.messageListAdapter = new MessageListAdapter(getContext(), null);
+
+        this.isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                .getDefaultSharedPreferences(getContext()), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
     }
 
     @Override
@@ -233,7 +239,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
                 switch (resultCode) {
                     case MessageDetailsActivity.RESULT_CODE_UPDATE_LIST:
-                        updateList(false);
+                        updateList(false, false);
                         break;
                 }
                 break;
@@ -422,10 +428,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     /**
      * Update a current messages list.
      *
-     * @param isFolderChanged if true we destroy a previous loader to reset position, if false we
-     *                        try to load a new messages.
+     * @param isFolderChanged         if true we destroy a previous loader to reset position, if false we
+     *                                try to load a new messages.
+     * @param isNeedToForceClearCache true if we need to forcefully clean the database cache.
      */
-    public void updateList(boolean isFolderChanged) {
+    public void updateList(boolean isFolderChanged, boolean isNeedToForceClearCache) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
@@ -436,7 +443,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
                 if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
-                        !isItSyncFolder(onManageEmailsListener.getCurrentFolder())) {
+                        !isItSyncFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
                     DataBaseUtil.cleanFolderCache(getContext(),
                             onManageEmailsListener.getCurrentAccountDao().getEmail(),
                             onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -458,7 +465,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         swipeRefreshLayout.setRefreshing(false);
         if (needToRefreshList || messageListAdapter.getCount() == 0) {
-            updateList(false);
+            updateList(false, false);
         }
     }
 
@@ -472,7 +479,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         progressView.setVisibility(View.GONE);
 
         if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
-            updateList(false);
+            updateList(false, false);
         } else if (messageListAdapter.getCount() == 0) {
             emptyView.setText(isShowOnlyEncryptedMessages ?
                     R.string.no_encrypted_messages : R.string.no_results);
@@ -532,8 +539,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             lastFirstVisibleItemPositionOffAllMessages = listViewMessages.getFirstVisiblePosition();
         }
 
-        getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache,
-                null, loadCachedMessagesCursorLoaderCallbacks);
+        updateList(true, true);
     }
 
     private boolean isItSyncFolder(Folder folder) {

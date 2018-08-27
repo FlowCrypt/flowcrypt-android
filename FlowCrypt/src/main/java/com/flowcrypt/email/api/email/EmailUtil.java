@@ -40,6 +40,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.iap.Argument;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
@@ -83,6 +84,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.search.BodyTerm;
+import javax.mail.search.SearchTerm;
 import javax.mail.util.ByteArrayDataSource;
 
 /**
@@ -671,6 +674,32 @@ public class EmailUtil {
     }
 
     /**
+     * Get updated information about messages in the local database using UIDs.
+     *
+     * @param imapFolder The folder which contains messages.
+     * @param first      The first UID in a range.
+     * @param end        The last UID in a range.
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] getUpdatedMessagesByUID(IMAPFolder imapFolder, long first, long end)
+            throws MessagingException {
+        if (end <= first) {
+            return new Message[]{};
+        } else {
+            Message[] messages = imapFolder.getMessagesByUID(first, end);
+
+            if (messages.length > 0) {
+                FetchProfile fetchProfile = new FetchProfile();
+                fetchProfile.add(FetchProfile.Item.FLAGS);
+                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+                imapFolder.fetch(messages, fetchProfile);
+            }
+            return messages;
+        }
+    }
+
+    /**
      * Load messages info.
      *
      * @param imapFolder The folder which contains messages.
@@ -752,5 +781,21 @@ public class EmailUtil {
                 return booleanLongSparseArray;
             }
         });
+    }
+
+    /**
+     * Generate a {@link SearchTerm} for encrypted messages which depends on an input {@link AccountDao}.
+     *
+     * @param accountDao An input {@link AccountDao}
+     * @return A generated {@link SearchTerm}.
+     */
+    @NonNull
+    public static SearchTerm generateSearchTermForEncryptedMessages(AccountDao accountDao) {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            return new GmailRawSearchTerm(
+                    "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg");
+        } else {
+            return new BodyTerm("-----BEGIN PGP MESSAGE-----");
+        }
     }
 }

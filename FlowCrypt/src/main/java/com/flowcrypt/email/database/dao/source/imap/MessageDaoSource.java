@@ -137,38 +137,41 @@ public class MessageDaoSource extends BaseDaoSource {
     /**
      * This method add rows per single transaction. This method must be called in the non-UI thread.
      *
-     * @param context    Interface to global information about an application environment.
-     * @param email      The email that the message linked.
-     * @param label      The folder label.
-     * @param imapFolder The {@link IMAPFolder} object which contains information about a
-     *                   remote folder.
-     * @param messages   The messages array.
-     * @param isNew      true if need to mark messages as new.
+     * @param context     Interface to global information about an application environment.
+     * @param email       The email that the message linked.
+     * @param label       The folder label.
+     * @param imapFolder  The {@link IMAPFolder} object which contains information about a
+     *                    remote folder.
+     * @param messages    The messages array.
+     * @param isNew       true if need to mark messages as new.
+     * @param isEncrypted true if the given messages are encrypted.
      * @return the number of newly created rows.
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
     public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
-                       boolean isNew) throws MessagingException {
-        return addRows(context, email, label, imapFolder, messages, new LongSparseArray<Boolean>(), isNew);
+                       boolean isNew, boolean isEncrypted) throws MessagingException {
+        return addRows(context, email, label, imapFolder, messages, new LongSparseArray<Boolean>(), isNew, isEncrypted);
     }
 
     /**
      * This method add rows per single transaction. This method must be called in the non-UI thread.
      *
-     * @param context                Interface to global information about an application environment.
-     * @param email                  The email that the message linked.
-     * @param label                  The folder label.
-     * @param imapFolder             The {@link IMAPFolder} object which contains information about a
-     *                               remote folder.
-     * @param messages               The messages array.
-     * @param isMessageEncryptedInfo An array which contains info about a message encryption state
+     * @param context                 Interface to global information about an application environment.
+     * @param email                   The email that the message linked.
+     * @param label                   The folder label.
+     * @param imapFolder              The {@link IMAPFolder} object which contains information about a
+     *                                remote folder.
+     * @param messages                The messages array.
+     * @param isMessageEncryptedInfo  An array which contains info about a message encryption state
+     * @param areAllMessagesEncrypted true if the given messages are encrypted.
      * @return the number of newly created rows.
      * @throws MessagingException This exception may be occured when we call <code>mapFolder
      *                            .getUID(message)</code>
      */
     public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
-                       LongSparseArray<Boolean> isMessageEncryptedInfo, boolean isNew) throws MessagingException {
+                       LongSparseArray<Boolean> isMessageEncryptedInfo, boolean isNew, boolean areAllMessagesEncrypted)
+            throws MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
             ContentValues[] contentValuesArray = new ContentValues[messages.length];
@@ -191,11 +194,12 @@ public class MessageDaoSource extends BaseDaoSource {
                     contentValues.put(COL_IS_NEW, false);
                 }
 
-                Boolean isEncrypted = isMessageEncryptedInfo.get(imapFolder.getUID(message));
-                if (isEncrypted != null) {
-                    contentValues.put(COL_IS_ENCRYPTED, isEncrypted);
+                Boolean isMessageEncrypted = areAllMessagesEncrypted ? Boolean.valueOf(true)
+                        : isMessageEncryptedInfo.get(imapFolder.getUID(message));
+                if (isMessageEncrypted != null) {
+                    contentValues.put(COL_IS_ENCRYPTED, isMessageEncrypted);
 
-                    if (isEncryptedMessagesOnly && !isEncrypted) {
+                    if (isEncryptedMessagesOnly && !isMessageEncrypted) {
                         contentValues.put(COL_IS_NEW, false);
                     }
                 }
@@ -615,6 +619,34 @@ public class MessageDaoSource extends BaseDaoSource {
         Cursor cursor = contentResolver.query(
                 getBaseContentUri(),
                 new String[]{"max(" + COL_UID + ")"},
+                MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
+                        .COL_FOLDER + " = ?",
+                new String[]{email, label},
+                null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int uid = cursor.getInt(0);
+            cursor.close();
+            return uid;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Get the oldest UID of a message in the database for some label.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The user email.
+     * @param label   The label name.
+     * @return The last UID for the current label or -1 if it not exists.
+     */
+    public int getOldestUIDOfMessageInLabel(Context context, String email, String label) {
+        ContentResolver contentResolver = context.getContentResolver();
+
+        Cursor cursor = contentResolver.query(
+                getBaseContentUri(),
+                new String[]{"min(" + COL_UID + ")"},
                 MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource
                         .COL_FOLDER + " = ?",
                 new String[]{email, label},

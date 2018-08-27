@@ -62,6 +62,8 @@ public class Constants {
             "preferences_key_manage_notifications";
     public static final String PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE =
             "preferences_key_security_change_pass_phrase";
+    public static final String PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED =
+            "preferences_key_is_show_only_encrypted";
 
     /**
      * The max total size off all attachment which can be send via the app.
