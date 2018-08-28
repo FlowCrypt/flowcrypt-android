@@ -296,6 +296,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
                         .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
                                 accountDao, localFolder, generalMessageDetailsList))
                         .setDefaults(Notification.DEFAULT_ALL)
+                        .setAutoCancel(true)
                         .setGroupSummary(true);
         notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
     }
