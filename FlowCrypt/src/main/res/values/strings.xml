@@ -333,8 +333,8 @@ icelanders prefer real sauna</font>
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
     <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
-    <string name="show_only_encrypted_messages">Show only encrypted messages</string>
-    <string name="show_all_messages">Show all messages</string>
+    <string name="showing_only_encrypted_messages">Showing only encrypted messages</string>
+    <string name="showing_all_messages">Showing all messages</string>
     <string name="no_encrypted_messages">No encrypted messages</string>
     <string name="messages">Messages</string>
     <string name="messages_notification_channel">The messages notification channel</string>
@@ -363,4 +363,7 @@ icelanders prefer real sauna</font>
         <item quantity="other">Loaded %1$d private keys from your clipboard</item>
     </plurals>
     <string name="select_only_one_key">Select a source that stores only one key</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="message_cache_will_be_reloaded">%1$s. The cache will be reloaded</string>
 </resources>

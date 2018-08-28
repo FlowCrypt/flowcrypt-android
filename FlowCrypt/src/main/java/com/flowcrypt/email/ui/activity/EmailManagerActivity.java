@@ -60,6 +60,7 @@ import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.GlideApp;
@@ -86,7 +87,8 @@ import java.util.List;
 public class EmailManagerActivity extends BaseEmailListActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
         View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
+        GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener, TwoWayDialogFragment
+                .OnTwoWayDialogListener {
 
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
     private static final int REQUEST_CODE_SIGN_IN = 101;
@@ -103,6 +105,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
     private LinearLayout accountManagementLayout;
     private NavigationView navigationView;
     private View currentAccountDetailsItem;
+    private Switch switchView;
+    private boolean isNeedToShowSwitchWarningDialog = true;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -126,8 +130,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
         if (accountDao != null) {
             googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this,
-                    GoogleApiClientHelper
-                            .generateGoogleSignInOptions());
+                    GoogleApiClientHelper.generateGoogleSignInOptions());
 
             new ActionManager(this).checkAndAddActionsToQueue(accountDao);
             getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
@@ -172,7 +175,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
         }
 
         MenuItem item = menu.findItem(R.id.menuSwitch);
-        Switch switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
+        switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
         if (switchView != null) {
             switchView.setChecked(SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
@@ -181,9 +184,16 @@ public class EmailManagerActivity extends BaseEmailListActivity
             switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferencesHelper.setBoolean(PreferenceManager.getDefaultSharedPreferences
-                            (EmailManagerActivity.this), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, isChecked);
-                    onShowOnlyEncryptedMessages(isChecked);
+                    if (isNeedToShowSwitchWarningDialog) {
+                        TwoWayDialogFragment newFragment = TwoWayDialogFragment.newInstance("",
+                                getString(R.string.message_cache_will_be_reloaded, isChecked ? getString(R.string
+                                        .showing_only_encrypted_messages) : getString(R.string.showing_all_messages)),
+                                getString(R.string.continue_), getString(R.string.cancel), false);
+                        newFragment.show(getSupportFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
+                        isNeedToShowSwitchWarningDialog = false;
+                    } else {
+                        isNeedToShowSwitchWarningDialog = true;
+                    }
                 }
             });
         }
@@ -497,6 +507,24 @@ public class EmailManagerActivity extends BaseEmailListActivity
         foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
         if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
             folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+        }
+    }
+
+    @Override
+    public void onTwoWayDialogButtonClick(int result) {
+        switch (result) {
+            case RESULT_OK:
+                cancelAllSyncTasks(0);
+                SharedPreferencesHelper.setBoolean(
+                        PreferenceManager.getDefaultSharedPreferences(EmailManagerActivity.this),
+                        Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, switchView.isChecked());
+                onShowOnlyEncryptedMessages(switchView.isChecked());
+                isNeedToShowSwitchWarningDialog = true;
+                break;
+
+            case RESULT_CANCELED:
+                switchView.setChecked(!switchView.isChecked());
+                break;
         }
     }
 

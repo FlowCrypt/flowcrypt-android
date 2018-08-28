@@ -105,6 +105,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
     public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 11;
     public static final int MESSAGE_SEARCH_MESSAGES = 12;
+    public static final int MESSAGE_CANCEL_ALL_TASKS = 13;
 
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
@@ -964,6 +965,12 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                             emailSyncManager.searchMessages(action.getOwnerKey(),
                                     action.getRequestCode(), folderWhereWeDoSearch, message.arg1);
+                        }
+                        break;
+
+                    case MESSAGE_CANCEL_ALL_TASKS:
+                        if (emailSyncManager != null && action != null) {
+                            emailSyncManager.cancelAllSyncTask();
                         }
                         break;
 

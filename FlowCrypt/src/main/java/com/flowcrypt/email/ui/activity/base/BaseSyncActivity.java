@@ -343,6 +343,27 @@ public abstract class BaseSyncActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Cancel all sync tasks which are waiting for executing.
+     *
+     * @param requestCode The unique request code for identify the current action.
+     */
+    public void cancelAllSyncTasks(int requestCode) {
+        if (checkServiceBound(isBoundToSyncService)) return;
+
+        BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
+
+        Message message = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_ALL_TASKS, action);
+
+        message.replyTo = syncServiceReplyMessenger;
+        try {
+            syncServiceMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+    }
+
     public boolean isSyncServiceConnected() {
         return isBoundToSyncService;
     }
