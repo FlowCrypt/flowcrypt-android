@@ -9,4 +9,9 @@
         <item>Encrypted messages only</item>
         <item>Never</item>
     </string-array>
+
+    <string-array name="notification_level_encrypted_entries">
+        <item>Encrypted messages only</item>
+        <item>Never</item>
+    </string-array>
 </resources>

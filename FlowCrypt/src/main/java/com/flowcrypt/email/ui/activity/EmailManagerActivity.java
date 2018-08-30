@@ -61,6 +61,7 @@ import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.GlideApp;
@@ -632,6 +633,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
     private void onShowOnlyEncryptedMessages(boolean isShowOnlyEncryptedMessages) {
         EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.emailListFragment);
+
+        if (isShowOnlyEncryptedMessages) {
+            String currentNotificationLevel = SharedPreferencesHelper.getString(PreferenceManager
+                    .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
+
+            if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentNotificationLevel)) {
+                SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
+                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER,
+                        NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
+            }
+        }
 
         if (emailListFragment != null) {
             emailListFragment.onFilterMessages(isShowOnlyEncryptedMessages);

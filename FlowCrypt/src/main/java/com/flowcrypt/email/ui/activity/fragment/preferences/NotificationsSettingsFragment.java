@@ -33,15 +33,31 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     public static final String NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY = "encrypted_messages_only";
     public static final String NOTIFICATION_LEVEL_NEVER = "never";
 
-    private static final CharSequence[] NOTIFICATION_LEVELS = new CharSequence[]{
-            NOTIFICATION_LEVEL_ALL_MESSAGES, NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY, NOTIFICATION_LEVEL_NEVER
-    };
+    private CharSequence[] notificationLevels;
+    private CharSequence[] notificationEntries;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.preferences_notifications_settings);
 
-        initPreferences();
+        boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                .getDefaultSharedPreferences(getContext()), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
+        if (isShowOnlyEncryptedMessages) {
+            notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+                    NOTIFICATION_LEVEL_NEVER
+            };
+            notificationEntries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
+        } else {
+            notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
+                    NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+                    NOTIFICATION_LEVEL_NEVER
+            };
+
+            notificationEntries = getResources().getStringArray(R.array.notification_level_entries);
+        }
+
+        initPreferences(isShowOnlyEncryptedMessages);
     }
 
     @Override
@@ -77,7 +93,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
         }
     }
 
-    protected void initPreferences() {
+    protected void initPreferences(boolean isShowOnlyEncryptedMessages) {
         Preference preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             preferenceSettingsSecurity.setOnPreferenceClickListener(this);
@@ -87,12 +103,19 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
 
         ListPreference listPreferenceNotificationsFilter = (ListPreference) findPreference(Constants
                 .PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER);
-        listPreferenceNotificationsFilter.setEntryValues(NOTIFICATION_LEVELS);
+        listPreferenceNotificationsFilter.setEntryValues(notificationLevels);
+        listPreferenceNotificationsFilter.setEntries(notificationEntries);
         listPreferenceNotificationsFilter.setOnPreferenceChangeListener(this);
 
-        listPreferenceNotificationsFilter.setSummary(generateSummaryListPreferences(
-                SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(getContext()),
-                        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""),
+        String currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
+                getContext()), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
+
+        if (isShowOnlyEncryptedMessages && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
+            listPreferenceNotificationsFilter.setValue(NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
+            currentValue = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY;
+        }
+
+        listPreferenceNotificationsFilter.setSummary(generateSummaryListPreferences(currentValue,
                 listPreferenceNotificationsFilter.getEntryValues(),
                 listPreferenceNotificationsFilter.getEntries()));
     }

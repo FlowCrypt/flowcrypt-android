@@ -6,7 +6,6 @@
     <android.support.v7.preference.ListPreference
         android:defaultValue="encrypted_messages_only"
         android:dialogTitle="@string/receive_notifications_for"
-        android:entries="@array/notification_level_entries"
         android:key="@string/preferences_key_messages_notification_filter"
         android:title="@string/notification_level" />
 
