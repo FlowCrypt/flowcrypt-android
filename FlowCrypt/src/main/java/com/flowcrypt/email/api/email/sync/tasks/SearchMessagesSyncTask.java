@@ -5,12 +5,17 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.Context;
 import android.os.Messenger;
 import android.support.annotation.NonNull;
+import android.support.v7.preference.PreferenceManager;
 
+import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -20,7 +25,9 @@ import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+import javax.mail.search.AndTerm;
 import javax.mail.search.SearchTerm;
+import javax.mail.search.StringTerm;
 import javax.mail.search.SubjectTerm;
 
 /**
@@ -54,20 +61,20 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
             throws Exception {
         super.runIMAPAction(accountDao, session, store, syncListener);
 
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
-        imapFolder.open(Folder.READ_ONLY);
-
-        if (countOfAlreadyLoadedMessages < 0) {
-            countOfAlreadyLoadedMessages = 0;
-        }
-
-        Message[] foundMessages = imapFolder.search(generateSearchTerm(accountDao));
-
-        int messagesCount = foundMessages.length;
-        int end = messagesCount - countOfAlreadyLoadedMessages;
-        int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
-
         if (syncListener != null) {
+            IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+            imapFolder.open(Folder.READ_ONLY);
+
+            if (countOfAlreadyLoadedMessages < 0) {
+                countOfAlreadyLoadedMessages = 0;
+            }
+
+            Message[] foundMessages = imapFolder.search(generateSearchTerm(syncListener.getContext(), accountDao));
+
+            int messagesCount = foundMessages.length;
+            int end = messagesCount - countOfAlreadyLoadedMessages;
+            int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
+
             if (end < 1) {
                 syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey,
                         requestCode);
@@ -90,23 +97,38 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
                 syncListener.onSearchMessagesReceived(accountDao, folder, imapFolder, bufferedMessages,
                         ownerKey, requestCode);
             }
-        }
 
-        imapFolder.close(false);
+            imapFolder.close(false);
+        }
     }
 
     /**
      * Generate a {@link SearchTerm} depend on an input {@link AccountDao}.
      *
+     * @param context    Interface to global information about an application environment.
      * @param accountDao An input {@link AccountDao}
      * @return A generated {@link SearchTerm}.
      */
     @NonNull
-    private SearchTerm generateSearchTerm(AccountDao accountDao) {
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
-            return new GmailRawSearchTerm(folder.getSearchQuery());
+    private SearchTerm generateSearchTerm(Context context, AccountDao accountDao) {
+        boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
+                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+
+        if (isShowOnlyEncryptedMessages) {
+            SearchTerm searchTerm = EmailUtil.generateSearchTermForEncryptedMessages(accountDao);
+
+            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+                StringTerm stringTerm = (StringTerm) searchTerm;
+                return new GmailRawSearchTerm(folder.getSearchQuery() + " AND (" + stringTerm.getPattern() + ")");
+            } else {
+                return new AndTerm(searchTerm, new SubjectTerm(folder.getSearchQuery()));
+            }
         } else {
-            return new SubjectTerm(folder.getSearchQuery());
+            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+                return new GmailRawSearchTerm(folder.getSearchQuery());
+            } else {
+                return new SubjectTerm(folder.getSearchQuery());
+            }
         }
     }
 }

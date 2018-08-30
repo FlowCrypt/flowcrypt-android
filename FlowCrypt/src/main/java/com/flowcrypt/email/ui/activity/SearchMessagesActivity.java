@@ -135,7 +135,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.activity_email_manager, menu);
+        inflater.inflate(R.menu.activity_search_messages, menu);
 
         MenuItem menuItemSearch = menu.findItem(R.id.menuSearch);
         menuItemSearch.expandActionView();
