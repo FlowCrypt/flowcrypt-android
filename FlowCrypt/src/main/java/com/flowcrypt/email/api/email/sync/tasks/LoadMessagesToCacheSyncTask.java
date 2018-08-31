@@ -5,17 +5,15 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.imap.IMAPFolder;
 
 import javax.mail.FetchProfile;
@@ -61,9 +59,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
             Message[] foundMessages = new Message[0];
             int messagesCount;
 
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(syncListener.getContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                    syncListener.getContext(), accountDao.getEmail());
 
             if (isShowOnlyEncryptedMessages) {
                 foundMessages = imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));

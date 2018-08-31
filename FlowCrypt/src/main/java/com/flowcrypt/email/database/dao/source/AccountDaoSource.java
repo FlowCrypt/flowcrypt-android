@@ -69,7 +69,8 @@ public class AccountDaoSource extends BaseDaoSource {
     public static final String COL_SMTP_IS_USE_CUSTOM_SIGN = "smtp_is_use_custom_sign";
     public static final String COL_SMTP_USERNAME = "smtp_username";
     public static final String COL_SMTP_PASSWORD = "smtp_password";
-    public static final String COL_IS_CONTACTS_LOADED = "ic_contacts_loaded";
+    public static final String COL_IS_CONTACTS_LOADED = "is_contacts_loaded";
+    public static final String COL_IS_SHOW_ONLY_ENCRYPTED = "is_show_only_encrypted";
 
     public static final String ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ACCOUNTS + " (" +
@@ -97,7 +98,8 @@ public class AccountDaoSource extends BaseDaoSource {
             COL_SMTP_IS_USE_CUSTOM_SIGN + " INTEGER DEFAULT 0, " +
             COL_SMTP_USERNAME + " TEXT DEFAULT NULL, " +
             COL_SMTP_PASSWORD + " TEXT DEFAULT NULL, " +
-            COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0 " + ");";
+            COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0, " +
+            COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = "CREATE UNIQUE INDEX IF NOT EXISTS "
             + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
@@ -385,6 +387,57 @@ public class AccountDaoSource extends BaseDaoSource {
         }
 
         return accountDaoList;
+    }
+
+    /**
+     * Checking of showing only encrypted messages for the given account.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   An email of the active account.
+     * @return true if need to show only encrypted messages
+     */
+    public boolean isShowOnlyEncryptedMessages(Context context, String email) {
+        if (email != null) {
+            email = email.toLowerCase();
+        }
+
+        Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
+                AccountDaoSource.COL_EMAIL + " = ?", new String[]{email}, null);
+
+        boolean isShowOnlyEncryptedMessages = false;
+
+        if (cursor != null && cursor.moveToFirst()) {
+            isShowOnlyEncryptedMessages = cursor.getInt(cursor.getColumnIndex(COL_IS_SHOW_ONLY_ENCRYPTED)) == 1;
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return isShowOnlyEncryptedMessages;
+    }
+
+    /**
+     * Change a value of {@link #COL_IS_SHOW_ONLY_ENCRYPTED} field for the given account.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The account which will be set as active.
+     * @return The count of updated rows.
+     */
+    public int setIsShowOnlyEncryptedMessages(Context context, String email, boolean isShowOnlyEncryptedMessages) {
+        if (email == null) {
+            return -1;
+        } else {
+            email = email.toLowerCase();
+        }
+
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver != null) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(COL_IS_SHOW_ONLY_ENCRYPTED, isShowOnlyEncryptedMessages);
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + " = ? ", new String[]{email});
+        } else return -1;
     }
 
     /**

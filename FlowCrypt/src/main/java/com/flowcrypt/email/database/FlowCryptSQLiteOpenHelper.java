@@ -276,11 +276,13 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
             sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
                     " ADD COLUMN " + MessageDaoSource.COL_IS_ENCRYPTED
                     + " INTEGER DEFAULT -1;");
-
             sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
                     " ADD COLUMN " + MessageDaoSource.COL_CC_ADDRESSES + " TEXT DEFAULT NULL;");
             sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
                     " ADD COLUMN " + MessageDaoSource.COL_IS_NEW + " INTEGER DEFAULT 0;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;");
 
             sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
             sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);

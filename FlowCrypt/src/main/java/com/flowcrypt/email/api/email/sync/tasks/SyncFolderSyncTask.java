@@ -5,16 +5,14 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import android.support.v7.preference.PreferenceManager;
 import android.util.LongSparseArray;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;
@@ -30,9 +28,9 @@ import javax.mail.UIDFolder;
  * This task does syncing a local folder with a remote. (Server -> client)
  *
  * @author Denis Bondarenko
- * Date: 25.07.2018
- * Time: 14:19
- * E-mail: DenBond7@gmail.com
+ *         Date: 25.07.2018
+ *         Time: 14:19
+ *         E-mail: DenBond7@gmail.com
  */
 public class SyncFolderSyncTask extends BaseSyncTask {
     private com.flowcrypt.email.api.email.Folder localFolder;
@@ -47,9 +45,8 @@ public class SyncFolderSyncTask extends BaseSyncTask {
             Exception {
 
         if (syncListener != null) {
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(syncListener.getContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                    syncListener.getContext(), accountDao.getEmail());
 
             IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
             imapFolder.open(javax.mail.Folder.READ_ONLY);

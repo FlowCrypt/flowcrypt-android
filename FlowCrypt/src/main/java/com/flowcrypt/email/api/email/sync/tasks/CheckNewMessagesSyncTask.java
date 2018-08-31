@@ -5,15 +5,13 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import android.support.v7.preference.PreferenceManager;
 import android.util.LongSparseArray;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;
@@ -47,9 +45,8 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
             throws Exception {
         if (syncListener != null) {
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                            .getDefaultSharedPreferences(syncListener.getContext()),
-                    Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                    syncListener.getContext(), accountDao.getEmail());
 
             IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
             imapFolder.open(Folder.READ_ONLY);

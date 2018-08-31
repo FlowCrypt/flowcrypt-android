@@ -8,14 +8,12 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.content.Context;
 import android.os.Messenger;
 import android.support.annotation.NonNull;
-import android.support.v7.preference.PreferenceManager;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.sun.mail.gimap.GmailRawSearchTerm;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -111,8 +109,8 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
      */
     @NonNull
     private SearchTerm generateSearchTerm(Context context, AccountDao accountDao) {
-        boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+        boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                context, accountDao.getEmail());
 
         if (isShowOnlyEncryptedMessages) {
             SearchTerm searchTerm = EmailUtil.generateSearchTermForEncryptedMessages(accountDao);

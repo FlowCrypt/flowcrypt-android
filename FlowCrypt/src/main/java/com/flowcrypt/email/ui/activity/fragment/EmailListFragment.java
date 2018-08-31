@@ -17,7 +17,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,7 +28,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -37,13 +35,13 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -192,8 +190,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         super.onCreate(savedInstanceState);
         this.messageListAdapter = new MessageListAdapter(getContext(), null);
 
-        this.isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                .getDefaultSharedPreferences(getContext()), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+        AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+        this.isShowOnlyEncryptedMessages = accountDaoSource.isShowOnlyEncryptedMessages(getContext(),
+                accountDao.getEmail());
     }
 
     @Override

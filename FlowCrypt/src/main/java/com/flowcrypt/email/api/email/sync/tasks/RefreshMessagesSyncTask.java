@@ -5,14 +5,11 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import android.support.v7.preference.PreferenceManager;
-
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;
@@ -60,9 +57,8 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
                     accountDao.getEmail(),
                     localFolder.getFolderAlias());
 
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(syncListener.getContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                    syncListener.getContext(), accountDao.getEmail());
 
             if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
                 if (isShowOnlyEncryptedMessages) {

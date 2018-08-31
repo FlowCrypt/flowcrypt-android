@@ -16,6 +16,8 @@ import android.support.v7.preference.PreferenceManager;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -40,8 +42,11 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.preferences_notifications_settings);
 
-        boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                .getDefaultSharedPreferences(getContext()), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+        AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+
+        boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(getContext(),
+                accountDao.getEmail());
 
         if (isShowOnlyEncryptedMessages) {
             notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,

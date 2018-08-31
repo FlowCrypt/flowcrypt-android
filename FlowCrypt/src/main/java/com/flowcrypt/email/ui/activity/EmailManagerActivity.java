@@ -179,8 +179,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
         switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
         if (switchView != null) {
-            switchView.setChecked(SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-                    (EmailManagerActivity.this), Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false));
+            switchView.setChecked(new AccountDaoSource().isShowOnlyEncryptedMessages(this, accountDao.getEmail()));
 
             switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -516,9 +515,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
         switch (result) {
             case RESULT_OK:
                 cancelAllSyncTasks(0);
-                SharedPreferencesHelper.setBoolean(
-                        PreferenceManager.getDefaultSharedPreferences(EmailManagerActivity.this),
-                        Constants.PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, switchView.isChecked());
+                new AccountDaoSource().setIsShowOnlyEncryptedMessages(this,
+                        accountDao.getEmail(), switchView.isChecked());
                 onShowOnlyEncryptedMessages(switchView.isChecked());
                 isNeedToShowSwitchWarningDialog = true;
                 break;

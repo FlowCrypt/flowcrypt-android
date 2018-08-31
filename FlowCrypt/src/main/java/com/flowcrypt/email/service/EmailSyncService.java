@@ -20,12 +20,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -44,7 +42,6 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -329,9 +326,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
         Log.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " message " +
                 "count: " + messages.length);
         try {
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(getApplicationContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages =
+                    new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), accountDao.getEmail());
 
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
@@ -403,9 +399,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                          String ownerKey, int requestCode) {
         Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
         try {
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(getApplicationContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages =
+                    new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), accountDao.getEmail());
 
             MessageDaoSource messageDaoSource = new MessageDaoSource();
             messageDaoSource.addRows(getApplicationContext(),
@@ -473,9 +468,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
             javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
                     remoteFolder, newMessages);
 
-            boolean isShowOnlyEncryptedMessages = SharedPreferencesHelper.getBoolean(PreferenceManager
-                    .getDefaultSharedPreferences(getApplicationContext()), Constants
-                    .PREFERENCES_KEY_IS_SHOW_ONLY_ENCRYPTED, false);
+            boolean isShowOnlyEncryptedMessages =
+                    new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), accountDao.getEmail());
 
             messageDaoSource.addRows(getApplicationContext(),
                     accountDao.getEmail(),
