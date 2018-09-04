@@ -3907,8 +3907,8 @@
 (function ( /* EXTENSIONS AND CONFIG */ ) {
 
   if(typeof window.openpgp !== 'undefined' && typeof window.openpgp.config !== 'undefined' && typeof window.openpgp.config.versionstring !== 'undefined' && typeof window.openpgp.config.commentstring !== 'undefined') {
-    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Gmail Encryption flowcrypt.com';
-    window.openpgp.config.commentstring = 'Seamlessly send, receive and search encrypted email';
+    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '');
+    window.openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
   }
 
   RegExp.escape = function (s) {
