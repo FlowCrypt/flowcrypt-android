@@ -346,7 +346,8 @@ icelanders prefer real sauna</font>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
     <string name="changing_pass_phrase">Change pass phrase</string>
     <string name="done">Done!</string>
-    <string name="pass_phrase_changed">Pass phrase successfully changed!</string>
+    <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
+    <string name="back_up_updated_key">You should back up your updated key.</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
     <string name="backup_options">Backup options</string>
     <string name="change_pass_phrase">Change pass phrase</string>

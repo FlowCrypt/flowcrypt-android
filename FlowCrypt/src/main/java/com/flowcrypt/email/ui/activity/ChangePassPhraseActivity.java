@@ -202,7 +202,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
     protected void runBackupKeysActivity() {
         isBackEnable = true;
-        Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show();
         startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
     }
 }
