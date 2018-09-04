@@ -110,12 +110,14 @@ public class SecurityUtils {
     /**
      * Generate a private keys backup for the given account.
      *
-     * @param context    Interface to global information about an application environment.
-     * @param js         An instance of {@link Js}
-     * @param accountDao The given account
+     * @param context               Interface to global information about an application environment.
+     * @param js                    An instance of {@link Js}
+     * @param accountDao            The given account
+     * @param isWeakCheckingEnabled true if need to check is a pass phrase is too weak.
      * @return A string which includes private keys
      */
-    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao) throws
+    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao,
+                                                   boolean isWeakCheckingEnabled) throws
             PrivateKeyStrengthException, DifferentPassPhrasesException {
         StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
         Zxcvbn zxcvbn = new Zxcvbn();
@@ -149,7 +151,7 @@ public class SecurityUtils {
             PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
                     zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
 
-            if (passwordStrength != null) {
+            if (passwordStrength != null && isWeakCheckingEnabled) {
                 switch (passwordStrength.getWord()) {
                     case Constants.PASSWORD_QUALITY_WEAK:
                     case Constants.PASSWORD_QUALITY_POOR:

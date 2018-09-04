@@ -43,8 +43,8 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
     public LoaderResult loadInBackground() {
         try {
             Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(),
-                    destinationUri, SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao)) > 0, null);
+            return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
+                    SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao, false)) > 0, null);
         } catch (Exception e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);

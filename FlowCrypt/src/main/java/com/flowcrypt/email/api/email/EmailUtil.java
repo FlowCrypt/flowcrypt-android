@@ -235,7 +235,7 @@ public class EmailUtil {
         multipart.addBodyPart(messageBodyPart);
 
         MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountDao,
-                SecurityUtils.generatePrivateKeysBackup(context, js, accountDao));
+                SecurityUtils.generatePrivateKeysBackup(context, js, accountDao, true));
         attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
         multipart.addBodyPart(attachmentsBodyPart);
 
