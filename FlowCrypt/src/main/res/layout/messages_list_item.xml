@@ -10,17 +10,6 @@
     android:layout_height="@dimen/layout_height_message_item"
     android:orientation="vertical">
 
-    <View
-        android:id="@+id/viewIsEncrypted"
-        android:layout_width="@dimen/layout_width_encrypted_indicator"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <TextView
         android:id="@+id/textViewSenderAddress"
         android:layout_width="0dp"
@@ -69,12 +58,25 @@
         android:id="@+id/textViewDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="end"
         android:textColor="@color/gray"
         android:textSize="@dimen/default_text_size_medium"
         app:layout_constraintBaseline_toBaselineOf="@id/textViewSenderAddress"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         tools:text="1:05 PM" />
+
+    <ImageView
+        android:id="@+id/viewIsEncrypted"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/security"
+        android:src="@mipmap/ic_security"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewSubject"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/textViewSubject"
+        app:layout_constraintTop_toTopOf="@+id/textViewSubject" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineLeft"
