@@ -257,16 +257,16 @@
         <item quantity="one">Import key backup</item>
         <item quantity="other">Import key backups</item>
     </plurals>
-    <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
+    <string name="enter_new_pass_phrase">Enter new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
     <string name="confirm_pass_phrase">Confirm pass phrase</string>
     <string name="use_another_pass_phrase">Use another pass phrase</string>
     <string name="repeat_pass_phrase">Repeat pass phrase</string>
-    <string name="loss_of_this_pass_phrase_cannot_be_recovered">Loss of this pass phrase cannot be recovered.</string>
+    <string name="loss_of_this_pass_phrase_cannot_be_recovered">Lost pass phrase cannot be recovered.</string>
     <string name="see_choosing_secure_pass_phrases">See choosing secure pass phrases</string>
     <string name="select_stronger_pass_phrase">Please select a stronger pass phrase. Combinations of 4 to 5 uncommon
         words are the best.</string>
-    <string name="password_quality_subtext">(average time to crack:</string>
+    <string name="password_quality_subtext">(time to crack:</string>
     <string name="password_quality_perfect">perfect</string>
     <string name="password_quality_great">great</string>
     <string name="password_quality_good">good</string>
@@ -344,7 +344,7 @@ icelanders prefer real sauna</font>
     <string name="notification_level">Notification level</string>
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
-    <string name="changing_pass_phrase">Changing the pass phrase</string>
+    <string name="changing_pass_phrase">Change pass phrase</string>
     <string name="done">Done!</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed!</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>

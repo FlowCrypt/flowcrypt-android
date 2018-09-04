@@ -155,7 +155,7 @@
                     android:layout_marginTop="@dimen/default_margin_content_big"
                     android:gravity="center"
                     android:text="@string/loss_of_this_pass_phrase_cannot_be_recovered"
-                    android:textColor="@android:color/black"
+                    android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
                     app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
                     app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
