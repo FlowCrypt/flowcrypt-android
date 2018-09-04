@@ -139,11 +139,11 @@ public class SecurityUtils {
             if (i == 0) {
                 firstPassPhrase = passPhrase;
             } else if (!passPhrase.equals(firstPassPhrase)) {
-                throw new DifferentPassPhrasesException("The keys have different pass phrase!");
+                throw new DifferentPassPhrasesException("The keys have different pass phrase");
             }
 
             if (TextUtils.isEmpty(passPhrase)) {
-                throw new PrivateKeyStrengthException("The pass phrase of some of your key(s) is empty!");
+                throw new PrivateKeyStrengthException("Empty pass phrase");
             }
 
             PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
@@ -153,7 +153,7 @@ public class SecurityUtils {
                 switch (passwordStrength.getWord()) {
                     case Constants.PASSWORD_QUALITY_WEAK:
                     case Constants.PASSWORD_QUALITY_POOR:
-                        throw new PrivateKeyStrengthException("The pass phrase of some of your key(s) is too weak!");
+                        throw new PrivateKeyStrengthException("Pass phrase too weak");
                 }
             }
 

@@ -103,8 +103,8 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
     protected void initViews() {
         super.initViews();
 
-        textViewFirstPasswordCheckTitle.setText(R.string.changing_pass_phrase);
-        textViewSecondPasswordCheckTitle.setText(R.string.changing_pass_phrase);
+        textViewFirstPasswordCheckTitle.setText(R.string.change_pass_phrase);
+        textViewSecondPasswordCheckTitle.setText(R.string.change_pass_phrase);
 
         textViewSuccessTitle.setText(R.string.done);
         textViewSuccessSubTitle.setText(R.string.pass_phrase_changed);

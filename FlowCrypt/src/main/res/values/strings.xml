@@ -344,7 +344,6 @@ icelanders prefer real sauna</font>
     <string name="notification_level">Notification level</string>
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
-    <string name="changing_pass_phrase">Change pass phrase</string>
     <string name="done">Done!</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
     <string name="back_up_updated_key">You should back up your updated key.</string>
@@ -352,7 +351,7 @@ icelanders prefer real sauna</font>
     <string name="backup_options">Backup options</string>
     <string name="change_pass_phrase">Change pass phrase</string>
     <string name="account_has_no_associated_keys">This account has no associated keys. Write us at %1$s if you need help</string>
-    <string name="pass_phrase_is_too_weak">The pass phrase of some of your key(s) is too weak</string>
+    <string name="pass_phrase_is_too_weak">Your pass phrase is too weak</string>
     <string name="fix">fix</string>
     <string name="different_pass_phrases">Your private keys have different pass phrases</string>
     <plurals name="file_contains_some_amount_of_keys">

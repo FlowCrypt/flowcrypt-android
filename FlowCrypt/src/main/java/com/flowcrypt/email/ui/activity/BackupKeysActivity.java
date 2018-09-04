@@ -103,7 +103,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 if (e instanceof PrivateKeyStrengthException) {
                     showSnackbar(getRootView(),
                             getString(R.string.pass_phrase_is_too_weak),
-                            getString(R.string.fix),
+                            getString(R.string.change_pass_phrase),
                             new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
@@ -301,7 +301,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 if (e instanceof PrivateKeyStrengthException) {
                     showSnackbar(getRootView(),
                             getString(R.string.pass_phrase_is_too_weak),
-                            getString(R.string.fix),
+                            getString(R.string.change_pass_phrase),
                             new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
