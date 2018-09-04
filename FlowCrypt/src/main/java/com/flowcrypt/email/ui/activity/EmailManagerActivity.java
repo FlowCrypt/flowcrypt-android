@@ -60,7 +60,6 @@ import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.service.actionqueue.ActionManager;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -81,15 +80,14 @@ import java.util.List;
  * This activity used to show messages list.
  *
  * @author DenBond7
- * Date: 27.04.2017
- * Time: 16:12
- * E-mail: DenBond7@gmail.com
+ *         Date: 27.04.2017
+ *         Time: 16:12
+ *         E-mail: DenBond7@gmail.com
  */
 public class EmailManagerActivity extends BaseEmailListActivity
         implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
         View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener, TwoWayDialogFragment
-                .OnTwoWayDialogListener {
+        GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
 
     private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
     private static final int REQUEST_CODE_SIGN_IN = 101;
@@ -107,7 +105,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
     private NavigationView navigationView;
     private View currentAccountDetailsItem;
     private Switch switchView;
-    private boolean isNeedToShowSwitchWarningDialog = true;
 
     public EmailManagerActivity() {
         this.foldersManager = new FoldersManager();
@@ -184,16 +181,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
             switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (isNeedToShowSwitchWarningDialog) {
-                        TwoWayDialogFragment newFragment = TwoWayDialogFragment.newInstance("",
-                                getString(R.string.message_cache_will_be_reloaded, isChecked ? getString(R.string
-                                        .showing_only_encrypted_messages) : getString(R.string.showing_all_messages)),
-                                getString(R.string.continue_), getString(R.string.cancel), false);
-                        newFragment.show(getSupportFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
-                        isNeedToShowSwitchWarningDialog = false;
-                    } else {
-                        isNeedToShowSwitchWarningDialog = true;
+                    if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this.getApplicationContext())) {
+                        buttonView.setEnabled(false);
                     }
+
+                    cancelAllSyncTasks(0);
+                    new AccountDaoSource().setIsShowOnlyEncryptedMessages(EmailManagerActivity.this,
+                            accountDao.getEmail(), isChecked);
+                    onShowOnlyEncryptedMessages(isChecked);
+
+                    Toast.makeText(EmailManagerActivity.this, isChecked ? R.string.showing_only_encrypted_messages
+                            : R.string.showing_all_messages, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -270,6 +268,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 }
                 break;
 
+            case R.id.syns_request_code_load_next_messages:
+                switchView.setEnabled(true);
+                super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+                break;
+
             default:
                 super.onReplyFromServiceReceived(requestCode, resultCode, obj);
         }
@@ -296,6 +299,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 if (!countingIdlingResourceForLabel.isIdleNow()) {
                     countingIdlingResourceForLabel.decrement();
                 }
+                break;
+
+            case R.id.syns_request_code_load_next_messages:
+                switchView.setEnabled(true);
+                super.onErrorFromServiceReceived(requestCode, errorType, e);
                 break;
 
             default:
@@ -366,6 +374,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
         return true;
     }
 
+    @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -373,12 +382,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 return new CursorLoader(this, new ImapLabelsDaoSource().getBaseContentUri(), null,
                         ImapLabelsDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
             default:
-                return null;
+                return new Loader<>(this.getApplicationContext());
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case R.id.loader_id_load_gmail_labels:
                 if (data != null) {
@@ -424,7 +433,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
 
     }
 
@@ -507,23 +516,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
         foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
         if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
             folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
-        }
-    }
-
-    @Override
-    public void onTwoWayDialogButtonClick(int result) {
-        switch (result) {
-            case RESULT_OK:
-                cancelAllSyncTasks(0);
-                new AccountDaoSource().setIsShowOnlyEncryptedMessages(this,
-                        accountDao.getEmail(), switchView.isChecked());
-                onShowOnlyEncryptedMessages(switchView.isChecked());
-                isNeedToShowSwitchWarningDialog = true;
-                break;
-
-            case RESULT_CANCELED:
-                switchView.setChecked(!switchView.isChecked());
-                break;
         }
     }
 
