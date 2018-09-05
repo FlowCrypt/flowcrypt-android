@@ -7,6 +7,7 @@ package com.flowcrypt.email.scenarios.setup;
 
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Test;
@@ -31,9 +32,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
  */
 
 public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandardAuthTest {
-
-    private static final String DEFAULT_PRIVATE_KEY_PASSWORD = "android";
-
     @Test
     public void testAllConditionsTrue() throws Exception {
         onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
@@ -41,7 +39,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
         onView(withId(R.id.buttonTryToConnect)).perform(click());
 
         checkRightHeader();
-        typeAndCheckPrivateKeyPassword(DEFAULT_PRIVATE_KEY_PASSWORD);
+        typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
         onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
     }
 
@@ -55,7 +53,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
         typeAndCheckPrivateKeyPassword("password");
         onView(withText(R.string.password_is_incorrect)).check(matches(isDisplayed()));
 
-        typeAndCheckPrivateKeyPassword(DEFAULT_PRIVATE_KEY_PASSWORD);
+        typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
         onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
     }
 
