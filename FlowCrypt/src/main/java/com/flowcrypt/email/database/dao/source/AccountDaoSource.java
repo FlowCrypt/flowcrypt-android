@@ -69,7 +69,7 @@ public class AccountDaoSource extends BaseDaoSource {
     public static final String COL_SMTP_IS_USE_CUSTOM_SIGN = "smtp_is_use_custom_sign";
     public static final String COL_SMTP_USERNAME = "smtp_username";
     public static final String COL_SMTP_PASSWORD = "smtp_password";
-    public static final String COL_IS_CONTACTS_LOADED = "is_contacts_loaded";
+    public static final String COL_IS_CONTACTS_LOADED = "ic_contacts_loaded";
     public static final String COL_IS_SHOW_ONLY_ENCRYPTED = "is_show_only_encrypted";
 
     public static final String ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
