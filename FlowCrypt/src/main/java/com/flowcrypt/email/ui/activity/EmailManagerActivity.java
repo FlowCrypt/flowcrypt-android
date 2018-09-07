@@ -202,12 +202,22 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem item = menu.findItem(R.id.menuSwitch);
+        MenuItem itemSwitch = menu.findItem(R.id.menuSwitch);
+        MenuItem itemSearch = menu.findItem(R.id.menuSearch);
+
         if (folder != null) {
-            item.setVisible(!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName()));
+            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+                itemSwitch.setVisible(false);
+                itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType()));
+            } else {
+                itemSwitch.setVisible(true);
+                itemSearch.setVisible(true);
+            }
         } else {
-            item.setVisible(true);
+            itemSwitch.setVisible(true);
+            itemSearch.setVisible(true);
         }
+
         return super.onPrepareOptionsMenu(menu);
     }
 
