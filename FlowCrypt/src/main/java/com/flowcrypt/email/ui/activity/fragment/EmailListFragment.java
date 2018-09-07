@@ -279,48 +279,54 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         }
 
         emptyView.setVisibility(View.GONE);
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            if (onManageEmailsListener.getCurrentFolder() != null) {
-                if (messageListAdapter.getCount() > 0) {
-                    swipeRefreshLayout.setRefreshing(true);
-                    refreshMessages();
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
+                .getServerFullFolderName())) {
+            swipeRefreshLayout.setRefreshing(false);
+        } else {
+            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                if (onManageEmailsListener.getCurrentFolder() != null) {
+                    if (messageListAdapter.getCount() > 0) {
+                        swipeRefreshLayout.setRefreshing(true);
+                        refreshMessages();
+                    } else {
+                        swipeRefreshLayout.setRefreshing(false);
+
+                        if (messageListAdapter.getCount() == 0) {
+                            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                        }
+
+                        loadNextMessages(-1);
+                    }
                 } else {
                     swipeRefreshLayout.setRefreshing(false);
 
                     if (messageListAdapter.getCount() == 0) {
-                        UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                        textViewStatusInfo.setText(R.string.server_unavailable);
+                        UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
                     }
 
-                    loadNextMessages(-1);
+                    showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server),
+                            getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    setSupportActionBarTitle(getString(R.string.loading));
+                                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+                                    ((BaseSyncActivity) getActivity()).updateLabels(R.id
+                                            .syns_request_code_update_label_active, false);
+                                }
+                            });
                 }
             } else {
                 swipeRefreshLayout.setRefreshing(false);
 
                 if (messageListAdapter.getCount() == 0) {
-                    textViewStatusInfo.setText(R.string.server_unavailable);
+                    textViewStatusInfo.setText(R.string.no_connection);
                     UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
                 }
 
-                showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server),
-                        getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                setSupportActionBarTitle(getString(R.string.loading));
-                                UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                                ((BaseSyncActivity) getActivity()).updateLabels(R.id
-                                        .syns_request_code_update_label_active, false);
-                            }
-                        });
+                showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar
+                        .LENGTH_LONG);
             }
-        } else {
-            swipeRefreshLayout.setRefreshing(false);
-
-            if (messageListAdapter.getCount() == 0) {
-                textViewStatusInfo.setText(R.string.no_connection);
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-            }
-
-            showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
         }
     }
 

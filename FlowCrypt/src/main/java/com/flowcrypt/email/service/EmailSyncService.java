@@ -523,7 +523,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
         foldersManager.addFolder(new com.flowcrypt.email.api.email.Folder(JavaEmailConstants.FOLDER_OUTBOX,
                 JavaEmailConstants.FOLDER_OUTBOX, 0,
-                new String[]{JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN}, true));
+                new String[]{JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN}, false));
 
         ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
         List<com.flowcrypt.email.api.email.Folder> currentFoldersList =

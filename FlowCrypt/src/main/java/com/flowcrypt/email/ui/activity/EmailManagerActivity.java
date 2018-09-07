@@ -48,6 +48,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -197,6 +198,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
         }
 
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.menuSwitch);
+        if (folder != null) {
+            item.setVisible(!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName()));
+        } else {
+            item.setVisible(true);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -366,6 +378,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 if (folder == null || !folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
                     this.folder = newFolder;
                     updateEmailsListFragmentAfterFolderChange();
+                    invalidateOptionsMenu();
                 }
                 break;
         }
