@@ -156,7 +156,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private boolean isUpdateInfoAboutToCompleted = true;
     private boolean isUpdateInfoAboutCcCompleted = true;
     private boolean isUpdateInfoAboutBccCompleted = true;
-    private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
 
     public CreateMessageFragment() {
@@ -378,12 +377,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        menu.setGroupVisible(0, !isMessageSendingNow);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
@@ -437,6 +430,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -569,11 +563,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-        notifyUserAboutErrorWhenSendMessage(e);
-    }
-
-    @Override
     public void onFocusChange(View v, boolean hasFocus) {
         switch (v.getId()) {
             case R.id.editTextRecipientTo:
@@ -689,7 +678,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
      * @param e An occurred error.
      */
     public void notifyUserAboutErrorWhenSendMessage(Exception e) {
-        isMessageSendingNow = false;
         if (getActivity() != null) {
             getActivity().invalidateOptionsMenu();
         }
@@ -702,15 +690,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         showInfoSnackbar(getView(), errorMessage);
-    }
-
-    /**
-     * Check the message sending status
-     *
-     * @return true if message was sent, false otherwise.
-     */
-    public boolean isMessageSendingNow() {
-        return isMessageSendingNow;
     }
 
     private void updateRecipientsFields() {
@@ -1510,13 +1489,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         dismissCurrentSnackBar();
 
         isUpdateInfoAboutContactsEnable = false;
-        isMessageSendingNow = true;
-
-        getActivity().invalidateOptionsMenu();
-
-        statusView.setVisibility(View.GONE);
-        UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
-
         OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
 
         ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();

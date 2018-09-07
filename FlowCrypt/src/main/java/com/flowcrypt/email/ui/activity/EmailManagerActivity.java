@@ -531,13 +531,13 @@ public class EmailManagerActivity extends BaseEmailListActivity
      */
     private String[] getSortedServerFolders() {
         List<Folder> folders = foldersManager.getServerFolders();
-        int foldersCount = folders.size();
-        String[] serverFolders = new String[foldersCount];
+        String[] serverFolders = new String[folders.size()];
 
-        Folder inbox, spam, trash;
+        Folder inbox, spam, trash, outbox;
         inbox = foldersManager.getFolderInbox();
         spam = foldersManager.getFolderSpam();
         trash = foldersManager.getFolderTrash();
+        outbox = foldersManager.getFolderOutbox();
 
         if (inbox != null) {
             folders.remove(inbox);
@@ -552,6 +552,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
         if (spam != null) {
             folders.remove(spam);
             serverFolders[folders.size() + 1] = spam.getFolderAlias();
+        }
+
+        if (outbox != null) {
+            folders.remove(outbox);
+            serverFolders[folders.size() + 1] = outbox.getFolderAlias();
         }
 
         for (int i = 0; i < folders.size(); i++) {

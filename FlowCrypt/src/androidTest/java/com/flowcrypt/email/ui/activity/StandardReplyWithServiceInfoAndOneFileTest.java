@@ -14,6 +14,7 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
@@ -82,6 +83,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
                 attachmentInfo.setEncodedSize(STRING.length());
                 attachmentInfo.setRawData(STRING);
                 attachmentInfo.setType("text/plain");
+                attachmentInfo.setId(EmailUtil.generateContentId());
                 attachmentInfo.setCanBeDeleted(false);
 
                 List<AttachmentInfo> attachmentInfoList = new ArrayList<>();

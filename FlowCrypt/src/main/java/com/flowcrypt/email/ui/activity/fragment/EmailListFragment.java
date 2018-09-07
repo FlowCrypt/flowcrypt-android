@@ -84,6 +84,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
             = new LoaderManager.LoaderCallbacks<Cursor>() {
 
+        @NonNull
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch (id) {
@@ -115,7 +116,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
 
                 default:
-                    return null;
+                    return new Loader<>(getContext());
             }
         }
 
@@ -136,6 +137,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
                         UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
                     } else {
+                        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
+                                onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+                            isMessagesFetchedIfNotExistInCache = true;
+                        }
+
                         if (!isMessagesFetchedIfNotExistInCache) {
                             isMessagesFetchedIfNotExistInCache = true;
                             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
@@ -337,9 +343,12 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         if (onManageEmailsListener.getCurrentFolder() != null
                 && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalItemCount == 1)) {
             boolean isMoreMessageAvailable = onManageEmailsListener.isMoreMessagesAvailable();
-            if (!isNewMessagesLoadingNow && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
-                    && isMoreMessageAvailable && firstVisibleItem + visibleItemCount >= totalItemCount -
-                    LOADING_SHIFT_IN_ITEMS) {
+            if (!isNewMessagesLoadingNow
+                    && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
+                    && isMoreMessageAvailable
+                    && firstVisibleItem + visibleItemCount >= totalItemCount - LOADING_SHIFT_IN_ITEMS
+                    && !JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
+                    onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
                 loadNextMessages(messageListAdapter.getCount());
             }
         }
@@ -443,7 +452,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
                 getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
                 if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
-                        !isItSyncFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
+                        !isItSyncOrOutboxFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
                     DataBaseUtil.cleanFolderCache(getContext(),
                             onManageEmailsListener.getCurrentAccountDao().getEmail(),
                             onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -542,8 +551,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         updateList(true, true);
     }
 
-    private boolean isItSyncFolder(Folder folder) {
-        if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+    private boolean isItSyncOrOutboxFolder(Folder folder) {
+        if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
+                || folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX)) {
             return true;
         } else return false;
     }

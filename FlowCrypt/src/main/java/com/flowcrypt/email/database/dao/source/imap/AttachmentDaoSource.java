@@ -75,6 +75,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
         contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
         contentValues.put(COL_TYPE, attachmentInfo.getType());
         contentValues.put(COL_ATTACHMENT_ID, attachmentInfo.getId());
+        contentValues.put(COL_FILE_URI, attachmentInfo.getUri().toString());
         return contentValues;
     }
 

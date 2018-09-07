@@ -326,6 +326,26 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Update some message by the given parameters.
+     *
+     * @param context       Interface to global information about an application environment.
+     * @param email         The email that the message linked.
+     * @param label         The folder label.
+     * @param uid           The message UID.
+     * @param contentValues The {@link ContentValues} which contains new information.
+     * @return The count of the updated row or -1 up.
+     */
+    public int updateMessage(Context context, String email, String label, long uid, ContentValues contentValues) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND "
+                            + COL_FOLDER + " = ? AND "
+                            + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
+
+    /**
      * Mark message as seen in the local database.
      *
      * @param context Interface to global information about an application environment.
@@ -902,7 +922,9 @@ public class MessageDaoSource extends BaseDaoSource {
         contentValues.put(COL_EMAIL, email);
         contentValues.put(COL_FOLDER, label);
         contentValues.put(COL_UID, uid);
-        contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
+        if (message.getReceivedDate() != null) {
+            contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
+        }
         if (message.getSentDate() != null) {
             contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
         }

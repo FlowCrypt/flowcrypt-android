@@ -49,7 +49,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.activation.DataHandler;
@@ -240,7 +239,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
         String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
                 getPubKeys(context, js, accountDao) : null;
 
-        String rawMessage = generateRawMessageWithoutAttachments(js, pubKeys);
+        String rawMessage = EmailUtil.generateRawMessageWithoutAttachments(outgoingMessageInfo, js, pubKeys);
 
         MimeMessage mimeMessage = new MimeMessage(session,
                 IOUtils.toInputStream(rawMessage, StandardCharsets.UTF_8));
@@ -306,7 +305,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                 attachmentsBodyPart.setFileName(attachmentInfo.getName());
                 break;
         }
-        attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
+        attachmentsBodyPart.setContentID(attachmentInfo.getId());
 
         return attachmentsBodyPart;
     }
@@ -345,7 +344,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
                     FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
                     mimeBodyPart.setDataHandler(new DataHandler(new FileDataSource(encryptedTempFile)));
                     mimeBodyPart.setFileName(encryptedTempFile.getName());
-                    mimeBodyPart.setContentID(EmailUtil.generateContentId());
+                    mimeBodyPart.setContentID(attachmentInfo.getId());
                 }
                 return mimeBodyPart;
 
@@ -355,36 +354,6 @@ public class SendMessageSyncTask extends BaseSyncTask {
         }
 
         return null;
-    }
-
-    /**
-     * Generate a raw MIME message using {@link Js} tools.
-     *
-     * @param js      The {@link Js} tools.
-     * @param pubKeys The public keys which will be used for generate an encrypted attachments.
-     * @return The generated raw MIME message.
-     */
-    private String generateRawMessageWithoutAttachments(Js js, String[] pubKeys) {
-        String messageText = null;
-
-        switch (outgoingMessageInfo.getMessageEncryptionType()) {
-            case ENCRYPTED:
-                messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage());
-                break;
-
-            case STANDARD:
-                messageText = outgoingMessageInfo.getMessage();
-                break;
-        }
-
-        return js.mime_encode(messageText,
-                outgoingMessageInfo.getToPgpContacts(),
-                outgoingMessageInfo.getCcPgpContacts(),
-                outgoingMessageInfo.getBccPgpContacts(),
-                outgoingMessageInfo.getFromPgpContact(),
-                outgoingMessageInfo.getSubject(),
-                null,
-                js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
     }
 
     /**
@@ -406,35 +375,12 @@ public class SendMessageSyncTask extends BaseSyncTask {
     private void updateContactsLastUseDateTime(Context context) {
         ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-        for (PgpContact pgpContact : getAllRecipients()) {
+        for (PgpContact pgpContact : EmailUtil.getAllRecipients(outgoingMessageInfo)) {
             int updateResult = contactsDaoSource.updateLastUseOfPgpContact(context, pgpContact);
             if (updateResult == -1) {
                 contactsDaoSource.addRow(context, pgpContact);
             }
         }
-    }
-
-    /**
-     * Generate a list of the all recipients.
-     *
-     * @return A list of the all recipients
-     */
-    private PgpContact[] getAllRecipients() {
-        List<PgpContact> pgpContacts = new ArrayList<>();
-
-        if (outgoingMessageInfo.getToPgpContacts() != null) {
-            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getToPgpContacts()));
-        }
-
-        if (outgoingMessageInfo.getCcPgpContacts() != null) {
-            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getCcPgpContacts()));
-        }
-
-        if (outgoingMessageInfo.getBccPgpContacts() != null) {
-            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getBccPgpContacts()));
-        }
-
-        return pgpContacts.toArray(new PgpContact[0]);
     }
 
     /**
@@ -447,7 +393,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      */
     private String[] getPubKeys(Context context, Js js, AccountDao accountDao) throws NoKeyAvailableException {
         ArrayList<String> publicKeys = new ArrayList<>();
-        for (PgpContact pgpContact : getAllRecipients()) {
+        for (PgpContact pgpContact : EmailUtil.getAllRecipients(outgoingMessageInfo)) {
             if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
                 publicKeys.add(pgpContact.getPubkey());
             }

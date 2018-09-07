@@ -11,6 +11,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
@@ -87,6 +88,7 @@ public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLo
                                 attachmentInfo.setEncodedSize(publicKeyFile.length());
                                 attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
                                 attachmentInfo.setUri(destinationUri);
+                                attachmentInfo.setId(EmailUtil.generateContentId());
                                 attachmentInfo.setEmail(primaryUserId.getEmail());
                                 attachmentInfoList.add(attachmentInfo);
                             }

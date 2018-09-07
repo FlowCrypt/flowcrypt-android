@@ -99,15 +99,20 @@ public class MessageListAdapter extends CursorAdapter {
                     context.getString(R.string.no_subject) :
                     generalMessageDetails.getSubject();
 
-            if (folderType == FoldersManager.FolderType.SENT) {
+            if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
                 viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
             } else {
                 viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
             }
 
             viewHolder.textViewSubject.setText(subject);
-            viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
-                    generalMessageDetails.getReceivedDateInMillisecond()));
+            if (folderType == FoldersManager.FolderType.OUTBOX) {
+                viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
+                        generalMessageDetails.getSentDateInMillisecond()));
+            } else {
+                viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
+                        generalMessageDetails.getReceivedDateInMillisecond()));
+            }
 
             if (generalMessageDetails.isSeen()) {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
