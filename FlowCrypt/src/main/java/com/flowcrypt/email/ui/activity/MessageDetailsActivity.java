@@ -19,9 +19,11 @@ import android.widget.Toast;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -270,9 +272,31 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     @Override
     public void onDeleteMessageClicked() {
         isBackEnable = false;
-        FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-        moveMessage(R.id.syns_request_delete_message, folder,
-                foldersManager.getFolderTrash(), generalMessageDetails.getUid());
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+            int deletedRows = new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                    folder.getFolderAlias(), generalMessageDetails.getUid());
+            if (deletedRows > 0) {
+                Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+
+                if (generalMessageDetails.isMessageHasAttachment()) {
+                    if (generalMessageDetails.isEncrypted()) {
+                        //todo-denbond7 delete encrypted files from the cache
+                    }
+
+                    new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
+                            folder.getFolderAlias(), generalMessageDetails.getUid());
+                }
+            } else {
+                Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_SHORT).show();
+            }
+
+            setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+            finish();
+        } else {
+            FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
+            moveMessage(R.id.syns_request_delete_message, folder,
+                    foldersManager.getFolderTrash(), generalMessageDetails.getUid());
+        }
     }
 
     @Override

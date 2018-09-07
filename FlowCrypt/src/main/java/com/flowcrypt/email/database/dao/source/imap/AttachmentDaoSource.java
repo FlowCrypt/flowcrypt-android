@@ -208,4 +208,22 @@ public class AttachmentDaoSource extends BaseDaoSource {
                     + COL_FOLDER + " = ?", new String[]{email, label});
         } else return -1;
     }
+
+    /**
+     * Delete attachments of some message in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @return The number of rows deleted.
+     */
+    public int deleteAttachments(Context context, String email, String label, long uid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                    + COL_FOLDER + " = ? AND "
+                    + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+        } else return -1;
+    }
 }

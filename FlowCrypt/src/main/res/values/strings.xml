@@ -366,4 +366,5 @@ icelanders prefer real sauna</font>
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="message_cache_will_be_reloaded">%1$s. The cache will be reloaded</string>
+    <string name="can_not_delete_sent_message">Sorry. We can\'t delete a sent message</string>
 </resources>

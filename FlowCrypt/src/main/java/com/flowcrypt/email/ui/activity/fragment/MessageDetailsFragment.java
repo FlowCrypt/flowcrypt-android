@@ -479,6 +479,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     break;
 
                 case DRAFTS:
+                case OUTBOX:
                     isMoveToInboxActionEnable = false;
                     isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
@@ -506,10 +507,13 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
      */
     private void runMessageAction(final int menuId) {
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            isAdditionalActionEnable = false;
-            getActivity().invalidateOptionsMenu();
-            statusView.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
+            if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+                isAdditionalActionEnable = false;
+                getActivity().invalidateOptionsMenu();
+                statusView.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
+            }
+
             switch (menuId) {
                 case R.id.menuActionArchiveMessage:
                     onActionListener.onArchiveMessageClicked();
@@ -561,7 +565,11 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()));
             }
             textViewSubject.setText(subject);
-            textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
+            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+                textViewDate.setText(dateFormat.format(generalMessageDetails.getSentDateInMillisecond()));
+            } else {
+                textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
+            }
         }
 
         updateMessageBody();
