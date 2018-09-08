@@ -16,9 +16,14 @@ package com.flowcrypt.email;
 
 public class Constants {
     /**
-     * The support email of Android developer. Mainly used to support application development.
+     * The base URL for attester.
      */
-    public static final String ANDROID_DEVELOPER_SUPPORT_EMAIL = "denbond7@gmail.com";
+    public static final String ATTESTER_URL = "https://attester.flowcrypt.com";
+
+    /**
+     * The base API URL.
+     */
+    public static final String FLOWCRYPT_API_URL = "https://flowcrypt.com/api";
 
     /**
      * This scope describe full access to the account, including permanent deletion of threads
@@ -51,6 +56,12 @@ public class Constants {
 
     public static final String PREFERENCES_KEY_SETTINGS_SECURITY =
             "preferences_key_settings_security";
+    public static final String PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER =
+            "preferences_key_messages_notification_filter";
+    public static final String PREFERENCES_KEY_MANAGE_NOTIFICATIONS =
+            "preferences_key_manage_notifications";
+    public static final String PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE =
+            "preferences_key_security_change_pass_phrase";
 
     /**
      * The max total size off all attachment which can be send via the app.

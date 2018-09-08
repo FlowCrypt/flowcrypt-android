@@ -15,9 +15,11 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction;
 
 
 /**
@@ -31,13 +33,16 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 8;
+    public static final int DB_VERSION = 9;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
 
+    private Context context;
+
     public FlowCryptSQLiteOpenHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        this.context = context;
     }
 
     public static void dropTable(SQLiteDatabase sqLiteDatabase, String tableName) {
@@ -72,6 +77,9 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
 
         sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
+
+        sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
+        sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
     }
 
     @Override
@@ -85,6 +93,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 2:
@@ -94,6 +103,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 3:
@@ -102,6 +112,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 4:
@@ -109,21 +120,29 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 5:
                 upgradeDatabaseFrom5To6Version(sqLiteDatabase);
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 6:
                 upgradeDatabaseFrom6To7Version(sqLiteDatabase);
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
 
             case 7:
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
+                break;
+
+            case 8:
+                upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 break;
         }
 
@@ -245,6 +264,30 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
             sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
                     " ADD COLUMN " + AccountDaoSource.COL_IS_CONTACTS_LOADED
                     + " INTEGER DEFAULT 0;");
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private void upgradeDatabaseFrom8To9Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_IS_ENCRYPTED
+                    + " INTEGER DEFAULT -1;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_CC_ADDRESSES + " TEXT DEFAULT NULL;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_IS_NEW + " INTEGER DEFAULT 0;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+                    " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;");
+
+            sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
+            sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+            new ActionQueueDaoSource().addAction(sqLiteDatabase, new FillUserIdEmailsKeysTableAction());
+
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();

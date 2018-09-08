@@ -33,7 +33,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
  *         E-mail: DenBond7@gmail.com
  */
 public class ApiHelper {
-    private static final String BASE_URL_ATTESTER_FLOWCRYPT_COM = "https://attester.flowcrypt.com";
     private OkHttpClient okHttpClient;
     private Retrofit retrofit;
 
@@ -61,7 +60,7 @@ public class ApiHelper {
         okHttpClient = okHttpClientBuilder.build();
 
         Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-                .baseUrl(BASE_URL_ATTESTER_FLOWCRYPT_COM)
+                .baseUrl(Constants.ATTESTER_URL)
                 .addConverterFactory(GsonConverterFactory
                         .create(new GsonBuilder()
                                 .excludeFieldsWithoutExposeAnnotation()

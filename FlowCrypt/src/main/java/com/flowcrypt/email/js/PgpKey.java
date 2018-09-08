@@ -38,7 +38,8 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
     }
 
     public PgpKey toPublic() {
-        return new PgpKey(this.v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())), this.js);
+        return new PgpKey(this.v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())),
+                this.js);
     }
 
     /**
@@ -48,7 +49,8 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
      */
     public long getCreated() {
         V8Object created = getAttributeAsObject("primaryKey").getObject("created");
-        return this.js.time_to_utc_timestamp(created.executeStringFunction("toString", new V8Array(this.v8object.getRuntime())));
+        return this.js.time_to_utc_timestamp(created.executeStringFunction("toString", new V8Array(this.v8object
+                .getRuntime())));
     }
 
     /**
@@ -58,10 +60,27 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
      */
     public PgpContact getPrimaryUserId() {
         V8Array users = getAttributeAsArray("users");
-        if(users.length() == 0) { // could happen to some keys. But will not happen to keys that are saved because we will check keys before saving
+        if (users.length() == 0) { // could happen to some keys. But will not happen to keys that are saved because
+            // we will check keys before saving
             return null;
         }
         return js.str_parse_email(users.getObject(0).getObject("userId").getString("userid"));
     }
 
+    /**
+     * Get information about all available <code>uid(s)</code> of a given key
+     *
+     * @return An array of {@link PgpContact} of the given key.
+     */
+    public PgpContact[] getUserIds() {
+        V8Array users = getAttributeAsArray("users");
+
+        PgpContact[] pgpContacts = new PgpContact[users.length()];
+
+        for (int i = 0; i < users.length(); i++) {
+            pgpContacts[i] = js.str_parse_email(users.getObject(i).getObject("userId").getString("userid"));
+        }
+
+        return pgpContacts;
+    }
 }

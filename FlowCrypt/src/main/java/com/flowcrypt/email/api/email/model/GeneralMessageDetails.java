@@ -7,9 +7,11 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.text.TextUtils;
 
 import java.util.Arrays;
+import java.util.Objects;
+
+import javax.mail.internet.InternetAddress;
 
 /**
  * Simple POJO class which describe a general message details.
@@ -22,30 +24,30 @@ import java.util.Arrays;
 
 public class GeneralMessageDetails implements Parcelable {
 
-    public static final Creator<GeneralMessageDetails> CREATOR = new
-            Creator<GeneralMessageDetails>() {
-                @Override
-                public GeneralMessageDetails createFromParcel(Parcel source) {
-                    return new GeneralMessageDetails(source);
-                }
+    public static final Creator<GeneralMessageDetails> CREATOR = new Creator<GeneralMessageDetails>() {
+        @Override
+        public GeneralMessageDetails createFromParcel(Parcel source) {
+            return new GeneralMessageDetails(source);
+        }
 
-                @Override
-                public GeneralMessageDetails[] newArray(int size) {
-                    return new GeneralMessageDetails[size];
-                }
-            };
-
+        @Override
+        public GeneralMessageDetails[] newArray(int size) {
+            return new GeneralMessageDetails[size];
+        }
+    };
     private String email;
     private String label;
     private int uid;
     private long receivedDateInMillisecond;
     private long sentDateInMillisecond;
-    private String[] from;
-    private String[] to;
+    private InternetAddress[] from;
+    private InternetAddress[] to;
+    private InternetAddress[] cc;
     private String subject;
     private String[] flags;
     private String rawMessageWithoutAttachments;
     private boolean isMessageHasAttachment;
+    private boolean isEncrypted;
 
     public GeneralMessageDetails() {
     }
@@ -56,12 +58,14 @@ public class GeneralMessageDetails implements Parcelable {
         this.uid = in.readInt();
         this.receivedDateInMillisecond = in.readLong();
         this.sentDateInMillisecond = in.readLong();
-        this.from = in.createStringArray();
-        this.to = in.createStringArray();
+        this.from = (InternetAddress[]) in.readSerializable();
+        this.to = (InternetAddress[]) in.readSerializable();
+        this.cc = (InternetAddress[]) in.readSerializable();
         this.subject = in.readString();
         this.flags = in.createStringArray();
         this.rawMessageWithoutAttachments = in.readString();
         this.isMessageHasAttachment = in.readByte() != 0;
+        this.isEncrypted = in.readByte() != 0;
     }
 
     @Override
@@ -74,11 +78,44 @@ public class GeneralMessageDetails implements Parcelable {
                 ", sentDateInMillisecond=" + sentDateInMillisecond +
                 ", from=" + Arrays.toString(from) +
                 ", to=" + Arrays.toString(to) +
+                ", cc=" + Arrays.toString(cc) +
                 ", subject='" + subject + '\'' +
                 ", flags=" + Arrays.toString(flags) +
-                ", rawMessageWithoutAttachments =" + TextUtils.isEmpty
-                (rawMessageWithoutAttachments) +
+                ", rawMessageWithoutAttachments='" + rawMessageWithoutAttachments + '\'' +
+                ", isMessageHasAttachment=" + isMessageHasAttachment +
+                ", isEncrypted=" + isEncrypted +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GeneralMessageDetails that = (GeneralMessageDetails) o;
+        return uid == that.uid &&
+                receivedDateInMillisecond == that.receivedDateInMillisecond &&
+                sentDateInMillisecond == that.sentDateInMillisecond &&
+                isMessageHasAttachment == that.isMessageHasAttachment &&
+                isEncrypted == that.isEncrypted &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(label, that.label) &&
+                Arrays.equals(from, that.from) &&
+                Arrays.equals(to, that.to) &&
+                Arrays.equals(cc, that.cc) &&
+                Objects.equals(subject, that.subject) &&
+                Arrays.equals(flags, that.flags) &&
+                Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
+                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted);
+        result = 31 * result + Arrays.hashCode(from);
+        result = 31 * result + Arrays.hashCode(to);
+        result = 31 * result + Arrays.hashCode(cc);
+        result = 31 * result + Arrays.hashCode(flags);
+        return result;
     }
 
     @Override
@@ -93,12 +130,14 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeInt(this.uid);
         dest.writeLong(this.receivedDateInMillisecond);
         dest.writeLong(this.sentDateInMillisecond);
-        dest.writeStringArray(this.from);
-        dest.writeStringArray(this.to);
+        dest.writeSerializable(this.from);
+        dest.writeSerializable(this.to);
+        dest.writeSerializable(this.cc);
         dest.writeString(this.subject);
         dest.writeStringArray(this.flags);
         dest.writeString(this.rawMessageWithoutAttachments);
         dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
     }
 
     public String getEmail() {
@@ -141,20 +180,28 @@ public class GeneralMessageDetails implements Parcelable {
         this.sentDateInMillisecond = sentDateInMillisecond;
     }
 
-    public String[] getFrom() {
+    public InternetAddress[] getFrom() {
         return from;
     }
 
-    public void setFrom(String[] from) {
+    public void setFrom(InternetAddress[] from) {
         this.from = from;
     }
 
-    public String[] getTo() {
+    public InternetAddress[] getTo() {
         return to;
     }
 
-    public void setTo(String[] to) {
+    public void setTo(InternetAddress[] to) {
         this.to = to;
+    }
+
+    public InternetAddress[] getCc() {
+        return cc;
+    }
+
+    public void setCc(InternetAddress[] cc) {
+        this.cc = cc;
     }
 
     public String getSubject() {
@@ -191,5 +238,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public void setMessageHasAttachment(boolean messageHasAttachment) {
         isMessageHasAttachment = messageHasAttachment;
+    }
+
+    public boolean isEncrypted() {
+        return isEncrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        isEncrypted = encrypted;
     }
 }

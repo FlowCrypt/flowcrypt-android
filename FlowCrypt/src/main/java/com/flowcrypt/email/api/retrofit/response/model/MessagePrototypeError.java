@@ -13,7 +13,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * The message prototype error which can be received from the API
- * "https://api.cryptup.io/message/prototype"
+ * "https://flowcrypt.com/api/message/prototype"
  *
  * @author DenBond7
  *         Date: 24.04.2017

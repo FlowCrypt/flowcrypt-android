@@ -28,12 +28,10 @@ import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-
-import org.acra.ACRA;
 
 import java.util.ArrayList;
 
@@ -117,9 +115,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                             finish();
                         } catch (Exception e) {
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                         break;

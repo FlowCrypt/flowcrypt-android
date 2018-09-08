@@ -5,8 +5,10 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.MailConnectException;
 
@@ -47,7 +49,8 @@ public class ExceptionUtil {
                 || (e instanceof ConnectionException)
                 || (e instanceof UserRecoverableAuthException)
                 || (e instanceof AuthenticationFailedException)
-                || (e instanceof UserRecoverableAuthIOException)) {
+                || (e instanceof UserRecoverableAuthIOException)
+                || (e instanceof FlowCryptException)) {
             return false;
         }
 
@@ -58,6 +61,9 @@ public class ExceptionUtil {
                 return false;
             }
 
+            if (e instanceof GoogleJsonResponseException) {
+                return false;
+            }
         }
 
         if ((e instanceof SSLHandshakeException
@@ -67,7 +73,8 @@ public class ExceptionUtil {
                     || e.getMessage().contains("I/O error during system call")
                     || e.getMessage().contains("Failure in SSL library, usually a protocol error")
                     || e.getMessage().contains("Handshake failed")
-                    || e.getMessage().contains("Exception reading response")) {
+                    || e.getMessage().contains("Exception reading response")
+                    || e.getMessage().contains("connection failure")) {
                 return false;
             }
         }
@@ -79,6 +86,12 @@ public class ExceptionUtil {
             }
 
             if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
+                return false;
+            }
+        }
+
+        if (e instanceof GoogleAuthException) {
+            if ("InternalError".equalsIgnoreCase(e.getMessage())) {
                 return false;
             }
         }

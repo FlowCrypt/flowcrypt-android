@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base;
 
+import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 /**
@@ -17,4 +18,22 @@ import android.support.v7.preference.PreferenceFragmentCompat;
  */
 
 public abstract class BasePreferenceFragment extends PreferenceFragmentCompat {
+    /**
+     * This method helps to generate a summary for {@link ListPreference}
+     *
+     * @param currentValue The preference current value;
+     * @param entryValues  The preferences entry values;
+     * @param entries      The preferences entries;
+     * @return A generated summary.
+     */
+    protected CharSequence generateSummaryListPreferences(String currentValue,
+                                                          CharSequence[] entryValues,
+                                                          CharSequence[] entries) {
+        for (int i = 0; i < entryValues.length; i++) {
+            if (entryValues[i].equals(currentValue)) {
+                return entries[i];
+            }
+        }
+        return "";
+    }
 }

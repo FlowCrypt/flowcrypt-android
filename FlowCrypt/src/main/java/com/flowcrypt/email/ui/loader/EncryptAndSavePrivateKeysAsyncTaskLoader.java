@@ -8,19 +8,20 @@ package com.flowcrypt.email.ui.loader;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v4.content.AsyncTaskLoader;
+import android.util.Pair;
 
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
@@ -63,20 +64,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
             Js js = new Js(getContext(), null);
             for (KeyDetails keyDetails : privateKeyDetailsList) {
-                String armoredPrivateKey = null;
-
-                switch (keyDetails.getBornType()) {
-                    case FILE:
-                        armoredPrivateKey = GeneralUtil.readFileFromUriToString(getContext(),
-                                keyDetails.getUri());
-                        break;
-
-                    case EMAIL:
-                    case CLIPBOARD:
-                        armoredPrivateKey = keyDetails.getValue();
-                        break;
-                }
-
+                String armoredPrivateKey = keyDetails.getValue();
                 String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
                 PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
@@ -88,20 +76,32 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                             Uri uri = keysDaoSource.addRow(getContext(),
                                     KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
 
-                            PgpContact pgpContact = pgpKey.getPrimaryUserId();
-                            PgpKey publicKey = pgpKey.toPublic();
-                            if (pgpContact != null) {
-                                pgpContact.setPubkey(publicKey.armor());
+                            PgpContact[] pgpContacts = pgpKey.getUserIds();
+                            List<Pair<String, String>> pairs = new ArrayList<>();
+                            if (pgpContacts != null) {
                                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                                if (js.str_is_email_valid(pgpContact.getEmail()) &&
-                                        contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail()) == null) {
-                                    new ContactsDaoSource().addRow(getContext(), pgpContact);
-                                    //todo-DenBond7 Need to resolve a situation with different public keys.
+
+                                for (PgpContact pgpContact : pgpContacts) {
+                                    if (pgpContact != null) {
+                                        PgpKey publicKey = pgpKey.toPublic();
+                                        pgpContact.setPubkey(publicKey.armor());
+                                        if (js.str_is_email_valid(pgpContact.getEmail()) &&
+                                                contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail())
+                                                        == null) {
+                                            new ContactsDaoSource().addRow(getContext(), pgpContact);
+                                            //todo-DenBond7 Need to resolve a situation with different public keys.
+                                            //For example we can have a situation when we have to different public
+                                            // keys with the same email
+                                        }
+
+                                        pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
+                                    }
                                 }
                             }
 
                             if (uri != null) {
                                 acceptedKeysList.add(keyDetails);
+                                new UserIdEmailsKeysDaoSource().addRows(getContext(), pairs);
                             }
                         } else if (privateKeyDetailsList.size() == 1) {
                             return new LoaderResult(null,

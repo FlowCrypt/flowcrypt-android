@@ -29,34 +29,34 @@ import javax.mail.Store;
  */
 
 public class MoveMessagesSyncTask extends BaseSyncTask {
-    private String sourceFolderName;
-    private String destinationFolderName;
+    private com.flowcrypt.email.api.email.Folder sourceFolderName;
+    private com.flowcrypt.email.api.email.Folder destinationFolderName;
     private long[] uids;
 
     /**
      * The base constructor.
      *
-     * @param ownerKey              The name of the reply to {@link Messenger}.
-     * @param requestCode           The unique request code for the reply to {@link Messenger}.
-     * @param sourceFolderName      The source folder name where a message exists.
-     * @param destinationFolderName The new destination folder name where a message will be move.
-     * @param uids                  The {@link com.sun.mail.imap.protocol.UID} of the moving
-     *                              messages.
+     * @param ownerKey          The name of the reply to {@link Messenger}.
+     * @param requestCode       The unique request code for the reply to {@link Messenger}.
+     * @param sourceFolder      A local implementation of the remote folder which is the source.
+     * @param destinationFolder A local implementation of the remote folder which is the destination.
+     * @param uids              The {@link com.sun.mail.imap.protocol.UID} of the moving
      */
-    public MoveMessagesSyncTask(String ownerKey, int requestCode, String sourceFolderName,
-                                String destinationFolderName, long[] uids) {
+    public MoveMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder sourceFolder,
+                                com.flowcrypt.email.api.email.Folder destinationFolder, long[] uids) {
         super(ownerKey, requestCode);
-        this.sourceFolderName = sourceFolderName;
-        this.destinationFolderName = destinationFolderName;
+        this.sourceFolderName = sourceFolder;
+        this.destinationFolderName = destinationFolder;
         this.uids = uids;
     }
 
     @Override
     public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
             Exception {
-        IMAPFolder sourceImapFolder = (IMAPFolder) store.getFolder(sourceFolderName);
-        IMAPFolder destinationImapFolder = (IMAPFolder) store.getFolder
-                (destinationFolderName);
+        IMAPFolder sourceImapFolder =
+                (IMAPFolder) store.getFolder(sourceFolderName.getServerFullFolderName());
+        IMAPFolder destinationImapFolder =
+                (IMAPFolder) store.getFolder(destinationFolderName.getServerFullFolderName());
 
         if (sourceImapFolder == null || !sourceImapFolder.exists()) {
             throw new IllegalArgumentException("The invalid source " +

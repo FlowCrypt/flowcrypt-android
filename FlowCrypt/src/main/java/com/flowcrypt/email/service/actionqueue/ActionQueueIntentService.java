@@ -10,9 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.JobIntentService;
 import android.util.Log;
 
+import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -27,7 +30,7 @@ import java.util.ArrayList;
  *         Time: 16:54
  *         E-mail: DenBond7@gmail.com
  */
-public class ActionQueueIntentService extends IntentService {
+public class ActionQueueIntentService extends JobIntentService {
     public static final String ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
             ActionQueueIntentService.class);
 
@@ -36,10 +39,6 @@ public class ActionQueueIntentService extends IntentService {
             ActionQueueIntentService.class);
     private static final String EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey
             ("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService.class);
-
-    public ActionQueueIntentService() {
-        super(ActionQueueIntentService.class.getSimpleName());
-    }
 
     /**
      * Starts this service to perform action {@link #ACTION_RUN_ACTIONS}. If the service is already performing a task
@@ -60,7 +59,8 @@ public class ActionQueueIntentService extends IntentService {
         intent.setAction(ACTION_RUN_ACTIONS);
         intent.putExtra(EXTRA_KEY_ACTIONS, actions);
         intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver);
-        context.startService(intent);
+
+        enqueueWork(context, ActionQueueIntentService.class, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent);
     }
 
     @Override
@@ -76,29 +76,27 @@ public class ActionQueueIntentService extends IntentService {
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String intentAction = intent.getAction();
-            if (ACTION_RUN_ACTIONS.equals(intentAction)) {
-                final ArrayList<Action> actions = intent.getParcelableArrayListExtra(EXTRA_KEY_ACTIONS);
-                final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
+    protected void onHandleWork(@NonNull Intent intent) {
+        final String intentAction = intent.getAction();
+        if (ACTION_RUN_ACTIONS.equals(intentAction)) {
+            final ArrayList<Action> actions = intent.getParcelableArrayListExtra(EXTRA_KEY_ACTIONS);
+            final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
 
-                if (actions != null && !actions.isEmpty()) {
-                    Log.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
-                    for (Action action : actions) {
-                        if (action != null) {
-                            Log.d(TAG, "Run " + action.getClass().getSimpleName());
-                            try {
-                                action.run(getApplicationContext());
-                                resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK,
-                                        ActionResultReceiver.generateSuccessBundle(action));
-                                Log.d(TAG, action.getClass().getSimpleName() + ": success");
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR,
-                                        ActionResultReceiver.generateErrorBundle(action, e));
-                                Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
-                            }
+            if (actions != null && !actions.isEmpty()) {
+                Log.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
+                for (Action action : actions) {
+                    if (action != null) {
+                        Log.d(TAG, "Run " + action.getClass().getSimpleName());
+                        try {
+                            action.run(getApplicationContext());
+                            resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK,
+                                    ActionResultReceiver.generateSuccessBundle(action));
+                            Log.d(TAG, action.getClass().getSimpleName() + ": success");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR,
+                                    ActionResultReceiver.generateErrorBundle(action, e));
+                            Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
                         }
                     }
                 }

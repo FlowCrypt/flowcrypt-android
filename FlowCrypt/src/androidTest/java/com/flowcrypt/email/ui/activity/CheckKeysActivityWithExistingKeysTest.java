@@ -59,7 +59,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
             ArrayList<KeyDetails> privateKeys = new ArrayList<>();
             try {
                 KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-                        (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"), null,
+                        (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
                         KeyDetails.Type.EMAIL, true, null);
                 privateKeys.add(keyDetails);
             } catch (IOException e) {
@@ -81,8 +81,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
-            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", KeyDetails.Type
-                    .EMAIL))
+            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", TestConstants
+                    .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
             .around(activityTestRule);
 
     @Test

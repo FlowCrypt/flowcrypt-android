@@ -12,7 +12,7 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
-        android:id="@+id/imageViewUserPhoto"
+        android:id="@+id/imageViewActiveUserPhoto"
         android:layout_width="@dimen/user_photo_size"
         android:layout_height="@dimen/user_photo_size"
         android:layout_margin="@dimen/default_margin_content"
@@ -27,6 +27,7 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
+        android:focusable="true"
         android:paddingBottom="@dimen/default_margin_content_small"
         android:paddingLeft="@dimen/default_margin_content"
         android:paddingRight="@dimen/default_margin_content"
@@ -47,7 +48,7 @@
             app:srcCompat="@mipmap/ic_arrow_drop_down" />
 
         <LinearLayout
-            android:id="@+id/layoutUserInfo"
+            android:id="@+id/layoutActiveUserInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -58,14 +59,14 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:id="@+id/textViewUserDisplayName"
+                android:id="@+id/textViewActiveUserDisplayName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 tools:text="Android Studio" />
 
             <TextView
-                android:id="@+id/textViewUserEmail"
+                android:id="@+id/textViewActiveUserEmail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"

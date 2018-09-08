@@ -27,6 +27,7 @@ import org.hamcrest.Matcher;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.RootMatchers.withDecorView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -168,6 +169,20 @@ public class BaseTest {
         onView(withText(message)).check(matches(isDisplayed()));
         onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
                 .perform(click());
+    }
+
+    /**
+     * Test is a {@link Snackbar} displayed.
+     */
+    protected void checkIsSnackBarDisplayed() {
+        onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()));
+    }
+
+    /**
+     * Test is a {@link Snackbar} not displayed.
+     */
+    protected void checkIsSnackBarNotDisplayed() {
+        onView(withId(android.support.design.R.id.snackbar_action)).check(doesNotExist());
     }
 
     /**

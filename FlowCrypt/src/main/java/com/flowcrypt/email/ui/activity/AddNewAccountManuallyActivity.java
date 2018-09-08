@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
@@ -41,12 +42,10 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.mail.util.MailConnectException;
-
-import org.acra.ACRA;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -248,6 +247,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -264,17 +264,17 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         handleLoaderResult(loader, loaderResult);
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
     }
 
@@ -312,6 +312,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                             getString(R.string.use_another_account)),
                             REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
                 }
+
+                getSupportLoaderManager().destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
                 break;
 
             default:
@@ -487,9 +489,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 return new Gson().fromJson(authCredentialsJson, AuthCredentials.class);
             } catch (JsonSyntaxException e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
             }
         }
 

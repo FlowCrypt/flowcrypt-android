@@ -1,0 +1,186 @@
+Return-Path: <test@denbond7.com>
+Delivered-To: default@denbond7.com
+Received: from mail.denbond7.com (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 545482060D
+	for <default@denbond7.com>; Fri, 23 Mar 2018 08:57:17 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.denbond7.com
+Received: from mail.denbond7.com ([127.0.0.1])
+	by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id uBF6_qgY65GG for <default@denbond7.com>;
+	Fri, 23 Mar 2018 08:57:15 +0000 (UTC)
+Received: from localhost (RedmiNote2-Bondes.lan [192.168.3.11])
+	by mail.denbond7.com (Postfix) with ESMTP id 06428205FE;
+	Fri, 23 Mar 2018 08:57:09 +0000 (UTC)
+Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-15217954341010.3077575752668922"
+In-Reply-To: <>
+References: <>
+To: default@denbond7.com, bondes87@denbond7.com,
+ user_with_two_letters@denbond7.com
+From: test@denbond7.com
+Subject: Standard message
+Date: Fri, 23 Mar 2018 08:57:14 +0000
+Message-Id: <503318164.0.1521795434293@localhost>
+MIME-Version: 1.0
+
+------sinikael-?=_1-15217954341010.3077575752668922
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+With the Android P Developer Preview now available, we have a much better =
+idea about what to expect.=C2=A0We explain when and what we expect to see =
+from Android 9.0, which may or may not be called Pistachio Ice Cream.
+
+You may be viewing an older version of this story cached by Google,=
+=C2=A0click here to see the latest version of this story.
+
+How to get the Android P Developer Preview
+
+Released in early March, the Android P Developer Preview is available only =
+to the Pixel, Pixel XL, Pixel 2 and Pixel 2 XL. You can=C2=A0download the =
+Android P system imageand flash it to your device, or=C2=A0run Android P in=
+ an emulator.
+
+If you do decide to flash the Developer Preview, to revert to your current =
+OS you'll need to=C2=A0flash=C2=A0a factory image.
+
+We aren't providing step-by-step instructions because the Developer Preview=
+ is not intended for normal users. A consumer preview will be available =
+soon, likely at Google I/O in May. We'd strongly recommend waiting until =
+then to try the latest features.
+
+What will Android 9.0 be called?
+
+Since the early days of Android updates have been named after sweet treats =
+and in alphabetical order. So far we've seen:
+
+Android Donut (v1.6)Android Eclair (v2.0)Android Froyo (v2.2)Android =
+Gingerbread (v2.3)Android Honeycomb (v3.0)Android Ice Cream Sandwich (v4.=
+0)Android Jelly Bean (v4.1)Android KitKat (v4.4)Android Lollipop (v5.=
+0)Android Marshmallow (v6.0)Android Nougat (v7.0)Android Oreo (v8.0)
+
+In 2018 we should see Android 'P' launch as Android 9.0. The name won't be =
+announced until the summer, but that doesn't stop us having a guess as to =
+what it could be.
+
+There are already=C2=A0rumours=C2=A0the name could be Android Pie, Android =
+Pecan Pie or Android Pumpkin Pie, thanks to=C2=A0a reference to Android Pi =
+within the Android Open Source Project. But that doesn't sound very Google.=
+
+
+Google Developers have also begun dropping hints on Twitter, and the binary=
+ code pictured takes you to the google.com/io website where you'll be able =
+to use Street View to explore the reception area of a Google Developer's =
+building. There are various puzzles to solve, and locked away in a second =
+room=C2=A0you'll find a Pineapple Cake. Could we be looking at Android =
+Pineapple?
+
+Plans are coming along for=C2=A0#io18=E2=80=A6=C2=A0pic.twitter.=
+com/48VpqvVqWU
+
+=E2=80=94 Google Developers (@googledevs)=C2=A0January 24, 2018
+
+More recently sources are pointing to Android Pistachio Ice Cream, which is=
+ apparently what Google is calling the upcoming OS internally. It fits the =
+usual sweet-treat requirement, and from previous OS names we know Google =
+likes ice cream. But pistachio? What about all the nut-allergy sufferers?
+
+Our favourite is Android Popsicle, but vote in our poll below and add any =
+other ideas to the comments at the bottom of this page.
+
+When is Android 9.0 coming out?
+
+A consumer preview of Android 9.0 will most likely be announced =
+during=C2=A0Google I/O 2018, which we expect to take place in mid-May, =
+potentially 16-18 May 2018. As before with Oreo the developer preview was =
+announced earlier in March.
+
+A=C2=A0few public betas will follow, and we expect to see the final =
+consumer release in August 2018.
+
+When will my phone get Android 9.0?
+
+Although Android 9.0 will be released in August 2018, it won't be =
+immediately available to all Android devices. The update will first be =
+available to Google Pixel devices, and then we'll start to see new phones =
+arriving with Android P out of the box at September's IFA 2018 show.
+
+Android updates are rolled out by phone manufacturers and network operators=
+ rather than Google itself, because any Android updates must first be =
+tweaked to work with any customisations they have made.=C2=A0
+
+Those with vanilla interfaces - such as Nokia, which has already confirmed =
+Android P updates for all 2017 phones - will be among the first to roll out=
+ the update, then the likes of Samsung, LG, Sony and HTC will begin rolling=
+ out Android 9.0 in late 2018/early 2019.
+
+OTA updates, when they do arrive, are expected to download and install =
+faster and use less data thanks to Google's Brotli compression algorithm.
+
+There's also no guarantee that your device will be updated to Android 9.0 =
+(see=C2=A0how to update Android). Device fragmentation is still a problem =
+for the OS, and at the last count (by=C2=A0Android Developers) on 5 =
+February there were still devices running version 2.3.3 Gingerbread.
+
+VersionCodenameDistribution2.3.3-2.3.7Gingerbread0.3%4.0.3-4.0.4Ice Cream =
+Sandwich0.4%4.1.xJelly Bean1.7%4.2.xJelly Bean2.6%4.3Jelly Bean0.7%4.=
+4KitKat12.0%5.0Lollipop5.4%5.1Lollipop19.2%6.0Marshmallow28.1%7.0Nougat22.=
+3%7.1Nougat6.2%8.0Oreo0.8%8.1Oreo0.3%
+
+What new features to expect in Android 9.0
+
+According to Android Developers, key new features in Android P include:
+
+Simplicity, speed, and many new ways to extend your apps
+
+MessagingStyle and other notification updates
+
+ImageDecoder for bitmaps and drawables
+
+Data cost sensitivity in JobScheduler
+
+Display cutout APIs
+
+Multi-camera APIs
+
+(For full details see the video at the top of this page.)
+
+There=C2=A0had been very few rumours as to what we can expect from Android =
+P, though XDA suggests Google will remove access to unofficial =
+APIs=C2=A0(those not part of the official SDK) - news that will upset some =
+developers.
+
+Other changes we can expect to see in the upcoming update, according to the=
+ enthusiast site, include support for Wi-Fi Direct Printing support and =
+Bluetooth hearing aids, and better integration for=C2=A0Android Things.
+
+The new OS will also prevent malicious apps running in the background from =
+accessing your camera and mic in order to spy on you, according =
+to=C2=A0AOSP. We'll have to wait and see how this affects anti-theft apps, =
+a consideration pointed out by Slashgear.
+
+One potential new feature is to do with smaller image file sizes. In iOS 11=
+ Apple introduced=C2=A0HEIC files, which are also known as=C2=A0HEIF or =
+High Efficiency Image Format.=C2=A0It=E2=80=99s the still image version of =
+HEVC, which is the latest video codec. It makes for Jpeg images just 50 =
+percent of their previous size, can store image edits and =
+multiple=C2=A0photos in one file (think Live Photo and burst mode), and it =
+supports transparency and 16-bit colour.
+
+HEIC is not a proprietary image format developed by Apple itself, so =
+there's every possibility Google could opt for the same format. However, =
+Google is also working with the Alliance for Open Media on its own version =
+that is currently able to create images 15 percent smaller than HEIC. It =
+would make sense to use the better version, of course, but for now the =
+project is very much in its infancy. Whether it will be ready for Android 9=
+.0 we simply don't know.
+
+According to=C2=A0Bloomberg,=C2=A0Android is also set to be adapted to =
+support phones with a 'notch' design, as introduced by the iPhone X.=
+=C2=A0The upcoming OS will also support foldable displays, such as that of =
+the Galaxy X, and devices with multiple displays.
+
+Increased call blocking is another possibility, according to=C2=A0XDA, =
+where users will even be able to block private numbers, pay phones and =
+numbers that either have no ID or aren't in your contacts list.
+------sinikael-?=_1-15217954341010.3077575752668922--

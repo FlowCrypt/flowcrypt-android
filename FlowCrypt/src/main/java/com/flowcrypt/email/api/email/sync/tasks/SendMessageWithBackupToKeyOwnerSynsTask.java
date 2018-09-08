@@ -6,11 +6,12 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
-import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import javax.mail.Message;
 import javax.mail.Session;
@@ -27,19 +28,14 @@ import javax.mail.Transport;
  */
 
 public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
-    private String accountName;
-
     /**
      * The base constructor.
      *
      * @param ownerKey    The name of the reply to {@link Messenger}.
      * @param requestCode The unique request code for the reply to {@link Messenger}.
-     * @param accountName The account name..
      */
-    public SendMessageWithBackupToKeyOwnerSynsTask(String ownerKey, int requestCode,
-                                                   String accountName) {
+    public SendMessageWithBackupToKeyOwnerSynsTask(String ownerKey, int requestCode) {
         super(ownerKey, requestCode);
-        this.accountName = accountName;
     }
 
     @Override
@@ -52,11 +48,12 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
             Exception {
         super.runSMTPAction(accountDao, session, store, syncListener);
 
-        if (syncListener != null && !TextUtils.isEmpty(accountName)) {
+        if (syncListener != null && accountDao != null) {
             Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
 
             Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
-                    accountName, session);
+                    accountDao, session, new Js(syncListener.getContext(),
+                            new SecurityStorageConnector(syncListener.getContext())));
             transport.sendMessage(message, message.getAllRecipients());
 
             syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);

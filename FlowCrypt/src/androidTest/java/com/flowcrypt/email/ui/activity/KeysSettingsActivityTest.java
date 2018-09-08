@@ -14,6 +14,7 @@ import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
@@ -61,7 +62,7 @@ public class KeysSettingsActivityTest extends BaseTest {
                 .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
         TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
-                .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), KeyDetails.Type.EMAIL);
+                .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
         onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
         onView(withId(R.id.listViewKeys)).check(matches(isDisplayed())).check(matches(matchListSize(2)));

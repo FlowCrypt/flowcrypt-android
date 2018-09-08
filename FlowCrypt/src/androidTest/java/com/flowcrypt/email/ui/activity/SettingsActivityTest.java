@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -13,13 +12,10 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
-import com.flowcrypt.email.util.AccountDaoManager;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -48,19 +44,8 @@ public class SettingsActivityTest extends BaseTest {
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
+            .around(new AddAccountToDatabaseRule())
             .around(new ActivityTestRule<>(SettingsActivity.class));
-
-    @Before
-    public void setUp() {
-        Context targetContext = InstrumentationRegistry.getTargetContext();
-        AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
-        AccountDaoSource accountDaoSource = new AccountDaoSource();
-        try {
-            accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Test
     public void testShowHelpScreen() {
@@ -70,6 +55,11 @@ public class SettingsActivityTest extends BaseTest {
     @Test
     public void testShowBackupsScreen() {
         checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.backups));
+    }
+
+    @Test
+    public void testShowSecurityScreen() {
+        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.security));
     }
 
     @Test

@@ -19,6 +19,7 @@ public class MessageBlock extends MeaningfulV8ObjectContainer {
     public static final String TYPE_PGP_PASSWORD_MESSAGE = "password_message";
     public static final String TYPE_ATTEST_PACKET = "attest_packet";
     public static final String TYPE_VERIFICATION = "cryptup_verification";
+    public static final String TYPE_PGP_PRIVATE_KEY = "private_key";
 
     private String type;
     private String content;

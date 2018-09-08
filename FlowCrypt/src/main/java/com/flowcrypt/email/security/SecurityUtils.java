@@ -7,10 +7,20 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.text.TextUtils;
 
+import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
+import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PasswordStrength;
+import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
+import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
+import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
+import com.nulabinc.zxcvbn.Zxcvbn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,5 +105,65 @@ public class SecurityUtils {
     public static String generateNameForPrivateKey(String email) {
         String sanitizedEmail = email.replaceAll("[^a-z0-9]", "");
         return "flowcrypt-backup-" + sanitizedEmail + ".key";
+    }
+
+    /**
+     * Generate a private keys backup for the given account.
+     *
+     * @param context               Interface to global information about an application environment.
+     * @param js                    An instance of {@link Js}
+     * @param accountDao            The given account
+     * @param isWeakCheckingEnabled true if need to check is a pass phrase is too weak.
+     * @return A string which includes private keys
+     */
+    public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao,
+                                                   boolean isWeakCheckingEnabled) throws
+            PrivateKeyStrengthException, DifferentPassPhrasesException {
+        StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
+        Zxcvbn zxcvbn = new Zxcvbn();
+        List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
+                (context, accountDao.getEmail());
+
+        PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
+                (longIdListOfAccountPrivateKeys.toArray(new String[0]));
+
+        if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+            throw new IllegalArgumentException("There are no private keys for " + accountDao.getEmail());
+        }
+
+        String firstPassPhrase = null;
+
+        for (int i = 0; i < pgpKeyInfoArray.length; i++) {
+            PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
+
+            String passPhrase = js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid());
+
+            if (i == 0) {
+                firstPassPhrase = passPhrase;
+            } else if (!passPhrase.equals(firstPassPhrase)) {
+                throw new DifferentPassPhrasesException("The keys have different pass phrase");
+            }
+
+            if (TextUtils.isEmpty(passPhrase)) {
+                throw new PrivateKeyStrengthException("Empty pass phrase");
+            }
+
+            PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
+                    zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
+
+            if (passwordStrength != null && isWeakCheckingEnabled) {
+                switch (passwordStrength.getWord()) {
+                    case Constants.PASSWORD_QUALITY_WEAK:
+                    case Constants.PASSWORD_QUALITY_POOR:
+                        throw new PrivateKeyStrengthException("Pass phrase too weak");
+                }
+            }
+
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+            pgpKey.encrypt(passPhrase);
+            armoredPrivateKeysBackupStringBuilder.append(i > 0 ? "\n" + pgpKey.armor() : pgpKey.armor());
+        }
+
+        return armoredPrivateKeysBackupStringBuilder.toString();
     }
 }

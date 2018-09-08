@@ -145,6 +145,38 @@ public class ContactsDaoSource extends BaseDaoSource {
     }
 
     /**
+     * This method add rows per single transaction using {@link android.content.ContentProvider#applyBatch(ArrayList)}
+     *
+     * @param context        Interface to global information about an application environment.
+     * @param pgpContactList A list of {@link PgpContact} objects.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] addRowsUsingApplyBatch(Context context, List<PgpContact> pgpContactList)
+            throws RemoteException, OperationApplicationException {
+        if (context == null) {
+            return null;
+        }
+
+        ContentResolver contentResolver = context.getContentResolver();
+        if (pgpContactList != null && !pgpContactList.isEmpty()) {
+            ContentValues[] contentValuesArray = new ContentValues[pgpContactList.size()];
+
+            for (int i = 0; i < pgpContactList.size(); i++) {
+                contentValuesArray[i] = prepareContentValues(pgpContactList.get(i));
+            }
+
+            ArrayList<ContentProviderOperation> contentProviderOperationList = new ArrayList<>();
+            for (ContentValues contentValues : contentValuesArray) {
+                contentProviderOperationList.add(ContentProviderOperation.newInsert(getBaseContentUri())
+                        .withValues(contentValues)
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperationList);
+        } else return new ContentProviderResult[0];
+    }
+
+    /**
      * Generate a {@link PgpContact} object from the current cursor position.
      *
      * @param cursor The {@link Cursor} which contains information about {@link PgpContact}.

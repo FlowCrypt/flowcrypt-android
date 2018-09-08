@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.MessageReplyModel;
 
 /**
- * This class describes a request to the https://api.cryptup.io/message/reply API.
+ * This class describes a request to the https://flowcrypt.com/api/message/reply API.
  * <p>
  * <code>POST /message/reply  {
  * "short" (<type 'str'>)  # original message short id

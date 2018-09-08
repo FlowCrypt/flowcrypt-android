@@ -5,20 +5,26 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.sun.mail.imap.IMAPFolder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
 /**
- * This task does job to load all new messages which not exist in the cache but exist on the server.
+ * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
+ * existing messages in the local database.
  *
  * @author DenBond7
  *         Date: 22.06.2017
@@ -26,104 +32,73 @@ import javax.mail.UIDFolder;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class RefreshMessagesSyncTask extends BaseSyncTask {
-    private String folderName;
-    private int lastUID;
-    private int countOfLoadedMessages;
-
-    public RefreshMessagesSyncTask(String ownerKey, int requestCode, String folderName,
-                                   int lastUID, int countOfLoadedMessages) {
-        super(ownerKey, requestCode);
-        this.folderName = folderName;
-        this.lastUID = lastUID;
-        this.countOfLoadedMessages = countOfLoadedMessages;
+public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
+    public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder) {
+        super(ownerKey, requestCode, localFolder);
     }
 
     @Override
-    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-            Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folderName);
-        imapFolder.open(Folder.READ_ONLY);
-
-        long nextUID = imapFolder.getUIDNext();
-
+    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+            throws Exception {
         if (syncListener != null) {
+            IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+            imapFolder.open(Folder.READ_ONLY);
+
+            long nextUID = imapFolder.getUIDNext();
+
             Message[] newMessages = new Message[0];
 
-            if (lastUID < nextUID - 1) {
-                newMessages = getNewMessages(imapFolder, nextUID);
-            }
-            int countOfNewMessages = newMessages != null ? newMessages.length : 0;
-            Message[] updatedMessages = getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
-            int countOfUpdatedMessages = updatedMessages != null ? updatedMessages.length : 0;
-            Message[] messages = new Message[countOfNewMessages + countOfUpdatedMessages];
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-            if (newMessages != null) {
-                System.arraycopy(newMessages, 0, messages, 0, newMessages.length);
-            }
+            int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(syncListener.getContext(), accountDao
+                    .getEmail(), localFolder.getFolderAlias());
 
-            if (updatedMessages != null) {
-                System.arraycopy(updatedMessages, 0, messages, newMessages != null ? newMessages.length : 0,
-                        updatedMessages.length);
-            }
+            int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
+                    accountDao.getEmail(),
+                    localFolder.getFolderAlias());
 
-            syncListener.onRefreshMessagesReceived(accountDao, imapFolder, messages, ownerKey, requestCode);
-        }
+            boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
+                    syncListener.getContext(), accountDao.getEmail());
 
-        imapFolder.close(false);
-    }
+            if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
+                if (isShowOnlyEncryptedMessages) {
+                    Message[] foundMessages =
+                            imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));
 
-    /**
-     * Load new messages using the next UID for fetching.
-     *
-     * @param imapFolder The folder which contains messages.
-     * @param nextUID    The next UID.
-     * @return New messages from a server which not exist in a local database.
-     * @throws MessagingException for other failures.
-     */
-    private Message[] getNewMessages(IMAPFolder imapFolder, long nextUID) throws MessagingException {
-        Message[] messages = imapFolder.getMessagesByUID(lastUID + 1, nextUID - 1);
+                    FetchProfile fetchProfile = new FetchProfile();
+                    fetchProfile.add(UIDFolder.FetchProfileItem.UID);
 
-        if (messages.length > 0) {
-            FetchProfile fetchProfile = new FetchProfile();
-            fetchProfile.add(FetchProfile.Item.ENVELOPE);
-            fetchProfile.add(FetchProfile.Item.FLAGS);
-            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-            imapFolder.fetch(messages, fetchProfile);
-        }
-        return messages;
-    }
+                    imapFolder.fetch(foundMessages, fetchProfile);
 
-    /**
-     * Get updated information about messages in the local database.
-     *
-     * @param imapFolder            The folder which contains messages.
-     * @param countOfLoadedMessages The count of already loaded messages.
-     * @param countOfNewMessages    The count of new messages (offset value).
-     * @return A list of messages which already exist in the local database.
-     * @throws MessagingException for other failures.
-     */
-    private Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages, int countOfNewMessages)
-            throws MessagingException {
-        int end = imapFolder.getMessageCount() - countOfNewMessages;
-        int start = end - countOfLoadedMessages + 1;
+                    List<Message> newMessagesList = new ArrayList<>();
 
-        if (end < 1) {
-            return new Message[]{};
-        } else {
-            if (start < 1) {
-                start = 1;
+                    for (Message message : foundMessages) {
+                        if (imapFolder.getUID(message) > newestCachedUID) {
+                            newMessagesList.add(message);
+                        }
+                    }
+
+                    newMessages = EmailUtil.fetchMessagesInfo(imapFolder, newMessagesList.toArray(new Message[0]));
+                } else {
+                    newMessages = EmailUtil.fetchMessagesInfo(imapFolder,
+                            imapFolder.getMessagesByUID(newestCachedUID + 1, nextUID - 1));
+                }
             }
 
-            Message[] messages = imapFolder.getMessages(start, end);
-
-            if (messages.length > 0) {
-                FetchProfile fetchProfile = new FetchProfile();
-                fetchProfile.add(FetchProfile.Item.FLAGS);
-                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-                imapFolder.fetch(messages, fetchProfile);
+            Message[] updatedMessages;
+            if (isShowOnlyEncryptedMessages) {
+                int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(syncListener.getContext(),
+                        accountDao.getEmail(), localFolder.getFolderAlias());
+                updatedMessages = EmailUtil.getUpdatedMessagesByUID(imapFolder, oldestCachedUID, newestCachedUID);
+            } else {
+                int countOfNewMessages = newMessages != null ? newMessages.length : 0;
+                updatedMessages = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
             }
-            return messages;
+
+            syncListener.onRefreshMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
+                    updatedMessages, ownerKey, requestCode);
+
+            imapFolder.close(false);
         }
     }
 }

@@ -22,14 +22,14 @@ import com.flowcrypt.email.util.GeneralUtil;
  * The base {@link android.app.Activity} for displaying messages.
  *
  * @author Denis Bondarenko
- * Date: 26.04.2018
- * Time: 16:45
- * E-mail: DenBond7@gmail.com
+ *         Date: 26.04.2018
+ *         Time: 16:45
+ *         E-mail: DenBond7@gmail.com
  */
 public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         EmailListFragment.OnManageEmailsListener {
     protected CountingIdlingResource countingIdlingResourceForMessages;
-    protected boolean isMoreMessagesAvailable;
+    protected boolean isMoreMessagesAvailable = true;
 
     public abstract void refreshFoldersInfoFromCache();
 
@@ -192,7 +192,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
                 .findFragmentById(R.id.emailListFragment);
 
         if (emailListFragment != null) {
-            emailListFragment.updateList(true);
+            emailListFragment.updateList(true, false);
+            updateActionProgressState(100, null);
         }
     }
 

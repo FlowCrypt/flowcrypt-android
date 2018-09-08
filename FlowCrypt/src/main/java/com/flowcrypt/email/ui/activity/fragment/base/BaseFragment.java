@@ -42,17 +42,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
 
     @Override
     public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
-        if (loaderResult != null) {
-            if (loaderResult.getResult() != null) {
-                handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
-            } else if (loaderResult.getException() != null) {
-                handleFailureLoaderResult(loader.getId(), loaderResult.getException());
-            } else {
-                UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
-            }
-        } else {
-            UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
-        }
+        handleLoaderResult(loader != null ? loader.getId() : -1, loaderResult);
     }
 
     @Override
@@ -175,5 +165,19 @@ public abstract class BaseFragment extends Fragment implements LoaderManager
 
     public BaseActivity getBaseActivity() {
         return (BaseActivity) getActivity();
+    }
+
+    protected void handleLoaderResult(int loaderId, LoaderResult loaderResult) {
+        if (loaderResult != null) {
+            if (loaderResult.getResult() != null) {
+                handleSuccessLoaderResult(loaderId, loaderResult.getResult());
+            } else if (loaderResult.getException() != null) {
+                handleFailureLoaderResult(loaderId, loaderResult.getException());
+            } else {
+                UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
+            }
+        } else {
+            UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
+        }
     }
 }

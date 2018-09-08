@@ -16,12 +16,18 @@ import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.matchers.ToolBarTitleMatcher;
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddLabelsToDatabaseRule;
+import com.flowcrypt.email.rules.AddMessageToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.AccountDaoManager;
+import com.flowcrypt.email.viewaction.CustomNavigationViewActions;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,6 +35,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -45,43 +54,44 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
- *         Date: 23.03.2018
- *         Time: 16:16
- *         E-mail: DenBond7@gmail.com
+ * Date: 23.03.2018
+ * Time: 16:16
+ * E-mail: DenBond7@gmail.com
  */
 
 public class EmailManagerActivityTest extends BaseEmailListActivityTest {
-    private String userWithMoreThan21LettersAccount;
-    private String userWithoutLetters;
+    private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
+    private AccountDao userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters();
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<EmailManagerActivity>(EmailManagerActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            AccountDao accountDao =
-                    AccountDaoManager.getAccountDao("user_with_more_than_21_letters_account.json");
-            userWithMoreThan21LettersAccount = accountDao.getEmail();
-            AccountDaoSource accountDaoSource = new AccountDaoSource();
-            try {
-                accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Intent intentRunEmailManagerActivity = new Intent(targetContext, EmailManagerActivity.class);
-            intentRunEmailManagerActivity.putExtra(EmailManagerActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-            return intentRunEmailManagerActivity;
-        }
-    };
+    private IntentsTestRule intentsTestRule = new IntentsTestRule<>(EmailManagerActivity.class);
+
+    private static final List<Folder> folders;
+    private static final Folder INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT =
+            new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false);
+
+    static {
+        folders = new ArrayList<>();
+        folders.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
+        folders.add(new Folder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
+        folders.add(new Folder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
+        folders.add(new Folder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
+    }
 
     @Rule
     public TestRule ruleChain = RuleChain
             .outerRule(new ClearAppSettingsRule())
+            .around(new AddAccountToDatabaseRule(userWithoutLetters))
+            .around(new AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
+            .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, folders))
+            .around(new AddMessageToDatabaseRule(userWithMoreThan21LettersAccount,
+                    INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
             .around(intentsTestRule);
 
     @Before
@@ -100,11 +110,6 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     }
 
     @Test
-    public void testDownloadAllMessages() {
-        testDownloadAllMessages(43);
-    }
-
-    @Test
     public void testComposeFloatButton() {
         onView(withId(R.id.floatActionButtonCompose)).check(matches(isDisplayed())).perform(click());
         intended(hasComponent(CreateMessageActivity.class.getName()));
@@ -113,7 +118,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     @Test
     public void testRunMessageDetailsActivity() {
-        testRunMessageDetailsActivity(20);
+        testRunMessageDetailsActivity(0);
     }
 
     @Test
@@ -127,23 +132,20 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     }
 
     @Test
-    public void testMenuTitlesExisting() {
+    public void testOpenAndSwipeNavigationView() {
         onView(withId(R.id.drawer_layout)).perform(open());
-        onView(withText(R.string.all_labels)).check(matches(isDisplayed()));
         onView(withId(R.id.navigationView)).perform(swipeUp());
-        onView(withText(R.string.authentication)).check(matches(isDisplayed()));
-        onView(withText(R.string.action_settings)).check(matches(isDisplayed()));
     }
 
     @Test
-    public void testClickLogOutIfOneAccount() {
+    public void testShowSplashActivityAfterLogout() {
+        clickLogOut();
         clickLogOut();
         intended(hasComponent(SplashActivity.class.getName()));
     }
 
     @Test
     public void testClickLogOutIfMoreAccounts() {
-        testAddNewAccount();
         clickLogOut();
         onView(withId(R.id.floatActionButtonCompose)).check(matches(isDisplayed()));
     }
@@ -157,49 +159,54 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     }
 
     @Test
-    public void testSelectJunkLabel() {
+    public void testSwitchLabels() {
+        String menuItem = "Sent";
+        onView(withId(R.id.toolbar)).check(matches(anyOf(
+                ToolBarTitleMatcher.withText("INBOX"),
+                ToolBarTitleMatcher.withText(InstrumentationRegistry.getTargetContext().getString(R.string.loading)))));
+
         onView(withId(R.id.drawer_layout)).perform(open());
-        onView(withText("Junk")).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(1))).check(matches(not(isDisplayed())));
-        onView(withId(R.id.emptyView)).check(matches(isDisplayed()));
+        onView(withId(R.id.navigationView)).perform(CustomNavigationViewActions.navigateTo(menuItem));
+        onView(withId(R.id.toolbar)).check(matches(ToolBarTitleMatcher.withText(menuItem)));
     }
 
     @Test
     public void testAddNewAccount() {
         Context targetContext = InstrumentationRegistry.getTargetContext();
-        AccountDao accountDao = AccountDaoManager.getAccountDao("user_without_letters.json");
-        userWithoutLetters = accountDao.getEmail();
-
+        AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
         Intent result = new Intent();
         result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, accountDao);
         intending(hasComponent(new ComponentName(targetContext, AddNewAccountActivity.class)))
                 .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, result));
 
         onView(withId(R.id.drawer_layout)).perform(open());
-        onView(withId(R.id.imageViewExpandAccountManagement)).check(matches(isDisplayed())).perform(click());
+        onView(withId(R.id.layoutUserDetails)).check(matches(isDisplayed())).perform(click(), click());
+
         try {
             AccountDaoSource accountDaoSource = new AccountDaoSource();
             accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-            accountDaoSource.setActiveAccount(targetContext, userWithoutLetters);
+            accountDaoSource.setActiveAccount(targetContext, accountDao.getEmail());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         onView(withId(R.id.viewIdAddNewAccount)).check(matches(isDisplayed())).perform(click());
 
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(1))).check(matches(not(isDisplayed())));
-        onView(withId(R.id.emptyView)).check(matches(isDisplayed()));
+        onView(withId(R.id.drawer_layout)).perform(open());
+        onView(withId(R.id.textViewActiveUserEmail)).check(matches(isDisplayed()))
+                .check(matches(withText(accountDao.getEmail())));
     }
 
     @Test
     public void testChooseAnotherAccount() {
-        testAddNewAccount();
         onView(withId(R.id.drawer_layout)).perform(open());
-        onView(withId(R.id.imageViewExpandAccountManagement)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withId(R.id.textViewUserEmail), withParent(withParent(withId(R.id.layoutUserDetails)))))
-                .check(matches(isDisplayed())).check(matches(withText(userWithoutLetters)));
-        onView(withText(userWithMoreThan21LettersAccount)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.listViewMessages)).check(matches(matchListSize(21))).check(matches(isDisplayed()));
+        onView(withId(R.id.textViewActiveUserEmail)).check(matches(isDisplayed())).check(matches(withText
+                (userWithMoreThan21LettersAccount.getEmail())));
+        onView(withId(R.id.layoutUserDetails)).check(matches(isDisplayed())).perform(click(), click());
+        onView(withText(userWithoutLetters.getEmail())).check(matches(isDisplayed())).perform(click());
+        onView(withId(R.id.drawer_layout)).perform(open());
+        onView(withId(R.id.textViewActiveUserEmail)).check(matches(isDisplayed())).check(
+                matches(withText(userWithoutLetters.getEmail())));
     }
 
     private void clickLogOut() {

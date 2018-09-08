@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.model;
 
-import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -41,7 +40,6 @@ public class KeyDetails implements Parcelable {
     };
     private String keyName;
     private String value;
-    private Uri uri;
     private Type bornType;
     private boolean isPrivateKey;
     private PgpContact pgpContact;
@@ -51,14 +49,12 @@ public class KeyDetails implements Parcelable {
     }
 
     public KeyDetails(String keyName, String value, Type bornType, boolean isPrivateKey) {
-        this(null, value, null, bornType, isPrivateKey, null);
+        this(null, value, bornType, isPrivateKey, null);
     }
 
-    public KeyDetails(String keyName, String value, Uri uri, Type bornType, boolean
-            isPrivateKey, PgpContact pgpContact) {
+    public KeyDetails(String keyName, String value, Type bornType, boolean isPrivateKey, PgpContact pgpContact) {
         this.keyName = keyName;
         this.value = value;
-        this.uri = uri;
         this.bornType = bornType;
         this.isPrivateKey = isPrivateKey;
         this.pgpContact = pgpContact;
@@ -67,7 +63,6 @@ public class KeyDetails implements Parcelable {
     protected KeyDetails(Parcel in) {
         this.keyName = in.readString();
         this.value = in.readString();
-        this.uri = in.readParcelable(Uri.class.getClassLoader());
         int tmpBornType = in.readInt();
         this.bornType = tmpBornType == -1 ? null : Type.values()[tmpBornType];
         this.isPrivateKey = in.readByte() != 0;
@@ -83,7 +78,6 @@ public class KeyDetails implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.keyName);
         dest.writeString(this.value);
-        dest.writeParcelable(this.uri, flags);
         dest.writeInt(this.bornType == null ? -1 : this.bornType.ordinal());
         dest.writeByte(this.isPrivateKey ? (byte) 1 : (byte) 0);
         dest.writeParcelable(this.pgpContact, flags);
@@ -103,10 +97,6 @@ public class KeyDetails implements Parcelable {
 
     public Type getBornType() {
         return bornType;
-    }
-
-    public Uri getUri() {
-        return uri;
     }
 
     public boolean isPrivateKey() {

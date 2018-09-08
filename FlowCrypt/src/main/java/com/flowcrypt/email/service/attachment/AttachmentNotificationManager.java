@@ -18,6 +18,7 @@ import android.text.format.DateUtils;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.ui.NotificationChannelManager;
+import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 
 /**
  * This manager is responsible for displaying attachment notifications.
@@ -28,7 +29,7 @@ import com.flowcrypt.email.ui.NotificationChannelManager;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class AttachmentNotificationManager {
+public class AttachmentNotificationManager extends CustomNotificationManager {
     private static final int MAX_CONTENT_TITLE_LENGTH = 30;
     private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
     private NotificationManager notificationManager;

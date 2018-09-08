@@ -30,10 +30,12 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
@@ -59,8 +61,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
 
+    private static final int TIMEOUT_BETWEEN_REQUESTS = 500;
+    private static final int LOADING_SHIFT_IN_ITEMS = 5;
+
     private ListView listViewMessages;
-    private View emptyView;
+    private TextView emptyView;
     private View footerProgressView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView textViewActionProgress;
@@ -68,14 +73,13 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
-    private MessageDaoSource messageDaoSource;
     private BaseSyncActivity baseSyncActivity;
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
     private boolean needForceFirstLoad;
-
-    private int lastCalledPositionForLoadMore;
-    private int lastPositionOfAlreadyLoaded;
+    private boolean isShowOnlyEncryptedMessages;
+    private long timeOfLastRequestEnd;
+    private int lastFirstVisibleItemPositionOffAllMessages;
 
     private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
             = new LoaderManager.LoaderCallbacks<Cursor>() {
@@ -83,7 +87,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             switch (id) {
-                case R.id.loader_id_load_gmail_messages:
+                case R.id.loader_id_load_messages_from_cache:
                     emptyView.setVisibility(View.GONE);
                     statusView.setVisibility(View.GONE);
 
@@ -99,10 +103,13 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                         getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
                     }
 
+                    String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
+                            + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+
                     return new CursorLoader(getContext(),
                             new MessageDaoSource().getBaseContentUri(),
                             null,
-                            MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
+                            selection,
                             new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
                                     onManageEmailsListener.getCurrentFolder().getFolderAlias()},
                             MessageDaoSource.COL_RECEIVED_DATE + " DESC");
@@ -115,13 +122,18 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             switch (loader.getId()) {
-                case R.id.loader_id_load_gmail_messages:
-                    isNewMessagesLoadingNow = false;
+                case R.id.loader_id_load_messages_from_cache:
+                    messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
+                    messageListAdapter.swapCursor(data);
                     if (data != null && data.getCount() != 0) {
-                        messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
-                        messageListAdapter.swapCursor(data);
                         emptyView.setVisibility(View.GONE);
                         statusView.setVisibility(View.GONE);
+
+                        if (!isShowOnlyEncryptedMessages && lastFirstVisibleItemPositionOffAllMessages != 0) {
+                            listViewMessages.setSelection(lastFirstVisibleItemPositionOffAllMessages);
+                            lastFirstVisibleItemPositionOffAllMessages = 0;
+                        }
+
                         UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
                     } else {
                         if (!isMessagesFetchedIfNotExistInCache) {
@@ -138,9 +150,12 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                                 showRetrySnackBar();
                             }
                         } else {
+                            emptyView.setText(isShowOnlyEncryptedMessages ?
+                                    R.string.no_encrypted_messages : R.string.no_results);
                             UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
                         }
                     }
+
                     break;
             }
         }
@@ -148,16 +163,12 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
             switch (loader.getId()) {
-                case R.id.loader_id_load_gmail_messages:
+                case R.id.loader_id_load_messages_from_cache:
                     messageListAdapter.swapCursor(null);
                     break;
             }
         }
     };
-
-    public EmailListFragment() {
-        this.messageDaoSource = new MessageDaoSource();
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -178,6 +189,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.messageListAdapter = new MessageListAdapter(getContext(), null);
+
+        AccountDaoSource accountDaoSource = new AccountDaoSource();
+        AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+        this.isShowOnlyEncryptedMessages = accountDaoSource.isShowOnlyEncryptedMessages(getContext(),
+                accountDao.getEmail());
     }
 
     @Override
@@ -204,7 +220,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 swipeRefreshLayout.setEnabled(false);
             }
 
-            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages,
+            getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache,
                     null, loadCachedMessagesCursorLoaderCallbacks);
         }
     }
@@ -223,7 +239,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
                 switch (resultCode) {
                     case MessageDetailsActivity.RESULT_CODE_UPDATE_LIST:
-                        updateList(false);
+                        updateList(false, false);
                         break;
                 }
                 break;
@@ -317,14 +333,13 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
      * @param totalItemCount   the number of items in the list adaptor
      */
     @Override
-    public void onScroll(AbsListView view, int firstVisibleItem,
-                         int visibleItemCount, int totalItemCount) {
-        if (onManageEmailsListener.getCurrentFolder() != null) {
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (onManageEmailsListener.getCurrentFolder() != null
+                && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalItemCount == 1)) {
             boolean isMoreMessageAvailable = onManageEmailsListener.isMoreMessagesAvailable();
-            if (!isNewMessagesLoadingNow
-                    && lastPositionOfAlreadyLoaded != messageListAdapter.getCount()
-                    && isMoreMessageAvailable
-                    && firstVisibleItem + visibleItemCount == totalItemCount) {
+            if (!isNewMessagesLoadingNow && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
+                    && isMoreMessageAvailable && firstVisibleItem + visibleItemCount >= totalItemCount -
+                    LOADING_SHIFT_IN_ITEMS) {
                 loadNextMessages(messageListAdapter.getCount());
             }
         }
@@ -334,6 +349,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
         switch (requestCode) {
             case R.id.syns_request_code_load_next_messages:
+                isNewMessagesLoadingNow = false;
                 if (e instanceof UserRecoverableAuthException) {
                     super.onErrorOccurred(requestCode, errorType,
                             new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
@@ -354,7 +370,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 footerProgressView.setVisibility(View.GONE);
                 emptyView.setVisibility(View.GONE);
 
-                getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+                getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
                 DataBaseUtil.cleanFolderCache(getContext(),
                         onManageEmailsListener.getCurrentAccountDao().getEmail(),
                         onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -374,6 +390,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 break;
 
             case R.id.syns_request_code_force_load_new_messages:
+                isNewMessagesLoadingNow = false;
                 swipeRefreshLayout.setRefreshing(false);
                 switch (errorType) {
                     case SyncErrorTypes.ACTION_FAILED_SHOW_TOAST:
@@ -402,6 +419,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 break;
 
             case R.id.sync_request_code_search_messages:
+                isNewMessagesLoadingNow = false;
                 super.onErrorOccurred(requestCode, errorType, e);
                 break;
         }
@@ -410,28 +428,32 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     /**
      * Update a current messages list.
      *
-     * @param isFolderChanged if true we destroy a previous loader to reset position, if false we
-     *                        try to load a new messages.
+     * @param isFolderChanged         if true we destroy a previous loader to reset position, if false we
+     *                                try to load a new messages.
+     * @param isNeedToForceClearCache true if we need to forcefully clean the database cache.
      */
-    public void updateList(boolean isFolderChanged) {
+    public void updateList(boolean isFolderChanged, boolean isNeedToForceClearCache) {
         if (onManageEmailsListener.getCurrentFolder() != null) {
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
             if (isFolderChanged) {
-                isNewMessagesLoadingNow = false;
-                lastPositionOfAlreadyLoaded = 0;
                 if (getSnackBar() != null) {
                     getSnackBar().dismiss();
                 }
 
-                getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
-                DataBaseUtil.cleanFolderCache(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias());
+                getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+                if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
+                        !isItSyncFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
+                    DataBaseUtil.cleanFolderCache(getContext(),
+                            onManageEmailsListener.getCurrentAccountDao().getEmail(),
+                            onManageEmailsListener.getCurrentFolder().getFolderAlias());
+                }
             }
 
-            getLoaderManager().restartLoader(R.id.loader_id_load_gmail_messages, null,
-                    loadCachedMessagesCursorLoaderCallbacks);
+            if (messageListAdapter.getCount() == 0) {
+                getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache, null,
+                        loadCachedMessagesCursorLoaderCallbacks);
+            }
         }
     }
 
@@ -443,7 +465,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
         swipeRefreshLayout.setRefreshing(false);
         if (needToRefreshList || messageListAdapter.getCount() == 0) {
-            updateList(false);
+            updateList(false, false);
         }
     }
 
@@ -453,14 +475,19 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
      * @param isNeedToUpdateList true if we must reload the emails list.
      */
     public void onNextMessagesLoaded(boolean isNeedToUpdateList) {
-        lastPositionOfAlreadyLoaded = lastCalledPositionForLoadMore;
         footerProgressView.setVisibility(View.GONE);
         progressView.setVisibility(View.GONE);
+
         if (isNeedToUpdateList || messageListAdapter.getCount() == 0) {
-            updateList(false);
-        } else {
-            isNewMessagesLoadingNow = false;
+            updateList(false, false);
+        } else if (messageListAdapter.getCount() == 0) {
+            emptyView.setText(isShowOnlyEncryptedMessages ?
+                    R.string.no_encrypted_messages : R.string.no_results);
+            UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
         }
+
+        isNewMessagesLoadingNow = false;
+        timeOfLastRequestEnd = System.currentTimeMillis();
     }
 
     /**
@@ -490,7 +517,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
      * Reload the folder messages.
      */
     public void reloadMessages() {
-        getLoaderManager().destroyLoader(R.id.loader_id_load_gmail_messages);
+        getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
         DataBaseUtil.cleanFolderCache(getContext(),
                 onManageEmailsListener.getCurrentAccountDao().getEmail(),
                 onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -503,6 +530,22 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             loadNextMessages(0);
             needForceFirstLoad = false;
         }
+    }
+
+    public void onFilterMessages(boolean isShowOnlyEncryptedMessages) {
+        this.isShowOnlyEncryptedMessages = isShowOnlyEncryptedMessages;
+
+        if (isShowOnlyEncryptedMessages) {
+            lastFirstVisibleItemPositionOffAllMessages = listViewMessages.getFirstVisiblePosition();
+        }
+
+        updateList(true, true);
+    }
+
+    private boolean isItSyncFolder(Folder folder) {
+        if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+            return true;
+        } else return false;
     }
 
     /**
@@ -527,15 +570,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
      * Try to load a new messages from an IMAP server.
      */
     private void refreshMessages() {
+        isNewMessagesLoadingNow = false;
         onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
         baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages,
-                onManageEmailsListener.getCurrentFolder(),
-                messageDaoSource.getLastUIDOfMessageInLabel(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias()),
-                messageDaoSource.getCountOfMessagesForLabel(getContext(),
-                        onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                        onManageEmailsListener.getCurrentFolder().getFolderAlias()));
+                onManageEmailsListener.getCurrentFolder());
     }
 
     /**
@@ -547,7 +585,6 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
             footerProgressView.setVisibility(View.VISIBLE);
             isNewMessagesLoadingNow = true;
-            lastCalledPositionForLoadMore = totalItemsCount;
             onManageEmailsListener.getCountingIdlingResourceForMessages().increment();
             if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getSearchQuery())) {
                 baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages,

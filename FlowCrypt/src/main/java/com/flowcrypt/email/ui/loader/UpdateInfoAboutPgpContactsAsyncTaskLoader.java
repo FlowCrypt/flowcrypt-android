@@ -20,9 +20,6 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,8 +54,7 @@ import retrofit2.Response;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
-        AsyncTaskLoader<LoaderResult> {
+public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     private List<String> emails;
 
     public UpdateInfoAboutPgpContactsAsyncTaskLoader(Context context, List<String> emails) {
@@ -93,9 +89,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                                 isAllInfoReceived = false;
                                 pgpContacts.add(localPgpContact);
                                 e.printStackTrace();
-                                if (ACRA.isInitialised()) {
-                                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                }
+                                ExceptionUtil.handleError(e);
                             }
                         } else {
                             pgpContacts.add(localPgpContact);
@@ -115,9 +109,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends
                             isAllInfoReceived = false;
                             pgpContacts.add(newPgpContact);
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                         }
                     }
                 }

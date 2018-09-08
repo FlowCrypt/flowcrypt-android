@@ -25,9 +25,8 @@ import android.util.Log;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.model.KeyImportModel;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -49,7 +48,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
     private volatile Looper serviceWorkerLooper;
     private volatile ServiceWorkerHandler serviceWorkerHandler;
 
-    private KeyDetails keyDetails;
+    private KeyImportModel keyImportModel;
     private IBinder localBinder;
     private ClipboardManager clipboardManager;
     private Messenger replyMessenger;
@@ -74,7 +73,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         handlerThread.start();
 
         serviceWorkerLooper = handlerThread.getLooper();
-        serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper);
+        serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper, this);
 
         checkClipboard();
     }
@@ -103,8 +102,8 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         checkClipboard();
     }
 
-    public KeyDetails getKeyDetails() {
-        return keyDetails;
+    public KeyImportModel getKeyImportModel() {
+        return keyImportModel;
     }
 
     public boolean isMustBePrivateKey() {
@@ -116,7 +115,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
     }
 
     private void checkClipboard() {
-        keyDetails = null;
+        keyImportModel = null;
         if (clipboardManager.hasPrimaryClip()) {
             ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
             CharSequence privateKeyFromClipboard = item.getText();
@@ -158,13 +157,70 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
                                 checkClipboardToFindKeyService =
                                 checkClipboardToFindPrivateKeyServiceWeakReference.get();
 
-                        KeyDetails keyDetails = (KeyDetails) message.obj;
+                        String key = (String) message.obj;
 
-                        checkClipboardToFindKeyService.keyDetails
-                                = new KeyDetails(null, keyDetails.getValue(), null,
-                                KeyDetails.Type.CLIPBOARD, checkClipboardToFindKeyService
-                                .isMustBePrivateKey(), keyDetails.getPgpContact());
+                        checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
+                                checkClipboardToFindPrivateKeyServiceWeakReference.get().isMustBePrivateKey,
+                                KeyDetails.Type.CLIPBOARD);
                         Log.d(TAG, "Found a valid private key in clipboard");
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * This handler will be used by the instance of {@link HandlerThread} to receive message from
+     * the UI thread.
+     */
+    private static final class ServiceWorkerHandler extends Handler {
+        static final int MESSAGE_WHAT = 1;
+        private final WeakReference<CheckClipboardToFindKeyService> checkClipboardToFindPrivateKeyServiceWeakReference;
+        private Js js;
+
+        ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
+            super(looper);
+            this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
+                    (checkClipboardToFindKeyService);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSAGE_WHAT:
+                    if (js == null) {
+                        try {
+                            if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
+                                js = new Js(checkClipboardToFindPrivateKeyServiceWeakReference.get(), null);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            ExceptionUtil.handleError(e);
+                        }
+                    }
+
+                    if (js != null) {
+                        String clipboardText = (String) msg.obj;
+
+                        try {
+                            String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
+                            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+
+                            if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null &&
+                                    js.is_valid_key(pgpKey, checkClipboardToFindPrivateKeyServiceWeakReference.get()
+                                            .isMustBePrivateKey)) {
+                                try {
+                                    Messenger messenger = msg.replyTo;
+                                    messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                    ExceptionUtil.handleError(e);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ExceptionUtil.handleError(e);
+                        }
                     }
                     break;
             }
@@ -177,67 +233,6 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
     public class LocalBinder extends Binder {
         public CheckClipboardToFindKeyService getService() {
             return CheckClipboardToFindKeyService.this;
-        }
-    }
-
-    /**
-     * This handler will be used by the instance of {@link HandlerThread} to receive message from
-     * the UI thread.
-     */
-    private final class ServiceWorkerHandler extends Handler {
-        static final int MESSAGE_WHAT = 1;
-        private Js js;
-
-        ServiceWorkerHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MESSAGE_WHAT:
-                    if (js == null) {
-                        try {
-                            js = new Js(getApplicationContext(), null);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
-                        }
-                    }
-
-                    if (js != null) {
-                        String clipboardText = (String) msg.obj;
-
-                        try {
-                            String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
-                            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-
-                            if (js.is_valid_key(pgpKey, isMustBePrivateKey)) {
-                                try {
-                                    KeyDetails keyDetails = new KeyDetails(null, clipboardText, null,
-                                            null,
-                                            false, pgpKey.getPrimaryUserId());
-                                    Messenger messenger = msg.replyTo;
-                                    messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT,
-                                            keyDetails));
-                                } catch (RemoteException e) {
-                                    e.printStackTrace();
-                                    if (ACRA.isInitialised()) {
-                                        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
-                        }
-                    }
-                    break;
-            }
         }
     }
 }

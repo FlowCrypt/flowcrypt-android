@@ -14,6 +14,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- android.permission.WAKE_LOCK will be used by classes which extend JobIntentService -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".FlowCryptApplication"
@@ -39,10 +43,12 @@
         <activity
             android:name=".ui.activity.EmailManagerActivity"
             android:label="@string/loading"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.MessageDetailsActivity"
+            android:parentActivityName=".ui.activity.EmailManagerActivity"
             android:screenOrientation="portrait" />
 
         <activity
@@ -123,7 +129,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.settings.BackupSettingsActivity"
+            android:name=".ui.activity.settings.SearchBackupsInEmailActivity"
             android:label="@string/backups"
             android:screenOrientation="portrait" />
 
@@ -178,6 +184,30 @@
             android:label="@string/add_contact"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.settings.NotificationsSettingsActivity"
+            android:label="@string/notifications"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.activity.ChangePassPhraseActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.BackupKeysActivity"
+            android:label="@string/backup_options"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activity.settings.SecuritySettingsActivity"
+            android:label="@string/security"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
@@ -198,6 +228,7 @@
         <!-- Services -->
         <service
             android:name=".service.EmailAndNameUpdaterService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false" />
 
         <service
@@ -214,11 +245,21 @@
 
         <service
             android:name=".service.actionqueue.ActionQueueIntentService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false" />
 
         <service
             android:name=".service.JsBackgroundService"
             android:exported="false" />
+
+        <!--This service will be used for syncing (JobScheduler logic)-->
+        <service
+            android:name=".jobscheduler.SyncJobService"
+            android:exported="false"
+            android:label="Sync service"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
     </application>
 
 </manifest>

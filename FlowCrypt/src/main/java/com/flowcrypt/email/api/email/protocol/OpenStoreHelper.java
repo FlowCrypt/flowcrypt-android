@@ -12,9 +12,11 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.api.services.gmail.GmailScopes;
 import com.sun.mail.gimap.GmailSSLStore;
 
 import java.io.IOException;
@@ -66,7 +68,8 @@ public class OpenStoreHelper {
      * gimaps.
      */
 
-    public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao accountDao,
+    public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao
+            accountDao,
                                                             boolean isResetTokenNeeded)
             throws MessagingException, IOException, GoogleAuthException {
         GmailSSLStore gmailSSLStore;
@@ -75,13 +78,13 @@ public class OpenStoreHelper {
             if (accountDao.getAccount() != null) {
                 try {
                     String token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
-                            JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                            JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
 
                     if (isResetTokenNeeded) {
                         Log.d(TAG, "Refresh Gmail token");
                         GoogleAuthUtil.clearToken(context, token);
                         token = GoogleAuthUtil.getToken(context, accountDao.getAccount(),
-                                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+                                JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
                     }
 
                     gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.getEmail(), token);
@@ -172,8 +175,11 @@ public class OpenStoreHelper {
                     return openAndConnectToGimapsStore(context, session, accountDao, false);
 
                 default:
-                    Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
                     AuthCredentials authCredentials = accountDao.getAuthCredentials();
+                    Store store = authCredentials.getImapSecurityTypeOption() == SecurityType.Option.NONE
+                            ? session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
+                            : session.getStore(JavaEmailConstants.PROTOCOL_IMAPS);
+
                     store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
                             authCredentials.getPassword());
                     return store;

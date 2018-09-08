@@ -9,8 +9,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
@@ -29,12 +31,10 @@ import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-
-import org.acra.ACRA;
 
 import java.util.ArrayList;
 
@@ -55,10 +55,13 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     private View splashView;
 
     private AccountDao accountDao;
+    private boolean isStartCheckKeysActivityEnable;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
+
         JsBackgroundService.start(this);
 
         initViews();
@@ -67,7 +70,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         if (accountDao != null) {
             if (SecurityUtils.isBackupKeysExist(this)) {
                 EmailSyncService.startEmailSyncService(this);
-                EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                EmailManagerActivity.runEmailManagerActivity(this);
                 finish();
             }
         }
@@ -97,6 +100,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 break;
 
             case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
+                isStartCheckKeysActivityEnable = false;
+
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                     case CheckKeysActivity.RESULT_NEUTRAL:
@@ -140,23 +145,20 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                                         accountDaoSource.getAccountInformation(this, authCredentials.getEmail());
 
                                 if (accountDao != null) {
-                                    EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+                                    EmailManagerActivity.runEmailManagerActivity(this);
                                     finish();
                                 } else {
                                     Toast.makeText(this, R.string.error_occurred_try_again_later,
                                             Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                ACRA.getErrorReporter().handleException(new NullPointerException("AuthCredentials is " +
-                                        "null!"));
+                                ExceptionUtil.handleError(new NullPointerException("AuthCredentials is null!"));
                                 Toast.makeText(this, R.string.error_occurred_try_again_later,
                                         Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            if (ACRA.isInitialised()) {
-                                ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                            }
+                            ExceptionUtil.handleError(e);
                             Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                         break;
@@ -203,16 +205,19 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_private_key_backups_from_email:
+                isStartCheckKeysActivityEnable = true;
+
                 AccountDao accountDao = null;
                 UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
                 if (currentGoogleSignInAccount != null) {
                     accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
                 }
-                return accountDao != null ? new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao) : null;
+                return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
                 return null;
@@ -221,15 +226,18 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         switch (loader.getId()) {
             case R.id.loader_id_load_private_key_backups_from_email:
                 if (loaderResult.getResult() != null) {
                     ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
                     if (keyDetailsList.isEmpty()) {
-                        startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
-                                new AccountDao(currentGoogleSignInAccount), true), REQUEST_CODE_CREATE_OR_IMPORT_KEY);
-                    } else {
+                        if (currentGoogleSignInAccount != null) {
+                            startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
+                                    new AccountDao(currentGoogleSignInAccount), true),
+                                    REQUEST_CODE_CREATE_OR_IMPORT_KEY);
+                        }
+                    } else if (isStartCheckKeysActivityEnable) {
                         startActivityForResult(CheckKeysActivity.newIntent(this,
                                 keyDetailsList,
                                 getResources().getQuantityString(
@@ -251,7 +259,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
     }
 
@@ -260,7 +268,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
         AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
         if (accountDao != null) {
-            EmailManagerActivity.runEmailManagerActivity(this, accountDao);
+            EmailManagerActivity.runEmailManagerActivity(this);
             finish();
         } else {
             Toast.makeText(this, R.string.error_occurred_try_again_later,
@@ -303,9 +311,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
      */
     private AccountDao addGmailAccount(GoogleSignInAccount googleSignInAccount) {
         if (googleSignInAccount == null) {
-            if (ACRA.isInitialised()) {
-                ACRA.getErrorReporter().handleException(new NullPointerException("GoogleSignInAccount is null!"));
-            }
+            ExceptionUtil.handleError(new NullPointerException("GoogleSignInAccount is null!"));
             return null;
         }
 

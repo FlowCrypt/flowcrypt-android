@@ -57,8 +57,22 @@ public class UIUtil {
      */
     public static Snackbar showSnackbar(View view, String messageText, String buttonName,
                                         @NonNull View.OnClickListener onClickListener) {
-        Snackbar snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
-                .setAction(buttonName, onClickListener);
+        return showSnackbar(view, messageText, buttonName, onClickListener, Snackbar.LENGTH_INDEFINITE);
+    }
+
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener. .
+     *
+     * @param view            he view to find a parent from.
+     * @param messageText     The text to show.  Can be formatted text..
+     * @param buttonName      The text of the Snackbar button;
+     * @param onClickListener The Snackbar button click listener.
+     * @param duration        How long to display the message.  Either {@link Snackbar#LENGTH_SHORT} or {@link
+     *                        Snackbar#LENGTH_LONG}
+     */
+    public static Snackbar showSnackbar(View view, String messageText, String buttonName,
+                                        @NonNull View.OnClickListener onClickListener, int duration) {
+        Snackbar snackbar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener);
         snackbar.show();
 
         return snackbar;
@@ -89,6 +103,10 @@ public class UIUtil {
      */
     public static void exchangeViewVisibility(Context context, final boolean show,
                                               final View firstView, final View secondView) {
+        if (context == null) {
+            return;
+        }
+
         int shortAnimTime = context.getResources().getInteger(android.R.integer
                 .config_shortAnimTime);
 

@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This manager creates and manages {@link JsTask}s using a background thread.
@@ -183,6 +184,13 @@ public class JsInBackgroundManager {
         public void run() {
             Log.d(TAG, " run!");
             Thread.currentThread().setName(workerName);
+
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 2000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             try {
                 js = new Js(jsListener.getContext(), new SecurityStorageConnector(jsListener.getContext()));
                 boolean isInterrupted = false;

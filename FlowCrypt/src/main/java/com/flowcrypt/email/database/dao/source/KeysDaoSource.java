@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.database.dao.source;
 
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,6 +18,7 @@ import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.js.PgpKey;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -142,5 +145,28 @@ public class KeysDaoSource extends BaseDaoSource {
                         COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
             } else return -1;
         } else return -1;
+    }
+
+    /**
+     * This method update information about some private keys.
+     *
+     * @param context           Interface to global information about an application environment.
+     * @param keysDaoCollection The list of {@link KeysDao} which contains information about the private keys.
+     * @return the {@link ContentProviderResult} array.
+     */
+    public ContentProviderResult[] updateKeys(Context context, Collection<KeysDao> keysDaoCollection) throws Exception {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (keysDaoCollection != null && contentResolver != null) {
+            ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
+            for (KeysDao keysDao : keysDaoCollection) {
+                contentProviderOperations.add(ContentProviderOperation.newUpdate(getBaseContentUri())
+                        .withValue(COL_PRIVATE_KEY, keysDao.getPrivateKey())
+                        .withValue(COL_PASSPHRASE, keysDao.getPassphrase())
+                        .withSelection(COL_LONG_ID + "= ?", new String[]{keysDao.getLongId()})
+                        .withYieldAllowed(true)
+                        .build());
+            }
+            return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperations);
+        } else return new ContentProviderResult[0];
     }
 }

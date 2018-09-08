@@ -134,4 +134,16 @@
     <style name="AppWidget.TextInputLayout.PgpBlock.Other">
         <item name="android:background">@drawable/bg_message_part_other</item>
     </style>
+
+    <style name="AppWidget.ProgressBar" />
+
+    <style name="AppWidget.ProgressBar.Linear" />
+
+    <style name="AppWidget.ProgressBar.Linear.Green" parent="AppTheme">
+        <item name="colorAccent">@color/colorPrimary</item>
+    </style>
+
+    <style name="AppWidget.Switch" parent="AppTheme">
+        <item name="colorAccent">@color/colorPrimaryLight</item>
+    </style>
 </resources>

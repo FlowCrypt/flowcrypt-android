@@ -338,7 +338,7 @@
   }
 
   function str_is_email_valid(email) {
-    return /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i.test(email);
+    return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
   }
 
   function str_month_name(month_index) {
@@ -1860,7 +1860,9 @@
         return armored;
       }
     } catch(error) {
-      catcher.handle_exception(error);
+      if(error.message !== 'Invalid key: need at least key and user ID packet') {
+        catcher.handle_exception(error);
+      }
     }
   }
 
@@ -3322,7 +3324,7 @@
 
   function api_cryptup_url(type, variable) {
     return {
-      'api': 'https://api.cryptup.io/',
+      'api': 'https://flowcrypt.com/api/',
       'me': 'https://flowcrypt.com/me/' + variable,
       'pubkey': 'https://flowcrypt.com/pub/' + variable,
       'decrypt': 'https://flowcrypt.com/' + variable,
@@ -3671,7 +3673,7 @@
     }
     try {
       $.ajax({
-        url: 'https://api.cryptup.io/help/error',
+        url: 'https://flowcrypt.com/api/help/error',
         method: 'POST',
         data: JSON.stringify({
           name: (error.name || '').substring(0, 50),
@@ -3905,8 +3907,8 @@
 (function ( /* EXTENSIONS AND CONFIG */ ) {
 
   if(typeof window.openpgp !== 'undefined' && typeof window.openpgp.config !== 'undefined' && typeof window.openpgp.config.versionstring !== 'undefined' && typeof window.openpgp.config.commentstring !== 'undefined') {
-    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '') + ' Gmail Encryption flowcrypt.com';
-    window.openpgp.config.commentstring = 'Seamlessly send, receive and search encrypted email';
+    window.openpgp.config.versionstring = 'FlowCrypt ' + (catcher.version() || '');
+    window.openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
   }
 
   RegExp.escape = function (s) {

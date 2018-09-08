@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.util;
 
+import android.app.ActivityManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
 /**
  * General util methods.
@@ -226,5 +232,28 @@ public class GeneralUtil {
      */
     public static String generateNameForIdlingResources(Class<?> aClass) {
         return aClass.getClass() + "-" + UUID.randomUUID();
+    }
+
+    /**
+     * Clear the {@link ClipData}
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public static void clearClipboard(Context context) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(ClipData.newPlainText(null, ""));
+        }
+    }
+
+    /**
+     * Check is the app foregrounded or visible.
+     *
+     * @return true if the app is foregrounded or visible.
+     */
+    public static boolean isAppForegrounded() {
+        ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(appProcessInfo);
+        return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE);
     }
 }

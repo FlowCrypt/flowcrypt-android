@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
@@ -30,6 +31,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
+import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -69,9 +71,9 @@ import javax.mail.internet.MimeMultipart;
  * This task does job of sending a message.
  *
  * @author DenBond7
- * Date: 29.06.2017
- * Time: 11:38
- * E-mail: DenBond7@gmail.com
+ *         Date: 29.06.2017
+ *         Time: 11:38
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class SendMessageSyncTask extends BaseSyncTask {
@@ -197,20 +199,24 @@ public class SendMessageSyncTask extends BaseSyncTask {
      */
     private void saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context, MimeMessage
             mimeMessage) throws MessagingException {
-        FoldersManager foldersManager = FoldersManager.fromDatabase(context,
-                accountDao.getEmail());
-        IMAPFolder sentImapFolder =
-                (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
+        FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
+        com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
 
-        if (sentImapFolder == null || !sentImapFolder.exists()) {
-            throw new IllegalArgumentException("The sent folder doesn't exists. Can't create a copy of " +
-                    "the sent message!");
+        if (sentFolder != null) {
+            IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
+
+            if (sentImapFolder == null || !sentImapFolder.exists()) {
+                throw new IllegalArgumentException("The sent folder doesn't exists. Can't create a copy of " +
+                        "the sent message!");
+            }
+
+            sentImapFolder.open(Folder.READ_WRITE);
+            mimeMessage.setFlag(Flags.Flag.SEEN, true);
+            sentImapFolder.appendMessages(new Message[]{mimeMessage});
+            sentImapFolder.close(false);
+        } else {
+            throw new IllegalArgumentException("The SENT folder is not defined");
         }
-
-        sentImapFolder.open(Folder.READ_WRITE);
-        mimeMessage.setFlag(Flags.Flag.SEEN, true);
-        sentImapFolder.appendMessages(new Message[]{mimeMessage});
-        sentImapFolder.close(false);
     }
 
     /**
@@ -228,7 +234,8 @@ public class SendMessageSyncTask extends BaseSyncTask {
     @NonNull
     private MimeMessage createMimeMessage(Session session, Context context, AccountDao accountDao,
                                           File pgpCacheDirectory, IMAPFolder folderOfForwardedMessage,
-                                          Message forwardedMessage) throws IOException, MessagingException {
+                                          Message forwardedMessage)
+            throws IOException, MessagingException, NoKeyAvailableException {
         Js js = new Js(context, new SecurityStorageConnector(context));
         String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
                 getPubKeys(context, js, accountDao) : null;
@@ -438,7 +445,7 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @param js         - {@link Js} util class.
      * @return <tt>String[]</tt> An array of public keys.
      */
-    private String[] getPubKeys(Context context, Js js, AccountDao accountDao) {
+    private String[] getPubKeys(Context context, Js js, AccountDao accountDao) throws NoKeyAvailableException {
         ArrayList<String> publicKeys = new ArrayList<>();
         for (PgpContact pgpContact : getAllRecipients()) {
             if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
@@ -459,37 +466,36 @@ public class SendMessageSyncTask extends BaseSyncTask {
      * @param accountDao The {@link AccountDao} which contains information about account.
      * @return <tt>String</tt> The sender public key.
      */
-    private String getAccountPublicKey(Context context, Js js, AccountDao accountDao) {
-        PgpContact pgpContact = new ContactsDaoSource().getPgpContact(context, accountDao.getEmail());
+    private String getAccountPublicKey(Context context, Js js, AccountDao accountDao) throws NoKeyAvailableException {
+        UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
+        List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context,
+                outgoingMessageInfo.getFromPgpContact().getEmail());
 
-        if (pgpContact != null && !TextUtils.isEmpty(pgpContact.getPubkey())) {
-            return pgpContact.getPubkey();
-        }
-
-        PgpKeyInfo[] pgpKeyInfoArray = new SecurityStorageConnector(context).getAllPgpPrivateKeys();
-        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-            if (pgpKey != null) {
-                PgpKey publicKey = pgpKey.toPublic();
-                if (publicKey != null) {
-                    PgpContact primaryUserId = pgpKey.getPrimaryUserId();
-                    if (primaryUserId != null) {
-                        if (!TextUtils.isEmpty(publicKey.armor())) {
-                            primaryUserId.setPubkey(publicKey.armor());
-                            new ContactsDaoSource().addRow(context, primaryUserId);
-                            return primaryUserId.getPubkey();
-                        }
-                        break;
-                    }
+        if (longIds.isEmpty()) {
+            if (accountDao.getEmail().equalsIgnoreCase(outgoingMessageInfo.getFromPgpContact().getEmail())) {
+                throw new NoKeyAvailableException(context, accountDao.getEmail(), null);
+            } else {
+                longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, accountDao.getEmail());
+                if (longIds.isEmpty()) {
+                    throw new NoKeyAvailableException(context, accountDao.getEmail(),
+                            outgoingMessageInfo.getFromPgpContact().getEmail());
                 }
             }
         }
 
-        throw new IllegalArgumentException("The sender doesn't have a public key");
+        PgpKeyInfo pgpKeyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longIds.get(0));
+        if (pgpKeyInfo != null) {
+            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+            if (pgpKey != null) {
+                return pgpKey.toPublic().armor();
+            }
+        }
+
+        throw new IllegalArgumentException("Internal error: PgpKeyInfo is null!");
     }
 
     /**
-     * Retrive a Gmail message thread id.
+     * Retrieve a Gmail message thread id.
      *
      * @param service          A {@link Gmail} reference.
      * @param rfc822msgidValue An rfc822 Message-Id value of the input message.

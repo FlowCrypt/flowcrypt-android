@@ -15,28 +15,42 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.LongSparseArray;
+import android.util.SparseArray;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.common.util.ArrayUtils;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.sun.mail.gimap.GmailRawSearchTerm;
+import com.sun.mail.iap.Argument;
+import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.protocol.BODY;
+import com.sun.mail.imap.protocol.FetchResponse;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.imap.protocol.UIDSet;
+import com.sun.mail.util.ASCIIUtility;
 
 import org.apache.commons.io.IOUtils;
 
@@ -48,8 +62,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,15 +73,19 @@ import java.util.regex.Pattern;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
+import javax.mail.FetchProfile;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
+import javax.mail.UIDFolder;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.search.BodyTerm;
+import javax.mail.search.SearchTerm;
 import javax.mail.util.ByteArrayDataSource;
 
 /**
@@ -178,18 +198,16 @@ public class EmailUtil {
     /**
      * Generate a {@link BodyPart} with a private key as an attachment.
      *
-     * @param accountName       The account name;
-     * @param armoredPrivateKey The  armored private key.
-     * @param i                 The unique index of attachment.
+     * @param accountDao        The given account;
+     * @param armoredPrivateKey The armored private key.
      * @return {@link BodyPart} with private key as an attachment.
      * @throws Exception will occur when generate this {@link BodyPart}.
      */
     @NonNull
-    public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(String accountName,
-                                                                        String armoredPrivateKey,
-                                                                        int i) throws Exception {
+    public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(AccountDao accountDao,
+                                                                        String armoredPrivateKey) throws Exception {
         MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
-        String attachmentName = SecurityUtils.generateNameForPrivateKey(accountName + (i >= 0 ? ("_" + i) : ""));
+        String attachmentName = SecurityUtils.generateNameForPrivateKey(accountDao.getEmail());
 
         DataSource dataSource = new ByteArrayDataSource(armoredPrivateKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
         attachmentsBodyPart.setDataHandler(new DataHandler(dataSource));
@@ -200,35 +218,26 @@ public class EmailUtil {
     /**
      * Generate a message with the html pattern and the private key(s) as an attachment.
      *
-     * @param context     Interface to global information about an application environment;
-     * @param accountName The account name;
-     * @param session     The current session.
+     * @param context    Interface to global information about an application environment;
+     * @param accountDao The given account;
+     * @param session    The current session.
+     * @param js         An instance of {@link Js}
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
     @NonNull
-    public static Message generateMessageWithAllPrivateKeysBackups(Context context, String accountName, Session session)
-            throws Exception {
-        Message message = generateMessageWithBackupTemplate(context, accountName, session);
+    public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao,
+                                                                   Session session, Js js) throws Exception {
+        Message message = generateMessageWithBackupTemplate(context, accountDao, session);
 
         Multipart multipart = new MimeMultipart();
         BodyPart messageBodyPart = getBodyPartWithBackupText(context);
         multipart.addBodyPart(messageBodyPart);
 
-        List<PrivateKeyInfo> privateKeyInfoList = SecurityUtils.getPrivateKeysInfo(context);
-        Js js = new Js(context, new SecurityStorageConnector(context));
-
-        for (int i = 0; i < privateKeyInfoList.size(); i++) {
-            PrivateKeyInfo privateKeyInfo = privateKeyInfoList.get(i);
-
-            String decryptedKeyFromDatabase = privateKeyInfo.getPgpKeyInfo().getPrivate();
-            PgpKey pgpKey = js.crypto_key_read(decryptedKeyFromDatabase);
-            pgpKey.encrypt(privateKeyInfo.getPassphrase());
-
-            MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountName, pgpKey.armor(), i);
-            attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
-            multipart.addBodyPart(attachmentsBodyPart);
-        }
+        MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountDao,
+                SecurityUtils.generatePrivateKeysBackup(context, js, accountDao, true));
+        attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
+        multipart.addBodyPart(attachmentsBodyPart);
 
         message.setContent(multipart);
         return message;
@@ -237,17 +246,17 @@ public class EmailUtil {
     /**
      * Generate a message with the html pattern and the private key as an attachment.
      *
-     * @param context     Interface to global information about an application environment;
-     * @param accountName The account name;
-     * @param session     The current session.
+     * @param context    Interface to global information about an application environment;
+     * @param accountDao The given account;
+     * @param session    The current session.
      * @return Generated {@link Message} object.
      * @throws Exception will occur when generate this message.
      */
     @NonNull
-    public static Message generateMessageWithPrivateKeysBackup(Context context, String accountName, Session session,
+    public static Message generateMessageWithPrivateKeysBackup(Context context, AccountDao accountDao, Session session,
                                                                MimeBodyPart mimeBodyPartPrivateKey)
             throws Exception {
-        Message message = generateMessageWithBackupTemplate(context, accountName, session);
+        Message message = generateMessageWithBackupTemplate(context, accountDao, session);
         Multipart multipart = new MimeMultipart();
         BodyPart messageBodyPart = getBodyPartWithBackupText(context);
         multipart.addBodyPart(messageBodyPart);
@@ -268,8 +277,7 @@ public class EmailUtil {
      */
     public static String getTokenForGmailAccount(Context context, @NonNull Account account) throws IOException,
             GoogleAuthException {
-        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailConstants
-                .SCOPE_MAIL_GOOGLE_COM);
+        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM);
     }
 
     /**
@@ -290,16 +298,17 @@ public class EmailUtil {
      * @param context    context Interface to global information about an application environment;
      * @param accountDao An {@link AccountDao} object.
      * @param session    A {@link Session} object.
+     * @param js         An instance of {@link Js}
      * @return A list of {@link KeyDetails}
      * @throws MessagingException
      * @throws IOException
      */
     public static Collection<? extends KeyDetails> getPrivateKeyBackupsUsingGmailAPI(Context context,
                                                                                      AccountDao accountDao,
-                                                                                     Session session)
+                                                                                     Session session, Js js)
             throws IOException, MessagingException {
         ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
-        String search = new Js(context, null).api_gmail_query_backups(accountDao.getEmail());
+        String search = js.api_gmail_query_backups(accountDao.getEmail());
         Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
 
         ListMessagesResponse listMessagesResponse = gmailApiService
@@ -339,9 +348,18 @@ public class EmailUtil {
             MimeMessage mimeMessage = new MimeMessage(session,
                     new ByteArrayInputStream(Base64.decodeBase64(message.getRaw())));
 
-            String key = getKeyFromMessageIfItExists(mimeMessage);
-            if (!TextUtils.isEmpty(key) && privateKeyNotExistsInList(privateKeyDetailsList, key)) {
-                privateKeyDetailsList.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
+            String backup = getKeyFromMessageIfItExists(mimeMessage);
+
+            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
+
+            for (MessageBlock messageBlock : messageBlocks) {
+                if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+                    if (!TextUtils.isEmpty(messageBlock.getContent())
+                            && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock.getContent())) {
+                        privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
+                                KeyDetails.Type.EMAIL));
+                    }
+                }
             }
         }
 
@@ -384,12 +402,12 @@ public class EmailUtil {
     }
 
     @NonNull
-    public static Message generateMessageWithBackupTemplate(Context context, String accountName, Session session)
+    public static Message generateMessageWithBackupTemplate(Context context, AccountDao accountDao, Session session)
             throws MessagingException {
         Message message = new MimeMessage(session);
 
-        message.setFrom(new InternetAddress(accountName));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountName));
+        message.setFrom(new InternetAddress(accountDao.getEmail()));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountDao.getEmail()));
         message.setSubject(context.getString(R.string.your_key_backup, context.getString(R.string.app_name)));
         return message;
     }
@@ -401,8 +419,7 @@ public class EmailUtil {
      * @param key            The private key armored string.
      * @return true if the key not exists in the list, otherwise false.
      */
-    public static boolean privateKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList,
-                                                    String key) {
+    public static boolean isKeyNotExistsInList(ArrayList<KeyDetails> keyDetailsList, String key) {
         for (KeyDetails keyDetails : keyDetailsList) {
             if (key.equals(keyDetails.getValue())) {
                 return false;
@@ -449,5 +466,336 @@ public class EmailUtil {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN_FORWARDED_DATE, Locale.US);
         return simpleDateFormat.format(date);
+    }
+
+    /**
+     * Prepare a fetch command from the given {@link FetchProfile}
+     *
+     * @param fetchProfile    The given {@link FetchProfile}
+     * @param isRev1          The protocol revision number
+     * @param envelopeCommand The envelope command
+     * @return A generated fetch command
+     */
+    public static StringBuilder prepareFetchCommand(FetchProfile fetchProfile, boolean isRev1, String envelopeCommand) {
+        StringBuilder command = new StringBuilder();
+        boolean first = true;
+
+        if (fetchProfile.contains(FetchProfile.Item.ENVELOPE)) {
+            command.append(envelopeCommand);
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.FLAGS)) {
+            command.append(first ? "FLAGS" : " FLAGS");
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.CONTENT_INFO)) {
+            command.append(first ? "BODYSTRUCTURE" : " BODYSTRUCTURE");
+            first = false;
+        }
+
+        if (fetchProfile.contains(UIDFolder.FetchProfileItem.UID)) {
+            command.append(first ? "UID" : " UID");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
+            if (isRev1)
+                command.append(first ?
+                        "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
+            else
+                command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
+            if (isRev1)
+                command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
+            else
+                command.append(first ? "RFC822" : " RFC822");
+            first = false;
+        }
+
+        if (fetchProfile.contains(FetchProfile.Item.SIZE) ||
+                fetchProfile.contains(IMAPFolder.FetchProfileItem.SIZE)) {
+            command.append(first ? "RFC822.SIZE" : " RFC822.SIZE");
+            first = false;
+        }
+
+        if (fetchProfile.contains(IMAPFolder.FetchProfileItem.INTERNALDATE)) {
+            command.append(first ? "INTERNALDATE" : " INTERNALDATE");
+            first = false;
+        }
+
+        for (FetchProfile.Item item : fetchProfile.getItems()) {
+            if (item instanceof CustomFetchProfileItem) {
+                CustomFetchProfileItem customFetchProfileItem = (CustomFetchProfileItem) item;
+                if (!first) {
+                    command.append(" ");
+                }
+
+                command.append(customFetchProfileItem.getValue());
+            }
+        }
+
+        return command;
+    }
+
+    /**
+     * Generated a list of UID of the local messages which will be removed.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return A list of UID of the local messages which will be removed.
+     */
+    public static Collection<Long> generateDeleteCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                            IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<Long> uidListDeleteCandidates = new HashSet<>(messagesUIDInLocalDatabase);
+        Collection<Long> uidList = new HashSet<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                uidList.add(imapFolder.getUID(message));
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+
+        uidListDeleteCandidates.removeAll(uidList);
+        return uidListDeleteCandidates;
+    }
+
+    /**
+     * Generate an array of {@link javax.mail.Message} which contains candidates for insert.
+     *
+     * @param messagesUIDInLocalDatabase The list of UID of the local messages.
+     * @param imapFolder                 The remote {@link IMAPFolder}.
+     * @param messages                   The array of incoming messages.
+     * @return The generated array.
+     */
+    public static javax.mail.Message[] generateNewCandidates(Collection<Long> messagesUIDInLocalDatabase,
+                                                             IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        List<javax.mail.Message> newCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                if (!messagesUIDInLocalDatabase.contains(imapFolder.getUID(message))) {
+                    newCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+        return newCandidates.toArray(new javax.mail.Message[0]);
+    }
+
+    /**
+     * Generate an array of the messages which will be updated.
+     *
+     * @param messagesUIDWithFlagsInLocalDatabase The map of UID and flags of the local messages.
+     * @param imapFolder                          The remote {@link IMAPFolder}.
+     * @param messages                            The array of incoming messages.
+     * @return An array of the messages which are candidates for updating iin the local database.
+     */
+    public static javax.mail.Message[] generateUpdateCandidates(
+            Map<Long, String> messagesUIDWithFlagsInLocalDatabase,
+            IMAPFolder imapFolder, javax.mail.Message[] messages) {
+        Collection<javax.mail.Message> updateCandidates = new ArrayList<>();
+        try {
+            for (javax.mail.Message message : messages) {
+                String flags = messagesUIDWithFlagsInLocalDatabase.get(imapFolder.getUID(message));
+                if (flags == null) {
+                    flags = "";
+                }
+
+                if (!flags.equalsIgnoreCase(message.getFlags().toString())) {
+                    updateCandidates.add(message);
+                }
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+        }
+        return updateCandidates.toArray(new javax.mail.Message[0]);
+    }
+
+    /**
+     * Get the personal name of the first address from an array. If the given name is null we will return the email
+     * address.
+     *
+     * @param internetAddresses An array of {@link InternetAddress}
+     * @return The first address as a human readable string or email.
+     */
+    public static String getFirstAddressString(InternetAddress[] internetAddresses) {
+        if (internetAddresses == null || internetAddresses.length == 0) {
+            return "";
+        }
+
+        if (TextUtils.isEmpty(internetAddresses[0].getPersonal())) {
+            return internetAddresses[0].getAddress();
+        } else {
+            return internetAddresses[0].getPersonal();
+        }
+    }
+
+    /**
+     * Get updated information about messages in the local database.
+     *
+     * @param imapFolder            The folder which contains messages.
+     * @param countOfLoadedMessages The count of already loaded messages.
+     * @param countOfNewMessages    The count of new messages (offset value).
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] getUpdatedMessages(IMAPFolder imapFolder, int countOfLoadedMessages, int countOfNewMessages)
+            throws MessagingException {
+        int end = imapFolder.getMessageCount() - countOfNewMessages;
+        int start = end - countOfLoadedMessages + 1;
+
+        if (end < 1) {
+            return new Message[]{};
+        } else {
+            if (start < 1) {
+                start = 1;
+            }
+
+            Message[] messages = imapFolder.getMessages(start, end);
+
+            if (messages.length > 0) {
+                FetchProfile fetchProfile = new FetchProfile();
+                fetchProfile.add(FetchProfile.Item.FLAGS);
+                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+                imapFolder.fetch(messages, fetchProfile);
+            }
+            return messages;
+        }
+    }
+
+    /**
+     * Get updated information about messages in the local database using UIDs.
+     *
+     * @param imapFolder The folder which contains messages.
+     * @param first      The first UID in a range.
+     * @param end        The last UID in a range.
+     * @return A list of messages which already exist in the local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] getUpdatedMessagesByUID(IMAPFolder imapFolder, long first, long end)
+            throws MessagingException {
+        if (end <= first) {
+            return new Message[]{};
+        } else {
+            Message[] messages = imapFolder.getMessagesByUID(first, end);
+
+            if (messages.length > 0) {
+                FetchProfile fetchProfile = new FetchProfile();
+                fetchProfile.add(FetchProfile.Item.FLAGS);
+                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+                imapFolder.fetch(messages, fetchProfile);
+            }
+            return messages;
+        }
+    }
+
+    /**
+     * Load messages info.
+     *
+     * @param imapFolder The folder which contains messages.
+     * @param messages   The array of {@link Message}.
+     * @return New messages from a server which not exist in a local database.
+     * @throws MessagingException for other failures.
+     */
+    public static Message[] fetchMessagesInfo(IMAPFolder imapFolder, Message[] messages) throws MessagingException {
+        if (messages.length > 0) {
+            FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(FetchProfile.Item.ENVELOPE);
+            fetchProfile.add(FetchProfile.Item.FLAGS);
+            fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
+            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+
+            imapFolder.fetch(messages, fetchProfile);
+        }
+
+        return messages;
+    }
+
+    /**
+     * Check is input messages are encrypted.
+     *
+     * @param imapFolder The localFolder which contains messages which will be checked.
+     * @param uidList    The array of messages {@link UID} values.
+     * @return {@link SparseArray} as results of the checking.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, List<Long> uidList)
+            throws MessagingException {
+        if (uidList.isEmpty()) {
+            return new LongSparseArray<>();
+        }
+
+        final UIDSet[] uidSets = UIDSet.createUIDSets(ArrayUtils.toLongArray(uidList));
+
+        if (uidSets == null || uidSets.length == 0) {
+            return new LongSparseArray<>();
+        }
+
+        return (LongSparseArray<Boolean>) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+                LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
+
+                Argument args = new Argument();
+                Argument list = new Argument();
+                list.writeString("UID");
+                list.writeString("BODY.PEEK[TEXT]<0.2048>");
+                args.writeArgument(list);
+
+                Response[] responses = imapProtocol.command(
+                        ("UID FETCH ") + UIDSet.toString(uidSets), args);
+                Response serverStatusResponse = responses[responses.length - 1];
+
+                if (serverStatusResponse.isOK()) {
+                    for (Response response : responses) {
+                        if (!(response instanceof FetchResponse))
+                            continue;
+
+                        FetchResponse fetchResponse = (FetchResponse) response;
+
+                        UID uid = fetchResponse.getItem(UID.class);
+                        if (uid != null && uid.uid != 0) {
+                            BODY body = fetchResponse.getItem(BODY.class);
+                            if (body != null && body.getByteArrayInputStream() != null) {
+                                String rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+                                booleanLongSparseArray.put(uid.uid,
+                                        rawMessage.contains("-----BEGIN PGP MESSAGE-----"));
+                            }
+                        }
+                    }
+                }
+
+                imapProtocol.notifyResponseHandlers(responses);
+                imapProtocol.handleResult(serverStatusResponse);
+
+                return booleanLongSparseArray;
+            }
+        });
+    }
+
+    /**
+     * Generate a {@link SearchTerm} for encrypted messages which depends on an input {@link AccountDao}.
+     *
+     * @param accountDao An input {@link AccountDao}
+     * @return A generated {@link SearchTerm}.
+     */
+    @NonNull
+    public static SearchTerm generateSearchTermForEncryptedMessages(AccountDao accountDao) {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            return new GmailRawSearchTerm(
+                    "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg");
+        } else {
+            return new BodyTerm("-----BEGIN PGP MESSAGE-----");
+        }
     }
 }

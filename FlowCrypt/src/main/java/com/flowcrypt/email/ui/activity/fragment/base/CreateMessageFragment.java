@@ -24,6 +24,7 @@ import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,7 +36,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -79,6 +82,7 @@ import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.RFC6068Parser;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.FlowCryptException;
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.Chip;
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
@@ -99,9 +103,9 @@ import java.util.regex.Pattern;
  * This fragment describe a logic of sent an encrypted or standard message.
  *
  * @author DenBond7
- *         Date: 10.05.2017
- *         Time: 11:27
- *         E-mail: DenBond7@gmail.com
+ * Date: 10.05.2017
+ * Time: 11:27
+ * E-mail: DenBond7@gmail.com
  */
 
 public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
@@ -144,8 +148,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private View progressBarBcc;
     private View layoutCc;
     private View layoutBcc;
-    private ImageButton imageButtonAdditionalRecipientsVisibility;
+    private LinearLayout progressBarAndButtonLayout;
     private ImageButton imageButtonAliases;
+    private View imageButtonAdditionalRecipientsVisibility;
 
     private boolean isUpdateInfoAboutContactsEnable = true;
     private boolean isUpdateInfoAboutToCompleted = true;
@@ -309,7 +314,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             case REQUEST_CODE_IMPORT_PUBLIC_KEY:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show();
                         updateRecipientsFields();
                         break;
                 }
@@ -517,7 +522,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         imageButtonAliases.setVisibility(View.INVISIBLE);
                     }
                 } else {
-                    imageButtonAliases.setVisibility(View.VISIBLE);
+                    if (serviceInfo == null || serviceInfo.isFromFieldEditEnable()) {
+                        imageButtonAliases.setVisibility(View.VISIBLE);
+                    } else {
+                        imageButtonAliases.setVisibility(View.INVISIBLE);
+                    }
                 }
 
                 new AccountAliasesDaoSource().updateAliases(getContext(), accountDao, accountAliasesDaoList);
@@ -561,7 +570,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     @Override
     public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-        notifyUserAboutErrorWhenSendMessage();
+        notifyUserAboutErrorWhenSendMessage(e);
     }
 
     @Override
@@ -580,6 +589,30 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             case R.id.editTextRecipientBcc:
                 pgpContactsBcc = runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
                         R.id.loader_id_update_info_about_pgp_contacts_bcc, hasFocus);
+                break;
+
+            case R.id.editTextEmailSubject:
+            case R.id.editTextEmailMessage:
+                if (hasFocus) {
+                    boolean isNeedToShowExpandButton = false;
+                    if (TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+                        layoutCc.setVisibility(View.GONE);
+                        isNeedToShowExpandButton = true;
+                    }
+
+                    if (TextUtils.isEmpty(editTextRecipientsBcc.getText())) {
+                        layoutBcc.setVisibility(View.GONE);
+                        isNeedToShowExpandButton = true;
+                    }
+
+                    if (isNeedToShowExpandButton) {
+                        imageButtonAdditionalRecipientsVisibility.setVisibility(View.VISIBLE);
+                        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                        layoutParams.gravity = Gravity.TOP | Gravity.END;
+                        progressBarAndButtonLayout.setLayoutParams(layoutParams);
+                    }
+                }
                 break;
         }
     }
@@ -608,28 +641,15 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                 break;
 
             case R.id.imageButtonAdditionalRecipientsVisibility:
-                int iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                if (layoutCc.getVisibility() == View.VISIBLE) {
-                    if (TextUtils.isEmpty(editTextRecipientsCc.getText())) {
-                        layoutCc.setVisibility(View.GONE);
-                        iconResources = R.mipmap.ic_arrow_drop_down_grey;
-                    }
-                } else {
-                    layoutCc.setVisibility(View.VISIBLE);
-                    iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                }
+                layoutCc.setVisibility(View.VISIBLE);
+                layoutBcc.setVisibility(View.VISIBLE);
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT);
+                layoutParams.gravity = Gravity.TOP | Gravity.END;
 
-                if (layoutBcc.getVisibility() == View.VISIBLE) {
-                    if (TextUtils.isEmpty(editTextRecipientsBcc.getText())) {
-                        layoutBcc.setVisibility(View.GONE);
-                        iconResources = R.mipmap.ic_arrow_drop_down_grey;
-                    }
-                } else {
-                    layoutBcc.setVisibility(View.VISIBLE);
-                    iconResources = R.mipmap.ic_arrow_drop_up_grey;
-                }
-
-                imageButtonAdditionalRecipientsVisibility.setImageResource(iconResources);
+                progressBarAndButtonLayout.setLayoutParams(layoutParams);
+                v.setVisibility(View.GONE);
+                editTextRecipientsCc.requestFocus();
                 break;
         }
     }
@@ -665,14 +685,23 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     /**
      * Notify the user about an error which occurred when we send a message.
+     *
+     * @param e An occurred error.
      */
-    public void notifyUserAboutErrorWhenSendMessage() {
+    public void notifyUserAboutErrorWhenSendMessage(Exception e) {
         isMessageSendingNow = false;
         if (getActivity() != null) {
             getActivity().invalidateOptionsMenu();
         }
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, getContentView());
-        showInfoSnackbar(getView(), getString(R.string.error_occurred_while_sending_message));
+
+        String errorMessage = getString(R.string.error_occurred_while_sending_message);
+
+        if (e != null && e instanceof FlowCryptException) {
+            errorMessage = e.getMessage();
+        }
+
+        showInfoSnackbar(getView(), errorMessage);
     }
 
     /**
@@ -1136,6 +1165,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         layoutAttachments = view.findViewById(R.id.layoutAttachments);
         layoutCc = view.findViewById(R.id.layoutCc);
         layoutBcc = view.findViewById(R.id.layoutBcc);
+        progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
 
         editTextRecipientsTo = view.findViewById(R.id.editTextRecipientTo);
         editTextRecipientsCc = view.findViewById(R.id.editTextRecipientCc);
@@ -1163,7 +1193,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
+        editTextEmailSubject.setOnFocusChangeListener(this);
         editTextEmailMessage = view.findViewById(R.id.editTextEmailMessage);
+        editTextEmailMessage.setOnFocusChangeListener(this);
         textInputLayoutEmailMessage = view.findViewById(R.id.textInputLayoutEmailMessage);
 
         progressBarTo = view.findViewById(R.id.progressBarTo);
@@ -1209,12 +1241,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
         //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
 
-        editTextFrom.setFocusable(serviceInfo.isFromFieldEditEnable());
-        editTextFrom.setFocusableInTouchMode(serviceInfo.isFromFieldEditEnable());
-        if (!serviceInfo.isFromFieldEditEnable()) {
-            editTextFrom.setOnClickListener(null);
-        }
-
         editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
         editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
 
@@ -1250,8 +1276,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                     Set<String> ccSet = new HashSet<>();
 
                     if (incomingMessageInfo.getTo() != null && !incomingMessageInfo.getTo().isEmpty()) {
-                        ArrayList<String> toRecipients = incomingMessageInfo.getTo();
+                        ArrayList<String> toRecipients = new ArrayList<>(incomingMessageInfo.getTo());
                         toRecipients.remove(accountDao.getEmail());
+
+                        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+                            List<AccountAliasesDao> accountAliasesDaoList =
+                                    new AccountAliasesDaoSource().getAliases(getContext(), accountDao);
+                            for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
+                                toRecipients.remove(accountAliasesDao.getSendAsEmail());
+                            }
+                        }
+
                         ccSet.addAll(toRecipients);
                     }
 

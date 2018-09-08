@@ -1,0 +1,17 @@
+<!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<resources>
+    <string-array name="notification_level_entries">
+        <item>All messages</item>
+        <item>Encrypted messages only</item>
+        <item>Never</item>
+    </string-array>
+
+    <string-array name="notification_level_encrypted_entries">
+        <item>Encrypted messages only</item>
+        <item>Never</item>
+    </string-array>
+</resources>

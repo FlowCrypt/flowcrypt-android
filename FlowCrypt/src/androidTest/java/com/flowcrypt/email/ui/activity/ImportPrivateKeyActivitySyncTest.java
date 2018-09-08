@@ -80,7 +80,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string
                     .import_private_key));
-            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_DETAILS_FROM_CLIPBOARD, (Parcelable) null);
+            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, (Parcelable) null);
             result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, true);
             return result;
         }

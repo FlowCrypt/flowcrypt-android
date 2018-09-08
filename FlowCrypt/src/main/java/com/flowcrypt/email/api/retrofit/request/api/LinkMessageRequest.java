@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel;
 
 /**
- * This class describes a request to the https://api.cryptup.io/link/message API.
+ * This class describes a request to the https://flowcrypt.com/api/link/message API.
  * <p>
  * <code>POST /link/message  {
  * "short" (<type 'str'>)  # short id of the message

@@ -4,7 +4,7 @@
   -->
 
 <resources>
-    <item name="loader_id_load_gmail_messages" type="id" />
+    <item name="loader_id_load_messages_from_cache" type="id" />
     <item name="loader_id_load_private_key_backups_from_email" type="id" />
     <item name="loader_id_encrypt_and_save_private_keys_infos" type="id" />
     <item name="loader_id_load_message_info_from_database" type="id" />
@@ -24,6 +24,8 @@
     <item name="loader_id_create_private_key" type="id" />
     <item name="loader_id_search_public_key" type="id" />
     <item name="loader_id_parse_public_keys" type="id" />
+    <item name="loader_id_change_pass_phrase" type="id" />
+    <item name="loader_id_save_backup_to_inbox" type="id" />
 
     <item name="syns_request_code_update_label_passive" type="id" />
     <item name="syns_request_code_update_label_active" type="id" />
@@ -35,9 +37,9 @@
     <item name="syns_request_delete_message" type="id" />
     <item name="syns_request_move_message_to_inbox" type="id" />
     <item name="syns_request_send_encrypted_message" type="id" />
-    <item name="syns_get_active_account" type="id" />
     <item name="syns_load_private_keys" type="id" />
     <item name="syns_send_backup_with_private_key_to_key_owner" type="id" />
+    <item name="syns_identify_encrypted_messages" type="id" />
 
     <item name="js_decrypt_message" type="id" />
     <item name="js_refresh_storage_connector" type="id" />
@@ -45,8 +47,6 @@
     <item name="viewIdProgressView" type="id" />
     <item name="viewIdStatusView" type="id" />
     <item name="viewIdTextViewStatusInfo" type="id" />
-    <item name="viewIdAddNewAccount" type="id" />
-
 
     <item name="progress_id_start_of_loading_new_messages" type="id" />
     <item name="progress_id_adding_task_to_queue" type="id" />

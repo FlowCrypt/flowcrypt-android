@@ -91,12 +91,14 @@
     <string name="download">Download</string>
     <string name="backup_as_a_file">backup as a file</string>
     <string name="backup_as_email">backup as email</string>
-    <string name="backup_as_download_hint">This will download your key as a file. Very secure option if your device is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
-    <string name="backup_as_email_hint">This will back up private key in your Email Inbox. The security depends on the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
+    <string name="backup_as_download_hint">This will download your key(s) as a file. Very secure option if your device
+        is encrypted, or if you can keep a file stored securely. If you lose both your phone and the file, your encrypted email will be unreadable, so you need to keep this file in a safe place.</string>
+    <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
+        the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
     <string name="key_successfully_saved">Key successfully saved</string>
     <string name="your_key_backup">Your %1$s Backup</string>
-    <string name="backup_was_sent_successfully">Backed up successfully</string>
+    <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
     <string name="please_wait_while_action_will_be_completed">Still working, please wait</string>
@@ -141,9 +143,9 @@
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
     <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
-    <string name="loaded_private_key_from_your_clipboard">Loaded private key from your clipboard</string>
     <string name="evaluating">Evaluating…</string>
-    <string name="key_successfully_imported">Key successfully imported</string>
+    <string name="key_successfully_imported">Key(s) successfully imported</string>
+    <string name="the_key_successfully_imported">Key successfully imported</string>
     <string name="attach_file">Attach file</string>
     <string name="switch_to_standard_email">Switch to standard email</string>
     <string name="switch_to_secure_email">Switch to secure email</string>
@@ -255,16 +257,16 @@
         <item quantity="one">Import key backup</item>
         <item quantity="other">Import key backups</item>
     </plurals>
-    <string name="enter_new_pass_phrase">Enter a new pass phrase</string>
+    <string name="enter_new_pass_phrase">Enter new pass phrase</string>
     <string name="set_pass_phrase">Set pass phrase</string>
     <string name="confirm_pass_phrase">Confirm pass phrase</string>
     <string name="use_another_pass_phrase">Use another pass phrase</string>
     <string name="repeat_pass_phrase">Repeat pass phrase</string>
-    <string name="loss_of_this_pass_phrase_cannot_be_recovered">Loss of this pass phrase cannot be recovered.</string>
+    <string name="loss_of_this_pass_phrase_cannot_be_recovered">Lost pass phrase cannot be recovered.</string>
     <string name="see_choosing_secure_pass_phrases">See choosing secure pass phrases</string>
     <string name="select_stronger_pass_phrase">Please select a stronger pass phrase. Combinations of 4 to 5 uncommon
         words are the best.</string>
-    <string name="password_quality_subtext">(average time to crack:</string>
+    <string name="password_quality_subtext">(time to crack:</string>
     <string name="password_quality_perfect">perfect</string>
     <string name="password_quality_great">great</string>
     <string name="password_quality_good">good</string>
@@ -328,5 +330,40 @@ icelanders prefer real sauna</font>
     <string name="already_imported">Already imported</string>
     <string name="success">Success</string>
     <string name="key_is_empty">The key is empty</string>
-    <string name="parse_public_keys">Parsing public keys</string>
+    <string name="parsing_public_keys">Parsing public keys</string>
+    <string name="importing_public_keys">Importing public keys</string>
+    <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
+    <string name="showing_only_encrypted_messages">Showing only encrypted messages</string>
+    <string name="showing_all_messages">Showing all messages</string>
+    <string name="no_encrypted_messages">No encrypted messages</string>
+    <string name="messages">Messages</string>
+    <string name="messages_notification_channel">The messages notification channel</string>
+    <string name="incoming_message">%1$d incoming messages</string>
+    <string name="notifications">Notifications</string>
+    <string name="manage_notifications">Manage notifications</string>
+    <string name="notification_level">Notification level</string>
+    <string name="receive_notifications_for">Receive notifications for:</string>
+    <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
+    <string name="done">Done!</string>
+    <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
+    <string name="back_up_updated_key">You should back up your updated key.</string>
+    <string name="please_wait_while_pass_phrase_will_be_changed">Changing a pass phrase, please wait</string>
+    <string name="backup_options">Backup options</string>
+    <string name="change_pass_phrase">Change pass phrase</string>
+    <string name="account_has_no_associated_keys">This account has no associated keys. Write us at %1$s if you need help</string>
+    <string name="pass_phrase_is_too_weak">Your pass phrase is too weak</string>
+    <string name="fix">fix</string>
+    <string name="different_pass_phrases">Your private keys have different pass phrases</string>
+    <plurals name="file_contains_some_amount_of_keys">
+        <item quantity="one">[%1$s]</item>
+        <item quantity="other">[%1$s] contains %2$d keys</item>
+    </plurals>
+    <plurals name="loaded_private_keys_from_clipboard">
+        <item quantity="one">Loaded private key from your clipboard</item>
+        <item quantity="other">Loaded %1$d private keys from your clipboard</item>
+    </plurals>
+    <string name="select_only_one_key">Select a source that stores only one key</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="message_cache_will_be_reloaded">%1$s. The cache will be reloaded</string>
 </resources>

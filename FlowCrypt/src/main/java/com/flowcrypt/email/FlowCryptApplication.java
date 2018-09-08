@@ -6,11 +6,14 @@
 package com.flowcrypt.email;
 
 import android.app.Application;
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.preference.PreferenceManager;
 
+import com.flowcrypt.email.jobscheduler.JobIdManager;
+import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -30,7 +33,7 @@ import org.acra.sender.HttpSender;
  *         E-mail: DenBond7@gmail.com
  */
 @ReportsCrashes(
-        formUri = "https://api.cryptup.io/help/acra",
+        formUri = "https://flowcrypt.com/api/help/acra",
         customReportContent = {
                 ReportField.ANDROID_VERSION,
                 ReportField.APP_VERSION_CODE,
@@ -73,6 +76,12 @@ public class FlowCryptApplication extends Application {
 
         intiLeakCanary();
         FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
+
+        JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        if (scheduler != null) {
+            scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
+        }
+        SyncJobService.schedule(this);
     }
 
     @Override

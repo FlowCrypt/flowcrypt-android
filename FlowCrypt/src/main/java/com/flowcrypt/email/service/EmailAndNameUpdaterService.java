@@ -5,16 +5,17 @@
 
 package com.flowcrypt.email.service;
 
-import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.v4.app.JobIntentService;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.EmailAndNamePair;
 
 import java.util.ArrayList;
 
@@ -39,30 +40,24 @@ import java.util.ArrayList;
  *         E-mail: DenBond7@gmail.com
  */
 
-public class EmailAndNameUpdaterService extends IntentService {
+public class EmailAndNameUpdaterService extends JobIntentService {
     private static final String EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID +
             ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME";
     private ContactsDaoSource contactsDaoSource;
 
     /**
-     * Creates an IntentService.
-     */
-    public EmailAndNameUpdaterService() {
-        super(EmailAndNameUpdaterService.class.getSimpleName());
-    }
-
-    /**
-     * Generate a new intent to start {@link EmailAndNameUpdaterService}.
+     * Enqueue a new task for {@link EmailAndNameUpdaterService}.
      *
      * @param context           Interface to global information about an application environment.
      * @param emailAndNamePairs A list of EmailAndNamePair objects.
-     * @return <tt>{@link Intent}</tt> which will be start {@link EmailAndNameUpdaterService}.
      */
-    public static Intent getStartIntent(Context context,
-                                        ArrayList<EmailAndNamePair> emailAndNamePairs) {
-        Intent intent = new Intent(context, EmailAndNameUpdaterService.class);
-        intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs);
-        return intent;
+    public static void enqueueWork(Context context, ArrayList<EmailAndNamePair> emailAndNamePairs) {
+        if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
+            Intent intent = new Intent(context, EmailAndNameUpdaterService.class);
+            intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs);
+
+            enqueueWork(context, EmailAndNameUpdaterService.class, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent);
+        }
     }
 
     @Override
@@ -72,8 +67,8 @@ public class EmailAndNameUpdaterService extends IntentService {
     }
 
     @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
-        if (intent != null && intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
+    protected void onHandleWork(@NonNull Intent intent) {
+        if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
             ArrayList<EmailAndNamePair> emailAndNamePairs = intent.getParcelableArrayListExtra
                     (EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME);
 

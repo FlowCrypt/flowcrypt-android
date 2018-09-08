@@ -55,15 +55,16 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
     /**
      * Generate the {@link AccountAliasesDao} from the current cursor position;
      *
-     * @param context Interface to global information about an application environment;
-     * @param cursor  The cursor from which to get the data.
+     * @param cursor The cursor from which to get the data.
      * @return {@link AccountAliasesDao}.
      */
-    public static AccountAliasesDao getCurrentAccountAliasesDao(Context context, Cursor cursor) {
+    public static AccountAliasesDao getCurrentAccountAliasesDao(Cursor cursor) {
         AccountAliasesDao accountAliasesDao = new AccountAliasesDao();
-        accountAliasesDao.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+        String accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL));
+        accountAliasesDao.setEmail(accountEmail != null ? accountEmail.toLowerCase() : null);
         accountAliasesDao.setAccountType(cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE)));
-        accountAliasesDao.setSendAsEmail(cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL)));
+        String sendAsEmail = cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL));
+        accountAliasesDao.setSendAsEmail(sendAsEmail != null ? sendAsEmail.toLowerCase() : null);
         accountAliasesDao.setDisplayName(cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)));
         accountAliasesDao.setDefault(cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1);
         accountAliasesDao.setVerificationStatus(cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS)));
@@ -128,7 +129,7 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
 
             if (cursor != null) {
                 while (cursor.moveToNext()) {
-                    accountAliasesDaoList.add(getCurrentAccountAliasesDao(context, cursor));
+                    accountAliasesDaoList.add(getCurrentAccountAliasesDao(cursor));
                 }
             }
 

@@ -14,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.gfx.ribbonizer:plugin:1.0.0'
+        classpath 'com.github.gfx.ribbonizer:ribbonizer-plugin:2.1.0'
     }
 }
 
@@ -241,7 +241,7 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }
-    implementation('com.google.apis:google-api-services-gmail:v1-rev72-1.23.0') {
+    implementation('com.google.apis:google-api-services-gmail:v1-rev86-1.23.0') {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }

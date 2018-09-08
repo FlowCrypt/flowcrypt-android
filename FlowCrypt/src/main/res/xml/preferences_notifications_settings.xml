@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <android.support.v7.preference.ListPreference
+        android:defaultValue="encrypted_messages_only"
+        android:dialogTitle="@string/receive_notifications_for"
+        android:key="@string/preferences_key_messages_notification_filter"
+        android:title="@string/notification_level" />
+
+    <android.support.v7.preference.Preference
+        android:key="@string/preferences_key_manage_notifications"
+        android:title="@string/manage_notifications" />
+</android.support.v7.preference.PreferenceScreen>

@@ -9,6 +9,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
@@ -77,6 +78,22 @@ public class ActionQueueDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Save information about an {@link Action} to the database;
+     *
+     * @param sqLiteDatabase An instance of the local database;
+     * @param action         An input {@link Action}.
+     * @return the row ID of the newly inserted row, or -1 if an error occurred;
+     */
+    public long addAction(SQLiteDatabase sqLiteDatabase, Action action) {
+        if (action != null && sqLiteDatabase != null) {
+            ContentValues contentValues = generateContentValues(action);
+            if (contentValues == null) return -1;
+
+            return sqLiteDatabase.insert(TABLE_NAME_ACTION_QUEUE, null, contentValues);
+        } else return -1;
+    }
+
+    /**
      * This method add rows per single transaction.
      *
      * @param context Interface to global information about an application environment.
@@ -107,7 +124,8 @@ public class ActionQueueDaoSource extends BaseDaoSource {
         List<Action> actions = new ArrayList<>();
         if (accountDao != null) {
             Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-                    ActionQueueDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
+                    ActionQueueDaoSource.COL_EMAIL + " = ? OR " + ActionQueueDaoSource.COL_EMAIL + " = ?",
+                    new String[]{accountDao.getEmail(), Action.USER_SYSTEM}, null);
 
             if (cursor != null) {
                 while (cursor.moveToNext()) {

@@ -9,7 +9,6 @@ import android.accounts.Account;
 import android.content.Context;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -17,6 +16,9 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.GmailScopes;
+
+import java.util.Arrays;
 
 /**
  * This class helps to work with Gmail API.
@@ -30,6 +32,7 @@ import com.google.api.services.gmail.Gmail;
 public class GmailApiHelper {
     public static final String DEFAULT_USER_ID = "me";
     public static final String MESSAGE_RESPONSE_FORMAT_RAW = "raw";
+    private static final String[] SCOPES = {GmailScopes.MAIL_GOOGLE_COM};
 
     /**
      * Generate {@link Gmail} using incoming {@link AccountDao}. The {@link} Gmail is the main point in using Gmail API.
@@ -60,8 +63,8 @@ public class GmailApiHelper {
      * @return Generated {@link GoogleAccountCredential}.
      */
     private static GoogleAccountCredential generateGoogleAccountCredential(Context context, Account account) {
-        GoogleAccountCredential googleAccountCredential = new GoogleAccountCredential(context,
-                JavaEmailConstants.OAUTH2 + GmailConstants.SCOPE_MAIL_GOOGLE_COM);
+        GoogleAccountCredential googleAccountCredential = GoogleAccountCredential
+                .usingOAuth2(context.getApplicationContext(), Arrays.asList(SCOPES));
         googleAccountCredential.setSelectedAccount(account);
 
         return googleAccountCredential;

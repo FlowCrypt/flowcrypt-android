@@ -37,10 +37,9 @@ import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
-import org.acra.ACRA;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -345,9 +344,7 @@ public class AttachmentDownloadManagerService extends Service {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                        }
+                        ExceptionUtil.handleError(e);
                         try {
                             replyMessenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED,
                                     new DownloadAttachmentTaskResult.Builder().setStartId(startId).setAttachmentInfo
@@ -381,9 +378,7 @@ public class AttachmentDownloadManagerService extends Service {
                                 downloadAttachmentTaskResult));
                     } catch (RemoteException e) {
                         e.printStackTrace();
-                        if (ACRA.isInitialised()) {
-                            ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                        }
+                        ExceptionUtil.handleError(e);
                     }
                     break;
             }
@@ -536,9 +531,7 @@ public class AttachmentDownloadManagerService extends Service {
                 store.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                if (ACRA.isInitialised()) {
-                    ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-                }
+                ExceptionUtil.handleError(e);
                 removeNotCompleteDownloadFile(attachmentFile);
                 if (onDownloadAttachmentListener != null) {
                     onDownloadAttachmentListener.onAttachmentDownloadFiled(startId, attachmentInfo, e);

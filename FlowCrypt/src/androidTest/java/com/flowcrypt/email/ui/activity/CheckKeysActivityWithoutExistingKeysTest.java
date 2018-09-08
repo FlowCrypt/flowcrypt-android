@@ -60,7 +60,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
             ArrayList<KeyDetails> privateKeys = new ArrayList<>();
             try {
                 KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-                        (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"), null,
+                        (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
                         KeyDetails.Type.EMAIL, true, null);
                 privateKeys.add(keyDetails);
             } catch (IOException e) {
