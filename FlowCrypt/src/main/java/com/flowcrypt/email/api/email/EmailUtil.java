@@ -399,9 +399,8 @@ public class EmailUtil {
     @NonNull
     public static BodyPart getBodyPartWithBackupText(Context context) throws MessagingException, IOException {
         BodyPart messageBodyPart = new MimeBodyPart();
-        messageBodyPart.setContent(IOUtils.toString(
-                context.getAssets().open(HTML_EMAIL_INTRO_TEMPLATE_HTM),
-                StandardCharsets.UTF_8), JavaEmailConstants.MIME_TYPE_TEXT_HTML);
+        messageBodyPart.setContent(GeneralUtil.removeAllCommentsInHTML(IOUtils.toString(context.getAssets()
+                .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8)), JavaEmailConstants.MIME_TYPE_TEXT_HTML);
         return messageBodyPart;
     }
 

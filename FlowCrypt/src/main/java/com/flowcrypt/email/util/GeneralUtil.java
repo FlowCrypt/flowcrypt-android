@@ -82,6 +82,16 @@ public class GeneralUtil {
     }
 
     /**
+     * Remove all comments from the given HTML {@link String}.
+     *
+     * @param text The given string.
+     * @return <tt>{@link String}</tt> which doesn't contain HTML comments.
+     */
+    public static String removeAllCommentsInHTML(String text) {
+        return TextUtils.isEmpty(text) ? text : text.replaceAll("<!--[\\s\\S]*?-->", "");
+    }
+
+    /**
      * Get a file size from his Uri.
      *
      * @param fileUri The {@link Uri} of the file.
