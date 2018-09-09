@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -63,8 +64,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
             "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity.class);
-    public static final String KEY_EXTRA_BOTTOM_TITLE = GeneralUtil.generateUniqueExtraKey(
-            "KEY_EXTRA_BOTTOM_TITLE", CheckKeysActivity.class);
+    public static final String KEY_EXTRA_SUB_TITLE = GeneralUtil.generateUniqueExtraKey(
+            "KEY_EXTRA_SUB_TITLE", CheckKeysActivity.class);
     public static final String KEY_EXTRA_POSITIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
             "KEY_EXTRA_POSITIVE_BUTTON_TITLE", CheckKeysActivity.class);
     public static final String KEY_EXTRA_NEUTRAL_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
@@ -72,18 +73,17 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     public static final String KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
             GeneralUtil.generateUniqueExtraKey(
                     "KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
-    public static final String KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
-            GeneralUtil.generateUniqueExtraKey(
-                    "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity.class);
+    public static final String KEY_EXTRA_IS_EXTRA_IMPORT_OPTION = GeneralUtil.generateUniqueExtraKey(
+            "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity.class);
 
     private ArrayList<KeyDetails> privateKeyDetailsList;
     private Map<KeyDetails, String> mapOfKeyDetailsAndLongIds;
 
     private EditText editTextKeyPassword;
-    private TextView textViewCheckKeysTitle;
+    private TextView textViewSubTitle;
     private View progressBar;
 
-    private String bottomTitle;
+    private String subTitle;
     private String positiveButtonTitle;
     private String neutralButtonTitle;
     private String negativeButtonTitle;
@@ -103,11 +103,11 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     }
 
     public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
-                                   String bottomTitle, String positiveButtonTitle,
+                                   String subTitle, String positiveButtonTitle,
                                    String neutralButtonTitle, String negativeButtonTitle, boolean isExtraImportOption) {
         Intent intent = new Intent(context, CheckKeysActivity.class);
         intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-        intent.putExtra(KEY_EXTRA_BOTTOM_TITLE, bottomTitle);
+        intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
         intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
         intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralButtonTitle);
         intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
@@ -140,7 +140,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         if (getIntent() != null) {
             this.privateKeyDetailsList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
-            this.bottomTitle = getIntent().getStringExtra(KEY_EXTRA_BOTTOM_TITLE);
+            this.subTitle = getIntent().getStringExtra(KEY_EXTRA_SUB_TITLE);
             this.positiveButtonTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
             this.neutralButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);
             this.negativeButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE);
@@ -150,7 +150,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                 this.countOfUniqueKeys = getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds);
 
                 if (!getIntent().getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
-                    removeAlreadyImportedKeys();
+                    removeAlreadyImportedKeysFromGivenList();
 
                     if (privateKeyDetailsList.size() != mapOfKeyDetailsAndLongIds.size()) {
                         this.privateKeyDetailsList = new ArrayList<>(mapOfKeyDetailsAndLongIds.keySet());
@@ -162,12 +162,12 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                                     = prepareMapFromKeyDetailsList(privateKeyDetailsList);
                             int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
 
-                            this.bottomTitle = getResources().getQuantityString(
+                            this.subTitle = getResources().getQuantityString(
                                     R.plurals.not_recovered_all_keys, remainingKeyCount,
                                     countOfUniqueKeys - remainingKeyCount, countOfUniqueKeys, remainingKeyCount);
                         }
                     } else {
-                        this.bottomTitle = getResources().getQuantityString(
+                        this.subTitle = getResources().getQuantityString(
                                 R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
                     }
                 }
@@ -231,6 +231,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -240,17 +241,17 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                         editTextKeyPassword.getText().toString());
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
         handleLoaderResult(loader, loaderResult);
     }
 
     @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
+    public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
     }
 
@@ -290,7 +291,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
                                 = prepareMapFromKeyDetailsList(privateKeyDetailsList);
                         int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
 
-                        textViewCheckKeysTitle.setText(getResources().getQuantityString(
+                        textViewSubTitle.setText(getResources().getQuantityString(
                                 R.plurals.not_recovered_all_keys, remainingKeyCount,
                                 countOfUniqueKeys - remainingKeyCount,
                                 countOfUniqueKeys, remainingKeyCount));
@@ -330,13 +331,18 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
             findViewById(R.id.imageButtonPasswordHint).setOnClickListener(this);
         }
 
-        textViewCheckKeysTitle = findViewById(R.id.textViewCheckKeysTitle);
-        if (textViewCheckKeysTitle != null) {
-            textViewCheckKeysTitle.setText(bottomTitle);
+        textViewSubTitle = findViewById(R.id.textViewSubTitle);
+        if (textViewSubTitle != null) {
+            textViewSubTitle.setText(subTitle);
         }
 
         editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
         progressBar = findViewById(R.id.progressBar);
+
+        if (getIntent().getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
+            TextView textViewTitle = findViewById(R.id.textViewTitle);
+            textViewTitle.setText(R.string.import_private_key);
+        }
     }
 
     private void initButton(int buttonViewId, int visibility, String text) {
@@ -349,7 +355,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     /**
      * Remove the already imported keys from the list of found backups.
      */
-    private void removeAlreadyImportedKeys() {
+    private void removeAlreadyImportedKeysFromGivenList() {
         Set<String> longIds = getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds);
         StorageConnectorInterface storageConnectorInterface
                 = JsForUiManager.getInstance(this).getJs().getStorageConnector();

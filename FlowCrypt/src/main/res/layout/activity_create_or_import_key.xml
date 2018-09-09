@@ -14,7 +14,7 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/textViewFirstPasswordCheckTitle"
+            android:id="@+id/textViewTitle"
             style="@style/ScreenHeading"
             android:text="@string/set_up_flow_crypt"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -31,7 +31,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
             app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
-            app:layout_constraintTop_toBottomOf="@+id/textViewFirstPasswordCheckTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/textViewTitle" />
 
         <Button
             android:id="@+id/buttonImportMyKey"
