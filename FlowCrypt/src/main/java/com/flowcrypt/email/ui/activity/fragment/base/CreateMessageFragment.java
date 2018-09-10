@@ -401,7 +401,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
             case R.id.menuActionAttachFile:
                 Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
                 startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_attachment)),
                         REQUEST_CODE_GET_CONTENT_FOR_SENDING);

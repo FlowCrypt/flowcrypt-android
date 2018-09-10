@@ -521,7 +521,7 @@ public class AttachmentDownloadManagerService extends Service {
                     if (!Thread.currentThread().isInterrupted()) {
                         if (onDownloadAttachmentListener != null) {
                             onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
-                                    FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider",
+                                    FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY,
                                             attachmentFile));
                         }
                     }

@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email;
 
+import android.support.v4.content.FileProvider;
+
 /**
  * This class contains the common constants used in the application.
  *
@@ -24,6 +26,12 @@ public class Constants {
      * The base API URL.
      */
     public static final String FLOWCRYPT_API_URL = "https://flowcrypt.com/api";
+
+    /**
+     * The authority of a {@link FileProvider} defined in a {@code <provider>} element in the app's
+     * manifest.
+     */
+    public static final String FILE_PROVIDER_AUTHORITY = BuildConfig.APPLICATION_ID + ".fileprovider";
 
     /**
      * This scope describe full access to the account, including permanent deletion of threads

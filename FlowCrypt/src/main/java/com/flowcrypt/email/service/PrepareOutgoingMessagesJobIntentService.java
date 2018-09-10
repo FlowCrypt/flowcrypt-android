@@ -11,11 +11,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.JobIntentService;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
@@ -36,9 +39,12 @@ import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +73,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     private Session session;
     private Store store;
     private AccountDao accountDao;
+    private File pgpCacheDirectory;
 
     /**
      * Enqueue a new task for {@link PrepareOutgoingMessagesJobIntentService}.
@@ -129,9 +136,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
                 if (newMessageUri != null) {
                     updateMessage(outgoingMessageInfo, rawMessage, generatedUID);
-                    addAttachmentsToCache(outgoingMessageInfo, generatedUID);
+                    addAttachmentsToCache(outgoingMessageInfo, generatedUID, pubKeys);
                 }
-            } catch (MessagingException | NoKeyAvailableException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 //todo-denbond7 need to handle this
             }
@@ -153,15 +160,57 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 JavaEmailConstants.FOLDER_OUTBOX, generatedUID, contentValues);
     }
 
-    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID) {
+    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID, String[] pubKeys)
+            throws IOException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-        attachmentDaoSource.addRows(getApplicationContext(),
-                accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
-                outgoingMessageInfo.getAttachmentInfoArrayList());
+        if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+            List<AttachmentInfo> encryptedFiles = new ArrayList<>();
+            List<AttachmentInfo> allAttachments = new ArrayList<>();
 
-        attachmentDaoSource.addRows(getApplicationContext(),
-                accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
-                outgoingMessageInfo.getForwardedAttachmentInfoList());
+            if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
+                allAttachments.addAll(outgoingMessageInfo.getAttachmentInfoArrayList());
+            }
+
+            if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+                allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
+            }
+
+            for (AttachmentInfo attachmentInfo : allAttachments) {
+                InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                if (inputStream != null) {
+                    File encryptedTempFile = generateTempFile(pgpCacheDirectory, attachmentInfo.getName());
+                    byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
+                            (inputStream), attachmentInfo.getName());
+                    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+                    attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                            Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
+                    attachmentInfo.setName(encryptedTempFile.getName());
+                    encryptedFiles.add(attachmentInfo);
+                }
+            }
+
+            attachmentDaoSource.addRows(getApplicationContext(), accountDao.getEmail(),
+                    JavaEmailConstants.FOLDER_OUTBOX, generatedUID, encryptedFiles);
+        } else {
+            attachmentDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
+                    outgoingMessageInfo.getAttachmentInfoArrayList());
+
+            attachmentDaoSource.addRows(getApplicationContext(),
+                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
+                    outgoingMessageInfo.getForwardedAttachmentInfoList());
+        }
+    }
+
+    /**
+     * Generate a temp file for IO operations.
+     *
+     * @param parentDirectory The parent directory where a new file will be created.
+     * @param fileName        The name of the created file
+     * @return Generated {@link File}
+     */
+    private File generateTempFile(File parentDirectory, String fileName) {
+        return new File(parentDirectory, fileName + ".pgp");
     }
 
     private void setupIfNeed() {
@@ -178,6 +227,16 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 store = OpenStoreHelper.openAndConnectToStore(getApplicationContext(), accountDao, session);
             } catch (MessagingException | IOException | GoogleAuthException e) {
                 e.printStackTrace();
+            }
+        }
+
+        if (pgpCacheDirectory == null) {
+            pgpCacheDirectory = new File(getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
+            if (!pgpCacheDirectory.exists()) {
+                if (!pgpCacheDirectory.mkdirs()) {
+                    throw new IllegalStateException("Create cache directory " + pgpCacheDirectory.getName() +
+                            " filed!");
+                }
             }
         }
     }
