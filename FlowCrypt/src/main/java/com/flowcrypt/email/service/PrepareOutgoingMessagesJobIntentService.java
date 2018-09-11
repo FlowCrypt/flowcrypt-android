@@ -58,9 +58,9 @@ import javax.mail.internet.MimeMessage;
  * This service creates a new outgoing message using the given {@link OutgoingMessageInfo}.
  *
  * @author DenBond7
- * Date: 22.05.2017
- * Time: 22:25
- * E-mail: DenBond7@gmail.com
+ *         Date: 22.05.2017
+ *         Time: 22:25
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
@@ -73,7 +73,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     private Session session;
     private Store store;
     private AccountDao accountDao;
-    private File pgpCacheDirectory;
+    private File attachmentsCacheDirectory;
 
     /**
      * Enqueue a new task for {@link PrepareOutgoingMessagesJobIntentService}.
@@ -130,13 +130,15 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 long generatedUID = messageDaoSource.getLastUIDOfMessageInLabel(getApplicationContext(),
                         accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX) + 1;
 
+                MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(rawMessage,
+                        StandardCharsets.UTF_8));
                 Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(),
-                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
-                        new MimeMessage(session, IOUtils.toInputStream(rawMessage, StandardCharsets.UTF_8)), false);
+                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, mimeMessage, false);
 
                 if (newMessageUri != null) {
                     updateMessage(outgoingMessageInfo, rawMessage, generatedUID);
-                    addAttachmentsToCache(outgoingMessageInfo, generatedUID, pubKeys);
+                    addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(), generatedUID,
+                            pubKeys);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -149,7 +151,6 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         ContentValues contentValues = new ContentValues();
         contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMessage);
         contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN);
-        contentValues.put(MessageDaoSource.COL_SENT_DATE, System.currentTimeMillis());
         contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS,
                 !CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
                         || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList()));
@@ -160,57 +161,64 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 JavaEmailConstants.FOLDER_OUTBOX, generatedUID, contentValues);
     }
 
-    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID, String[] pubKeys)
+    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long sentTime, long generatedUID,
+                                       String[] pubKeys)
             throws IOException {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+        File messageAttachmentCacheDirectory;
+
+        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
+                || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+            messageAttachmentCacheDirectory = new File(attachmentsCacheDirectory, String.valueOf(sentTime));
+            if (!messageAttachmentCacheDirectory.mkdir()) {
+                throw new IllegalStateException("Create cache directory " + attachmentsCacheDirectory.getName() +
+                        " filed!");
+            }
+        } else {
+            return;
+        }
+
+        List<AttachmentInfo> allAttachments = new ArrayList<>();
+        List<AttachmentInfo> cachedAttachments = new ArrayList<>();
+
+        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
+            allAttachments.addAll(outgoingMessageInfo.getAttachmentInfoArrayList());
+        }
+
+        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+            allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
+        }
+
         if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            List<AttachmentInfo> encryptedFiles = new ArrayList<>();
-            List<AttachmentInfo> allAttachments = new ArrayList<>();
-
-            if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
-                allAttachments.addAll(outgoingMessageInfo.getAttachmentInfoArrayList());
-            }
-
-            if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-                allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
-            }
-
             for (AttachmentInfo attachmentInfo : allAttachments) {
                 InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
                 if (inputStream != null) {
-                    File encryptedTempFile = generateTempFile(pgpCacheDirectory, attachmentInfo.getName());
+                    File encryptedTempFile = new File(messageAttachmentCacheDirectory,
+                            attachmentInfo.getName() + ".pgp");
                     byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
                             (inputStream), attachmentInfo.getName());
                     FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
                     attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
                             Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
                     attachmentInfo.setName(encryptedTempFile.getName());
-                    encryptedFiles.add(attachmentInfo);
+                    cachedAttachments.add(attachmentInfo);
                 }
             }
-
-            attachmentDaoSource.addRows(getApplicationContext(), accountDao.getEmail(),
-                    JavaEmailConstants.FOLDER_OUTBOX, generatedUID, encryptedFiles);
         } else {
-            attachmentDaoSource.addRows(getApplicationContext(),
-                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
-                    outgoingMessageInfo.getAttachmentInfoArrayList());
-
-            attachmentDaoSource.addRows(getApplicationContext(),
-                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID,
-                    outgoingMessageInfo.getForwardedAttachmentInfoList());
+            for (AttachmentInfo attachmentInfo : allAttachments) {
+                InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                if (inputStream != null) {
+                    File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
+                    FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
+                    attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                            Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
+                    cachedAttachments.add(attachmentInfo);
+                }
+            }
         }
-    }
 
-    /**
-     * Generate a temp file for IO operations.
-     *
-     * @param parentDirectory The parent directory where a new file will be created.
-     * @param fileName        The name of the created file
-     * @return Generated {@link File}
-     */
-    private File generateTempFile(File parentDirectory, String fileName) {
-        return new File(parentDirectory, fileName + ".pgp");
+        attachmentDaoSource.addRows(getApplicationContext(), accountDao.getEmail(),
+                JavaEmailConstants.FOLDER_OUTBOX, generatedUID, cachedAttachments);
     }
 
     private void setupIfNeed() {
@@ -230,11 +238,11 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             }
         }
 
-        if (pgpCacheDirectory == null) {
-            pgpCacheDirectory = new File(getCacheDir(), Constants.PGP_ATTACHMENTS_CACHE_DIR);
-            if (!pgpCacheDirectory.exists()) {
-                if (!pgpCacheDirectory.mkdirs()) {
-                    throw new IllegalStateException("Create cache directory " + pgpCacheDirectory.getName() +
+        if (attachmentsCacheDirectory == null) {
+            attachmentsCacheDirectory = new File(getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
+            if (!attachmentsCacheDirectory.exists()) {
+                if (!attachmentsCacheDirectory.mkdirs()) {
+                    throw new IllegalStateException("Create cache directory " + attachmentsCacheDirectory.getName() +
                             " filed!");
                 }
             }

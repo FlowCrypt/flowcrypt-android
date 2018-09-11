@@ -83,6 +83,7 @@ public class Constants {
 
     public static final String PGP_CACHE_DIR = "PGP";
     public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
+    public static final String ATTACHMENTS_CACHE_DIR = "attachments";
 
 
     /**
