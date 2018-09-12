@@ -24,10 +24,12 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -122,6 +124,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
             setupIfNeed();
 
+            updateContactsLastUseDateTime(outgoingMessageInfo);
+
             try {
                 String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
                         getPubKeys(outgoingMessageInfo) : null;
@@ -140,6 +144,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                     addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(), generatedUID,
                             pubKeys);
                 }
+
+                MessagesSenderJobService.schedule(getApplicationContext());
             } catch (Exception e) {
                 e.printStackTrace();
                 //todo-denbond7 need to handle this
@@ -187,6 +193,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
             allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
+            //need to add a logic of forwarded messages
         }
 
         if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -245,6 +252,22 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                     throw new IllegalStateException("Create cache directory " + attachmentsCacheDirectory.getName() +
                             " filed!");
                 }
+            }
+        }
+    }
+
+    /**
+     * Update the {@link ContactsDaoSource#COL_LAST_USE} field in the {@link ContactsDaoSource#TABLE_NAME_CONTACTS}.
+     *
+     * @param outgoingMessageInfo - {@link OutgoingMessageInfo} which contains information about an outgoing message.
+     */
+    private void updateContactsLastUseDateTime(OutgoingMessageInfo outgoingMessageInfo) {
+        ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+
+        for (PgpContact pgpContact : EmailUtil.getAllRecipients(outgoingMessageInfo)) {
+            int updateResult = contactsDaoSource.updateLastUseOfPgpContact(getApplicationContext(), pgpContact);
+            if (updateResult == -1) {
+                contactsDaoSource.addRow(getApplicationContext(), pgpContact);
             }
         }
     }

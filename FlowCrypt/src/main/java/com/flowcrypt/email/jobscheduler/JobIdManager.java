@@ -20,4 +20,5 @@ public class JobIdManager {
     public static final int JOB_TYPE_ACTION_QUEUE = 2;
     public static final int JOB_TYPE_EMAIL_AND_NAME_UPDATE = 3;
     public static final int JOB_TYPE_PREPARE_OUT_GOING_MESSAGE = 4;
+    public static final int JOB_TYPE_SEND_MESSAGES = 5;
 }

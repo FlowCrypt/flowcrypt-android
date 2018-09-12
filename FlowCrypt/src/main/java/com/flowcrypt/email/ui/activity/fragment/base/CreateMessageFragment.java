@@ -386,12 +386,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
                 if (isUpdateInfoAboutToCompleted && isUpdateInfoAboutCcCompleted && isUpdateInfoAboutBccCompleted) {
                     UIUtil.hideSoftInput(getContext(), getView());
-                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                        if (isAllInformationCorrect()) {
-                            sendMessage();
+                    if (isAllInformationCorrect()) {
+                        sendMessage();
+
+                        if (!GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                            UIUtil.showInfoSnackbar(getView(), getString(R.string
+                                    .internet_connection_is_not_available));
                         }
-                    } else {
-                        UIUtil.showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available));
                     }
                 } else {
                     Toast.makeText(getContext(), R.string.please_wait_while_information_about_contacts_will_be_updated,
