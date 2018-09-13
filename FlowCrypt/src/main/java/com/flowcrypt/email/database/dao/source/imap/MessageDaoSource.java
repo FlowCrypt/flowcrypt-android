@@ -489,15 +489,18 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Get all {@link Folder} objects from the database by an email.
+     * Get all messages of some folder.
      *
-     * @param email The email of the {@link Folder}.
-     * @return A  list of {@link Folder} objects.
+     * @param context Interface to global information about an application environment.
+     * @param email   The email of the {@link Folder}.
+     * @param label   The label name.
+     * @return A  list of {@link GeneralMessageDetails} objects.
      */
-    public List<GeneralMessageDetails> getMessages(Context context, String email) {
+    public List<GeneralMessageDetails> getMessages(Context context, String email, String label) {
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
-                null, COL_EMAIL + " = ?", new String[]{email}, null);
+                null, MessageDaoSource.COL_EMAIL + "= ? AND "
+                        + MessageDaoSource.COL_FOLDER + " = ?", new String[]{email, label}, null);
 
         List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 

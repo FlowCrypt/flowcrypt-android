@@ -54,6 +54,7 @@ public class JavaEmailConstants {
 
     public static final String HEADER_X_ATTACHMENT_ID = "X-Attachment-Id";
     public static final String HEADER_CONTENT_ID = "Content-ID";
+    public static final String HEADER_IN_REPLY_TO = "In-Reply-To";
     public static final String FOLDER_INBOX = "INBOX";
     public static final String FOLDER_OUTBOX = "Outbox";
     public static final String FOLDER_FLAG_HAS_NO_CHILDREN = "\\HasNoChildren";

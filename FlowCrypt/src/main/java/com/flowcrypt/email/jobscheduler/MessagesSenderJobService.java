@@ -11,39 +11,65 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
+import com.google.api.client.util.Base64;
+import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.BodyPart;
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 /**
  * @author Denis Bondarenko
- * Date: 11.09.2018
- * Time: 18:43
- * E-mail: DenBond7@gmail.com
+ *         Date: 11.09.2018
+ *         Time: 18:43
+ *         E-mail: DenBond7@gmail.com
  */
 public class MessagesSenderJobService extends JobService {
 
@@ -61,7 +87,7 @@ public class MessagesSenderJobService extends JobService {
             for (JobInfo jobInfo : scheduler.getAllPendingJobs()) {
                 if (jobInfo.getId() == JobIdManager.JOB_TYPE_SEND_MESSAGES) {
                     //skip schedule a new job if we already have another one
-                    Log.d(TAG, "A job has already scheduled! Skip to schedule a new job.");
+                    Log.d(TAG, "A job has already scheduled! Skip scheduling a new job.");
                     return;
                 }
             }
@@ -92,7 +118,7 @@ public class MessagesSenderJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
         Log.d(TAG, "onStartJob");
-        new SendMessagesJobTask(this).execute(jobParameters);
+        new SendMessagesAsyncTask(this).execute(jobParameters);
         return true;
     }
 
@@ -104,16 +130,16 @@ public class MessagesSenderJobService extends JobService {
     }
 
     /**
-     *
+     * This is an implementation of {@link AsyncTask} which sends the outgoing messages.
      */
-    private static class SendMessagesJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
+    private static class SendMessagesAsyncTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
         private final WeakReference<MessagesSenderJobService> messagesSenderJobServiceWeakReference;
 
         private Session session;
         private Store store;
         private boolean isFailed;
 
-        SendMessagesJobTask(MessagesSenderJobService messagesSenderJobService) {
+        SendMessagesAsyncTask(MessagesSenderJobService messagesSenderJobService) {
             this.messagesSenderJobServiceWeakReference = new WeakReference<>(messagesSenderJobService);
         }
 
@@ -139,13 +165,11 @@ public class MessagesSenderJobService extends JobService {
                             while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource.getMessages
                                     (context, accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX))) {
                                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
-                                MimeMessage mimeMessage = new MimeMessage(session,
-                                        IOUtils.toInputStream(generalMessageDetails.getRawMessageWithoutAttachments()
-                                                , StandardCharsets.UTF_8));
+                                boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails);
 
-                                Transport transport =
-                                        SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
-                                transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                                if (!isMessageSent) {
+                                    continue;
+                                }
 
                                 messageDaoSource.deleteMessagesByUID(context, accountDao.getEmail(),
                                         JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
@@ -186,6 +210,201 @@ public class MessagesSenderJobService extends JobService {
         protected void onProgressUpdate(Boolean... values) {
             super.onProgressUpdate(values);
             isFailed = values[0];
+        }
+
+        private boolean sendMessage(Context context, AccountDao accountDao, GeneralMessageDetails
+                generalMessageDetails) throws IOException, MessagingException, GoogleAuthException {
+            MimeMessage mimeMessage = createMimeMessage(context, session, accountDao, generalMessageDetails);
+
+            switch (accountDao.getAccountType()) {
+                case AccountDao.ACCOUNT_TYPE_GOOGLE:
+                    if (accountDao.getEmail().equalsIgnoreCase(generalMessageDetails.getFrom()[0].getAddress())) {
+                        Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+                        transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                    } else {
+                        Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        mimeMessage.writeTo(byteArrayOutputStream);
+
+                        String threadId = null;
+                        String replyMessageId = mimeMessage.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null);
+
+                        if (!TextUtils.isEmpty(replyMessageId)) {
+                            threadId = getGmailMessageThreadID(gmailApiService, replyMessageId);
+                        }
+
+                        com.google.api.services.gmail.model.Message sentMessage
+                                = new com.google.api.services.gmail.model.Message();
+                        sentMessage.setRaw(Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray()));
+
+                        if (!TextUtils.isEmpty(threadId)) {
+                            sentMessage.setThreadId(threadId);
+                        }
+
+                        sentMessage = gmailApiService
+                                .users()
+                                .messages()
+                                .send(GmailApiHelper.DEFAULT_USER_ID, sentMessage)
+                                .execute();
+
+                        if (sentMessage.getId() == null) {
+                            return false;
+                        }
+                    }
+
+                    //Gmail automatically save a copy of the sent message.
+                    break;
+
+                default:
+                    Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+                    transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+                    saveCopyOfSentMessage(accountDao, store, context, mimeMessage);
+            }
+            return true;
+        }
+
+        /**
+         * Create {@link MimeMessage} from the given {@link GeneralMessageDetails}.
+         *
+         * @param session Will be used to create {@link MimeMessage}
+         * @param context Interface to global information about an application environment.
+         * @throws IOException
+         * @throws MessagingException
+         */
+        @NonNull
+        private MimeMessage createMimeMessage(Context context, Session session, AccountDao accountDao,
+                                              GeneralMessageDetails generalMessageDetails)
+                throws IOException, MessagingException {
+            MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(generalMessageDetails
+                    .getRawMessageWithoutAttachments(), StandardCharsets.UTF_8));
+
+            List<AttachmentInfo> attachmentInfoList = new AttachmentDaoSource().getAttachmentInfoList(context,
+                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+            if (mimeMessage.getContent() instanceof MimeMultipart && !CollectionUtils.isEmpty(attachmentInfoList)) {
+                MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
+
+                for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                    BodyPart attachmentBodyPart = generateBodyPartWithAttachment(context, attachmentInfo);
+                    mimeMultipart.addBodyPart(attachmentBodyPart);
+                }
+
+                mimeMessage.setContent(mimeMultipart);
+                mimeMessage.saveChanges();
+            }
+
+            return mimeMessage;
+        }
+
+        /**
+         * Generate a {@link BodyPart} with an attachment.
+         *
+         * @param context        Interface to global information about an application environment.
+         * @param attachmentInfo The {@link AttachmentInfo} object, which contains general information about the
+         *                       attachment.
+         * @return Generated {@link MimeBodyPart} with the attachment.
+         * @throws MessagingException
+         */
+        @NonNull
+        private BodyPart generateBodyPartWithAttachment(Context context, AttachmentInfo attachmentInfo)
+                throws MessagingException {
+            MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
+            attachmentsBodyPart.setDataHandler(new DataHandler(new AttachmentInfoDataSource(context, attachmentInfo)));
+            attachmentsBodyPart.setFileName(attachmentInfo.getName());
+            attachmentsBodyPart.setContentID(attachmentInfo.getId());
+
+            return attachmentsBodyPart;
+        }
+
+        /**
+         * Retrieve a Gmail message thread id.
+         *
+         * @param service          A {@link Gmail} reference.
+         * @param rfc822msgidValue An rfc822 Message-Id value of the input message.
+         * @return The input message thread id.
+         * @throws IOException
+         */
+        private String getGmailMessageThreadID(Gmail service, String rfc822msgidValue) throws IOException {
+            ListMessagesResponse response = service.users().messages().list(GmailApiHelper.DEFAULT_USER_ID).setQ(
+                    "rfc822msgid:" + rfc822msgidValue).execute();
+
+            if (response.getMessages() != null && response.getMessages().size() == 1) {
+                return response.getMessages().get(0).getThreadId();
+            }
+
+            return null;
+        }
+
+        /**
+         * Save a copy of the sent message to the account SENT folder.
+         *
+         * @param accountDao  The object which contains information about an email account.
+         * @param store       The connected and opened {@link Store} object.
+         * @param context     Interface to global information about an application environment.
+         * @param mimeMessage The original {@link MimeMessage} which will be saved to the SENT folder.
+         * @throws MessagingException Errors can be happened when we try to save a copy of sent message.
+         */
+        private void saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context,
+                                           MimeMessage mimeMessage) throws MessagingException {
+            FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
+            com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
+
+            if (sentFolder != null) {
+                IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
+
+                if (sentImapFolder == null || !sentImapFolder.exists()) {
+                    throw new IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of " +
+                            "the sent message!");
+                }
+
+                sentImapFolder.open(Folder.READ_WRITE);
+                mimeMessage.setFlag(Flags.Flag.SEEN, true);
+                sentImapFolder.appendMessages(new Message[]{mimeMessage});
+                sentImapFolder.close(false);
+            } else {
+                throw new IllegalArgumentException("The SENT folder is not defined");
+            }
+        }
+    }
+
+    /**
+     * The {@link DataSource} realization for a file which received from {@link Uri}
+     */
+    private static class AttachmentInfoDataSource implements DataSource {
+        private AttachmentInfo attachmentInfo;
+        private Context context;
+
+        AttachmentInfoDataSource(Context context, AttachmentInfo attachmentInfo) {
+            this.attachmentInfo = attachmentInfo;
+            this.context = context;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            InputStream inputStream = attachmentInfo.getUri() == null ? (attachmentInfo.getRawData() != null ?
+                    IOUtils.toInputStream(attachmentInfo.getRawData(), StandardCharsets.UTF_8) : null) :
+                    context.getContentResolver().openInputStream(attachmentInfo.getUri());
+
+            return inputStream == null ? null : new BufferedInputStream(inputStream);
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            return null;
+        }
+
+        /**
+         * If a content type is unknown we return "application/octet-stream".
+         * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
+         */
+        @Override
+        public String getContentType() {
+            return TextUtils.isEmpty(attachmentInfo.getType()) ? "application/octet-stream" : attachmentInfo.getType();
+        }
+
+        @Override
+        public String getName() {
+            return attachmentInfo.getName();
         }
     }
 }
