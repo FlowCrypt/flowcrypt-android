@@ -857,4 +857,22 @@ public class EmailUtil {
 
         return pgpContacts.toArray(new PgpContact[0]);
     }
+
+    /**
+     * Get next {@link UID} value for the outgoing message.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The next {@link UID} value for the outgoing message.
+     */
+    public static long generateOutboxUID(Context context) {
+        long lastUid = SharedPreferencesHelper.getLong(PreferenceManager
+                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, 0);
+
+        lastUid++;
+
+        SharedPreferencesHelper.setLong(PreferenceManager
+                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, lastUid);
+
+        return lastUid;
+    }
 }

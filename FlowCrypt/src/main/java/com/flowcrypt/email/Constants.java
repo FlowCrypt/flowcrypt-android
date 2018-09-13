@@ -62,14 +62,13 @@ public class Constants {
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";
 
-    public static final String PREFERENCES_KEY_SETTINGS_SECURITY =
-            "preferences_key_settings_security";
     public static final String PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER =
             "preferences_key_messages_notification_filter";
     public static final String PREFERENCES_KEY_MANAGE_NOTIFICATIONS =
             "preferences_key_manage_notifications";
     public static final String PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE =
             "preferences_key_security_change_pass_phrase";
+    public static final String PREFERENCES_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid";
 
     /**
      * The max total size off all attachment which can be send via the app.

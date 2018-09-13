@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -131,8 +132,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         getPubKeys(outgoingMessageInfo) : null;
 
                 String rawMessage = EmailUtil.generateRawMessageWithoutAttachments(outgoingMessageInfo, js, pubKeys);
-                long generatedUID = messageDaoSource.getLastUIDOfMessageInLabel(getApplicationContext(),
-                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX) + 1;
+                long generatedUID = EmailUtil.generateOutboxUID(getApplicationContext());
 
                 MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(rawMessage,
                         StandardCharsets.UTF_8));
@@ -175,7 +175,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
                 || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-            messageAttachmentCacheDirectory = new File(attachmentsCacheDirectory, String.valueOf(sentTime));
+            messageAttachmentCacheDirectory = new File(attachmentsCacheDirectory, UUID.randomUUID().toString());
             if (!messageAttachmentCacheDirectory.mkdir()) {
                 throw new IllegalStateException("Create cache directory " + attachmentsCacheDirectory.getName() +
                         " filed!");

@@ -165,7 +165,13 @@ public class MessagesSenderJobService extends JobService {
                             while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource.getMessages
                                     (context, accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX))) {
                                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
-                                boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails);
+                                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+                                List<AttachmentInfo> attachmentInfoList =
+                                        attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+                                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                                boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails,
+                                        attachmentInfoList);
 
                                 if (!isMessageSent) {
                                     continue;
@@ -175,8 +181,25 @@ public class MessagesSenderJobService extends JobService {
                                         JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
                                                 generalMessageDetails.getUid()));
 
-                                FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
-                                        String.valueOf(generalMessageDetails.getSentDateInMillisecond())));
+                                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                                    AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
+                                    attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
+                                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                                    Uri uri = attachmentInfo.getUri();
+                                    List<String> segments = uri.getPathSegments();
+                                    int size = segments.size();
+                                    if (size <= 1) {
+                                        continue;
+                                    }
+
+                                    String attachmentFolderName = segments.get(size - 2);
+
+                                    if (!TextUtils.isEmpty(attachmentFolderName)) {
+                                        FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
+                                                attachmentFolderName));
+                                    }
+                                }
                             }
 
                             if (store != null) {
@@ -212,9 +235,11 @@ public class MessagesSenderJobService extends JobService {
             isFailed = values[0];
         }
 
-        private boolean sendMessage(Context context, AccountDao accountDao, GeneralMessageDetails
-                generalMessageDetails) throws IOException, MessagingException, GoogleAuthException {
-            MimeMessage mimeMessage = createMimeMessage(context, session, accountDao, generalMessageDetails);
+        private boolean sendMessage(Context context, AccountDao accountDao,
+                                    GeneralMessageDetails generalMessageDetails,
+                                    List<AttachmentInfo> attachmentInfoList)
+                throws IOException, MessagingException, GoogleAuthException {
+            MimeMessage mimeMessage = createMimeMessage(context, session, generalMessageDetails, attachmentInfoList);
 
             switch (accountDao.getAccountType()) {
                 case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -272,14 +297,12 @@ public class MessagesSenderJobService extends JobService {
          * @throws MessagingException
          */
         @NonNull
-        private MimeMessage createMimeMessage(Context context, Session session, AccountDao accountDao,
-                                              GeneralMessageDetails generalMessageDetails)
+        private MimeMessage createMimeMessage(Context context, Session session,
+                                              GeneralMessageDetails generalMessageDetails,
+                                              List<AttachmentInfo> attachmentInfoList)
                 throws IOException, MessagingException {
             MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(generalMessageDetails
                     .getRawMessageWithoutAttachments(), StandardCharsets.UTF_8));
-
-            List<AttachmentInfo> attachmentInfoList = new AttachmentDaoSource().getAttachmentInfoList(context,
-                    accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
             if (mimeMessage.getContent() instanceof MimeMultipart && !CollectionUtils.isEmpty(attachmentInfoList)) {
                 MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
