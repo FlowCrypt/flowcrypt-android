@@ -51,9 +51,9 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
  * the start, this fragment download user messages.
  *
  * @author DenBond7
- *         Date: 27.04.2017
- *         Time: 15:39
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.04.2017
+ * Time: 15:39
+ * E-mail: DenBond7@gmail.com
  */
 
 public class EmailListFragment extends BaseSyncFragment implements AdapterView.OnItemClickListener,
@@ -258,12 +258,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
-            cursor.moveToPosition(position);
+        Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
+        cursor.moveToPosition(position);
+        GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
 
-            GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
-
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
+                .getServerFullFolderName())
+                || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
+                || GeneralUtil.isInternetConnectionAvailable(getContext())) {
             startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
                     onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
                     REQUEST_CODE_SHOW_MESSAGE_DETAILS);
