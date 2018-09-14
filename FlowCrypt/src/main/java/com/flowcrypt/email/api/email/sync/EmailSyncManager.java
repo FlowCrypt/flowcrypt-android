@@ -29,6 +29,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
@@ -121,6 +122,10 @@ public class EmailSyncManager {
         }
 
         runIdleInboxIfNeed();
+
+        if (syncListener != null && syncListener.getContext() != null) {
+            MessagesSenderJobService.schedule(syncListener.getContext());
+        }
     }
 
     /**

@@ -12,7 +12,9 @@ import android.support.test.espresso.idling.CountingIdlingResource;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
@@ -194,6 +196,11 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         if (emailListFragment != null) {
             emailListFragment.updateList(true, false);
             updateActionProgressState(100, null);
+        }
+
+        if (getCurrentFolder() != null &&
+                JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getServerFullFolderName())) {
+            MessagesSenderJobService.schedule(getApplicationContext());
         }
     }
 
