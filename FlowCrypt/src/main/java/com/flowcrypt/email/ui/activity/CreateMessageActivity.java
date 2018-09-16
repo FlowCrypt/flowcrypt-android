@@ -176,7 +176,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     @Override
     public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
         PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
-        Toast.makeText(this, R.string.message_was_sent, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.message_will_be_sent_soon, Toast.LENGTH_SHORT).show();
         finish();
     }
 

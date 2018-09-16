@@ -115,6 +115,44 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Prepare the content values for insert to the database. This method must be called in the
+     * non-UI thread.
+     *
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param message The message which will be added to the database.
+     * @param uid     The message UID.
+     * @param isNew   true if need to mark a given message as new
+     * @return generated {@link ContentValues}
+     * @throws MessagingException This exception may be occured when we call methods of thr
+     *                            {@link Message} object</code>
+     */
+    @NonNull
+    public static ContentValues prepareContentValues(String email, String label, Message message, long uid, boolean
+            isNew) throws MessagingException {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, email);
+        contentValues.put(COL_FOLDER, label);
+        contentValues.put(COL_UID, uid);
+        if (message.getReceivedDate() != null) {
+            contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
+        }
+        if (message.getSentDate() != null) {
+            contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
+        }
+        contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(message.getFrom()));
+        contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.TO)));
+        contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.CC)));
+        contentValues.put(COL_SUBJECT, message.getSubject());
+        contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
+        contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
+        if (!message.getFlags().contains(Flags.Flag.SEEN)) {
+            contentValues.put(COL_IS_NEW, isNew);
+        }
+        return contentValues;
+    }
+
+    /**
      * Add a new message details to the database. This method must be called in the non-UI thread.
      *
      * @param context Interface to global information about an application environment.
@@ -906,41 +944,17 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
-     * Prepare the content values for insert to the database. This method must be called in the
-     * non-UI thread.
+     * Add a new message details to the database.
      *
-     * @param email   The email that the message linked.
-     * @param label   The folder label.
-     * @param message The message which will be added to the database.
-     * @param uid     The message UID.
-     * @param isNew   true if need to mark a given message as new
-     * @return generated {@link ContentValues}
-     * @throws MessagingException This exception may be occured when we call methods of thr
-     *                            {@link Message} object</code>
+     * @param context       Interface to global information about an application environment.
+     * @param contentValues {@link ContentValues} which contains information about a new message.
+     * @return A {@link Uri} of the created row.
      */
-    @NonNull
-    private ContentValues prepareContentValues(String email, String label, Message message, long uid, boolean isNew)
-            throws MessagingException {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_EMAIL, email);
-        contentValues.put(COL_FOLDER, label);
-        contentValues.put(COL_UID, uid);
-        if (message.getReceivedDate() != null) {
-            contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
-        }
-        if (message.getSentDate() != null) {
-            contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
-        }
-        contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(message.getFrom()));
-        contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.TO)));
-        contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.CC)));
-        contentValues.put(COL_SUBJECT, message.getSubject());
-        contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
-        contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-        if (!message.getFlags().contains(Flags.Flag.SEEN)) {
-            contentValues.put(COL_IS_NEW, isNew);
-        }
-        return contentValues;
+    public Uri addRow(Context context, ContentValues contentValues) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (contentValues != null && contentResolver != null) {
+            return contentResolver.insert(getBaseContentUri(), contentValues);
+        } else return null;
     }
 
     private String[] parseFlags(String string) {
@@ -956,7 +970,7 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param part The parent part.
      * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise or if an error has occurred.
      */
-    private boolean isMessageHasAttachment(Part part) {
+    private static boolean isMessageHasAttachment(Part part) {
         try {
             if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
                 Multipart multiPart = (Multipart) part.getContent();

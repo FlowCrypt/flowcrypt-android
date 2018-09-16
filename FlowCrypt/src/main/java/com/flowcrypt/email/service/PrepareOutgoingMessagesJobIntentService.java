@@ -136,13 +136,15 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
                 MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(rawMessage,
                         StandardCharsets.UTF_8));
-                Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(),
-                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, mimeMessage, false);
+
+                ContentValues contentValues = prepareContentValues(outgoingMessageInfo, generatedUID, mimeMessage,
+                        rawMessage);
+
+                Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(), contentValues);
 
                 if (newMessageUri != null) {
-                    updateMessage(outgoingMessageInfo, rawMessage, generatedUID);
-                    addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(), generatedUID,
-                            pubKeys);
+                    addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(),
+                            generatedUID, pubKeys);
                 }
 
                 MessagesSenderJobService.schedule(getApplicationContext());
@@ -153,8 +155,13 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         }
     }
 
-    private void updateMessage(OutgoingMessageInfo outgoingMessageInfo, String rawMessage, long generatedUID) {
-        ContentValues contentValues = new ContentValues();
+    @NonNull
+    private ContentValues prepareContentValues(OutgoingMessageInfo outgoingMessageInfo,
+                                               long generatedUID, MimeMessage mimeMessage, String rawMessage)
+            throws MessagingException {
+        ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
+                JavaEmailConstants.FOLDER_OUTBOX, mimeMessage, generatedUID, false);
+
         contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMessage);
         contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN);
         contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS,
@@ -163,8 +170,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
                 outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
 
-        messageDaoSource.updateMessage(getApplicationContext(), accountDao.getEmail(),
-                JavaEmailConstants.FOLDER_OUTBOX, generatedUID, contentValues);
+        return contentValues;
     }
 
     private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long sentTime, long generatedUID,
