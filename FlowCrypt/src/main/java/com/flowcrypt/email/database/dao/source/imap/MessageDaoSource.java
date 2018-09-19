@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -78,6 +79,7 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
     public static final String COL_IS_ENCRYPTED = "is_encrypted";
     public static final String COL_IS_NEW = "is_new";
+    public static final String COL_STATE = "state";
 
     public static final int ENCRYPTED_STATE_UNDEFINED = -1;
 
@@ -97,7 +99,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
             COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
             COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
-            COL_IS_NEW + " INTEGER DEFAULT 0 " + ");";
+            COL_IS_NEW + " INTEGER DEFAULT -1, " +
+            COL_STATE + " INTEGER DEFAULT -1 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -384,6 +387,23 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Update a state of some message.
+     *
+     * @param context      Interface to global information about an application environment
+     * @param email        The email that the message linked
+     * @param label        The folder label
+     * @param uid          The message UID
+     * @param messageState A new message state.
+     * @return The count of the updated row or -1 up.
+     */
+    public int updateMessageState(Context context, String email, String label, long uid, MessageState messageState) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_STATE, messageState.getValue());
+
+        return updateMessage(context, email, label, uid, contentValues);
+    }
+
+    /**
      * Mark message as seen in the local database.
      *
      * @param context Interface to global information about an application environment.
@@ -500,6 +520,8 @@ public class MessageDaoSource extends BaseDaoSource {
                 (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
         generalMessageDetails.setEncrypted(cursor.getInt(cursor.getColumnIndex
                 (COL_IS_ENCRYPTED)) == 1);
+
+        generalMessageDetails.setMessageState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
 
         try {
             String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));

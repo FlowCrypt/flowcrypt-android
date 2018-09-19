@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
@@ -169,6 +170,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList()));
         contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
                 outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
+        contentValues.put(MessageDaoSource.COL_STATE, MessageState.QUEUED.getValue());
 
         return contentValues;
     }

@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
@@ -165,40 +166,50 @@ public class MessagesSenderJobService extends JobService {
                             while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource.getMessages
                                     (context, accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX))) {
                                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
-                                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-                                List<AttachmentInfo> attachmentInfoList =
-                                        attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
-                                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+                                try {
+                                    messageDaoSource.updateMessageState(context,
+                                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                                            generalMessageDetails.getUid(), MessageState.SENDING);
+                                    AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+                                    List<AttachmentInfo> attachmentInfoList =
+                                            attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+                                                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
-                                boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails,
-                                        attachmentInfoList);
+                                    boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails,
+                                            attachmentInfoList);
 
-                                if (!isMessageSent) {
-                                    continue;
-                                }
-
-                                messageDaoSource.deleteMessagesByUID(context, accountDao.getEmail(),
-                                        JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
-                                                generalMessageDetails.getUid()));
-
-                                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                                    AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
-                                    attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
-                                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
-
-                                    Uri uri = attachmentInfo.getUri();
-                                    List<String> segments = uri.getPathSegments();
-                                    int size = segments.size();
-                                    if (size <= 1) {
+                                    if (!isMessageSent) {
                                         continue;
                                     }
 
-                                    String attachmentFolderName = segments.get(size - 2);
+                                    messageDaoSource.deleteMessagesByUID(context, accountDao.getEmail(),
+                                            JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
+                                                    generalMessageDetails.getUid()));
 
-                                    if (!TextUtils.isEmpty(attachmentFolderName)) {
-                                        FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
-                                                attachmentFolderName));
+                                    if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                                        AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
+                                        attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
+                                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                                        Uri uri = attachmentInfo.getUri();
+                                        List<String> segments = uri.getPathSegments();
+                                        int size = segments.size();
+                                        if (size <= 1) {
+                                            continue;
+                                        }
+
+                                        String attachmentFolderName = segments.get(size - 2);
+
+                                        if (!TextUtils.isEmpty(attachmentFolderName)) {
+                                            FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
+                                                    attachmentFolderName));
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    messageDaoSource.updateMessageState(context,
+                                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                                            generalMessageDetails.getUid(), MessageState.QUEUED);
                                 }
                             }
 

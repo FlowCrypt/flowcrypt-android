@@ -8,6 +8,8 @@ package com.flowcrypt.email.api.email.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.flowcrypt.email.database.MessageState;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -48,6 +50,7 @@ public class GeneralMessageDetails implements Parcelable {
     private String rawMessageWithoutAttachments;
     private boolean isMessageHasAttachment;
     private boolean isEncrypted;
+    private MessageState messageState;
 
     public GeneralMessageDetails() {
     }
@@ -66,6 +69,8 @@ public class GeneralMessageDetails implements Parcelable {
         this.rawMessageWithoutAttachments = in.readString();
         this.isMessageHasAttachment = in.readByte() != 0;
         this.isEncrypted = in.readByte() != 0;
+        int tmpMessageState = in.readInt();
+        this.messageState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
     }
 
     @Override
@@ -84,6 +89,7 @@ public class GeneralMessageDetails implements Parcelable {
                 ", rawMessageWithoutAttachments='" + rawMessageWithoutAttachments + '\'' +
                 ", isMessageHasAttachment=" + isMessageHasAttachment +
                 ", isEncrypted=" + isEncrypted +
+                ", messageState=" + messageState +
                 '}';
     }
 
@@ -104,13 +110,14 @@ public class GeneralMessageDetails implements Parcelable {
                 Arrays.equals(cc, that.cc) &&
                 Objects.equals(subject, that.subject) &&
                 Arrays.equals(flags, that.flags) &&
-                Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments);
+                Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments) &&
+                messageState == that.messageState;
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
-                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted);
+                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState);
         result = 31 * result + Arrays.hashCode(from);
         result = 31 * result + Arrays.hashCode(to);
         result = 31 * result + Arrays.hashCode(cc);
@@ -138,6 +145,7 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeString(this.rawMessageWithoutAttachments);
         dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.messageState == null ? -1 : this.messageState.ordinal());
     }
 
     public String getEmail() {
@@ -246,5 +254,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public void setEncrypted(boolean encrypted) {
         isEncrypted = encrypted;
+    }
+
+    public MessageState getMessageState() {
+        return messageState;
+    }
+
+    public void setMessageState(MessageState messageState) {
+        this.messageState = messageState;
     }
 }
