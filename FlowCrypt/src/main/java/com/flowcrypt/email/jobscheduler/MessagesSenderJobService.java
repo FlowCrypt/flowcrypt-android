@@ -31,6 +31,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -210,21 +211,27 @@ public class MessagesSenderJobService extends JobService {
                                     messageDaoSource.updateMessageState(context,
                                             generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
                                             generalMessageDetails.getUid(), MessageState.QUEUED);
+
+                                    if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+                                        publishProgress(true);
+                                        break;
+                                    }
                                 }
                             }
 
-                            if (store != null) {
+                            if (store != null && store.isConnected()) {
                                 store.close();
                             }
                         }
                     }
                 }
+
+                publishProgress(false);
             } catch (Exception e) {
                 e.printStackTrace();
                 publishProgress(true);
             }
 
-            publishProgress(false);
             return params[0];
         }
 
