@@ -591,7 +591,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
-                View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+                final View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -606,6 +606,26 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                         }
                     }
                 });
+
+                if (attachmentInfo.getUri() != null) {
+                    View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
+                    layoutAttachment.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (attachmentInfo.getUri().getLastPathSegment().endsWith(".pgp")) {
+                                imageButtonDownloadAttachment.performClick();
+                            } else {
+                                Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());
+                                intentOpenFile.setAction(Intent.ACTION_VIEW);
+                                intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
+                                    startActivity(intentOpenFile);
+                                }
+                            }
+                        }
+                    });
+                }
 
                 layoutMessageParts.addView(rootView);
             }
