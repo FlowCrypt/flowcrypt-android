@@ -430,6 +430,22 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
                         for (String label : getSortedServerFolders()) {
                             mailLabels.getSubMenu().add(label);
+                            if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
+                                MenuItem menuItem = mailLabels.getSubMenu()
+                                        .getItem(mailLabels.getSubMenu().size() - 1);
+
+                                if (foldersManager.getFolderByAlias(label).getMessageCount() > 0) {
+                                    View navigationItemWithAmount = LayoutInflater.from(this).inflate(R.layout
+                                            .navigation_view_item_with_amount, navigationView, false);
+                                    TextView textViewMessagesCount = navigationItemWithAmount.findViewById(R.id
+                                            .textViewMessageCount);
+                                    textViewMessagesCount.setText(String.valueOf(foldersManager.getFolderByAlias(label)
+                                            .getMessageCount()));
+                                    menuItem.setActionView(navigationItemWithAmount);
+                                } else {
+                                    menuItem.setActionView(null);
+                                }
+                            }
                         }
 
                         for (Folder s : foldersManager.getCustomLabels()) {

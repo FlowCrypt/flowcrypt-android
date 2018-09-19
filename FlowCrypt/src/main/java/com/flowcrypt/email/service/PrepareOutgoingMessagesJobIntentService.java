@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
@@ -146,6 +147,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 if (newMessageUri != null) {
                     addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(),
                             generatedUID, pubKeys);
+
+                    new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
+                            JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getCountOfMessagesForLabel
+                                    (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX));
                 }
 
                 MessagesSenderJobService.schedule(getApplicationContext());

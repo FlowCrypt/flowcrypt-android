@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -153,6 +154,7 @@ public class MessagesSenderJobService extends JobService {
                     Context context = messagesSenderJobServiceWeakReference.get().getApplicationContext();
                     AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(context);
                     MessageDaoSource messageDaoSource = new MessageDaoSource();
+                    ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
 
                     File attachmentsCacheDirectory = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
@@ -186,6 +188,9 @@ public class MessagesSenderJobService extends JobService {
                                     messageDaoSource.deleteMessagesByUID(context, accountDao.getEmail(),
                                             JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
                                                     generalMessageDetails.getUid()));
+
+                                    imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
+                                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
 
                                     if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                                         AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
