@@ -1236,15 +1236,20 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private void updateViewsFromIncomingMessageInfo() {
         switch (messageType) {
             case REPLY:
-                if (folderType == FoldersManager.FolderType.SENT) {
-                    editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
-                } else {
-                    editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                switch (folderType) {
+                    case SENT:
+                    case OUTBOX:
+                        editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
+                        break;
+
+                    default:
+                        editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                        break;
                 }
                 break;
 
             case REPLY_ALL:
-                if (folderType == FoldersManager.FolderType.SENT) {
+                if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
                     editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
 
                     if (incomingMessageInfo.getCc() != null && !incomingMessageInfo.getCc().isEmpty()) {
