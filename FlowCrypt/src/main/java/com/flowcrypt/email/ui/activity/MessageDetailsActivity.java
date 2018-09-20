@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -16,19 +17,28 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.google.android.gms.common.util.CollectionUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * This activity describe details of some message.
@@ -208,6 +218,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
                         new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
                                 folder.getFolderAlias(), generalMessageDetails.getUid());
+                        new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
+                                folder.getFolderAlias(), generalMessageDetails.getUid());
                         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
                         finish();
                         break;
@@ -273,21 +285,16 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onDeleteMessageClicked() {
         isBackEnable = false;
         if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
-            int deletedRows = new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
-                    folder.getFolderAlias(), generalMessageDetails.getUid());
-            if (deletedRows > 0) {
-                Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+            MessageDaoSource messageDaoSource = new MessageDaoSource();
+            GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessage(this, this
+                    .generalMessageDetails.getEmail(), this.generalMessageDetails.getLabel(), this
+                    .generalMessageDetails.getUid());
 
-                if (generalMessageDetails.isMessageHasAttachment()) {
-                    if (generalMessageDetails.isEncrypted()) {
-                        //todo-denbond7 delete encrypted files from the cache
-                    }
-
-                    new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-                            folder.getFolderAlias(), generalMessageDetails.getUid());
-                }
+            if (generalMessageDetails == null || generalMessageDetails.getMessageState() == MessageState.SENDING) {
+                Toast.makeText(this, generalMessageDetails == null ? R.string.can_not_delete_sent_message
+                        : R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_SHORT).show();
+                deleteOutgoingMessage(generalMessageDetails);
             }
 
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
@@ -307,8 +314,50 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 foldersManager.getFolderInbox(), generalMessageDetails.getUid());
     }
 
+    private void deleteOutgoingMessage(GeneralMessageDetails generalMessageDetails) {
+        int deletedRows = new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                folder.getFolderAlias(), generalMessageDetails.getUid());
+        if (deletedRows > 0) {
+            Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+
+            if (generalMessageDetails.isMessageHasAttachment()) {
+                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+
+                List<AttachmentInfo> attachmentInfoList =
+                        attachmentDaoSource.getAttachmentInfoList(this, generalMessageDetails.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                    AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
+                    new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
+                            folder.getFolderAlias(), generalMessageDetails.getUid());
+
+                    Uri uri = attachmentInfo.getUri();
+                    List<String> segments = uri.getPathSegments();
+                    int size = segments.size();
+                    if (size > 1) {
+                        String attachmentFolderName = segments.get(size - 2);
+
+                        if (!TextUtils.isEmpty(attachmentFolderName)) {
+                            try {
+                                FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
+                                        Constants.ATTACHMENTS_CACHE_DIR), attachmentFolderName));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void messageNotAvailableInFolder() {
         new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+                folder.getFolderAlias(), generalMessageDetails.getUid());
+        new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
                 folder.getFolderAlias(), generalMessageDetails.getUid());
         setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
         Toast.makeText(this, R.string.email_does_not_available_in_this_folder,

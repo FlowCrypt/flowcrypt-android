@@ -506,7 +506,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
      * @param menuId The action menu id.
      */
     private void runMessageAction(final int menuId) {
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())
+                || JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
             if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
                 isAdditionalActionEnable = false;
                 getActivity().invalidateOptionsMenu();

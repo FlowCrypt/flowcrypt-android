@@ -29,8 +29,7 @@ import com.flowcrypt.email.util.UIUtil;
  *         E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseFragment extends Fragment implements LoaderManager
-        .LoaderCallbacks<LoaderResult> {
+public abstract class BaseFragment extends Fragment implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
     private boolean isBackPressedEnable = true;
     private Snackbar snackbar;
