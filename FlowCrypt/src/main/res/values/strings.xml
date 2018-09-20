@@ -372,5 +372,6 @@ icelanders prefer real sauna</font>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
     <string name="queued">Queued</string>
+    <string name="cash_error">Cash error</string>
     <string name="can_not_delete_sending_message">Sorry. We can\'t delete a message which is sending now</string>
 </resources>

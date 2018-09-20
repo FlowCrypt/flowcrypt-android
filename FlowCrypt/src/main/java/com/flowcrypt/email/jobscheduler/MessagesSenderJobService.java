@@ -46,6 +46,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -159,15 +160,15 @@ public class MessagesSenderJobService extends JobService {
                     File attachmentsCacheDirectory = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
                     if (accountDao != null) {
-                        List<GeneralMessageDetails> generalMessageDetailsList = messageDaoSource.getMessages
-                                (context, accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX);
+                        List<GeneralMessageDetails> generalMessageDetailsList = messageDaoSource.getOutboxMessages
+                                (context, accountDao.getEmail(), MessageState.QUEUED);
 
                         if (!CollectionUtils.isEmpty(generalMessageDetailsList)) {
                             session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
                             store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
 
-                            while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource.getMessages
-                                    (context, accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX))) {
+                            while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
+                                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.QUEUED))) {
                                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
                                 try {
                                     messageDaoSource.updateMessageState(context,
@@ -213,9 +214,21 @@ public class MessagesSenderJobService extends JobService {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
+                                    MessageState newMessageState;
+
+                                    if (e.getCause() != null) {
+                                        if (e.getCause() instanceof FileNotFoundException) {
+                                            newMessageState = MessageState.CASH_ERROR;
+                                        } else {
+                                            newMessageState = MessageState.QUEUED;
+                                        }
+                                    } else {
+                                        newMessageState = MessageState.QUEUED;
+                                    }
+
                                     messageDaoSource.updateMessageState(context,
                                             generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                                            generalMessageDetails.getUid(), MessageState.QUEUED);
+                                            generalMessageDetails.getUid(), newMessageState);
 
                                     if (!GeneralUtil.isInternetConnectionAvailable(context)) {
                                         publishProgress(true);

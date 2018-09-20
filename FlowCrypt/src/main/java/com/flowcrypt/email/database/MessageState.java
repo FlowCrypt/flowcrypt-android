@@ -9,14 +9,15 @@ package com.flowcrypt.email.database;
  * This class describes the message states.
  *
  * @author Denis Bondarenko
- * Date: 16.09.2018
- * Time: 15:11
- * E-mail: DenBond7@gmail.com
+ *         Date: 16.09.2018
+ *         Time: 15:11
+ *         E-mail: DenBond7@gmail.com
  */
 public enum MessageState {
     NONE(-1),
     QUEUED(1),
-    SENDING(2);
+    SENDING(2),
+    CASH_ERROR(3);
 
     private int value;
 
