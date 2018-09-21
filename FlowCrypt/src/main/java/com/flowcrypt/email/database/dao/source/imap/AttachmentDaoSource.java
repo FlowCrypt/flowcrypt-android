@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
@@ -165,7 +166,10 @@ public class AttachmentDaoSource extends BaseDaoSource {
         attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
         attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
         attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
-        attachmentInfo.setUri(Uri.parse(cursor.getString(cursor.getColumnIndex(COL_FILE_URI))));
+        String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
+        if (!TextUtils.isEmpty(uriString)) {
+            attachmentInfo.setUri(Uri.parse(uriString));
+        }
         return attachmentInfo;
     }
 
