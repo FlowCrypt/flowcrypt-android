@@ -17,7 +17,6 @@ import android.util.Log;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -309,30 +308,6 @@ public abstract class BaseSyncActivity extends BaseActivity {
 
         Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
                 uid, 0, action);
-
-        message.replyTo = syncServiceReplyMessenger;
-        try {
-            syncServiceMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-    }
-
-    /**
-     * Send a message.
-     *
-     * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
-     *                            message.
-     */
-    public void sendMessage(int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
-        if (checkServiceBound(isBoundToSyncService)) return;
-
-        BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-                requestCode, outgoingMessageInfo);
-
-        Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE, action);
 
         message.replyTo = syncServiceReplyMessenger;
         try {

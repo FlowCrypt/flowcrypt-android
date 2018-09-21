@@ -11,7 +11,6 @@ import android.util.Log;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
@@ -23,7 +22,6 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSy
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
@@ -352,23 +350,6 @@ public class EmailSyncManager {
         try {
             activeSyncTaskBlockingQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode, sourceFolder,
                     destinationFolder, new long[]{uid}));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-    }
-
-    /**
-     * Move the message to an another folder.
-     *
-     * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
-     *                            message.
-     */
-    public void sendMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
-        try {
-            activeSyncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
         } catch (InterruptedException e) {
             e.printStackTrace();
             ExceptionUtil.handleError(e);
