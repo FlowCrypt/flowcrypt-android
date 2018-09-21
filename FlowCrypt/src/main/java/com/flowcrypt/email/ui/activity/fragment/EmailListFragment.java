@@ -51,9 +51,9 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
  * the start, this fragment download user messages.
  *
  * @author DenBond7
- * Date: 27.04.2017
- * Time: 15:39
- * E-mail: DenBond7@gmail.com
+ *         Date: 27.04.2017
+ *         Time: 15:39
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class EmailListFragment extends BaseSyncFragment implements AdapterView.OnItemClickListener,
@@ -259,18 +259,21 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
-        cursor.moveToPosition(position);
-        GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
+        if (cursor != null) {
+            cursor.moveToPosition(position);
+            GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
 
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
-                .getServerFullFolderName())
-                || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
-                || GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                    onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
-                    REQUEST_CODE_SHOW_MESSAGE_DETAILS);
-        } else {
-            showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
+            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
+                    .getServerFullFolderName())
+                    || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
+                    || GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+                        onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
+                        REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+            } else {
+                showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar
+                        .LENGTH_LONG);
+            }
         }
     }
 
