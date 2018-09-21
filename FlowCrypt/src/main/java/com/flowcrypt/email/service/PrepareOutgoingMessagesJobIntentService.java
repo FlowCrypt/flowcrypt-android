@@ -39,6 +39,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -158,6 +159,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 MessagesSenderJobService.schedule(getApplicationContext());
             } catch (Exception e) {
                 e.printStackTrace();
+                ExceptionUtil.handleError(e);
                 //todo-denbond7 need to handle this
             }
         }
