@@ -15,9 +15,10 @@ package com.flowcrypt.email.database;
  */
 public enum MessageState {
     NONE(-1),
-    QUEUED(1),
-    SENDING(2),
-    CASH_ERROR(3);
+    NEW(1),
+    QUEUED(2),
+    SENDING(3),
+    CASH_ERROR(4);
 
     private int value;
 

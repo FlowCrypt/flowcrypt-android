@@ -152,6 +152,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                                     (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX));
                 }
 
+                messageDaoSource.updateMessageState(getApplicationContext(),
+                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.QUEUED);
+
                 MessagesSenderJobService.schedule(getApplicationContext());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -174,7 +177,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList()));
         contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
                 outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
-        contentValues.put(MessageDaoSource.COL_STATE, MessageState.QUEUED.getValue());
+        contentValues.put(MessageDaoSource.COL_STATE, MessageState.NEW.getValue());
 
         return contentValues;
     }
