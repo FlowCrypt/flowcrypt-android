@@ -145,8 +145,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(), contentValues);
 
                 if (newMessageUri != null) {
-                    addAttachmentsToCache(outgoingMessageInfo, mimeMessage.getSentDate().getTime(),
-                            generatedUID, pubKeys);
+                    addAttachmentsToCache(outgoingMessageInfo, generatedUID, pubKeys);
 
                     new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
                             JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getCountOfMessagesForLabel
@@ -180,9 +179,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         return contentValues;
     }
 
-    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long sentTime, long generatedUID,
-                                       String[] pubKeys)
-            throws IOException {
+    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID, String[] pubKeys) {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
         File messageAttachmentCacheDirectory;
 
@@ -204,35 +201,44 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             allAttachments.addAll(outgoingMessageInfo.getAttachmentInfoArrayList());
         }
 
-        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+        //Temporary disabled sending forwarded attachments
+        /*if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
             allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
             //need to add a logic of forwarded messages
-        }
+        }*/
 
         if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             for (AttachmentInfo attachmentInfo : allAttachments) {
-                InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
-                if (inputStream != null) {
-                    File encryptedTempFile = new File(messageAttachmentCacheDirectory,
-                            attachmentInfo.getName() + ".pgp");
-                    byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
-                            (inputStream), attachmentInfo.getName());
-                    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-                    attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
-                            Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
-                    attachmentInfo.setName(encryptedTempFile.getName());
-                    cachedAttachments.add(attachmentInfo);
+                try {
+                    InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                    if (inputStream != null) {
+                        File encryptedTempFile = new File(messageAttachmentCacheDirectory,
+                                attachmentInfo.getName() + ".pgp");
+                        byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
+                                (inputStream), attachmentInfo.getName());
+                        FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+                        attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                                Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
+                        attachmentInfo.setName(encryptedTempFile.getName());
+                        cachedAttachments.add(attachmentInfo);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         } else {
             for (AttachmentInfo attachmentInfo : allAttachments) {
-                InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
-                if (inputStream != null) {
-                    File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
-                    FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
-                    attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
-                            Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
-                    cachedAttachments.add(attachmentInfo);
+                try {
+                    InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                    if (inputStream != null) {
+                        File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
+                        FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
+                        attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                                Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
+                        cachedAttachments.add(attachmentInfo);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }

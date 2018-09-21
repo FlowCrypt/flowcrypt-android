@@ -1521,7 +1521,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         ArrayList<AttachmentInfo> forwardedAttachmentInfoList = new ArrayList<>();
 
         for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-            if (attachmentInfo.getId() != null) {
+            if (attachmentInfo.getId() != null && attachmentInfo.isForwarded()) {
                 forwardedAttachmentInfoList.add(attachmentInfo);
             }
         }

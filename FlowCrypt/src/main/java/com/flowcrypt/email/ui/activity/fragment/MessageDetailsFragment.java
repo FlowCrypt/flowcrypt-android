@@ -257,6 +257,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
                             Toast.LENGTH_LONG).show();
                 } else {
+                    for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                        attachmentInfo.setForwarded(true);
+                    }
+
                     incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
                 }
                 startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
