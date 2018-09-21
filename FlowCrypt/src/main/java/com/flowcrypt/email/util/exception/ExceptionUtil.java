@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util.exception;
 
+import android.text.TextUtils;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -69,13 +71,15 @@ public class ExceptionUtil {
         if ((e instanceof SSLHandshakeException
                 || e instanceof SSLProtocolException
                 || e instanceof MessagingException)) {
-            if (e.getMessage().contains("Connection closed by peer")
-                    || e.getMessage().contains("I/O error during system call")
-                    || e.getMessage().contains("Failure in SSL library, usually a protocol error")
-                    || e.getMessage().contains("Handshake failed")
-                    || e.getMessage().contains("Exception reading response")
-                    || e.getMessage().contains("connection failure")) {
-                return false;
+            if (!TextUtils.isEmpty(e.getMessage())) {
+                if (e.getMessage().contains("Connection closed by peer")
+                        || e.getMessage().contains("I/O error during system call")
+                        || e.getMessage().contains("Failure in SSL library, usually a protocol error")
+                        || e.getMessage().contains("Handshake failed")
+                        || e.getMessage().contains("Exception reading response")
+                        || e.getMessage().contains("connection failure")) {
+                    return false;
+                }
             }
         }
 
