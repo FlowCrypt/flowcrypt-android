@@ -67,6 +67,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyD
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -175,7 +176,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                             attachmentInfoList = data.getParcelableArrayListExtra
                                     (PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
-                            if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
+                            if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                                     attachmentInfo.setCanBeDeleted(false);
                                 }
@@ -257,8 +258,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
                             Toast.LENGTH_LONG).show();
                 } else {
-                    for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                        attachmentInfo.setForwarded(true);
+                    if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                        for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                            attachmentInfo.setForwarded(true);
+                        }
                     }
 
                     //incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);

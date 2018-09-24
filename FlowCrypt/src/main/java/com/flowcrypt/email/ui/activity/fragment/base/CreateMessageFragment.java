@@ -1246,6 +1246,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
                         break;
                 }
+
+                if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+                    editTextEmailMessage.requestFocus();
+                }
                 break;
 
             case REPLY_ALL:
@@ -1286,6 +1290,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         layoutCc.setVisibility(View.VISIBLE);
                         editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
                     }
+                }
+
+                if (!TextUtils.isEmpty(editTextRecipientsTo.getText())
+                        || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+                    editTextEmailMessage.requestFocus();
                 }
                 break;
 
