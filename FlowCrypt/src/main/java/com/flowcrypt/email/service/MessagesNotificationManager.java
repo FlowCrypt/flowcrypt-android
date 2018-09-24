@@ -15,7 +15,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
@@ -39,6 +38,7 @@ import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -322,8 +322,15 @@ public class MessagesNotificationManager extends CustomNotificationManager {
         intent.setAction(MarkMessagesAsOldBroadcastReceiver.ACTION_MARK_MESSAGES_AS_OLD);
         intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, accountDao.getEmail());
         intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.getFolderAlias());
-        intent.putParcelableArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST,
-                (ArrayList<? extends Parcelable>) generalMessageDetailsList);
+
+        if (!CollectionUtils.isEmpty(generalMessageDetailsList)) {
+            ArrayList<String> uidList = new ArrayList<>();
+            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                uidList.add(String.valueOf(generalMessageDetails.getUid()));
+            }
+            intent.putStringArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST, uidList);
+        }
+
         return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
