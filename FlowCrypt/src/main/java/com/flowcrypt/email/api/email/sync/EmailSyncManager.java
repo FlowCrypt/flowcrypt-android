@@ -196,7 +196,6 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -231,7 +230,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder, start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -249,7 +247,6 @@ public class EmailSyncManager {
             passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -269,7 +266,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode, folder, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -308,7 +304,6 @@ public class EmailSyncManager {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -331,7 +326,6 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -352,7 +346,6 @@ public class EmailSyncManager {
                     destinationFolder, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -367,7 +360,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -382,7 +374,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -400,7 +391,6 @@ public class EmailSyncManager {
                     requestCode, localFolder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -431,7 +421,6 @@ public class EmailSyncManager {
                     folder, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
