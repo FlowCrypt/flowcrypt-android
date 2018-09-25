@@ -101,7 +101,11 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
 
                             if (uri != null) {
                                 acceptedKeysList.add(keyDetails);
-                                new UserIdEmailsKeysDaoSource().addRows(getContext(), pairs);
+                                UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
+
+                                for (Pair<String, String> pair : pairs) {
+                                    userIdEmailsKeysDaoSource.addRow(getContext(), pair.first, pair.second);
+                                }
                             }
                         } else if (privateKeyDetailsList.size() == 1) {
                             return new LoaderResult(null,
