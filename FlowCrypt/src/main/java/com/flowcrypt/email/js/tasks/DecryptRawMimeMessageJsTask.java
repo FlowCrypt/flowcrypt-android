@@ -52,7 +52,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
     }
 
     @Override
-    public void runAction(Js js, JsListener jsListener) throws Exception {
+    public void runAction(Js js, JsListener jsListener) {
         IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
         if (rawMimeMessage != null) {
             ProcessedMime processedMime = js.mime_process(rawMimeMessage);
@@ -76,10 +76,14 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             incomingMessageInfo.setTo(addressesTo);
             incomingMessageInfo.setCc(addressesCc);
             incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
-            incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
             incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMimeMessage);
             incomingMessageInfo.setMessageParts(getMessagePartsFromProcessedMime(jsListener.getContext(), js,
                     processedMime));
+
+            long timestamp = processedMime.getTimeHeader("date");
+            if (timestamp != -1) {
+                incomingMessageInfo.setReceiveDate(new Date(timestamp));
+            }
 
             MimeMessage mimeMessage = js.mime_decode(rawMimeMessage);
 

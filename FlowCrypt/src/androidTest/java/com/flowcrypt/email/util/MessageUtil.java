@@ -45,8 +45,12 @@ public class MessageUtil {
         incomingMessageInfo.setTo(addressesTo);
         incomingMessageInfo.setCc(addressesCc);
         incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
-        incomingMessageInfo.setReceiveDate(new Date(processedMime.getTimeHeader("date")));
         incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
+
+        long timestamp = processedMime.getTimeHeader("date");
+        if (timestamp != -1) {
+            incomingMessageInfo.setReceiveDate(new Date(timestamp));
+        }
 
         return incomingMessageInfo;
     }
