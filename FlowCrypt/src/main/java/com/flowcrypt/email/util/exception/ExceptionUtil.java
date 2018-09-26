@@ -51,6 +51,7 @@ public class ExceptionUtil {
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
                 || (e instanceof ConnectionException)
+                || (e instanceof java.net.ConnectException)
                 || (e instanceof UserRecoverableAuthException)
                 || (e instanceof AuthenticationFailedException)
                 || (e instanceof UserRecoverableAuthIOException)
