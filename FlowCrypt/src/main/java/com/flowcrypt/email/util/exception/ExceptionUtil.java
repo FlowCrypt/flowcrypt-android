@@ -12,6 +12,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.smtp.SMTPSendFailedException;
 import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
@@ -46,6 +47,7 @@ public class ExceptionUtil {
      */
     public static boolean isErrorHandleWithACRA(Exception e) {
         if ((e instanceof MailConnectException)
+                || (e instanceof SMTPSendFailedException)
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
                 || (e instanceof ConnectionException)
