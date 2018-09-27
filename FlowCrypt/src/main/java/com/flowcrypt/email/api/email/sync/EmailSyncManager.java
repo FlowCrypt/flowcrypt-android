@@ -401,8 +401,12 @@ public class EmailSyncManager {
 
     public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
-        this.isIdleSupport = true;
-        beginSync(true);
+        if (accountDao != null) {
+            this.isIdleSupport = true;
+            beginSync(true);
+        } else {
+            stopSync();
+        }
     }
 
     /**

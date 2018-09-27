@@ -240,15 +240,17 @@ public class AccountDaoSource extends BaseDaoSource {
         Cursor cursor = context.getContentResolver().query(
                 getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE + " = ?", new String[]{"1"}, null);
 
+        AccountDao accountDao = null;
+
         if (cursor != null && cursor.moveToFirst()) {
-            return getCurrentAccountDao(context, cursor);
+            accountDao = getCurrentAccountDao(context, cursor);
         }
 
         if (cursor != null) {
             cursor.close();
         }
 
-        return null;
+        return accountDao;
     }
 
     /**
