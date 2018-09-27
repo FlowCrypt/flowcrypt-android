@@ -35,6 +35,7 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
+import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.util.MailConnectException;
 
@@ -536,9 +537,10 @@ public class EmailSyncManager {
         /**
          * Run the incoming {@link SyncTask}
          *
-         * @param syncTask The incoming {@link SyncTask}
+         * @param isRetryEnabled true if want to retry a task if it was fail
+         * @param syncTask       The incoming {@link SyncTask}
          */
-        void runSyncTask(SyncTask syncTask) {
+        void runSyncTask(SyncTask syncTask, boolean isRetryEnabled) {
             try {
                 notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
                         R.id.progress_id_running_task);
@@ -568,8 +570,17 @@ public class EmailSyncManager {
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                ExceptionUtil.handleError(e);
-                syncTask.handleException(accountDao, e, syncListener);
+                if (e instanceof ConnectionException) {
+                    if (isRetryEnabled) {
+                        runSyncTask(syncTask, false);
+                    } else {
+                        ExceptionUtil.handleError(e);
+                        syncTask.handleException(accountDao, e, syncListener);
+                    }
+                } else {
+                    ExceptionUtil.handleError(e);
+                    syncTask.handleException(accountDao, e, syncListener);
+                }
             }
         }
 
@@ -624,7 +635,7 @@ public class EmailSyncManager {
 
                     runIdleInboxIfNeed();
 
-                    runSyncTask(syncTask);
+                    runSyncTask(syncTask, true);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -648,7 +659,7 @@ public class EmailSyncManager {
                     runIdleInboxIfNeed();
 
                     if (syncTask != null) {
-                        runSyncTask(syncTask);
+                        runSyncTask(syncTask, true);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
