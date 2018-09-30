@@ -136,6 +136,10 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
                     for (Message message : foundMessages) {
                         String backup = EmailUtil.getKeyFromMessageIfItExists(message);
 
+                        if (TextUtils.isEmpty(backup)) {
+                            continue;
+                        }
+
                         MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
 
                         for (MessageBlock messageBlock : messageBlocks) {

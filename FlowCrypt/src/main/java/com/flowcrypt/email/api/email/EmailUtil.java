@@ -354,6 +354,10 @@ public class EmailUtil {
 
             String backup = getKeyFromMessageIfItExists(mimeMessage);
 
+            if (TextUtils.isEmpty(backup)) {
+                continue;
+            }
+
             MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
 
             for (MessageBlock messageBlock : messageBlocks) {

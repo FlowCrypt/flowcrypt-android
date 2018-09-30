@@ -115,6 +115,11 @@ public class ParsePublicKeysFromStringAsyncTaskLoader extends AsyncTaskLoader<Lo
 
     private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String publicKey) {
         List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
+
+        if (TextUtils.isEmpty(publicKey)) {
+            return publicKeyInfoList;
+        }
+
         Set<String> emails = new HashSet<>();
         MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(publicKey);
         for (MessageBlock messageBlock : messageBlocks) {
