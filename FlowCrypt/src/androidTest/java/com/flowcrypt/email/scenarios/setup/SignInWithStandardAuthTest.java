@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.scenarios.setup;
 
+import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.LargeTest;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
