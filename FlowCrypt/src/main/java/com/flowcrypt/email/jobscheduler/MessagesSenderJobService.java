@@ -52,7 +52,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 
 import javax.activation.DataHandler;
@@ -160,86 +159,30 @@ public class MessagesSenderJobService extends JobService {
                     File attachmentsCacheDirectory = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
                     if (accountDao != null) {
-                        List<GeneralMessageDetails> generalMessageDetailsList = messageDaoSource.getOutboxMessages
+                        List<GeneralMessageDetails> listOfQueuedMessages = messageDaoSource.getOutboxMessages
                                 (context, accountDao.getEmail(), MessageState.QUEUED);
 
-                        if (!CollectionUtils.isEmpty(generalMessageDetailsList)) {
+                        List<GeneralMessageDetails> listOfSentButNotSavedMessages = messageDaoSource.getOutboxMessages
+                                (context, accountDao.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY);
+
+                        if (!CollectionUtils.isEmpty(listOfQueuedMessages)
+                                || !CollectionUtils.isEmpty(listOfSentButNotSavedMessages)) {
                             session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
                             store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+                        }
 
-                            while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
-                                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.QUEUED))) {
-                                GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
-                                try {
-                                    messageDaoSource.updateMessageState(context,
-                                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                                            generalMessageDetails.getUid(), MessageState.SENDING);
-                                    AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-                                    List<AttachmentInfo> attachmentInfoList =
-                                            attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
-                                                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+                        if (!CollectionUtils.isEmpty(listOfQueuedMessages)) {
+                            sendQueuedMessages(context, accountDao, messageDaoSource, imapLabelsDaoSource,
+                                    attachmentsCacheDirectory);
+                        }
 
-                                    boolean isMessageSent = sendMessage(context, accountDao, generalMessageDetails,
-                                            attachmentInfoList);
+                        if (!CollectionUtils.isEmpty(listOfSentButNotSavedMessages)) {
+                            saveCopyOfAlreadySentMessages(context, accountDao, messageDaoSource, imapLabelsDaoSource,
+                                    attachmentsCacheDirectory);
+                        }
 
-                                    if (!isMessageSent) {
-                                        continue;
-                                    }
-
-                                    messageDaoSource.deleteMessagesByUID(context, accountDao.getEmail(),
-                                            JavaEmailConstants.FOLDER_OUTBOX, Collections.singletonList((long)
-                                                    generalMessageDetails.getUid()));
-
-                                    imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
-                                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
-
-                                    if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                                        AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
-                                        attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
-                                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
-
-                                        Uri uri = attachmentInfo.getUri();
-                                        List<String> segments = uri.getPathSegments();
-                                        int size = segments.size();
-                                        if (size <= 1) {
-                                            continue;
-                                        }
-
-                                        String attachmentFolderName = segments.get(size - 2);
-
-                                        if (!TextUtils.isEmpty(attachmentFolderName)) {
-                                            FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
-                                                    attachmentFolderName));
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    MessageState newMessageState;
-
-                                    if (e.getCause() != null) {
-                                        if (e.getCause() instanceof FileNotFoundException) {
-                                            newMessageState = MessageState.CASH_ERROR;
-                                        } else {
-                                            newMessageState = MessageState.QUEUED;
-                                        }
-                                    } else {
-                                        newMessageState = MessageState.QUEUED;
-                                    }
-
-                                    messageDaoSource.updateMessageState(context,
-                                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                                            generalMessageDetails.getUid(), newMessageState);
-
-                                    if (!GeneralUtil.isInternetConnectionAvailable(context)) {
-                                        publishProgress(true);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (store != null && store.isConnected()) {
-                                store.close();
-                            }
+                        if (store != null && store.isConnected()) {
+                            store.close();
                         }
                     }
                 }
@@ -271,8 +214,157 @@ public class MessagesSenderJobService extends JobService {
             isFailed = values[0];
         }
 
+        private void sendQueuedMessages(Context context, AccountDao accountDao, MessageDaoSource messageDaoSource,
+                                        ImapLabelsDaoSource imapLabelsDaoSource, File attachmentsCacheDirectory) {
+            List<GeneralMessageDetails> generalMessageDetailsList;
+            while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
+                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.QUEUED))) {
+                GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
+                try {
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), MessageState.SENDING);
+                    AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+                    List<AttachmentInfo> attachmentInfoList =
+                            attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+                                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                    boolean isMessageSent = sendMessage(context, accountDao, messageDaoSource,
+                            generalMessageDetails, attachmentInfoList);
+
+                    if (!isMessageSent) {
+                        continue;
+                    }
+
+                    generalMessageDetails = messageDaoSource.getMessage(context, accountDao.getEmail(),
+                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                    if (generalMessageDetails.getMessageState() == MessageState.SENT) {
+                        messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                        if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                            deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
+                                    generalMessageDetails, attachmentDaoSource, attachmentInfoList);
+                        }
+
+                        imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    MessageState newMessageState;
+
+                    if (e.getCause() != null) {
+                        if (e.getCause() instanceof FileNotFoundException) {
+                            newMessageState = MessageState.CASH_ERROR;
+                        } else {
+                            newMessageState = MessageState.QUEUED;
+                        }
+                    } else {
+                        newMessageState = MessageState.QUEUED;
+                    }
+
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), newMessageState);
+
+                    if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+                        publishProgress(true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void saveCopyOfAlreadySentMessages(Context context, AccountDao accountDao,
+                                                   MessageDaoSource messageDaoSource,
+                                                   ImapLabelsDaoSource imapLabelsDaoSource,
+                                                   File attachmentsCacheDirectory) {
+            List<GeneralMessageDetails> generalMessageDetailsList;
+
+            while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
+                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY))) {
+                GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
+                try {
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), MessageState.SENDING);
+                    AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+                    List<AttachmentInfo> attachmentInfoList =
+                            attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+                                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                    MimeMessage mimeMessage = createMimeMessage(context, session,
+                            generalMessageDetails, attachmentInfoList);
+                    boolean isMessageSavedInSentFolder = saveCopyOfSentMessage(accountDao, store, context, mimeMessage);
+
+                    if (!isMessageSavedInSentFolder) {
+                        continue;
+                    }
+
+                    messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                    if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                        deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
+                                generalMessageDetails, attachmentDaoSource, attachmentInfoList);
+                    }
+
+                    imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
+                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+
+                    if (e.getCause() != null) {
+                        if (e.getCause() instanceof FileNotFoundException) {
+                            messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+                                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+                        } else {
+                            messageDaoSource.updateMessageState(context,
+                                    generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                                    generalMessageDetails.getUid(), MessageState.SENT_WITHOUT_LOCAL_COPY);
+                        }
+                    } else {
+                        messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+                    }
+
+                    if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+                        publishProgress(true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void deleteMessageAttachments(Context context, AccountDao accountDao, File
+                attachmentsCacheDirectory, GeneralMessageDetails generalMessageDetails, AttachmentDaoSource
+                                                      attachmentDaoSource, List<AttachmentInfo> attachmentInfoList)
+                throws IOException {
+            AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
+            attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
+                    JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+            Uri uri = attachmentInfo.getUri();
+            List<String> segments = uri.getPathSegments();
+            int size = segments.size();
+
+            if (size <= 1) {
+                return;
+            }
+
+            String attachmentFolderName = segments.get(size - 2);
+
+            if (!TextUtils.isEmpty(attachmentFolderName)) {
+                FileAndDirectoryUtils.deleteDirectory(new File
+                        (attachmentsCacheDirectory,
+                                attachmentFolderName));
+            }
+        }
+
         private boolean sendMessage(Context context, AccountDao accountDao,
-                                    GeneralMessageDetails generalMessageDetails,
+                                    MessageDaoSource messageDaoSource, GeneralMessageDetails generalMessageDetails,
                                     List<AttachmentInfo> attachmentInfoList)
                 throws IOException, MessagingException, GoogleAuthException {
             MimeMessage mimeMessage = createMimeMessage(context, session, generalMessageDetails, attachmentInfoList);
@@ -313,14 +405,37 @@ public class MessagesSenderJobService extends JobService {
                         }
                     }
 
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), MessageState.SENT);
+
                     //Gmail automatically save a copy of the sent message.
                     break;
 
+                case AccountDao.ACCOUNT_TYPE_OUTLOOK:
+                    Transport outlookTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+                    outlookTransport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), MessageState.SENT);
+                    break;
+
                 default:
-                    Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
-                    transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
-                    saveCopyOfSentMessage(accountDao, store, context, mimeMessage);
+                    Transport defaultTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+                    defaultTransport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
+
+                    messageDaoSource.updateMessageState(context,
+                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            generalMessageDetails.getUid(), MessageState.SENT_WITHOUT_LOCAL_COPY);
+
+                    if (saveCopyOfSentMessage(accountDao, store, context, mimeMessage)) {
+                        messageDaoSource.updateMessageState(context,
+                                generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                                generalMessageDetails.getUid(), MessageState.SENT);
+                    }
             }
+
             return true;
         }
 
@@ -401,28 +516,34 @@ public class MessagesSenderJobService extends JobService {
          * @param store       The connected and opened {@link Store} object.
          * @param context     Interface to global information about an application environment.
          * @param mimeMessage The original {@link MimeMessage} which will be saved to the SENT folder.
-         * @throws MessagingException Errors can be happened when we try to save a copy of sent message.
          */
-        private void saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context,
-                                           MimeMessage mimeMessage) throws MessagingException {
+        private boolean saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context,
+                                              MimeMessage mimeMessage) {
             FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
             com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
 
-            if (sentFolder != null) {
-                IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
+            try {
+                if (sentFolder != null) {
+                    IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
 
-                if (sentImapFolder == null || !sentImapFolder.exists()) {
-                    throw new IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of " +
-                            "the sent message!");
+                    if (sentImapFolder == null || !sentImapFolder.exists()) {
+                        throw new IllegalArgumentException("The SENT folder doesn't exists. Can't create a " +
+                                "copy of the sent message!");
+                    }
+
+                    sentImapFolder.open(Folder.READ_WRITE);
+                    mimeMessage.setFlag(Flags.Flag.SEEN, true);
+                    sentImapFolder.appendMessages(new Message[]{mimeMessage});
+                    sentImapFolder.close(false);
+                    return true;
+                } else {
+                    throw new IllegalArgumentException("The SENT folder is not defined");
                 }
-
-                sentImapFolder.open(Folder.READ_WRITE);
-                mimeMessage.setFlag(Flags.Flag.SEEN, true);
-                sentImapFolder.appendMessages(new Message[]{mimeMessage});
-                sentImapFolder.close(false);
-            } else {
-                throw new IllegalArgumentException("The SENT folder is not defined");
+            } catch (MessagingException e) {
+                e.printStackTrace();
             }
+
+            return false;
         }
     }
 

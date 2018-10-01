@@ -41,9 +41,9 @@ import javax.mail.internet.InternetAddress;
  * The MessageListAdapter responsible for displaying the message in the list.
  *
  * @author DenBond7
- * Date: 28.04.2017
- * Time: 10:29
- * E-mail: DenBond7@gmail.com
+ *         Date: 28.04.2017
+ *         Time: 10:29
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class MessageListAdapter extends CursorAdapter {
@@ -229,7 +229,7 @@ public class MessageListAdapter extends CursorAdapter {
 
     private CharSequence generateOutboxStatus(Context context, MessageState messageState) {
         String me = context.getString(R.string.me);
-        String state = "";
+        String state;
         int stateTextColor = ContextCompat.getColor(context, R.color.red);
 
         switch (messageState) {
@@ -251,6 +251,10 @@ public class MessageListAdapter extends CursorAdapter {
             case CASH_ERROR:
                 state = context.getString(R.string.cash_error);
                 stateTextColor = ContextCompat.getColor(context, R.color.red);
+                break;
+
+            default:
+                state = "";
                 break;
 
         }
