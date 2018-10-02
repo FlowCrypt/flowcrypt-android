@@ -40,7 +40,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
 
         checkRightHeader();
         typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
+        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -52,9 +52,6 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
         checkRightHeader();
         typeAndCheckPrivateKeyPassword("password");
         onView(withText(R.string.password_is_incorrect)).check(matches(isDisplayed()));
-
-        typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
     }
 
     @Test
@@ -81,7 +78,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
         onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
         onView(withText(R.string.use_existing_keys)).perform(click());
 
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
+        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
     }
 
     private void typeAndCheckPrivateKeyPassword(String password) {
