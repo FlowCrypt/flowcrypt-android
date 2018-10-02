@@ -46,6 +46,8 @@ import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 
+import javax.mail.AuthenticationFailedException;
+
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
  * the start, this fragment download user messages.
@@ -433,8 +435,15 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case R.id.syns_request_code_update_label_passive:
             case R.id.syns_request_code_update_label_active:
                 if (onManageEmailsListener.getCurrentFolder() == null) {
-                    super.onErrorOccurred(requestCode, errorType,
-                            new Exception(getString(R.string.failed_load_labels_from_email_server)));
+                    String errorMessage = getString(R.string.failed_load_labels_from_email_server);
+
+                    if (e instanceof AuthenticationFailedException) {
+                        if (getString(R.string.gmail_imap_disabled_error).equalsIgnoreCase(e.getMessage())) {
+                            errorMessage = getString(R.string.it_seems_imap_access_is_disabled);
+                        }
+                    }
+
+                    super.onErrorOccurred(requestCode, errorType, new Exception(errorMessage));
                     setSupportActionBarTitle(null);
                 }
                 break;
