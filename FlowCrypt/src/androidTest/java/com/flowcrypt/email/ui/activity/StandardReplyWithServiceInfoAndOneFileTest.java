@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -57,9 +58,9 @@ import static org.hamcrest.Matchers.not;
  * This class tests a case when we want to send a reply with {@link ServiceInfo}
  *
  * @author Denis Bondarenko
- * Date: 14.05.2018
- * Time: 16:34
- * E-mail: DenBond7@gmail.com
+ *         Date: 14.05.2018
+ *         Time: 16:34
+ *         E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
@@ -118,9 +119,8 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
 
     @Test
     public void testFrom() {
-        onView(withId(R.id.editTextFrom)).check(matches(allOf(
-                isDisplayed(),
-                serviceInfo.isFromFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+        onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
+                isDisplayed(), serviceInfo.isFromFieldEditEnable() ? isFocusable() : not(isFocusable()))));
     }
 
     @Test
@@ -133,9 +133,8 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
                 + chipSeparator
                 + autoCorrectSeparator;
 
-        onView(withId(R.id.editTextRecipientTo)).check(matches(allOf(
-                isDisplayed(),
-                withText(textWithSeparator.toString()),
+        onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
+                isDisplayed(), withText(textWithSeparator.toString()),
                 serviceInfo.isToFieldEditEnable() ? isFocusable() : not(isFocusable()))));
     }
 
