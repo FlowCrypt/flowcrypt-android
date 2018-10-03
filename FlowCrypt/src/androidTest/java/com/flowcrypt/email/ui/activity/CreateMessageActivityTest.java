@@ -54,6 +54,7 @@ import static android.support.test.espresso.assertion.ViewAssertions.doesNotExis
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.intending;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasCategories;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtra;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasType;
@@ -64,6 +65,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -383,9 +386,12 @@ public class CreateMessageActivityTest extends BaseTest {
     private void addAttachment(File attachment) {
         Intent resultData = new Intent();
         resultData.setData(Uri.fromFile(attachment));
-        intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-                .ACTION_GET_CONTENT), hasType("*/*"))))).respondWith(new Instrumentation.ActivityResult(Activity
-                .RESULT_OK, resultData));
+        intending(allOf(hasAction(Intent.ACTION_CHOOSER),
+                hasExtra(is(Intent.EXTRA_INTENT),
+                        allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT),
+                                hasType("*/*"),
+                                hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))))))
+                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
         Espresso.closeSoftKeyboard();
         onView(withId(R.id.menuActionAttachFile)).check(matches(isDisplayed())).perform(click());
         onView(withText(attachment.getName())).check(matches(isDisplayed()));
