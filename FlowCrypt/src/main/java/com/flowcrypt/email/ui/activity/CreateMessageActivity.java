@@ -24,7 +24,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
@@ -61,8 +61,6 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     private MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
     private ServiceInfo serviceInfo;
-
-    private boolean isMessageSendingNow;
 
     public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
                                         MessageEncryptionType messageEncryptionType) {
@@ -176,47 +174,12 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
-        switch (requestCode) {
-            case R.id.syns_request_send_encrypted_message:
-                isMessageSendingNow = false;
-                switch (resultCode) {
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
-                        Toast.makeText(this, R.string.message_was_sent, Toast.LENGTH_SHORT).show();
-                        finish();
-                        break;
-
-                    case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT:
-                        notifyUserAboutErrorWhenSendMessage();
-                        break;
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
-        switch (requestCode) {
-            case R.id.syns_request_send_encrypted_message:
-                isMessageSendingNow = false;
-                notifyFragmentAboutErrorFromService(requestCode, errorType, e);
-                break;
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!isMessageSendingNow && isCanFinishActivity()) {
-            super.onBackPressed();
-        } else {
-            Toast.makeText(this, R.string.please_wait_while_message_will_be_sent, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
     public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
-        isMessageSendingNow = true;
-        sendMessage(R.id.syns_request_send_encrypted_message, outgoingMessageInfo);
+        PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
+        Toast.makeText(this, GeneralUtil.isInternetConnectionAvailable(this)
+                ? R.string.message_will_be_sent_soon
+                : R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
+        finish();
     }
 
     @Override
@@ -273,30 +236,6 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
                     getSupportActionBar().setTitle(R.string.compose);
                 }
             }
-        }
-    }
-
-    private void notifyUserAboutErrorWhenSendMessage() {
-        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager
-                ().findFragmentById(R.id.composeFragment);
-        if (composeFragment != null) {
-            composeFragment.notifyUserAboutErrorWhenSendMessage(null);
-        }
-    }
-
-    private boolean isCanFinishActivity() {
-        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.composeFragment);
-
-        return composeFragment != null && !composeFragment.isMessageSendingNow();
-    }
-
-    private void notifyFragmentAboutErrorFromService(int requestCode, int errorType, Exception e) {
-        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.composeFragment);
-
-        if (composeFragment != null) {
-            composeFragment.onErrorOccurred(requestCode, errorType, e);
         }
     }
 

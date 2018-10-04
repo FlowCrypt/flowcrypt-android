@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.util.exception;
 
+import android.text.TextUtils;
+
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.smtp.SMTPSendFailedException;
 import com.sun.mail.util.MailConnectException;
 
 import org.acra.ACRA;
@@ -44,9 +47,11 @@ public class ExceptionUtil {
      */
     public static boolean isErrorHandleWithACRA(Exception e) {
         if ((e instanceof MailConnectException)
+                || (e instanceof SMTPSendFailedException)
                 || (e instanceof UnknownHostException)
                 || (e instanceof SocketTimeoutException)
                 || (e instanceof ConnectionException)
+                || (e instanceof java.net.ConnectException)
                 || (e instanceof UserRecoverableAuthException)
                 || (e instanceof AuthenticationFailedException)
                 || (e instanceof UserRecoverableAuthIOException)
@@ -69,13 +74,15 @@ public class ExceptionUtil {
         if ((e instanceof SSLHandshakeException
                 || e instanceof SSLProtocolException
                 || e instanceof MessagingException)) {
-            if (e.getMessage().contains("Connection closed by peer")
-                    || e.getMessage().contains("I/O error during system call")
-                    || e.getMessage().contains("Failure in SSL library, usually a protocol error")
-                    || e.getMessage().contains("Handshake failed")
-                    || e.getMessage().contains("Exception reading response")
-                    || e.getMessage().contains("connection failure")) {
-                return false;
+            if (!TextUtils.isEmpty(e.getMessage())) {
+                if (e.getMessage().contains("Connection closed by peer")
+                        || e.getMessage().contains("I/O error during system call")
+                        || e.getMessage().contains("Failure in SSL library, usually a protocol error")
+                        || e.getMessage().contains("Handshake failed")
+                        || e.getMessage().contains("Exception reading response")
+                        || e.getMessage().contains("connection failure")) {
+                    return false;
+                }
             }
         }
 

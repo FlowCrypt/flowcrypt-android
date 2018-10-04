@@ -9,7 +9,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +26,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.DateTimeUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -99,15 +105,29 @@ public class MessageListAdapter extends CursorAdapter {
                     context.getString(R.string.no_subject) :
                     generalMessageDetails.getSubject();
 
-            if (folderType == FoldersManager.FolderType.SENT) {
-                viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
-            } else {
-                viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
+            switch (folderType) {
+                case SENT:
+                    viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
+                    break;
+
+                case OUTBOX:
+                    viewHolder.textViewSenderAddress.setText(generateOutboxStatus(viewHolder.textViewSenderAddress
+                            .getContext(), generalMessageDetails.getMessageState()));
+                    break;
+
+                default:
+                    viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
+                    break;
             }
 
             viewHolder.textViewSubject.setText(subject);
-            viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
-                    generalMessageDetails.getReceivedDateInMillisecond()));
+            if (folderType == FoldersManager.FolderType.OUTBOX) {
+                viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
+                        generalMessageDetails.getSentDateInMillisecond()));
+            } else {
+                viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
+                        generalMessageDetails.getReceivedDateInMillisecond()));
+            }
 
             if (generalMessageDetails.isSeen()) {
                 changeViewsTypeface(viewHolder, Typeface.NORMAL);
@@ -182,6 +202,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewSubject.setText(null);
         viewHolder.textViewDate.setText(null);
         viewHolder.imageViewAttachments.setVisibility(View.GONE);
+        viewHolder.viewIsEncrypted.setVisibility(View.GONE);
 
         changeViewsTypeface(viewHolder, Typeface.NORMAL);
     }
@@ -204,6 +225,49 @@ public class MessageListAdapter extends CursorAdapter {
                 return prepareSenderName(b.toString());
             b.append(", ");
         }
+    }
+
+    private CharSequence generateOutboxStatus(Context context, MessageState messageState) {
+        String me = context.getString(R.string.me);
+        String state = "";
+        int stateTextColor = ContextCompat.getColor(context, R.color.red);
+
+        switch (messageState) {
+            case NEW:
+                state = context.getString(R.string.preparing);
+                stateTextColor = ContextCompat.getColor(context, R.color.colorAccent);
+                break;
+
+            case QUEUED:
+                state = context.getString(R.string.queued);
+                stateTextColor = ContextCompat.getColor(context, R.color.colorAccent);
+                break;
+
+            case SENDING:
+                state = context.getString(R.string.sending);
+                stateTextColor = ContextCompat.getColor(context, R.color.colorPrimary);
+                break;
+
+            case CASH_ERROR:
+                state = context.getString(R.string.cash_error);
+                stateTextColor = ContextCompat.getColor(context, R.color.red);
+                break;
+
+        }
+
+        int meTextSize = context.getResources().getDimensionPixelSize(R.dimen.default_text_size_big);
+        int statusTextSize = context.getResources().getDimensionPixelSize(R.dimen.default_text_size_very_small);
+
+        SpannableString spannableStringMe = new SpannableString(me);
+        spannableStringMe.setSpan(new AbsoluteSizeSpan(meTextSize), 0, me.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+        SpannableString spannableStringStatus = new SpannableString(state);
+        spannableStringStatus.setSpan(new AbsoluteSizeSpan(statusTextSize), 0, state.length(), Spanned
+                .SPAN_INCLUSIVE_INCLUSIVE);
+        spannableStringStatus.setSpan(new ForegroundColorSpan(stateTextColor), 0, state.length(), Spanned
+                .SPAN_INCLUSIVE_INCLUSIVE);
+
+        return TextUtils.concat(spannableStringMe, " ", spannableStringStatus);
     }
 
     /**

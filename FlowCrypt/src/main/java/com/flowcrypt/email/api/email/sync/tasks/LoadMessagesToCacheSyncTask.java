@@ -79,7 +79,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
                     + " | start = " + start
                     + " | end = " + end);
 
-            new ImapLabelsDaoSource().updateLabelMessageCount(syncListener.getContext(),
+            new ImapLabelsDaoSource().updateLabelMessageCount(syncListener.getContext(), accountDao.getEmail(),
                     imapFolder.getFullName(), messagesCount);
 
             syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);

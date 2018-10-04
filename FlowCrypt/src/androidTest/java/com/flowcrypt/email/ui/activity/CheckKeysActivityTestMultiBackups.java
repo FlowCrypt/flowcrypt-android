@@ -311,14 +311,14 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
     }
 
     private void checkKeysTitle(int quantityOfKeysUsed, int totalQuantityOfKeys, int quantityOfRemainingKeys) {
-        onView(withId(R.id.textViewCheckKeysTitle)).check(matches(isDisplayed()))
+        onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
                 .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
                         .getQuantityString(R.plurals.not_recovered_all_keys, quantityOfRemainingKeys,
                                 quantityOfKeysUsed, totalQuantityOfKeys, quantityOfRemainingKeys))));
     }
 
     private void checkKeysTitleAtStart(int totalQuantityOfKeys) {
-        onView(withId(R.id.textViewCheckKeysTitle)).check(matches(isDisplayed()))
+        onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
                 .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
                         .getQuantityString(R.plurals.found_backup_of_your_account_key, totalQuantityOfKeys,
                                 totalQuantityOfKeys))));
@@ -330,7 +330,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
         Intent startCheckKeysActivity = new Intent(targetContext, CheckKeysActivity.class);
         startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, getKeyDetailsListFromAssets
                 (keysPaths));
-        startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_BOTTOM_TITLE,
+        startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
                 targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
         startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE,
                 targetContext.getString(R.string.continue_));

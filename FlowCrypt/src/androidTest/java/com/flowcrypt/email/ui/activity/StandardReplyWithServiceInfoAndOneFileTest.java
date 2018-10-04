@@ -9,11 +9,12 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.LargeTest;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
@@ -82,6 +83,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
                 attachmentInfo.setEncodedSize(STRING.length());
                 attachmentInfo.setRawData(STRING);
                 attachmentInfo.setType("text/plain");
+                attachmentInfo.setId(EmailUtil.generateContentId());
                 attachmentInfo.setCanBeDeleted(false);
 
                 List<AttachmentInfo> attachmentInfoList = new ArrayList<>();

@@ -27,6 +27,17 @@ public class FileAndDirectoryUtils {
      * @param directory The directory which will be cleaned.
      * @throws IOException An error can occur while cleaning the directory.
      */
+    public static void deleteDirectory(final File directory) throws IOException {
+        cleanDirectory(directory);
+        deleteFile(directory);
+    }
+
+    /**
+     * Cleans an input directory.
+     *
+     * @param directory The directory which will be cleaned.
+     * @throws IOException An error can occur while cleaning the directory.
+     */
     public static void cleanDirectory(final File directory) throws IOException {
         if (directory == null || !directory.exists() || !directory.isDirectory()) {
             return;
@@ -75,10 +86,9 @@ public class FileAndDirectoryUtils {
      *
      * @param directory The input directory.
      * @return The the directory files or an empty array.
-     * @throws IOException if {@link IOException} error occurred
      */
     @NonNull
-    private static File[] getFilesInDirectory(final File directory) throws IOException {
+    private static File[] getFilesInDirectory(final File directory) {
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles();
             if (files == null) {

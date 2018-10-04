@@ -66,7 +66,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
                 e.printStackTrace();
             }
             result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_BOTTOM_TITLE,
+            result.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
                     targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
             result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE, targetContext.getString(R.string
                     .continue_));

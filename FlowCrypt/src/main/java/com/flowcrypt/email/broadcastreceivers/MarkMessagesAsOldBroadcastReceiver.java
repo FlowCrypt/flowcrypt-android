@@ -11,20 +11,19 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.MessagesNotificationManager;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This {@link BroadcastReceiver} will be used by {@link MessagesNotificationManager} to mark messages as old.
  *
  * @author Denis Bondarenko
- * Date: 03.07.2018
- * Time: 16:29
- * E-mail: DenBond7@gmail.com
+ *         Date: 03.07.2018
+ *         Time: 16:29
+ *         E-mail: DenBond7@gmail.com
  */
 public class MarkMessagesAsOldBroadcastReceiver extends BroadcastReceiver {
 
@@ -46,15 +45,9 @@ public class MarkMessagesAsOldBroadcastReceiver extends BroadcastReceiver {
         String email = intent.getStringExtra(EXTRA_KEY_EMAIL);
         String label = intent.getStringExtra(EXTRA_KEY_LABEL);
 
-        ArrayList<GeneralMessageDetails> generalMessageDetailsList =
-                intent.getParcelableArrayListExtra(EXTRA_KEY_UID_LIST);
+        ArrayList<String> uidList = intent.getStringArrayListExtra(EXTRA_KEY_UID_LIST);
 
-        if (generalMessageDetailsList != null && !generalMessageDetailsList.isEmpty()) {
-            List<String> uidList = new ArrayList<>();
-            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                uidList.add(String.valueOf(generalMessageDetails.getUid()));
-            }
-
+        if (!CollectionUtils.isEmpty(uidList)) {
             new MessageDaoSource().setOldStatusForLocalMessages(context, email, label, uidList);
         }
     }

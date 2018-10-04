@@ -29,7 +29,6 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
@@ -98,11 +97,10 @@ public class EmailSyncService extends BaseService implements SyncListener {
     public static final int MESSAGE_REFRESH_MESSAGES = 6;
     public static final int MESSAGE_LOAD_MESSAGE_DETAILS = 7;
     public static final int MESSAGE_MOVE_MESSAGE = 8;
-    public static final int MESSAGE_SEND_MESSAGE = 9;
-    public static final int MESSAGE_LOAD_PRIVATE_KEYS = 10;
-    public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 11;
-    public static final int MESSAGE_SEARCH_MESSAGES = 12;
-    public static final int MESSAGE_CANCEL_ALL_TASKS = 13;
+    public static final int MESSAGE_LOAD_PRIVATE_KEYS = 9;
+    public static final int MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10;
+    public static final int MESSAGE_SEARCH_MESSAGES = 11;
+    public static final int MESSAGE_CANCEL_ALL_TASKS = 12;
 
     private static final String TAG = EmailSyncService.class.getSimpleName();
     /**
@@ -521,6 +519,10 @@ public class EmailSyncService extends BaseService implements SyncListener {
             }
         }
 
+        foldersManager.addFolder(new com.flowcrypt.email.api.email.Folder(JavaEmailConstants.FOLDER_OUTBOX,
+                JavaEmailConstants.FOLDER_OUTBOX, 0,
+                new String[]{JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN}, false));
+
         ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
         List<com.flowcrypt.email.api.email.Folder> currentFoldersList =
                 imapLabelsDaoSource.getFolders(getApplicationContext(), accountDao.getEmail());
@@ -928,15 +930,6 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
                             emailSyncManager.moveMessage(action.getOwnerKey(), action.getRequestCode(),
                                     folders[0], folders[1], message.arg1);
-                        }
-                        break;
-
-                    case MESSAGE_SEND_MESSAGE:
-                        if (emailSyncManager != null && action != null) {
-                            OutgoingMessageInfo outgoingMessageInfo = (OutgoingMessageInfo) action.getObject();
-
-                            emailSyncManager.sendMessage(action.getOwnerKey(), action.getRequestCode(),
-                                    outgoingMessageInfo);
                         }
                         break;
 

@@ -463,6 +463,25 @@ public class AttachmentDownloadManagerService extends Service {
             try {
                 checkMaxDecryptedFileSize();
 
+                if (attachmentInfo.getUri() != null) {
+                    InputStream inputStream = context.getContentResolver().openInputStream(attachmentInfo.getUri());
+                    if (inputStream != null) {
+                        FileUtils.copyInputStreamToFile(inputStream, attachmentFile);
+                        attachmentFile = decryptFileIfNeed(context, attachmentFile);
+                        attachmentInfo.setName(attachmentFile.getName());
+
+                        if (!Thread.currentThread().isInterrupted()) {
+                            if (onDownloadAttachmentListener != null) {
+                                onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
+                                        FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY,
+                                                attachmentFile));
+                            }
+                        }
+
+                        return;
+                    }
+                }
+
                 Session session = OpenStoreHelper.getAttachmentSession(context, accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
                 IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
@@ -521,7 +540,7 @@ public class AttachmentDownloadManagerService extends Service {
                     if (!Thread.currentThread().isInterrupted()) {
                         if (onDownloadAttachmentListener != null) {
                             onDownloadAttachmentListener.onAttachmentSuccessDownloaded(startId, attachmentInfo,
-                                    FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider",
+                                    FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY,
                                             attachmentFile));
                         }
                     }

@@ -18,6 +18,8 @@ public class GmailConstants {
     public static final String PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable";
     public static final String PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth.mechanisms";
     public static final String PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE = "mail.gimaps.fetchsize";
+    public static final String GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED = "[ALERT] Please log in via your web" +
+            " browser";
 
     public static final String GMAIL_IMAP_SERVER = "imap.gmail.com";
     public static final String GMAIL_SMTP_SERVER = "smtp.gmail.com";

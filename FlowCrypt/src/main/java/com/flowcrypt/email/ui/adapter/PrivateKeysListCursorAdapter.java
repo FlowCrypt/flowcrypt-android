@@ -61,6 +61,11 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
 
         textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
         textViewKeywords.setText(js.mnemonic(longId));
-        textViewCreationDate.setText(dateFormat.format(new Date(pgpKey.getCreated())));
+
+        long timestamp = pgpKey.getCreated();
+
+        if (timestamp != -1) {
+            textViewCreationDate.setText(dateFormat.format(new Date(timestamp)));
+        }
     }
 }

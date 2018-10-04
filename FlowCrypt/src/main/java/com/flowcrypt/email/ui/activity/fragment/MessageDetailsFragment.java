@@ -67,6 +67,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyD
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -175,7 +176,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                             attachmentInfoList = data.getParcelableArrayListExtra
                                     (PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
-                            if (attachmentInfoList != null && !attachmentInfoList.isEmpty()) {
+                            if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                                     attachmentInfo.setCanBeDeleted(false);
                                 }
@@ -257,7 +258,13 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
                             Toast.LENGTH_LONG).show();
                 } else {
-                    incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
+                    if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                        for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                            attachmentInfo.setForwarded(true);
+                        }
+                    }
+
+                    //incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
                 }
                 startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
                         MessageType.FORWARD, messageEncryptionType));
@@ -479,6 +486,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     break;
 
                 case DRAFTS:
+                case OUTBOX:
                     isMoveToInboxActionEnable = false;
                     isArchiveActionEnable = false;
                     isDeleteActionEnable = true;
@@ -505,11 +513,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
      * @param menuId The action menu id.
      */
     private void runMessageAction(final int menuId) {
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-            isAdditionalActionEnable = false;
-            getActivity().invalidateOptionsMenu();
-            statusView.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())
+                || JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+            if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+                isAdditionalActionEnable = false;
+                getActivity().invalidateOptionsMenu();
+                statusView.setVisibility(View.GONE);
+                UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
+            }
+
             switch (menuId) {
                 case R.id.menuActionArchiveMessage:
                     onActionListener.onArchiveMessageClicked();
@@ -561,7 +573,11 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()));
             }
             textViewSubject.setText(subject);
-            textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
+            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+                textViewDate.setText(dateFormat.format(generalMessageDetails.getSentDateInMillisecond()));
+            } else {
+                textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
+            }
         }
 
         updateMessageBody();
@@ -583,7 +599,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
                 textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
-                View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+                final View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
                 imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -598,6 +614,26 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                         }
                     }
                 });
+
+                if (attachmentInfo.getUri() != null) {
+                    View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
+                    layoutAttachment.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (attachmentInfo.getUri().getLastPathSegment().endsWith(".pgp")) {
+                                imageButtonDownloadAttachment.performClick();
+                            } else {
+                                Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());
+                                intentOpenFile.setAction(Intent.ACTION_VIEW);
+                                intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
+                                    startActivity(intentOpenFile);
+                                }
+                            }
+                        }
+                    });
+                }
 
                 layoutMessageParts.addView(rootView);
             }

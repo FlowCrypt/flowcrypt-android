@@ -11,7 +11,6 @@ import android.util.Log;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
@@ -23,12 +22,12 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSy
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.SendMessageSyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
@@ -36,6 +35,7 @@ import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.security.ProviderInstaller;
+import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.util.MailConnectException;
 
@@ -121,6 +121,10 @@ public class EmailSyncManager {
         }
 
         runIdleInboxIfNeed();
+
+        if (syncListener != null && syncListener.getContext() != null) {
+            MessagesSenderJobService.schedule(syncListener.getContext());
+        }
     }
 
     /**
@@ -193,7 +197,6 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -228,7 +231,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, folder, start, end));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -246,7 +248,6 @@ public class EmailSyncManager {
             passiveSyncTaskBlockingQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -266,7 +267,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode, folder, uid));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -305,7 +305,6 @@ public class EmailSyncManager {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -328,7 +327,6 @@ public class EmailSyncManager {
             syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode, folder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -349,24 +347,6 @@ public class EmailSyncManager {
                     destinationFolder, new long[]{uid}));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
-    }
-
-    /**
-     * Move the message to an another folder.
-     *
-     * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
-     * @param requestCode         The unique request code for identify the current action.
-     * @param outgoingMessageInfo The {@link OutgoingMessageInfo} which contains information about an outgoing
-     *                            message.
-     */
-    public void sendMessage(String ownerKey, int requestCode, OutgoingMessageInfo outgoingMessageInfo) {
-        try {
-            activeSyncTaskBlockingQueue.put(new SendMessageSyncTask(ownerKey, requestCode, outgoingMessageInfo));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -381,7 +361,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -396,7 +375,6 @@ public class EmailSyncManager {
             activeSyncTaskBlockingQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -414,7 +392,6 @@ public class EmailSyncManager {
                     requestCode, localFolder));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -424,8 +401,12 @@ public class EmailSyncManager {
 
     public void switchAccount(AccountDao accountDao) {
         this.accountDao = accountDao;
-        this.isIdleSupport = true;
-        beginSync(true);
+        if (accountDao != null) {
+            this.isIdleSupport = true;
+            beginSync(true);
+        } else {
+            stopSync();
+        }
     }
 
     /**
@@ -445,7 +426,6 @@ public class EmailSyncManager {
                     folder, countOfAlreadyLoadedMessages));
         } catch (InterruptedException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
         }
     }
 
@@ -561,9 +541,10 @@ public class EmailSyncManager {
         /**
          * Run the incoming {@link SyncTask}
          *
-         * @param syncTask The incoming {@link SyncTask}
+         * @param isRetryEnabled true if want to retry a task if it was fail
+         * @param syncTask       The incoming {@link SyncTask}
          */
-        void runSyncTask(SyncTask syncTask) {
+        void runSyncTask(SyncTask syncTask, boolean isRetryEnabled) {
             try {
                 notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
                         R.id.progress_id_running_task);
@@ -593,8 +574,17 @@ public class EmailSyncManager {
                 Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
             } catch (Exception e) {
                 e.printStackTrace();
-                ExceptionUtil.handleError(e);
-                syncTask.handleException(accountDao, e, syncListener);
+                if (e instanceof ConnectionException) {
+                    if (isRetryEnabled) {
+                        runSyncTask(syncTask, false);
+                    } else {
+                        ExceptionUtil.handleError(e);
+                        syncTask.handleException(accountDao, e, syncListener);
+                    }
+                } else {
+                    ExceptionUtil.handleError(e);
+                    syncTask.handleException(accountDao, e, syncListener);
+                }
             }
         }
 
@@ -649,7 +639,7 @@ public class EmailSyncManager {
 
                     runIdleInboxIfNeed();
 
-                    runSyncTask(syncTask);
+                    runSyncTask(syncTask, true);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -673,7 +663,7 @@ public class EmailSyncManager {
                     runIdleInboxIfNeed();
 
                     if (syncTask != null) {
-                        runSyncTask(syncTask);
+                        runSyncTask(syncTask, true);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

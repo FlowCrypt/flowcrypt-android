@@ -156,7 +156,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private boolean isUpdateInfoAboutToCompleted = true;
     private boolean isUpdateInfoAboutCcCompleted = true;
     private boolean isUpdateInfoAboutBccCompleted = true;
-    private boolean isMessageSendingNow;
     private boolean isIncomingMessageInfoUsed;
 
     public CreateMessageFragment() {
@@ -378,12 +377,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        menu.setGroupVisible(0, !isMessageSendingNow);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuActionSend:
@@ -393,12 +386,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
                 if (isUpdateInfoAboutToCompleted && isUpdateInfoAboutCcCompleted && isUpdateInfoAboutBccCompleted) {
                     UIUtil.hideSoftInput(getContext(), getView());
-                    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                        if (isAllInformationCorrect()) {
-                            sendMessage();
+                    if (isAllInformationCorrect()) {
+                        sendMessage();
+
+                        if (!GeneralUtil.isInternetConnectionAvailable(getContext())) {
+                            UIUtil.showInfoSnackbar(getView(), getString(R.string
+                                    .internet_connection_is_not_available));
                         }
-                    } else {
-                        UIUtil.showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available));
                     }
                 } else {
                     Toast.makeText(getContext(), R.string.please_wait_while_information_about_contacts_will_be_updated,
@@ -408,7 +402,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
             case R.id.menuActionAttachFile:
                 Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
                 startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_attachment)),
                         REQUEST_CODE_GET_CONTENT_FOR_SENDING);
@@ -437,6 +432,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
     }
 
+    @NonNull
     @Override
     public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -569,11 +565,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
 
     @Override
-    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-        notifyUserAboutErrorWhenSendMessage(e);
-    }
-
-    @Override
     public void onFocusChange(View v, boolean hasFocus) {
         switch (v.getId()) {
             case R.id.editTextRecipientTo:
@@ -689,7 +680,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
      * @param e An occurred error.
      */
     public void notifyUserAboutErrorWhenSendMessage(Exception e) {
-        isMessageSendingNow = false;
         if (getActivity() != null) {
             getActivity().invalidateOptionsMenu();
         }
@@ -702,15 +692,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         showInfoSnackbar(getView(), errorMessage);
-    }
-
-    /**
-     * Check the message sending status
-     *
-     * @return true if message was sent, false otherwise.
-     */
-    public boolean isMessageSendingNow() {
-        return isMessageSendingNow;
     }
 
     private void updateRecipientsFields() {
@@ -1255,15 +1236,24 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private void updateViewsFromIncomingMessageInfo() {
         switch (messageType) {
             case REPLY:
-                if (folderType == FoldersManager.FolderType.SENT) {
-                    editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
-                } else {
-                    editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                switch (folderType) {
+                    case SENT:
+                    case OUTBOX:
+                        editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
+                        break;
+
+                    default:
+                        editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+                        break;
+                }
+
+                if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+                    editTextEmailMessage.requestFocus();
                 }
                 break;
 
             case REPLY_ALL:
-                if (folderType == FoldersManager.FolderType.SENT) {
+                if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
                     editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
 
                     if (incomingMessageInfo.getCc() != null && !incomingMessageInfo.getCc().isEmpty()) {
@@ -1300,6 +1290,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         layoutCc.setVisibility(View.VISIBLE);
                         editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
                     }
+                }
+
+                if (!TextUtils.isEmpty(editTextRecipientsTo.getText())
+                        || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+                    editTextEmailMessage.requestFocus();
                 }
                 break;
 
@@ -1510,13 +1505,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         dismissCurrentSnackBar();
 
         isUpdateInfoAboutContactsEnable = false;
-        isMessageSendingNow = true;
-
-        getActivity().invalidateOptionsMenu();
-
-        statusView.setVisibility(View.GONE);
-        UIUtil.exchangeViewVisibility(getContext(), true, progressView, getContentView());
-
         OutgoingMessageInfo outgoingMessageInfo = getOutgoingMessageInfo();
 
         ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();
@@ -1542,7 +1530,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         ArrayList<AttachmentInfo> forwardedAttachmentInfoList = new ArrayList<>();
 
         for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-            if (attachmentInfo.getId() != null) {
+            if (attachmentInfo.getId() != null && attachmentInfo.isForwarded()) {
                 forwardedAttachmentInfoList.add(attachmentInfo);
             }
         }

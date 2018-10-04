@@ -148,7 +148,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
 
                     case Activity.RESULT_CANCELED:
                     case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-                        this.currentGoogleSignInAccount = null;
+                        getSupportLoaderManager().destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
                         break;
                 }
                 break;
@@ -168,7 +168,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 
@@ -179,7 +179,11 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
 
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
-
+        switch (loader.getId()) {
+            case R.id.loader_id_load_private_key_backups_from_email:
+                this.currentGoogleSignInAccount = null;
+                break;
+        }
     }
 
     @SuppressWarnings("unchecked")

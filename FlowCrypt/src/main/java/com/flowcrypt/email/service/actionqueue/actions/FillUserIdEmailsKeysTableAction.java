@@ -24,9 +24,9 @@ import java.util.List;
  * {@link UserIdEmailsKeysDaoSource#TABLE_NAME_USER_ID_EMAILS_AND_KEYS}.
  *
  * @author Denis Bondarenko
- * Date: 31.07.2018
- * Time: 10:25
- * E-mail: DenBond7@gmail.com
+ *         Date: 31.07.2018
+ *         Time: 10:25
+ *         E-mail: DenBond7@gmail.com
  */
 public class FillUserIdEmailsKeysTableAction extends Action {
     public static final Creator<FillUserIdEmailsKeysTableAction> CREATOR = new
@@ -72,7 +72,11 @@ public class FillUserIdEmailsKeysTableAction extends Action {
             }
         }
 
-        new UserIdEmailsKeysDaoSource().addRows(context, pairs);
+        UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
+
+        for (Pair<String, String> pair : pairs) {
+            userIdEmailsKeysDaoSource.addRow(context, pair.first, pair.second);
+        }
     }
 
     @Override

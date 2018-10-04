@@ -81,7 +81,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     public void testAllCredentialsCorrect() throws Exception {
         fillAllFields();
         onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
-        onView(withId(R.id.textViewFirstPasswordCheckTitle)).check(matches(isDisplayed()));
+        onView(withId(R.id.textViewTitle)).check(matches(isDisplayed()));
     }
 
     @Test

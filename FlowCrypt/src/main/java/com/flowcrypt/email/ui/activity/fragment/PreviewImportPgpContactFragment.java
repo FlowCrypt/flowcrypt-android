@@ -279,6 +279,11 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
         private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String armoredKeys) {
             List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
+
+            if (TextUtils.isEmpty(armoredKeys)) {
+                return publicKeyInfoList;
+            }
+
             Set<String> emails = new HashSet<>();
             MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(armoredKeys);
 

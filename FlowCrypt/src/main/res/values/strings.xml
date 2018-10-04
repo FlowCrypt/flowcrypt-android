@@ -366,4 +366,13 @@ icelanders prefer real sauna</font>
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="message_cache_will_be_reloaded">%1$s. The cache will be reloaded</string>
+    <string name="can_not_delete_sent_message">Cannot delete sent message</string>
+    <string name="message_will_be_sent_soon">Sending..</string>
+    <string name="no_connection_message_will_be_sent_later">Offline. The message will be sent later</string>
+    <string name="me">me</string>
+    <string name="sending">Sending&#8230;</string>
+    <string name="queued">Queued</string>
+    <string name="cash_error">Cash error</string>
+    <string name="can_not_delete_sending_message">Sorry. We can\'t delete a message which is sending now</string>
+    <string name="preparing">Preparing&#8230;</string>
 </resources>

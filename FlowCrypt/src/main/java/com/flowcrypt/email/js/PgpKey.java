@@ -5,8 +5,12 @@
 
 package com.flowcrypt.email.js;
 
+import android.text.TextUtils;
+
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+
+import java.util.ArrayList;
 
 public class PgpKey extends MeaningfulV8ObjectContainer {
 
@@ -74,13 +78,23 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
      */
     public PgpContact[] getUserIds() {
         V8Array users = getAttributeAsArray("users");
+        ArrayList<PgpContact> pgpContacts = new ArrayList<>();
 
-        PgpContact[] pgpContacts = new PgpContact[users.length()];
-
-        for (int i = 0; i < users.length(); i++) {
-            pgpContacts[i] = js.str_parse_email(users.getObject(i).getObject("userId").getString("userid"));
+        if (users != null) {
+            for (int i = 0; i < users.length(); i++) {
+                V8Object user = users.getObject(i);
+                if (user != null) {
+                    V8Object userId = user.getObject("userId");
+                    if (userId != null) {
+                        String userIdValue = userId.getString("userid");
+                        if (!TextUtils.isEmpty(userIdValue)) {
+                            pgpContacts.add(js.str_parse_email(userIdValue));
+                        }
+                    }
+                }
+            }
         }
 
-        return pgpContacts;
+        return pgpContacts.toArray(new PgpContact[0]);
     }
 }

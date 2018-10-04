@@ -49,6 +49,7 @@ public class AttachmentInfo implements Parcelable {
     private String id;
     private Uri uri;
     private boolean isCanBeDeleted = true;
+    private boolean isForwarded;
 
     public AttachmentInfo() {
     }
@@ -64,13 +65,14 @@ public class AttachmentInfo implements Parcelable {
         this.id = in.readString();
         this.uri = in.readParcelable(Uri.class.getClassLoader());
         this.isCanBeDeleted = in.readByte() != 0;
+        this.isForwarded = in.readByte() != 0;
     }
 
     @Override
     public String toString() {
         return "AttachmentInfo{" +
                 "rawData='" + rawData + '\'' +
-                "email='" + email + '\'' +
+                ", email='" + email + '\'' +
                 ", folder='" + folder + '\'' +
                 ", uid=" + uid +
                 ", name='" + name + '\'' +
@@ -79,6 +81,7 @@ public class AttachmentInfo implements Parcelable {
                 ", id='" + id + '\'' +
                 ", uri=" + uri +
                 ", isCanBeDeleted=" + isCanBeDeleted +
+                ", isForwarded=" + isForwarded +
                 '}';
     }
 
@@ -99,6 +102,7 @@ public class AttachmentInfo implements Parcelable {
         dest.writeString(this.id);
         dest.writeParcelable(this.uri, flags);
         dest.writeByte(this.isCanBeDeleted ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
     }
 
     public String getRawData() {
@@ -184,5 +188,13 @@ public class AttachmentInfo implements Parcelable {
     @Nullable
     public Account getGoogleAccount() {
         return this.email == null ? null : new Account(this.email, AccountDao.ACCOUNT_TYPE_GOOGLE);
+    }
+
+    public boolean isForwarded() {
+        return isForwarded;
+    }
+
+    public void setForwarded(boolean forwarded) {
+        isForwarded = forwarded;
     }
 }

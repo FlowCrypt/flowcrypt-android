@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
@@ -75,6 +76,9 @@ public class AttachmentDaoSource extends BaseDaoSource {
         contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
         contentValues.put(COL_TYPE, attachmentInfo.getType());
         contentValues.put(COL_ATTACHMENT_ID, attachmentInfo.getId());
+        if (attachmentInfo.getUri() != null) {
+            contentValues.put(COL_FILE_URI, attachmentInfo.getUri().toString());
+        }
         return contentValues;
     }
 
@@ -162,6 +166,10 @@ public class AttachmentDaoSource extends BaseDaoSource {
         attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
         attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
         attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
+        String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
+        if (!TextUtils.isEmpty(uriString)) {
+            attachmentInfo.setUri(Uri.parse(uriString));
+        }
         return attachmentInfo;
     }
 
@@ -205,6 +213,24 @@ public class AttachmentDaoSource extends BaseDaoSource {
         if (email != null && label != null && contentResolver != null) {
             return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND "
                     + COL_FOLDER + " = ?", new String[]{email, label});
+        } else return -1;
+    }
+
+    /**
+     * Delete attachments of some message in the local database.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @return The number of rows deleted.
+     */
+    public int deleteAttachments(Context context, String email, String label, long uid) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
+                    + COL_FOLDER + " = ? AND "
+                    + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
         } else return -1;
     }
 }

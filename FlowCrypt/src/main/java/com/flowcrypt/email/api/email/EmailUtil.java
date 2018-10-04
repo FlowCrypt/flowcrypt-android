@@ -23,10 +23,12 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -148,6 +150,7 @@ public class EmailUtil {
             AttachmentInfo attachmentInfo = new AttachmentInfo();
             attachmentInfo.setUri(uri);
             attachmentInfo.setType(GeneralUtil.getFileMimeTypeFromUri(context, uri));
+            attachmentInfo.setId(EmailUtil.generateContentId());
 
             Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
             if (cursor != null) {
@@ -185,6 +188,7 @@ public class EmailUtil {
                 attachmentInfo.setRawData(publicKeyValue);
                 attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
                 attachmentInfo.setEmail(publicKey.getPrimaryUserId().getEmail());
+                attachmentInfo.setId(EmailUtil.generateContentId());
 
                 return attachmentInfo;
             } else {
@@ -350,6 +354,10 @@ public class EmailUtil {
 
             String backup = getKeyFromMessageIfItExists(mimeMessage);
 
+            if (TextUtils.isEmpty(backup)) {
+                continue;
+            }
+
             MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
 
             for (MessageBlock messageBlock : messageBlocks) {
@@ -395,9 +403,8 @@ public class EmailUtil {
     @NonNull
     public static BodyPart getBodyPartWithBackupText(Context context) throws MessagingException, IOException {
         BodyPart messageBodyPart = new MimeBodyPart();
-        messageBodyPart.setContent(IOUtils.toString(
-                context.getAssets().open(HTML_EMAIL_INTRO_TEMPLATE_HTM),
-                StandardCharsets.UTF_8), JavaEmailConstants.MIME_TYPE_TEXT_HTML);
+        messageBodyPart.setContent(GeneralUtil.removeAllCommentsInHTML(IOUtils.toString(context.getAssets()
+                .open(HTML_EMAIL_INTRO_TEMPLATE_HTM), StandardCharsets.UTF_8)), JavaEmailConstants.MIME_TYPE_TEXT_HTML);
         return messageBodyPart;
     }
 
@@ -797,5 +804,79 @@ public class EmailUtil {
         } else {
             return new BodyTerm("-----BEGIN PGP MESSAGE-----");
         }
+    }
+
+    /**
+     * Generate a raw MIME message using {@link Js} tools.
+     *
+     * @param outgoingMessageInfo The given {@link OutgoingMessageInfo} which contains information about an outgoing
+     *                            message.
+     * @param js                  An instance of {@link Js}
+     * @param pubKeys             The public keys which will be used to generate an encrypted part.
+     * @return The generated raw MIME message.
+     */
+    public static String generateRawMessageWithoutAttachments(OutgoingMessageInfo outgoingMessageInfo, Js js,
+                                                              String[] pubKeys) {
+        String messageText = null;
+
+        switch (outgoingMessageInfo.getMessageEncryptionType()) {
+            case ENCRYPTED:
+                messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage());
+                break;
+
+            case STANDARD:
+                messageText = outgoingMessageInfo.getMessage();
+                break;
+        }
+
+        return js.mime_encode(messageText,
+                outgoingMessageInfo.getToPgpContacts(),
+                outgoingMessageInfo.getCcPgpContacts(),
+                outgoingMessageInfo.getBccPgpContacts(),
+                outgoingMessageInfo.getFromPgpContact(),
+                outgoingMessageInfo.getSubject(),
+                null,
+                js.mime_decode(outgoingMessageInfo.getRawReplyMessage()));
+    }
+
+    /**
+     * Generate a list of the all recipients.
+     *
+     * @return A list of the all recipients
+     */
+    public static PgpContact[] getAllRecipients(OutgoingMessageInfo outgoingMessageInfo) {
+        List<PgpContact> pgpContacts = new ArrayList<>();
+
+        if (outgoingMessageInfo.getToPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getToPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getCcPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getCcPgpContacts()));
+        }
+
+        if (outgoingMessageInfo.getBccPgpContacts() != null) {
+            pgpContacts.addAll(Arrays.asList(outgoingMessageInfo.getBccPgpContacts()));
+        }
+
+        return pgpContacts.toArray(new PgpContact[0]);
+    }
+
+    /**
+     * Get next {@link UID} value for the outgoing message.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The next {@link UID} value for the outgoing message.
+     */
+    public static long generateOutboxUID(Context context) {
+        long lastUid = SharedPreferencesHelper.getLong(PreferenceManager
+                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, 0);
+
+        lastUid++;
+
+        SharedPreferencesHelper.setLong(PreferenceManager
+                .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, lastUid);
+
+        return lastUid;
     }
 }

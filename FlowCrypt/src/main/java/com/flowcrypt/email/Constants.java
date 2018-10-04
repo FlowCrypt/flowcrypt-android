@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email;
 
+import android.support.v4.content.FileProvider;
+
 /**
  * This class contains the common constants used in the application.
  *
@@ -24,6 +26,12 @@ public class Constants {
      * The base API URL.
      */
     public static final String FLOWCRYPT_API_URL = "https://flowcrypt.com/api";
+
+    /**
+     * The authority of a {@link FileProvider} defined in a {@code <provider>} element in the app's
+     * manifest.
+     */
+    public static final String FILE_PROVIDER_AUTHORITY = BuildConfig.APPLICATION_ID + ".fileprovider";
 
     /**
      * This scope describe full access to the account, including permanent deletion of threads
@@ -54,14 +62,13 @@ public class Constants {
     public static final String PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS =
             "preferences_key_temp_last_auth_credentials";
 
-    public static final String PREFERENCES_KEY_SETTINGS_SECURITY =
-            "preferences_key_settings_security";
     public static final String PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER =
             "preferences_key_messages_notification_filter";
     public static final String PREFERENCES_KEY_MANAGE_NOTIFICATIONS =
             "preferences_key_manage_notifications";
     public static final String PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE =
             "preferences_key_security_change_pass_phrase";
+    public static final String PREFERENCES_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid";
 
     /**
      * The max total size off all attachment which can be send via the app.
@@ -75,6 +82,7 @@ public class Constants {
 
     public static final String PGP_CACHE_DIR = "PGP";
     public static final String PGP_ATTACHMENTS_CACHE_DIR = "PGP/attachments";
+    public static final String ATTACHMENTS_CACHE_DIR = "attachments";
 
 
     /**

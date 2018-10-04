@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -63,6 +64,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
 
         JsBackgroundService.start(this);
+        MessagesSenderJobService.schedule(getApplicationContext());
 
         initViews();
 
@@ -220,7 +222,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 

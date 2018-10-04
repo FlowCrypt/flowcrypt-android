@@ -48,6 +48,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -197,6 +198,27 @@ public class EmailManagerActivity extends BaseEmailListActivity
         }
 
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem itemSwitch = menu.findItem(R.id.menuSwitch);
+        MenuItem itemSearch = menu.findItem(R.id.menuSearch);
+
+        if (folder != null) {
+            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+                itemSwitch.setVisible(false);
+                itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType()));
+            } else {
+                itemSwitch.setVisible(true);
+                itemSearch.setVisible(true);
+            }
+        } else {
+            itemSwitch.setVisible(true);
+            itemSearch.setVisible(true);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -366,6 +388,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 if (folder == null || !folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
                     this.folder = newFolder;
                     updateEmailsListFragmentAfterFolderChange();
+                    invalidateOptionsMenu();
                 }
                 break;
         }
@@ -407,6 +430,22 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
                         for (String label : getSortedServerFolders()) {
                             mailLabels.getSubMenu().add(label);
+                            if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
+                                MenuItem menuItem = mailLabels.getSubMenu()
+                                        .getItem(mailLabels.getSubMenu().size() - 1);
+
+                                if (foldersManager.getFolderByAlias(label).getMessageCount() > 0) {
+                                    View navigationItemWithAmount = LayoutInflater.from(this).inflate(R.layout
+                                            .navigation_view_item_with_amount, navigationView, false);
+                                    TextView textViewMessagesCount = navigationItemWithAmount.findViewById(R.id
+                                            .textViewMessageCount);
+                                    textViewMessagesCount.setText(String.valueOf(foldersManager.getFolderByAlias(label)
+                                            .getMessageCount()));
+                                    menuItem.setActionView(navigationItemWithAmount);
+                                } else {
+                                    menuItem.setActionView(null);
+                                }
+                            }
                         }
 
                         for (Folder s : foldersManager.getCustomLabels()) {
@@ -531,13 +570,13 @@ public class EmailManagerActivity extends BaseEmailListActivity
      */
     private String[] getSortedServerFolders() {
         List<Folder> folders = foldersManager.getServerFolders();
-        int foldersCount = folders.size();
-        String[] serverFolders = new String[foldersCount];
+        String[] serverFolders = new String[folders.size()];
 
-        Folder inbox, spam, trash;
+        Folder inbox, spam, trash, outbox;
         inbox = foldersManager.getFolderInbox();
         spam = foldersManager.getFolderSpam();
         trash = foldersManager.getFolderTrash();
+        outbox = foldersManager.getFolderOutbox();
 
         if (inbox != null) {
             folders.remove(inbox);
@@ -552,6 +591,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
         if (spam != null) {
             folders.remove(spam);
             serverFolders[folders.size() + 1] = spam.getFolderAlias();
+        }
+
+        if (outbox != null) {
+            folders.remove(outbox);
+            serverFolders[folders.size() + 1] = outbox.getFolderAlias();
         }
 
         for (int i = 0; i < folders.size(); i++) {

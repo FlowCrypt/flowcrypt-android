@@ -228,8 +228,8 @@
         <!-- Services -->
         <service
             android:name=".service.EmailAndNameUpdaterService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
             android:name=".service.EmailSyncService"
@@ -245,8 +245,13 @@
 
         <service
             android:name=".service.actionqueue.ActionQueueIntentService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".service.PrepareOutgoingMessagesJobIntentService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
             android:name=".service.JsBackgroundService"
@@ -256,7 +261,11 @@
         <service
             android:name=".jobscheduler.SyncJobService"
             android:exported="false"
-            android:label="Sync service"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".jobscheduler.MessagesSenderJobService"
+            android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />

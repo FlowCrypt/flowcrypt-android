@@ -129,6 +129,12 @@ public class FoldersManager {
                     return FolderType.INBOX;
                 }
             }
+
+            if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
+                if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+                    return FolderType.OUTBOX;
+                }
+            }
         }
         return null;
     }
@@ -273,6 +279,10 @@ public class FoldersManager {
         return null;
     }
 
+    public Folder getFolderOutbox() {
+        return folders.get(FolderType.OUTBOX.getValue());
+    }
+
     private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
         FolderType folderType = getFolderTypeForImapFolder(generateFolder(imapFolder, null));
         if (folderType == null) {
@@ -304,7 +314,8 @@ public class FoldersManager {
         SPAM("\\Spam"),
         SENT("\\Sent"),
         TRASH("\\Trash"),
-        IMPORTANT("\\Important");
+        IMPORTANT("\\Important"),
+        OUTBOX("\\Outbox");
 
 
         private String value;
