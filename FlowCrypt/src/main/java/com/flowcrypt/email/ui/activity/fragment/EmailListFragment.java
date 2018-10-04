@@ -28,12 +28,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.DataBaseUtil;
+import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -108,6 +110,12 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
                     String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
                             + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+
+                    if (!BuildConfig.DEBUG && JavaEmailConstants.FOLDER_OUTBOX
+                            .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
+                        selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
+                                + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
+                    }
 
                     return new CursorLoader(getContext(),
                             new MessageDaoSource().getBaseContentUri(),
