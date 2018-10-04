@@ -177,7 +177,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
         PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
         Toast.makeText(this, GeneralUtil.isInternetConnectionAvailable(this)
-                ? R.string.message_will_be_sent_soon
+                ? R.string.sending
                 : R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
         finish();
     }
