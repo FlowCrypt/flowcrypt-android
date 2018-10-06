@@ -105,19 +105,23 @@ public class MessageListAdapter extends CursorAdapter {
                     context.getString(R.string.no_subject) :
                     generalMessageDetails.getSubject();
 
-            switch (folderType) {
-                case SENT:
-                    viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
-                    break;
+            if (folderType != null) {
+                switch (folderType) {
+                    case SENT:
+                        viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
+                        break;
 
-                case OUTBOX:
-                    viewHolder.textViewSenderAddress.setText(generateOutboxStatus(viewHolder.textViewSenderAddress
-                            .getContext(), generalMessageDetails.getMessageState()));
-                    break;
+                    case OUTBOX:
+                        viewHolder.textViewSenderAddress.setText(generateOutboxStatus(viewHolder.textViewSenderAddress
+                                .getContext(), generalMessageDetails.getMessageState()));
+                        break;
 
-                default:
-                    viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
-                    break;
+                    default:
+                        viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
+                        break;
+                }
+            } else {
+                viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
             }
 
             viewHolder.textViewSubject.setText(subject);
