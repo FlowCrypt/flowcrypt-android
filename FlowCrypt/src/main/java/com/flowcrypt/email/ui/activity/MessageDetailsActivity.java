@@ -333,17 +333,19 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                             folder.getFolderAlias(), generalMessageDetails.getUid());
 
                     Uri uri = attachmentInfo.getUri();
-                    List<String> segments = uri.getPathSegments();
-                    int size = segments.size();
-                    if (size > 1) {
-                        String attachmentFolderName = segments.get(size - 2);
+                    if (uri != null) {
+                        List<String> segments = uri.getPathSegments();
+                        int size = segments.size();
+                        if (size > 1) {
+                            String attachmentFolderName = segments.get(size - 2);
 
-                        if (!TextUtils.isEmpty(attachmentFolderName)) {
-                            try {
-                                FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
-                                        Constants.ATTACHMENTS_CACHE_DIR), attachmentFolderName));
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            if (!TextUtils.isEmpty(attachmentFolderName)) {
+                                try {
+                                    FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
+                                            Constants.ATTACHMENTS_CACHE_DIR), attachmentFolderName));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     }

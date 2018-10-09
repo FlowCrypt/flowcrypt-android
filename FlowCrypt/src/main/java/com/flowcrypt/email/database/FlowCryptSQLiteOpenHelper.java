@@ -33,7 +33,7 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NAME_COUNT = "COUNT(*)";
     public static final String DB_NAME = "flowcrypt.db";
-    public static final int DB_VERSION = 10;
+    public static final int DB_VERSION = 11;
 
     private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -95,6 +95,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 2:
@@ -106,6 +107,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 3:
@@ -116,6 +118,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 4:
@@ -125,6 +128,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 5:
@@ -133,6 +137,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 6:
@@ -140,21 +145,29 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 7:
                 upgradeDatabaseFrom7To8Version(sqLiteDatabase);
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 8:
                 upgradeDatabaseFrom8To9Version(sqLiteDatabase);
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
 
             case 9:
                 upgradeDatabaseFrom9To10Version(sqLiteDatabase);
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
+                break;
+
+            case 10:
+                upgradeDatabaseFrom10To11Version(sqLiteDatabase);
                 break;
         }
 
@@ -311,6 +324,19 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         try {
             sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
                     " ADD COLUMN " + MessageDaoSource.COL_STATE + " INTEGER DEFAULT -1;");
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private void upgradeDatabaseFrom10To11Version(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
+                    " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;");
+            sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
+                    " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;");
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();

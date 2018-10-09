@@ -347,6 +347,11 @@ public class MessagesSenderJobService extends JobService {
                     JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
             Uri uri = attachmentInfo.getUri();
+
+            if (uri == null) {
+                return;
+            }
+
             List<String> segments = uri.getPathSegments();
             int size = segments.size();
 

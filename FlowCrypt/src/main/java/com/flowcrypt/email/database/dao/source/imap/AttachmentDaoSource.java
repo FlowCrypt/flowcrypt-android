@@ -38,6 +38,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
     public static final String COL_TYPE = "type";
     public static final String COL_ATTACHMENT_ID = "attachment_id";
     public static final String COL_FILE_URI = "file_uri";
+    public static final String COL_FORWARDED_FOLDER = "forwarded_folder";
+    public static final String COL_FORWARDED_UID = "forwarded_uid";
 
     public static final String ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
             TABLE_NAME_ATTACHMENT + " (" +
@@ -49,7 +51,9 @@ public class AttachmentDaoSource extends BaseDaoSource {
             COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
             COL_TYPE + " VARCHAR(100) NOT NULL, " +
             COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
-            COL_FILE_URI + " TEXT " + ");";
+            COL_FILE_URI + " TEXT, " +
+            COL_FORWARDED_FOLDER + " TEXT, " +
+            COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");";
 
     public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
@@ -79,6 +83,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
         if (attachmentInfo.getUri() != null) {
             contentValues.put(COL_FILE_URI, attachmentInfo.getUri().toString());
         }
+        contentValues.put(COL_FORWARDED_FOLDER, attachmentInfo.getForwardedFolder());
+        contentValues.put(COL_FORWARDED_UID, attachmentInfo.getForwardedUid());
         return contentValues;
     }
 
@@ -126,8 +132,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
 
             for (int i = 0; i < attachmentInfoList.size(); i++) {
                 AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
-                ContentValues contentValues =
-                        prepareContentValues(email, label, uid, attachmentInfo);
+                ContentValues contentValues = prepareContentValues(email, label, uid, attachmentInfo);
 
                 contentValuesArray[i] = contentValues;
             }
@@ -170,6 +175,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
         if (!TextUtils.isEmpty(uriString)) {
             attachmentInfo.setUri(Uri.parse(uriString));
         }
+        attachmentInfo.setForwardedFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
+        attachmentInfo.setForwardedUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
         return attachmentInfo;
     }
 

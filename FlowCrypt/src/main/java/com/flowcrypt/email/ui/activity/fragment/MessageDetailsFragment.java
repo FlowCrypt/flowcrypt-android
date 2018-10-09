@@ -264,7 +264,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                         }
                     }
 
-                    //incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
+                    incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
                 }
                 startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
                         MessageType.FORWARD, messageEncryptionType));

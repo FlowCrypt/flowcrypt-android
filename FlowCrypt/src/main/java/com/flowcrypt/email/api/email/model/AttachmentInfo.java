@@ -43,6 +43,8 @@ public class AttachmentInfo implements Parcelable {
     private String email;
     private String folder;
     private int uid;
+    private String forwardedFolder;
+    private int forwardedUid;
     private String name;
     private long encodedSize;
     private String type;
@@ -54,11 +56,36 @@ public class AttachmentInfo implements Parcelable {
     public AttachmentInfo() {
     }
 
+    /**
+     * Create a new {@link AttachmentInfo} object as forwarded.
+     *
+     * @param newFolder      A new folder which will be contain a message with the given attachments;
+     * @param attachmentInfo The forwarded attachments.
+     */
+    public AttachmentInfo(String newFolder, AttachmentInfo attachmentInfo) {
+        if (attachmentInfo != null) {
+            this.rawData = attachmentInfo.getRawData();
+            this.email = attachmentInfo.getEmail();
+            this.folder = newFolder;
+            this.forwardedFolder = attachmentInfo.getFolder();
+            this.forwardedUid = attachmentInfo.getUid();
+            this.name = attachmentInfo.getName();
+            this.encodedSize = attachmentInfo.getEncodedSize();
+            this.type = attachmentInfo.getType();
+            this.id = attachmentInfo.getId();
+            this.uri = attachmentInfo.getUri();
+            this.isCanBeDeleted = attachmentInfo.isCanBeDeleted();
+            this.isForwarded = attachmentInfo.isForwarded();
+        }
+    }
+
     protected AttachmentInfo(Parcel in) {
         this.rawData = in.readString();
         this.email = in.readString();
         this.folder = in.readString();
         this.uid = in.readInt();
+        this.forwardedFolder = in.readString();
+        this.forwardedUid = in.readInt();
         this.name = in.readString();
         this.encodedSize = in.readLong();
         this.type = in.readString();
@@ -75,6 +102,8 @@ public class AttachmentInfo implements Parcelable {
                 ", email='" + email + '\'' +
                 ", folder='" + folder + '\'' +
                 ", uid=" + uid +
+                ", forwardedFolder='" + forwardedFolder + '\'' +
+                ", forwardedUid=" + forwardedUid +
                 ", name='" + name + '\'' +
                 ", encodedSize=" + encodedSize +
                 ", type='" + type + '\'' +
@@ -96,6 +125,8 @@ public class AttachmentInfo implements Parcelable {
         dest.writeString(this.email);
         dest.writeString(this.folder);
         dest.writeInt(this.uid);
+        dest.writeString(this.forwardedFolder);
+        dest.writeInt(this.forwardedUid);
         dest.writeString(this.name);
         dest.writeLong(this.encodedSize);
         dest.writeString(this.type);
@@ -196,5 +227,21 @@ public class AttachmentInfo implements Parcelable {
 
     public void setForwarded(boolean forwarded) {
         isForwarded = forwarded;
+    }
+
+    public String getForwardedFolder() {
+        return forwardedFolder;
+    }
+
+    public void setForwardedFolder(String forwardedFolder) {
+        this.forwardedFolder = forwardedFolder;
+    }
+
+    public int getForwardedUid() {
+        return forwardedUid;
+    }
+
+    public void setForwardedUid(int forwardedUid) {
+        this.forwardedUid = forwardedUid;
     }
 }

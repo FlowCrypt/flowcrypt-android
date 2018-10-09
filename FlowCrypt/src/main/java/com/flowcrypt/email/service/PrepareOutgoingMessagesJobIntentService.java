@@ -41,7 +41,6 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
-import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -57,7 +56,6 @@ import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.internet.MimeMessage;
 
 /**
@@ -77,7 +75,6 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     private MessageDaoSource messageDaoSource;
     private Js js;
     private Session session;
-    private Store store;
     private AccountDao accountDao;
     private File attachmentsCacheDirectory;
 
@@ -153,8 +150,12 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                                     (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX));
                 }
 
-                messageDaoSource.updateMessageState(getApplicationContext(),
-                        accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.QUEUED);
+                if (CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+                    messageDaoSource.updateMessageState(getApplicationContext(),
+                            accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.QUEUED);
+                } else {
+                    //download attachments
+                }
 
                 MessagesSenderJobService.schedule(getApplicationContext());
             } catch (Exception e) {
@@ -199,52 +200,49 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             return;
         }
 
-        List<AttachmentInfo> allAttachments = new ArrayList<>();
         List<AttachmentInfo> cachedAttachments = new ArrayList<>();
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
-            allAttachments.addAll(outgoingMessageInfo.getAttachmentInfoArrayList());
-        }
-
-        //Temporary disabled sending forwarded attachments
-        /*if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-            allAttachments.addAll(outgoingMessageInfo.getForwardedAttachmentInfoList());
-            //need to add a logic of forwarded messages
-        }*/
-
-        if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            for (AttachmentInfo attachmentInfo : allAttachments) {
-                try {
-                    InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
-                    if (inputStream != null) {
-                        File encryptedTempFile = new File(messageAttachmentCacheDirectory,
-                                attachmentInfo.getName() + ".pgp");
-                        byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
-                                (inputStream), attachmentInfo.getName());
-                        FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-                        attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
-                                Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
-                        attachmentInfo.setName(encryptedTempFile.getName());
-                        cachedAttachments.add(attachmentInfo);
+            if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                        if (inputStream != null) {
+                            File encryptedTempFile = new File(messageAttachmentCacheDirectory,
+                                    attachmentInfo.getName() + ".pgp");
+                            byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
+                                    (inputStream), attachmentInfo.getName());
+                            FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+                            attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                                    Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
+                            attachmentInfo.setName(encryptedTempFile.getName());
+                            cachedAttachments.add(attachmentInfo);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                }
+            } else {
+                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                        if (inputStream != null) {
+                            File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
+                            FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
+                            attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
+                                    Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
+                            cachedAttachments.add(attachmentInfo);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        } else {
-            for (AttachmentInfo attachmentInfo : allAttachments) {
-                try {
-                    InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
-                    if (inputStream != null) {
-                        File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
-                        FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
-                        attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
-                                Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
-                        cachedAttachments.add(attachmentInfo);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        }
+
+        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+            for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+                cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
             }
         }
 
@@ -257,14 +255,6 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             try {
                 js = new Js(getApplicationContext(), new SecurityStorageConnector(getApplicationContext()));
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (store == null || !store.isConnected()) {
-            try {
-                store = OpenStoreHelper.openAndConnectToStore(getApplicationContext(), accountDao, session);
-            } catch (MessagingException | IOException | GoogleAuthException e) {
                 e.printStackTrace();
             }
         }
