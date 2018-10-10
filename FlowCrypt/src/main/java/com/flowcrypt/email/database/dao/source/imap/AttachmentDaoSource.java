@@ -156,6 +156,28 @@ public class AttachmentDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Update some attachment by the given parameters.
+     *
+     * @param context       Interface to global information about an application environment.
+     * @param email         The email that the attachment linked.
+     * @param label         The folder that the attachment linked.
+     * @param uid           The message UID that the attachment linked.
+     * @param attachmentId  The unique attachment id.
+     * @param contentValues The {@link ContentValues} which contains new information.
+     * @return The count of the updated row or -1 up.
+     */
+    public int update(Context context, String email, String label, long uid, String attachmentId,
+                      ContentValues contentValues) {
+        ContentResolver contentResolver = context.getContentResolver();
+        if (email != null && label != null && contentResolver != null) {
+            return contentResolver.update(getBaseContentUri(), contentValues,
+                    COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND "
+                            + COL_ATTACHMENT_ID + " = ? ", new String[]{email, label, String.valueOf(uid),
+                            attachmentId});
+        } else return -1;
+    }
+
+    /**
      * Generate an {@link AttachmentInfo} object from the current cursor position.
      *
      * @param cursor The {@link Cursor} which contains information about an
@@ -177,6 +199,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
         }
         attachmentInfo.setForwardedFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
         attachmentInfo.setForwardedUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
+        attachmentInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
+                && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
         return attachmentInfo;
     }
 

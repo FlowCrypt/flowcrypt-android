@@ -74,12 +74,12 @@ public class MessageDaoSource extends BaseDaoSource {
     public static final String COL_CC_ADDRESSES = "cc_address";
     public static final String COL_SUBJECT = "subject";
     public static final String COL_FLAGS = "flags";
-    public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS =
-            "raw_message_without_attachments";
+    public static final String COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS = "raw_message_without_attachments";
     public static final String COL_IS_MESSAGE_HAS_ATTACHMENTS = "is_message_has_attachments";
     public static final String COL_IS_ENCRYPTED = "is_encrypted";
     public static final String COL_IS_NEW = "is_new";
     public static final String COL_STATE = "state";
+    public static final String COL_ATTACHMENTS_DIRECTORY = "attachments_directory";
 
     public static final int ENCRYPTED_STATE_UNDEFINED = -1;
 
@@ -100,7 +100,8 @@ public class MessageDaoSource extends BaseDaoSource {
             COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
             COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
             COL_IS_NEW + " INTEGER DEFAULT -1, " +
-            COL_STATE + " INTEGER DEFAULT -1 " + ");";
+            COL_STATE + " INTEGER DEFAULT -1, " +
+            COL_ATTACHMENTS_DIRECTORY + " TEXT " + ");";
 
     public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
             "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -544,6 +545,9 @@ public class MessageDaoSource extends BaseDaoSource {
         } catch (AddressException e) {
             e.printStackTrace();
         }
+
+        generalMessageDetails.setAttachmentsDirectory(cursor.getString(cursor.getColumnIndex
+                (COL_ATTACHMENTS_DIRECTORY)));
 
         return generalMessageDetails;
     }

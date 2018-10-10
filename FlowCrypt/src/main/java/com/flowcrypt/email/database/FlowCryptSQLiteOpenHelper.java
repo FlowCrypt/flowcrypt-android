@@ -337,6 +337,9 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
                     " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;");
             sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
                     " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;");
+
+            sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
+                    " ADD COLUMN " + MessageDaoSource.COL_ATTACHMENTS_DIRECTORY + " TEXT;");
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();
