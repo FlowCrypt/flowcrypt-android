@@ -704,7 +704,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                             AttachmentInfo attachmentInfo = new AttachmentInfo();
                             attachmentInfo.setName(bodyPart.getFileName());
                             attachmentInfo.setEncodedSize(bodyPart.getSize());
-                            attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getPrimaryType());
+                            attachmentInfo.setType(new ContentType(bodyPart.getContentType()).getBaseType());
                             attachmentInfo.setId(headers[0]);
                             attachmentInfoList.add(attachmentInfo);
                         }

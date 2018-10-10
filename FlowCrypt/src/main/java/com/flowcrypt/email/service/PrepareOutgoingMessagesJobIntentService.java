@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.JobIntentService;
 import android.support.v4.content.FileProvider;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -26,21 +25,19 @@ import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -129,7 +126,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
             try {
                 String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
-                        getPubKeys(outgoingMessageInfo) : null;
+                        SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
+                                (outgoingMessageInfo), accountDao, outgoingMessageInfo.getFromPgpContact().getEmail())
+                        : null;
 
                 String rawMessage = EmailUtil.generateRawMessageWithoutAttachments(outgoingMessageInfo, js, pubKeys);
                 long generatedUID = EmailUtil.generateOutboxUID(getApplicationContext());
@@ -137,27 +136,42 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(rawMessage,
                         StandardCharsets.UTF_8));
 
+                File messageAttachmentCacheDirectory = new File(attachmentsCacheDirectory,
+                        UUID.randomUUID().toString());
+
                 ContentValues contentValues = prepareContentValues(outgoingMessageInfo, generatedUID, mimeMessage,
-                        rawMessage);
+                        rawMessage, messageAttachmentCacheDirectory);
 
                 Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(), contentValues);
 
                 if (newMessageUri != null) {
-                    addAttachmentsToCache(outgoingMessageInfo, generatedUID, pubKeys);
-
                     new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
                             JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getCountOfMessagesForLabel
                                     (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX));
-                }
 
-                if (CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-                    messageDaoSource.updateMessageState(getApplicationContext(),
-                            accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.QUEUED);
-                } else {
-                    //download attachments
-                }
+                    if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
+                            || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+                        if (!messageAttachmentCacheDirectory.exists()) {
+                            if (!messageAttachmentCacheDirectory.mkdir()) {
+                                Log.e(TAG, "Create cache directory " + attachmentsCacheDirectory.getName() + " filed!");
+                                messageDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+                                        JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.CASH_ERROR);
+                                return;
+                            }
+                        }
 
-                MessagesSenderJobService.schedule(getApplicationContext());
+                        addAttachmentsToCache(outgoingMessageInfo, generatedUID, pubKeys,
+                                messageAttachmentCacheDirectory);
+                    }
+
+                    if (CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
+                        messageDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.QUEUED);
+                        MessagesSenderJobService.schedule(getApplicationContext());
+                    } else {
+                        ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
@@ -168,7 +182,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
     @NonNull
     private ContentValues prepareContentValues(OutgoingMessageInfo outgoingMessageInfo,
-                                               long generatedUID, MimeMessage mimeMessage, String rawMessage)
+                                               long generatedUID, MimeMessage mimeMessage,
+                                               String rawMessage, File attachmentsCacheDirectory)
             throws MessagingException {
         ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, mimeMessage, generatedUID, false);
@@ -181,25 +196,14 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
                 outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
         contentValues.put(MessageDaoSource.COL_STATE, MessageState.NEW.getValue());
+        contentValues.put(MessageDaoSource.COL_ATTACHMENTS_DIRECTORY, attachmentsCacheDirectory.getName());
 
         return contentValues;
     }
 
-    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID, String[] pubKeys) {
+    private void addAttachmentsToCache(OutgoingMessageInfo outgoingMessageInfo, long generatedUID, String[] pubKeys,
+                                       File messageAttachmentCacheDirectory) {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-        File messageAttachmentCacheDirectory;
-
-        if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
-                || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-            messageAttachmentCacheDirectory = new File(attachmentsCacheDirectory, UUID.randomUUID().toString());
-            if (!messageAttachmentCacheDirectory.mkdir()) {
-                throw new IllegalStateException("Create cache directory " + attachmentsCacheDirectory.getName() +
-                        " filed!");
-            }
-        } else {
-            return;
-        }
-
         List<AttachmentInfo> cachedAttachments = new ArrayList<>();
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
@@ -284,56 +288,5 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 contactsDaoSource.addRow(getApplicationContext(), pgpContact);
             }
         }
-    }
-
-    /**
-     * Get public keys for recipients + keys of the sender;
-     *
-     * @return <tt>String[]</tt> An array of public keys.
-     */
-    private String[] getPubKeys(OutgoingMessageInfo outgoingMessageInfo) throws NoKeyAvailableException {
-        ArrayList<String> publicKeys = new ArrayList<>();
-        for (PgpContact pgpContact : EmailUtil.getAllRecipients(outgoingMessageInfo)) {
-            if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
-                publicKeys.add(pgpContact.getPubkey());
-            }
-        }
-
-        publicKeys.add(getAccountPublicKey(outgoingMessageInfo));
-
-        return publicKeys.toArray(new String[0]);
-    }
-
-    /**
-     * Get a public key of the sender;
-     *
-     * @return <tt>String</tt> The sender public key.
-     */
-    private String getAccountPublicKey(OutgoingMessageInfo outgoingMessageInfo) throws NoKeyAvailableException {
-        UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
-        List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(getApplicationContext(),
-                outgoingMessageInfo.getFromPgpContact().getEmail());
-
-        if (longIds.isEmpty()) {
-            if (accountDao.getEmail().equalsIgnoreCase(outgoingMessageInfo.getFromPgpContact().getEmail())) {
-                throw new NoKeyAvailableException(getApplicationContext(), accountDao.getEmail(), null);
-            } else {
-                longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(getApplicationContext(), accountDao.getEmail());
-                if (longIds.isEmpty()) {
-                    throw new NoKeyAvailableException(getApplicationContext(), accountDao.getEmail(),
-                            outgoingMessageInfo.getFromPgpContact().getEmail());
-                }
-            }
-        }
-
-        PgpKeyInfo pgpKeyInfo = new SecurityStorageConnector(getApplicationContext()).getPgpPrivateKey(longIds.get(0));
-        if (pgpKeyInfo != null) {
-            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-            if (pgpKey != null) {
-                return pgpKey.toPublic().armor();
-            }
-        }
-
-        throw new IllegalArgumentException("Internal error: PgpKeyInfo is null!");
     }
 }
