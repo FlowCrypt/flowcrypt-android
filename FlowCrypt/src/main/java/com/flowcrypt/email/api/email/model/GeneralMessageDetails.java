@@ -51,6 +51,7 @@ public class GeneralMessageDetails implements Parcelable {
     private boolean isMessageHasAttachment;
     private boolean isEncrypted;
     private MessageState messageState;
+    private String attachmentsDirectory;
 
     public GeneralMessageDetails() {
     }
@@ -71,6 +72,7 @@ public class GeneralMessageDetails implements Parcelable {
         this.isEncrypted = in.readByte() != 0;
         int tmpMessageState = in.readInt();
         this.messageState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
+        this.attachmentsDirectory = in.readString();
     }
 
     @Override
@@ -90,6 +92,7 @@ public class GeneralMessageDetails implements Parcelable {
                 ", isMessageHasAttachment=" + isMessageHasAttachment +
                 ", isEncrypted=" + isEncrypted +
                 ", messageState=" + messageState +
+                ", attachmentsDirectory=" + attachmentsDirectory +
                 '}';
     }
 
@@ -111,13 +114,14 @@ public class GeneralMessageDetails implements Parcelable {
                 Objects.equals(subject, that.subject) &&
                 Arrays.equals(flags, that.flags) &&
                 Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments) &&
-                messageState == that.messageState;
+                messageState == that.messageState &&
+                Objects.equals(attachmentsDirectory, that.attachmentsDirectory);
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
-                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState);
+                rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState, attachmentsDirectory);
         result = 31 * result + Arrays.hashCode(from);
         result = 31 * result + Arrays.hashCode(to);
         result = 31 * result + Arrays.hashCode(cc);
@@ -146,6 +150,7 @@ public class GeneralMessageDetails implements Parcelable {
         dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
         dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
         dest.writeInt(this.messageState == null ? -1 : this.messageState.ordinal());
+        dest.writeString(this.attachmentsDirectory);
     }
 
     public String getEmail() {
@@ -262,5 +267,13 @@ public class GeneralMessageDetails implements Parcelable {
 
     public void setMessageState(MessageState messageState) {
         this.messageState = messageState;
+    }
+
+    public String getAttachmentsDirectory() {
+        return attachmentsDirectory;
+    }
+
+    public void setAttachmentsDirectory(String attachmentsDirectory) {
+        this.attachmentsDirectory = attachmentsDirectory;
     }
 }
