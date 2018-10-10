@@ -245,7 +245,7 @@ public class MessagesSenderJobService extends JobService {
 
                         if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                             deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
-                                    generalMessageDetails, attachmentDaoSource, attachmentInfoList);
+                                    generalMessageDetails, attachmentDaoSource);
                         }
 
                         imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
@@ -308,7 +308,7 @@ public class MessagesSenderJobService extends JobService {
 
                     if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                         deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
-                                generalMessageDetails, attachmentDaoSource, attachmentInfoList);
+                                generalMessageDetails, attachmentDaoSource);
                     }
 
                     imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
@@ -338,33 +338,15 @@ public class MessagesSenderJobService extends JobService {
             }
         }
 
-        private void deleteMessageAttachments(Context context, AccountDao accountDao, File
-                attachmentsCacheDirectory, GeneralMessageDetails generalMessageDetails, AttachmentDaoSource
-                                                      attachmentDaoSource, List<AttachmentInfo> attachmentInfoList)
-                throws IOException {
-            AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
+        private void deleteMessageAttachments(Context context, AccountDao accountDao, File attachmentsCacheDirectory,
+                                              GeneralMessageDetails generalMessageDetails,
+                                              AttachmentDaoSource attachmentDaoSource) throws IOException {
             attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
                     JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
-            Uri uri = attachmentInfo.getUri();
-
-            if (uri == null) {
-                return;
-            }
-
-            List<String> segments = uri.getPathSegments();
-            int size = segments.size();
-
-            if (size <= 1) {
-                return;
-            }
-
-            String attachmentFolderName = segments.get(size - 2);
-
-            if (!TextUtils.isEmpty(attachmentFolderName)) {
-                FileAndDirectoryUtils.deleteDirectory(new File
-                        (attachmentsCacheDirectory,
-                                attachmentFolderName));
+            if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+                FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
+                        generalMessageDetails.getAttachmentsDirectory()));
             }
         }
 

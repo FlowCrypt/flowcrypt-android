@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -328,25 +327,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                                 JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
                 if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                    AttachmentInfo attachmentInfo = attachmentInfoList.get(0);
                     new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
                             folder.getFolderAlias(), generalMessageDetails.getUid());
 
-                    Uri uri = attachmentInfo.getUri();
-                    if (uri != null) {
-                        List<String> segments = uri.getPathSegments();
-                        int size = segments.size();
-                        if (size > 1) {
-                            String attachmentFolderName = segments.get(size - 2);
-
-                            if (!TextUtils.isEmpty(attachmentFolderName)) {
-                                try {
-                                    FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
-                                            Constants.ATTACHMENTS_CACHE_DIR), attachmentFolderName));
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                    if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+                        try {
+                            FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
+                                    Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
