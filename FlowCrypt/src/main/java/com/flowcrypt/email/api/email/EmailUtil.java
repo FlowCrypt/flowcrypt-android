@@ -23,9 +23,11 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpContact;
@@ -860,6 +862,31 @@ public class EmailUtil {
         }
 
         return pgpContacts.toArray(new PgpContact[0]);
+    }
+
+    /**
+     * Generate a list of the all recipients.
+     *
+     * @return A list of the all recipients
+     */
+    public static PgpContact[] getAllRecipients(Context context, GeneralMessageDetails generalMessageDetails) {
+        List<String> emails = new ArrayList<>();
+
+        if (generalMessageDetails.getTo() != null) {
+            for (InternetAddress internetAddress : generalMessageDetails.getTo()) {
+                emails.add(internetAddress.getAddress());
+            }
+        }
+
+        if (generalMessageDetails.getCc() != null) {
+            for (InternetAddress internetAddress : generalMessageDetails.getCc()) {
+                emails.add(internetAddress.getAddress());
+            }
+        }
+
+        //todo-denbond7 need to add support BCC
+
+        return new ContactsDaoSource().getPgpContactsListFromDatabase(context, emails).toArray(new PgpContact[0]);
     }
 
     /**
