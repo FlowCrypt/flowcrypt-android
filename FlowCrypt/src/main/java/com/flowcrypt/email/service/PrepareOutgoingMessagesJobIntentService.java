@@ -195,7 +195,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList()));
         contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
                 outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
-        contentValues.put(MessageDaoSource.COL_STATE, MessageState.NEW.getValue());
+        contentValues.put(MessageDaoSource.COL_STATE, outgoingMessageInfo.isForwarded()
+                ? MessageState.NEW_FORWARDED.getValue() : MessageState.NEW.getValue());
         contentValues.put(MessageDaoSource.COL_ATTACHMENTS_DIRECTORY, attachmentsCacheDirectory.getName());
 
         return contentValues;

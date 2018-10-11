@@ -20,7 +20,8 @@ public enum MessageState {
     SENDING(3),
     CASH_ERROR(4),
     SENT(5),
-    SENT_WITHOUT_LOCAL_COPY(6);
+    SENT_WITHOUT_LOCAL_COPY(6),
+    NEW_FORWARDED(7);
 
     private int value;
 

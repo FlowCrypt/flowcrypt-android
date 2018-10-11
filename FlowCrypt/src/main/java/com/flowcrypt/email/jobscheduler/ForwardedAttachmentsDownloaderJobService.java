@@ -171,7 +171,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
 
                     if (accountDao != null) {
                         List<GeneralMessageDetails> listOfNewMessages = messageDaoSource.getOutboxMessages
-                                (context, accountDao.getEmail(), MessageState.NEW);
+                                (context, accountDao.getEmail(), MessageState.NEW_FORWARDED);
 
                         if (!CollectionUtils.isEmpty(listOfNewMessages)) {
                             session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
@@ -188,6 +188,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                 publishProgress(false);
             } catch (Exception e) {
                 e.printStackTrace();
+                ExceptionUtil.handleError(e);
                 publishProgress(true);
             }
 
@@ -218,7 +219,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
 
             while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
-                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.NEW))) {
+                    .getOutboxMessages(context, accountDao.getEmail(), MessageState.NEW_FORWARDED))) {
                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
                 File messageAttachmentsDir =
                         new File(attachmentCacheDir, generalMessageDetails.getAttachmentsDirectory());
@@ -232,11 +233,16 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                                     JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
                     if (CollectionUtils.isEmpty(attachmentInfoList)) {
-                        //handle this
+                        messageDaoSource.updateMessageState(context,
+                                generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                                generalMessageDetails.getUid(), MessageState.QUEUED);
+                        continue;
                     }
 
                     IMAPFolder folderOfForwardedMessage = null;
                     Message forwardedMessage = null;
+
+                    MessageState messageState = MessageState.QUEUED;
 
                     for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                         if (attachmentInfo.isForwarded() && attachmentInfo.getUri() == null) {
@@ -255,7 +261,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                             }
 
                             if (forwardedMessage == null) {
-                                //handle this
+                                messageState = MessageState.CASH_ERROR;
+                                break;
                             }
 
                             Part partWithForwardedAttachment = ImapProtocolUtil.getAttachmentPartById
@@ -276,14 +283,23 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                                         FileUtils.copyInputStreamToFile(inputStream, tempFile);
                                     }
 
-                                    FileUtils.moveFile(tempFile, attachmentFile);
-                                    attachmentInfo.setUri(FileProvider.getUriForFile(context,
-                                            Constants.FILE_PROVIDER_AUTHORITY, attachmentFile));
+                                    if (messageAttachmentsDir.exists()) {
+                                        FileUtils.moveFile(tempFile, attachmentFile);
+                                        attachmentInfo.setUri(FileProvider.getUriForFile(context,
+                                                Constants.FILE_PROVIDER_AUTHORITY, attachmentFile));
+                                    } else {
+                                        FileAndDirectoryUtils.cleanDirectory(forwardedAttachmentCacheDir);
+                                        //It means the user has already deleted the current message. We don't need
+                                        // to download other attachments.
+                                        break;
+                                    }
                                 } else {
-                                    //handle this
+                                    messageState = MessageState.CASH_ERROR;
+                                    break;
                                 }
                             } else {
-                                //handle this
+                                messageState = MessageState.CASH_ERROR;
+                                break;
                             }
                         }
 
@@ -296,12 +312,10 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                         }
                     }
 
-                    messageDaoSource.updateMessageState(context,
-                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                            generalMessageDetails.getUid(), MessageState.QUEUED);
-
-                    MessagesSenderJobService.schedule(context);
-
+                    if (messageDaoSource.updateMessageState(context, generalMessageDetails.getEmail(),
+                            generalMessageDetails.getLabel(), generalMessageDetails.getUid(), messageState) > 0) {
+                        MessagesSenderJobService.schedule(context);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
 

@@ -238,6 +238,7 @@ public class MessageListAdapter extends CursorAdapter {
 
         switch (messageState) {
             case NEW:
+            case NEW_FORWARDED:
                 state = context.getString(R.string.preparing);
                 stateTextColor = ContextCompat.getColor(context, R.color.colorAccent);
                 break;
