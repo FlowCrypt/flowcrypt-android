@@ -32,6 +32,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -53,10 +54,12 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 /**
+ * This realization of {@link JobService} downloads the attachments for forwarding purposes.
+ *
  * @author Denis Bondarenko
- * Date: 09.10.2018
- * Time: 11:48
- * E-mail: DenBond7@gmail.com
+ *         Date: 09.10.2018
+ *         Time: 11:48
+ *         E-mail: DenBond7@gmail.com
  */
 public class ForwardedAttachmentsDownloaderJobService extends JobService {
 
@@ -237,6 +240,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
 
                     for (AttachmentInfo attachmentInfo : attachmentInfoList) {
                         if (attachmentInfo.isForwarded() && attachmentInfo.getUri() == null) {
+                            FileAndDirectoryUtils.cleanDirectory(forwardedAttachmentCacheDir);
+
                             if (folderOfForwardedMessage == null) {
                                 folderOfForwardedMessage = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
                                         .getFolderByAlias(context, attachmentInfo.getEmail(),
