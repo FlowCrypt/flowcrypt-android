@@ -372,8 +372,7 @@ public class KeyStoreCryptoManager {
         KeyPairGeneratorSpec keyPairGeneratorSpec =
                 new KeyPairGeneratorSpec.Builder(context)
                         .setAlias(ANDROID_KEY_STORE_RSA_ALIAS)
-                        .setSubject(new X500Principal("CN=" + context.getString(R.string
-                                .app_name) + ", OU=cryptup.org, O=Android Authority, C=US"))
+                        .setSubject(new X500Principal("CN=FlowCrypt, OU=flowcrypt.com, O=Android Authority, C=US"))
                         .setStartDate(startDate.getTime())
                         .setEndDate(endDate.getTime())
                         .setSerialNumber(BigInteger.valueOf(startDate.getTimeInMillis()))

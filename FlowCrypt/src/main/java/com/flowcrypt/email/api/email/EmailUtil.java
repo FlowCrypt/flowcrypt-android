@@ -417,7 +417,7 @@ public class EmailUtil {
 
         message.setFrom(new InternetAddress(accountDao.getEmail()));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountDao.getEmail()));
-        message.setSubject(context.getString(R.string.your_key_backup, context.getString(R.string.app_name)));
+        message.setSubject(context.getString(R.string.your_key_backup));
         return message;
     }
 
