@@ -82,12 +82,19 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     public long time_to_utc_timestamp(String string) {
-        if (string.equalsIgnoreCase("NaN")) {
+        if (TextUtils.isEmpty(string) || "NaN".equalsIgnoreCase(string)) {
             return -1;
         }
 
-        return Long.parseLong((String) this.call(str, p("time", "to_utc_timestamp"), new V8Array(v8).push(string)
-                .push(true)));
+        String number = (String) this.call(str, p("time", "to_utc_timestamp"),
+                new V8Array(v8).push(string).push(true));
+
+        try {
+            return Long.parseLong(number);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
     public MimeMessage mime_decode(String mime_message) {
