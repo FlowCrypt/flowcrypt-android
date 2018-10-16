@@ -46,6 +46,7 @@ import java.util.Map;
 import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Message;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
@@ -216,7 +217,7 @@ public class MessageDaoSource extends BaseDaoSource {
             throws MessagingException {
         if (messages != null) {
             ContentResolver contentResolver = context.getContentResolver();
-            ContentValues[] contentValuesArray = new ContentValues[messages.length];
+            ArrayList<ContentValues> contentValuesArrayList = new ArrayList<>();
 
             boolean isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER.equals
                     (SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
@@ -226,30 +227,33 @@ public class MessageDaoSource extends BaseDaoSource {
                     .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
                             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-            for (int i = 0; i < messages.length; i++) {
-                Message message = messages[i];
+            for (Message message : messages) {
+                try {
+                    ContentValues contentValues = prepareContentValues(email, label, message,
+                            imapFolder.getUID(message), isNew);
 
-                ContentValues contentValues = prepareContentValues(email, label, message,
-                        imapFolder.getUID(message), isNew);
-
-                if (isNotificationDisabled) {
-                    contentValues.put(COL_IS_NEW, false);
-                }
-
-                Boolean isMessageEncrypted = areAllMessagesEncrypted ? Boolean.valueOf(true)
-                        : isMessageEncryptedInfo.get(imapFolder.getUID(message));
-                if (isMessageEncrypted != null) {
-                    contentValues.put(COL_IS_ENCRYPTED, isMessageEncrypted);
-
-                    if (isEncryptedMessagesOnly && !isMessageEncrypted) {
+                    if (isNotificationDisabled) {
                         contentValues.put(COL_IS_NEW, false);
                     }
-                }
 
-                contentValuesArray[i] = contentValues;
+                    Boolean isMessageEncrypted = areAllMessagesEncrypted ? Boolean.valueOf(true)
+                            : isMessageEncryptedInfo.get(imapFolder.getUID(message));
+                    if (isMessageEncrypted != null) {
+                        contentValues.put(COL_IS_ENCRYPTED, isMessageEncrypted);
+
+                        if (isEncryptedMessagesOnly && !isMessageEncrypted) {
+                            contentValues.put(COL_IS_NEW, false);
+                        }
+                    }
+
+                    contentValuesArrayList.add(contentValues);
+                } catch (MessageRemovedException e) {
+                    e.printStackTrace();
+                }
             }
 
-            return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
+            return contentResolver.bulkInsert(getBaseContentUri(),
+                    contentValuesArrayList.toArray(new ContentValues[0]));
         } else return 0;
     }
 

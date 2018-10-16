@@ -79,6 +79,7 @@ import javax.activation.DataSource;
 import javax.mail.BodyPart;
 import javax.mail.FetchProfile;
 import javax.mail.Message;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
@@ -569,7 +570,9 @@ public class EmailUtil {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
+            if (!(e instanceof MessageRemovedException)) {
+                ExceptionUtil.handleError(e);
+            }
         }
 
         uidListDeleteCandidates.removeAll(uidList);
@@ -595,7 +598,9 @@ public class EmailUtil {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
+            if (!(e instanceof MessageRemovedException)) {
+                ExceptionUtil.handleError(e);
+            }
         }
         return newCandidates.toArray(new javax.mail.Message[0]);
     }
@@ -625,7 +630,9 @@ public class EmailUtil {
             }
         } catch (MessagingException e) {
             e.printStackTrace();
-            ExceptionUtil.handleError(e);
+            if (!(e instanceof MessageRemovedException)) {
+                ExceptionUtil.handleError(e);
+            }
         }
         return updateCandidates.toArray(new javax.mail.Message[0]);
     }
