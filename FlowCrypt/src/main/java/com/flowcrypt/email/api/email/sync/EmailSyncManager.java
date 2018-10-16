@@ -641,7 +641,12 @@ public class EmailSyncManager {
 
                     runIdleInboxIfNeed();
 
-                    runSyncTask(syncTask, true);
+                    if (accountDao != null) {
+                        runSyncTask(syncTask, true);
+                    } else {
+                        //There is no an active account. Finishing a work.
+                        break;
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -664,8 +669,11 @@ public class EmailSyncManager {
 
                     runIdleInboxIfNeed();
 
-                    if (syncTask != null) {
+                    if (accountDao != null) {
                         runSyncTask(syncTask, true);
+                    } else {
+                        //There is no an active account. Finishing a work.
+                        break;
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
