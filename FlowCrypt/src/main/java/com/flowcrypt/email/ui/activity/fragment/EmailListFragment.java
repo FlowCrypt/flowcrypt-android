@@ -293,7 +293,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             getSnackBar().dismiss();
         }
 
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
+        if (onManageEmailsListener.getCurrentFolder() == null
+                || TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getServerFullFolderName())
+                || JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
                 .getServerFullFolderName())) {
             swipeRefreshLayout.setRefreshing(false);
         } else {

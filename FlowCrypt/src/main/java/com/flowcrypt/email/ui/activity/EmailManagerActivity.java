@@ -385,10 +385,13 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
             case Menu.NONE:
                 Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
-                if (folder == null || !folder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
-                    this.folder = newFolder;
-                    updateEmailsListFragmentAfterFolderChange();
-                    invalidateOptionsMenu();
+                if (newFolder != null) {
+                    if (folder == null || !folder.getServerFullFolderName()
+                            .equals(newFolder.getServerFullFolderName())) {
+                        this.folder = newFolder;
+                        updateEmailsListFragmentAfterFolderChange();
+                        invalidateOptionsMenu();
+                    }
                 }
                 break;
         }

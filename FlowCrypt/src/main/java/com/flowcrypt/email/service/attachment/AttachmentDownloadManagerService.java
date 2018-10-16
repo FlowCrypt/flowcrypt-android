@@ -484,9 +484,16 @@ public class AttachmentDownloadManagerService extends Service {
 
                 Session session = OpenStoreHelper.getAttachmentSession(context, accountDao);
                 Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
-                IMAPFolder imapFolder = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
-                        .getFolderByAlias(context, attachmentInfo.getEmail(), attachmentInfo.getFolder())
-                        .getServerFullFolderName());
+
+                com.flowcrypt.email.api.email.Folder folder = new ImapLabelsDaoSource()
+                        .getFolderByAlias(context, attachmentInfo.getEmail(), attachmentInfo.getFolder());
+
+                if (folder == null) {
+                    throw new IllegalArgumentException("Folder " + attachmentInfo.getFolder() + " doesn't found in " +
+                            "the local cache");
+                }
+
+                IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
                 imapFolder.open(Folder.READ_ONLY);
 
                 javax.mail.Message message = imapFolder.getMessageByUID(attachmentInfo.getUid());
@@ -544,7 +551,7 @@ public class AttachmentDownloadManagerService extends Service {
                                             attachmentFile));
                         }
                     }
-                } else throw new IOException("The attachment does not exists on an IMAP server.");
+                } else throw new IOException("The attachment does not exist on an IMAP server.");
 
                 imapFolder.close(false);
                 store.close();
