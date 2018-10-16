@@ -211,7 +211,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
                 for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
                     try {
-                        InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                        Uri uriOfOriginalFile = attachmentInfo.getUri();
+
+                        InputStream inputStream = getContentResolver().openInputStream(uriOfOriginalFile);
                         if (inputStream != null) {
                             File encryptedTempFile = new File(messageAttachmentCacheDirectory,
                                     attachmentInfo.getName() + ".pgp");
@@ -222,6 +224,11 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                                     Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile));
                             attachmentInfo.setName(encryptedTempFile.getName());
                             cachedAttachments.add(attachmentInfo);
+
+                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri()
+                                    .getAuthority())) {
+                                getContentResolver().delete(uriOfOriginalFile, null, null);
+                            }
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -230,13 +237,20 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             } else {
                 for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
                     try {
-                        InputStream inputStream = getContentResolver().openInputStream(attachmentInfo.getUri());
+                        Uri uriOfOriginalFile = attachmentInfo.getUri();
+
+                        InputStream inputStream = getContentResolver().openInputStream(uriOfOriginalFile);
                         if (inputStream != null) {
                             File cachedAttachment = new File(messageAttachmentCacheDirectory, attachmentInfo.getName());
                             FileUtils.copyInputStreamToFile(inputStream, cachedAttachment);
                             attachmentInfo.setUri(FileProvider.getUriForFile(getApplicationContext(),
                                     Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
                             cachedAttachments.add(attachmentInfo);
+
+                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri()
+                                    .getAuthority())) {
+                                getContentResolver().delete(uriOfOriginalFile, null, null);
+                            }
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

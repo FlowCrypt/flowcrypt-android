@@ -83,7 +83,7 @@ public class Constants {
     public static final String PGP_CACHE_DIR = "PGP";
     public static final String FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded";
     public static final String ATTACHMENTS_CACHE_DIR = "attachments";
-
+    public static final String DRAFT_CACHE_DIR = "draft";
 
     /**
      * The password quality types.

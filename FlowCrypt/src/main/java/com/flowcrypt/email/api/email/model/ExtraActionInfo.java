@@ -5,9 +5,15 @@
 
 package com.flowcrypt.email.api.email.model;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
+import com.flowcrypt.email.api.email.EmailUtil;
+import com.flowcrypt.email.util.RFC6068Parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +72,80 @@ public class ExtraActionInfo implements Parcelable {
         this.bccAddresses = in.createStringArrayList();
         this.subject = in.readString();
         this.body = in.readString();
+    }
+
+    /**
+     * Parse an incoming information from the intent which has next actions:
+     * <ul>
+     * <li>{@link Intent#ACTION_VIEW}</li>
+     * <li>{@link Intent#ACTION_SENDTO}</li>
+     * <li>{@link Intent#ACTION_SEND}</li>
+     * <li>{@link Intent#ACTION_SEND_MULTIPLE}</li>
+     * </ul>
+     *
+     * @param intent An incoming intent.
+     */
+    public static ExtraActionInfo parseExtraActionInfo(Context context, Intent intent) {
+        ExtraActionInfo extraActionInfo = null;
+
+        //parse mailto: URI
+        if (Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_SENDTO.equals(intent.getAction())) {
+            if (intent.getData() != null) {
+                Uri uri = intent.getData();
+                if (RFC6068Parser.isMailTo(uri)) {
+                    extraActionInfo = RFC6068Parser.parse(uri);
+                }
+            }
+        }
+
+        if (extraActionInfo == null) {
+            extraActionInfo = new ExtraActionInfo();
+        }
+
+        switch (intent.getAction()) {
+            case Intent.ACTION_VIEW:
+            case Intent.ACTION_SENDTO:
+            case Intent.ACTION_SEND:
+            case Intent.ACTION_SEND_MULTIPLE:
+
+                CharSequence extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+                // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
+                if (extraText != null && TextUtils.isEmpty(extraActionInfo.getBody())) {
+                    extraActionInfo.setBody(extraText.toString());
+                }
+
+                String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+                // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
+                if (subject != null && TextUtils.isEmpty(extraActionInfo.getSubject())) {
+                    extraActionInfo.setSubject(subject);
+                }
+
+                List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+
+                if (Intent.ACTION_SEND.equals(intent.getAction())) {
+                    Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    if (stream != null) {
+                        AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, stream);
+                        attachmentInfoList.add(attachmentInfo);
+                    }
+                } else {
+                    List<Parcelable> parcelableArrayList = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+                    if (parcelableArrayList != null) {
+                        for (Parcelable parcelable : parcelableArrayList) {
+                            Uri uri = (Uri) parcelable;
+                            if (uri != null) {
+                                AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, uri);
+                                attachmentInfoList.add(attachmentInfo);
+                            }
+                        }
+                    }
+                }
+
+                extraActionInfo.setAttachmentInfoList(attachmentInfoList);
+                break;
+        }
+
+        return extraActionInfo;
     }
 
     @Override

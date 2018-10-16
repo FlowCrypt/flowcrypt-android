@@ -14,16 +14,17 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -80,7 +81,6 @@ import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.RFC6068Parser;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.FlowCryptException;
 import com.hootsuite.nachos.NachoTextView;
@@ -91,6 +91,9 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
 
 import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -115,6 +118,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
     private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
     private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 104;
+    private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
     private Js js;
     private OnMessageSendListener onMessageSendListener;
@@ -132,6 +136,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private PgpContact pgpContactWithNoPublicKey;
     private ExtraActionInfo extraActionInfo;
     private MessageType messageType = MessageType.NEW;
+    private File draftCacheDir;
 
     private ViewGroup layoutAttachments;
     private EditText editTextFrom;
@@ -185,6 +190,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
+        initDraftCacheDirectory();
+
         accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
         fromAddressesArrayAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
@@ -203,7 +210,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             }
 
             if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
-                parseExtraActionInfo(intent);
+                this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
+                addAttachmentsFromExtraActionInfo();
             } else {
                 this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
                 this.incomingMessageInfo = intent.getParcelableExtra(
@@ -694,6 +702,48 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         showInfoSnackbar(getView(), errorMessage);
     }
 
+    private void initDraftCacheDirectory() {
+        draftCacheDir = new File(getContext().getCacheDir(), Constants.DRAFT_CACHE_DIR);
+
+        if (!draftCacheDir.exists()) {
+            if (!draftCacheDir.mkdir()) {
+                Log.e(TAG, "Create cache directory " + draftCacheDir.getName() + " filed!");
+            }
+        }
+    }
+
+    private void addAttachmentsFromExtraActionInfo() {
+        String maxTotalAttachmentSizeWarning = getString(R.string.template_warning_max_total_attachments_size,
+                FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
+
+        for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachmentInfoList()) {
+            if (isAttachmentCanBeAdded(attachmentInfo)) {
+                File draftAttachment = new File(draftCacheDir, attachmentInfo.getName());
+
+                try {
+                    InputStream inputStream = getContext().getContentResolver()
+                            .openInputStream(attachmentInfo.getUri());
+
+                    if (inputStream != null) {
+                        FileUtils.copyInputStreamToFile(inputStream, draftAttachment);
+                        attachmentInfo.setUri(FileProvider.getUriForFile(getContext(),
+                                Constants.FILE_PROVIDER_AUTHORITY, draftAttachment));
+                        attachmentInfoList.add(attachmentInfo);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+
+                    if (!draftAttachment.delete()) {
+                        Log.e(TAG, "Delete " + draftAttachment.getName() + " filed!");
+                    }
+                }
+            } else {
+                Toast.makeText(getContext(), maxTotalAttachmentSizeWarning, Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+    }
+
     private void updateRecipientsFields() {
         getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null, this);
 
@@ -764,91 +814,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         return pgpContacts;
-    }
-
-    /**
-     * Parse an incoming information from the intent which has next actions:
-     * <ul>
-     * <li>{@link Intent#ACTION_VIEW}</li>
-     * <li>{@link Intent#ACTION_SENDTO}</li>
-     * <li>{@link Intent#ACTION_SEND}</li>
-     * <li>{@link Intent#ACTION_SEND_MULTIPLE}</li>
-     * </ul>
-     *
-     * @param intent An incoming intent.
-     */
-    private void parseExtraActionInfo(Intent intent) {
-        //parse mailto: URI
-        if (Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_SENDTO.equals(intent.getAction())) {
-            if (intent.getData() != null) {
-                Uri uri = intent.getData();
-                if (RFC6068Parser.isMailTo(uri)) {
-                    extraActionInfo = RFC6068Parser.parse(uri);
-                }
-            }
-        }
-
-        if (extraActionInfo == null) {
-            extraActionInfo = new ExtraActionInfo();
-        }
-
-        switch (intent.getAction()) {
-            case Intent.ACTION_VIEW:
-            case Intent.ACTION_SENDTO:
-            case Intent.ACTION_SEND:
-            case Intent.ACTION_SEND_MULTIPLE:
-
-                CharSequence extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
-                // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
-                if (extraText != null && TextUtils.isEmpty(extraActionInfo.getBody())) {
-                    extraActionInfo.setBody(extraText.toString());
-                }
-
-                String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-                // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
-                if (subject != null && TextUtils.isEmpty(extraActionInfo.getSubject())) {
-                    extraActionInfo.setSubject(subject);
-                }
-
-                List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
-                String maxTotalAttachmentSizeWarning = getString(R.string.template_warning_max_total_attachments_size,
-                        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
-                if (Intent.ACTION_SEND.equals(intent.getAction())) {
-                    Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                    if (stream != null) {
-                        AttachmentInfo attachmentInfo =
-                                EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
-                        if (isAttachmentCanBeAdded(attachmentInfo)) {
-                            attachmentInfoList.add(attachmentInfo);
-                            this.attachmentInfoList.add(attachmentInfo);
-                        } else {
-                            Toast.makeText(getContext(), maxTotalAttachmentSizeWarning, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                } else {
-                    List<Parcelable> list = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-                    if (list != null) {
-                        for (Parcelable parcelable : list) {
-                            Uri stream = (Uri) parcelable;
-                            if (stream != null) {
-                                AttachmentInfo attachmentInfo =
-                                        EmailUtil.getAttachmentInfoFromUri(getContext(), stream);
-                                if (isAttachmentCanBeAdded(attachmentInfo)) {
-                                    attachmentInfoList.add(attachmentInfo);
-                                    this.attachmentInfoList.add(attachmentInfo);
-                                } else {
-                                    Toast.makeText(getContext(), maxTotalAttachmentSizeWarning,
-                                            Toast.LENGTH_SHORT).show();
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                extraActionInfo.setAttachmentInfoList(attachmentInfoList);
-                break;
-        }
     }
 
     /**
@@ -1571,6 +1536,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                         public void onClick(View v) {
                             attachmentInfoList.remove(attachmentInfo);
                             layoutAttachments.removeView(rootView);
+
+                            //Remove a temp file which was created by our app
+                            Uri uri = attachmentInfo.getUri();
+                            if (uri != null && Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uri.getAuthority())) {
+                                getContext().getContentResolver().delete(uri, null, null);
+                            }
                         }
                     });
                 }
