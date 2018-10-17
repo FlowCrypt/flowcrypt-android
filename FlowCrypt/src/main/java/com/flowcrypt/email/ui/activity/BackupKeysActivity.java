@@ -348,10 +348,6 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             radioGroupBackupsVariants.setOnCheckedChangeListener(this);
         }
 
-        if (findViewById(R.id.buttonSeeMoreBackupOptions) != null) {
-            findViewById(R.id.buttonSeeMoreBackupOptions).setOnClickListener(this);
-        }
-
         buttonBackupAction = findViewById(R.id.buttonBackupAction);
         if (buttonBackupAction != null) {
             buttonBackupAction.setOnClickListener(this);

@@ -157,6 +157,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSeeMoreBackupOptions:
+            case R.id.buttonBackupMyKey:
                 startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
                 break;
         }
@@ -177,6 +178,10 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
 
         if (findViewById(R.id.buttonSeeMoreBackupOptions) != null) {
             findViewById(R.id.buttonSeeMoreBackupOptions).setOnClickListener(this);
+        }
+
+        if (findViewById(R.id.buttonBackupMyKey) != null) {
+            findViewById(R.id.buttonBackupMyKey).setOnClickListener(this);
         }
     }
 

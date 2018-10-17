@@ -32,4 +32,15 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewBackupNotFound" />
+
+    <Button
+        android:id="@+id/buttonBackupMyKey"
+        style="@style/AppWidget.Button.Green"
+        android:layout_width="0dp"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:text="@string/back_up_my_key"
+        android:theme="@style/AppWidget.Button.Green"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewWarning" />
 </android.support.constraint.ConstraintLayout>

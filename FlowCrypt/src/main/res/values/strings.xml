@@ -378,4 +378,5 @@ icelanders prefer real sauna</font>
         settings page and enable your account for IMAP access. (Failure)</string>
     <string name="it_seems_imap_access_is_disabled">Could not connect to mail server.\n\nIt seems IMAP access is
         disabled.\n\nPlease allow IMAP on your Google account.</string>
+    <string name="back_up_my_key">Back up my key</string>
 </resources>
