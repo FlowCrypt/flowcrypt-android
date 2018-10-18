@@ -42,7 +42,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
@@ -81,7 +80,5 @@ public class BackupKeysActivityTest extends BaseTest {
     @Test
     public void testSuccessEmailBackup() {
         onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.layoutSyncStatus)).check(matches(not(isDisplayed())));
-        checkIsSnackBarNotDisplayed();
     }
 }
