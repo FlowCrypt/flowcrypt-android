@@ -117,7 +117,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
     private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
     private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
-    private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 104;
+    private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE = 104;
+    private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105;
     private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
     private Js js;
@@ -162,6 +163,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     private boolean isUpdateInfoAboutCcCompleted = true;
     private boolean isUpdateInfoAboutBccCompleted = true;
     private boolean isIncomingMessageInfoUsed;
+    private boolean isMessageSentToQueue;
 
     public CreateMessageFragment() {
         pgpContactsTo = new ArrayList<>();
@@ -211,7 +213,18 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
             if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
                 this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
-                addAttachmentsFromExtraActionInfo();
+
+                if (isListHasExternalStorageUriAttachments(extraActionInfo.getAttachmentInfoList())) {
+                    if (ContextCompat.checkSelfPermission(getContext(),
+                            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                                REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO);
+                    } else {
+                        addAttachmentsFromExtraActionInfo();
+                    }
+                } else {
+                    addAttachmentsFromExtraActionInfo();
+                }
             } else {
                 this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
                 this.incomingMessageInfo = intent.getParcelableExtra(
@@ -257,6 +270,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (incomingMessageInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext())
                 && onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             updateRecipientsFields();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (!isMessageSentToQueue) {
+            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
+                if (attachmentInfo.getUri() != null && Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(
+                        attachmentInfo.getUri().getAuthority())) {
+                    getContext().getContentResolver().delete(attachmentInfo.getUri(), null, null);
+                }
+            }
         }
     }
 
@@ -396,11 +422,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                     UIUtil.hideSoftInput(getContext(), getView());
                     if (isAllInformationCorrect()) {
                         sendMessage();
-
-                        if (!GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                            UIUtil.showInfoSnackbar(getView(), getString(R.string
-                                    .internet_connection_is_not_available));
-                        }
+                        this.isMessageSentToQueue = true;
                     }
                 } else {
                     Toast.makeText(getContext(), R.string.please_wait_while_information_about_contacts_will_be_updated,
@@ -426,9 +448,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
+            case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE:
                 if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     sendMessage();
+                } else {
+                    Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO:
+                if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    addAttachmentsFromExtraActionInfo();
+                    showAttachments();
                 } else {
                     Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
                             Toast.LENGTH_LONG).show();
@@ -1035,11 +1067,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         if (attachmentInfoList != null && !attachmentInfoList.isEmpty()
-                && isMessageHasExternalStorageUriAttachments()) {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                && isListHasExternalStorageUriAttachments(this.attachmentInfoList)) {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE);
                 return false;
             } else {
                 return true;
@@ -1065,7 +1097,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
                 });
     }
 
-    private boolean isMessageHasExternalStorageUriAttachments() {
+    private boolean isListHasExternalStorageUriAttachments(List<AttachmentInfo> attachmentInfoList) {
         for (AttachmentInfo attachmentInfo : attachmentInfoList) {
             if (attachmentInfo.getUri() != null
                     && ContentResolver.SCHEME_FILE.equalsIgnoreCase(attachmentInfo.getUri().getScheme())) {
@@ -1179,6 +1211,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
         editTextEmailSubject.setText(extraActionInfo.getSubject());
         editTextEmailMessage.setText(extraActionInfo.getBody());
+
+        if (TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+            editTextRecipientsTo.requestFocus();
+            return;
+        }
+
+        if (TextUtils.isEmpty(editTextEmailSubject.getText())) {
+            editTextEmailSubject.requestFocus();
+            return;
+        }
+
         editTextEmailMessage.requestFocus();
     }
 
