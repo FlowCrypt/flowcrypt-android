@@ -12,6 +12,8 @@ import android.support.test.espresso.IdlingRegistry;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.espresso.matcher.ViewMatchers;
+import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.EditText;
 
 import com.flowcrypt.email.R;
@@ -29,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.clearText;
@@ -52,6 +55,8 @@ import static org.hamcrest.Matchers.not;
  * Time: 13:59
  * E-mail: DenBond7@gmail.com
  */
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
 
     private static final String FOLDER_NAME = "INBOX";
@@ -121,11 +126,6 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
         onView(withId(android.support.v7.appcompat.R.id.search_close_btn)).perform(click());
         onView(isAssignableFrom(EditText.class)).check(matches(withText(isEmptyString())))
                 .check(matches(withHint(InstrumentationRegistry.getTargetContext().getString(R.string.search))));
-    }
-
-    @Test
-    public void testDownloadAllMessages() {
-        testDownloadAllMessages(22);
     }
 
     private static ContentValues generateContentValues() {

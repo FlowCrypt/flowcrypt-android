@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -24,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -50,7 +53,8 @@ import static org.hamcrest.Matchers.not;
  *         Time: 08:55
  *         E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class ShareIntentsTest extends BaseTest {
     private static final int ATTACHMENTS_COUNT = 3;
     private static final String ENCODED_SUBJECT = "some%20subject";

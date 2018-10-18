@@ -36,7 +36,6 @@ import static org.hamcrest.Matchers.allOf;
  *         Time: 14:56
  *         E-mail: DenBond7@gmail.com
  */
-
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class HtmlViewFromAssetsRawActivityTest extends BaseTest {

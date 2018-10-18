@@ -14,6 +14,8 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.IdlingRegistry;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.filters.LargeTest;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -35,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +68,8 @@ import static org.hamcrest.Matchers.not;
  * Time: 16:16
  * E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
     private AccountDao userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters();
