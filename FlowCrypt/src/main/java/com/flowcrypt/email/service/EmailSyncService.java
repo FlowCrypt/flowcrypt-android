@@ -307,8 +307,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
             if (TextUtils.isEmpty(rawMessageWithOutAttachments)) {
                 sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND);
             } else {
-                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
                 updateAttachmentTable(accountDao, localFolder, imapFolder, message);
+                sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
             }
         } catch (RemoteException | MessagingException | IOException e) {
             e.printStackTrace();
