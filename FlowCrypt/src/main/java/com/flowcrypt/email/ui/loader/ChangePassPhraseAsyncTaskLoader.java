@@ -21,6 +21,7 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
                     (longIdListOfAccountPrivateKeys.toArray(new String[0]));
 
             if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
-                throw new IllegalArgumentException("There are no private keys for " + accountDao.getEmail());
+                throw new NoPrivateKeysAvailableException(getContext(), accountDao.getEmail());
             }
 
             KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());

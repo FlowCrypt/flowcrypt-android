@@ -379,4 +379,5 @@ icelanders prefer real sauna</font>
     <string name="it_seems_imap_access_is_disabled">Could not connect to mail server.\n\nIt seems IMAP access is
         disabled.\n\nPlease allow IMAP on your Google account.</string>
     <string name="back_up_my_key">Back up my key</string>
+    <string name="there_are_no_private_keys">There are no imported private keys for %1$s</string>
 </resources>

@@ -21,6 +21,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
+import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
@@ -120,7 +121,7 @@ public class SecurityUtils {
      */
     public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao,
                                                    boolean isWeakCheckingEnabled) throws
-            PrivateKeyStrengthException, DifferentPassPhrasesException {
+            PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException {
         StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
         Zxcvbn zxcvbn = new Zxcvbn();
         List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
@@ -130,7 +131,7 @@ public class SecurityUtils {
                 (longIdListOfAccountPrivateKeys.toArray(new String[0]));
 
         if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
-            throw new IllegalArgumentException("There are no private keys for " + accountDao.getEmail());
+            throw new NoPrivateKeysAvailableException(context, accountDao.getEmail());
         }
 
         String firstPassPhrase = null;
