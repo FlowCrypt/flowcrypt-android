@@ -258,6 +258,11 @@ public class MessageListAdapter extends CursorAdapter {
                 stateTextColor = ContextCompat.getColor(context, R.color.red);
                 break;
 
+            case ERROR_DURING_CREATION:
+                state = context.getString(R.string.corrupted);
+                stateTextColor = ContextCompat.getColor(context, R.color.red);
+                break;
+
             default:
                 state = "";
                 break;

@@ -124,6 +124,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
             updateContactsLastUseDateTime(outgoingMessageInfo);
 
+            Uri newMessageUri = null;
+            long generatedUID = -1;
+
             try {
                 String[] pubKeys = outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
                         SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
@@ -131,7 +134,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         : null;
 
                 String rawMessage = EmailUtil.generateRawMessageWithoutAttachments(outgoingMessageInfo, js, pubKeys);
-                long generatedUID = EmailUtil.generateOutboxUID(getApplicationContext());
+                generatedUID = EmailUtil.generateOutboxUID(getApplicationContext());
 
                 MimeMessage mimeMessage = new MimeMessage(session, IOUtils.toInputStream(rawMessage,
                         StandardCharsets.UTF_8));
@@ -142,7 +145,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 ContentValues contentValues = prepareContentValues(outgoingMessageInfo, generatedUID, mimeMessage,
                         rawMessage, messageAttachmentCacheDirectory);
 
-                Uri newMessageUri = messageDaoSource.addRow(getApplicationContext(), contentValues);
+                newMessageUri = messageDaoSource.addRow(getApplicationContext(), contentValues);
 
                 if (newMessageUri != null) {
                     new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
@@ -176,7 +179,11 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
-                //todo-denbond7 need to handle this
+
+                if (newMessageUri != null) {
+                    messageDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+                            JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.ERROR_DURING_CREATION);
+                }
             }
         }
     }

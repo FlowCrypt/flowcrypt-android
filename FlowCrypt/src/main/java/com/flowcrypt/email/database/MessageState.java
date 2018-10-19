@@ -21,7 +21,8 @@ public enum MessageState {
     CACHE_ERROR(4),
     SENT(5),
     SENT_WITHOUT_LOCAL_COPY(6),
-    NEW_FORWARDED(7);
+    NEW_FORWARDED(7),
+    ERROR_DURING_CREATION(8);
 
     private int value;
 
