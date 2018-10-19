@@ -13,6 +13,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
 import android.support.test.espresso.idling.CountingIdlingResource;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -128,7 +129,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                             });
                 } else if (e instanceof NoPrivateKeysAvailableException) {
                     UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
-                    showInfoSnackbar(getRootView(), e.getMessage());
+                    showInfoSnackbar(getRootView(), e.getMessage(), Snackbar.LENGTH_LONG);
                 } else {
                     UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
                     showSnackbar(getRootView(),
@@ -181,7 +182,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 if (CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource().getLongIdsByEmail
                         (getApplicationContext(), accountDao.getEmail()))) {
                     showInfoSnackbar(getRootView(), getString(R.string.there_are_no_private_keys,
-                            accountDao.getEmail()));
+                            accountDao.getEmail()), Snackbar.LENGTH_LONG);
                 } else {
                     switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
                         case R.id.radioButtonEmail:
