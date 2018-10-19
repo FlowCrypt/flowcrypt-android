@@ -253,8 +253,8 @@ public class MessageListAdapter extends CursorAdapter {
                 stateTextColor = ContextCompat.getColor(context, R.color.colorPrimary);
                 break;
 
-            case CASH_ERROR:
-                state = context.getString(R.string.cash_error);
+            case CACHE_ERROR:
+                state = context.getString(R.string.cache_error);
                 stateTextColor = ContextCompat.getColor(context, R.color.red);
                 break;
 

@@ -147,7 +147,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                 if (newMessageUri != null) {
                     new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
                             JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getCountOfMessagesForLabel
-                                    (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX));
+                                    (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants
+                                            .FOLDER_OUTBOX));
 
                     if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
                             || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
@@ -155,7 +156,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                             if (!messageAttachmentCacheDirectory.mkdir()) {
                                 Log.e(TAG, "Create cache directory " + attachmentsCacheDirectory.getName() + " filed!");
                                 messageDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
-                                        JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.CASH_ERROR);
+                                        JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.CACHE_ERROR);
                                 return;
                             }
                         }

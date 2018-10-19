@@ -18,7 +18,7 @@ public enum MessageState {
     NEW(1),
     QUEUED(2),
     SENDING(3),
-    CASH_ERROR(4),
+    CACHE_ERROR(4),
     SENT(5),
     SENT_WITHOUT_LOCAL_COPY(6),
     NEW_FORWARDED(7);

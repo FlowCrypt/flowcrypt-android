@@ -261,7 +261,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                             }
 
                             if (forwardedMessage == null) {
-                                messageState = MessageState.CASH_ERROR;
+                                messageState = MessageState.CACHE_ERROR;
                                 break;
                             }
 
@@ -294,11 +294,11 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                                         break;
                                     }
                                 } else {
-                                    messageState = MessageState.CASH_ERROR;
+                                    messageState = MessageState.CACHE_ERROR;
                                     break;
                                 }
                             } else {
-                                messageState = MessageState.CASH_ERROR;
+                                messageState = MessageState.CACHE_ERROR;
                                 break;
                             }
                         }
