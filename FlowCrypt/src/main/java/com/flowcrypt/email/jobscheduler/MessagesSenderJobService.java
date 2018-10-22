@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.activation.DataHandler;
@@ -215,15 +216,35 @@ public class MessagesSenderJobService extends JobService {
         }
 
         private void sendQueuedMessages(Context context, AccountDao accountDao, MessageDaoSource messageDaoSource,
-                                        ImapLabelsDaoSource imapLabelsDaoSource, File attachmentsCacheDirectory) {
+                                        ImapLabelsDaoSource imapLabelsDaoSource, File attachmentsCacheDirectory)
+                throws InterruptedException {
             List<GeneralMessageDetails> generalMessageDetailsList;
+            int uidOfLastMessage = 0;
             while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
                     .getOutboxMessages(context, accountDao.getEmail(), MessageState.QUEUED))) {
-                GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
+                Iterator<GeneralMessageDetails> iterator = generalMessageDetailsList.iterator();
+                GeneralMessageDetails generalMessageDetails = null;
+
+                while (iterator.hasNext()) {
+                    GeneralMessageDetails generalMessageDetailsTemp = iterator.next();
+                    if (generalMessageDetailsTemp.getUid() > uidOfLastMessage) {
+                        generalMessageDetails = generalMessageDetailsTemp;
+                        break;
+                    }
+                }
+
+                if (generalMessageDetails == null) {
+                    generalMessageDetails = generalMessageDetailsList.get(0);
+                }
+
+                uidOfLastMessage = generalMessageDetails.getUid();
+
                 try {
                     messageDaoSource.updateMessageState(context,
                             generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
                             generalMessageDetails.getUid(), MessageState.SENDING);
+                    Thread.sleep(2000);
+
                     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
                     List<AttachmentInfo> attachmentInfoList =
                             attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
@@ -273,6 +294,8 @@ public class MessagesSenderJobService extends JobService {
                         publishProgress(true);
                         break;
                     }
+
+                    Thread.sleep(5000);
                 }
             }
         }
@@ -287,9 +310,6 @@ public class MessagesSenderJobService extends JobService {
                     .getOutboxMessages(context, accountDao.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY))) {
                 GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
                 try {
-                    messageDaoSource.updateMessageState(context,
-                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                            generalMessageDetails.getUid(), MessageState.SENDING);
                     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
                     List<AttachmentInfo> attachmentInfoList =
                             attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
