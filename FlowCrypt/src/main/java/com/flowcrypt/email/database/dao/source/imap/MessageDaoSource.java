@@ -609,6 +609,33 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     /**
+     * Get all messages of the outbox folder which are not sent.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   The email of the {@link Folder}.
+     * @return A  list of {@link GeneralMessageDetails} objects.
+     */
+    public List<GeneralMessageDetails> getOutboxMessages(Context context, String email) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(getBaseContentUri(),
+                null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " NOT IN (?, ?)",
+                new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENT.getValue()),
+                        String.valueOf(MessageState.SENT_WITHOUT_LOCAL_COPY.getValue())},
+                null);
+
+        List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                generalMessageDetailsList.add(getMessageInfo(cursor));
+            }
+            cursor.close();
+        }
+
+        return generalMessageDetailsList;
+    }
+
+    /**
      * Get new messages.
      *
      * @param context Interface to global information about an application environment.

@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
@@ -318,6 +319,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 folder.getFolderAlias(), generalMessageDetails.getUid());
         if (deletedRows > 0) {
             Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+
+            new ImapLabelsDaoSource().updateLabelMessageCount(this, generalMessageDetails.getEmail(),
+                    JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(this,
+                            generalMessageDetails.getEmail()).size());
 
             if (generalMessageDetails.isMessageHasAttachment()) {
                 AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();

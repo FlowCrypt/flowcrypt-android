@@ -149,9 +149,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
                 if (newMessageUri != null) {
                     new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
-                            JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getCountOfMessagesForLabel
-                                    (getApplicationContext(), accountDao.getEmail(), JavaEmailConstants
-                                            .FOLDER_OUTBOX));
+                            JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getOutboxMessages
+                                    (getApplicationContext(),
+                                            accountDao.getEmail()).size());
 
                     if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
                             || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
@@ -255,8 +255,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                                     Constants.FILE_PROVIDER_AUTHORITY, cachedAttachment));
                             cachedAttachments.add(attachmentInfo);
 
-                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri()
-                                    .getAuthority())) {
+                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uriOfOriginalFile.getAuthority())) {
                                 getContentResolver().delete(uriOfOriginalFile, null, null);
                             }
                         }

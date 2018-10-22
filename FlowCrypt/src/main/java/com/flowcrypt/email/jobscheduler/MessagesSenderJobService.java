@@ -270,7 +270,8 @@ public class MessagesSenderJobService extends JobService {
                         }
 
                         imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
-                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
+                                JavaEmailConstants.FOLDER_OUTBOX, messageDaoSource.getOutboxMessages(context,
+                                        generalMessageDetails.getEmail()).size());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -330,9 +331,6 @@ public class MessagesSenderJobService extends JobService {
                         deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
                                 generalMessageDetails, attachmentDaoSource);
                     }
-
-                    imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
-                            JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetailsList.size() - 1);
                 } catch (Exception e) {
                     e.printStackTrace();
 
