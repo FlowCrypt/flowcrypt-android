@@ -54,7 +54,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
     @Override
     public void runAction(Js js, JsListener jsListener) {
         IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
-        if (rawMimeMessage != null) {
+        if (!TextUtils.isEmpty(rawMimeMessage)) {
             ProcessedMime processedMime = js.mime_process(rawMimeMessage);
             ArrayList<String> addressesFrom = new ArrayList<>();
             ArrayList<String> addressesTo = new ArrayList<>();
@@ -97,7 +97,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMessageInfo);
         } else {
             jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR,
-                    new NullPointerException("The raw MIME message is null!"), ownerKey, requestCode);
+                    new NullPointerException("The raw MIME message is null or empty!"), ownerKey, requestCode);
         }
     }
 
