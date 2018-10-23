@@ -233,8 +233,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                             attachmentInfo.setName(encryptedTempFile.getName());
                             cachedAttachments.add(attachmentInfo);
 
-                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri()
-                                    .getAuthority())) {
+                            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uriOfOriginalFile.getAuthority())) {
                                 getContentResolver().delete(uriOfOriginalFile, null, null);
                             }
                         }
