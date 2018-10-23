@@ -150,11 +150,11 @@ public class JsBackgroundService extends BaseService implements JsListener {
             if (replyToMessengers.containsKey(ownerKey)) {
                 Messenger messenger = replyToMessengers.get(ownerKey);
                 messenger.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e));
-                ExceptionUtil.handleError(e);
             }
         } catch (RemoteException remoteException) {
             remoteException.printStackTrace();
         }
+        ExceptionUtil.handleError(e);
     }
 
     @Override
