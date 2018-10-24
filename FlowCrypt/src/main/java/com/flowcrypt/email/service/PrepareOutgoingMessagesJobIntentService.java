@@ -159,7 +159,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                             if (!messageAttachmentCacheDirectory.mkdir()) {
                                 Log.e(TAG, "Create cache directory " + attachmentsCacheDirectory.getName() + " filed!");
                                 messageDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
-                                        JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.CACHE_ERROR);
+                                        JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState
+                                                .ERROR_CACHE_PROBLEM);
                                 return;
                             }
                         }
@@ -266,6 +267,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                        ExceptionUtil.handleError(e);
                     }
                 }
             }

@@ -371,7 +371,7 @@ icelanders prefer real sauna</font>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
     <string name="queued">Queued</string>
-    <string name="cache_error">Cache error</string>
+    <string name="cache_error">Can\'t send a message: there is a cache problem</string>
     <string name="corrupted">Corrupted</string>
     <string name="can_not_delete_sending_message">Sorry. We can\'t delete a message which is sending now</string>
     <string name="preparing">Preparing&#8230;</string>
@@ -381,4 +381,7 @@ icelanders prefer real sauna</font>
         disabled.\n\nPlease allow IMAP on your Google account.</string>
     <string name="back_up_my_key">Back up my key</string>
     <string name="there_are_no_private_keys">There are no imported private keys for %1$s</string>
+    <string name="original_message_missing">Could not forward: original message missing</string>
+    <string name="original_attachment_not_found">Could not forward: some attachments are not available</string>
+    <string name="could_not_create">Could not create: an unknown error</string>
 </resources>

@@ -279,7 +279,7 @@ public class MessagesSenderJobService extends JobService {
 
                     if (e.getCause() != null) {
                         if (e.getCause() instanceof FileNotFoundException) {
-                            newMessageState = MessageState.CACHE_ERROR;
+                            newMessageState = MessageState.ERROR_CACHE_PROBLEM;
                         } else {
                             newMessageState = MessageState.QUEUED;
                         }

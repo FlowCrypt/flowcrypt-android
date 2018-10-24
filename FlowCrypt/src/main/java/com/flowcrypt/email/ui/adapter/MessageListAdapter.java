@@ -233,7 +233,7 @@ public class MessageListAdapter extends CursorAdapter {
 
     private CharSequence generateOutboxStatus(Context context, MessageState messageState) {
         String me = context.getString(R.string.me);
-        String state;
+        String state = "";
         int stateTextColor = ContextCompat.getColor(context, R.color.red);
 
         switch (messageState) {
@@ -253,20 +253,31 @@ public class MessageListAdapter extends CursorAdapter {
                 stateTextColor = ContextCompat.getColor(context, R.color.colorPrimary);
                 break;
 
-            case CACHE_ERROR:
-                state = context.getString(R.string.cache_error);
-                stateTextColor = ContextCompat.getColor(context, R.color.red);
-                break;
-
+            case ERROR_CACHE_PROBLEM:
             case ERROR_DURING_CREATION:
-                state = context.getString(R.string.corrupted);
+            case ERROR_ORIGINAL_MESSAGE_MISSING:
+            case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
                 stateTextColor = ContextCompat.getColor(context, R.color.red);
-                break;
 
-            default:
-                state = "";
-                break;
+                switch (messageState) {
+                    case ERROR_CACHE_PROBLEM:
+                        state = context.getString(R.string.cache_error);
+                        break;
 
+                    case ERROR_DURING_CREATION:
+                        state = context.getString(R.string.could_not_create);
+                        break;
+
+                    case ERROR_ORIGINAL_MESSAGE_MISSING:
+                        state = context.getString(R.string.original_message_missing);
+                        break;
+
+                    case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
+                        state = context.getString(R.string.original_attachment_not_found);
+                        break;
+                }
+
+                break;
         }
 
         int meTextSize = context.getResources().getDimensionPixelSize(R.dimen.default_text_size_big);

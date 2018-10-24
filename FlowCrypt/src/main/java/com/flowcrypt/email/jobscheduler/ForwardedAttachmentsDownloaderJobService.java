@@ -261,7 +261,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                             }
 
                             if (forwardedMessage == null) {
-                                messageState = MessageState.CACHE_ERROR;
+                                messageState = MessageState.ERROR_ORIGINAL_MESSAGE_MISSING;
                                 break;
                             }
 
@@ -294,11 +294,11 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                                         break;
                                     }
                                 } else {
-                                    messageState = MessageState.CACHE_ERROR;
+                                    messageState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
                                     break;
                                 }
                             } else {
-                                messageState = MessageState.CACHE_ERROR;
+                                messageState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
                                 break;
                             }
                         }
@@ -318,6 +318,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    ExceptionUtil.handleError(e);
 
                     if (!GeneralUtil.isInternetConnectionAvailable(context)) {
                         publishProgress(true);
