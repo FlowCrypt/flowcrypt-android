@@ -185,6 +185,12 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                             JavaEmailConstants.FOLDER_OUTBOX, generatedUID, MessageState.ERROR_DURING_CREATION);
                 }
             }
+
+            if (newMessageUri != null) {
+                new ImapLabelsDaoSource().updateLabelMessageCount(this, accountDao.getEmail(),
+                        JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(this,
+                                accountDao.getEmail()).size());
+            }
         }
     }
 
