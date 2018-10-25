@@ -384,4 +384,7 @@ icelanders prefer real sauna</font>
     <string name="original_message_missing">Could not forward: original message missing</string>
     <string name="original_attachment_not_found">Could not forward: some attachments are not available</string>
     <string name="could_not_create">Could not create: an unknown error</string>
+    <string name="message_filed_to_forward">Message failed to send. Please forward the message again</string>
+    <string name="there_is_problem_with_cache">There is a problem with a temp cache directory. Please create the message again</string>
+    <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.</string>
 </resources>

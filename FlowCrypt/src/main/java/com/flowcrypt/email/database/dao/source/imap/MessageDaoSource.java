@@ -25,15 +25,19 @@ import android.util.LongSparseArray;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment;
+import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1044,6 +1048,47 @@ public class MessageDaoSource extends BaseDaoSource {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Delete an outgoing message.
+     *
+     * @param context               Interface to global information about an application environment.
+     * @param generalMessageDetails Input details about the outgoing message.
+     * @return The number of rows deleted.
+     */
+    public int deleteOutgoingMessage(Context context, GeneralMessageDetails generalMessageDetails) {
+        int deletedRows = deleteMessageFromFolder(context, generalMessageDetails.getEmail(),
+                generalMessageDetails.getLabel(), generalMessageDetails.getUid());
+        if (deletedRows > 0) {
+            new ImapLabelsDaoSource().updateLabelMessageCount(context, generalMessageDetails.getEmail(),
+                    JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
+                            generalMessageDetails.getEmail()).size());
+
+            if (generalMessageDetails.isMessageHasAttachment()) {
+                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+
+                List<AttachmentInfo> attachmentInfoList =
+                        attachmentDaoSource.getAttachmentInfoList(context, generalMessageDetails.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                    new AttachmentDaoSource().deleteAttachments(context, generalMessageDetails.getEmail(),
+                            generalMessageDetails.getLabel(), generalMessageDetails.getUid());
+
+                    if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+                        try {
+                            FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
+                                    Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
+        return deletedRows;
     }
 
     private String[] parseFlags(String string) {

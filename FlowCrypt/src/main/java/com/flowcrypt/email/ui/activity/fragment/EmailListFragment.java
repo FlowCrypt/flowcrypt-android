@@ -42,9 +42,12 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 
@@ -277,9 +280,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                     .getServerFullFolderName())
                     || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
                     || GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                        onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
-                        REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+
+                if (generalMessageDetails.getMessageState() != null) {
+                    handleOutgoingMessageWhichHasSomeError(generalMessageDetails);
+                } else {
+                    startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+                            onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
+                            REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+                }
             } else {
                 showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar
                         .LENGTH_LONG);
@@ -580,6 +588,43 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         }
 
         updateList(true, true);
+    }
+
+    private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails generalMessageDetails) {
+        String message = null;
+
+        switch (generalMessageDetails.getMessageState()) {
+            case ERROR_ORIGINAL_MESSAGE_MISSING:
+            case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
+                message = getString(R.string.message_filed_to_forward);
+                break;
+
+            case ERROR_CACHE_PROBLEM:
+                message = getString(R.string.there_is_problem_with_cache);
+                break;
+
+            case ERROR_DURING_CREATION:
+                message = getString(R.string.error_happened_during_creation,
+                        getString(R.string.support_email));
+                break;
+        }
+
+        InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(null, message, true);
+        infoDialogFragment.setOnInfoDialogButtonClickListener(new InfoDialogFragment
+                .OnInfoDialogButtonClickListener() {
+            @Override
+            public void onInfoDialogButtonClick() {
+                int deletedRows = new MessageDaoSource().deleteOutgoingMessage(getContext(), generalMessageDetails);
+                if (deletedRows > 0) {
+                    Toast.makeText(getContext(), R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+                } else {
+                    ExceptionUtil.handleError(new ManualHandledException("Can't delete an outgoing " +
+                            "messages which has some errors."));
+                }
+            }
+        });
+
+        infoDialogFragment.show(getActivity().getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
     }
 
     private boolean isItSyncOrOutboxFolder(Folder folder) {

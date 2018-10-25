@@ -41,7 +41,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     private static final String KEY_INFO_IS_CANCELABLE = GeneralUtil.generateUniqueExtraKey
             ("KEY_INFO_IS_CANCELABLE", InfoDialogFragment.class);
     private static final String KEY_INFO_IS_MESSAGE_CONTAINS_HTML = GeneralUtil.generateUniqueExtraKey
-            ("KEY_INFO_IS_CANCELABLE", InfoDialogFragment.class);
+            ("KEY_INFO_IS_MESSAGE_CONTAINS_HTML", InfoDialogFragment.class);
 
     protected String dialogTitle;
     protected String dialogMessage;

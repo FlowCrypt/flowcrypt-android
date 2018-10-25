@@ -16,29 +16,20 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
-import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * This activity describe details of some message.
@@ -294,7 +285,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                 Toast.makeText(this, generalMessageDetails == null ? R.string.can_not_delete_sent_message
                         : R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show();
             } else {
-                deleteOutgoingMessage(generalMessageDetails);
+                int deletedRows = new MessageDaoSource().deleteOutgoingMessage(this, generalMessageDetails);
+                if (deletedRows > 0) {
+                    Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show();
+                }
             }
 
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
@@ -312,42 +308,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
         moveMessage(R.id.syns_request_move_message_to_inbox, folder,
                 foldersManager.getFolderInbox(), generalMessageDetails.getUid());
-    }
-
-    private void deleteOutgoingMessage(GeneralMessageDetails generalMessageDetails) {
-        int deletedRows = new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
-                folder.getFolderAlias(), generalMessageDetails.getUid());
-        if (deletedRows > 0) {
-            Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
-
-            new ImapLabelsDaoSource().updateLabelMessageCount(this, generalMessageDetails.getEmail(),
-                    JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(this,
-                            generalMessageDetails.getEmail()).size());
-
-            if (generalMessageDetails.isMessageHasAttachment()) {
-                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-
-                List<AttachmentInfo> attachmentInfoList =
-                        attachmentDaoSource.getAttachmentInfoList(this, generalMessageDetails.getEmail(),
-                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
-
-                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                    new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-                            folder.getFolderAlias(), generalMessageDetails.getUid());
-
-                    if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
-                        try {
-                            FileAndDirectoryUtils.deleteDirectory(new File(new File(getCacheDir(),
-                                    Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        } else {
-            Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show();
-        }
     }
 
     private void messageNotAvailableInFolder() {
