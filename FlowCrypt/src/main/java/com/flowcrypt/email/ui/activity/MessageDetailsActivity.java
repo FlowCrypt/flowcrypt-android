@@ -79,11 +79,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             this.generalMessageDetails = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
         }
 
-        initViews();
+        updateViews();
 
         if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
             getSupportLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
         }
+
+        getSupportLoaderManager().initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
     }
 
     @Override
@@ -100,6 +102,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case R.id.loader_id_load_message_info_from_database:
+            case R.id.loader_id_subscribe_to_message_changes:
                 return new CursorLoader(this, new MessageDaoSource().
                         getBaseContentUri(),
                         null,
@@ -143,6 +146,14 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                     }
                 }
                 break;
+
+            case R.id.loader_id_subscribe_to_message_changes:
+                if (cursor != null && cursor.moveToFirst()) {
+                    MessageDaoSource messageDaoSource = new MessageDaoSource();
+                    generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+                    updateViews();
+                }
+                break;
         }
     }
 
@@ -150,6 +161,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info_from_database:
+                break;
+
+            case R.id.loader_id_subscribe_to_message_changes:
+                generalMessageDetails = null;
+                updateViews();
                 break;
         }
     }
@@ -356,9 +372,48 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
-    private void initViews() {
+    private void updateViews() {
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(null);
+            String actionBarTitle = null;
+            String actionBarSubTitle = null;
+
+            if (generalMessageDetails != null) {
+                if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+                    actionBarTitle = getString(R.string.outgoing);
+
+                    if (generalMessageDetails.getMessageState() != null) {
+                        switch (generalMessageDetails.getMessageState()) {
+                            case NEW:
+                            case NEW_FORWARDED:
+                                actionBarSubTitle = getString(R.string.preparing);
+                                break;
+
+                            case QUEUED:
+                                actionBarSubTitle = getString(R.string.queued);
+                                break;
+
+                            case SENDING:
+                                actionBarSubTitle = getString(R.string.sending);
+                                break;
+
+                            case SENT:
+                            case SENT_WITHOUT_LOCAL_COPY:
+                                actionBarSubTitle = getString(R.string.sent);
+                                break;
+
+                            case ERROR_CACHE_PROBLEM:
+                            case ERROR_DURING_CREATION:
+                            case ERROR_ORIGINAL_MESSAGE_MISSING:
+                            case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
+                                actionBarSubTitle = getString(R.string.an_error_has_occurred);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            getSupportActionBar().setTitle(actionBarTitle);
+            getSupportActionBar().setSubtitle(actionBarSubTitle);
         }
     }
 }

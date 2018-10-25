@@ -387,4 +387,7 @@ icelanders prefer real sauna</font>
     <string name="message_filed_to_forward">Message failed to send. Please forward the message again</string>
     <string name="there_is_problem_with_cache">There is a problem with a temp cache directory. Please create the message again</string>
     <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.</string>
+    <string name="sent">Sent</string>
+    <string name="an_error_has_occurred">An error has occurred</string>
+    <string name="outgoing">Outgoing</string>
 </resources>
