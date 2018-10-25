@@ -282,7 +282,21 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                     || GeneralUtil.isInternetConnectionAvailable(getContext())) {
 
                 if (generalMessageDetails.getMessageState() != null) {
-                    handleOutgoingMessageWhichHasSomeError(generalMessageDetails);
+                    switch (generalMessageDetails.getMessageState()) {
+                        case ERROR_ORIGINAL_MESSAGE_MISSING:
+                        case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
+                        case ERROR_CACHE_PROBLEM:
+                        case ERROR_DURING_CREATION:
+                            handleOutgoingMessageWhichHasSomeError(generalMessageDetails);
+                            break;
+
+                        default:
+                            startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
+                                    onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
+                                    REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+                            break;
+                    }
+
                 } else {
                     startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
                             onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
