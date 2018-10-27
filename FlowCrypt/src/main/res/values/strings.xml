@@ -390,4 +390,8 @@ icelanders prefer real sauna</font>
     <string name="sent">Sent</string>
     <string name="an_error_has_occurred">An error has occurred</string>
     <string name="outgoing">Outgoing</string>
+    <plurals name="messages_deleted">
+        <item quantity="one">The message was deleted</item>
+        <item quantity="other">%1$d messages were deleted</item>
+    </plurals>
 </resources>

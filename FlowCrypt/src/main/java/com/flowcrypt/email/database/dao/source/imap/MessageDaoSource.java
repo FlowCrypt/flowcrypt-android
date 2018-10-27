@@ -1007,6 +1007,58 @@ public class MessageDaoSource extends BaseDaoSource {
         } else return null;
     }
 
+    /**
+     * Delete an outgoing message.
+     *
+     * @param context               Interface to global information about an application environment.
+     * @param generalMessageDetails Input details about the outgoing message.
+     * @return The number of rows deleted.
+     */
+    public int deleteOutgoingMessage(Context context, GeneralMessageDetails generalMessageDetails) {
+        int deletedRows;
+        ContentResolver contentResolver = context.getContentResolver();
+
+        if (generalMessageDetails.getEmail() != null && generalMessageDetails.getLabel() != null && contentResolver
+                != null) {
+            deletedRows = contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND" +
+                            " " + COL_UID + " = ? AND " + COL_STATE + " != " + MessageState.SENDING.getValue(),
+                    new String[]{generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
+                            String.valueOf(generalMessageDetails.getUid())});
+        } else {
+            deletedRows = -1;
+        }
+
+        if (deletedRows > 0) {
+            new ImapLabelsDaoSource().updateLabelMessageCount(context, generalMessageDetails.getEmail(),
+                    JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
+                            generalMessageDetails.getEmail()).size());
+
+            if (generalMessageDetails.isMessageHasAttachment()) {
+                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+
+                List<AttachmentInfo> attachmentInfoList =
+                        attachmentDaoSource.getAttachmentInfoList(context, generalMessageDetails.getEmail(),
+                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+
+                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+                    new AttachmentDaoSource().deleteAttachments(context, generalMessageDetails.getEmail(),
+                            generalMessageDetails.getLabel(), generalMessageDetails.getUid());
+
+                    if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+                        try {
+                            FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
+                                    Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
+        return deletedRows;
+    }
+
     private static String[] parseArray(String attributesAsString, String regex) {
         if (attributesAsString != null && attributesAsString.length() > 0) {
             return attributesAsString.split(regex);
@@ -1048,47 +1100,6 @@ public class MessageDaoSource extends BaseDaoSource {
             e.printStackTrace();
             return false;
         }
-    }
-
-    /**
-     * Delete an outgoing message.
-     *
-     * @param context               Interface to global information about an application environment.
-     * @param generalMessageDetails Input details about the outgoing message.
-     * @return The number of rows deleted.
-     */
-    public int deleteOutgoingMessage(Context context, GeneralMessageDetails generalMessageDetails) {
-        int deletedRows = deleteMessageFromFolder(context, generalMessageDetails.getEmail(),
-                generalMessageDetails.getLabel(), generalMessageDetails.getUid());
-        if (deletedRows > 0) {
-            new ImapLabelsDaoSource().updateLabelMessageCount(context, generalMessageDetails.getEmail(),
-                    JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
-                            generalMessageDetails.getEmail()).size());
-
-            if (generalMessageDetails.isMessageHasAttachment()) {
-                AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
-
-                List<AttachmentInfo> attachmentInfoList =
-                        attachmentDaoSource.getAttachmentInfoList(context, generalMessageDetails.getEmail(),
-                                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
-
-                if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                    new AttachmentDaoSource().deleteAttachments(context, generalMessageDetails.getEmail(),
-                            generalMessageDetails.getLabel(), generalMessageDetails.getUid());
-
-                    if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
-                        try {
-                            FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
-                                    Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
-
-        return deletedRows;
     }
 
     private String[] parseFlags(String string) {

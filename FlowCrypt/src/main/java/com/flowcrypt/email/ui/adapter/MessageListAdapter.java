@@ -8,6 +8,8 @@ package com.flowcrypt.email.ui.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
@@ -15,6 +17,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
+import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +54,8 @@ public class MessageListAdapter extends CursorAdapter {
     private Folder folder;
     private FoldersManager.FolderType folderType;
     private Pattern patternSenderName;
+    private LongSparseArray<Boolean> selectionStates = new LongSparseArray<>();
+    private Drawable defaultItemBackground;
 
     public MessageListAdapter(Context context, Cursor c) {
         super(context, c, false);
@@ -60,7 +65,11 @@ public class MessageListAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return LayoutInflater.from(context).inflate(R.layout.messages_list_item, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.messages_list_item, parent, false);
+        if (defaultItemBackground == null) {
+            defaultItemBackground = view.getBackground();
+        }
+        return view;
     }
 
     @Override
@@ -68,14 +77,40 @@ public class MessageListAdapter extends CursorAdapter {
         GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
 
         ViewHolder viewHolder = new ViewHolder();
-        viewHolder.textViewSenderAddress = view.findViewById(R.id
-                .textViewSenderAddress);
+        viewHolder.textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
         viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
         viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject);
         viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
         viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
         updateItem(context, generalMessageDetails, viewHolder);
+
+        long itemId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
+
+        if (selectionStates.get(itemId) != null && selectionStates.get(itemId)) {
+            view.setBackgroundColor(UIUtil.getColor(context, R.color.silver));
+        } else {
+            view.setBackground(defaultItemBackground);
+        }
+    }
+
+    @Override
+    public GeneralMessageDetails getItem(int position) {
+        Cursor cursor = (Cursor) super.getItem(position);
+
+        if (cursor != null) {
+            return messageDaoSource.getMessageInfo(cursor);
+        } else return null;
+    }
+
+    public void updateItemState(int position, boolean isCheck) {
+        selectionStates.put(getItemId(position), isCheck);
+        notifyDataSetChanged();
+    }
+
+    public void clearSelection() {
+        selectionStates.clear();
+        notifyDataSetChanged();
     }
 
     public Folder getFolder() {
@@ -102,8 +137,7 @@ public class MessageListAdapter extends CursorAdapter {
                             @NonNull ViewHolder viewHolder) {
         if (generalMessageDetails != null) {
             String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ?
-                    context.getString(R.string.no_subject) :
-                    generalMessageDetails.getSubject();
+                    context.getString(R.string.no_subject) : generalMessageDetails.getSubject();
 
             if (folderType != null) {
                 switch (folderType) {
@@ -143,8 +177,8 @@ public class MessageListAdapter extends CursorAdapter {
                 viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
             }
 
-            viewHolder.imageViewAttachments.setVisibility(generalMessageDetails
-                    .isMessageHasAttachment() ? View.VISIBLE : View.GONE);
+            viewHolder.imageViewAttachments.setVisibility(generalMessageDetails.isMessageHasAttachment()
+                    ? View.VISIBLE : View.GONE);
             viewHolder.viewIsEncrypted.setVisibility(generalMessageDetails.isEncrypted() ? View.VISIBLE : View.GONE);
         } else {
             clearItem(viewHolder);
@@ -225,8 +259,9 @@ public class MessageListAdapter extends CursorAdapter {
             String displayName = TextUtils.isEmpty(internetAddress.getPersonal()) ? internetAddress.getAddress() :
                     internetAddress.getPersonal();
             b.append(displayName);
-            if (i == iMax)
+            if (i == iMax) {
                 return prepareSenderName(b.toString());
+            }
             b.append(", ");
         }
     }

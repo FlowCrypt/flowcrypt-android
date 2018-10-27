@@ -18,7 +18,12 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.TextUtils;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -51,6 +56,9 @@ import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.mail.AuthenticationFailedException;
 
 /**
@@ -64,7 +72,7 @@ import javax.mail.AuthenticationFailedException;
  */
 
 public class EmailListFragment extends BaseSyncFragment implements AdapterView.OnItemClickListener,
-        AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener {
+        AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
 
@@ -81,12 +89,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
     private BaseSyncActivity baseSyncActivity;
+
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
     private boolean needForceFirstLoad;
     private boolean isShowOnlyEncryptedMessages;
     private long timeOfLastRequestEnd;
     private int lastFirstVisibleItemPositionOffAllMessages;
+    private int originalStatusBarColor;
 
     private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
             = new LoaderManager.LoaderCallbacks<Cursor>() {
@@ -202,6 +212,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             this.baseSyncActivity = (BaseSyncActivity) context;
         } else throw new IllegalArgumentException(context.toString() + " must implement " +
                 BaseSyncActivity.class.getSimpleName());
+
+        this.originalStatusBarColor = getActivity().getWindow().getStatusBarColor();
     }
 
     @Override
@@ -271,11 +283,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
-        if (cursor != null) {
-            cursor.moveToPosition(position);
-            GeneralMessageDetails generalMessageDetails = new MessageDaoSource().getMessageInfo(cursor);
-
+        GeneralMessageDetails generalMessageDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
+        if (generalMessageDetails != null) {
             if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
                     .getServerFullFolderName())
                     || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
@@ -487,6 +496,68 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         }
     }
 
+    @Override
+    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+        MenuInflater inflater = mode.getMenuInflater();
+        inflater.inflate(R.menu.message_list_context_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+        getActivity().getWindow().setStatusBarColor(UIUtil.getColor(getContext(), R.color.dark));
+        return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuActionDeleteMessage:
+                SparseBooleanArray checkedItemPositions = listViewMessages.getCheckedItemPositions();
+
+                if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
+                    List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+                    for (int i = 0; i < checkedItemPositions.size(); i++) {
+                        int key = checkedItemPositions.keyAt(i);
+                        GeneralMessageDetails generalMessageDetails = messageListAdapter.getItem(key);
+                        if (generalMessageDetails != null) {
+                            generalMessageDetailsList.add(generalMessageDetails);
+                        }
+                    }
+
+                    MessageDaoSource messageDaoSource = new MessageDaoSource();
+                    int countOfDeletedMessages = 0;
+                    for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                        if (messageDaoSource.deleteOutgoingMessage(getContext(), generalMessageDetails) > 0) {
+                            countOfDeletedMessages++;
+                        }
+                    }
+
+                    Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
+                            countOfDeletedMessages, countOfDeletedMessages), Toast.LENGTH_LONG).show();
+
+                    mode.finish();
+                }
+
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void onDestroyActionMode(ActionMode mode) {
+        getActivity().getWindow().setStatusBarColor(originalStatusBarColor);
+        messageListAdapter.clearSelection();
+    }
+
+    @Override
+    public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+        messageListAdapter.updateItemState(position, checked);
+        mode.setTitle(listViewMessages.getCheckedItemCount() > 0
+                ? String.valueOf(listViewMessages.getCheckedItemCount()) : null);
+    }
+
     /**
      * Update a current messages list.
      *
@@ -499,6 +570,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             isMessagesFetchedIfNotExistInCache = !isFolderChanged;
 
             if (isFolderChanged) {
+                messageListAdapter.clearSelection();
+                if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
+                        onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+                    listViewMessages.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+                } else {
+                    listViewMessages.setChoiceMode(ListView.CHOICE_MODE_NONE);
+                }
+
                 if (getSnackBar() != null) {
                     getSnackBar().dismiss();
                 }
@@ -711,6 +790,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         listViewMessages = view.findViewById(R.id.listViewMessages);
         listViewMessages.setOnItemClickListener(this);
+        listViewMessages.setMultiChoiceModeListener(this);
 
         footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout.list_view_progress_footer,
                 listViewMessages, false);
