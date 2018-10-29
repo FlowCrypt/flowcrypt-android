@@ -303,12 +303,16 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                             }
                         }
 
-                        if (attachmentInfo.getUri() != null) {
+                        if (attachmentInfo.getUri() != null || generalMessageDetails.isEncrypted()) { // need db update
                             ContentValues contentValues = new ContentValues();
-                            contentValues.put(AttachmentDaoSource.COL_FILE_URI, attachmentInfo.getUri().toString());
-
-                            attachmentDaoSource.update(context, attachmentInfo.getEmail(), attachmentInfo.getFolder()
-                                    , attachmentInfo.getUid(), attachmentInfo.getId(), contentValues);
+                            if(attachmentInfo.getUri() != null) { // update new uri
+                                contentValues.put(AttachmentDaoSource.COL_FILE_URI, attachmentInfo.getUri().toString());
+                            }
+                            if(generalMessageDetails.isEncrypted()) { // update filename with .pgp
+                                contentValues.put(AttachmentDaoSource.COL_NAME, attachmentInfo.getName() + ".pgp");
+                            }
+                            attachmentDaoSource.update(context, attachmentInfo.getEmail(), attachmentInfo.getFolder(),
+                                    attachmentInfo.getUid(), attachmentInfo.getId(), contentValues);
                         }
                     }
 

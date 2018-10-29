@@ -274,17 +274,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         }
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-            if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
-                    AttachmentInfo attachmentInfoEncrypted = new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX,
-                            attachmentInfo);
-                    attachmentInfoEncrypted.setName(attachmentInfoEncrypted.getName() + ".pgp");
-                    cachedAttachments.add(attachmentInfoEncrypted);
-                }
-            } else {
-                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
-                    cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
-                }
+            for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+                cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
             }
         }
 
