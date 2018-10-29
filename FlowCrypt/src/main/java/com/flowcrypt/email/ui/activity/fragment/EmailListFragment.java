@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -48,6 +49,7 @@ import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment;
 import com.flowcrypt.email.ui.adapter.MessageListAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -75,6 +77,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
+    private static final int REQUEST_CODE_DELETE_MESSAGES = 11;
 
     private static final int TIMEOUT_BETWEEN_REQUESTS = 500;
     private static final int LOADING_SHIFT_IN_ITEMS = 5;
@@ -274,6 +277,38 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 switch (resultCode) {
                     case MessageDetailsActivity.RESULT_CODE_UPDATE_LIST:
                         updateList(false, false);
+                        break;
+                }
+                break;
+
+            case REQUEST_CODE_DELETE_MESSAGES:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        SparseBooleanArray checkedItemPositions = listViewMessages.getCheckedItemPositions();
+
+                        if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
+                            List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+                            for (int i = 0; i < checkedItemPositions.size(); i++) {
+                                int key = checkedItemPositions.keyAt(i);
+                                GeneralMessageDetails generalMessageDetails = messageListAdapter.getItem(key);
+                                if (generalMessageDetails != null) {
+                                    generalMessageDetailsList.add(generalMessageDetails);
+                                }
+                            }
+
+                            MessageDaoSource messageDaoSource = new MessageDaoSource();
+                            int countOfDeletedMessages = 0;
+                            for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
+                                if (messageDaoSource.deleteOutgoingMessage(getContext(), generalMessageDetails) > 0) {
+                                    countOfDeletedMessages++;
+                                }
+                            }
+
+                            Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
+                                    countOfDeletedMessages, countOfDeletedMessages), Toast.LENGTH_LONG).show();
+
+                            actionMode.finish();
+                        }
                         break;
                 }
                 break;
@@ -520,31 +555,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case R.id.menuActionDeleteMessage:
                 SparseBooleanArray checkedItemPositions = listViewMessages.getCheckedItemPositions();
 
-                if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
-                    List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
-                    for (int i = 0; i < checkedItemPositions.size(); i++) {
-                        int key = checkedItemPositions.keyAt(i);
-                        GeneralMessageDetails generalMessageDetails = messageListAdapter.getItem(key);
-                        if (generalMessageDetails != null) {
-                            generalMessageDetailsList.add(generalMessageDetails);
-                        }
-                    }
+                TwoWayDialogFragment twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
+                        getResources().getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
+                                checkedItemPositions.size()), getString(android.R.string.ok),
+                        getString(R.string.cancel), true);
+                twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES);
+                twoWayDialogFragment.show(getFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
 
-                    MessageDaoSource messageDaoSource = new MessageDaoSource();
-                    int countOfDeletedMessages = 0;
-                    for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-                        if (messageDaoSource.deleteOutgoingMessage(getContext(), generalMessageDetails) > 0) {
-                            countOfDeletedMessages++;
-                        }
-                    }
-
-                    Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
-                            countOfDeletedMessages, countOfDeletedMessages), Toast.LENGTH_LONG).show();
-
-                    mode.finish();
-                }
-
-                return true;
+                return false;
             default:
                 return false;
         }
@@ -560,7 +578,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         if (isNeedToSaveChoices) {
             checkedItemPositions = listViewMessages.getCheckedItemPositions().clone();
         } else {
-            checkedItemPositions.clear();
+            if (checkedItemPositions != null) {
+                checkedItemPositions.clear();
+            }
         }
     }
 

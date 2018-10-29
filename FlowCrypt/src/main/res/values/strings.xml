@@ -394,4 +394,8 @@ icelanders prefer real sauna</font>
         <item quantity="one">The message was deleted</item>
         <item quantity="other">%1$d messages were deleted</item>
     </plurals>
+    <plurals name="delete_messages">
+        <item quantity="one">Delete this message?</item>
+        <item quantity="other">Delete these %1$d messages?</item>
+    </plurals>
 </resources>
