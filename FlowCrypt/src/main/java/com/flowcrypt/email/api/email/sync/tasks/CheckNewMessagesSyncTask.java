@@ -56,8 +56,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
             Message[] newMessages = new Message[0];
 
             int newestCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(syncListener.getContext(),
-                    accountDao
-                            .getEmail(), localFolder.getFolderAlias());
+                    accountDao.getEmail(), localFolder.getFolderAlias());
 
             if (newestCachedUID < nextUID - 1) {
                 if (isShowOnlyEncryptedMessages) {
