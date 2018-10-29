@@ -89,11 +89,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     private MessageListAdapter messageListAdapter;
     private OnManageEmailsListener onManageEmailsListener;
     private BaseSyncActivity baseSyncActivity;
+    private ActionMode actionMode;
+    private SparseBooleanArray checkedItemPositions;
 
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
     private boolean needForceFirstLoad;
     private boolean isShowOnlyEncryptedMessages;
+    private boolean isNeedToSaveChoices;
     private long timeOfLastRequestEnd;
     private int lastFirstVisibleItemPositionOffAllMessages;
     private int originalStatusBarColor;
@@ -498,6 +501,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     @Override
     public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+        swipeRefreshLayout.setEnabled(false);
         MenuInflater inflater = mode.getMenuInflater();
         inflater.inflate(R.menu.message_list_context_menu, menu);
         return true;
@@ -505,6 +509,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     @Override
     public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+        this.actionMode = mode;
         getActivity().getWindow().setStatusBarColor(UIUtil.getColor(getContext(), R.color.dark));
         return false;
     }
@@ -548,7 +553,15 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     @Override
     public void onDestroyActionMode(ActionMode mode) {
         getActivity().getWindow().setStatusBarColor(originalStatusBarColor);
+
+        actionMode = null;
         messageListAdapter.clearSelection();
+        swipeRefreshLayout.setEnabled(true);
+        if (isNeedToSaveChoices) {
+            checkedItemPositions = listViewMessages.getCheckedItemPositions().clone();
+        } else {
+            checkedItemPositions.clear();
+        }
     }
 
     @Override
@@ -576,6 +589,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                     listViewMessages.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
                 } else {
                     listViewMessages.setChoiceMode(ListView.CHOICE_MODE_NONE);
+                    if (checkedItemPositions != null) {
+                        checkedItemPositions.clear();
+                    }
                 }
 
                 if (getSnackBar() != null) {
@@ -681,6 +697,23 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         }
 
         updateList(true, true);
+    }
+
+    public void onDrawerStateChange(boolean isOpen) {
+        isNeedToSaveChoices = isOpen;
+        if (isOpen) {
+            if (actionMode != null) {
+                actionMode.finish();
+            }
+        } else {
+            if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
+                for (int i = 0; i < checkedItemPositions.size(); i++) {
+                    int key = checkedItemPositions.keyAt(i);
+                    boolean value = checkedItemPositions.valueAt(i);
+                    listViewMessages.setItemChecked(key, value);
+                }
+            }
+        }
     }
 
     private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails generalMessageDetails) {

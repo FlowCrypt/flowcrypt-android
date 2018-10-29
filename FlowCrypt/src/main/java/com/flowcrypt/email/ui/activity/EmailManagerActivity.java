@@ -687,6 +687,20 @@ public class EmailManagerActivity extends BaseEmailListActivity
         }
     }
 
+    /**
+     * Notify a fragment about {@link DrawerLayout} changes.
+     *
+     * @param isOpen true if the drawer is open, otherwise false.
+     */
+    private void notifyFragmentAboutDrawerChange(boolean isOpen) {
+        EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.emailListFragment);
+
+        if (emailListFragment != null) {
+            emailListFragment.onDrawerStateChange(isOpen);
+        }
+    }
+
     private void initViews() {
         drawerLayout = findViewById(R.id.drawer_layout);
         actionBarDrawerToggle = new CustomDrawerToggle(this, drawerLayout, getToolbar(),
@@ -845,6 +859,20 @@ public class EmailManagerActivity extends BaseEmailListActivity
         CustomDrawerToggle(Activity activity, DrawerLayout drawerLayout, Toolbar toolbar,
                            @StringRes int openDrawerContentDescRes, @StringRes int closeDrawerContentDescRes) {
             super(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes);
+        }
+
+        @Override
+        public void onDrawerSlide(View drawerView, float slideOffset) {
+            super.onDrawerSlide(drawerView, slideOffset);
+
+            if (slideOffset > 0.05) {
+                notifyFragmentAboutDrawerChange(true);
+                return;
+            }
+
+            if (slideOffset <= 0.03) {
+                notifyFragmentAboutDrawerChange(false);
+            }
         }
 
         @Override
