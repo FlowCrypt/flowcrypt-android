@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -53,6 +54,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     private boolean isNeedToReceiveMessageBody;
     private boolean isBackEnable = true;
     private boolean isRequestMessageDetailsStarted;
+    private boolean isNeedToRetrieveIncomingMsg = true;
 
     public static Intent getIntent(Context context, Folder folder, GeneralMessageDetails generalMessageDetails) {
         Intent intent = new Intent(context, MessageDetailsActivity.class);
@@ -98,6 +100,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         }
     }
 
+    @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -112,44 +115,42 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
                                 String.valueOf(generalMessageDetails.getUid())}, null);
 
             default:
-                return null;
+                return new Loader<>(this);
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        MessageDaoSource messageDaoSource = new MessageDaoSource();
+
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info_from_database:
-                if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
-                    if (cursor != null && cursor.moveToFirst()) {
-                        if (TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex
-                                (MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)))) {
-                            if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
-                                this.isRequestMessageDetailsStarted = true;
-                                loadMessageDetails(R.id.syns_request_code_load_message_details,
-                                        folder, generalMessageDetails.getUid());
-                            } else {
-                                isNeedToReceiveMessageBody = true;
-                            }
-                        } else {
-                            isNeedToReceiveMessageBody = false;
-                            MessageDaoSource messageDaoSource = new MessageDaoSource();
-                            messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
-                                    folder.getFolderAlias(), generalMessageDetails.getUid());
-                            this.generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-                            updateMessageDetails(generalMessageDetails);
-                            setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    this.generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+                    updateMessageDetails(generalMessageDetails);
 
-                            decryptMessage(R.id.js_decrypt_message, generalMessageDetails
-                                    .getRawMessageWithoutAttachments());
+                    if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+                        if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
+                            this.isRequestMessageDetailsStarted = true;
+                            loadMessageDetails(R.id.syns_request_code_load_message_details,
+                                    folder, generalMessageDetails.getUid());
+                        } else {
+                            isNeedToReceiveMessageBody = true;
                         }
+                    } else if (isNeedToRetrieveIncomingMsg) {
+                        isNeedToRetrieveIncomingMsg = false;
+                        isNeedToReceiveMessageBody = false;
+                        messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
+                                folder.getFolderAlias(), generalMessageDetails.getUid());
+                        setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+                        decryptMessage(R.id.js_decrypt_message, generalMessageDetails
+                                .getRawMessageWithoutAttachments());
                     }
                 }
                 break;
 
             case R.id.loader_id_subscribe_to_message_changes:
                 if (cursor != null && cursor.moveToFirst()) {
-                    MessageDaoSource messageDaoSource = new MessageDaoSource();
                     generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
                     updateViews();
                 }
@@ -158,7 +159,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         switch (loader.getId()) {
             case R.id.loader_id_load_message_info_from_database:
                 break;
