@@ -34,6 +34,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.Folder;
@@ -620,7 +621,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     layoutAttachment.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            if (attachmentInfo.getUri().getLastPathSegment().endsWith(".pgp")) {
+                            if (attachmentInfo.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
                                 imageButtonDownloadAttachment.performClick();
                             } else {
                                 Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());

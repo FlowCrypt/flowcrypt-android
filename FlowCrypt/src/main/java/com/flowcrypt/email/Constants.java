@@ -94,4 +94,6 @@ public class Constants {
     public static final String PASSWORD_QUALITY_REASONABLE = "reasonable";
     public static final String PASSWORD_QUALITY_WEAK = "weak";
     public static final String PASSWORD_QUALITY_POOR = "poor";
+
+    public static final String PGP_FILE_EXT = ".pgp";
 }

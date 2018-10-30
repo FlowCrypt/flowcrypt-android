@@ -39,6 +39,7 @@ import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -277,7 +278,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                                 if (inputStream != null) {
                                     if (generalMessageDetails.isEncrypted()) {
                                         byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, IOUtils
-                                                .toByteArray(inputStream), attachmentInfo.getName());
+                                                .toByteArray(inputStream), FilenameUtils.removeExtension(attachmentInfo
+                                                .getName()));
                                         FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
                                     } else {
                                         FileUtils.copyInputStreamToFile(inputStream, tempFile);
@@ -303,14 +305,10 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                             }
                         }
 
-                        if (attachmentInfo.getUri() != null || generalMessageDetails.isEncrypted()) { // need db update
+                        if (attachmentInfo.getUri() != null) {
                             ContentValues contentValues = new ContentValues();
-                            if(attachmentInfo.getUri() != null) { // update new uri
-                                contentValues.put(AttachmentDaoSource.COL_FILE_URI, attachmentInfo.getUri().toString());
-                            }
-                            if(generalMessageDetails.isEncrypted()) { // update filename with .pgp
-                                contentValues.put(AttachmentDaoSource.COL_NAME, attachmentInfo.getName() + ".pgp");
-                            }
+                            contentValues.put(AttachmentDaoSource.COL_FILE_URI, attachmentInfo.getUri().toString());
+
                             attachmentDaoSource.update(context, attachmentInfo.getEmail(), attachmentInfo.getFolder(),
                                     attachmentInfo.getUid(), attachmentInfo.getId(), contentValues);
                         }

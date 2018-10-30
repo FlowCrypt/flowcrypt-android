@@ -231,7 +231,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                         InputStream inputStream = getContentResolver().openInputStream(uriOfOriginalFile);
                         if (inputStream != null) {
                             File encryptedTempFile = new File(messageAttachmentCacheDirectory,
-                                    attachmentInfo.getName() + ".pgp");
+                                    attachmentInfo.getName() + Constants.PGP_FILE_EXT);
                             byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, IOUtils.toByteArray
                                     (inputStream), attachmentInfo.getName());
                             FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
@@ -274,8 +274,17 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         }
 
         if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-            for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
-                cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
+            if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+                    AttachmentInfo attachmentInfoEncrypted =
+                            new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo);
+                    attachmentInfoEncrypted.setName(attachmentInfoEncrypted.getName() + Constants.PGP_FILE_EXT);
+                    cachedAttachments.add(attachmentInfoEncrypted);
+                }
+            } else {
+                for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+                    cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
+                }
             }
         }
 
