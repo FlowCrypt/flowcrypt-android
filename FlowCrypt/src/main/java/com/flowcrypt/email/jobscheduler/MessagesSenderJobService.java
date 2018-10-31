@@ -40,6 +40,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.util.MailConnectException;
 
 import org.apache.commons.io.IOUtils;
 
@@ -68,6 +69,7 @@ import javax.mail.Transport;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.net.ssl.SSLException;
 
 /**
  * @author Denis Bondarenko
@@ -275,21 +277,38 @@ public class MessagesSenderJobService extends JobService {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    MessageState newMessageState = MessageState.ERROR_SENDING_FAILED;
-
-                    if (e.getCause() != null) {
-                        if (e.getCause() instanceof FileNotFoundException) {
-                            newMessageState = MessageState.ERROR_CACHE_PROBLEM;
-                        }
-                    }
-
-                    messageDaoSource.updateMessageState(context,
-                            generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                            generalMessageDetails.getUid(), newMessageState);
+                    ExceptionUtil.handleError(e);
 
                     if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+                        messageDaoSource.updateMessageState(context, generalMessageDetails.getEmail(),
+                                generalMessageDetails.getLabel(), generalMessageDetails.getUid(), MessageState.QUEUED);
+
                         publishProgress(true);
+
                         break;
+                    } else {
+                        MessageState newMessageState = MessageState.ERROR_SENDING_FAILED;
+
+                        if (e instanceof MailConnectException) {
+                            newMessageState = MessageState.QUEUED;
+                        }
+
+                        if (e instanceof MessagingException) {
+                            if (e.getCause() != null) {
+                                if (e.getCause() instanceof SSLException) {
+                                    newMessageState = MessageState.QUEUED;
+                                }
+                            }
+                        }
+
+                        if (e.getCause() != null) {
+                            if (e.getCause() instanceof FileNotFoundException) {
+                                newMessageState = MessageState.ERROR_CACHE_PROBLEM;
+                            }
+                        }
+
+                        messageDaoSource.updateMessageState(context, generalMessageDetails.getEmail(),
+                                generalMessageDetails.getLabel(), generalMessageDetails.getUid(), newMessageState);
                     }
 
                     Thread.sleep(5000);
