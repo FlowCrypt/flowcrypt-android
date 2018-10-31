@@ -275,16 +275,12 @@ public class MessagesSenderJobService extends JobService {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    MessageState newMessageState;
+                    MessageState newMessageState = MessageState.ERROR_SENDING_FAILED;
 
                     if (e.getCause() != null) {
                         if (e.getCause() instanceof FileNotFoundException) {
                             newMessageState = MessageState.ERROR_CACHE_PROBLEM;
-                        } else {
-                            newMessageState = MessageState.QUEUED;
                         }
-                    } else {
-                        newMessageState = MessageState.QUEUED;
                     }
 
                     messageDaoSource.updateMessageState(context,

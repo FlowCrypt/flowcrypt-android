@@ -384,7 +384,7 @@ icelanders prefer real sauna</font>
     <string name="original_message_missing">Could not forward: original message missing</string>
     <string name="original_attachment_not_found">Could not forward: some attachments are not available</string>
     <string name="could_not_create">Could not create: an unknown error</string>
-    <string name="message_filed_to_forward">Message failed to send. Please forward the message again</string>
+    <string name="message_failed_to_forward">Message failed to send. Please forward the message again</string>
     <string name="there_is_problem_with_cache">There is a problem with a temp cache directory. Please create the message again</string>
     <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.</string>
     <string name="sent">Sent</string>
@@ -398,4 +398,6 @@ icelanders prefer real sauna</font>
         <item quantity="one">Delete this message?</item>
         <item quantity="other">Delete these %1$d messages?</item>
     </plurals>
+    <string name="cannot_send_message_unknown_error">Can\'t send a message: an unknown error</string>
+    <string name="message_failed_to_send">Message failed to send. An unknown error has happened.</string>
 </resources>

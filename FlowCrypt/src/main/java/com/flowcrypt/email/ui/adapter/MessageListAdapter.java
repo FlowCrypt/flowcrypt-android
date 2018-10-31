@@ -292,6 +292,7 @@ public class MessageListAdapter extends CursorAdapter {
             case ERROR_DURING_CREATION:
             case ERROR_ORIGINAL_MESSAGE_MISSING:
             case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
+            case ERROR_SENDING_FAILED:
                 stateTextColor = ContextCompat.getColor(context, R.color.red);
 
                 switch (messageState) {
@@ -309,6 +310,10 @@ public class MessageListAdapter extends CursorAdapter {
 
                     case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
                         state = context.getString(R.string.original_attachment_not_found);
+                        break;
+
+                    case ERROR_SENDING_FAILED:
+                        state = context.getString(R.string.cannot_send_message_unknown_error);
                         break;
                 }
 

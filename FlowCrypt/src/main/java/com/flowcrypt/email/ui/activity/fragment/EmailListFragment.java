@@ -45,6 +45,7 @@ import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
@@ -78,6 +79,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
     private static final int REQUEST_CODE_DELETE_MESSAGES = 11;
+    private static final int REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12;
 
     private static final int TIMEOUT_BETWEEN_REQUESTS = 500;
     private static final int LOADING_SHIFT_IN_ITEMS = 5;
@@ -94,6 +96,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     private BaseSyncActivity baseSyncActivity;
     private ActionMode actionMode;
     private SparseBooleanArray checkedItemPositions;
+    private GeneralMessageDetails activeMsgDetails;
 
     private boolean isMessagesFetchedIfNotExistInCache;
     private boolean isNewMessagesLoadingNow;
@@ -313,6 +316,19 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 }
                 break;
 
+            case REQUEST_CODE_RETRY_TO_SEND_MESSAGES:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        if (activeMsgDetails != null) {
+                            new MessageDaoSource().updateMessageState(getContext(),
+                                    activeMsgDetails.getEmail(), activeMsgDetails.getLabel(),
+                                    activeMsgDetails.getUid(), MessageState.QUEUED);
+                            MessagesSenderJobService.schedule(getContext());
+                        }
+                        break;
+                }
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
                 break;
@@ -321,32 +337,33 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        GeneralMessageDetails generalMessageDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
-        if (generalMessageDetails != null) {
+        activeMsgDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
+        if (activeMsgDetails != null) {
             if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
                     .getServerFullFolderName())
-                    || !TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())
+                    || !TextUtils.isEmpty(activeMsgDetails.getRawMessageWithoutAttachments())
                     || GeneralUtil.isInternetConnectionAvailable(getContext())) {
 
-                if (generalMessageDetails.getMessageState() != null) {
-                    switch (generalMessageDetails.getMessageState()) {
+                if (activeMsgDetails.getMessageState() != null) {
+                    switch (activeMsgDetails.getMessageState()) {
                         case ERROR_ORIGINAL_MESSAGE_MISSING:
                         case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
                         case ERROR_CACHE_PROBLEM:
                         case ERROR_DURING_CREATION:
-                            handleOutgoingMessageWhichHasSomeError(generalMessageDetails);
+                        case ERROR_SENDING_FAILED:
+                            handleOutgoingMessageWhichHasSomeError(activeMsgDetails);
                             break;
 
                         default:
                             startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                                    onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
+                                    onManageEmailsListener.getCurrentFolder(), activeMsgDetails),
                                     REQUEST_CODE_SHOW_MESSAGE_DETAILS);
                             break;
                     }
 
                 } else {
                     startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                            onManageEmailsListener.getCurrentFolder(), generalMessageDetails),
+                            onManageEmailsListener.getCurrentFolder(), activeMsgDetails),
                             REQUEST_CODE_SHOW_MESSAGE_DETAILS);
                 }
             } else {
@@ -742,7 +759,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         switch (generalMessageDetails.getMessageState()) {
             case ERROR_ORIGINAL_MESSAGE_MISSING:
             case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
-                message = getString(R.string.message_filed_to_forward);
+                message = getString(R.string.message_failed_to_forward);
                 break;
 
             case ERROR_CACHE_PROBLEM:
@@ -753,6 +770,14 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                 message = getString(R.string.error_happened_during_creation,
                         getString(R.string.support_email));
                 break;
+
+            case ERROR_SENDING_FAILED:
+                TwoWayDialogFragment twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
+                        getString(R.string.message_failed_to_send), getString(R.string.retry),
+                        getString(R.string.cancel), true);
+                twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES);
+                twoWayDialogFragment.show(getFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
+                return;
         }
 
         InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(null, message, true);
