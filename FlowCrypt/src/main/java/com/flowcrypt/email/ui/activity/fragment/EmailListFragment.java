@@ -300,15 +300,17 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                             }
 
                             MessageDaoSource messageDaoSource = new MessageDaoSource();
-                            int countOfDeletedMessages = 0;
+                            int countOfDelMsgs = 0;
                             for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
                                 if (messageDaoSource.deleteOutgoingMessage(getContext(), generalMessageDetails) > 0) {
-                                    countOfDeletedMessages++;
+                                    countOfDelMsgs++;
                                 }
                             }
 
-                            Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
-                                    countOfDeletedMessages, countOfDeletedMessages), Toast.LENGTH_LONG).show();
+                            if (countOfDelMsgs > 0) {
+                                Toast.makeText(getContext(), getResources().getQuantityString(R.plurals
+                                        .messages_deleted, countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show();
+                            }
 
                             actionMode.finish();
                         }
