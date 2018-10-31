@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
@@ -295,7 +296,8 @@ public class MessagesSenderJobService extends JobService {
 
                         if (e instanceof MessagingException) {
                             if (e.getCause() != null) {
-                                if (e.getCause() instanceof SSLException) {
+                                if (e.getCause() instanceof SSLException
+                                        || e.getCause() instanceof SocketException) {
                                     newMessageState = MessageState.QUEUED;
                                 }
                             }
