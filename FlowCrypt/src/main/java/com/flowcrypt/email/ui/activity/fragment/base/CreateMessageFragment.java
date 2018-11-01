@@ -951,6 +951,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         outgoingMessageInfo.setCcPgpContacts(pgpContactsCc.toArray(new PgpContact[0]));
         outgoingMessageInfo.setBccPgpContacts(pgpContactsBcc.toArray(new PgpContact[0]));
         outgoingMessageInfo.setFromPgpContact(new PgpContact(editTextFrom.getText().toString(), null));
+        outgoingMessageInfo.setUid(EmailUtil.generateOutboxUID(getContext()));
 
         return outgoingMessageInfo;
     }

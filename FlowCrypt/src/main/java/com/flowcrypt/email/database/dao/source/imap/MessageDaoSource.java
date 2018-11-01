@@ -680,9 +680,9 @@ public class MessageDaoSource extends BaseDaoSource {
      * @param email   The user email.
      * @param label   The label name.
      * @param uid     The uid of the message.
-     * @return A  list of {@link Folder} objects.
+     * @return {@link GeneralMessageDetails} if the information about a message is exists.
      */
-    public GeneralMessageDetails getMessage(Context context, String email, String label, int uid) {
+    public GeneralMessageDetails getMessage(Context context, String email, String label, long uid) {
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(getBaseContentUri(),
                 null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ",

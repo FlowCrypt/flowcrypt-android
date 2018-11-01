@@ -43,6 +43,7 @@ public class OutgoingMessageInfo extends MessageInfo {
     private ArrayList<AttachmentInfo> forwardedAttachmentInfoList;
     private MessageEncryptionType messageEncryptionType;
     private boolean isForwarded;
+    private long uid;
 
     public OutgoingMessageInfo() {
     }
@@ -60,6 +61,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         this.messageEncryptionType = tmpMessageEncryptionType == -1 ? null : MessageEncryptionType.values()
                 [tmpMessageEncryptionType];
         this.isForwarded = in.readByte() != 0;
+        this.uid = in.readLong();
     }
 
     @Override
@@ -79,6 +81,7 @@ public class OutgoingMessageInfo extends MessageInfo {
         dest.writeTypedList(this.forwardedAttachmentInfoList);
         dest.writeInt(this.messageEncryptionType == null ? -1 : this.messageEncryptionType.ordinal());
         dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
+        dest.writeLong(this.uid);
     }
 
     public PgpContact[] getCcPgpContacts() {
@@ -151,5 +154,13 @@ public class OutgoingMessageInfo extends MessageInfo {
 
     public void setForwardedAttachmentInfoList(ArrayList<AttachmentInfo> forwardedAttachmentInfoList) {
         this.forwardedAttachmentInfoList = forwardedAttachmentInfoList;
+    }
+
+    public long getUid() {
+        return uid;
+    }
+
+    public void setUid(long uid) {
+        this.uid = uid;
     }
 }
