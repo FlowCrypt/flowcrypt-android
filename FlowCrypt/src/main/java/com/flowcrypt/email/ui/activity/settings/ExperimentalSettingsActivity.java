@@ -11,18 +11,18 @@ import com.flowcrypt.email.R;
 
 /**
  * @author DenBond7
- *         Date: 29.09.2017.
- *         Time: 22:42.
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.09.2017.
+ * Time: 22:42.
+ * E-mail: DenBond7@gmail.com
  */
 public class ExperimentalSettingsActivity extends BaseSettingsActivity {
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_experimental_settings;
-    }
+  @Override
+  public int getContentViewResourceId() {
+    return R.layout.activity_experimental_settings;
+  }
 
-    @Override
-    public View getRootView() {
-        return null;
-    }
+  @Override
+  public View getRootView() {
+    return null;
+  }
 }

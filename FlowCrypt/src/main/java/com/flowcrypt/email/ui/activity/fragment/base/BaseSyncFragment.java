@@ -20,75 +20,75 @@ import com.flowcrypt.email.util.UIUtil;
  * The base fragment which must used when we will work with an email provider.
  *
  * @author DenBond7
- *         Date: 04.05.2017
- *         Time: 10:29
- *         E-mail: DenBond7@gmail.com
+ * Date: 04.05.2017
+ * Time: 10:29
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseSyncFragment extends BaseFragment {
 
-    protected View progressView;
-    protected View statusView;
-    protected TextView textViewStatusInfo;
+  protected View progressView;
+  protected View statusView;
+  protected TextView textViewStatusInfo;
 
-    /**
-     * Get a content view which contains a UI.
-     *
-     * @return <tt>View</tt> Return a progress view.
-     */
-    public abstract View getContentView();
+  /**
+   * Get a content view which contains a UI.
+   *
+   * @return <tt>View</tt> Return a progress view.
+   */
+  public abstract View getContentView();
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        progressView = view.findViewById(R.id.viewIdProgressView);
-        statusView = view.findViewById(R.id.viewIdStatusView);
-        textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo);
-        if (progressView == null || statusView == null || textViewStatusInfo == null) {
-            throw new IllegalArgumentException("The layout file of this fragment not contains " +
-                    "some needed views");
+  @Override
+  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+    progressView = view.findViewById(R.id.viewIdProgressView);
+    statusView = view.findViewById(R.id.viewIdStatusView);
+    textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo);
+    if (progressView == null || statusView == null || textViewStatusInfo == null) {
+      throw new IllegalArgumentException("The layout file of this fragment not contains " +
+          "some needed views");
+    }
+  }
+
+  /**
+   * Handle an error from the sync service.
+   *
+   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+   * @param errorType   The {@link SyncErrorTypes}
+   * @param e           The exception which happened.
+   */
+  public void onErrorOccurred(int requestCode, int errorType, Exception e) {
+    getContentView().setVisibility(View.GONE);
+
+    switch (errorType) {
+      case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
+        textViewStatusInfo.setText(R.string.there_was_syncing_problem);
+        break;
+
+      default:
+        if (e != null && !TextUtils.isEmpty(e.getMessage())) {
+          textViewStatusInfo.setText(e.getMessage());
+        } else {
+          textViewStatusInfo.setText(R.string.unknown_error);
         }
+        break;
     }
 
-    /**
-     * Handle an error from the sync service.
-     *
-     * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-     * @param errorType   The {@link SyncErrorTypes}
-     * @param e           The exception which happened.
-     */
-    public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-        getContentView().setVisibility(View.GONE);
-
-        switch (errorType) {
-            case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-                textViewStatusInfo.setText(R.string.there_was_syncing_problem);
-                break;
-
-            default:
-                if (e != null && !TextUtils.isEmpty(e.getMessage())) {
-                    textViewStatusInfo.setText(e.getMessage());
-                } else {
-                    textViewStatusInfo.setText(R.string.unknown_error);
-                }
-                break;
-        }
-
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-        if (getSnackBar() != null) {
-            getSnackBar().dismiss();
-        }
+    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+    if (getSnackBar() != null) {
+      getSnackBar().dismiss();
     }
+  }
 
-    /**
-     * Check is we connected to the sync service.
-     *
-     * @return true if we connected, otherwise false.
-     */
-    public boolean isSyncServiceConnected() {
-        BaseSyncActivity baseSyncActivity = (BaseSyncActivity) getActivity();
-        if (baseSyncActivity != null) {
-            return baseSyncActivity.isSyncServiceConnected();
-        } else throw new NullPointerException("BaseSyncActivity is null!");
-    }
+  /**
+   * Check is we connected to the sync service.
+   *
+   * @return true if we connected, otherwise false.
+   */
+  public boolean isSyncServiceConnected() {
+    BaseSyncActivity baseSyncActivity = (BaseSyncActivity) getActivity();
+    if (baseSyncActivity != null) {
+      return baseSyncActivity.isSyncServiceConnected();
+    } else throw new NullPointerException("BaseSyncActivity is null!");
+  }
 }

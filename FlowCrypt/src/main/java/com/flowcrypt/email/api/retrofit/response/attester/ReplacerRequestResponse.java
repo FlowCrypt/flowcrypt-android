@@ -20,56 +20,56 @@ import com.google.gson.annotations.Expose;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 10:31
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 10:31
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ReplacerRequestResponse extends BaseApiResponse {
 
-    public static final Creator<ReplacerRequestResponse> CREATOR = new
-            Creator<ReplacerRequestResponse>() {
-                @Override
-                public ReplacerRequestResponse createFromParcel(Parcel source) {
-                    return new ReplacerRequestResponse(source);
-                }
+  public static final Creator<ReplacerRequestResponse> CREATOR = new
+      Creator<ReplacerRequestResponse>() {
+        @Override
+        public ReplacerRequestResponse createFromParcel(Parcel source) {
+          return new ReplacerRequestResponse(source);
+        }
 
-                @Override
-                public ReplacerRequestResponse[] newArray(int size) {
-                    return new ReplacerRequestResponse[size];
-                }
-            };
+        @Override
+        public ReplacerRequestResponse[] newArray(int size) {
+          return new ReplacerRequestResponse[size];
+        }
+      };
 
-    @Expose
-    private boolean saved;
+  @Expose
+  private boolean saved;
 
-    public ReplacerRequestResponse() {
-    }
+  public ReplacerRequestResponse() {
+  }
 
-    protected ReplacerRequestResponse(Parcel in) {
-        super(in);
-        this.saved = in.readByte() != 0;
-    }
+  protected ReplacerRequestResponse(Parcel in) {
+    super(in);
+    this.saved = in.readByte() != 0;
+  }
 
-    @Override
-    public String toString() {
-        return "ReplacerRequestResponse{" +
-                "saved=" + saved +
-                "} " + super.toString();
-    }
+  @Override
+  public String toString() {
+    return "ReplacerRequestResponse{" +
+        "saved=" + saved +
+        "} " + super.toString();
+  }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeByte(this.saved ? (byte) 1 : (byte) 0);
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeByte(this.saved ? (byte) 1 : (byte) 0);
+  }
 
-    public boolean isSaved() {
-        return saved;
-    }
+  public boolean isSaved() {
+    return saved;
+  }
 }

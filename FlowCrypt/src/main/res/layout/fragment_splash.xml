@@ -84,7 +84,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textViewConnectYourEmail"
         tools:layout_constraintLeft_creator="1"
         tools:layout_constraintRight_creator="1"
-        tools:layout_constraintTop_creator="1"/>
+        tools:layout_constraintTop_creator="1" />
 
     <Button
         android:id="@+id/buttonOtherEmailProvider"
@@ -95,6 +95,6 @@
         android:theme="@style/AppWidget.Button.White.ConnectAccount"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail"/>
+        app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail" />
 
 </android.support.constraint.ConstraintLayout>

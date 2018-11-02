@@ -44,68 +44,68 @@ import static org.hamcrest.Matchers.allOf;
 
 /**
  * @author Denis Bondarenko
- *         Date: 23.02.2018
- *         Time: 16:51
- *         E-mail: DenBond7@gmail.com
+ * Date: 23.02.2018
+ * Time: 16:51
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
-    private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
-            GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
-                    CreateOrImportKeyActivity.class);
+  private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
+      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
+          CreateOrImportKeyActivity.class);
 
-    private IntentsTestRule activityTestRule = new IntentsTestRule<CreateOrImportKeyActivity>
-            (CreateOrImportKeyActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
-            Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
-            result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-            result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-            return result;
-        }
-    };
-
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddPrivateKeyToDatabaseRule())
-            .around(activityTestRule);
-
-    @Test
-    public void testClickOnButtonCreateNewKey() {
-        intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
-                CreatePrivateKeyActivity.class)), hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-        onView(withId(R.id.buttonCreateNewKey)).check(matches(isDisplayed())).perform(click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  private IntentsTestRule activityTestRule = new IntentsTestRule<CreateOrImportKeyActivity>
+      (CreateOrImportKeyActivity.class) {
+    @Override
+    protected Intent getActivityIntent() {
+      Context targetContext = InstrumentationRegistry.getTargetContext();
+      AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
+      Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
+      result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
+      result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
+      return result;
     }
+  };
 
-    @Test
-    public void testClickOnButtonImportMyKey() {
-        intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
-                        ImportPrivateKeyActivity.class)),
-                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
-                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),
-                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD),
-                hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-        onView(withId(R.id.buttonImportMyKey)).check(matches(isDisplayed())).perform(click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-    }
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddPrivateKeyToDatabaseRule())
+      .around(activityTestRule);
 
-    @Test
-    public void testClickOnButtonSelectAnotherAccount() {
-        onView(withId(R.id.buttonSelectAnotherAccount)).check(matches(isDisplayed())).perform(click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(CreateOrImportKeyActivity
-                .RESULT_CODE_USE_ANOTHER_ACCOUNT));
-    }
+  @Test
+  public void testClickOnButtonCreateNewKey() {
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+        CreatePrivateKeyActivity.class)), hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+    onView(withId(R.id.buttonCreateNewKey)).check(matches(isDisplayed())).perform(click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
 
-    @Test
-    public void testClickOnButtonSkipSetup() {
-        onView(withId(R.id.buttonSkipSetup)).check(matches(isDisplayed())).perform(click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-    }
+  @Test
+  public void testClickOnButtonImportMyKey() {
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+            ImportPrivateKeyActivity.class)),
+        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
+        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),
+        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD),
+        hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+    onView(withId(R.id.buttonImportMyKey)).check(matches(isDisplayed())).perform(click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
+
+  @Test
+  public void testClickOnButtonSelectAnotherAccount() {
+    onView(withId(R.id.buttonSelectAnotherAccount)).check(matches(isDisplayed())).perform(click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(CreateOrImportKeyActivity
+        .RESULT_CODE_USE_ANOTHER_ACCOUNT));
+  }
+
+  @Test
+  public void testClickOnButtonSkipSetup() {
+    onView(withId(R.id.buttonSkipSetup)).check(matches(isDisplayed())).perform(click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
 }

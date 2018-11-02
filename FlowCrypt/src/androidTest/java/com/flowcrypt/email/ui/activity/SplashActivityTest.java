@@ -40,54 +40,54 @@ import static org.hamcrest.Matchers.not;
  * A test for {@link SplashActivity}
  *
  * @author Denis Bondarenko
- *         Date: 13.02.2018
- *         Time: 11:12
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.02.2018
+ * Time: 11:12
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class SplashActivityTest extends BaseTest {
 
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new IntentsTestRule<>(SplashActivity.class));
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new IntentsTestRule<>(SplashActivity.class));
 
-    @Before
-    public void stubAllExternalIntents() {
-        // All external Intents will be blocked.
-        intending(not(isInternal())).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    }
+  @Before
+  public void stubAllExternalIntents() {
+    // All external Intents will be blocked.
+    intending(not(isInternal())).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+  }
 
-    @Test
-    public void testUseOtherEmailProviders() {
-        onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar)))).check(matches
-                (isDisplayed()));
-    }
+  @Test
+  public void testUseOtherEmailProviders() {
+    onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed())).perform(click());
+    onView(allOf(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar)))).check(matches
+        (isDisplayed()));
+  }
 
-    @Test
-    public void testUseGmail() {
-        onView(withId(R.id.buttonSignInWithGmail)).check(matches(isDisplayed())).perform(click());
-        //check that the Google Sign-in screen displayed
-        intended(toPackage("com.google.android.gms"));
-    }
+  @Test
+  public void testUseGmail() {
+    onView(withId(R.id.buttonSignInWithGmail)).check(matches(isDisplayed())).perform(click());
+    //check that the Google Sign-in screen displayed
+    intended(toPackage("com.google.android.gms"));
+  }
 
-    @Test
-    public void testShowPrivacyScreen() {
-        onView(withId(R.id.buttonPrivacy)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowPrivacyScreen() {
+    onView(withId(R.id.buttonPrivacy)).check(matches(isDisplayed())).perform(click());
+    onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 
-    @Test
-    public void testShowTermsScreen() {
-        onView(withId(R.id.buttonTerms)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowTermsScreen() {
+    onView(withId(R.id.buttonTerms)).check(matches(isDisplayed())).perform(click());
+    onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 
-    @Test
-    public void testShowSecurityScreen() {
-        onView(withId(R.id.buttonSecurity)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowSecurityScreen() {
+    onView(withId(R.id.buttonSecurity)).check(matches(isDisplayed())).perform(click());
+    onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 }

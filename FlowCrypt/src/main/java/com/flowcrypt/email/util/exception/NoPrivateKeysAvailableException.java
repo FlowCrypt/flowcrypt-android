@@ -18,14 +18,14 @@ import com.flowcrypt.email.R;
  * E-mail: DenBond7@gmail.com
  */
 public class NoPrivateKeysAvailableException extends FlowCryptException {
-    private String email;
+  private String email;
 
-    public NoPrivateKeysAvailableException(Context context, String email) {
-        super(context.getString(R.string.there_are_no_private_keys, email));
-        this.email = email;
-    }
+  public NoPrivateKeysAvailableException(Context context, String email) {
+    super(context.getString(R.string.there_are_no_private_keys, email));
+    this.email = email;
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  public String getEmail() {
+    return email;
+  }
 }

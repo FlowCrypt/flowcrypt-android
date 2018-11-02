@@ -23,64 +23,64 @@ import retrofit2.Response;
  * using API "https://attester.flowcrypt.com/initial/legacy_submit".
  *
  * @author Denis Bondarenko
- *         Date: 30.01.2018
- *         Time: 18:01
- *         E-mail: DenBond7@gmail.com
+ * Date: 30.01.2018
+ * Time: 18:01
+ * E-mail: DenBond7@gmail.com
  */
 
 public class RegisterUserPublicKeyAction extends Action {
-    public static final Creator<RegisterUserPublicKeyAction> CREATOR = new Creator<RegisterUserPublicKeyAction>() {
-        @Override
-        public RegisterUserPublicKeyAction createFromParcel(Parcel source) {
-            return new RegisterUserPublicKeyAction(source);
-        }
-
-        @Override
-        public RegisterUserPublicKeyAction[] newArray(int size) {
-            return new RegisterUserPublicKeyAction[size];
-        }
-    };
-
-    private String publicKey;
-
-    public RegisterUserPublicKeyAction(String email, String publicKey) {
-        super(email, ActionType.REGISTER_USER_PUBLIC_KEY);
-        this.publicKey = publicKey;
-    }
-
-
-    protected RegisterUserPublicKeyAction(Parcel in) {
-        super(in);
-        this.publicKey = in.readString();
+  public static final Creator<RegisterUserPublicKeyAction> CREATOR = new Creator<RegisterUserPublicKeyAction>() {
+    @Override
+    public RegisterUserPublicKeyAction createFromParcel(Parcel source) {
+      return new RegisterUserPublicKeyAction(source);
     }
 
     @Override
-    public void run(Context context) throws IOException {
-        ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-        Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
-                new InitialLegacySubmitModel(email, publicKey)).execute();
+    public RegisterUserPublicKeyAction[] newArray(int size) {
+      return new RegisterUserPublicKeyAction[size];
+    }
+  };
 
-        InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
-        if (initialLegacySubmitResponse == null) {
-            throw new IllegalArgumentException("The response is null!");
-        }
+  private String publicKey;
 
-        if (initialLegacySubmitResponse.getApiError() != null) {
-            if (initialLegacySubmitResponse.getApiError().getCode() < 400
-                    || initialLegacySubmitResponse.getApiError().getCode() >= 500) {
-                throw new ApiException(initialLegacySubmitResponse.getApiError());
-            }
-        }
+  public RegisterUserPublicKeyAction(String email, String publicKey) {
+    super(email, ActionType.REGISTER_USER_PUBLIC_KEY);
+    this.publicKey = publicKey;
+  }
+
+
+  protected RegisterUserPublicKeyAction(Parcel in) {
+    super(in);
+    this.publicKey = in.readString();
+  }
+
+  @Override
+  public void run(Context context) throws IOException {
+    ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
+    Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
+        new InitialLegacySubmitModel(email, publicKey)).execute();
+
+    InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
+    if (initialLegacySubmitResponse == null) {
+      throw new IllegalArgumentException("The response is null!");
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    if (initialLegacySubmitResponse.getApiError() != null) {
+      if (initialLegacySubmitResponse.getApiError().getCode() < 400
+          || initialLegacySubmitResponse.getApiError().getCode() >= 500) {
+        throw new ApiException(initialLegacySubmitResponse.getApiError());
+      }
     }
+  }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeString(this.publicKey);
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeString(this.publicKey);
+  }
 }

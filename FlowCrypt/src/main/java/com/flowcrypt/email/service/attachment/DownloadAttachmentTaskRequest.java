@@ -13,31 +13,31 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  * This class will be used to define information about a new download attachment task.
  *
  * @author Denis Bondarenko
- *         Date: 16.08.2017
- *         Time: 16:04
- *         E-mail: DenBond7@gmail.com
+ * Date: 16.08.2017
+ * Time: 16:04
+ * E-mail: DenBond7@gmail.com
  */
 
 public class DownloadAttachmentTaskRequest {
-    private Context context;
-    private int startId;
-    private AttachmentInfo attachmentInfo;
+  private Context context;
+  private int startId;
+  private AttachmentInfo attachmentInfo;
 
-    public DownloadAttachmentTaskRequest(Context context, int startId, AttachmentInfo attachmentInfo) {
-        this.context = context;
-        this.startId = startId;
-        this.attachmentInfo = attachmentInfo;
-    }
+  public DownloadAttachmentTaskRequest(Context context, int startId, AttachmentInfo attachmentInfo) {
+    this.context = context;
+    this.startId = startId;
+    this.attachmentInfo = attachmentInfo;
+  }
 
-    public Context getContext() {
-        return context;
-    }
+  public Context getContext() {
+    return context;
+  }
 
-    public int getStartId() {
-        return startId;
-    }
+  public int getStartId() {
+    return startId;
+  }
 
-    public AttachmentInfo getAttachmentInfo() {
-        return attachmentInfo;
-    }
+  public AttachmentInfo getAttachmentInfo() {
+    return attachmentInfo;
+  }
 }

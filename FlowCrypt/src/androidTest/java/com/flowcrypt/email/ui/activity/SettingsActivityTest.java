@@ -33,62 +33,62 @@ import static org.hamcrest.Matchers.allOf;
 
 /**
  * @author Denis Bondarenko
- *         Date: 20.02.2018
- *         Time: 15:42
- *         E-mail: DenBond7@gmail.com
+ * Date: 20.02.2018
+ * Time: 15:42
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class SettingsActivityTest extends BaseTest {
 
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(new ActivityTestRule<>(SettingsActivity.class));
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new ActivityTestRule<>(SettingsActivity.class));
 
-    @Test
-    public void testShowHelpScreen() {
-        testHelpScreen();
-    }
+  @Test
+  public void testShowHelpScreen() {
+    testHelpScreen();
+  }
 
-    @Test
-    public void testShowBackupsScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.backups));
-    }
+  @Test
+  public void testShowBackupsScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.backups));
+  }
 
-    @Test
-    public void testShowSecurityScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.security));
-    }
+  @Test
+  public void testShowSecurityScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+  }
 
-    @Test
-    public void testShowContactsScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.contacts));
-    }
+  @Test
+  public void testShowContactsScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.contacts));
+  }
 
-    @Test
-    public void testShowKeysScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.keys));
-    }
+  @Test
+  public void testShowKeysScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.keys));
+  }
 
-    @Test
-    public void testShowAttesterScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.attester));
-    }
+  @Test
+  public void testShowAttesterScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.attester));
+  }
 
-    @Test
-    public void testShowLegalScreen() {
-        checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.experimental),
-                InstrumentationRegistry.getTargetContext().getString(R.string.experimental_settings));
-    }
+  @Test
+  public void testShowLegalScreen() {
+    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.experimental),
+        InstrumentationRegistry.getTargetContext().getString(R.string.experimental_settings));
+  }
 
-    private void checkIsScreenDisplaying(String screenName) {
-        checkIsScreenDisplaying(screenName, screenName);
-    }
+  private void checkIsScreenDisplaying(String screenName) {
+    checkIsScreenDisplaying(screenName, screenName);
+  }
 
-    private void checkIsScreenDisplaying(String commandName, String screenName) {
-        onView(withText(commandName)).check(matches(isDisplayed())).perform(click());
-        onView(allOf(withText(screenName), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  private void checkIsScreenDisplaying(String commandName, String screenName) {
+    onView(withText(commandName)).check(matches(isDisplayed())).perform(click());
+    onView(allOf(withText(screenName), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 }

@@ -24,59 +24,59 @@ import java.util.Locale;
  * The debug log writer which will be used to write logs to the file.
  *
  * @author Denis Bondarenko
- *         Date: 10.07.2017
- *         Time: 16:10
- *         E-mail: DenBond7@gmail.com
+ * Date: 10.07.2017
+ * Time: 16:10
+ * E-mail: DenBond7@gmail.com
  */
 public class DebugLogWriter {
-    private static final long MAX_FILE_SIZE = FileUtils.ONE_MB;
-    private static final String LOG_MESSAGE_PATTERN = "%-20s    %s";
-    private static final String YYYY_MM_DD_HH_MM_SS_S = "yyyy-MM-dd HH:mm:ss.S";
+  private static final long MAX_FILE_SIZE = FileUtils.ONE_MB;
+  private static final String LOG_MESSAGE_PATTERN = "%-20s    %s";
+  private static final String YYYY_MM_DD_HH_MM_SS_S = "yyyy-MM-dd HH:mm:ss.S";
 
-    private File fileLog;
-    private DateFormat dateFormat;
+  private File fileLog;
+  private DateFormat dateFormat;
 
-    public DebugLogWriter(String fileName) {
-        this(new File(Environment.getExternalStorageDirectory() + "/" + BuildConfig
-                .APPLICATION_ID + "_" + fileName + "" +
-                ".log"));
+  public DebugLogWriter(String fileName) {
+    this(new File(Environment.getExternalStorageDirectory() + "/" + BuildConfig
+        .APPLICATION_ID + "_" + fileName + "" +
+        ".log"));
+  }
+
+  public DebugLogWriter(File fileLog) {
+    this.fileLog = fileLog;
+
+    if (fileLog.length() >= MAX_FILE_SIZE) {
+      try {
+        FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
+      } catch (IOException e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+      }
     }
 
-    public DebugLogWriter(File fileLog) {
-        this.fileLog = fileLog;
+    dateFormat = new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS_S, Locale.US);
+  }
 
-        if (fileLog.length() >= MAX_FILE_SIZE) {
-            try {
-                FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
-            } catch (IOException e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-            }
-        }
-
-        dateFormat = new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS_S, Locale.US);
+  public void writeLog(String message) {
+    try {
+      FileUtils.writeStringToFile(fileLog, String.format(LOG_MESSAGE_PATTERN,
+          dateFormat.format(new Date()), ""), Charset.defaultCharset(), true);
+      FileUtils.writeStringToFile(fileLog, message, Charset.defaultCharset(), true);
+      FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
+    } catch (IOException e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
     }
+  }
 
-    public void writeLog(String message) {
-        try {
-            FileUtils.writeStringToFile(fileLog, String.format(LOG_MESSAGE_PATTERN,
-                    dateFormat.format(new Date()), ""), Charset.defaultCharset(), true);
-            FileUtils.writeStringToFile(fileLog, message, Charset.defaultCharset(), true);
-            FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-        }
+  public void resetLogs() {
+    if (fileLog != null) {
+      try {
+        FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
+      } catch (IOException e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+      }
     }
-
-    public void resetLogs() {
-        if (fileLog != null) {
-            try {
-                FileUtils.writeStringToFile(fileLog, "", Charset.defaultCharset(), false);
-            } catch (IOException e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-            }
-        }
-    }
+  }
 }

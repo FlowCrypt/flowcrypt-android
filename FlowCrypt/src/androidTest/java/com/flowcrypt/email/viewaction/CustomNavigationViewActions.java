@@ -38,105 +38,105 @@ import static org.hamcrest.Matchers.allOf;
  */
 public final class CustomNavigationViewActions {
 
-    private CustomNavigationViewActions() {
-        // no Instance
-    }
+  private CustomNavigationViewActions() {
+    // no Instance
+  }
 
-    /**
-     * Returns a {@link ViewAction} that navigates to a menu item in {@link NavigationView} using a
-     * menu item title.
-     * <p>
-     * <p>View constraints:
-     * <p>
-     * <ul>
-     * <li>View must be a child of a {@link DrawerLayout}
-     * <li>View must be of type {@link NavigationView}
-     * <li>View must be visible on screen
-     * <li>View must be displayed on screen
-     * <ul>
-     *
-     * @param menuItemName the name of the menu item title
-     * @return a {@link ViewAction} that navigates on a menu item
-     */
-    public static ViewAction navigateTo(final String menuItemName) {
+  /**
+   * Returns a {@link ViewAction} that navigates to a menu item in {@link NavigationView} using a
+   * menu item title.
+   * <p>
+   * <p>View constraints:
+   * <p>
+   * <ul>
+   * <li>View must be a child of a {@link DrawerLayout}
+   * <li>View must be of type {@link NavigationView}
+   * <li>View must be visible on screen
+   * <li>View must be displayed on screen
+   * <ul>
+   *
+   * @param menuItemName the name of the menu item title
+   * @return a {@link ViewAction} that navigates on a menu item
+   */
+  public static ViewAction navigateTo(final String menuItemName) {
 
-        return new ViewAction() {
+    return new ViewAction() {
 
-            @Override
-            public void perform(UiController uiController, View view) {
-                NavigationView navigationView = (NavigationView) view;
-                NavigationMenu navigationMenu = (NavigationMenu) navigationView.getMenu();
+      @Override
+      public void perform(UiController uiController, View view) {
+        NavigationView navigationView = (NavigationView) view;
+        NavigationMenu navigationMenu = (NavigationMenu) navigationView.getMenu();
 
-                MenuItem matchedMenuItem = null;
+        MenuItem matchedMenuItem = null;
 
-                for (int i = 0; i < navigationMenu.size(); i++) {
-                    MenuItem menuItem = navigationMenu.getItem(i);
-                    if (menuItem.hasSubMenu()) {
-                        SubMenu subMenu = menuItem.getSubMenu();
-                        for (int j = 0; j < subMenu.size(); j++) {
-                            MenuItem subMenuItem = subMenu.getItem(j);
-                            if (subMenuItem.getTitle().equals(menuItemName)) {
-                                matchedMenuItem = subMenuItem;
-                            }
-                        }
-                    } else {
-                        if (menuItem.getTitle().equals(menuItemName)) {
-                            matchedMenuItem = menuItem;
-                        }
-                    }
-                }
-
-                if (matchedMenuItem == null) {
-                    throw new PerformException.Builder()
-                            .withActionDescription(this.getDescription())
-                            .withViewDescription(HumanReadables.describe(view))
-                            .withCause(new RuntimeException(getErrorMessage(navigationMenu, view)))
-                            .build();
-                }
-                navigationMenu.performItemAction(matchedMenuItem, 0);
+        for (int i = 0; i < navigationMenu.size(); i++) {
+          MenuItem menuItem = navigationMenu.getItem(i);
+          if (menuItem.hasSubMenu()) {
+            SubMenu subMenu = menuItem.getSubMenu();
+            for (int j = 0; j < subMenu.size(); j++) {
+              MenuItem subMenuItem = subMenu.getItem(j);
+              if (subMenuItem.getTitle().equals(menuItemName)) {
+                matchedMenuItem = subMenuItem;
+              }
             }
-
-            @Override
-            public String getDescription() {
-                return "click on menu item with id";
+          } else {
+            if (menuItem.getTitle().equals(menuItemName)) {
+              matchedMenuItem = menuItem;
             }
+          }
+        }
 
-            @Override
-            public Matcher<View> getConstraints() {
-                return allOf(
-                        isAssignableFrom(NavigationView.class),
-                        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
-                        isDisplayingAtLeast(90));
-            }
+        if (matchedMenuItem == null) {
+          throw new PerformException.Builder()
+              .withActionDescription(this.getDescription())
+              .withViewDescription(HumanReadables.describe(view))
+              .withCause(new RuntimeException(getErrorMessage(navigationMenu, view)))
+              .build();
+        }
+        navigationMenu.performItemAction(matchedMenuItem, 0);
+      }
 
-            private String getErrorMessage(Menu menu, View view) {
-                String newLine = System.getProperty("line.separator");
-                StringBuilder errorMessage =
-                        new StringBuilder("Menu item was not found, " + "available menu items:")
-                                .append(newLine);
-                for (int position = 0; position < menu.size(); position++) {
-                    errorMessage.append("[MenuItem] position=").append(position);
-                    MenuItem menuItem = menu.getItem(position);
-                    if (menuItem != null) {
-                        CharSequence itemTitle = menuItem.getTitle();
-                        if (itemTitle != null) {
-                            errorMessage.append(", title=").append(itemTitle);
-                        }
-                        if (view.getResources() != null) {
-                            int itemId = menuItem.getItemId();
-                            try {
-                                errorMessage.append(", id=");
-                                String menuItemResourceName = view.getResources().getResourceName(itemId);
-                                errorMessage.append(menuItemResourceName);
-                            } catch (Resources.NotFoundException nfe) {
-                                errorMessage.append("not found");
-                            }
-                        }
-                        errorMessage.append(newLine);
-                    }
-                }
-                return errorMessage.toString();
+      @Override
+      public String getDescription() {
+        return "click on menu item with id";
+      }
+
+      @Override
+      public Matcher<View> getConstraints() {
+        return allOf(
+            isAssignableFrom(NavigationView.class),
+            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+            isDisplayingAtLeast(90));
+      }
+
+      private String getErrorMessage(Menu menu, View view) {
+        String newLine = System.getProperty("line.separator");
+        StringBuilder errorMessage =
+            new StringBuilder("Menu item was not found, " + "available menu items:")
+                .append(newLine);
+        for (int position = 0; position < menu.size(); position++) {
+          errorMessage.append("[MenuItem] position=").append(position);
+          MenuItem menuItem = menu.getItem(position);
+          if (menuItem != null) {
+            CharSequence itemTitle = menuItem.getTitle();
+            if (itemTitle != null) {
+              errorMessage.append(", title=").append(itemTitle);
             }
-        };
-    }
+            if (view.getResources() != null) {
+              int itemId = menuItem.getItemId();
+              try {
+                errorMessage.append(", id=");
+                String menuItemResourceName = view.getResources().getResourceName(itemId);
+                errorMessage.append(menuItemResourceName);
+              } catch (Resources.NotFoundException nfe) {
+                errorMessage.append("not found");
+              }
+            }
+            errorMessage.append(newLine);
+          }
+        }
+        return errorMessage.toString();
+      }
+    };
+  }
 }

@@ -25,50 +25,50 @@ import java.util.ArrayList;
 
 public class LookUpResponse extends BaseApiResponse {
 
-    public static final Creator<LookUpResponse> CREATOR = new Creator<LookUpResponse>() {
-        @Override
-        public LookUpResponse createFromParcel(Parcel source) {
-            return new LookUpResponse(source);
-        }
-
-        @Override
-        public LookUpResponse[] newArray(int size) {
-            return new LookUpResponse[size];
-        }
-    };
-
-    @Expose
-    private ArrayList<LookUpPublicKeyInfo> results;
-
-    @Expose
-    private String query;
-
-    public LookUpResponse() {
-    }
-
-    protected LookUpResponse(Parcel in) {
-        super(in);
-        this.results = in.createTypedArrayList(LookUpPublicKeyInfo.CREATOR);
-        this.query = in.readString();
+  public static final Creator<LookUpResponse> CREATOR = new Creator<LookUpResponse>() {
+    @Override
+    public LookUpResponse createFromParcel(Parcel source) {
+      return new LookUpResponse(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public LookUpResponse[] newArray(int size) {
+      return new LookUpResponse[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeTypedList(this.results);
-        dest.writeString(this.query);
-    }
+  @Expose
+  private ArrayList<LookUpPublicKeyInfo> results;
 
-    public ArrayList<LookUpPublicKeyInfo> getResults() {
-        return results;
-    }
+  @Expose
+  private String query;
 
-    public String getQuery() {
-        return query;
-    }
+  public LookUpResponse() {
+  }
+
+  protected LookUpResponse(Parcel in) {
+    super(in);
+    this.results = in.createTypedArrayList(LookUpPublicKeyInfo.CREATOR);
+    this.query = in.readString();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeTypedList(this.results);
+    dest.writeString(this.query);
+  }
+
+  public ArrayList<LookUpPublicKeyInfo> getResults() {
+    return results;
+  }
+
+  public String getQuery() {
+    return query;
+  }
 }

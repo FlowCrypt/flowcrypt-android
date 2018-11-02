@@ -16,31 +16,31 @@ import com.hootsuite.nachos.chip.ChipSpan;
  * This class describes the representation of {@link ChipSpan} with PGP existing.
  *
  * @author Denis Bondarenko
- *         Date: 15.08.2017
- *         Time: 16:28
- *         E-mail: DenBond7@gmail.com
+ * Date: 15.08.2017
+ * Time: 16:28
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PGPContactChipSpan extends ChipSpan {
-    private Boolean isHasPgp;
+  private Boolean isHasPgp;
 
-    public PGPContactChipSpan(@NonNull Context context, @NonNull CharSequence text, @Nullable
-            Drawable icon, Object
-            data) {
-        super(context, text, icon, data);
-    }
+  public PGPContactChipSpan(@NonNull Context context, @NonNull CharSequence text, @Nullable
+      Drawable icon, Object
+                                data) {
+    super(context, text, icon, data);
+  }
 
-    public PGPContactChipSpan(@NonNull Context context, @NonNull PGPContactChipSpan
-            pgpContactChipSpan) {
-        super(context, pgpContactChipSpan);
-        this.isHasPgp = pgpContactChipSpan.isHasPgp();
-    }
+  public PGPContactChipSpan(@NonNull Context context, @NonNull PGPContactChipSpan
+      pgpContactChipSpan) {
+    super(context, pgpContactChipSpan);
+    this.isHasPgp = pgpContactChipSpan.isHasPgp();
+  }
 
-    public Boolean isHasPgp() {
-        return isHasPgp;
-    }
+  public Boolean isHasPgp() {
+    return isHasPgp;
+  }
 
-    public void setHasPgp(Boolean hasPgp) {
-        isHasPgp = hasPgp;
-    }
+  public void setHasPgp(Boolean hasPgp) {
+    isHasPgp = hasPgp;
+  }
 }

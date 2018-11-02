@@ -19,13 +19,13 @@ import com.flowcrypt.email.api.retrofit.request.model.ReplaceRequestModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 10:02
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 10:02
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ReplaceRequest extends BaseRequest<ReplaceRequestModel> {
-    public ReplaceRequest(ReplaceRequestModel replaceRequestModel) {
-        super(ApiName.POST_REPLACE_REQUEST, replaceRequestModel);
-    }
+  public ReplaceRequest(ReplaceRequestModel replaceRequestModel) {
+    super(ApiName.POST_REPLACE_REQUEST, replaceRequestModel);
+  }
 }

@@ -14,83 +14,83 @@ import com.google.gson.annotations.Expose;
  * to the API "https://flowcrypt.com/api/initial/legacy_submit"
  *
  * @author DenBond7
- *         Date: 15.01.2018
- *         Time: 16:37
- *         E-mail: DenBond7@gmail.com
+ * Date: 15.01.2018
+ * Time: 16:37
+ * E-mail: DenBond7@gmail.com
  */
 
 public class InitialLegacySubmitModel extends BaseRequestModel {
 
-    public static final Creator<InitialLegacySubmitModel> CREATOR = new Creator<InitialLegacySubmitModel>() {
-        @Override
-        public InitialLegacySubmitModel createFromParcel(Parcel source) {
-            return new InitialLegacySubmitModel(source);
-        }
-
-        @Override
-        public InitialLegacySubmitModel[] newArray(int size) {
-            return new InitialLegacySubmitModel[size];
-        }
-    };
-
-    @Expose
-    private String email;
-
-    @Expose
-    private String pubkey;
-
-    /*todo-denbond7 Make sure to choose attest: false for now.
-     https://github.com/FlowCrypt/flowcrypt-android/issues/71*/
-    @Expose
-    private boolean attest = false;
-
-    public InitialLegacySubmitModel() {
-    }
-
-    public InitialLegacySubmitModel(String email, String pubkey) {
-        this.email = email;
-        this.pubkey = pubkey;
-    }
-
-    protected InitialLegacySubmitModel(Parcel in) {
-        this.email = in.readString();
-        this.pubkey = in.readString();
-        this.attest = in.readByte() != 0;
+  public static final Creator<InitialLegacySubmitModel> CREATOR = new Creator<InitialLegacySubmitModel>() {
+    @Override
+    public InitialLegacySubmitModel createFromParcel(Parcel source) {
+      return new InitialLegacySubmitModel(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public InitialLegacySubmitModel[] newArray(int size) {
+      return new InitialLegacySubmitModel[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.email);
-        dest.writeString(this.pubkey);
-        dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
-    }
+  @Expose
+  private String email;
 
-    public String getEmail() {
-        return email;
-    }
+  @Expose
+  private String pubkey;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  /*todo-denbond7 Make sure to choose attest: false for now.
+   https://github.com/FlowCrypt/flowcrypt-android/issues/71*/
+  @Expose
+  private boolean attest = false;
 
-    public String getPubkey() {
-        return pubkey;
-    }
+  public InitialLegacySubmitModel() {
+  }
 
-    public void setPubkey(String pubkey) {
-        this.pubkey = pubkey;
-    }
+  public InitialLegacySubmitModel(String email, String pubkey) {
+    this.email = email;
+    this.pubkey = pubkey;
+  }
 
-    public boolean isAttest() {
-        return attest;
-    }
+  protected InitialLegacySubmitModel(Parcel in) {
+    this.email = in.readString();
+    this.pubkey = in.readString();
+    this.attest = in.readByte() != 0;
+  }
 
-    public void setAttest(boolean attest) {
-        this.attest = attest;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.email);
+    dest.writeString(this.pubkey);
+    dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public String getPubkey() {
+    return pubkey;
+  }
+
+  public void setPubkey(String pubkey) {
+    this.pubkey = pubkey;
+  }
+
+  public boolean isAttest() {
+    return attest;
+  }
+
+  public void setAttest(boolean attest) {
+    this.attest = attest;
+  }
 }

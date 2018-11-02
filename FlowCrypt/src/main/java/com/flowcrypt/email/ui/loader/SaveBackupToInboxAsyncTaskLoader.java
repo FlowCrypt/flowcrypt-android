@@ -31,46 +31,46 @@ import javax.mail.Transport;
  * E-mail: DenBond7@gmail.com
  */
 public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-    private final AccountDao accountDao;
-    private boolean isActionStarted;
-    private LoaderResult data;
+  private final AccountDao accountDao;
+  private boolean isActionStarted;
+  private LoaderResult data;
 
-    public SaveBackupToInboxAsyncTaskLoader(Context context, AccountDao accountDao) {
-        super(context);
-        this.accountDao = accountDao;
-    }
+  public SaveBackupToInboxAsyncTaskLoader(Context context, AccountDao accountDao) {
+    super(context);
+    this.accountDao = accountDao;
+  }
 
-    @Override
-    public void onStartLoading() {
-        if (data != null) {
-            deliverResult(data);
-        } else {
-            if (!isActionStarted) {
-                forceLoad();
-            }
-        }
+  @Override
+  public void onStartLoading() {
+    if (data != null) {
+      deliverResult(data);
+    } else {
+      if (!isActionStarted) {
+        forceLoad();
+      }
     }
+  }
 
-    @Override
-    public LoaderResult loadInBackground() {
-        isActionStarted = true;
-        try {
-            Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
-            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
-            Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(getContext(), accountDao, session, js);
-            transport.sendMessage(message, message.getAllRecipients());
-            return new LoaderResult(true, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-            return new LoaderResult(null, e);
-        }
+  @Override
+  public LoaderResult loadInBackground() {
+    isActionStarted = true;
+    try {
+      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
+      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
+      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
+      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(getContext(), accountDao, session, js);
+      transport.sendMessage(message, message.getAllRecipients());
+      return new LoaderResult(true, null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
     }
+  }
 
-    @Override
-    public void deliverResult(@Nullable LoaderResult data) {
-        this.data = data;
-        super.deliverResult(data);
-    }
+  @Override
+  public void deliverResult(@Nullable LoaderResult data) {
+    this.data = data;
+    super.deliverResult(data);
+  }
 }

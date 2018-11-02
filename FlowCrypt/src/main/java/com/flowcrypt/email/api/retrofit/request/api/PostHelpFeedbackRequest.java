@@ -21,13 +21,13 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
  * </pre>
  *
  * @author DenBond7
- *         Date: 30.05.2017
- *         Time: 12:32
- *         E-mail: DenBond7@gmail.com
+ * Date: 30.05.2017
+ * Time: 12:32
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PostHelpFeedbackRequest extends BaseRequest<PostHelpFeedbackModel> {
-    public PostHelpFeedbackRequest(PostHelpFeedbackModel postHelpFeedbackModel) {
-        super(ApiName.POST_HELP_FEEDBACK, postHelpFeedbackModel);
-    }
+  public PostHelpFeedbackRequest(PostHelpFeedbackModel postHelpFeedbackModel) {
+    super(ApiName.POST_HELP_FEEDBACK, postHelpFeedbackModel);
+  }
 }

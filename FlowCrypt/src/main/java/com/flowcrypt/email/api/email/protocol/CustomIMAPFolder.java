@@ -39,118 +39,118 @@ import javax.mail.MessagingException;
  */
 public class CustomIMAPFolder extends IMAPFolder implements FlowCryptIMAPFolder {
 
-    protected CustomIMAPFolder(String fullName, char separator, IMAPStore store, Boolean isNamespace) {
-        super(fullName, separator, store, isNamespace);
+  protected CustomIMAPFolder(String fullName, char separator, IMAPStore store, Boolean isNamespace) {
+    super(fullName, separator, store, isNamespace);
+  }
+
+  protected CustomIMAPFolder(ListInfo li, IMAPStore store) {
+    super(li, store);
+  }
+
+  @Override
+  protected IMAPMessage newIMAPMessage(int msgnum) {
+    return new CustomIMAPMessage(this, msgnum);
+  }
+
+  @Override
+  public void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException {
+    // cache this information in case connection is closed and
+    // protocol is set to null
+    boolean isRev1;
+    FetchItem[] fitems;
+
+    synchronized (messageCacheLock) {
+      checkOpened();
+      isRev1 = protocol.isREV1();
+      fitems = protocol.getFetchItems();
     }
 
-    protected CustomIMAPFolder(ListInfo li, IMAPStore store) {
-        super(li, store);
-    }
+    StringBuilder command = EmailUtil.prepareFetchCommand(fetchProfile, isRev1, getEnvelopeCommand());
+    boolean allHeaders = fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)
+        || fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE);
 
-    @Override
-    protected IMAPMessage newIMAPMessage(int msgnum) {
-        return new CustomIMAPMessage(this, msgnum);
-    }
+    Utility.Condition condition = new IMAPMessage.FetchProfileCondition(fetchProfile, fitems);
 
-    @Override
-    public void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException {
-        // cache this information in case connection is closed and
-        // protocol is set to null
-        boolean isRev1;
-        FetchItem[] fitems;
+    // Acquire the Folder's MessageCacheLock.
+    synchronized (messageCacheLock) {
 
-        synchronized (messageCacheLock) {
-            checkOpened();
-            isRev1 = protocol.isREV1();
-            fitems = protocol.getFetchItems();
+      // check again to make sure folder is still open
+      checkOpened();
+
+      // Apply the test, and get the sequence-number set for
+      // the messages that need to be prefetched.
+      MessageSet[] msgsets = Utility.toMessageSetSorted(messages, condition);
+
+      if (msgsets == null)
+        // We already have what we need.
+        return;
+
+      Response[] responseArray = null;
+      // to collect non-FETCH responses & unsolicited FETCH FLAG responses
+      List<Response> responseArrayList = new ArrayList<>();
+      try {
+        responseArray = getProtocol().fetch(msgsets, command.toString());
+      } catch (ConnectionException cex) {
+        throw new FolderClosedException(this, cex.getMessage());
+      } catch (CommandFailedException cfx) {
+        // Ignore these, as per RFC 2180
+      } catch (ProtocolException pex) {
+        throw new MessagingException(pex.getMessage(), pex);
+      }
+
+      if (responseArray == null)
+        return;
+
+      for (Response response : responseArray) {
+        if (response == null)
+          continue;
+        if (!(response instanceof FetchResponse)) {
+          responseArrayList.add(response); // Unsolicited Non-FETCH response
+          continue;
         }
 
-        StringBuilder command = EmailUtil.prepareFetchCommand(fetchProfile, isRev1, getEnvelopeCommand());
-        boolean allHeaders = fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)
-                || fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE);
+        // Got a FetchResponse.
+        FetchResponse fetchResponse = (FetchResponse) response;
+        // Get the corresponding message.
+        CustomIMAPMessage msg = (CustomIMAPMessage) getMessageBySeqNumber(fetchResponse.getNumber());
 
-        Utility.Condition condition = new IMAPMessage.FetchProfileCondition(fetchProfile, fitems);
+        int count = fetchResponse.getItemCount();
+        boolean unsolicitedFlags = false;
 
-        // Acquire the Folder's MessageCacheLock.
-        synchronized (messageCacheLock) {
+        for (int j = 0; j < count; j++) {
+          Item item = fetchResponse.getItem(j);
+          // Check for the FLAGS item
+          if (item instanceof Flags &&
+              (!fetchProfile.contains(FetchProfile.Item.FLAGS) ||
+                  msg == null)) {
+            // Ok, Unsolicited FLAGS update.
+            unsolicitedFlags = true;
+          } else if (msg != null) {
+            msg.handleFetchItemWithCustomBody(item, null, allHeaders);
+          }
+        }
 
-            // check again to make sure folder is still open
-            checkOpened();
+        if (msg != null) {
+          msg.handleExtensionFetchItems(fetchResponse.getExtensionItems());
+        }
 
-            // Apply the test, and get the sequence-number set for
-            // the messages that need to be prefetched.
-            MessageSet[] msgsets = Utility.toMessageSetSorted(messages, condition);
+        // If this response contains any unsolicited FLAGS
+        // add it to the unsolicited response vector
+        if (unsolicitedFlags) {
+          responseArrayList.add(fetchResponse);
+        }
+      }
 
-            if (msgsets == null)
-                // We already have what we need.
-                return;
+      // Dispatch any unsolicited responses
+      if (!responseArrayList.isEmpty()) {
+        Response[] responses = new Response[responseArrayList.size()];
+        responseArrayList.toArray(responses);
+        for (Response aR : responseArray) {
+          if (aR != null)
+            handleResponse(aR);
+        }
+      }
 
-            Response[] responseArray = null;
-            // to collect non-FETCH responses & unsolicited FETCH FLAG responses
-            List<Response> responseArrayList = new ArrayList<>();
-            try {
-                responseArray = getProtocol().fetch(msgsets, command.toString());
-            } catch (ConnectionException cex) {
-                throw new FolderClosedException(this, cex.getMessage());
-            } catch (CommandFailedException cfx) {
-                // Ignore these, as per RFC 2180
-            } catch (ProtocolException pex) {
-                throw new MessagingException(pex.getMessage(), pex);
-            }
-
-            if (responseArray == null)
-                return;
-
-            for (Response response : responseArray) {
-                if (response == null)
-                    continue;
-                if (!(response instanceof FetchResponse)) {
-                    responseArrayList.add(response); // Unsolicited Non-FETCH response
-                    continue;
-                }
-
-                // Got a FetchResponse.
-                FetchResponse fetchResponse = (FetchResponse) response;
-                // Get the corresponding message.
-                CustomIMAPMessage msg = (CustomIMAPMessage) getMessageBySeqNumber(fetchResponse.getNumber());
-
-                int count = fetchResponse.getItemCount();
-                boolean unsolicitedFlags = false;
-
-                for (int j = 0; j < count; j++) {
-                    Item item = fetchResponse.getItem(j);
-                    // Check for the FLAGS item
-                    if (item instanceof Flags &&
-                            (!fetchProfile.contains(FetchProfile.Item.FLAGS) ||
-                                    msg == null)) {
-                        // Ok, Unsolicited FLAGS update.
-                        unsolicitedFlags = true;
-                    } else if (msg != null) {
-                        msg.handleFetchItemWithCustomBody(item, null, allHeaders);
-                    }
-                }
-
-                if (msg != null) {
-                    msg.handleExtensionFetchItems(fetchResponse.getExtensionItems());
-                }
-
-                // If this response contains any unsolicited FLAGS
-                // add it to the unsolicited response vector
-                if (unsolicitedFlags) {
-                    responseArrayList.add(fetchResponse);
-                }
-            }
-
-            // Dispatch any unsolicited responses
-            if (!responseArrayList.isEmpty()) {
-                Response[] responses = new Response[responseArrayList.size()];
-                responseArrayList.toArray(responses);
-                for (Response aR : responseArray) {
-                    if (aR != null)
-                        handleResponse(aR);
-                }
-            }
-
-        } // Release messageCacheLock
-    }
+    } // Release messageCacheLock
+  }
 }

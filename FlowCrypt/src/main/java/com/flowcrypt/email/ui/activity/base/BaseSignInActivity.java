@@ -23,115 +23,115 @@ import com.google.android.gms.common.api.GoogleApiClient;
  * This activity will be a common point of a sign-in logic.
  *
  * @author Denis Bondarenko
- *         Date: 06.10.2017
- *         Time: 10:38
- *         E-mail: DenBond7@gmail.com
+ * Date: 06.10.2017
+ * Time: 10:38
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseSignInActivity extends BaseActivity implements View.OnClickListener,
-        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
-    protected static final int REQUEST_CODE_SIGN_IN = 10;
-    protected static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 11;
+    GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+  protected static final int REQUEST_CODE_SIGN_IN = 10;
+  protected static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 11;
 
-    private static final String KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
-            GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity.class);
-    /**
-     * The main entry point for Google Play services integration.
-     */
-    protected GoogleApiClient googleApiClient;
-    protected boolean isRunSignInWithGmailNeeded;
+  private static final String KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
+      GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity.class);
+  /**
+   * The main entry point for Google Play services integration.
+   */
+  protected GoogleApiClient googleApiClient;
+  protected boolean isRunSignInWithGmailNeeded;
 
-    protected GoogleSignInAccount currentGoogleSignInAccount;
+  protected GoogleSignInAccount currentGoogleSignInAccount;
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+    if (savedInstanceState != null) {
+      this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+    }
+
+    initGoogleApiClient();
+    initViews();
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
+  }
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    switch (requestCode) {
+      case REQUEST_CODE_ADD_OTHER_ACCOUNT:
+        switch (resultCode) {
+          case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
+            this.isRunSignInWithGmailNeeded = true;
+            break;
         }
+        break;
 
-        initGoogleApiClient();
-        initViews();
+      default:
+        super.onActivityResult(requestCode, resultCode, data);
     }
+  }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
-    }
+  @Override
+  public void onClick(View v) {
+    switch (v.getId()) {
+      case R.id.buttonSignInWithGmail:
+        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
+            REQUEST_CODE_SIGN_IN);
+        break;
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE_ADD_OTHER_ACCOUNT:
-                switch (resultCode) {
-                    case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
-                        this.isRunSignInWithGmailNeeded = true;
-                        break;
-                }
-                break;
-
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
+      case R.id.buttonOtherEmailProvider:
+        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class),
+              REQUEST_CODE_ADD_OTHER_ACCOUNT);
+        } else {
+          showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
         }
+        break;
+    }
+  }
+
+  @Override
+  public void onConnected(@Nullable Bundle bundle) {
+    if (this.isRunSignInWithGmailNeeded) {
+      this.isRunSignInWithGmailNeeded = false;
+      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
+          REQUEST_CODE_SIGN_IN);
+    }
+  }
+
+  @Override
+  public void onConnectionSuspended(int i) {
+
+  }
+
+  @Override
+  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+  }
+
+  @Override
+  public void onJsServiceConnected() {
+
+  }
+
+  protected void initGoogleApiClient() {
+    googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
+        .generateGoogleSignInOptions());
+  }
+
+  private void initViews() {
+    if (findViewById(R.id.buttonSignInWithGmail) != null) {
+      findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.buttonSignInWithGmail:
-                GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-                        REQUEST_CODE_SIGN_IN);
-                break;
-
-            case R.id.buttonOtherEmailProvider:
-                if (GeneralUtil.isInternetConnectionAvailable(this)) {
-                    startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class),
-                            REQUEST_CODE_ADD_OTHER_ACCOUNT);
-                } else {
-                    showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
-                }
-                break;
-        }
+    if (findViewById(R.id.buttonOtherEmailProvider) != null) {
+      findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
     }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (this.isRunSignInWithGmailNeeded) {
-            this.isRunSignInWithGmailNeeded = false;
-            GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-                    REQUEST_CODE_SIGN_IN);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
-    }
-
-    @Override
-    public void onJsServiceConnected() {
-
-    }
-
-    protected void initGoogleApiClient() {
-        googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
-                .generateGoogleSignInOptions());
-    }
-
-    private void initViews() {
-        if (findViewById(R.id.buttonSignInWithGmail) != null) {
-            findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
-        }
-
-        if (findViewById(R.id.buttonOtherEmailProvider) != null) {
-            findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
-        }
-    }
+  }
 }

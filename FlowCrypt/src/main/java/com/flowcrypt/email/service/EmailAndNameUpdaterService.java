@@ -35,57 +35,57 @@ import java.util.ArrayList;
  * </ul>
  *
  * @author DenBond7
- *         Date: 22.05.2017
- *         Time: 22:25
- *         E-mail: DenBond7@gmail.com
+ * Date: 22.05.2017
+ * Time: 22:25
+ * E-mail: DenBond7@gmail.com
  */
 
 public class EmailAndNameUpdaterService extends JobIntentService {
-    private static final String EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID +
-            ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME";
-    private ContactsDaoSource contactsDaoSource;
+  private static final String EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID +
+      ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME";
+  private ContactsDaoSource contactsDaoSource;
 
-    /**
-     * Enqueue a new task for {@link EmailAndNameUpdaterService}.
-     *
-     * @param context           Interface to global information about an application environment.
-     * @param emailAndNamePairs A list of EmailAndNamePair objects.
-     */
-    public static void enqueueWork(Context context, ArrayList<EmailAndNamePair> emailAndNamePairs) {
-        if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
-            Intent intent = new Intent(context, EmailAndNameUpdaterService.class);
-            intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs);
+  /**
+   * Enqueue a new task for {@link EmailAndNameUpdaterService}.
+   *
+   * @param context           Interface to global information about an application environment.
+   * @param emailAndNamePairs A list of EmailAndNamePair objects.
+   */
+  public static void enqueueWork(Context context, ArrayList<EmailAndNamePair> emailAndNamePairs) {
+    if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
+      Intent intent = new Intent(context, EmailAndNameUpdaterService.class);
+      intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs);
 
-            enqueueWork(context, EmailAndNameUpdaterService.class, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent);
+      enqueueWork(context, EmailAndNameUpdaterService.class, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent);
+    }
+  }
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    contactsDaoSource = new ContactsDaoSource();
+  }
+
+  @Override
+  protected void onHandleWork(@NonNull Intent intent) {
+    if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
+      ArrayList<EmailAndNamePair> emailAndNamePairs = intent.getParcelableArrayListExtra
+          (EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME);
+
+      for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
+        PgpContact pgpContact = contactsDaoSource.getPgpContact(getApplicationContext(),
+            emailAndNamePair.getEmail());
+        if (pgpContact != null) {
+          if (TextUtils.isEmpty(pgpContact.getName())) {
+            contactsDaoSource.updateNameOfPgpContact(getApplicationContext(),
+                emailAndNamePair.getEmail(),
+                emailAndNamePair.getName());
+          }
+        } else {
+          contactsDaoSource.addRow(getApplicationContext(), new PgpContact
+              (emailAndNamePair.getEmail(), emailAndNamePair.getName()));
         }
+      }
     }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        contactsDaoSource = new ContactsDaoSource();
-    }
-
-    @Override
-    protected void onHandleWork(@NonNull Intent intent) {
-        if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
-            ArrayList<EmailAndNamePair> emailAndNamePairs = intent.getParcelableArrayListExtra
-                    (EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME);
-
-            for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
-                PgpContact pgpContact = contactsDaoSource.getPgpContact(getApplicationContext(),
-                        emailAndNamePair.getEmail());
-                if (pgpContact != null) {
-                    if (TextUtils.isEmpty(pgpContact.getName())) {
-                        contactsDaoSource.updateNameOfPgpContact(getApplicationContext(),
-                                emailAndNamePair.getEmail(),
-                                emailAndNamePair.getName());
-                    }
-                } else {
-                    contactsDaoSource.addRow(getApplicationContext(), new PgpContact
-                            (emailAndNamePair.getEmail(), emailAndNamePair.getName()));
-                }
-            }
-        }
-    }
+  }
 }

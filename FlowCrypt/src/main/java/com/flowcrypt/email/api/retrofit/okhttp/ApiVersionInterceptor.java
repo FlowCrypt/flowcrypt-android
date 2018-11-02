@@ -16,20 +16,20 @@ import okhttp3.Response;
  * requests.
  *
  * @author Denis Bondarenko
- *         Date: 12.07.2017
- *         Time: 13:40
- *         E-mail: DenBond7@gmail.com
+ * Date: 12.07.2017
+ * Time: 13:40
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ApiVersionInterceptor implements Interceptor {
 
-    private static final String HEADER_NAME_API_VERSION = "api-version";
-    private static final String API_VERSION_VALUE = "3";
+  private static final String HEADER_NAME_API_VERSION = "api-version";
+  private static final String API_VERSION_VALUE = "3";
 
-    @Override
-    public Response intercept(Chain chain) throws IOException {
-        Request request = chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION,
-                API_VERSION_VALUE).build();
-        return chain.proceed(request);
-    }
+  @Override
+  public Response intercept(Chain chain) throws IOException {
+    Request request = chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION,
+        API_VERSION_VALUE).build();
+    return chain.proceed(request);
+  }
 }

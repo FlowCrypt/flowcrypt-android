@@ -12,18 +12,18 @@ package com.flowcrypt.email.util.exception;
  * E-mail: DenBond7@gmail.com
  */
 public class PrivateKeyStrengthException extends FlowCryptException {
-    public PrivateKeyStrengthException() {
-    }
+  public PrivateKeyStrengthException() {
+  }
 
-    public PrivateKeyStrengthException(String message) {
-        super(message);
-    }
+  public PrivateKeyStrengthException(String message) {
+    super(message);
+  }
 
-    public PrivateKeyStrengthException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public PrivateKeyStrengthException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public PrivateKeyStrengthException(Throwable cause) {
-        super(cause);
-    }
+  public PrivateKeyStrengthException(Throwable cause) {
+    super(cause);
+  }
 }

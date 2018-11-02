@@ -19,93 +19,93 @@ import com.flowcrypt.email.js.PgpContact;
  * E-mail: DenBond7@gmail.com
  */
 public class PublicKeyInfo implements Parcelable {
-    public static final Parcelable.Creator<PublicKeyInfo> CREATOR = new Parcelable.Creator<PublicKeyInfo>() {
-        @Override
-        public PublicKeyInfo createFromParcel(Parcel source) {
-            return new PublicKeyInfo(source);
-        }
-
-        @Override
-        public PublicKeyInfo[] newArray(int size) {
-            return new PublicKeyInfo[size];
-        }
-    };
-
-    private String keyWords;
-    private String fingerprint;
-    private String keyOwner;
-    private String longId;
-    private PgpContact pgpContact;
-    private String publicKey;
-
-
-    public PublicKeyInfo(String keyWords, String fingerprint, String keyOwner,
-                         String longId, PgpContact pgpContact, String publicKey) {
-        this.keyWords = keyWords;
-        this.fingerprint = fingerprint;
-        this.keyOwner = keyOwner;
-        this.longId = longId;
-        this.pgpContact = pgpContact;
-        this.publicKey = publicKey;
-    }
-
-    protected PublicKeyInfo(Parcel in) {
-        this.keyWords = in.readString();
-        this.fingerprint = in.readString();
-        this.keyOwner = in.readString();
-        this.longId = in.readString();
-        this.pgpContact = in.readParcelable(PgpContact.class.getClassLoader());
-        this.publicKey = in.readString();
+  public static final Parcelable.Creator<PublicKeyInfo> CREATOR = new Parcelable.Creator<PublicKeyInfo>() {
+    @Override
+    public PublicKeyInfo createFromParcel(Parcel source) {
+      return new PublicKeyInfo(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public PublicKeyInfo[] newArray(int size) {
+      return new PublicKeyInfo[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.keyWords);
-        dest.writeString(this.fingerprint);
-        dest.writeString(this.keyOwner);
-        dest.writeString(this.longId);
-        dest.writeParcelable(this.pgpContact, flags);
-        dest.writeString(this.publicKey);
-    }
+  private String keyWords;
+  private String fingerprint;
+  private String keyOwner;
+  private String longId;
+  private PgpContact pgpContact;
+  private String publicKey;
 
-    public String getKeyWords() {
-        return keyWords;
-    }
 
-    public String getFingerprint() {
-        return fingerprint;
-    }
+  public PublicKeyInfo(String keyWords, String fingerprint, String keyOwner,
+                       String longId, PgpContact pgpContact, String publicKey) {
+    this.keyWords = keyWords;
+    this.fingerprint = fingerprint;
+    this.keyOwner = keyOwner;
+    this.longId = longId;
+    this.pgpContact = pgpContact;
+    this.publicKey = publicKey;
+  }
 
-    public String getKeyOwner() {
-        return keyOwner;
-    }
+  protected PublicKeyInfo(Parcel in) {
+    this.keyWords = in.readString();
+    this.fingerprint = in.readString();
+    this.keyOwner = in.readString();
+    this.longId = in.readString();
+    this.pgpContact = in.readParcelable(PgpContact.class.getClassLoader());
+    this.publicKey = in.readString();
+  }
 
-    public String getLongId() {
-        return longId;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    public PgpContact getPgpContact() {
-        return pgpContact;
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.keyWords);
+    dest.writeString(this.fingerprint);
+    dest.writeString(this.keyOwner);
+    dest.writeString(this.longId);
+    dest.writeParcelable(this.pgpContact, flags);
+    dest.writeString(this.publicKey);
+  }
 
-    public void setPgpContact(PgpContact pgpContact) {
-        this.pgpContact = pgpContact;
-    }
+  public String getKeyWords() {
+    return keyWords;
+  }
 
-    public String getPublicKey() {
-        return publicKey;
-    }
+  public String getFingerprint() {
+    return fingerprint;
+  }
 
-    public boolean isPgpContactExists() {
-        return pgpContact != null;
-    }
+  public String getKeyOwner() {
+    return keyOwner;
+  }
 
-    public boolean isPgpContactCanBeUpdated() {
-        return pgpContact != null && (pgpContact.getLongid() == null || !pgpContact.getLongid().equals(longId));
-    }
+  public String getLongId() {
+    return longId;
+  }
+
+  public PgpContact getPgpContact() {
+    return pgpContact;
+  }
+
+  public void setPgpContact(PgpContact pgpContact) {
+    this.pgpContact = pgpContact;
+  }
+
+  public String getPublicKey() {
+    return publicKey;
+  }
+
+  public boolean isPgpContactExists() {
+    return pgpContact != null;
+  }
+
+  public boolean isPgpContactCanBeUpdated() {
+    return pgpContact != null && (pgpContact.getLongid() == null || !pgpContact.getLongid().equals(longId));
+  }
 }

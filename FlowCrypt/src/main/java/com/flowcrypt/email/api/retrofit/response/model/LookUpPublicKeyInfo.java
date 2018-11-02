@@ -23,68 +23,68 @@ import java.util.ArrayList;
  * E-mail: DenBond7@gmail.com
  */
 public class LookUpPublicKeyInfo implements Parcelable {
-    public static final Creator<LookUpPublicKeyInfo> CREATOR = new Creator<LookUpPublicKeyInfo>() {
-        @Override
-        public LookUpPublicKeyInfo createFromParcel(Parcel source) {
-            return new LookUpPublicKeyInfo(source);
-        }
-
-        @Override
-        public LookUpPublicKeyInfo[] newArray(int size) {
-            return new LookUpPublicKeyInfo[size];
-        }
-    };
-
-    @SerializedName("longid")
-    @Expose
-    private String longId;
-
-    @SerializedName("pubkey")
-    @Expose
-    private String publicKey;
-
-    @Expose
-    private String query;
-
-    @Expose
-    private ArrayList<String> attests;
-
-    public LookUpPublicKeyInfo() {
-    }
-
-    protected LookUpPublicKeyInfo(Parcel in) {
-        this.longId = in.readString();
-        this.publicKey = in.readString();
-        this.query = in.readString();
-        this.attests = in.createStringArrayList();
+  public static final Creator<LookUpPublicKeyInfo> CREATOR = new Creator<LookUpPublicKeyInfo>() {
+    @Override
+    public LookUpPublicKeyInfo createFromParcel(Parcel source) {
+      return new LookUpPublicKeyInfo(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public LookUpPublicKeyInfo[] newArray(int size) {
+      return new LookUpPublicKeyInfo[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.longId);
-        dest.writeString(this.publicKey);
-        dest.writeString(this.query);
-        dest.writeStringList(this.attests);
-    }
+  @SerializedName("longid")
+  @Expose
+  private String longId;
 
-    public String getLongId() {
-        return longId;
-    }
+  @SerializedName("pubkey")
+  @Expose
+  private String publicKey;
 
-    public String getPublicKey() {
-        return publicKey;
-    }
+  @Expose
+  private String query;
 
-    public String getQuery() {
-        return query;
-    }
+  @Expose
+  private ArrayList<String> attests;
 
-    public ArrayList<String> getAttests() {
-        return attests;
-    }
+  public LookUpPublicKeyInfo() {
+  }
+
+  protected LookUpPublicKeyInfo(Parcel in) {
+    this.longId = in.readString();
+    this.publicKey = in.readString();
+    this.query = in.readString();
+    this.attests = in.createStringArrayList();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.longId);
+    dest.writeString(this.publicKey);
+    dest.writeString(this.query);
+    dest.writeStringList(this.attests);
+  }
+
+  public String getLongId() {
+    return longId;
+  }
+
+  public String getPublicKey() {
+    return publicKey;
+  }
+
+  public String getQuery() {
+    return query;
+  }
+
+  public ArrayList<String> getAttests() {
+    return attests;
+  }
 }

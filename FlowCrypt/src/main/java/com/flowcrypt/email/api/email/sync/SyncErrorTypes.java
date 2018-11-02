@@ -9,14 +9,14 @@ package com.flowcrypt.email.api.email.sync;
  * This class contains types of synchronization errors.
  *
  * @author DenBond7
- *         Date: 16.06.2017
- *         Time: 9:18
- *         E-mail: DenBond7@gmail.com
+ * Date: 16.06.2017
+ * Time: 9:18
+ * E-mail: DenBond7@gmail.com
  */
 
 public class SyncErrorTypes {
-    public static final int UNKNOWN_ERROR = 0;
-    public static final int ACTION_FAILED_SHOW_TOAST = 1;
-    public static final int TASK_RUNNING_ERROR = 2;
-    public static final int CONNECTION_TO_STORE_IS_LOST = 3;
+  public static final int UNKNOWN_ERROR = 0;
+  public static final int ACTION_FAILED_SHOW_TOAST = 1;
+  public static final int TASK_RUNNING_ERROR = 2;
+  public static final int CONNECTION_TO_STORE_IS_LOST = 3;
 }

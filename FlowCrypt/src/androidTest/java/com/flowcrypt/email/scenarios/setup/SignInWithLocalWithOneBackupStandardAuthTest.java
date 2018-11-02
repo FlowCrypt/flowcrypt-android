@@ -12,15 +12,15 @@ import com.flowcrypt.email.util.AuthCredentialsManager;
  * This test is using credentials of the user which has only one backup.
  *
  * @author Denis Bondarenko
- *         Date: 26.12.2017
- *         Time: 13:35
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.12.2017
+ * Time: 13:35
+ * E-mail: DenBond7@gmail.com
  */
 
 public class SignInWithLocalWithOneBackupStandardAuthTest extends SignInWithBackupStandardAuthTest {
 
-    @Override
-    AuthCredentials getAuthCredentials() {
-        return AuthCredentialsManager.getLocalWithOneBackupAuthCredentials();
-    }
+  @Override
+  AuthCredentials getAuthCredentials() {
+    return AuthCredentialsManager.getLocalWithOneBackupAuthCredentials();
+  }
 }

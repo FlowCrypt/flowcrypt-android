@@ -22,13 +22,13 @@ import com.flowcrypt.email.api.retrofit.request.model.MessageReplyModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 16:32
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 16:32
+ * E-mail: DenBond7@gmail.com
  */
 
 public class MessageReplyRequest extends BaseRequest<MessageReplyModel> {
-    public MessageReplyRequest(MessageReplyModel requestModel) {
-        super(ApiName.POST_MESSAGE_REPLY, requestModel);
-    }
+  public MessageReplyRequest(MessageReplyModel requestModel) {
+    super(ApiName.POST_MESSAGE_REPLY, requestModel);
+  }
 }

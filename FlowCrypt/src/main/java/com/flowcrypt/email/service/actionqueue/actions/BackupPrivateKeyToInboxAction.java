@@ -25,59 +25,59 @@ import javax.mail.Transport;
  * This action describes a task which backups a private key to INBOX.
  *
  * @author Denis Bondarenko
- *         Date: 29.01.2018
- *         Time: 16:58
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.01.2018
+ * Time: 16:58
+ * E-mail: DenBond7@gmail.com
  */
 
 public class BackupPrivateKeyToInboxAction extends Action {
-    public static final Creator<BackupPrivateKeyToInboxAction> CREATOR = new Creator<BackupPrivateKeyToInboxAction>() {
-        @Override
-        public BackupPrivateKeyToInboxAction createFromParcel(Parcel source) {
-            return new BackupPrivateKeyToInboxAction(source);
-        }
-
-        @Override
-        public BackupPrivateKeyToInboxAction[] newArray(int size) {
-            return new BackupPrivateKeyToInboxAction[size];
-        }
-    };
-
-    private String privateKeyLongId;
-
-    public BackupPrivateKeyToInboxAction(String email, String privateKeyLongId) {
-        super(email, ActionType.BACKUP_PRIVATE_KEY_TO_INBOX);
-        this.privateKeyLongId = privateKeyLongId;
-    }
-
-
-    protected BackupPrivateKeyToInboxAction(Parcel in) {
-        super(in);
-        this.privateKeyLongId = in.readString();
+  public static final Creator<BackupPrivateKeyToInboxAction> CREATOR = new Creator<BackupPrivateKeyToInboxAction>() {
+    @Override
+    public BackupPrivateKeyToInboxAction createFromParcel(Parcel source) {
+      return new BackupPrivateKeyToInboxAction(source);
     }
 
     @Override
-    public void run(Context context) throws Exception {
-        AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, email);
-        SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
-        PgpKeyInfo pgpKeyInfo = securityStorageConnector.getPgpPrivateKey(privateKeyLongId);
-        if (accountDao != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
-            Session session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
-            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
-            Message message = EmailUtil.generateMessageWithPrivateKeysBackup(context, accountDao, session,
-                    EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKeyInfo.getPrivate()));
-            transport.sendMessage(message, message.getAllRecipients());
-        }
+    public BackupPrivateKeyToInboxAction[] newArray(int size) {
+      return new BackupPrivateKeyToInboxAction[size];
     }
+  };
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  private String privateKeyLongId;
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeString(this.privateKeyLongId);
+  public BackupPrivateKeyToInboxAction(String email, String privateKeyLongId) {
+    super(email, ActionType.BACKUP_PRIVATE_KEY_TO_INBOX);
+    this.privateKeyLongId = privateKeyLongId;
+  }
+
+
+  protected BackupPrivateKeyToInboxAction(Parcel in) {
+    super(in);
+    this.privateKeyLongId = in.readString();
+  }
+
+  @Override
+  public void run(Context context) throws Exception {
+    AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, email);
+    SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
+    PgpKeyInfo pgpKeyInfo = securityStorageConnector.getPgpPrivateKey(privateKeyLongId);
+    if (accountDao != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
+      Session session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
+      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+      Message message = EmailUtil.generateMessageWithPrivateKeysBackup(context, accountDao, session,
+          EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKeyInfo.getPrivate()));
+      transport.sendMessage(message, message.getAllRecipients());
     }
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeString(this.privateKeyLongId);
+  }
 }

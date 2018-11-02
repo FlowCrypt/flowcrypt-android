@@ -22,24 +22,24 @@ import javax.mail.URLName;
  */
 public class CustomGmailSSLStore extends GmailSSLStore {
 
-    /**
-     * Constructor that takes a Session object and a URLName that
-     * represents a specific IMAP server.
-     *
-     * @param session the Session
-     * @param url     the URLName of this store
-     */
-    public CustomGmailSSLStore(Session session, URLName url) {
-        super(session, url);
-    }
+  /**
+   * Constructor that takes a Session object and a URLName that
+   * represents a specific IMAP server.
+   *
+   * @param session the Session
+   * @param url     the URLName of this store
+   */
+  public CustomGmailSSLStore(Session session, URLName url) {
+    super(session, url);
+  }
 
-    @Override
-    protected IMAPFolder newIMAPFolder(ListInfo li) {
-        return new CustomGmailFolder(li, this);
-    }
+  @Override
+  protected IMAPFolder newIMAPFolder(ListInfo li) {
+    return new CustomGmailFolder(li, this);
+  }
 
-    @Override
-    protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
-        return new CustomGmailFolder(fullName, separator, this, isNamespace);
-    }
+  @Override
+  protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
+    return new CustomGmailFolder(fullName, separator, this, isNamespace);
+  }
 }

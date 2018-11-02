@@ -36,72 +36,72 @@ import java.util.List;
  */
 public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
-    private final String newPassphrase;
-    private final AccountDao accountDao;
-    private boolean isActionStarted;
-    private LoaderResult data;
+  private final String newPassphrase;
+  private final AccountDao accountDao;
+  private boolean isActionStarted;
+  private LoaderResult data;
 
-    public ChangePassPhraseAsyncTaskLoader(Context context, AccountDao accountDao, String newPassphrase) {
-        super(context);
-        this.accountDao = accountDao;
-        this.newPassphrase = newPassphrase;
+  public ChangePassPhraseAsyncTaskLoader(Context context, AccountDao accountDao, String newPassphrase) {
+    super(context);
+    this.accountDao = accountDao;
+    this.newPassphrase = newPassphrase;
+  }
+
+  @Override
+  public void onStartLoading() {
+    if (data != null) {
+      deliverResult(data);
+    } else {
+      if (!isActionStarted) {
+        forceLoad();
+      }
     }
+  }
 
-    @Override
-    public void onStartLoading() {
-        if (data != null) {
-            deliverResult(data);
-        } else {
-            if (!isActionStarted) {
-                forceLoad();
-            }
+  @Override
+  public LoaderResult loadInBackground() {
+    isActionStarted = true;
+    try {
+      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
+
+      List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
+          (getContext(), accountDao.getEmail());
+
+      PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
+          (longIdListOfAccountPrivateKeys.toArray(new String[0]));
+
+      if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+        throw new NoPrivateKeysAvailableException(getContext(), accountDao.getEmail());
+      }
+
+      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
+      List<KeysDao> keysDaoList = new ArrayList<>();
+
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+        PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, pgpKey, newPassphrase));
+      }
+
+      ContentProviderResult[] contentProviderResults = new KeysDaoSource().updateKeys(getContext(), keysDaoList);
+
+      for (ContentProviderResult contentProviderResult : contentProviderResults) {
+        if (contentProviderResult.count < 1) {
+          throw new IllegalArgumentException("An error occurred when we tried update " +
+              contentProviderResult.uri);
         }
+      }
+
+      return new LoaderResult(true, null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
     }
+  }
 
-    @Override
-    public LoaderResult loadInBackground() {
-        isActionStarted = true;
-        try {
-            Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-
-            List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-                    (getContext(), accountDao.getEmail());
-
-            PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
-                    (longIdListOfAccountPrivateKeys.toArray(new String[0]));
-
-            if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
-                throw new NoPrivateKeysAvailableException(getContext(), accountDao.getEmail());
-            }
-
-            KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
-            List<KeysDao> keysDaoList = new ArrayList<>();
-
-            for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-                PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-                keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, pgpKey, newPassphrase));
-            }
-
-            ContentProviderResult[] contentProviderResults = new KeysDaoSource().updateKeys(getContext(), keysDaoList);
-
-            for (ContentProviderResult contentProviderResult : contentProviderResults) {
-                if (contentProviderResult.count < 1) {
-                    throw new IllegalArgumentException("An error occurred when we tried update " +
-                            contentProviderResult.uri);
-                }
-            }
-
-            return new LoaderResult(true, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-            return new LoaderResult(null, e);
-        }
-    }
-
-    @Override
-    public void deliverResult(@Nullable LoaderResult data) {
-        this.data = data;
-        super.deliverResult(data);
-    }
+  @Override
+  public void deliverResult(@Nullable LoaderResult data) {
+    this.data = data;
+    super.deliverResult(data);
+  }
 }

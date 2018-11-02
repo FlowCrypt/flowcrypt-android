@@ -38,58 +38,58 @@ import javax.mail.Session;
  * E-mail: DenBond7@gmail.com
  */
 public class CustomIMAPMessage extends IMAPMessage implements FlowCryptIMAPMessage {
-    protected CustomIMAPMessage(IMAPFolder folder, int msgnum) {
-        super(folder, msgnum);
+  protected CustomIMAPMessage(IMAPFolder folder, int msgnum) {
+    super(folder, msgnum);
+  }
+
+  protected CustomIMAPMessage(Session session) {
+    super(session);
+  }
+
+
+  @Override
+  public boolean handleFetchItemWithCustomBody(Item item, String[] hdrs, boolean allHeaders) throws
+      MessagingException {
+    //Check for the standard items
+    if (item instanceof Flags
+        || item instanceof ENVELOPE
+        || item instanceof INTERNALDATE
+        || item instanceof RFC822SIZE
+        || item instanceof MODSEQ
+        || item instanceof BODYSTRUCTURE
+        || item instanceof UID
+        || item instanceof RFC822DATA) {
+      return handleFetchItem(item, hdrs, allHeaders);
     }
 
-    protected CustomIMAPMessage(Session session) {
-        super(session);
+    // Check for header items
+    else if (item instanceof BODY) {
+      ByteArrayInputStream bodyStream;
+      bodyStream = ((BODY) item).getByteArrayInputStream();
+
+      if (!((BODY) item).isHeader()) {
+        content = ASCIIUtility.toString(bodyStream).getBytes();
+      }
+    } else
+      return false;    // not handled
+    return true;        // something above handled it
+  }
+
+  @Override
+  public String getBodyAsString() {
+    try {
+      if (content != null) {
+        return IOUtils.toString(content, StandardCharsets.UTF_8.displayName());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
+    return "";
+  }
 
-    @Override
-    public boolean handleFetchItemWithCustomBody(Item item, String[] hdrs, boolean allHeaders) throws
-            MessagingException {
-        //Check for the standard items
-        if (item instanceof Flags
-                || item instanceof ENVELOPE
-                || item instanceof INTERNALDATE
-                || item instanceof RFC822SIZE
-                || item instanceof MODSEQ
-                || item instanceof BODYSTRUCTURE
-                || item instanceof UID
-                || item instanceof RFC822DATA) {
-            return handleFetchItem(item, hdrs, allHeaders);
-        }
-
-        // Check for header items
-        else if (item instanceof BODY) {
-            ByteArrayInputStream bodyStream;
-            bodyStream = ((BODY) item).getByteArrayInputStream();
-
-            if (!((BODY) item).isHeader()) {
-                content = ASCIIUtility.toString(bodyStream).getBytes();
-            }
-        } else
-            return false;    // not handled
-        return true;        // something above handled it
-    }
-
-    @Override
-    public String getBodyAsString() {
-        try {
-            if (content != null) {
-                return IOUtils.toString(content, StandardCharsets.UTF_8.displayName());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    @Override
-    protected void handleExtensionFetchItems(Map<String, Object> extensionItems) {
-        super.handleExtensionFetchItems(extensionItems);
-    }
+  @Override
+  protected void handleExtensionFetchItems(Map<String, Object> extensionItems) {
+    super.handleExtensionFetchItems(extensionItems);
+  }
 }

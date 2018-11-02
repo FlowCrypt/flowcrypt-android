@@ -23,26 +23,26 @@ import static org.hamcrest.CoreMatchers.is;
  */
 public class ToolBarTitleMatcher extends BoundedMatcher<View, Toolbar> {
 
-    private final Matcher<String> textMatcher;
+  private final Matcher<String> textMatcher;
 
-    public ToolBarTitleMatcher(Matcher<String> textMatcher) {
-        super(Toolbar.class);
-        this.textMatcher = textMatcher;
-    }
+  public ToolBarTitleMatcher(Matcher<String> textMatcher) {
+    super(Toolbar.class);
+    this.textMatcher = textMatcher;
+  }
 
-    public static Matcher<View> withText(String textMatcher) {
-        return new ToolBarTitleMatcher(checkNotNull(is(textMatcher)));
-    }
+  public static Matcher<View> withText(String textMatcher) {
+    return new ToolBarTitleMatcher(checkNotNull(is(textMatcher)));
+  }
 
-    @Override
-    protected boolean matchesSafely(Toolbar toolbar) {
-        System.out.println("toolbar = [" + toolbar.getTitle() + "]");
-        return textMatcher.matches(toolbar.getTitle());
-    }
+  @Override
+  protected boolean matchesSafely(Toolbar toolbar) {
+    System.out.println("toolbar = [" + toolbar.getTitle() + "]");
+    return textMatcher.matches(toolbar.getTitle());
+  }
 
-    @Override
-    public void describeTo(Description description) {
-        description.appendText("with toolbar title: ");
-        textMatcher.describeTo(description);
-    }
+  @Override
+  public void describeTo(Description description) {
+    description.appendText("with toolbar title: ");
+    textMatcher.describeTo(description);
+  }
 }

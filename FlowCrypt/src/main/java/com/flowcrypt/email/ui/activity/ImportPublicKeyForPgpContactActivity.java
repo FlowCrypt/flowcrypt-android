@@ -22,72 +22,72 @@ import com.flowcrypt.email.util.GeneralUtil;
  * This activity describes a logic of import public keys.
  *
  * @author Denis Bondarenko
- *         Date: 03.08.2017
- *         Time: 12:35
- *         E-mail: DenBond7@gmail.com
+ * Date: 03.08.2017
+ * Time: 12:35
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ImportPublicKeyForPgpContactActivity extends BaseImportKeyActivity {
-    public static final String KEY_EXTRA_PGP_CONTACT
-            = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
-            ImportPublicKeyForPgpContactActivity.class);
+  public static final String KEY_EXTRA_PGP_CONTACT
+      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
+      ImportPublicKeyForPgpContactActivity.class);
 
-    private PgpContact pgpContact;
+  private PgpContact pgpContact;
 
-    public static Intent newIntent(Context context, String title, PgpContact pgpContact) {
-        Intent intent = newIntent(context, title, false, ImportPublicKeyForPgpContactActivity.class);
-        intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact);
-        return intent;
+  public static Intent newIntent(Context context, String title, PgpContact pgpContact) {
+    Intent intent = newIntent(context, title, false, ImportPublicKeyForPgpContactActivity.class);
+    intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact);
+    return intent;
+  }
+
+  @Override
+  public int getContentViewResourceId() {
+    return R.layout.activity_import_public_key_for_pgp_contact;
+  }
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PGP_CONTACT)) {
+      this.pgpContact = getIntent().getParcelableExtra(KEY_EXTRA_PGP_CONTACT);
+    } else {
+      finish();
     }
+  }
 
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_import_public_key_for_pgp_contact;
+  @Override
+  public void onKeyValidated(KeyDetails.Type type) {
+    if (!keyDetailsList.isEmpty()) {
+      if (keyDetailsList.size() == 1) {
+        updateInformationAboutPgpContact();
+        setResult(Activity.RESULT_OK);
+        finish();
+      } else {
+        showInfoSnackbar(getRootView(), getString(R.string.select_only_one_key));
+      }
+    } else {
+      showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
     }
+  }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PGP_CONTACT)) {
-            this.pgpContact = getIntent().getParcelableExtra(KEY_EXTRA_PGP_CONTACT);
-        } else {
-            finish();
-        }
+  @Override
+  public boolean isPrivateKeyChecking() {
+    return false;
+  }
+
+  protected void updateInformationAboutPgpContact() {
+    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+    KeyDetails keyDetails = keyDetailsList.get(0);
+
+    if (pgpContact.getEmail().equalsIgnoreCase(keyDetails.getPgpContact().getEmail())) {
+      pgpContact.setPubkey(keyDetails.getValue());
+      contactsDaoSource.updatePgpContact(this, pgpContact);
+    } else {
+      pgpContact.setPubkey(keyDetails.getValue());
+      contactsDaoSource.updatePgpContact(this, pgpContact);
+
+      keyDetails.getPgpContact().setPubkey(keyDetails.getValue());
+      contactsDaoSource.addRow(this, keyDetails.getPgpContact());
     }
-
-    @Override
-    public void onKeyValidated(KeyDetails.Type type) {
-        if (!keyDetailsList.isEmpty()) {
-            if (keyDetailsList.size() == 1) {
-                updateInformationAboutPgpContact();
-                setResult(Activity.RESULT_OK);
-                finish();
-            } else {
-                showInfoSnackbar(getRootView(), getString(R.string.select_only_one_key));
-            }
-        } else {
-            showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
-        }
-    }
-
-    @Override
-    public boolean isPrivateKeyChecking() {
-        return false;
-    }
-
-    protected void updateInformationAboutPgpContact() {
-        ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-        KeyDetails keyDetails = keyDetailsList.get(0);
-
-        if (pgpContact.getEmail().equalsIgnoreCase(keyDetails.getPgpContact().getEmail())) {
-            pgpContact.setPubkey(keyDetails.getValue());
-            contactsDaoSource.updatePgpContact(this, pgpContact);
-        } else {
-            pgpContact.setPubkey(keyDetails.getValue());
-            contactsDaoSource.updatePgpContact(this, pgpContact);
-
-            keyDetails.getPgpContact().setPubkey(keyDetails.getValue());
-            contactsDaoSource.addRow(this, keyDetails.getPgpContact());
-        }
-    }
+  }
 }

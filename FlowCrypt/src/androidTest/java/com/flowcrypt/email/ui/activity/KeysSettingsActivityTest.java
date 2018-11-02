@@ -40,37 +40,37 @@ import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
- *         Date: 20.02.2018
- *         Time: 15:42
- *         E-mail: DenBond7@gmail.com
+ * Date: 20.02.2018
+ * Time: 15:42
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class KeysSettingsActivityTest extends BaseTest {
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<>(KeysSettingsActivity.class);
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(new AddPrivateKeyToDatabaseRule())
-            .around(intentsTestRule);
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(KeysSettingsActivity.class);
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new AddPrivateKeyToDatabaseRule())
+      .around(intentsTestRule);
 
-    @Test
-    public void testAddNewKeys() throws Throwable {
-        intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPrivateKeyActivity
-                .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+  @Test
+  public void testAddNewKeys() throws Throwable {
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPrivateKeyActivity
+        .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
-        TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
-                .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
+    TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
+        .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
-        onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
-        onView(withId(R.id.listViewKeys)).check(matches(isDisplayed())).check(matches(matchListSize(2)));
-    }
+    onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
+    onView(withId(R.id.listViewKeys)).check(matches(isDisplayed())).check(matches(matchListSize(2)));
+  }
 
-    @Test
-    public void testIsKeyExists() {
-        onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
-        onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
-    }
+  @Test
+  public void testIsKeyExists() {
+    onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
+    onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
+  }
 }

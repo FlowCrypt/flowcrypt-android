@@ -16,10 +16,10 @@ import javax.mail.MessagingException;
  * An abstract implementation of the {@link IMAPFolder} for our purposes
  *
  * @author Denis Bondarenko
- *         Date: 30.05.2018
- *         Time: 9:50
- *         E-mail: DenBond7@gmail.com
+ * Date: 30.05.2018
+ * Time: 9:50
+ * E-mail: DenBond7@gmail.com
  */
 public interface FlowCryptIMAPFolder {
-    void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException;
+  void fetchGeneralInfo(Message[] messages, FetchProfile fetchProfile) throws MessagingException;
 }

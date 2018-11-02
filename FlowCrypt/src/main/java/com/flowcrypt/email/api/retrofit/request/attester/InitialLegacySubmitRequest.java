@@ -19,13 +19,13 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 15.01.2018
- *         Time: 16:42
- *         E-mail: DenBond7@gmail.com
+ * Date: 15.01.2018
+ * Time: 16:42
+ * E-mail: DenBond7@gmail.com
  */
 
 public class InitialLegacySubmitRequest extends BaseRequest<InitialLegacySubmitModel> {
-    public InitialLegacySubmitRequest(InitialLegacySubmitModel initialLegacySubmitModel) {
-        super(ApiName.POST_INITIAL_LEGACY_SUBMIT, initialLegacySubmitModel);
-    }
+  public InitialLegacySubmitRequest(InitialLegacySubmitModel initialLegacySubmitModel) {
+    super(ApiName.POST_INITIAL_LEGACY_SUBMIT, initialLegacySubmitModel);
+  }
 }

@@ -20,95 +20,95 @@ import com.google.gson.annotations.Expose;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 15:16
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 15:16
+ * E-mail: DenBond7@gmail.com
  */
 
 public class LinkMessageResponse extends BaseApiResponse {
 
-    public static final Creator<LinkMessageResponse> CREATOR = new Creator<LinkMessageResponse>() {
-        @Override
-        public LinkMessageResponse createFromParcel(Parcel source) {
-            return new LinkMessageResponse(source);
-        }
-
-        @Override
-        public LinkMessageResponse[] newArray(int size) {
-            return new LinkMessageResponse[size];
-        }
-    };
-
-    @Expose
-    private String url;
-
-    @Expose
-    private boolean deleted;
-
-    @Expose
-    private String expire;
-
-    @Expose
-    private boolean expired;
-
-    @Expose
-    private Boolean repliable;
-
-    public LinkMessageResponse() {
-    }
-
-    protected LinkMessageResponse(Parcel in) {
-        super(in);
-        this.url = in.readString();
-        this.deleted = in.readByte() != 0;
-        this.expire = in.readString();
-        this.expired = in.readByte() != 0;
-        this.repliable = (Boolean) in.readValue(Boolean.class.getClassLoader());
+  public static final Creator<LinkMessageResponse> CREATOR = new Creator<LinkMessageResponse>() {
+    @Override
+    public LinkMessageResponse createFromParcel(Parcel source) {
+      return new LinkMessageResponse(source);
     }
 
     @Override
-    public String toString() {
-        return "LinkMessageResponse{" +
-                "url='" + url + '\'' +
-                ", deleted=" + deleted +
-                ", expire='" + expire + '\'' +
-                ", expired=" + expired +
-                ", repliable=" + repliable +
-                "} " + super.toString();
+    public LinkMessageResponse[] newArray(int size) {
+      return new LinkMessageResponse[size];
     }
+  };
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Expose
+  private String url;
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeString(this.url);
-        dest.writeByte(this.deleted ? (byte) 1 : (byte) 0);
-        dest.writeString(this.expire);
-        dest.writeByte(this.expired ? (byte) 1 : (byte) 0);
-        dest.writeValue(this.repliable);
-    }
+  @Expose
+  private boolean deleted;
 
-    public String getUrl() {
-        return url;
-    }
+  @Expose
+  private String expire;
 
-    public boolean isDeleted() {
-        return deleted;
-    }
+  @Expose
+  private boolean expired;
 
-    public String getExpire() {
-        return expire;
-    }
+  @Expose
+  private Boolean repliable;
 
-    public boolean isExpired() {
-        return expired;
-    }
+  public LinkMessageResponse() {
+  }
 
-    public Boolean getRepliable() {
-        return repliable;
-    }
+  protected LinkMessageResponse(Parcel in) {
+    super(in);
+    this.url = in.readString();
+    this.deleted = in.readByte() != 0;
+    this.expire = in.readString();
+    this.expired = in.readByte() != 0;
+    this.repliable = (Boolean) in.readValue(Boolean.class.getClassLoader());
+  }
+
+  @Override
+  public String toString() {
+    return "LinkMessageResponse{" +
+        "url='" + url + '\'' +
+        ", deleted=" + deleted +
+        ", expire='" + expire + '\'' +
+        ", expired=" + expired +
+        ", repliable=" + repliable +
+        "} " + super.toString();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeString(this.url);
+    dest.writeByte(this.deleted ? (byte) 1 : (byte) 0);
+    dest.writeString(this.expire);
+    dest.writeByte(this.expired ? (byte) 1 : (byte) 0);
+    dest.writeValue(this.repliable);
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public boolean isDeleted() {
+    return deleted;
+  }
+
+  public String getExpire() {
+    return expire;
+  }
+
+  public boolean isExpired() {
+    return expired;
+  }
+
+  public Boolean getRepliable() {
+    return repliable;
+  }
 }

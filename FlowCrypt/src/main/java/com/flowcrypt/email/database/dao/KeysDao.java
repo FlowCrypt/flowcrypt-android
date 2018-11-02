@@ -20,179 +20,179 @@ import java.util.UUID;
  * This class describe a key information object.
  *
  * @author DenBond7
- *         Date: 13.05.2017
- *         Time: 12:54
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.05.2017
+ * Time: 12:54
+ * E-mail: DenBond7@gmail.com
  */
 
 public class KeysDao extends BaseDao {
 
-    public static final Creator<KeysDao> CREATOR = new Creator<KeysDao>() {
-        @Override
-        public KeysDao createFromParcel(Parcel source) {
-            return new KeysDao(source);
-        }
-
-        @Override
-        public KeysDao[] newArray(int size) {
-            return new KeysDao[size];
-        }
-    };
-
-    private String longId;
-    private PrivateKeySourceType privateKeySourceType;
-    private String publicKey;
-    private String privateKey;
-    private String passphrase;
-
-    public KeysDao() {
-    }
-
-    public KeysDao(String longId, PrivateKeySourceType privateKeySourceType, String publicKey,
-                   String
-                           privateKey, String
-                           passphrase) {
-        this.longId = longId;
-        this.privateKeySourceType = privateKeySourceType;
-        this.publicKey = publicKey;
-        this.privateKey = privateKey;
-        this.passphrase = passphrase;
-    }
-
-    protected KeysDao(Parcel in) {
-        this.longId = in.readString();
-        int tmpPrivateKeySourceType = in.readInt();
-        this.privateKeySourceType = tmpPrivateKeySourceType == -1 ? null : PrivateKeySourceType
-                .values()[tmpPrivateKeySourceType];
-        this.publicKey = in.readString();
-        this.privateKey = in.readString();
-        this.passphrase = in.readString();
-    }
-
-    /**
-     * Generate {@link KeysDao} using input parameters.
-     * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
-     * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
-     *
-     * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-     *                              information about a key;
-     * @param keyDetails            The private key details
-     * @param pgpKey                A normalized key;
-     * @param passphrase            A passphrase which user provided;
-     */
-    public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails keyDetails,
-                                          PgpKey pgpKey, String passphrase) throws Exception {
-        KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, pgpKey, passphrase);
-
-        switch (keyDetails.getBornType()) {
-            case EMAIL:
-                keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
-                break;
-
-            case FILE:
-            case CLIPBOARD:
-                keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
-                break;
-
-            case NEW:
-                keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
-                break;
-        }
-
-        return keysDao;
-    }
-
-    /**
-     * Generate {@link KeysDao} using input parameters.
-     * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
-     * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
-     *
-     * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-     *                              information about a key;
-     * @param pgpKey                A normalized key;
-     * @param passphrase            A passphrase which user provided;
-     */
-    public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey,
-                                          String passphrase) throws Exception {
-        KeysDao keysDao = new KeysDao();
-        keysDao.setLongId(pgpKey.getLongid());
-
-        String randomVector;
-
-        if (TextUtils.isEmpty(pgpKey.getLongid())) {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-                    UUID.randomUUID().toString().substring(0,
-                            KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
-        } else {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
-                    (pgpKey.getLongid());
-        }
-
-        String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
-        keysDao.setPrivateKey(encryptedPrivateKey);
-        keysDao.setPublicKey(pgpKey.toPublic().armor());
-
-        String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
-        keysDao.setPassphrase(encryptedPassphrase);
-        return keysDao;
+  public static final Creator<KeysDao> CREATOR = new Creator<KeysDao>() {
+    @Override
+    public KeysDao createFromParcel(Parcel source) {
+      return new KeysDao(source);
     }
 
     @Override
-    public BaseDaoSource getDaoSource() {
-        return null;
+    public KeysDao[] newArray(int size) {
+      return new KeysDao[size];
+    }
+  };
+
+  private String longId;
+  private PrivateKeySourceType privateKeySourceType;
+  private String publicKey;
+  private String privateKey;
+  private String passphrase;
+
+  public KeysDao() {
+  }
+
+  public KeysDao(String longId, PrivateKeySourceType privateKeySourceType, String publicKey,
+                 String
+                     privateKey, String
+                     passphrase) {
+    this.longId = longId;
+    this.privateKeySourceType = privateKeySourceType;
+    this.publicKey = publicKey;
+    this.privateKey = privateKey;
+    this.passphrase = passphrase;
+  }
+
+  protected KeysDao(Parcel in) {
+    this.longId = in.readString();
+    int tmpPrivateKeySourceType = in.readInt();
+    this.privateKeySourceType = tmpPrivateKeySourceType == -1 ? null : PrivateKeySourceType
+        .values()[tmpPrivateKeySourceType];
+    this.publicKey = in.readString();
+    this.privateKey = in.readString();
+    this.passphrase = in.readString();
+  }
+
+  /**
+   * Generate {@link KeysDao} using input parameters.
+   * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
+   * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
+   *
+   * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
+   *                              information about a key;
+   * @param keyDetails            The private key details
+   * @param pgpKey                A normalized key;
+   * @param passphrase            A passphrase which user provided;
+   */
+  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails keyDetails,
+                                        PgpKey pgpKey, String passphrase) throws Exception {
+    KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, pgpKey, passphrase);
+
+    switch (keyDetails.getBornType()) {
+      case EMAIL:
+        keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
+        break;
+
+      case FILE:
+      case CLIPBOARD:
+        keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
+        break;
+
+      case NEW:
+        keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
+        break;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    return keysDao;
+  }
+
+  /**
+   * Generate {@link KeysDao} using input parameters.
+   * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
+   * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
+   *
+   * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
+   *                              information about a key;
+   * @param pgpKey                A normalized key;
+   * @param passphrase            A passphrase which user provided;
+   */
+  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey,
+                                        String passphrase) throws Exception {
+    KeysDao keysDao = new KeysDao();
+    keysDao.setLongId(pgpKey.getLongid());
+
+    String randomVector;
+
+    if (TextUtils.isEmpty(pgpKey.getLongid())) {
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
+          UUID.randomUUID().toString().substring(0,
+              KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+    } else {
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
+          (pgpKey.getLongid());
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.longId);
-        dest.writeInt(this.privateKeySourceType == null ? -1 : this.privateKeySourceType.ordinal());
-        dest.writeString(this.publicKey);
-        dest.writeString(this.privateKey);
-        dest.writeString(this.passphrase);
-    }
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
+    keysDao.setPrivateKey(encryptedPrivateKey);
+    keysDao.setPublicKey(pgpKey.toPublic().armor());
 
-    public String getLongId() {
-        return longId;
-    }
+    String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
+    keysDao.setPassphrase(encryptedPassphrase);
+    return keysDao;
+  }
 
-    public void setLongId(String longId) {
-        this.longId = longId;
-    }
+  @Override
+  public BaseDaoSource getDaoSource() {
+    return null;
+  }
 
-    public PrivateKeySourceType getPrivateKeySourceType() {
-        return privateKeySourceType;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    public void setPrivateKeySourceType(PrivateKeySourceType privateKeySourceType) {
-        this.privateKeySourceType = privateKeySourceType;
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.longId);
+    dest.writeInt(this.privateKeySourceType == null ? -1 : this.privateKeySourceType.ordinal());
+    dest.writeString(this.publicKey);
+    dest.writeString(this.privateKey);
+    dest.writeString(this.passphrase);
+  }
 
-    public String getPublicKey() {
-        return publicKey;
-    }
+  public String getLongId() {
+    return longId;
+  }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
+  public void setLongId(String longId) {
+    this.longId = longId;
+  }
 
-    public String getPrivateKey() {
-        return privateKey;
-    }
+  public PrivateKeySourceType getPrivateKeySourceType() {
+    return privateKeySourceType;
+  }
 
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
-    }
+  public void setPrivateKeySourceType(PrivateKeySourceType privateKeySourceType) {
+    this.privateKeySourceType = privateKeySourceType;
+  }
 
-    public String getPassphrase() {
-        return passphrase;
-    }
+  public String getPublicKey() {
+    return publicKey;
+  }
 
-    public void setPassphrase(String passphrase) {
-        this.passphrase = passphrase;
-    }
+  public void setPublicKey(String publicKey) {
+    this.publicKey = publicKey;
+  }
+
+  public String getPrivateKey() {
+    return privateKey;
+  }
+
+  public void setPrivateKey(String privateKey) {
+    this.privateKey = privateKey;
+  }
+
+  public String getPassphrase() {
+    return passphrase;
+  }
+
+  public void setPassphrase(String passphrase) {
+    this.passphrase = passphrase;
+  }
 }

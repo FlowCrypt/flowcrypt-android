@@ -17,14 +17,14 @@ import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 15:12
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 15:12
+ * E-mail: DenBond7@gmail.com
  */
 
 public class LinkMessageRequest extends BaseRequest<LinkMessageModel> {
 
-    public LinkMessageRequest(LinkMessageModel requestModel) {
-        super(ApiName.POST_LINK_MESSAGE, requestModel);
-    }
+  public LinkMessageRequest(LinkMessageModel requestModel) {
+    super(ApiName.POST_LINK_MESSAGE, requestModel);
+  }
 }

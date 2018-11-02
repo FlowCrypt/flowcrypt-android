@@ -25,60 +25,60 @@ import java.util.List;
  * This loader finds and returns Gmail aliases.
  *
  * @author DenBond7
- *         Date: 26.10.2017.
- *         Time: 12:28.
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.10.2017.
+ * Time: 12:28.
+ * E-mail: DenBond7@gmail.com
  */
 public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
 
-    /**
-     * An user account.
-     */
-    private AccountDao accountDao;
+  /**
+   * An user account.
+   */
+  private AccountDao accountDao;
 
-    public LoadGmailAliasesLoader(Context context, AccountDao accountDao) {
-        super(context);
-        this.accountDao = accountDao;
-        onContentChanged();
+  public LoadGmailAliasesLoader(Context context, AccountDao accountDao) {
+    super(context);
+    this.accountDao = accountDao;
+    onContentChanged();
+  }
+
+  @Override
+  public void onStartLoading() {
+    if (takeContentChanged()) {
+      forceLoad();
     }
+  }
 
-    @Override
-    public void onStartLoading() {
-        if (takeContentChanged()) {
-            forceLoad();
+  @Override
+  public LoaderResult loadInBackground() {
+    try {
+      Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
+      ListSendAsResponse aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
+          .execute();
+      List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
+      for (SendAs alias : aliases.getSendAs()) {
+        if (alias.getVerificationStatus() != null) {
+          AccountAliasesDao accountAliasesDao = new AccountAliasesDao();
+          accountAliasesDao.setEmail(accountDao.getEmail());
+          accountAliasesDao.setAccountType(accountDao.getAccountType());
+          accountAliasesDao.setSendAsEmail(alias.getSendAsEmail());
+          accountAliasesDao.setDisplayName(alias.getDisplayName());
+          accountAliasesDao.setDefault(alias.getIsDefault() != null && alias.getIsDefault());
+          accountAliasesDao.setVerificationStatus(alias.getVerificationStatus());
+          accountAliasesDaoList.add(accountAliasesDao);
         }
-    }
+      }
 
-    @Override
-    public LoaderResult loadInBackground() {
-        try {
-            Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-            ListSendAsResponse aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
-                    .execute();
-            List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
-            for (SendAs alias : aliases.getSendAs()) {
-                if (alias.getVerificationStatus() != null) {
-                    AccountAliasesDao accountAliasesDao = new AccountAliasesDao();
-                    accountAliasesDao.setEmail(accountDao.getEmail());
-                    accountAliasesDao.setAccountType(accountDao.getAccountType());
-                    accountAliasesDao.setSendAsEmail(alias.getSendAsEmail());
-                    accountAliasesDao.setDisplayName(alias.getDisplayName());
-                    accountAliasesDao.setDefault(alias.getIsDefault() != null && alias.getIsDefault());
-                    accountAliasesDao.setVerificationStatus(alias.getVerificationStatus());
-                    accountAliasesDaoList.add(accountAliasesDao);
-                }
-            }
-
-            return new LoaderResult(accountAliasesDaoList, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-            return new LoaderResult(null, e);
-        }
+      return new LoaderResult(accountAliasesDaoList, null);
+    } catch (IOException e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
     }
+  }
 
-    @Override
-    public void onStopLoading() {
-        cancelLoad();
-    }
+  @Override
+  public void onStopLoading() {
+    cancelLoad();
+  }
 }

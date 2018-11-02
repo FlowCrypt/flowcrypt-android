@@ -20,56 +20,56 @@ import com.google.gson.annotations.Expose;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 11:51
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 11:51
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ReplaceConfirmResponse extends BaseApiResponse {
-    public static final Creator<ReplaceConfirmResponse> CREATOR = new
-            Creator<ReplaceConfirmResponse>() {
-                @Override
-                public ReplaceConfirmResponse createFromParcel(Parcel source) {
-                    return new ReplaceConfirmResponse(source);
-                }
+  public static final Creator<ReplaceConfirmResponse> CREATOR = new
+      Creator<ReplaceConfirmResponse>() {
+        @Override
+        public ReplaceConfirmResponse createFromParcel(Parcel source) {
+          return new ReplaceConfirmResponse(source);
+        }
 
-                @Override
-                public ReplaceConfirmResponse[] newArray(int size) {
-                    return new ReplaceConfirmResponse[size];
-                }
-            };
+        @Override
+        public ReplaceConfirmResponse[] newArray(int size) {
+          return new ReplaceConfirmResponse[size];
+        }
+      };
 
-    @Expose
-    private boolean attested;
+  @Expose
+  private boolean attested;
 
-    public ReplaceConfirmResponse() {
-    }
+  public ReplaceConfirmResponse() {
+  }
 
 
-    protected ReplaceConfirmResponse(Parcel in) {
-        super(in);
-        this.attested = in.readByte() != 0;
-    }
+  protected ReplaceConfirmResponse(Parcel in) {
+    super(in);
+    this.attested = in.readByte() != 0;
+  }
 
-    @Override
-    public String toString() {
-        return "ReplaceConfirmResponse{" +
-                "attested=" + attested +
-                "} " + super.toString();
-    }
+  @Override
+  public String toString() {
+    return "ReplaceConfirmResponse{" +
+        "attested=" + attested +
+        "} " + super.toString();
+  }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
+  }
 
-    public boolean isAttested() {
-        return attested;
-    }
+  public boolean isAttested() {
+    return attested;
+  }
 }

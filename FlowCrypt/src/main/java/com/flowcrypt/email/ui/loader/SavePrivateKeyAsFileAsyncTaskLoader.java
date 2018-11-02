@@ -23,44 +23,44 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
  * Return true if the key saved, false otherwise;
  *
  * @author DenBond7
- *         Date: 26.07.2017
- *         Time: 13:18
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.07.2017
+ * Time: 13:18
+ * E-mail: DenBond7@gmail.com
  */
 
 public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-    private Uri destinationUri;
-    private AccountDao accountDao;
+  private Uri destinationUri;
+  private AccountDao accountDao;
 
-    public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao accountDao, Uri destinationUri) {
-        super(context);
-        this.accountDao = accountDao;
-        this.destinationUri = destinationUri;
-        onContentChanged();
-    }
+  public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao accountDao, Uri destinationUri) {
+    super(context);
+    this.accountDao = accountDao;
+    this.destinationUri = destinationUri;
+    onContentChanged();
+  }
 
-    @Override
-    public LoaderResult loadInBackground() {
-        try {
-            Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-            return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
-                    SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao, false)) > 0, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-            return new LoaderResult(null, e);
-        }
+  @Override
+  public LoaderResult loadInBackground() {
+    try {
+      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
+      return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
+          SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao, false)) > 0, null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
     }
+  }
 
-    @Override
-    public void onStartLoading() {
-        if (takeContentChanged()) {
-            forceLoad();
-        }
+  @Override
+  public void onStartLoading() {
+    if (takeContentChanged()) {
+      forceLoad();
     }
+  }
 
-    @Override
-    public void onStopLoading() {
-        cancelLoad();
-    }
+  @Override
+  public void onStopLoading() {
+    cancelLoad();
+  }
 }

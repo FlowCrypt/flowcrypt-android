@@ -11,18 +11,18 @@ import android.os.Parcel;
  * This class describes the simple not encrypted text.
  *
  * @author Denis Bondarenko
- *         Date: 18.07.2017
- *         Time: 17:46
- *         E-mail: DenBond7@gmail.com
+ * Date: 18.07.2017
+ * Time: 17:46
+ * E-mail: DenBond7@gmail.com
  */
 
 public class MessagePartText extends MessagePart {
-    public MessagePartText(String value) {
-        super(MessagePartType.TEXT, value);
-    }
+  public MessagePartText(String value) {
+    super(MessagePartType.TEXT, value);
+  }
 
-    public MessagePartText(Parcel in) {
-        super(in);
-        this.messagePartType = MessagePartType.TEXT;
-    }
+  public MessagePartText(Parcel in) {
+    super(in);
+    this.messagePartType = MessagePartType.TEXT;
+  }
 }

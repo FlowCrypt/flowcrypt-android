@@ -20,19 +20,19 @@ import javax.mail.URLName;
  * E-mail: DenBond7@gmail.com
  */
 public class CustomIMAPSSLStore extends IMAPSSLStore {
-    /**
-     * Constructor that takes a Session object and a URLName that
-     * represents a specific IMAP server.
-     *
-     * @param session the Session
-     * @param url     the URLName of this store
-     */
-    public CustomIMAPSSLStore(Session session, URLName url) {
-        super(session, url);
-    }
+  /**
+   * Constructor that takes a Session object and a URLName that
+   * represents a specific IMAP server.
+   *
+   * @param session the Session
+   * @param url     the URLName of this store
+   */
+  public CustomIMAPSSLStore(Session session, URLName url) {
+    super(session, url);
+  }
 
-    @Override
-    protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
-        return new CustomIMAPFolder(fullName, separator, this, isNamespace);
-    }
+  @Override
+  protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
+    return new CustomIMAPFolder(fullName, separator, this, isNamespace);
+  }
 }

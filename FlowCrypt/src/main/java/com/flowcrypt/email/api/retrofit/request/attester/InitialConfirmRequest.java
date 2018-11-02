@@ -17,13 +17,13 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialConfirmModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 12.07.2017
- *         Time: 17:09
- *         E-mail: DenBond7@gmail.com
+ * Date: 12.07.2017
+ * Time: 17:09
+ * E-mail: DenBond7@gmail.com
  */
 
 public class InitialConfirmRequest extends BaseRequest<InitialConfirmModel> {
-    public InitialConfirmRequest(InitialConfirmModel initialConfirmModel) {
-        super(ApiName.POST_INITIAL_CONFIRM, initialConfirmModel);
-    }
+  public InitialConfirmRequest(InitialConfirmModel initialConfirmModel) {
+    super(ApiName.POST_INITIAL_CONFIRM, initialConfirmModel);
+  }
 }

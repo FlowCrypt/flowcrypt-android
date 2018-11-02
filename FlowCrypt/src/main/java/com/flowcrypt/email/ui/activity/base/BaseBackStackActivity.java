@@ -18,31 +18,31 @@ import android.view.MenuItem;
  * back stack functionality.
  *
  * @author DenBond7
- *         Date: 26.05.2017
- *         Time: 10:03
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.05.2017
+ * Time: 10:03
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseBackStackActivity extends BaseActivity {
 
-    @Override
-    public boolean isDisplayHomeAsUpEnabled() {
+  @Override
+  public boolean isDisplayHomeAsUpEnabled() {
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        onBackPressed();
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onJsServiceConnected() {
 
     }
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  public void onJsServiceConnected() {
+
+  }
 }

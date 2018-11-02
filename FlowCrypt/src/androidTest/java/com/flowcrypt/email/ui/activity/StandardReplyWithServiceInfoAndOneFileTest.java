@@ -58,129 +58,129 @@ import static org.hamcrest.Matchers.not;
  * This class tests a case when we want to send a reply with {@link ServiceInfo}
  *
  * @author Denis Bondarenko
- *         Date: 14.05.2018
- *         Time: 16:34
- *         E-mail: DenBond7@gmail.com
+ * Date: 14.05.2018
+ * Time: 16:34
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
-    private static final String STRING = "Some short string";
-    private ServiceInfo serviceInfo;
-    private IncomingMessageInfo incomingMessageInfo;
+  private static final String STRING = "Some short string";
+  private ServiceInfo serviceInfo;
+  private IncomingMessageInfo incomingMessageInfo;
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            try {
-                incomingMessageInfo =
-                        MessageUtil.getIncomingMessageInfoWithOutBody(
-                                new Js(InstrumentationRegistry.getTargetContext(), null),
-                                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
-                                        "messages/mime_message.txt"));
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
+    @Override
+    protected Intent getActivityIntent() {
+      try {
+        incomingMessageInfo =
+            MessageUtil.getIncomingMessageInfoWithOutBody(
+                new Js(InstrumentationRegistry.getTargetContext(), null),
+                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+                    "messages/mime_message.txt"));
 
-                AttachmentInfo attachmentInfo = new AttachmentInfo();
-                attachmentInfo.setName("test.txt");
-                attachmentInfo.setEncodedSize(STRING.length());
-                attachmentInfo.setRawData(STRING);
-                attachmentInfo.setType("text/plain");
-                attachmentInfo.setId(EmailUtil.generateContentId());
-                attachmentInfo.setCanBeDeleted(false);
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        attachmentInfo.setName("test.txt");
+        attachmentInfo.setEncodedSize(STRING.length());
+        attachmentInfo.setRawData(STRING);
+        attachmentInfo.setType("text/plain");
+        attachmentInfo.setId(EmailUtil.generateContentId());
+        attachmentInfo.setCanBeDeleted(false);
 
-                List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
-                attachmentInfoList.add(attachmentInfo);
+        List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+        attachmentInfoList.add(attachmentInfo);
 
-                serviceInfo = new ServiceInfo.Builder()
-                        .setIsFromFieldEditEnable(false)
-                        .setIsToFieldEditEnable(false)
-                        .setIsSubjectEditEnable(false)
-                        .setIsMessageTypeCanBeSwitched(false)
-                        .setIsAddNewAttachmentsEnable(false)
-                        .setSystemMessage(InstrumentationRegistry.getTargetContext()
-                                .getString(R.string.message_was_encrypted_for_wrong_key))
-                        .setAttachmentInfoList(attachmentInfoList)
-                        .createServiceInfo();
+        serviceInfo = new ServiceInfo.Builder()
+            .setIsFromFieldEditEnable(false)
+            .setIsToFieldEditEnable(false)
+            .setIsSubjectEditEnable(false)
+            .setIsMessageTypeCanBeSwitched(false)
+            .setIsAddNewAttachmentsEnable(false)
+            .setSystemMessage(InstrumentationRegistry.getTargetContext()
+                .getString(R.string.message_was_encrypted_for_wrong_key))
+            .setAttachmentInfoList(attachmentInfoList)
+            .createServiceInfo();
 
-                return CreateMessageActivity.generateIntent(InstrumentationRegistry.getTargetContext(),
-                        incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-        }
-    };
-
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
-            .around(intentsTestRule);
-
-    @Test
-    public void testFrom() {
-        onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
-                isDisplayed(), serviceInfo.isFromFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getTargetContext(),
+            incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
+      } catch (IOException e) {
+        e.printStackTrace();
+        throw new IllegalStateException(e);
+      }
     }
+  };
 
-    @Test
-    public void testToRecipients() {
-        String chipSeparator = Character.toString(SpanChipTokenizer.CHIP_SPAN_SEPARATOR);
-        String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
-        CharSequence textWithSeparator = autoCorrectSeparator
-                + chipSeparator
-                + incomingMessageInfo.getFrom().get(0)
-                + chipSeparator
-                + autoCorrectSeparator;
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
+      .around(intentsTestRule);
 
-        onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
-                isDisplayed(), withText(textWithSeparator.toString()),
-                serviceInfo.isToFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+  @Test
+  public void testFrom() {
+    onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
+        isDisplayed(), serviceInfo.isFromFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+  }
+
+  @Test
+  public void testToRecipients() {
+    String chipSeparator = Character.toString(SpanChipTokenizer.CHIP_SPAN_SEPARATOR);
+    String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
+    CharSequence textWithSeparator = autoCorrectSeparator
+        + chipSeparator
+        + incomingMessageInfo.getFrom().get(0)
+        + chipSeparator
+        + autoCorrectSeparator;
+
+    onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
+        isDisplayed(), withText(textWithSeparator.toString()),
+        serviceInfo.isToFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+  }
+
+  @Test
+  public void testSubject() {
+    onView(withId(R.id.editTextEmailSubject)).check(matches(allOf(
+        isDisplayed(),
+        serviceInfo.isSubjectEditEnable() ? isFocusable() : not(isFocusable()))));
+  }
+
+  @Test
+  public void testEmailMessage() {
+    onView(withId(R.id.editTextEmailMessage)).check(matches(
+        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMessage())
+                ? withText(isEmptyString())
+                : withText(serviceInfo.getSystemMessage()),
+            serviceInfo.isMessageEditEnable() ? isFocusable() : not(isFocusable()))));
+
+    if (serviceInfo.isMessageEditEnable()) {
+      onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
     }
+  }
 
-    @Test
-    public void testSubject() {
-        onView(withId(R.id.editTextEmailSubject)).check(matches(allOf(
-                isDisplayed(),
-                serviceInfo.isSubjectEditEnable() ? isFocusable() : not(isFocusable()))));
+  @Test
+  public void testAvailabilityAddingAttachments() {
+    if (!serviceInfo.isAddNewAttachmentsEnable()) {
+      onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
     }
+  }
 
-    @Test
-    public void testEmailMessage() {
-        onView(withId(R.id.editTextEmailMessage)).check(matches(
-                allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMessage())
-                                ? withText(isEmptyString())
-                                : withText(serviceInfo.getSystemMessage()),
-                        serviceInfo.isMessageEditEnable() ? isFocusable() : not(isFocusable()))));
-
-        if (serviceInfo.isMessageEditEnable()) {
-            onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
-        }
+  @Test
+  public void testDisabledSwitchingBetweenEncryptionTypes() {
+    if (!serviceInfo.isMessageTypeCanBeSwitched()) {
+      onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
+      onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
     }
+  }
 
-    @Test
-    public void testAvailabilityAddingAttachments() {
-        if (!serviceInfo.isAddNewAttachmentsEnable()) {
-            onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
-        }
-    }
+  @Test
+  public void testShowHelpScreen() {
+    testHelpScreen();
+  }
 
-    @Test
-    public void testDisabledSwitchingBetweenEncryptionTypes() {
-        if (!serviceInfo.isMessageTypeCanBeSwitched()) {
-            onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
-            onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
-        }
-    }
-
-    @Test
-    public void testShowHelpScreen() {
-        testHelpScreen();
-    }
-
-    private ContentValues generateContentValues() {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
-        return contentValues;
-    }
+  private ContentValues generateContentValues() {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
+    return contentValues;
+  }
 }

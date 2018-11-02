@@ -58,97 +58,97 @@ import static org.hamcrest.Matchers.is;
 
 /**
  * @author Denis Bondarenko
- *         Date: 23.02.2018
- *         Time: 16:53
- *         E-mail: DenBond7@gmail.com
+ * Date: 23.02.2018
+ * Time: 16:53
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
-    private static final String SOME_TEXT = "Some text";
-    private static File fileWithPublicKey;
-    private static File fileWithoutPublicKey;
-    private static String publicKey;
+  private static final String SOME_TEXT = "Some text";
+  private static File fileWithPublicKey;
+  private static File fileWithoutPublicKey;
+  private static String publicKey;
 
-    private IntentsTestRule intentsTestRule = new IntentsTestRule<ImportPublicKeyForPgpContactActivity>
-            (ImportPublicKeyForPgpContactActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            PgpContact pgpContact = new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
-                    false, null, false, null, null, null, 0);
-            Intent result = new Intent(targetContext, ImportPublicKeyForPgpContactActivity.class);
-            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
-            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string.import_public_key));
-            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, (Parcelable) null);
-            result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
-            result.putExtra(ImportPublicKeyForPgpContactActivity.KEY_EXTRA_PGP_CONTACT, pgpContact);
-            return result;
-        }
-    };
-
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-            .around(intentsTestRule);
-
-    @BeforeClass
-    public static void createResources() throws IOException {
-        publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
-                "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc");
-        fileWithPublicKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
-                + "_pub.asc", publicKey);
-        fileWithoutPublicKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
-                + ".txt", SOME_TEXT);
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<ImportPublicKeyForPgpContactActivity>
+      (ImportPublicKeyForPgpContactActivity.class) {
+    @Override
+    protected Intent getActivityIntent() {
+      Context targetContext = InstrumentationRegistry.getTargetContext();
+      PgpContact pgpContact = new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
+          false, null, false, null, null, null, 0);
+      Intent result = new Intent(targetContext, ImportPublicKeyForPgpContactActivity.class);
+      result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
+      result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string.import_public_key));
+      result.putExtra(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, (Parcelable) null);
+      result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
+      result.putExtra(ImportPublicKeyForPgpContactActivity.KEY_EXTRA_PGP_CONTACT, pgpContact);
+      return result;
     }
+  };
 
-    @AfterClass
-    public static void cleanResources() {
-        List<File> files = new ArrayList<>();
-        files.add(fileWithPublicKey);
-        files.add(fileWithoutPublicKey);
-        TestGeneralUtil.deleteFiles(files);
-    }
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+      .around(intentsTestRule);
 
-    @Test
-    public void testImportKeyFromFile() {
-        Intent resultData = new Intent();
-        resultData.setData(Uri.fromFile(fileWithPublicKey));
-        intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-                .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-        onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-        assertThat(intentsTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-    }
+  @BeforeClass
+  public static void createResources() throws IOException {
+    publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+        "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc");
+    fileWithPublicKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+        + "_pub.asc", publicKey);
+    fileWithoutPublicKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+        + ".txt", SOME_TEXT);
+  }
 
-    @Test
-    public void testShowErrorWhenImportingKeyFromFile() {
-        Intent resultData = new Intent();
-        resultData.setData(Uri.fromFile(fileWithoutPublicKey));
-        intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-                .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-        onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-        checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
-                R.string.file_has_wrong_pgp_structure,
-                InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
-    }
+  @AfterClass
+  public static void cleanResources() {
+    List<File> files = new ArrayList<>();
+    files.add(fileWithPublicKey);
+    files.add(fileWithoutPublicKey);
+    TestGeneralUtil.deleteFiles(files);
+  }
 
-    @Test
-    public void testImportKeyFromClipboard() throws Throwable {
-        addTextToClipboard("public key", publicKey);
-        onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-        assertThat(intentsTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-    }
+  @Test
+  public void testImportKeyFromFile() {
+    Intent resultData = new Intent();
+    resultData.setData(Uri.fromFile(fileWithPublicKey));
+    intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
+        .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+    onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
+    assertThat(intentsTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
 
-    @Test
-    public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
-        addTextToClipboard("not public key", SOME_TEXT);
-        onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-        checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
-                R.string.clipboard_has_wrong_structure,
-                InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
-    }
+  @Test
+  public void testShowErrorWhenImportingKeyFromFile() {
+    Intent resultData = new Intent();
+    resultData.setData(Uri.fromFile(fileWithoutPublicKey));
+    intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
+        .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+    onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+        R.string.file_has_wrong_pgp_structure,
+        InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
+  }
+
+  @Test
+  public void testImportKeyFromClipboard() throws Throwable {
+    addTextToClipboard("public key", publicKey);
+    onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
+    assertThat(intentsTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
+
+  @Test
+  public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
+    addTextToClipboard("not public key", SOME_TEXT);
+    onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+        R.string.clipboard_has_wrong_structure,
+        InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
+  }
 }

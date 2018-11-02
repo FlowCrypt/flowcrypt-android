@@ -29,22 +29,22 @@ import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
- *         Date: 23.02.2018
- *         Time: 10:11
- *         E-mail: DenBond7@gmail.com
+ * Date: 23.02.2018
+ * Time: 10:11
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class AttesterSettingsActivityTest extends BaseTest {
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(new ActivityTestRule<>(AttesterSettingsActivity.class));
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new ActivityTestRule<>(AttesterSettingsActivity.class));
 
-    @Test
-    public void testIsKeysExistsOnAttester() {
-        onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
-        onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
-    }
+  @Test
+  public void testIsKeysExistsOnAttester() {
+    onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
+    onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
+  }
 }

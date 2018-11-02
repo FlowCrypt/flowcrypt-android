@@ -54,31 +54,31 @@ import static org.hamcrest.Matchers.hasItem;
 //todo-denbond7 Not completed
 public class BackupKeysActivityTest extends BaseTest {
 
-    private IntentsTestRule activityTestRule = new IntentsTestRule<>(BackupKeysActivity.class);
+  private IntentsTestRule activityTestRule = new IntentsTestRule<>(BackupKeysActivity.class);
 
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddAccountToDatabaseRule())
-            .around(new AddPrivateKeyToDatabaseRule())
-            .around(activityTestRule);
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new AddPrivateKeyToDatabaseRule())
+      .around(activityTestRule);
 
-    @Test
-    public void testSuccessDownloadBackup() {
-        onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-        Intent resultData = new Intent();
-        File file = TestGeneralUtil.createFile("key.asc", "");
-        resultData.setData(Uri.fromFile(file));
-        intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
-                hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
-                hasType(Constants.MIME_TYPE_PGP_KEY)))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-        onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-        TestGeneralUtil.deleteFiles(Collections.singletonList(file));
-    }
+  @Test
+  public void testSuccessDownloadBackup() {
+    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
+    Intent resultData = new Intent();
+    File file = TestGeneralUtil.createFile("key.asc", "");
+    resultData.setData(Uri.fromFile(file));
+    intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
+        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasType(Constants.MIME_TYPE_PGP_KEY)))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    TestGeneralUtil.deleteFiles(Collections.singletonList(file));
+  }
 
-    @Test
-    public void testSuccessEmailBackup() {
-        onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    }
+  @Test
+  public void testSuccessEmailBackup() {
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+  }
 }

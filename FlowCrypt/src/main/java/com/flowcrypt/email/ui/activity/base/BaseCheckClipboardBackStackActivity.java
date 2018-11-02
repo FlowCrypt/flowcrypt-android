@@ -21,45 +21,45 @@ import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
  * app was in the background), as long as email auth is already done but key is not yet set up.
  *
  * @author Denis Bondarenko
- *         Date: 27.07.2017
- *         Time: 11:13
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.07.2017
+ * Time: 11:13
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackActivity implements
-        ServiceConnection {
-    protected boolean isServiceBound;
-    protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
+    ServiceConnection {
+  protected boolean isServiceBound;
+  protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
 
-    public abstract boolean isPrivateKeyChecking();
+  public abstract boolean isPrivateKeyChecking();
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        bindService(new Intent(this, CheckClipboardToFindKeyService.class),
-                this, Context.BIND_AUTO_CREATE);
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    bindService(new Intent(this, CheckClipboardToFindKeyService.class),
+        this, Context.BIND_AUTO_CREATE);
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (isServiceBound) {
+      unbindService(this);
+      isServiceBound = false;
     }
+  }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (isServiceBound) {
-            unbindService(this);
-            isServiceBound = false;
-        }
-    }
+  @Override
+  public void onServiceConnected(ComponentName name, IBinder service) {
+    CheckClipboardToFindKeyService.LocalBinder binder =
+        (CheckClipboardToFindKeyService.LocalBinder) service;
+    checkClipboardToFindKeyService = binder.getService();
+    checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
+    isServiceBound = true;
+  }
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        CheckClipboardToFindKeyService.LocalBinder binder =
-                (CheckClipboardToFindKeyService.LocalBinder) service;
-        checkClipboardToFindKeyService = binder.getService();
-        checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
-        isServiceBound = true;
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        isServiceBound = false;
-    }
+  @Override
+  public void onServiceDisconnected(ComponentName name) {
+    isServiceBound = false;
+  }
 }
