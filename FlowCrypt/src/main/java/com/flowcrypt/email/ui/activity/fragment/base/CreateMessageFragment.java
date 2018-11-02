@@ -106,9 +106,9 @@ import java.util.regex.Pattern;
  * This fragment describe a logic of sent an encrypted or standard message.
  *
  * @author DenBond7
- * Date: 10.05.2017
- * Time: 11:27
- * E-mail: DenBond7@gmail.com
+ *         Date: 10.05.2017
+ *         Time: 11:27
+ *         E-mail: DenBond7@gmail.com
  */
 
 public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
@@ -1020,6 +1020,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
      * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
      */
     private boolean isAllInformationCorrect() {
+        editTextRecipientsTo.chipifyAllUnterminatedTokens();
+        editTextRecipientsCc.chipifyAllUnterminatedTokens();
+        editTextRecipientsBcc.chipifyAllUnterminatedTokens();
+
         if (TextUtils.isEmpty(editTextRecipientsTo.getText().toString())) {
             showInfoSnackbar(editTextRecipientsTo, getString(R.string.text_must_not_be_empty,
                     getString(R.string.prompt_recipients_to)));
