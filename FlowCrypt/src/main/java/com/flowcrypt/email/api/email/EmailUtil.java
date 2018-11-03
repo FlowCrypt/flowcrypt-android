@@ -39,7 +39,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.common.util.ArrayUtils;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
@@ -748,11 +748,16 @@ public class EmailUtil {
   @NonNull
   public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, List<Long> uidList)
       throws MessagingException {
-    if (uidList.isEmpty()) {
+    if (CollectionUtils.isEmpty(uidList)) {
       return new LongSparseArray<>();
     }
+    long[] uidArray = new long[uidList.size()];
 
-    final UIDSet[] uidSets = UIDSet.createUIDSets(ArrayUtils.toLongArray(uidList));
+    for (int i = 0; i < uidList.size(); i++) {
+      uidArray[i] = uidList.get(i);
+    }
+
+    final UIDSet[] uidSets = UIDSet.createUIDSets(uidArray);
 
     if (uidSets == null || uidSets.length == 0) {
       return new LongSparseArray<>();
