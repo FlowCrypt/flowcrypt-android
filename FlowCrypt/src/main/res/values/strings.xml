@@ -371,7 +371,7 @@ icelanders prefer real sauna</font>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
     <string name="queued">Queued</string>
-    <string name="cache_error">Can\'t send a message: there is a cache problem</string>
+    <string name="cache_error">Can\'t send message: cache problem</string>
     <string name="corrupted">Corrupted</string>
     <string name="can_not_delete_sending_message">Sorry. We can\'t delete a message which is sending now</string>
     <string name="preparing">Preparing&#8230;</string>
@@ -398,6 +398,6 @@ icelanders prefer real sauna</font>
         <item quantity="one">Delete this message?</item>
         <item quantity="other">Delete these %1$d messages?</item>
     </plurals>
-    <string name="cannot_send_message_unknown_error">Can\'t send a message: an unknown error</string>
-    <string name="message_failed_to_send">Message failed to send. An unknown error has happened.</string>
+    <string name="cannot_send_message_unknown_error">Can\'t send message: unknown error</string>
+    <string name="message_failed_to_send">Message failed to send: unknown error</string>
 </resources>
