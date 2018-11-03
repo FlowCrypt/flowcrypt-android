@@ -17,13 +17,13 @@ import com.flowcrypt.email.api.retrofit.request.model.ReplaceConfirmModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 13.07.2017
- *         Time: 11:49
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.07.2017
+ * Time: 11:49
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ReplaceConfirmRequest extends BaseRequest<ReplaceConfirmModel> {
-    public ReplaceConfirmRequest(ReplaceConfirmModel replaceConfirmModel) {
-        super(ApiName.POST_REPLACE_CONFIRM, replaceConfirmModel);
-    }
+  public ReplaceConfirmRequest(ReplaceConfirmModel replaceConfirmModel) {
+    super(ApiName.POST_REPLACE_CONFIRM, replaceConfirmModel);
+  }
 }

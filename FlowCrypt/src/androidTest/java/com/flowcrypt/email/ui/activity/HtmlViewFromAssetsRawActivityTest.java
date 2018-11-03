@@ -32,46 +32,45 @@ import static org.hamcrest.Matchers.allOf;
 
 /**
  * @author Denis Bondarenko
- *         Date: 24.02.2018
- *         Time: 14:56
- *         E-mail: DenBond7@gmail.com
+ * Date: 24.02.2018
+ * Time: 14:56
+ * E-mail: DenBond7@gmail.com
  */
-
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class HtmlViewFromAssetsRawActivityTest extends BaseTest {
-    private ActivityTestRule activityTestRule = new ActivityTestRule<>
-            (HtmlViewFromAssetsRawActivity.class, false, false);
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>
+      (HtmlViewFromAssetsRawActivity.class, false, false);
 
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(activityTestRule);
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(activityTestRule);
 
-    @Test
-    public void testShowPrivacyTitle() {
-        startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.privacy));
-        onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowPrivacyTitle() {
+    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.privacy));
+    onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 
-    @Test
-    public void testShowTermsTitle() {
-        startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.terms));
-        onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowTermsTitle() {
+    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.terms));
+    onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 
-    @Test
-    public void testShowSecurityTitle() {
-        startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.security));
-        onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testShowSecurityTitle() {
+    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+    onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
+  }
 
-    private void startActivity(String title) {
-        Context targetContext = InstrumentationRegistry.getTargetContext();
-        Intent intent = new Intent(targetContext, HtmlViewFromAssetsRawActivity.class);
-        intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title);
-        intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm");
-        activityTestRule.launchActivity(intent);
-    }
+  private void startActivity(String title) {
+    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Intent intent = new Intent(targetContext, HtmlViewFromAssetsRawActivity.class);
+    intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title);
+    intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm");
+    activityTestRule.launchActivity(intent);
+  }
 }
 

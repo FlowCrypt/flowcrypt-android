@@ -21,16 +21,16 @@ import javax.mail.URLName;
  */
 public class CustomIMAPStore extends IMAPStore {
 
-    public CustomIMAPStore(Session session, URLName url) {
-        super(session, url);
-    }
+  public CustomIMAPStore(Session session, URLName url) {
+    super(session, url);
+  }
 
-    protected CustomIMAPStore(Session session, URLName url, String name, boolean isSSL) {
-        super(session, url, name, isSSL);
-    }
+  protected CustomIMAPStore(Session session, URLName url, String name, boolean isSSL) {
+    super(session, url, name, isSSL);
+  }
 
-    @Override
-    protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
-        return new CustomIMAPFolder(fullName, separator, this, isNamespace);
-    }
+  @Override
+  protected IMAPFolder newIMAPFolder(String fullName, char separator, Boolean isNamespace) {
+    return new CustomIMAPFolder(fullName, separator, this, isNamespace);
+  }
 }

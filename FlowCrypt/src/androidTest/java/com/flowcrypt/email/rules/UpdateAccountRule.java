@@ -26,28 +26,28 @@ import org.junit.runners.model.Statement;
  * E-mail: DenBond7@gmail.com
  */
 public class UpdateAccountRule implements TestRule {
-    private AccountDao accountDao;
-    private ContentValues contentValues;
+  private AccountDao accountDao;
+  private ContentValues contentValues;
 
-    public UpdateAccountRule(AccountDao accountDao, ContentValues contentValues) {
-        this.accountDao = accountDao;
-        this.contentValues = contentValues;
-    }
+  public UpdateAccountRule(AccountDao accountDao, ContentValues contentValues) {
+    this.accountDao = accountDao;
+    this.contentValues = contentValues;
+  }
 
-    @Override
-    public Statement apply(final Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                updateAccount();
-                base.evaluate();
-            }
-        };
-    }
+  @Override
+  public Statement apply(final Statement base, Description description) {
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        updateAccount();
+        base.evaluate();
+      }
+    };
+  }
 
-    private void updateAccount() {
-        Context targetContext = InstrumentationRegistry.getTargetContext();
-        AccountDaoSource accountDaoSource = new AccountDaoSource();
-        accountDaoSource.updateAccountInformation(targetContext, accountDao.getAccount(), contentValues);
-    }
+  private void updateAccount() {
+    Context targetContext = InstrumentationRegistry.getTargetContext();
+    AccountDaoSource accountDaoSource = new AccountDaoSource();
+    accountDaoSource.updateAccountInformation(targetContext, accountDao.getAccount(), contentValues);
+  }
 }

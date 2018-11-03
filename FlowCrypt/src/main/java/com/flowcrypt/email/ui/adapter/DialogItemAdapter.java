@@ -22,60 +22,60 @@ import java.util.List;
  * This adapter can be used with {@link DialogItem}
  *
  * @author Denis Bondarenko
- *         Date: 01.08.2017
- *         Time: 11:29
- *         E-mail: DenBond7@gmail.com
+ * Date: 01.08.2017
+ * Time: 11:29
+ * E-mail: DenBond7@gmail.com
  */
 
 public class DialogItemAdapter extends BaseAdapter {
-    private LayoutInflater inflater;
-    private List<DialogItem> dialogItems;
+  private LayoutInflater inflater;
+  private List<DialogItem> dialogItems;
 
-    public DialogItemAdapter(Context context, List<DialogItem> dialogItems) {
-        this.dialogItems = dialogItems;
-        this.inflater = LayoutInflater.from(context);
+  public DialogItemAdapter(Context context, List<DialogItem> dialogItems) {
+    this.dialogItems = dialogItems;
+    this.inflater = LayoutInflater.from(context);
 
-        if (this.dialogItems == null) {
-            this.dialogItems = new ArrayList<>();
-        }
+    if (this.dialogItems == null) {
+      this.dialogItems = new ArrayList<>();
+    }
+  }
+
+  @Override
+  public int getCount() {
+    return dialogItems.size();
+  }
+
+  @Override
+  public DialogItem getItem(int position) {
+    return dialogItems.get(position);
+  }
+
+  @Override
+  public long getItemId(int position) {
+    return position;
+  }
+
+  @Override
+  public View getView(int position, View convertView, ViewGroup parent) {
+    DialogItem dialogItem = getItem(position);
+
+    ViewHolder viewHolder;
+    if (convertView == null) {
+      viewHolder = new ViewHolder();
+      convertView = inflater.inflate(R.layout.dialog_item, parent, false);
+      viewHolder.textViewItemTitle = convertView.findViewById(R.id.textViewDialogItem);
+      convertView.setTag(viewHolder);
+    } else {
+      viewHolder = (ViewHolder) convertView.getTag();
     }
 
-    @Override
-    public int getCount() {
-        return dialogItems.size();
-    }
+    viewHolder.textViewItemTitle.setText(dialogItem.getTitle());
+    viewHolder.textViewItemTitle.setCompoundDrawablesWithIntrinsicBounds(dialogItem.getIconResourceId(), 0, 0, 0);
 
-    @Override
-    public DialogItem getItem(int position) {
-        return dialogItems.get(position);
-    }
+    return convertView;
+  }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        DialogItem dialogItem = getItem(position);
-
-        ViewHolder viewHolder;
-        if (convertView == null) {
-            viewHolder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.dialog_item, parent, false);
-            viewHolder.textViewItemTitle = convertView.findViewById(R.id.textViewDialogItem);
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
-        }
-
-        viewHolder.textViewItemTitle.setText(dialogItem.getTitle());
-        viewHolder.textViewItemTitle.setCompoundDrawablesWithIntrinsicBounds(dialogItem.getIconResourceId(), 0, 0, 0);
-
-        return convertView;
-    }
-
-    private static class ViewHolder {
-        TextView textViewItemTitle;
-    }
+  private static class ViewHolder {
+    TextView textViewItemTitle;
+  }
 }

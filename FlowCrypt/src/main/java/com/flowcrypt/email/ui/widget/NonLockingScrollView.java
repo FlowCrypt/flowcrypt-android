@@ -49,147 +49,147 @@ import java.util.List;
  * See https://github.com/k9mail/k-9
  */
 public class NonLockingScrollView extends ScrollView {
-    /**
-     * The list of children who should always receive touch events, and not have them intercepted.
+  /**
+   * The list of children who should always receive touch events, and not have them intercepted.
+   */
+  private final List<View> childrenNeedingAllTouches = new ArrayList<>();
+  private final Rect hitFrame = new Rect();
+  /**
+   * Whether or not the contents of this view is being dragged by one of the children in
+   * {@link #childrenNeedingAllTouches}.
+   */
+  private boolean inCustomDrag = false;
+  private boolean skipWebViewScroll = true;
+
+  public NonLockingScrollView(Context context) {
+    super(context);
+  }
+
+  public NonLockingScrollView(Context context, AttributeSet attrs) {
+    super(context, attrs);
+  }
+
+  public NonLockingScrollView(Context context, AttributeSet attrs, int defStyle) {
+    super(context, attrs, defStyle);
+  }
+
+  @Override
+  public boolean onInterceptTouchEvent(MotionEvent ev) {
+    final int action = getActionMasked(ev);
+    final boolean isUp = action == MotionEvent.ACTION_UP;
+
+    if (isUp && inCustomDrag) {
+      // An up event after a drag should be intercepted so that child views don't handle
+      // click events falsely after a drag.
+      inCustomDrag = false;
+      onTouchEvent(ev);
+      return true;
+    }
+
+    if (!inCustomDrag && !isEventOverChild(ev, childrenNeedingAllTouches)) {
+      return super.onInterceptTouchEvent(ev);
+    }
+
+    // Note the normal scrollview implementation is to intercept all touch events after it has
+    // detected a drag starting. We will handle this ourselves.
+    inCustomDrag = super.onInterceptTouchEvent(ev);
+    if (inCustomDrag) {
+      onTouchEvent(ev);
+    }
+
+    // Don't intercept events - pass them on to children as normal.
+    return false;
+  }
+
+  @Override
+  protected void onFinishInflate() {
+    super.onFinishInflate();
+    setupDelegationOfTouchAndHierarchyChangeEvents();
+  }
+
+  @Override
+  public void requestChildFocus(View child, View focused) {
+    /*
+     * Normally a ScrollView will scroll the child into view.
+     * Prevent this when a MessageWebView is first touched,
+     * assuming it already is at least partially in view.
+     *
      */
-    private final List<View> childrenNeedingAllTouches = new ArrayList<>();
-    private final Rect hitFrame = new Rect();
-    /**
-     * Whether or not the contents of this view is being dragged by one of the children in
-     * {@link #childrenNeedingAllTouches}.
-     */
-    private boolean inCustomDrag = false;
-    private boolean skipWebViewScroll = true;
-
-    public NonLockingScrollView(Context context) {
-        super(context);
+    if (skipWebViewScroll &&
+        focused instanceof EmailWebView &&
+        focused.getGlobalVisibleRect(new Rect())) {
+      skipWebViewScroll = false;
+      super.requestChildFocus(child, child);
+      ViewParent parent = getParent();
+      if (parent != null) {
+        parent.requestChildFocus(this, focused);
+      }
+    } else {
+      super.requestChildFocus(child, focused);
     }
+  }
 
-    public NonLockingScrollView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+  private static boolean canViewReceivePointerEvents(View child) {
+    return child.getVisibility() == VISIBLE || (child.getAnimation() != null);
+  }
+
+  private int getActionMasked(MotionEvent ev) {
+    // Equivalent to MotionEvent.getActionMasked() which is in API 8+
+    return ev.getAction() & MotionEvent.ACTION_MASK;
+  }
+
+  private void setupDelegationOfTouchAndHierarchyChangeEvents() {
+    OnHierarchyChangeListener listener = new HierarchyTreeChangeListener();
+    setOnHierarchyChangeListener(listener);
+    for (int i = 0, childCount = getChildCount(); i < childCount; i++) {
+      listener.onChildViewAdded(this, getChildAt(i));
     }
+  }
 
-    public NonLockingScrollView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+  private boolean isEventOverChild(MotionEvent ev, List<View> children) {
+    final int actionIndex = ev.getActionIndex();
+    final float x = ev.getX(actionIndex) + getScrollX();
+    final float y = ev.getY(actionIndex) + getScrollY();
+
+    for (View child : children) {
+      if (!canViewReceivePointerEvents(child)) {
+        continue;
+      }
+      child.getHitRect(hitFrame);
+
+      // child can receive the motion event.
+      if (hitFrame.contains((int) x, (int) y)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private class HierarchyTreeChangeListener implements OnHierarchyChangeListener {
+    @Override
+    public void onChildViewAdded(View parent, View child) {
+      if (child instanceof WebView) {
+        childrenNeedingAllTouches.add(child);
+      } else if (child instanceof ViewGroup) {
+        ViewGroup childGroup = (ViewGroup) child;
+        childGroup.setOnHierarchyChangeListener(this);
+        for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
+          onChildViewAdded(childGroup, childGroup.getChildAt(i));
+        }
+      }
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        final int action = getActionMasked(ev);
-        final boolean isUp = action == MotionEvent.ACTION_UP;
-
-        if (isUp && inCustomDrag) {
-            // An up event after a drag should be intercepted so that child views don't handle
-            // click events falsely after a drag.
-            inCustomDrag = false;
-            onTouchEvent(ev);
-            return true;
+    public void onChildViewRemoved(View parent, View child) {
+      if (child instanceof WebView) {
+        childrenNeedingAllTouches.remove(child);
+      } else if (child instanceof ViewGroup) {
+        ViewGroup childGroup = (ViewGroup) child;
+        for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
+          onChildViewRemoved(childGroup, childGroup.getChildAt(i));
         }
-
-        if (!inCustomDrag && !isEventOverChild(ev, childrenNeedingAllTouches)) {
-            return super.onInterceptTouchEvent(ev);
-        }
-
-        // Note the normal scrollview implementation is to intercept all touch events after it has
-        // detected a drag starting. We will handle this ourselves.
-        inCustomDrag = super.onInterceptTouchEvent(ev);
-        if (inCustomDrag) {
-            onTouchEvent(ev);
-        }
-
-        // Don't intercept events - pass them on to children as normal.
-        return false;
+        childGroup.setOnHierarchyChangeListener(null);
+      }
     }
-
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-        setupDelegationOfTouchAndHierarchyChangeEvents();
-    }
-
-    @Override
-    public void requestChildFocus(View child, View focused) {
-        /*
-         * Normally a ScrollView will scroll the child into view.
-         * Prevent this when a MessageWebView is first touched,
-         * assuming it already is at least partially in view.
-         *
-         */
-        if (skipWebViewScroll &&
-                focused instanceof EmailWebView &&
-                focused.getGlobalVisibleRect(new Rect())) {
-            skipWebViewScroll = false;
-            super.requestChildFocus(child, child);
-            ViewParent parent = getParent();
-            if (parent != null) {
-                parent.requestChildFocus(this, focused);
-            }
-        } else {
-            super.requestChildFocus(child, focused);
-        }
-    }
-
-    private static boolean canViewReceivePointerEvents(View child) {
-        return child.getVisibility() == VISIBLE || (child.getAnimation() != null);
-    }
-
-    private int getActionMasked(MotionEvent ev) {
-        // Equivalent to MotionEvent.getActionMasked() which is in API 8+
-        return ev.getAction() & MotionEvent.ACTION_MASK;
-    }
-
-    private void setupDelegationOfTouchAndHierarchyChangeEvents() {
-        OnHierarchyChangeListener listener = new HierarchyTreeChangeListener();
-        setOnHierarchyChangeListener(listener);
-        for (int i = 0, childCount = getChildCount(); i < childCount; i++) {
-            listener.onChildViewAdded(this, getChildAt(i));
-        }
-    }
-
-    private boolean isEventOverChild(MotionEvent ev, List<View> children) {
-        final int actionIndex = ev.getActionIndex();
-        final float x = ev.getX(actionIndex) + getScrollX();
-        final float y = ev.getY(actionIndex) + getScrollY();
-
-        for (View child : children) {
-            if (!canViewReceivePointerEvents(child)) {
-                continue;
-            }
-            child.getHitRect(hitFrame);
-
-            // child can receive the motion event.
-            if (hitFrame.contains((int) x, (int) y)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private class HierarchyTreeChangeListener implements OnHierarchyChangeListener {
-        @Override
-        public void onChildViewAdded(View parent, View child) {
-            if (child instanceof WebView) {
-                childrenNeedingAllTouches.add(child);
-            } else if (child instanceof ViewGroup) {
-                ViewGroup childGroup = (ViewGroup) child;
-                childGroup.setOnHierarchyChangeListener(this);
-                for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
-                    onChildViewAdded(childGroup, childGroup.getChildAt(i));
-                }
-            }
-        }
-
-        @Override
-        public void onChildViewRemoved(View parent, View child) {
-            if (child instanceof WebView) {
-                childrenNeedingAllTouches.remove(child);
-            } else if (child instanceof ViewGroup) {
-                ViewGroup childGroup = (ViewGroup) child;
-                for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
-                    onChildViewRemoved(childGroup, childGroup.getChildAt(i));
-                }
-                childGroup.setOnHierarchyChangeListener(null);
-            }
-        }
-    }
+  }
 }

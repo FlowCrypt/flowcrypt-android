@@ -21,39 +21,39 @@ import com.flowcrypt.email.util.UIUtil;
  * This fragment contains actions which related to Security options.
  *
  * @author DenBond7
- *         Date: 08.08.2018.
- *         Time: 10:47.
- *         E-mail: DenBond7@gmail.com
+ * Date: 08.08.2018.
+ * Time: 10:47.
+ * E-mail: DenBond7@gmail.com
  */
 public class SecuritySettingsFragment extends BasePreferenceFragment implements Preference.OnPreferenceClickListener {
-    private AccountDao accountDao;
+  private AccountDao accountDao;
 
-    @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        addPreferencesFromResource(R.xml.preferences_security_settings);
+  @Override
+  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+    addPreferencesFromResource(R.xml.preferences_security_settings);
 
-        accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
+    accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
 
-        Preference preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE);
-        if (preferenceChangePassPhrase != null) {
-            preferenceChangePassPhrase.setOnPreferenceClickListener(this);
-        }
+    Preference preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE);
+    if (preferenceChangePassPhrase != null) {
+      preferenceChangePassPhrase.setOnPreferenceClickListener(this);
     }
+  }
 
-    @Override
-    public boolean onPreferenceClick(Preference preference) {
-        switch (preference.getKey()) {
-            case Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE:
-                if (new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), accountDao.getEmail()).isEmpty()) {
-                    UIUtil.showInfoSnackbar(getView(), getString(R.string.account_has_no_associated_keys, getString
-                            (R.string.support_email)));
-                } else {
-                    startActivity(ChangePassPhraseActivity.newIntent(getContext(), accountDao));
-                }
-                return true;
-
-            default:
-                return false;
+  @Override
+  public boolean onPreferenceClick(Preference preference) {
+    switch (preference.getKey()) {
+      case Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE:
+        if (new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), accountDao.getEmail()).isEmpty()) {
+          UIUtil.showInfoSnackbar(getView(), getString(R.string.account_has_no_associated_keys, getString
+              (R.string.support_email)));
+        } else {
+          startActivity(ChangePassPhraseActivity.newIntent(getContext(), accountDao));
         }
+        return true;
+
+      default:
+        return false;
     }
+  }
 }

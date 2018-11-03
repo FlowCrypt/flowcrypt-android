@@ -18,13 +18,13 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 12.07.2017
- *         Time: 16:39
- *         E-mail: DenBond7@gmail.com
+ * Date: 12.07.2017
+ * Time: 16:39
+ * E-mail: DenBond7@gmail.com
  */
 
 public class TestWelcomeRequest extends BaseRequest<TestWelcomeModel> {
-    public TestWelcomeRequest(TestWelcomeModel testWelcomeModel) {
-        super(ApiName.POST_TEST_WELCOME, testWelcomeModel);
-    }
+  public TestWelcomeRequest(TestWelcomeModel testWelcomeModel) {
+    super(ApiName.POST_TEST_WELCOME, testWelcomeModel);
+  }
 }

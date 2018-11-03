@@ -36,203 +36,203 @@ import java.lang.ref.WeakReference;
  * service running.
  *
  * @author Denis Bondarenko
- *         Date: 27.07.2017
- *         Time: 9:07
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.07.2017
+ * Time: 9:07
+ * E-mail: DenBond7@gmail.com
  */
 
 public class CheckClipboardToFindKeyService extends Service implements ClipboardManager
-        .OnPrimaryClipChangedListener {
-    public static final String TAG = CheckClipboardToFindKeyService.class.getSimpleName();
+    .OnPrimaryClipChangedListener {
+  public static final String TAG = CheckClipboardToFindKeyService.class.getSimpleName();
 
-    private volatile Looper serviceWorkerLooper;
-    private volatile ServiceWorkerHandler serviceWorkerHandler;
+  private volatile Looper serviceWorkerLooper;
+  private volatile ServiceWorkerHandler serviceWorkerHandler;
 
-    private KeyImportModel keyImportModel;
-    private IBinder localBinder;
-    private ClipboardManager clipboardManager;
-    private Messenger replyMessenger;
-    private boolean isMustBePrivateKey;
+  private KeyImportModel keyImportModel;
+  private IBinder localBinder;
+  private ClipboardManager clipboardManager;
+  private Messenger replyMessenger;
+  private boolean isMustBePrivateKey;
 
-    public CheckClipboardToFindKeyService() {
-        this.localBinder = new LocalBinder();
-        this.replyMessenger = new Messenger(new ReplyHandler(this));
+  public CheckClipboardToFindKeyService() {
+    this.localBinder = new LocalBinder();
+    this.replyMessenger = new Messenger(new ReplyHandler(this));
+  }
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    Log.d(TAG, "onCreate");
+
+    clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+    if (clipboardManager != null) {
+      clipboardManager.addPrimaryClipChangedListener(this);
+    }
+
+    HandlerThread handlerThread = new HandlerThread(TAG);
+    handlerThread.start();
+
+    serviceWorkerLooper = handlerThread.getLooper();
+    serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper, this);
+
+    checkClipboard();
+  }
+
+  @Nullable
+  @Override
+  public IBinder onBind(Intent intent) {
+    Log.d(TAG, "onBind:" + intent);
+    return localBinder;
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    Log.d(TAG, "onDestroy");
+
+    serviceWorkerLooper.quit();
+
+    if (clipboardManager != null) {
+      clipboardManager.removePrimaryClipChangedListener(this);
+    }
+  }
+
+  @Override
+  public void onPrimaryClipChanged() {
+    checkClipboard();
+  }
+
+  public KeyImportModel getKeyImportModel() {
+    return keyImportModel;
+  }
+
+  public boolean isMustBePrivateKey() {
+    return isMustBePrivateKey;
+  }
+
+  public void setMustBePrivateKey(boolean mustBePrivateKey) {
+    isMustBePrivateKey = mustBePrivateKey;
+  }
+
+  private void checkClipboard() {
+    keyImportModel = null;
+    if (clipboardManager.hasPrimaryClip()) {
+      ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
+      CharSequence privateKeyFromClipboard = item.getText();
+      if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
+        checkClipboardText(privateKeyFromClipboard.toString());
+      }
+    }
+  }
+
+  private void checkClipboardText(String clipboardText) {
+    Message message = serviceWorkerHandler.obtainMessage();
+    message.what = ServiceWorkerHandler.MESSAGE_WHAT;
+    message.obj = clipboardText;
+    message.replyTo = replyMessenger;
+    serviceWorkerHandler.removeMessages(ServiceWorkerHandler.MESSAGE_WHAT);
+    serviceWorkerHandler.sendMessage(message);
+  }
+
+  /**
+   * The incoming handler realization. This handler will be used to communicate with current
+   * service and the worker thread.
+   */
+  private static class ReplyHandler extends Handler {
+    static final int MESSAGE_WHAT = 1;
+    private final WeakReference<CheckClipboardToFindKeyService>
+        checkClipboardToFindPrivateKeyServiceWeakReference;
+
+    ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
+      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
+          (checkClipboardToFindKeyService);
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d(TAG, "onCreate");
+    public void handleMessage(Message message) {
+      switch (message.what) {
+        case MESSAGE_WHAT:
+          if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
+            CheckClipboardToFindKeyService
+                checkClipboardToFindKeyService =
+                checkClipboardToFindPrivateKeyServiceWeakReference.get();
 
-        clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboardManager != null) {
-            clipboardManager.addPrimaryClipChangedListener(this);
-        }
+            String key = (String) message.obj;
 
-        HandlerThread handlerThread = new HandlerThread(TAG);
-        handlerThread.start();
-
-        serviceWorkerLooper = handlerThread.getLooper();
-        serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper, this);
-
-        checkClipboard();
+            checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
+                checkClipboardToFindPrivateKeyServiceWeakReference.get().isMustBePrivateKey,
+                KeyDetails.Type.CLIPBOARD);
+            Log.d(TAG, "Found a valid private key in clipboard");
+          }
+          break;
+      }
     }
+  }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind:" + intent);
-        return localBinder;
-    }
+  /**
+   * This handler will be used by the instance of {@link HandlerThread} to receive message from
+   * the UI thread.
+   */
+  private static final class ServiceWorkerHandler extends Handler {
+    static final int MESSAGE_WHAT = 1;
+    private final WeakReference<CheckClipboardToFindKeyService> checkClipboardToFindPrivateKeyServiceWeakReference;
+    private Js js;
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
-
-        serviceWorkerLooper.quit();
-
-        if (clipboardManager != null) {
-            clipboardManager.removePrimaryClipChangedListener(this);
-        }
+    ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
+      super(looper);
+      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
+          (checkClipboardToFindKeyService);
     }
 
     @Override
-    public void onPrimaryClipChanged() {
-        checkClipboard();
-    }
-
-    public KeyImportModel getKeyImportModel() {
-        return keyImportModel;
-    }
-
-    public boolean isMustBePrivateKey() {
-        return isMustBePrivateKey;
-    }
-
-    public void setMustBePrivateKey(boolean mustBePrivateKey) {
-        isMustBePrivateKey = mustBePrivateKey;
-    }
-
-    private void checkClipboard() {
-        keyImportModel = null;
-        if (clipboardManager.hasPrimaryClip()) {
-            ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
-            CharSequence privateKeyFromClipboard = item.getText();
-            if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-                checkClipboardText(privateKeyFromClipboard.toString());
+    public void handleMessage(Message msg) {
+      switch (msg.what) {
+        case MESSAGE_WHAT:
+          if (js == null) {
+            try {
+              if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
+                js = new Js(checkClipboardToFindPrivateKeyServiceWeakReference.get(), null);
+              }
+            } catch (IOException e) {
+              e.printStackTrace();
+              ExceptionUtil.handleError(e);
             }
-        }
-    }
+          }
 
-    private void checkClipboardText(String clipboardText) {
-        Message message = serviceWorkerHandler.obtainMessage();
-        message.what = ServiceWorkerHandler.MESSAGE_WHAT;
-        message.obj = clipboardText;
-        message.replyTo = replyMessenger;
-        serviceWorkerHandler.removeMessages(ServiceWorkerHandler.MESSAGE_WHAT);
-        serviceWorkerHandler.sendMessage(message);
-    }
+          if (js != null) {
+            String clipboardText = (String) msg.obj;
 
-    /**
-     * The incoming handler realization. This handler will be used to communicate with current
-     * service and the worker thread.
-     */
-    private static class ReplyHandler extends Handler {
-        static final int MESSAGE_WHAT = 1;
-        private final WeakReference<CheckClipboardToFindKeyService>
-                checkClipboardToFindPrivateKeyServiceWeakReference;
+            try {
+              String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
+              PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
-        ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-            this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
-                    (checkClipboardToFindKeyService);
-        }
-
-        @Override
-        public void handleMessage(Message message) {
-            switch (message.what) {
-                case MESSAGE_WHAT:
-                    if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
-                        CheckClipboardToFindKeyService
-                                checkClipboardToFindKeyService =
-                                checkClipboardToFindPrivateKeyServiceWeakReference.get();
-
-                        String key = (String) message.obj;
-
-                        checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
-                                checkClipboardToFindPrivateKeyServiceWeakReference.get().isMustBePrivateKey,
-                                KeyDetails.Type.CLIPBOARD);
-                        Log.d(TAG, "Found a valid private key in clipboard");
-                    }
-                    break;
+              if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null &&
+                  js.is_valid_key(pgpKey, checkClipboardToFindPrivateKeyServiceWeakReference.get()
+                      .isMustBePrivateKey)) {
+                try {
+                  Messenger messenger = msg.replyTo;
+                  messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
+                } catch (RemoteException e) {
+                  e.printStackTrace();
+                  ExceptionUtil.handleError(e);
+                }
+              }
+            } catch (Exception e) {
+              e.printStackTrace();
+              ExceptionUtil.handleError(e);
             }
-        }
+          }
+          break;
+      }
     }
+  }
 
-    /**
-     * This handler will be used by the instance of {@link HandlerThread} to receive message from
-     * the UI thread.
-     */
-    private static final class ServiceWorkerHandler extends Handler {
-        static final int MESSAGE_WHAT = 1;
-        private final WeakReference<CheckClipboardToFindKeyService> checkClipboardToFindPrivateKeyServiceWeakReference;
-        private Js js;
-
-        ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-            super(looper);
-            this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
-                    (checkClipboardToFindKeyService);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MESSAGE_WHAT:
-                    if (js == null) {
-                        try {
-                            if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
-                                js = new Js(checkClipboardToFindPrivateKeyServiceWeakReference.get(), null);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            ExceptionUtil.handleError(e);
-                        }
-                    }
-
-                    if (js != null) {
-                        String clipboardText = (String) msg.obj;
-
-                        try {
-                            String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
-                            PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-
-                            if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null &&
-                                    js.is_valid_key(pgpKey, checkClipboardToFindPrivateKeyServiceWeakReference.get()
-                                            .isMustBePrivateKey)) {
-                                try {
-                                    Messenger messenger = msg.replyTo;
-                                    messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
-                                } catch (RemoteException e) {
-                                    e.printStackTrace();
-                                    ExceptionUtil.handleError(e);
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            ExceptionUtil.handleError(e);
-                        }
-                    }
-                    break;
-            }
-        }
+  /**
+   * The local binder realization.
+   */
+  public class LocalBinder extends Binder {
+    public CheckClipboardToFindKeyService getService() {
+      return CheckClipboardToFindKeyService.this;
     }
-
-    /**
-     * The local binder realization.
-     */
-    public class LocalBinder extends Binder {
-        public CheckClipboardToFindKeyService getService() {
-            return CheckClipboardToFindKeyService.this;
-        }
-    }
+  }
 }

@@ -30,48 +30,48 @@ import javax.mail.Store;
  */
 
 public class LoadNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncTask {
-    private com.flowcrypt.email.api.email.Folder folder;
-    private int[] messageIds;
+  private com.flowcrypt.email.api.email.Folder folder;
+  private int[] messageIds;
 
-    public LoadNewMessagesSyncTask(String ownerKey, int requestCode,
-                                   com.flowcrypt.email.api.email.Folder folder, Message[] messages) {
-        super(ownerKey, requestCode, folder);
-        this.folder = folder;
+  public LoadNewMessagesSyncTask(String ownerKey, int requestCode,
+                                 com.flowcrypt.email.api.email.Folder folder, Message[] messages) {
+    super(ownerKey, requestCode, folder);
+    this.folder = folder;
 
-        if (messages != null) {
-            messageIds = new int[messages.length];
-            for (int i = 0; i < messages.length; i++) {
-                messageIds[i] = messages[i].getMessageNumber();
-            }
-        }
+    if (messages != null) {
+      messageIds = new int[messages.length];
+      for (int i = 0; i < messages.length; i++) {
+        messageIds[i] = messages[i].getMessageNumber();
+      }
+    }
+  }
+
+  @Override
+  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+      throws Exception {
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+    imapFolder.open(Folder.READ_ONLY);
+
+    if (syncListener != null && messageIds != null) {
+      Message[] messages = imapFolder.getMessages(messageIds);
+      EmailUtil.fetchMessagesInfo(imapFolder, messages);
+
+      List<Long> uidList = new ArrayList<>();
+
+      for (Message message : messages) {
+        uidList.add(imapFolder.getUID(message));
+      }
+
+      if (uidList.isEmpty()) {
+        syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages, new LongSparseArray
+            <Boolean>(), ownerKey, requestCode);
+        return;
+      }
+
+      syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages,
+          EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList), ownerKey, requestCode);
     }
 
-    @Override
-    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-            throws Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
-        imapFolder.open(Folder.READ_ONLY);
-
-        if (syncListener != null && messageIds != null) {
-            Message[] messages = imapFolder.getMessages(messageIds);
-            EmailUtil.fetchMessagesInfo(imapFolder, messages);
-
-            List<Long> uidList = new ArrayList<>();
-
-            for (Message message : messages) {
-                uidList.add(imapFolder.getUID(message));
-            }
-
-            if (uidList.isEmpty()) {
-                syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages, new LongSparseArray
-                        <Boolean>(), ownerKey, requestCode);
-                return;
-            }
-
-            syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages,
-                    EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList), ownerKey, requestCode);
-        }
-
-        imapFolder.close(false);
-    }
+    imapFolder.close(false);
+  }
 }

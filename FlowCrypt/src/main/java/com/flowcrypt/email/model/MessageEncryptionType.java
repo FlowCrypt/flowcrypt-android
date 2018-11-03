@@ -9,11 +9,11 @@ package com.flowcrypt.email.model;
  * The message encryption type.
  *
  * @author Denis Bondarenko
- *         Date: 28.07.2017
- *         Time: 15:41
- *         E-mail: DenBond7@gmail.com
+ * Date: 28.07.2017
+ * Time: 15:41
+ * E-mail: DenBond7@gmail.com
  */
 
 public enum MessageEncryptionType {
-    ENCRYPTED, STANDARD
+  ENCRYPTED, STANDARD
 }

@@ -18,13 +18,13 @@ import com.flowcrypt.email.R;
  * E-mail: DenBond7@gmail.com
  */
 public class SecuritySettingsActivity extends BaseSettingsActivity {
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_security_settings;
-    }
+  @Override
+  public int getContentViewResourceId() {
+    return R.layout.activity_security_settings;
+  }
 
-    @Override
-    public View getRootView() {
-        return null;
-    }
+  @Override
+  public View getRootView() {
+    return null;
+  }
 }

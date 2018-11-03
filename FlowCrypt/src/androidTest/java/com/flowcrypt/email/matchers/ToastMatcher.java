@@ -33,30 +33,30 @@ import org.hamcrest.TypeSafeMatcher;
  * <p>
  *
  * @author Denis Bondarenko
- *         Date: 09.03.2018
- *         Time: 13:09
- *         E-mail: DenBond7@gmail.com
+ * Date: 09.03.2018
+ * Time: 13:09
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ToastMatcher extends TypeSafeMatcher<Root> {
 
-    @Override
-    public void describeTo(Description description) {
-        description.appendText("is toast");
-    }
+  @Override
+  public void describeTo(Description description) {
+    description.appendText("is toast");
+  }
 
-    @Override
-    public boolean matchesSafely(Root root) {
-        int type = root.getWindowLayoutParams().get().type;
-        if ((type == WindowManager.LayoutParams.TYPE_TOAST)) {
-            IBinder windowToken = root.getDecorView().getWindowToken();
-            IBinder appToken = root.getDecorView().getApplicationWindowToken();
-            if (windowToken == appToken) {
-                // windowToken == appToken means this window isn't contained by any other windows.
-                // if it was a window for an activity, it would have TYPE_BASE_APPLICATION.
-                return true;
-            }
-        }
-        return false;
+  @Override
+  public boolean matchesSafely(Root root) {
+    int type = root.getWindowLayoutParams().get().type;
+    if ((type == WindowManager.LayoutParams.TYPE_TOAST)) {
+      IBinder windowToken = root.getDecorView().getWindowToken();
+      IBinder appToken = root.getDecorView().getApplicationWindowToken();
+      if (windowToken == appToken) {
+        // windowToken == appToken means this window isn't contained by any other windows.
+        // if it was a window for an activity, it would have TYPE_BASE_APPLICATION.
+        return true;
+      }
     }
+    return false;
+  }
 }

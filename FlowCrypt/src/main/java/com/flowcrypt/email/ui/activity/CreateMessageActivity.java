@@ -36,224 +36,224 @@ import com.flowcrypt.email.util.UIUtil;
  * This activity describes a logic of send encrypted or standard message.
  *
  * @author DenBond7
- *         Date: 10.05.2017
- *         Time: 11:43
- *         E-mail: DenBond7@gmail.com
+ * Date: 10.05.2017
+ * Time: 11:43
+ * E-mail: DenBond7@gmail.com
  */
 
 public class CreateMessageActivity extends BaseBackStackSyncActivity implements
-        CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptedTypeListener {
+    CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptedTypeListener {
 
-    public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
+  public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
+      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
 
-    public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity.class);
+  public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
+      ("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity.class);
 
-    public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
+  public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
+      ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
 
-    public static final String EXTRA_KEY_MESSAGE_TYPE =
-            GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity.class);
+  public static final String EXTRA_KEY_MESSAGE_TYPE =
+      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity.class);
 
-    private View nonEncryptedHintView;
-    private View layoutContent;
+  private View nonEncryptedHintView;
+  private View layoutContent;
 
-    private MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-    private ServiceInfo serviceInfo;
+  private MessageEncryptionType messageEncryptionType = MessageEncryptionType.ENCRYPTED;
+  private ServiceInfo serviceInfo;
 
-    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
-                                        MessageEncryptionType messageEncryptionType) {
-        return generateIntent(context, incomingMessageInfo, MessageType.NEW, messageEncryptionType);
+  public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                      MessageEncryptionType messageEncryptionType) {
+    return generateIntent(context, incomingMessageInfo, MessageType.NEW, messageEncryptionType);
+  }
+
+  public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                      MessageType messageType,
+                                      MessageEncryptionType messageEncryptionType) {
+    return generateIntent(context, incomingMessageInfo, messageType, messageEncryptionType, null);
+  }
+
+  public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
+                                      MessageType messageType, MessageEncryptionType messageEncryptionType,
+                                      ServiceInfo serviceInfo) {
+
+    Intent intent = new Intent(context, CreateMessageActivity.class);
+    intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
+    intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
+    intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
+    intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
+    return intent;
+  }
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    if (accountDao == null) {
+      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
+      finish();
     }
 
-    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
-                                        MessageType messageType,
-                                        MessageEncryptionType messageEncryptionType) {
-        return generateIntent(context, incomingMessageInfo, messageType, messageEncryptionType, null);
+    if (getIntent() != null) {
+      serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
+      if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
+        messageEncryptionType = (MessageEncryptionType) getIntent()
+            .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
+      }
     }
 
-    public static Intent generateIntent(Context context, IncomingMessageInfo incomingMessageInfo,
-                                        MessageType messageType, MessageEncryptionType messageEncryptionType,
-                                        ServiceInfo serviceInfo) {
+    super.onCreate(savedInstanceState);
 
-        Intent intent = new Intent(context, CreateMessageActivity.class);
-        intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMessageInfo);
-        intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
-        intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, messageEncryptionType);
-        intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
-        return intent;
+    layoutContent = findViewById(R.id.layoutContent);
+    initNonEncryptedHintView();
+
+    if (getIntent() != null) {
+      onMessageEncryptionTypeChange(messageEncryptionType);
+      prepareActionBarTitle();
+    }
+  }
+
+  @Override
+  public View getRootView() {
+    return layoutContent;
+  }
+
+  @Override
+  public int getContentViewResourceId() {
+    return R.layout.activity_create_message;
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.activity_send_message, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    super.onPrepareOptionsMenu(menu);
+    MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
+    menuActionSwitchType.setTitle(messageEncryptionType == MessageEncryptionType.STANDARD ?
+        R.string.switch_to_secure_email : R.string.switch_to_standard_email);
+
+    if (serviceInfo != null) {
+      if (!serviceInfo.isMessageTypeCanBeSwitched()) {
+        menu.removeItem(R.id.menuActionSwitchType);
+      }
+
+      if (!serviceInfo.isAddNewAttachmentsEnable()) {
+        menu.removeItem(R.id.menuActionAttachFile);
+      }
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
-        if (accountDao == null) {
-            Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
-            finish();
-        }
+    return true;
+  }
 
-        if (getIntent() != null) {
-            serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
-            if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
-                messageEncryptionType = (MessageEncryptionType) getIntent()
-                        .getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
-            }
-        }
-
-        super.onCreate(savedInstanceState);
-
-        layoutContent = findViewById(R.id.layoutContent);
-        initNonEncryptedHintView();
-
-        if (getIntent() != null) {
-            onMessageEncryptionTypeChange(messageEncryptionType);
-            prepareActionBarTitle();
-        }
-    }
-
-    @Override
-    public View getRootView() {
-        return layoutContent;
-    }
-
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_create_message;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.activity_send_message, menu);
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.menuActionHelp:
+        startActivity(new Intent(this, FeedbackActivity.class));
         return true;
-    }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
-        menuActionSwitchType.setTitle(messageEncryptionType == MessageEncryptionType.STANDARD ?
-                R.string.switch_to_secure_email : R.string.switch_to_standard_email);
-
-        if (serviceInfo != null) {
-            if (!serviceInfo.isMessageTypeCanBeSwitched()) {
-                menu.removeItem(R.id.menuActionSwitchType);
-            }
-
-            if (!serviceInfo.isAddNewAttachmentsEnable()) {
-                menu.removeItem(R.id.menuActionAttachFile);
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuActionHelp:
-                startActivity(new Intent(this, FeedbackActivity.class));
-                return true;
-
-            case R.id.menuActionSwitchType:
-                switch (messageEncryptionType) {
-                    case ENCRYPTED:
-                        onMessageEncryptionTypeChange(MessageEncryptionType.STANDARD);
-                        break;
-
-                    case STANDARD:
-                        onMessageEncryptionTypeChange(MessageEncryptionType.ENCRYPTED);
-                        break;
-                }
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
-        PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
-        Toast.makeText(this, GeneralUtil.isInternetConnectionAvailable(this)
-                ? R.string.message_will_be_sent_soon
-                : R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
-        finish();
-    }
-
-    @Override
-    public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
-        this.messageEncryptionType = messageEncryptionType;
+      case R.id.menuActionSwitchType:
         switch (messageEncryptionType) {
-            case ENCRYPTED:
-                getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary));
-                getAppBarLayout().removeView(nonEncryptedHintView);
-                break;
+          case ENCRYPTED:
+            onMessageEncryptionTypeChange(MessageEncryptionType.STANDARD);
+            break;
 
-            case STANDARD:
-                getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.red));
-                getAppBarLayout().addView(nonEncryptedHintView);
-                break;
+          case STANDARD:
+            onMessageEncryptionTypeChange(MessageEncryptionType.ENCRYPTED);
+            break;
         }
+        return true;
 
-        invalidateOptionsMenu();
-        notifyFragmentAboutChangeMessageEncryptionType(messageEncryptionType);
+      default:
+        return super.onOptionsItemSelected(item);
+    }
+  }
+
+  @Override
+  public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
+    PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
+    Toast.makeText(this, GeneralUtil.isInternetConnectionAvailable(this)
+        ? R.string.sending
+        : R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
+    finish();
+  }
+
+  @Override
+  public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
+    this.messageEncryptionType = messageEncryptionType;
+    switch (messageEncryptionType) {
+      case ENCRYPTED:
+        getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary));
+        getAppBarLayout().removeView(nonEncryptedHintView);
+        break;
+
+      case STANDARD:
+        getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.red));
+        getAppBarLayout().addView(nonEncryptedHintView);
+        break;
     }
 
-    @Override
-    public MessageEncryptionType getMessageEncryptionType() {
-        return messageEncryptionType;
-    }
+    invalidateOptionsMenu();
+    notifyFragmentAboutChangeMessageEncryptionType(messageEncryptionType);
+  }
 
-    private void prepareActionBarTitle() {
-        if (getSupportActionBar() != null) {
-            if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
-                MessageType messageType = (MessageType) getIntent().getSerializableExtra(
-                        CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
+  @Override
+  public MessageEncryptionType getMessageEncryptionType() {
+    return messageEncryptionType;
+  }
 
-                switch (messageType) {
-                    case NEW:
-                        getSupportActionBar().setTitle(R.string.compose);
-                        break;
+  private void prepareActionBarTitle() {
+    if (getSupportActionBar() != null) {
+      if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
+        MessageType messageType = (MessageType) getIntent().getSerializableExtra(
+            CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
 
-                    case REPLY:
-                        getSupportActionBar().setTitle(R.string.reply);
-                        break;
+        switch (messageType) {
+          case NEW:
+            getSupportActionBar().setTitle(R.string.compose);
+            break;
 
-                    case REPLY_ALL:
-                        getSupportActionBar().setTitle(R.string.reply_all);
-                        break;
+          case REPLY:
+            getSupportActionBar().setTitle(R.string.reply);
+            break;
 
-                    case FORWARD:
-                        getSupportActionBar().setTitle(R.string.forward);
-                        break;
-                }
-            } else {
-                if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
-                    getSupportActionBar().setTitle(R.string.reply);
-                } else {
-                    getSupportActionBar().setTitle(R.string.compose);
-                }
-            }
+          case REPLY_ALL:
+            getSupportActionBar().setTitle(R.string.reply_all);
+            break;
+
+          case FORWARD:
+            getSupportActionBar().setTitle(R.string.forward);
+            break;
         }
-    }
-
-    private void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
-                                                                        messageEncryptionType) {
-        CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.composeFragment);
-
-        if (composeFragment != null) {
-            composeFragment.onMessageEncryptionTypeChange(messageEncryptionType);
+      } else {
+        if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
+          getSupportActionBar().setTitle(R.string.reply);
+        } else {
+          getSupportActionBar().setTitle(R.string.compose);
         }
+      }
     }
+  }
 
-    private void initNonEncryptedHintView() {
-        nonEncryptedHintView = getLayoutInflater().inflate(R.layout.under_toolbar_line_with_text,
-                getAppBarLayout(), false);
+  private void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
+                                                                  messageEncryptionType) {
+    CreateMessageFragment composeFragment = (CreateMessageFragment) getSupportFragmentManager()
+        .findFragmentById(R.id.composeFragment);
 
-        TextView textView = nonEncryptedHintView.findViewById(R.id.underToolbarTextTextView);
-        textView.setText(R.string.this_message_will_not_be_encrypted);
+    if (composeFragment != null) {
+      composeFragment.onMessageEncryptionTypeChange(messageEncryptionType);
     }
+  }
+
+  private void initNonEncryptedHintView() {
+    nonEncryptedHintView = getLayoutInflater().inflate(R.layout.under_toolbar_line_with_text,
+        getAppBarLayout(), false);
+
+    TextView textView = nonEncryptedHintView.findViewById(R.id.underToolbarTextTextView);
+    textView.setText(R.string.this_message_will_not_be_encrypted);
+  }
 }

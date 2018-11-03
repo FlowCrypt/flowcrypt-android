@@ -21,33 +21,33 @@ import android.text.style.ForegroundColorSpan;
  * E-mail: DenBond7@gmail.com
  */
 public class CustomNotificationManager {
-    public static final int NOTIFICATIONS_GROUP_MESSAGES = -1;
+  public static final int NOTIFICATIONS_GROUP_MESSAGES = -1;
 
-    /**
-     * Prepare formatted line for {@link InboxStyle}
-     *
-     * @param context  Interface to global information about an application environment.
-     * @param username A sender name.
-     * @param subject  An incoming message subject.
-     * @return A formatted line.
-     */
-    protected Spannable formatInboxStyleLine(Context context, String username, String subject) {
-        Spannable spannable = new SpannableString(username + "   " + subject);
-        int color = ContextCompat.getColor(context, android.R.color.black);
-        spannable.setSpan(new ForegroundColorSpan(color), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return spannable;
-    }
+  /**
+   * Prepare formatted line for {@link InboxStyle}
+   *
+   * @param context  Interface to global information about an application environment.
+   * @param username A sender name.
+   * @param subject  An incoming message subject.
+   * @return A formatted line.
+   */
+  protected Spannable formatInboxStyleLine(Context context, String username, String subject) {
+    Spannable spannable = new SpannableString(username + "   " + subject);
+    int color = ContextCompat.getColor(context, android.R.color.black);
+    spannable.setSpan(new ForegroundColorSpan(color), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    return spannable;
+  }
 
-    /**
-     * Format an input text via apply {@link ForegroundColorSpan} to it.
-     *
-     * @param text  An input text.
-     * @param color A color which will be used for change the text style.
-     * @return A formatted text.
-     */
-    protected Spannable formatText(String text, int color) {
-        Spannable spannable = new SpannableString(text);
-        spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return spannable;
-    }
+  /**
+   * Format an input text via apply {@link ForegroundColorSpan} to it.
+   *
+   * @param text  An input text.
+   * @param color A color which will be used for change the text style.
+   * @return A formatted text.
+   */
+  protected Spannable formatText(String text, int color) {
+    Spannable spannable = new SpannableString(text);
+    spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    return spannable;
+  }
 }

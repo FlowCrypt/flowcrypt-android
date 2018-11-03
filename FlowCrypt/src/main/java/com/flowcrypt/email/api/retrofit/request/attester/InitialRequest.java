@@ -20,13 +20,13 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialRequestModel;
  * }</code>
  *
  * @author Denis Bondarenko
- *         Date: 12.07.2017
- *         Time: 16:47
- *         E-mail: DenBond7@gmail.com
+ * Date: 12.07.2017
+ * Time: 16:47
+ * E-mail: DenBond7@gmail.com
  */
 
 public class InitialRequest extends BaseRequest<InitialRequestModel> {
-    public InitialRequest(InitialRequestModel initialRequestModel) {
-        super(ApiName.POST_INITIAL_REQUEST, initialRequestModel);
-    }
+  public InitialRequest(InitialRequestModel initialRequestModel) {
+    super(ApiName.POST_INITIAL_REQUEST, initialRequestModel);
+  }
 }

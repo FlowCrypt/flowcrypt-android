@@ -20,56 +20,56 @@ import javax.mail.UIDFolder;
  * This task does job to load messages.
  *
  * @author DenBond7
- *         Date: 20.06.2017
- *         Time: 15:06
- *         E-mail: DenBond7@gmail.com
+ * Date: 20.06.2017
+ * Time: 15:06
+ * E-mail: DenBond7@gmail.com
  */
 
 public class LoadMessagesSyncTask extends BaseSyncTask {
-    private com.flowcrypt.email.api.email.Folder folder;
-    private int start;
-    private int end;
+  private com.flowcrypt.email.api.email.Folder folder;
+  private int start;
+  private int end;
 
-    public LoadMessagesSyncTask(String ownerKey, int requestCode,
-                                com.flowcrypt.email.api.email.Folder folder, int start, int end) {
-        super(ownerKey, requestCode);
-        this.folder = folder;
-        this.start = start;
-        this.end = end;
-    }
+  public LoadMessagesSyncTask(String ownerKey, int requestCode,
+                              com.flowcrypt.email.api.email.Folder folder, int start, int end) {
+    super(ownerKey, requestCode);
+    this.folder = folder;
+    this.start = start;
+    this.end = end;
+  }
 
-    @Override
-    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-            Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
-        imapFolder.open(Folder.READ_ONLY);
+  @Override
+  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+      Exception {
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+    imapFolder.open(Folder.READ_ONLY);
 
-        int messagesCount = imapFolder.getMessageCount();
+    int messagesCount = imapFolder.getMessageCount();
 
-        if (syncListener != null) {
-            if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-                syncListener.onMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
-            } else {
-                Message[] messages;
+    if (syncListener != null) {
+      if (this.end < 1 || this.end > messagesCount || this.start < 1) {
+        syncListener.onMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
+      } else {
+        Message[] messages;
 
-                if (this.end == this.start) {
-                    messages = new Message[]{imapFolder.getMessage(end)};
-                } else {
-                    messages = imapFolder.getMessages(start, end);
-                }
-
-                FetchProfile fetchProfile = new FetchProfile();
-                fetchProfile.add(FetchProfile.Item.ENVELOPE);
-                fetchProfile.add(FetchProfile.Item.FLAGS);
-                fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
-                fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-
-                imapFolder.fetch(messages, fetchProfile);
-
-                syncListener.onMessagesReceived(accountDao, folder, imapFolder, messages, ownerKey, requestCode);
-            }
+        if (this.end == this.start) {
+          messages = new Message[]{imapFolder.getMessage(end)};
+        } else {
+          messages = imapFolder.getMessages(start, end);
         }
 
-        imapFolder.close(false);
+        FetchProfile fetchProfile = new FetchProfile();
+        fetchProfile.add(FetchProfile.Item.ENVELOPE);
+        fetchProfile.add(FetchProfile.Item.FLAGS);
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+
+        imapFolder.fetch(messages, fetchProfile);
+
+        syncListener.onMessagesReceived(accountDao, folder, imapFolder, messages, ownerKey, requestCode);
+      }
     }
+
+    imapFolder.close(false);
+  }
 }

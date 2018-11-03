@@ -15,65 +15,65 @@ import com.flowcrypt.email.js.PgpKeyInfo;
  * private key passphrase.
  *
  * @author DenBond7
- *         Date: 16.05.2017
- *         Time: 13:17
- *         E-mail: DenBond7@gmail.com
+ * Date: 16.05.2017
+ * Time: 13:17
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PrivateKeyInfo implements Parcelable {
-    public static final Parcelable.Creator<PrivateKeyInfo> CREATOR = new Parcelable
-            .Creator<PrivateKeyInfo>() {
-        @Override
-        public PrivateKeyInfo createFromParcel(Parcel source) {
-            return new PrivateKeyInfo(source);
-        }
-
-        @Override
-        public PrivateKeyInfo[] newArray(int size) {
-            return new PrivateKeyInfo[size];
-        }
-    };
-
-    private PgpKeyInfo pgpKeyInfo;
-    private String passphrase;
-
-    public PrivateKeyInfo() {
-    }
-
-    public PrivateKeyInfo(PgpKeyInfo pgpKeyInfo, String passphrase) {
-        this.pgpKeyInfo = pgpKeyInfo;
-        this.passphrase = passphrase;
-    }
-
-    protected PrivateKeyInfo(Parcel in) {
-        this.pgpKeyInfo = in.readParcelable(PgpKeyInfo.class.getClassLoader());
-        this.passphrase = in.readString();
+  public static final Parcelable.Creator<PrivateKeyInfo> CREATOR = new Parcelable
+      .Creator<PrivateKeyInfo>() {
+    @Override
+    public PrivateKeyInfo createFromParcel(Parcel source) {
+      return new PrivateKeyInfo(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public PrivateKeyInfo[] newArray(int size) {
+      return new PrivateKeyInfo[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(this.pgpKeyInfo, flags);
-        dest.writeString(this.passphrase);
-    }
+  private PgpKeyInfo pgpKeyInfo;
+  private String passphrase;
 
-    public PgpKeyInfo getPgpKeyInfo() {
-        return pgpKeyInfo;
-    }
+  public PrivateKeyInfo() {
+  }
 
-    public void setPgpKeyInfo(PgpKeyInfo pgpKeyInfo) {
-        this.pgpKeyInfo = pgpKeyInfo;
-    }
+  public PrivateKeyInfo(PgpKeyInfo pgpKeyInfo, String passphrase) {
+    this.pgpKeyInfo = pgpKeyInfo;
+    this.passphrase = passphrase;
+  }
 
-    public String getPassphrase() {
-        return passphrase;
-    }
+  protected PrivateKeyInfo(Parcel in) {
+    this.pgpKeyInfo = in.readParcelable(PgpKeyInfo.class.getClassLoader());
+    this.passphrase = in.readString();
+  }
 
-    public void setPassphrase(String passphrase) {
-        this.passphrase = passphrase;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeParcelable(this.pgpKeyInfo, flags);
+    dest.writeString(this.passphrase);
+  }
+
+  public PgpKeyInfo getPgpKeyInfo() {
+    return pgpKeyInfo;
+  }
+
+  public void setPgpKeyInfo(PgpKeyInfo pgpKeyInfo) {
+    this.pgpKeyInfo = pgpKeyInfo;
+  }
+
+  public String getPassphrase() {
+    return passphrase;
+  }
+
+  public void setPassphrase(String passphrase) {
+    this.passphrase = passphrase;
+  }
 }

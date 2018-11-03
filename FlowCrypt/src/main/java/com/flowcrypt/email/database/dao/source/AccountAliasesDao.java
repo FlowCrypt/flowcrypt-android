@@ -12,115 +12,115 @@ import android.os.Parcelable;
  * This object describes information about an account alias.
  *
  * @author Denis Bondarenko
- *         Date: 26.10.2017
- *         Time: 16:04
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.10.2017
+ * Time: 16:04
+ * E-mail: DenBond7@gmail.com
  */
 
 public class AccountAliasesDao implements Parcelable {
-    public static final Creator<AccountAliasesDao> CREATOR = new Creator<AccountAliasesDao>() {
-        @Override
-        public AccountAliasesDao createFromParcel(Parcel source) {
-            return new AccountAliasesDao(source);
-        }
-
-        @Override
-        public AccountAliasesDao[] newArray(int size) {
-            return new AccountAliasesDao[size];
-        }
-    };
-
-    private String email;
-    private String accountType;
-    private String sendAsEmail;
-    private String displayName;
-    private boolean isDefault;
-    private String verificationStatus;
-
-    public AccountAliasesDao() {
-    }
-
-    protected AccountAliasesDao(Parcel in) {
-        this.email = in.readString();
-        this.accountType = in.readString();
-        this.sendAsEmail = in.readString();
-        this.displayName = in.readString();
-        this.isDefault = in.readByte() != 0;
-        this.verificationStatus = in.readString();
+  public static final Creator<AccountAliasesDao> CREATOR = new Creator<AccountAliasesDao>() {
+    @Override
+    public AccountAliasesDao createFromParcel(Parcel source) {
+      return new AccountAliasesDao(source);
     }
 
     @Override
-    public String toString() {
-        return "AccountAliasesDao{" +
-                "email='" + email + '\'' +
-                ", accountType='" + accountType + '\'' +
-                ", sendAsEmail='" + sendAsEmail + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", isDefault=" + isDefault +
-                ", verificationStatus='" + verificationStatus + '\'' +
-                '}';
+    public AccountAliasesDao[] newArray(int size) {
+      return new AccountAliasesDao[size];
     }
+  };
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  private String email;
+  private String accountType;
+  private String sendAsEmail;
+  private String displayName;
+  private boolean isDefault;
+  private String verificationStatus;
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.email);
-        dest.writeString(this.accountType);
-        dest.writeString(this.sendAsEmail);
-        dest.writeString(this.displayName);
-        dest.writeByte(this.isDefault ? (byte) 1 : (byte) 0);
-        dest.writeString(this.verificationStatus);
-    }
+  public AccountAliasesDao() {
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  protected AccountAliasesDao(Parcel in) {
+    this.email = in.readString();
+    this.accountType = in.readString();
+    this.sendAsEmail = in.readString();
+    this.displayName = in.readString();
+    this.isDefault = in.readByte() != 0;
+    this.verificationStatus = in.readString();
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  @Override
+  public String toString() {
+    return "AccountAliasesDao{" +
+        "email='" + email + '\'' +
+        ", accountType='" + accountType + '\'' +
+        ", sendAsEmail='" + sendAsEmail + '\'' +
+        ", displayName='" + displayName + '\'' +
+        ", isDefault=" + isDefault +
+        ", verificationStatus='" + verificationStatus + '\'' +
+        '}';
+  }
 
-    public String getAccountType() {
-        return accountType;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.email);
+    dest.writeString(this.accountType);
+    dest.writeString(this.sendAsEmail);
+    dest.writeString(this.displayName);
+    dest.writeByte(this.isDefault ? (byte) 1 : (byte) 0);
+    dest.writeString(this.verificationStatus);
+  }
 
-    public String getSendAsEmail() {
-        return sendAsEmail;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public void setSendAsEmail(String sendAsEmail) {
-        this.sendAsEmail = sendAsEmail;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public String getDisplayName() {
-        return displayName;
-    }
+  public String getAccountType() {
+    return accountType;
+  }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+  public void setAccountType(String accountType) {
+    this.accountType = accountType;
+  }
 
-    public boolean isDefault() {
-        return isDefault;
-    }
+  public String getSendAsEmail() {
+    return sendAsEmail;
+  }
 
-    public void setDefault(boolean aDefault) {
-        isDefault = aDefault;
-    }
+  public void setSendAsEmail(String sendAsEmail) {
+    this.sendAsEmail = sendAsEmail;
+  }
 
-    public String getVerificationStatus() {
-        return verificationStatus;
-    }
+  public String getDisplayName() {
+    return displayName;
+  }
 
-    public void setVerificationStatus(String verificationStatus) {
-        this.verificationStatus = verificationStatus;
-    }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public boolean isDefault() {
+    return isDefault;
+  }
+
+  public void setDefault(boolean aDefault) {
+    isDefault = aDefault;
+  }
+
+  public String getVerificationStatus() {
+    return verificationStatus;
+  }
+
+  public void setVerificationStatus(String verificationStatus) {
+    this.verificationStatus = verificationStatus;
+  }
 }

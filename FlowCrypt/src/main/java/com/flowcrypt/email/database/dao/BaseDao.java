@@ -14,11 +14,11 @@ import com.flowcrypt.email.database.dao.source.BaseDaoSource;
  * The base DAO class.
  *
  * @author DenBond7
- *         Date: 13.05.2017
- *         Time: 12:48
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.05.2017
+ * Time: 12:48
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseDao implements Parcelable {
-    public abstract BaseDaoSource getDaoSource();
+  public abstract BaseDaoSource getDaoSource();
 }

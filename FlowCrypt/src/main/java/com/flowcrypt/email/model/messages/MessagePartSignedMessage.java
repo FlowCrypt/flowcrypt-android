@@ -11,18 +11,18 @@ import android.os.Parcel;
  * This class describes a signed message.
  *
  * @author Denis Bondarenko
- *         Date: 12.03.2018
- *         Time: 12:26
- *         E-mail: DenBond7@gmail.com
+ * Date: 12.03.2018
+ * Time: 12:26
+ * E-mail: DenBond7@gmail.com
  */
 
 public class MessagePartSignedMessage extends MessagePart {
-    public MessagePartSignedMessage(String value) {
-        super(MessagePartType.PGP_SIGNED_MESSAGE, value);
-    }
+  public MessagePartSignedMessage(String value) {
+    super(MessagePartType.PGP_SIGNED_MESSAGE, value);
+  }
 
-    public MessagePartSignedMessage(Parcel in) {
-        super(in);
-        this.messagePartType = MessagePartType.PGP_SIGNED_MESSAGE;
-    }
+  public MessagePartSignedMessage(Parcel in) {
+    super(in);
+    this.messagePartType = MessagePartType.PGP_SIGNED_MESSAGE;
+  }
 }

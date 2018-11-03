@@ -16,97 +16,97 @@ import com.google.gson.annotations.SerializedName;
  * "https://attester.flowcrypt.com/lookup/email"
  *
  * @author DenBond7
- *         Date: 24.04.2017
- *         Time: 13:20
- *         E-mail: DenBond7@gmail.com
+ * Date: 24.04.2017
+ * Time: 13:20
+ * E-mail: DenBond7@gmail.com
  */
 
 public class LookUpEmailResponse extends BaseApiResponse {
 
-    public static final Creator<LookUpEmailResponse> CREATOR = new Creator<LookUpEmailResponse>() {
-        @Override
-        public LookUpEmailResponse createFromParcel(Parcel source) {
-            return new LookUpEmailResponse(source);
-        }
-
-        @Override
-        public LookUpEmailResponse[] newArray(int size) {
-            return new LookUpEmailResponse[size];
-        }
-    };
-
-    @Expose
-    private boolean attested;
-
-    @SerializedName("has_cryptup")
-    @Expose
-    private boolean hasCryptup;
-
-    @Expose
-    private String pubkey;
-
-    @Expose
-    private String email;
-
-    @SerializedName("longid")
-    @Expose
-    private String longId;
-
-    public LookUpEmailResponse() {
-    }
-
-    protected LookUpEmailResponse(Parcel in) {
-        super(in);
-        this.attested = in.readByte() != 0;
-        this.hasCryptup = in.readByte() != 0;
-        this.pubkey = in.readString();
-        this.email = in.readString();
-        this.longId = in.readString();
+  public static final Creator<LookUpEmailResponse> CREATOR = new Creator<LookUpEmailResponse>() {
+    @Override
+    public LookUpEmailResponse createFromParcel(Parcel source) {
+      return new LookUpEmailResponse(source);
     }
 
     @Override
-    public String toString() {
-        return "LookUpEmailResponse{" +
-                "attested=" + attested +
-                ", hasCryptup=" + hasCryptup +
-                ", pubkey='" + pubkey + '\'' +
-                ", email='" + email + '\'' +
-                ", longId='" + longId + '\'' +
-                "} " + super.toString();
+    public LookUpEmailResponse[] newArray(int size) {
+      return new LookUpEmailResponse[size];
     }
+  };
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Expose
+  private boolean attested;
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
-        dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
-        dest.writeString(this.pubkey);
-        dest.writeString(this.email);
-        dest.writeString(this.longId);
-    }
+  @SerializedName("has_cryptup")
+  @Expose
+  private boolean hasCryptup;
 
-    public boolean isAttested() {
-        return attested;
-    }
+  @Expose
+  private String pubkey;
 
-    public boolean isHasCryptup() {
-        return hasCryptup;
-    }
+  @Expose
+  private String email;
 
-    public String getPubkey() {
-        return pubkey;
-    }
+  @SerializedName("longid")
+  @Expose
+  private String longId;
 
-    public String getEmail() {
-        return email;
-    }
+  public LookUpEmailResponse() {
+  }
 
-    public String getLongId() {
-        return longId;
-    }
+  protected LookUpEmailResponse(Parcel in) {
+    super(in);
+    this.attested = in.readByte() != 0;
+    this.hasCryptup = in.readByte() != 0;
+    this.pubkey = in.readString();
+    this.email = in.readString();
+    this.longId = in.readString();
+  }
+
+  @Override
+  public String toString() {
+    return "LookUpEmailResponse{" +
+        "attested=" + attested +
+        ", hasCryptup=" + hasCryptup +
+        ", pubkey='" + pubkey + '\'' +
+        ", email='" + email + '\'' +
+        ", longId='" + longId + '\'' +
+        "} " + super.toString();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    super.writeToParcel(dest, flags);
+    dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
+    dest.writeString(this.pubkey);
+    dest.writeString(this.email);
+    dest.writeString(this.longId);
+  }
+
+  public boolean isAttested() {
+    return attested;
+  }
+
+  public boolean isHasCryptup() {
+    return hasCryptup;
+  }
+
+  public String getPubkey() {
+    return pubkey;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public String getLongId() {
+    return longId;
+  }
 }

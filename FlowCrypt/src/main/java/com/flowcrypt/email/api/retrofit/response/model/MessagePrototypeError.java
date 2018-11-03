@@ -16,67 +16,67 @@ import com.google.gson.annotations.SerializedName;
  * "https://flowcrypt.com/api/message/prototype"
  *
  * @author DenBond7
- *         Date: 24.04.2017
- *         Time: 13:58
- *         E-mail: DenBond7@gmail.com
+ * Date: 24.04.2017
+ * Time: 13:58
+ * E-mail: DenBond7@gmail.com
  */
 
 public class MessagePrototypeError extends BaseResponseModel {
-    public static final Creator<MessagePrototypeError> CREATOR = new
-            Creator<MessagePrototypeError>() {
-                @Override
-                public MessagePrototypeError createFromParcel(Parcel source) {
-                    return new MessagePrototypeError(source);
-                }
+  public static final Creator<MessagePrototypeError> CREATOR = new
+      Creator<MessagePrototypeError>() {
+        @Override
+        public MessagePrototypeError createFromParcel(Parcel source) {
+          return new MessagePrototypeError(source);
+        }
 
-                @Override
-                public MessagePrototypeError[] newArray(int size) {
-                    return new MessagePrototypeError[size];
-                }
-            };
+        @Override
+        public MessagePrototypeError[] newArray(int size) {
+          return new MessagePrototypeError[size];
+        }
+      };
 
-    @SerializedName("internal_msg")
-    @Expose
-    private String internalMsg;
+  @SerializedName("internal_msg")
+  @Expose
+  private String internalMsg;
 
-    @SerializedName("code")
-    @Expose
-    private int code;
+  @SerializedName("code")
+  @Expose
+  private int code;
 
-    @SerializedName("public_msg")
-    @Expose
-    private String publicMsg;
+  @SerializedName("public_msg")
+  @Expose
+  private String publicMsg;
 
-    public MessagePrototypeError() {
-    }
+  public MessagePrototypeError() {
+  }
 
-    protected MessagePrototypeError(Parcel in) {
-        this.internalMsg = in.readString();
-        this.code = in.readInt();
-        this.publicMsg = in.readString();
-    }
+  protected MessagePrototypeError(Parcel in) {
+    this.internalMsg = in.readString();
+    this.code = in.readInt();
+    this.publicMsg = in.readString();
+  }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.internalMsg);
-        dest.writeInt(this.code);
-        dest.writeString(this.publicMsg);
-    }
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.internalMsg);
+    dest.writeInt(this.code);
+    dest.writeString(this.publicMsg);
+  }
 
-    public String getInternalMsg() {
-        return internalMsg;
-    }
+  public String getInternalMsg() {
+    return internalMsg;
+  }
 
-    public int getCode() {
-        return code;
-    }
+  public int getCode() {
+    return code;
+  }
 
-    public String getPublicMsg() {
-        return publicMsg;
-    }
+  public String getPublicMsg() {
+    return publicMsg;
+  }
 }

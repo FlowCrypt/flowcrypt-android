@@ -31,81 +31,81 @@ import javax.mail.Store;
  * larger than 200kb, we'll get only the first part of it.
  *
  * @author DenBond7
- *         Date: 26.06.2017
- *         Time: 17:41
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.06.2017
+ * Time: 17:41
+ * E-mail: DenBond7@gmail.com
  */
 
 public class LoadMessageDetailsSyncTask extends BaseSyncTask {
-    private long uid;
-    private com.flowcrypt.email.api.email.Folder localFolder;
+  private long uid;
+  private com.flowcrypt.email.api.email.Folder localFolder;
 
-    /**
-     * The base constructor.
-     *
-     * @param ownerKey    The name of the reply to {@link Messenger}.
-     * @param requestCode The unique request code for the reply to {@link Messenger}.
-     * @param folder      The local folder implementation.
-     * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message).
-     */
-    public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
-                                      long uid) {
-        super(ownerKey, requestCode);
-        this.localFolder = folder;
-        this.uid = uid;
-    }
+  /**
+   * The base constructor.
+   *
+   * @param ownerKey    The name of the reply to {@link Messenger}.
+   * @param requestCode The unique request code for the reply to {@link Messenger}.
+   * @param folder      The local folder implementation.
+   * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message).
+   */
+  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
+                                    long uid) {
+    super(ownerKey, requestCode);
+    this.localFolder = folder;
+    this.uid = uid;
+  }
 
-    @Override
-    public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-            Exception {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
-        imapFolder.open(Folder.READ_WRITE);
+  @Override
+  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+      Exception {
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+    imapFolder.open(Folder.READ_WRITE);
 
-        if (syncListener != null) {
-            String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-                public Object doCommand(IMAPProtocol imapProtocol)
-                        throws ProtocolException {
-                    String rawMessage = null;
+    if (syncListener != null) {
+      String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+        public Object doCommand(IMAPProtocol imapProtocol)
+            throws ProtocolException {
+          String rawMessage = null;
 
-                    Argument args = new Argument();
-                    Argument list = new Argument();
-                    list.writeString("RFC822.SIZE");
-                    list.writeString("BODY[]<0.204800>");
-                    args.writeArgument(list);
+          Argument args = new Argument();
+          Argument list = new Argument();
+          list.writeString("RFC822.SIZE");
+          list.writeString("BODY[]<0.204800>");
+          args.writeArgument(list);
 
 
-                    Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
-                    Response serverStatusResponse = responses[responses.length - 1];
+          Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
+          Response serverStatusResponse = responses[responses.length - 1];
 
-                    if (serverStatusResponse.isOK()) {
-                        for (Response response : responses) {
-                            if (!(response instanceof FetchResponse))
-                                continue;
+          if (serverStatusResponse.isOK()) {
+            for (Response response : responses) {
+              if (!(response instanceof FetchResponse))
+                continue;
 
-                            FetchResponse fetchResponse = (FetchResponse) response;
-                            BODY body = fetchResponse.getItem(BODY.class);
-                            if (body != null && body.getByteArrayInputStream() != null) {
-                                rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
-                            }
-                        }
-                    }
-
-                    imapProtocol.notifyResponseHandlers(responses);
-                    imapProtocol.handleResult(serverStatusResponse);
-
-                    return rawMessage;
-                }
-            });
-
-            Message message = imapFolder.getMessageByUID(uid);
-            if (message != null) {
-                message.setFlag(Flags.Flag.SEEN, true);
+              FetchResponse fetchResponse = (FetchResponse) response;
+              BODY body = fetchResponse.getItem(BODY.class);
+              if (body != null && body.getByteArrayInputStream() != null) {
+                rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+              }
             }
+          }
 
-            syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, message, rawMessage,
-                    ownerKey, requestCode);
+          imapProtocol.notifyResponseHandlers(responses);
+          imapProtocol.handleResult(serverStatusResponse);
+
+          return rawMessage;
         }
+      });
 
-        imapFolder.close(false);
+      Message message = imapFolder.getMessageByUID(uid);
+      if (message != null) {
+        message.setFlag(Flags.Flag.SEEN, true);
+      }
+
+      syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, message, rawMessage,
+          ownerKey, requestCode);
     }
+
+    imapFolder.close(false);
+  }
 }

@@ -36,129 +36,129 @@ import java.util.ArrayList;
  * This dialog can be used for collecting information about user public keys.
  *
  * @author Denis Bondarenko
- *         Date: 24.11.2017
- *         Time: 13:13
- *         E-mail: DenBond7@gmail.com
+ * Date: 24.11.2017
+ * Time: 13:13
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment implements View.OnClickListener {
-    public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
-            ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
+  public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
+      ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
 
-    private ArrayList<AttachmentInfo> attachmentInfoList;
-    private ListView listViewKeys;
+  private ArrayList<AttachmentInfo> attachmentInfoList;
+  private ListView listViewKeys;
 
-    public PrepareSendUserPublicKeyDialogFragment() {
+  public PrepareSendUserPublicKeyDialogFragment() {
+  }
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.attachmentInfoList = new ArrayList<>();
+    prepareAttachments();
+  }
+
+  @NonNull
+  @Override
+  public Dialog onCreateDialog(Bundle savedInstanceState) {
+    View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
+        null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
+
+    TextView textViewMessage = view.findViewById(R.id.textViewMessage);
+    listViewKeys = view.findViewById(R.id.listViewKeys);
+    View buttonOk = view.findViewById(R.id.buttonOk);
+    buttonOk.setOnClickListener(this);
+
+    if (attachmentInfoList.size() > 1) {
+      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+      textViewMessage.append("\n\n");
+      textViewMessage.append(getString(R.string.select_key));
+
+      String[] strings = new String[attachmentInfoList.size()];
+      for (int i = 0; i < attachmentInfoList.size(); i++) {
+        AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
+        strings[i] = attachmentInfo.getEmail();
+      }
+
+      ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
+          .layout.simple_list_item_single_choice, strings);
+
+      listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+      listViewKeys.setAdapter(stringArrayAdapter);
+    } else {
+      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+      listViewKeys.setVisibility(View.GONE);
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.attachmentInfoList = new ArrayList<>();
-        prepareAttachments();
-    }
+    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+    builder.setView(view);
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
-                null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
+    return builder.create();
+  }
 
-        TextView textViewMessage = view.findViewById(R.id.textViewMessage);
-        listViewKeys = view.findViewById(R.id.listViewKeys);
-        View buttonOk = view.findViewById(R.id.buttonOk);
-        buttonOk.setOnClickListener(this);
+  @Override
+  public void onClick(View v) {
+    switch (v.getId()) {
+      case R.id.buttonOk:
+        if (attachmentInfoList != null) {
+          if (attachmentInfoList.size() == 1) {
+            sendResult(Activity.RESULT_OK, attachmentInfoList);
+            dismiss();
+          } else {
+            if (attachmentInfoList.size() != 0) {
+              ArrayList<AttachmentInfo> selectedAttachmentInfoArrayList = new ArrayList<>();
+              SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
+              if (checkedItemPositions != null) {
+                for (int i = 0; i < checkedItemPositions.size(); i++) {
+                  int key = checkedItemPositions.keyAt(i);
+                  if (checkedItemPositions.get(key)) {
+                    selectedAttachmentInfoArrayList.add(attachmentInfoList.get(key));
+                  }
+                }
+              }
 
-        if (attachmentInfoList.size() > 1) {
-            textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-            textViewMessage.append("\n\n");
-            textViewMessage.append(getString(R.string.select_key));
-
-            String[] strings = new String[attachmentInfoList.size()];
-            for (int i = 0; i < attachmentInfoList.size(); i++) {
-                AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
-                strings[i] = attachmentInfo.getEmail();
+              if (selectedAttachmentInfoArrayList.isEmpty()) {
+                showToast(getString(R.string.please_select_key));
+              } else {
+                sendResult(Activity.RESULT_OK, selectedAttachmentInfoArrayList);
+                dismiss();
+              }
+            } else {
+              dismiss();
             }
-
-            ArrayAdapter<String> stringArrayAdapter = new ArrayAdapter<>(getContext(), android.R
-                    .layout.simple_list_item_single_choice, strings);
-
-            listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-            listViewKeys.setAdapter(stringArrayAdapter);
+          }
         } else {
-            textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-            listViewKeys.setVisibility(View.GONE);
+          dismiss();
         }
+        break;
+    }
+  }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setView(view);
+  public void prepareAttachments() {
+    Js js = JsForUiManager.getInstance(getContext()).getJs();
+    PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
+    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+      PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+      if (pgpKey != null) {
+        PgpKey publicKey = pgpKey.toPublic();
+        if (publicKey != null) {
+          PgpContact primaryUserId = pgpKey.getPrimaryUserId();
+          if (primaryUserId != null) {
+            attachmentInfoList.add(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
+          }
+        }
+      }
+    }
+  }
 
-        return builder.create();
+  private void sendResult(int result, ArrayList<AttachmentInfo> attachmentInfoList) {
+    if (getTargetFragment() == null) {
+      return;
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.buttonOk:
-                if (attachmentInfoList != null) {
-                    if (attachmentInfoList.size() == 1) {
-                        sendResult(Activity.RESULT_OK, attachmentInfoList);
-                        dismiss();
-                    } else {
-                        if (attachmentInfoList.size() != 0) {
-                            ArrayList<AttachmentInfo> selectedAttachmentInfoArrayList = new ArrayList<>();
-                            SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
-                            if (checkedItemPositions != null) {
-                                for (int i = 0; i < checkedItemPositions.size(); i++) {
-                                    int key = checkedItemPositions.keyAt(i);
-                                    if (checkedItemPositions.get(key)) {
-                                        selectedAttachmentInfoArrayList.add(attachmentInfoList.get(key));
-                                    }
-                                }
-                            }
+    Intent intent = new Intent();
+    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, attachmentInfoList);
 
-                            if (selectedAttachmentInfoArrayList.isEmpty()) {
-                                showToast(getString(R.string.please_select_key));
-                            } else {
-                                sendResult(Activity.RESULT_OK, selectedAttachmentInfoArrayList);
-                                dismiss();
-                            }
-                        } else {
-                            dismiss();
-                        }
-                    }
-                } else {
-                    dismiss();
-                }
-                break;
-        }
-    }
-
-    public void prepareAttachments() {
-        Js js = JsForUiManager.getInstance(getContext()).getJs();
-        PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
-        for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-            PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-            if (pgpKey != null) {
-                PgpKey publicKey = pgpKey.toPublic();
-                if (publicKey != null) {
-                    PgpContact primaryUserId = pgpKey.getPrimaryUserId();
-                    if (primaryUserId != null) {
-                        attachmentInfoList.add(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
-                    }
-                }
-            }
-        }
-    }
-
-    private void sendResult(int result, ArrayList<AttachmentInfo> attachmentInfoList) {
-        if (getTargetFragment() == null) {
-            return;
-        }
-
-        Intent intent = new Intent();
-        intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, attachmentInfoList);
-
-        getTargetFragment().onActivityResult(getTargetRequestCode(), result, intent);
-    }
+    getTargetFragment().onActivityResult(getTargetRequestCode(), result, intent);
+  }
 }

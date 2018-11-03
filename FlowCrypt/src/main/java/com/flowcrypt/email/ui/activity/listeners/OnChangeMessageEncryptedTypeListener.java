@@ -11,20 +11,20 @@ import com.flowcrypt.email.model.MessageEncryptionType;
  * This interface can be used when need to notify if {@link MessageEncryptionType} was changed.
  *
  * @author Denis Bondarenko
- *         Date: 28.07.2017
- *         Time: 15:39
- *         E-mail: DenBond7@gmail.com
+ * Date: 28.07.2017
+ * Time: 15:39
+ * E-mail: DenBond7@gmail.com
  */
 
 public interface OnChangeMessageEncryptedTypeListener {
 
-    /**
-     * Handle a switch of the message encryption type.
-     *
-     * @param messageEncryptionType The new message encryption type.
-     */
-    void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
+  /**
+   * Handle a switch of the message encryption type.
+   *
+   * @param messageEncryptionType The new message encryption type.
+   */
+  void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
 
-    MessageEncryptionType getMessageEncryptionType();
+  MessageEncryptionType getMessageEncryptionType();
 }
 

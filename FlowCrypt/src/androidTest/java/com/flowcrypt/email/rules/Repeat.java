@@ -14,13 +14,13 @@ import static java.lang.annotation.ElementType.METHOD;
 
 /**
  * @author Denis Bondarenko
- *         Date: 24.02.2018
- *         Time: 17:29
- *         E-mail: DenBond7@gmail.com
+ * Date: 24.02.2018
+ * Time: 17:29
+ * E-mail: DenBond7@gmail.com
  */
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({METHOD, ANNOTATION_TYPE})
 public @interface Repeat {
-    int value() default 1;
+  int value() default 1;
 }

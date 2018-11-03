@@ -24,44 +24,44 @@ import com.hootsuite.nachos.NachoTextView;
  * {@link NachoTextView}.
  *
  * @author DenBond7
- *         Date: 17.05.2017
- *         Time: 17:44
- *         E-mail: DenBond7@gmail.com
+ * Date: 17.05.2017
+ * Time: 17:44
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PgpContactAdapter extends CursorAdapter {
 
-    public PgpContactAdapter(Context context, Cursor c, boolean autoRequery) {
-        super(context, c, autoRequery);
+  public PgpContactAdapter(Context context, Cursor c, boolean autoRequery) {
+    super(context, c, autoRequery);
+  }
+
+  @Override
+  public View newView(Context context, Cursor cursor, ViewGroup parent) {
+    return LayoutInflater.from(context).inflate(R.layout.pgp_contact_item, parent, false);
+  }
+
+  @Override
+  public CharSequence convertToString(Cursor cursor) {
+    return cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
+  }
+
+  @Override
+  public void bindView(View view, Context context, Cursor cursor) {
+    TextView textViewName = view.findViewById(R.id.textViewName);
+    TextView textViewEmail = view.findViewById(R.id.textViewEmail);
+    TextView textViewOnlyEmail = view.findViewById(R.id.textViewOnlyEmail);
+
+    String name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME));
+    String email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
+
+    if (TextUtils.isEmpty(name)) {
+      textViewEmail.setText(null);
+      textViewName.setText(null);
+      textViewOnlyEmail.setText(email);
+    } else {
+      textViewEmail.setText(email);
+      textViewName.setText(name);
+      textViewOnlyEmail.setText(null);
     }
-
-    @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return LayoutInflater.from(context).inflate(R.layout.pgp_contact_item, parent, false);
-    }
-
-    @Override
-    public CharSequence convertToString(Cursor cursor) {
-        return cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
-    }
-
-    @Override
-    public void bindView(View view, Context context, Cursor cursor) {
-        TextView textViewName = view.findViewById(R.id.textViewName);
-        TextView textViewEmail = view.findViewById(R.id.textViewEmail);
-        TextView textViewOnlyEmail = view.findViewById(R.id.textViewOnlyEmail);
-
-        String name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME));
-        String email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
-
-        if (TextUtils.isEmpty(name)) {
-            textViewEmail.setText(null);
-            textViewName.setText(null);
-            textViewOnlyEmail.setText(email);
-        } else {
-            textViewEmail.setText(email);
-            textViewName.setText(name);
-            textViewOnlyEmail.setText(null);
-        }
-    }
+  }
 }

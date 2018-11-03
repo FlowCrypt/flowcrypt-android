@@ -16,36 +16,36 @@ import com.flowcrypt.email.model.results.LoaderResult;
  * The base dialog fragment.
  *
  * @author Denis Bondarenko
- *         Date: 01.08.2017
- *         Time: 10:04
- *         E-mail: DenBond7@gmail.com
+ * Date: 01.08.2017
+ * Time: 10:04
+ * E-mail: DenBond7@gmail.com
  */
 
 public class BaseDialogFragment extends DialogFragment {
 
-    public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
-        if (loaderResult != null) {
-            if (loaderResult.getResult() != null) {
-                handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
-            } else if (loaderResult.getException() != null) {
-                handleFailureLoaderResult(loader.getId(), loaderResult.getException());
-            } else {
-                showToast(getString(R.string.unknown_error));
-            }
-        } else {
-            showToast(getString(R.string.unknown_error));
-        }
+  public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
+    if (loaderResult != null) {
+      if (loaderResult.getResult() != null) {
+        handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
+      } else if (loaderResult.getException() != null) {
+        handleFailureLoaderResult(loader.getId(), loaderResult.getException());
+      } else {
+        showToast(getString(R.string.unknown_error));
+      }
+    } else {
+      showToast(getString(R.string.unknown_error));
     }
+  }
 
-    public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void handleFailureLoaderResult(int loaderId, Exception e) {
 
-    }
+  }
 
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void handleSuccessLoaderResult(int loaderId, Object result) {
 
-    }
+  }
 
-    public void showToast(String string) {
-        Toast.makeText(getContext(), string, Toast.LENGTH_SHORT).show();
-    }
+  public void showToast(String string) {
+    Toast.makeText(getContext(), string, Toast.LENGTH_SHORT).show();
+  }
 }

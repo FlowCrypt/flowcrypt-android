@@ -21,37 +21,37 @@ import java.util.Locale;
  * This fragment shows a general information about the current build.
  *
  * @author Denis Bondarenko
- *         Date: 10.07.2017
- *         Time: 12:11
- *         E-mail: DenBond7@gmail.com
+ * Date: 10.07.2017
+ * Time: 12:11
+ * E-mail: DenBond7@gmail.com
  */
 public class BuildConfigInfoPreferencesFragment extends DialogPreference {
-    public BuildConfigInfoPreferencesFragment(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        Class clazz = BuildConfig.class;
-        Field[] fields = clazz.getDeclaredFields();
+  public BuildConfigInfoPreferencesFragment(Context context, AttributeSet attrs) {
+    super(context, attrs);
+    Class clazz = BuildConfig.class;
+    Field[] fields = clazz.getDeclaredFields();
 
-        Formatter formatter = new Formatter(Locale.getDefault());
+    Formatter formatter = new Formatter(Locale.getDefault());
 
-        for (Field field : fields) {
-            try {
-                formatter.format("%s: %s\n\n", field.getName(), field.get(null));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-            }
-        }
-
-        setDialogMessage(formatter.toString());
+    for (Field field : fields) {
+      try {
+        formatter.format("%s: %s\n\n", field.getName(), field.get(null));
+      } catch (IllegalAccessException e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+      }
     }
 
-    public BuildConfigInfoPreferencesFragment(Context context) {
-        this(context, null);
-    }
+    setDialogMessage(formatter.toString());
+  }
 
-    @Override
-    protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-        super.onPrepareDialogBuilder(builder);
-        builder.setPositiveButton(null, null);
-    }
+  public BuildConfigInfoPreferencesFragment(Context context) {
+    this(context, null);
+  }
+
+  @Override
+  protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
+    super.onPrepareDialogBuilder(builder);
+    builder.setPositiveButton(null, null);
+  }
 }

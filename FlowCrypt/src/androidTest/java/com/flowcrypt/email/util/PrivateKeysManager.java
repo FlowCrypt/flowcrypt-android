@@ -24,46 +24,46 @@ import java.util.UUID;
  * This tool can help manage private keys in the database. For testing purposes only.
  *
  * @author Denis Bondarenko
- *         Date: 27.12.2017
- *         Time: 17:44
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.12.2017
+ * Time: 17:44
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PrivateKeysManager {
 
-    private static final String TEMP_PASSPHRASE = "android";
-    private static final String TEMP_PRIVATE_KEY_LONGID = "6C0DD31D159DF3EF";
+  private static final String TEMP_PASSPHRASE = "android";
+  private static final String TEMP_PRIVATE_KEY_LONGID = "6C0DD31D159DF3EF";
 
-    public static void addTempPrivateKey() throws Exception {
-        String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getContext().getAssets().open
-                ("pgp/temp-sec.asc"), "UTF-8");
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        Js js = new Js(appContext, null);
-        KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
-        String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
+  public static void addTempPrivateKey() throws Exception {
+    String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getContext().getAssets().open
+        ("pgp/temp-sec.asc"), "UTF-8");
+    Context appContext = InstrumentationRegistry.getTargetContext();
+    Js js = new Js(appContext, null);
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
+    String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
-        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-        KeysDao keysDao = new KeysDao();
-        keysDao.setLongId(pgpKey.getLongid());
-        keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
+    PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+    KeysDao keysDao = new KeysDao();
+    keysDao.setLongId(pgpKey.getLongid());
+    keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
 
-        String randomVector;
+    String randomVector;
 
-        if (TextUtils.isEmpty(pgpKey.getLongid())) {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-                    UUID.randomUUID().toString().substring(0,
-                            KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
-        } else {
-            randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
-                    (pgpKey.getLongid());
-        }
-
-        String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
-        keysDao.setPrivateKey(encryptedPrivateKey);
-        keysDao.setPublicKey(pgpKey.toPublic().armor());
-
-        String encryptedPassphrase = keyStoreCryptoManager.encrypt(TEMP_PASSPHRASE, randomVector);
-        keysDao.setPassphrase(encryptedPassphrase);
-        new KeysDaoSource().addRow(appContext, keysDao);
+    if (TextUtils.isEmpty(pgpKey.getLongid())) {
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
+          UUID.randomUUID().toString().substring(0,
+              KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+    } else {
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
+          (pgpKey.getLongid());
     }
+
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
+    keysDao.setPrivateKey(encryptedPrivateKey);
+    keysDao.setPublicKey(pgpKey.toPublic().armor());
+
+    String encryptedPassphrase = keyStoreCryptoManager.encrypt(TEMP_PASSPHRASE, randomVector);
+    keysDao.setPassphrase(encryptedPassphrase);
+    new KeysDaoSource().addRow(appContext, keysDao);
+  }
 }

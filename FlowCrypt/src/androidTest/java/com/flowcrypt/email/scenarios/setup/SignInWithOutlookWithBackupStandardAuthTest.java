@@ -14,15 +14,15 @@ import org.junit.Ignore;
  * This test is using the Outlook credentials.
  *
  * @author Denis Bondarenko
- *         Date: 26.12.2017
- *         Time: 13:35
- *         E-mail: DenBond7@gmail.com
+ * Date: 26.12.2017
+ * Time: 13:35
+ * E-mail: DenBond7@gmail.com
  */
 @Ignore
 public class SignInWithOutlookWithBackupStandardAuthTest extends SignInWithBackupStandardAuthTest {
 
-    @Override
-    AuthCredentials getAuthCredentials() {
-        return AuthCredentialsManager.getOutLookWithBackupAuthCredentials();
-    }
+  @Override
+  AuthCredentials getAuthCredentials() {
+    return AuthCredentialsManager.getOutLookWithBackupAuthCredentials();
+  }
 }

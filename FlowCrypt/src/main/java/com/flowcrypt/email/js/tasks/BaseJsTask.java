@@ -11,34 +11,34 @@ import com.flowcrypt.email.js.JsListener;
  * A base implementation of {@link JsTask}
  *
  * @author Denis Bondarenko
- *         Date: 16.02.2018
- *         Time: 10:39
- *         E-mail: DenBond7@gmail.com
+ * Date: 16.02.2018
+ * Time: 10:39
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseJsTask implements JsTask {
-    String ownerKey;
-    int requestCode;
+  String ownerKey;
+  int requestCode;
 
-    public BaseJsTask(String ownerKey, int requestCode) {
-        this.ownerKey = ownerKey;
-        this.requestCode = requestCode;
-    }
+  public BaseJsTask(String ownerKey, int requestCode) {
+    this.ownerKey = ownerKey;
+    this.requestCode = requestCode;
+  }
 
-    @Override
-    public void handleException(Exception e, JsListener jsListener) {
-        if (jsListener != null) {
-            jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR, e, ownerKey, requestCode);
-        }
+  @Override
+  public void handleException(Exception e, JsListener jsListener) {
+    if (jsListener != null) {
+      jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR, e, ownerKey, requestCode);
     }
+  }
 
-    @Override
-    public String getOwnerKey() {
-        return ownerKey;
-    }
+  @Override
+  public String getOwnerKey() {
+    return ownerKey;
+  }
 
-    @Override
-    public int getRequestCode() {
-        return requestCode;
-    }
+  @Override
+  public int getRequestCode() {
+    return requestCode;
+  }
 }

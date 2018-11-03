@@ -22,41 +22,41 @@ import javax.mail.Transport;
  * This task send a message with backup to the key owner.
  *
  * @author DenBond7
- *         Date: 05.07.2017
- *         Time: 14:08
- *         E-mail: DenBond7@gmail.com
+ * Date: 05.07.2017
+ * Time: 14:08
+ * E-mail: DenBond7@gmail.com
  */
 
 public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
-    /**
-     * The base constructor.
-     *
-     * @param ownerKey    The name of the reply to {@link Messenger}.
-     * @param requestCode The unique request code for the reply to {@link Messenger}.
-     */
-    public SendMessageWithBackupToKeyOwnerSynsTask(String ownerKey, int requestCode) {
-        super(ownerKey, requestCode);
+  /**
+   * The base constructor.
+   *
+   * @param ownerKey    The name of the reply to {@link Messenger}.
+   * @param requestCode The unique request code for the reply to {@link Messenger}.
+   */
+  public SendMessageWithBackupToKeyOwnerSynsTask(String ownerKey, int requestCode) {
+    super(ownerKey, requestCode);
+  }
+
+  @Override
+  public boolean isUseSMTP() {
+    return true;
+  }
+
+  @Override
+  public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+      Exception {
+    super.runSMTPAction(accountDao, session, store, syncListener);
+
+    if (syncListener != null && accountDao != null) {
+      Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
+
+      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
+          accountDao, session, new Js(syncListener.getContext(),
+              new SecurityStorageConnector(syncListener.getContext())));
+      transport.sendMessage(message, message.getAllRecipients());
+
+      syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);
     }
-
-    @Override
-    public boolean isUseSMTP() {
-        return true;
-    }
-
-    @Override
-    public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-            Exception {
-        super.runSMTPAction(accountDao, session, store, syncListener);
-
-        if (syncListener != null && accountDao != null) {
-            Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
-
-            Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
-                    accountDao, session, new Js(syncListener.getContext(),
-                            new SecurityStorageConnector(syncListener.getContext())));
-            transport.sendMessage(message, message.getAllRecipients());
-
-            syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);
-        }
-    }
+  }
 }

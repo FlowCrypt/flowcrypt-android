@@ -13,9 +13,9 @@ import com.bumptech.glide.module.AppGlideModule;
  * See http://sjudd.github.io/glide/doc/generatedapi.html for more details.
  *
  * @author Denis Bondarenko
- *         Date: 22.12.2017
- *         Time: 16:47
- *         E-mail: DenBond7@gmail.com
+ * Date: 22.12.2017
+ * Time: 16:47
+ * E-mail: DenBond7@gmail.com
  */
 
 @GlideModule

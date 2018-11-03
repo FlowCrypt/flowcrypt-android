@@ -11,45 +11,45 @@ import android.view.MenuItem;
  * The base back stack sync {@link android.app.Activity}
  *
  * @author DenBond7
- *         Date: 27.06.2017
- *         Time: 13:26
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.06.2017
+ * Time: 13:26
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
-    @Override
-    public boolean isDisplayHomeAsUpEnabled() {
+  @Override
+  public boolean isDisplayHomeAsUpEnabled() {
+    return true;
+  }
+
+  @Override
+  public boolean isSyncEnable() {
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        onBackPressed();
         return true;
-    }
-
-    @Override
-    public boolean isSyncEnable() {
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
 
     }
+    return super.onOptionsItemSelected(item);
+  }
 
-    @Override
-    public void onSyncServiceConnected() {
+  @Override
+  public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
 
-    }
+  }
 
-    @Override
-    public void onJsServiceConnected() {
+  @Override
+  public void onSyncServiceConnected() {
 
-    }
+  }
+
+  @Override
+  public void onJsServiceConnected() {
+
+  }
 }

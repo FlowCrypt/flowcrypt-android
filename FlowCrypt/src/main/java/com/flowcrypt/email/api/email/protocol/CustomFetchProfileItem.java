@@ -17,39 +17,39 @@ import javax.mail.FetchProfile;
  */
 public class CustomFetchProfileItem extends FetchProfile.Item {
 
-    /**
-     * This item is for fetching only first 2k characters of the body<p>
-     * <p>
-     * Information which received helps to understand is the message has an encrypted content or not
-     */
-    public static final CustomFetchProfileItem BODY_FISRT_CHARACTERS =
-            new CustomFetchProfileItem("BODY.PEEK[TEXT]<0.2048>", "BODY.PEEK[TEXT]<0.2048>");
+  /**
+   * This item is for fetching only first 2k characters of the body<p>
+   * <p>
+   * Information which received helps to understand is the message has an encrypted content or not
+   */
+  public static final CustomFetchProfileItem BODY_FISRT_CHARACTERS =
+      new CustomFetchProfileItem("BODY.PEEK[TEXT]<0.2048>", "BODY.PEEK[TEXT]<0.2048>");
 
-    private String value;
+  private String value;
 
-    /**
-     * Constructor for an item. The name is used only for debugging.
-     *
-     * @param name the item name
-     */
-    protected CustomFetchProfileItem(String name) {
-        super(name);
-    }
+  /**
+   * Constructor for an item. The name is used only for debugging.
+   *
+   * @param name the item name
+   */
+  protected CustomFetchProfileItem(String name) {
+    super(name);
+  }
 
-    public CustomFetchProfileItem(String name, String value) {
-        super(name);
-        this.value = value;
-    }
+  public CustomFetchProfileItem(String name, String value) {
+    super(name);
+    this.value = value;
+  }
 
-    @Override
-    public String toString() {
-        return "CustomFetchProfileItem{" +
-                "value='" + value + '\'' +
-                "} " + super.toString();
-    }
+  @Override
+  public String toString() {
+    return "CustomFetchProfileItem{" +
+        "value='" + value + '\'' +
+        "} " + super.toString();
+  }
 
-    public String getValue() {
-        return value;
-    }
+  public String getValue() {
+    return value;
+  }
 
 }

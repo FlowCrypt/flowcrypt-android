@@ -26,81 +26,81 @@ import java.util.ArrayList;
  * a service on a separate handler thread.
  *
  * @author Denis Bondarenko
- *         Date: 29.01.2018
- *         Time: 16:54
- *         E-mail: DenBond7@gmail.com
+ * Date: 29.01.2018
+ * Time: 16:54
+ * E-mail: DenBond7@gmail.com
  */
 public class ActionQueueIntentService extends JobIntentService {
-    public static final String ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
-            ActionQueueIntentService.class);
+  public static final String ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
+      ActionQueueIntentService.class);
 
-    private static final String TAG = ActionQueueIntentService.class.getSimpleName();
-    private static final String EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
-            ActionQueueIntentService.class);
-    private static final String EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey
-            ("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService.class);
+  private static final String TAG = ActionQueueIntentService.class.getSimpleName();
+  private static final String EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
+      ActionQueueIntentService.class);
+  private static final String EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey
+      ("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService.class);
 
-    /**
-     * Starts this service to perform action {@link #ACTION_RUN_ACTIONS}. If the service is already performing a task
-     * this action will be queued.
-     *
-     * @param context                Interface to global information about an application environment;
-     * @param actions                A list of {@link Action} objects.
-     * @param resultReceiverCallBack An implementation of {@link android.os.ResultReceiver}.
-     * @see IntentService
-     */
+  /**
+   * Starts this service to perform action {@link #ACTION_RUN_ACTIONS}. If the service is already performing a task
+   * this action will be queued.
+   *
+   * @param context                Interface to global information about an application environment;
+   * @param actions                A list of {@link Action} objects.
+   * @param resultReceiverCallBack An implementation of {@link android.os.ResultReceiver}.
+   * @see IntentService
+   */
 
-    public static void appendActionsToQueue(Context context, ArrayList<Action> actions,
-                                            ActionResultReceiver.ResultReceiverCallBack resultReceiverCallBack) {
-        ActionResultReceiver resultReceiver = new ActionResultReceiver(new Handler(context.getMainLooper()));
-        resultReceiver.setResultReceiverCallBack(resultReceiverCallBack);
+  public static void appendActionsToQueue(Context context, ArrayList<Action> actions,
+                                          ActionResultReceiver.ResultReceiverCallBack resultReceiverCallBack) {
+    ActionResultReceiver resultReceiver = new ActionResultReceiver(new Handler(context.getMainLooper()));
+    resultReceiver.setResultReceiverCallBack(resultReceiverCallBack);
 
-        Intent intent = new Intent(context, ActionQueueIntentService.class);
-        intent.setAction(ACTION_RUN_ACTIONS);
-        intent.putExtra(EXTRA_KEY_ACTIONS, actions);
-        intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver);
+    Intent intent = new Intent(context, ActionQueueIntentService.class);
+    intent.setAction(ACTION_RUN_ACTIONS);
+    intent.putExtra(EXTRA_KEY_ACTIONS, actions);
+    intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver);
 
-        enqueueWork(context, ActionQueueIntentService.class, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent);
-    }
+    enqueueWork(context, ActionQueueIntentService.class, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent);
+  }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d(TAG, "onCreate");
-    }
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    Log.d(TAG, "onCreate");
+  }
 
-    @Override
-    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
-        return super.onStartCommand(intent, flags, startId);
-    }
+  @Override
+  public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+    Log.d(TAG, "onStartCommand");
+    return super.onStartCommand(intent, flags, startId);
+  }
 
-    @Override
-    protected void onHandleWork(@NonNull Intent intent) {
-        final String intentAction = intent.getAction();
-        if (ACTION_RUN_ACTIONS.equals(intentAction)) {
-            final ArrayList<Action> actions = intent.getParcelableArrayListExtra(EXTRA_KEY_ACTIONS);
-            final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
+  @Override
+  protected void onHandleWork(@NonNull Intent intent) {
+    final String intentAction = intent.getAction();
+    if (ACTION_RUN_ACTIONS.equals(intentAction)) {
+      final ArrayList<Action> actions = intent.getParcelableArrayListExtra(EXTRA_KEY_ACTIONS);
+      final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
 
-            if (actions != null && !actions.isEmpty()) {
-                Log.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
-                for (Action action : actions) {
-                    if (action != null) {
-                        Log.d(TAG, "Run " + action.getClass().getSimpleName());
-                        try {
-                            action.run(getApplicationContext());
-                            resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK,
-                                    ActionResultReceiver.generateSuccessBundle(action));
-                            Log.d(TAG, action.getClass().getSimpleName() + ": success");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR,
-                                    ActionResultReceiver.generateErrorBundle(action, e));
-                            Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
-                        }
-                    }
-                }
+      if (actions != null && !actions.isEmpty()) {
+        Log.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
+        for (Action action : actions) {
+          if (action != null) {
+            Log.d(TAG, "Run " + action.getClass().getSimpleName());
+            try {
+              action.run(getApplicationContext());
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK,
+                  ActionResultReceiver.generateSuccessBundle(action));
+              Log.d(TAG, action.getClass().getSimpleName() + ": success");
+            } catch (Exception e) {
+              e.printStackTrace();
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR,
+                  ActionResultReceiver.generateErrorBundle(action, e));
+              Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
             }
+          }
         }
+      }
     }
+  }
 }

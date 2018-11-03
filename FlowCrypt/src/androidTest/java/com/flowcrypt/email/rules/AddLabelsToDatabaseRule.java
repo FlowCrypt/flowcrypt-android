@@ -24,28 +24,28 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 public class AddLabelsToDatabaseRule implements TestRule {
-    private AccountDao accountDao;
-    private List<Folder> folders;
+  private AccountDao accountDao;
+  private List<Folder> folders;
 
-    public AddLabelsToDatabaseRule(AccountDao accountDao, List<Folder> folders) {
-        this.accountDao = accountDao;
-        this.folders = folders;
-    }
+  public AddLabelsToDatabaseRule(AccountDao accountDao, List<Folder> folders) {
+    this.accountDao = accountDao;
+    this.folders = folders;
+  }
 
-    @Override
-    public Statement apply(final Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                saveLabelsToDatabase();
-                base.evaluate();
-            }
-        };
-    }
+  @Override
+  public Statement apply(final Statement base, Description description) {
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        saveLabelsToDatabase();
+        base.evaluate();
+      }
+    };
+  }
 
-    private void saveLabelsToDatabase() {
-        ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-        imapLabelsDaoSource.addRows(InstrumentationRegistry.getTargetContext(), accountDao.getEmail(), folders);
-    }
+  private void saveLabelsToDatabase() {
+    ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+    imapLabelsDaoSource.addRows(InstrumentationRegistry.getTargetContext(), accountDao.getEmail(), folders);
+  }
 }
 

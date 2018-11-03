@@ -44,82 +44,82 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Denis Bondarenko
- *         Date: 02.03.2018
- *         Time: 16:17
- *         E-mail: DenBond7@gmail.com
+ * Date: 02.03.2018
+ * Time: 16:17
+ * E-mail: DenBond7@gmail.com
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
-    private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-            Context targetContext = InstrumentationRegistry.getTargetContext();
-            Intent result = new Intent(targetContext, CheckKeysActivity.class);
-            ArrayList<KeyDetails> privateKeys = new ArrayList<>();
-            try {
-                KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-                        (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
-                        KeyDetails.Type.EMAIL, true, null);
-                privateKeys.add(keyDetails);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
-                    targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE, targetContext.getString(R.string
-                    .continue_));
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, targetContext.getString(R.string
-                    .use_existing_keys));
-            result.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE, targetContext.getString(R.string
-                    .use_another_account));
-            return result;
-        }
-    };
-
-    @Rule
-    public TestRule ruleChain = RuleChain
-            .outerRule(new ClearAppSettingsRule())
-            .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", TestConstants
-                    .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
-            .around(activityTestRule);
-
-    @Test
-    public void testShowMessageEmptyPassPhrase() {
-        Espresso.closeSoftKeyboard();
-        onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-        checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string
-                .passphrase_must_be_non_empty));
+  private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
+    @Override
+    protected Intent getActivityIntent() {
+      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Intent result = new Intent(targetContext, CheckKeysActivity.class);
+      ArrayList<KeyDetails> privateKeys = new ArrayList<>();
+      try {
+        KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
+            (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
+            KeyDetails.Type.EMAIL, true, null);
+        privateKeys.add(keyDetails);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
+      result.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
+          targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
+      result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE, targetContext.getString(R.string
+          .continue_));
+      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, targetContext.getString(R.string
+          .use_existing_keys));
+      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE, targetContext.getString(R.string
+          .use_another_account));
+      return result;
     }
+  };
 
-    @Test
-    public void testUseIncorrectPassPhrase() {
-        onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
-                .perform(typeText("some pass phrase"), closeSoftKeyboard());
-        onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-        checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string.password_is_incorrect));
-    }
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", TestConstants
+          .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
+      .around(activityTestRule);
 
-    @Test
-    public void testUseCorrectPassPhrase() throws Exception {
-        onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
-                .perform(typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard());
-        onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-    }
+  @Test
+  public void testShowMessageEmptyPassPhrase() {
+    Espresso.closeSoftKeyboard();
+    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string
+        .passphrase_must_be_non_empty));
+  }
 
-    @Test
-    public void testCheckClickButtonNeutral() throws Exception {
-        Espresso.closeSoftKeyboard();
-        onView(withId(R.id.buttonNeutralAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEUTRAL));
-    }
+  @Test
+  public void testUseIncorrectPassPhrase() {
+    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
+        .perform(typeText("some pass phrase"), closeSoftKeyboard());
+    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string.password_is_incorrect));
+  }
 
-    @Test
-    public void testCheckClickButtonNegative() throws Exception {
-        Espresso.closeSoftKeyboard();
-        onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
-        assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));
-    }
+  @Test
+  public void testUseCorrectPassPhrase() throws Exception {
+    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
+        .perform(typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard());
+    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  }
+
+  @Test
+  public void testCheckClickButtonNeutral() throws Exception {
+    Espresso.closeSoftKeyboard();
+    onView(withId(R.id.buttonNeutralAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEUTRAL));
+  }
+
+  @Test
+  public void testCheckClickButtonNegative() throws Exception {
+    Espresso.closeSoftKeyboard();
+    onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));
+  }
 }

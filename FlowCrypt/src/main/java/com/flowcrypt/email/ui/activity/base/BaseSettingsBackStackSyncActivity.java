@@ -23,21 +23,21 @@ import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
  */
 public abstract class BaseSettingsBackStackSyncActivity extends BaseBackStackSyncActivity {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_settings, menu);
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.activity_settings, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.menuActionHelp:
+        startActivity(new Intent(this, FeedbackActivity.class));
         return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuActionHelp:
-                startActivity(new Intent(this, FeedbackActivity.class));
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+      default:
+        return super.onOptionsItemSelected(item);
     }
+  }
 }

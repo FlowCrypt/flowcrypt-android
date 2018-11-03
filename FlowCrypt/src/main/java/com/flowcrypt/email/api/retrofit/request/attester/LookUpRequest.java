@@ -18,14 +18,14 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
  */
 
 public class LookUpRequest extends BaseRequest {
-    private String query;
+  private String query;
 
-    public LookUpRequest(String query) {
-        super(ApiName.GET_LOOKUP);
-        this.query = query;
-    }
+  public LookUpRequest(String query) {
+    super(ApiName.GET_LOOKUP);
+    this.query = query;
+  }
 
-    public String getQuery() {
-        return query;
-    }
+  public String getQuery() {
+    return query;
+  }
 }

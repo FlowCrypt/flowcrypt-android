@@ -11,20 +11,20 @@ import com.flowcrypt.email.model.KeyDetails;
  * This exception means that the key already added.
  *
  * @author Denis Bondarenko
- *         Date: 27.02.2018
- *         Time: 14:09
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.02.2018
+ * Time: 14:09
+ * E-mail: DenBond7@gmail.com
  */
 
 public class KeyAlreadyAddedException extends Exception {
-    private KeyDetails keyDetails;
+  private KeyDetails keyDetails;
 
-    public KeyAlreadyAddedException(KeyDetails keyDetails, String errorMessage) {
-        super(errorMessage);
-        this.keyDetails = keyDetails;
-    }
+  public KeyAlreadyAddedException(KeyDetails keyDetails, String errorMessage) {
+    super(errorMessage);
+    this.keyDetails = keyDetails;
+  }
 
-    public KeyDetails getKeyDetails() {
-        return keyDetails;
-    }
+  public KeyDetails getKeyDetails() {
+    return keyDetails;
+  }
 }

@@ -18,51 +18,51 @@ import java.util.List;
  * .io/lookup/email" to retrieve info about an array of keys.
  *
  * @author Denis Bondarenko
- *         Date: 13.11.2017
- *         Time: 15:16
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.11.2017
+ * Time: 15:16
+ * E-mail: DenBond7@gmail.com
  */
 
 public class PostLookUpEmailsModel implements Parcelable {
-    public static final Parcelable.Creator<PostLookUpEmailsModel> CREATOR = new Parcelable
-            .Creator<PostLookUpEmailsModel>() {
-        @Override
-        public PostLookUpEmailsModel createFromParcel(Parcel source) {
-            return new PostLookUpEmailsModel(source);
-        }
-
-        @Override
-        public PostLookUpEmailsModel[] newArray(int size) {
-            return new PostLookUpEmailsModel[size];
-        }
-    };
-
-    @SerializedName("email")
-    @Expose
-    private List<String> emails;
-
-    public PostLookUpEmailsModel() {
-    }
-
-    public PostLookUpEmailsModel(List<String> emails) {
-        this.emails = emails;
-    }
-
-    public PostLookUpEmailsModel(Parcel in) {
-        this.emails = in.createStringArrayList();
+  public static final Parcelable.Creator<PostLookUpEmailsModel> CREATOR = new Parcelable
+      .Creator<PostLookUpEmailsModel>() {
+    @Override
+    public PostLookUpEmailsModel createFromParcel(Parcel source) {
+      return new PostLookUpEmailsModel(source);
     }
 
     @Override
-    public int describeContents() {
-        return 0;
+    public PostLookUpEmailsModel[] newArray(int size) {
+      return new PostLookUpEmailsModel[size];
     }
+  };
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeStringList(this.emails);
-    }
+  @SerializedName("email")
+  @Expose
+  private List<String> emails;
 
-    public List<String> getEmails() {
-        return emails;
-    }
+  public PostLookUpEmailsModel() {
+  }
+
+  public PostLookUpEmailsModel(List<String> emails) {
+    this.emails = emails;
+  }
+
+  public PostLookUpEmailsModel(Parcel in) {
+    this.emails = in.createStringArrayList();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeStringList(this.emails);
+  }
+
+  public List<String> getEmails() {
+    return emails;
+  }
 }

@@ -30,83 +30,83 @@ import java.util.List;
  * This loader prepares information about the user private keys as a list of {@link AttachmentInfo} objects.
  *
  * @author Denis Bondarenko
- *         Date: 25.11.2017
- *         Time: 10:13
- *         E-mail: DenBond7@gmail.com
+ * Date: 25.11.2017
+ * Time: 10:13
+ * E-mail: DenBond7@gmail.com
  */
 
 public class GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
-    private static final String TAG = GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader.class.getSimpleName();
+  private static final String TAG = GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader.class.getSimpleName();
 
-    public GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader(Context context) {
-        super(context);
-        onContentChanged();
+  public GetOwnPublicKeysAsAttachmentInfoAsyncTaskLoader(Context context) {
+    super(context);
+    onContentChanged();
+  }
+
+  @Override
+  public void onStartLoading() {
+    if (takeContentChanged()) {
+      forceLoad();
     }
+  }
 
-    @Override
-    public void onStartLoading() {
-        if (takeContentChanged()) {
-            forceLoad();
+  @Override
+  public LoaderResult loadInBackground() {
+    try {
+      List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+
+      SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(getContext());
+      Js js = new Js(getContext(), securityStorageConnector);
+
+      PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
+
+      File pgpCacheDirectory = new File(getContext().getCacheDir(), Constants.PGP_CACHE_DIR);
+      if (!pgpCacheDirectory.exists()) {
+        if (!pgpCacheDirectory.mkdir()) {
+          Log.d(TAG, "Create cache directory " + pgpCacheDirectory.getName() + " filed!");
         }
-    }
+      }
 
-    @Override
-    public LoaderResult loadInBackground() {
-        try {
-            List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+        PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
+        if (pgpKey != null) {
+          PgpKey publicKey = pgpKey.toPublic();
+          if (publicKey != null) {
+            PgpContact primaryUserId = pgpKey.getPrimaryUserId();
+            if (primaryUserId != null) {
+              String fileName = "0x" + publicKey.getLongid().toUpperCase() + ".asc";
+              String publicKeyValue = publicKey.armor();
+              File publicKeyFile = new File(pgpCacheDirectory, fileName);
+              Uri destinationUri = Uri.fromFile(publicKeyFile);
 
-            SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(getContext());
-            Js js = new Js(getContext(), securityStorageConnector);
+              if (GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
+                  publicKeyValue) > 0) {
+                AttachmentInfo attachmentInfo = new AttachmentInfo();
 
-            PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
-
-            File pgpCacheDirectory = new File(getContext().getCacheDir(), Constants.PGP_CACHE_DIR);
-            if (!pgpCacheDirectory.exists()) {
-                if (!pgpCacheDirectory.mkdir()) {
-                    Log.d(TAG, "Create cache directory " + pgpCacheDirectory.getName() + " filed!");
-                }
+                attachmentInfo.setName(fileName);
+                attachmentInfo.setEncodedSize(publicKeyFile.length());
+                attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
+                attachmentInfo.setUri(destinationUri);
+                attachmentInfo.setId(EmailUtil.generateContentId());
+                attachmentInfo.setEmail(primaryUserId.getEmail());
+                attachmentInfoList.add(attachmentInfo);
+              }
             }
-
-            for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-                PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-                if (pgpKey != null) {
-                    PgpKey publicKey = pgpKey.toPublic();
-                    if (publicKey != null) {
-                        PgpContact primaryUserId = pgpKey.getPrimaryUserId();
-                        if (primaryUserId != null) {
-                            String fileName = "0x" + publicKey.getLongid().toUpperCase() + ".asc";
-                            String publicKeyValue = publicKey.armor();
-                            File publicKeyFile = new File(pgpCacheDirectory, fileName);
-                            Uri destinationUri = Uri.fromFile(publicKeyFile);
-
-                            if (GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
-                                    publicKeyValue) > 0) {
-                                AttachmentInfo attachmentInfo = new AttachmentInfo();
-
-                                attachmentInfo.setName(fileName);
-                                attachmentInfo.setEncodedSize(publicKeyFile.length());
-                                attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
-                                attachmentInfo.setUri(destinationUri);
-                                attachmentInfo.setId(EmailUtil.generateContentId());
-                                attachmentInfo.setEmail(primaryUserId.getEmail());
-                                attachmentInfoList.add(attachmentInfo);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return new LoaderResult(attachmentInfoList, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-            return new LoaderResult(null, e);
+          }
         }
-    }
+      }
 
-    @Override
-    public void onStopLoading() {
-        cancelLoad();
+      return new LoaderResult(attachmentInfoList, null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
     }
+  }
+
+  @Override
+  public void onStopLoading() {
+    cancelLoad();
+  }
 }

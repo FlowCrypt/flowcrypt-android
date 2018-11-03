@@ -28,97 +28,97 @@ import java.util.List;
  * /lookup/email/ Attester API, then compares the results.
  *
  * @author DenBond7
- *         Date: 13.11.2017
- *         Time: 15:07
- *         E-mail: DenBond7@gmail.com
+ * Date: 13.11.2017
+ * Time: 15:07
+ * E-mail: DenBond7@gmail.com
  */
 
 public class AttesterSettingsActivity extends BaseBackStackActivity
-        implements LoaderManager.LoaderCallbacks<LoaderResult> {
-    private View progressBar;
-    private View emptyView;
-    private View layoutContent;
-    private ListView listViewKeys;
+    implements LoaderManager.LoaderCallbacks<LoaderResult> {
+  private View progressBar;
+  private View emptyView;
+  private View layoutContent;
+  private ListView listViewKeys;
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initViews();
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    initViews();
+  }
+
+  @Override
+  public int getContentViewResourceId() {
+    return R.layout.activity_attester_settings;
+  }
+
+  @Override
+  public View getRootView() {
+    return findViewById(R.id.screenContent);
+  }
+
+  @Override
+  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
+    switch (id) {
+      case R.id.loader_id_load_keys_info_from_attester:
+        UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+        return new LoadAccountKeysInfoFromAttester(this,
+            new AccountDaoSource().getActiveAccountInformation(this));
+      default:
+        return null;
     }
+  }
 
-    @Override
-    public int getContentViewResourceId() {
-        return R.layout.activity_attester_settings;
+  @Override
+  public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+    handleLoaderResult(loader, loaderResult);
+  }
+
+  @Override
+  public void onLoaderReset(Loader<LoaderResult> loader) {
+    switch (loader.getId()) {
+      default:
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
     }
+  }
 
-    @Override
-    public View getRootView() {
-        return findViewById(R.id.screenContent);
-    }
-
-    @Override
-    public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-        switch (id) {
-            case R.id.loader_id_load_keys_info_from_attester:
-                UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                return new LoadAccountKeysInfoFromAttester(this,
-                        new AccountDaoSource().getActiveAccountInformation(this));
-            default:
-                return null;
+  @SuppressWarnings("unchecked")
+  @Override
+  public void handleSuccessLoaderResult(int loaderId, Object result) {
+    switch (loaderId) {
+      case R.id.loader_id_load_keys_info_from_attester:
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+        List<LookUpEmailResponse> lookUpEmailResponses = (List<LookUpEmailResponse>) result;
+        if (lookUpEmailResponses != null && !lookUpEmailResponses.isEmpty()) {
+          listViewKeys.setAdapter(new AttesterKeyAdapter(this, lookUpEmailResponses));
+        } else {
+          UIUtil.exchangeViewVisibility(this, true, emptyView, layoutContent);
         }
+        break;
+
+      default:
+        super.handleSuccessLoaderResult(loaderId, result);
     }
+  }
 
-    @Override
-    public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
-        handleLoaderResult(loader, loaderResult);
+  @Override
+  public void handleFailureLoaderResult(int loaderId, Exception e) {
+    switch (loaderId) {
+      case R.id.loader_id_load_keys_info_from_attester:
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+        showInfoSnackbar(getRootView(), e.getMessage());
+        break;
+
+      default:
+        super.handleFailureLoaderResult(loaderId, e);
     }
+  }
 
-    @Override
-    public void onLoaderReset(Loader<LoaderResult> loader) {
-        switch (loader.getId()) {
-            default:
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-        }
-    }
+  private void initViews() {
+    this.progressBar = findViewById(R.id.progressBar);
+    this.layoutContent = findViewById(R.id.layoutContent);
+    this.emptyView = findViewById(R.id.emptyView);
+    listViewKeys = findViewById(R.id.listViewKeys);
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void handleSuccessLoaderResult(int loaderId, Object result) {
-        switch (loaderId) {
-            case R.id.loader_id_load_keys_info_from_attester:
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                List<LookUpEmailResponse> lookUpEmailResponses = (List<LookUpEmailResponse>) result;
-                if (lookUpEmailResponses != null && !lookUpEmailResponses.isEmpty()) {
-                    listViewKeys.setAdapter(new AttesterKeyAdapter(this, lookUpEmailResponses));
-                } else {
-                    UIUtil.exchangeViewVisibility(this, true, emptyView, layoutContent);
-                }
-                break;
-
-            default:
-                super.handleSuccessLoaderResult(loaderId, result);
-        }
-    }
-
-    @Override
-    public void handleFailureLoaderResult(int loaderId, Exception e) {
-        switch (loaderId) {
-            case R.id.loader_id_load_keys_info_from_attester:
-                UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-                showInfoSnackbar(getRootView(), e.getMessage());
-                break;
-
-            default:
-                super.handleFailureLoaderResult(loaderId, e);
-        }
-    }
-
-    private void initViews() {
-        this.progressBar = findViewById(R.id.progressBar);
-        this.layoutContent = findViewById(R.id.layoutContent);
-        this.emptyView = findViewById(R.id.emptyView);
-        listViewKeys = findViewById(R.id.listViewKeys);
-
-        getSupportLoaderManager().initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
-    }
+    getSupportLoaderManager().initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
+  }
 }

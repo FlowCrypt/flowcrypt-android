@@ -39,69 +39,69 @@ import javax.mail.Session;
  */
 public class CustomGmailMessage extends GmailMessage implements FlowCryptIMAPMessage {
 
-    protected CustomGmailMessage(IMAPFolder folder, int msgnum) {
-        super(folder, msgnum);
+  protected CustomGmailMessage(IMAPFolder folder, int msgnum) {
+    super(folder, msgnum);
+  }
+
+  protected CustomGmailMessage(Session session) {
+    super(session);
+  }
+
+  @Override
+  public String getBodyAsString() {
+    try {
+      if (content != null) {
+        return IOUtils.toString(content, StandardCharsets.UTF_8.displayName());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    protected CustomGmailMessage(Session session) {
-        super(session);
+    return "";
+  }
+
+  /**
+   * Apply the data in the FETCH item to this message.
+   * <p>
+   * ASSERT: Must hold the messageCacheLock.
+   *
+   * @param item       the fetch item
+   * @param hdrs       the headers we're asking for
+   * @param allHeaders load all headers?
+   * @return did we handle this fetch item?
+   * @throws MessagingException for failures
+   * @since JavaMail 1.4.6
+   */
+  @Override
+  public boolean handleFetchItemWithCustomBody(Item item, String[] hdrs, boolean allHeaders) throws
+      MessagingException {
+    // Check for the standard items
+    if (item instanceof Flags
+        || item instanceof ENVELOPE
+        || item instanceof INTERNALDATE
+        || item instanceof RFC822SIZE
+        || item instanceof MODSEQ
+        || item instanceof BODYSTRUCTURE
+        || item instanceof UID
+        || item instanceof RFC822DATA) {
+      return handleFetchItem(item, hdrs, allHeaders);
     }
 
-    @Override
-    public String getBodyAsString() {
-        try {
-            if (content != null) {
-                return IOUtils.toString(content, StandardCharsets.UTF_8.displayName());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    // Check for header items
+    else if (item instanceof BODY) {
+      ByteArrayInputStream bodyStream;
+      bodyStream = ((BODY) item).getByteArrayInputStream();
 
-        return "";
-    }
+      if (!((BODY) item).isHeader()) {
+        content = ASCIIUtility.toString(bodyStream).getBytes();
+      }
+    } else
+      return false;    // not handled
+    return true;        // something above handled it
+  }
 
-    /**
-     * Apply the data in the FETCH item to this message.
-     * <p>
-     * ASSERT: Must hold the messageCacheLock.
-     *
-     * @param item       the fetch item
-     * @param hdrs       the headers we're asking for
-     * @param allHeaders load all headers?
-     * @return did we handle this fetch item?
-     * @throws MessagingException for failures
-     * @since JavaMail 1.4.6
-     */
-    @Override
-    public boolean handleFetchItemWithCustomBody(Item item, String[] hdrs, boolean allHeaders) throws
-            MessagingException {
-        // Check for the standard items
-        if (item instanceof Flags
-                || item instanceof ENVELOPE
-                || item instanceof INTERNALDATE
-                || item instanceof RFC822SIZE
-                || item instanceof MODSEQ
-                || item instanceof BODYSTRUCTURE
-                || item instanceof UID
-                || item instanceof RFC822DATA) {
-            return handleFetchItem(item, hdrs, allHeaders);
-        }
-
-        // Check for header items
-        else if (item instanceof BODY) {
-            ByteArrayInputStream bodyStream;
-            bodyStream = ((BODY) item).getByteArrayInputStream();
-
-            if (!((BODY) item).isHeader()) {
-                content = ASCIIUtility.toString(bodyStream).getBytes();
-            }
-        } else
-            return false;    // not handled
-        return true;        // something above handled it
-    }
-
-    @Override
-    protected void handleExtensionFetchItems(Map<String, Object> extensionItems) {
-        super.handleExtensionFetchItems(extensionItems);
-    }
+  @Override
+  protected void handleExtensionFetchItems(Map<String, Object> extensionItems) {
+    super.handleExtensionFetchItems(extensionItems);
+  }
 }

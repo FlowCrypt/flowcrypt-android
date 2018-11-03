@@ -24,43 +24,43 @@ import java.io.IOException;
  * The rule which clears the application settings.
  *
  * @author Denis Bondarenko
- *         Date: 27.12.2017
- *         Time: 11:57
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.12.2017
+ * Time: 11:57
+ * E-mail: DenBond7@gmail.com
  */
 
 public class ClearAppSettingsRule implements TestRule {
 
-    @Override
-    public Statement apply(final Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                clearApp();
-                base.evaluate();
-            }
-        };
-    }
+  @Override
+  public Statement apply(final Statement base, Description description) {
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        clearApp();
+        base.evaluate();
+      }
+    };
+  }
 
-    /**
-     * Clear the all application settings.
-     *
-     * @throws IOException Different errors can be occurred.
-     */
-    private void clearApp() throws Throwable {
-        SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
-        FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
-        InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
-                .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
-        UiThreadStatement.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
-                        .getJs()
-                        .getStorageConnector()
-                        .refresh(InstrumentationRegistry.getTargetContext());
-            }
-        });
-        Thread.sleep(1000);// Added timeout for a better sync between threads.
-    }
+  /**
+   * Clear the all application settings.
+   *
+   * @throws IOException Different errors can be occurred.
+   */
+  private void clearApp() throws Throwable {
+    SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
+    FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
+    InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
+        .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+    UiThreadStatement.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
+            .getJs()
+            .getStorageConnector()
+            .refresh(InstrumentationRegistry.getTargetContext());
+      }
+    });
+    Thread.sleep(1000);// Added timeout for a better sync between threads.
+  }
 }

@@ -26,71 +26,68 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
  * This class tests the condition when a user has some private key backups (email).
  *
  * @author Denis Bondarenko
- *         Date: 27.12.2017
- *         Time: 13:05
- *         E-mail: DenBond7@gmail.com
+ * Date: 27.12.2017
+ * Time: 13:05
+ * E-mail: DenBond7@gmail.com
  */
 
 public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandardAuthTest {
-    @Test
-    public void testAllConditionsTrue() throws Exception {
-        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
-        fillAllFields();
-        onView(withId(R.id.buttonTryToConnect)).perform(click());
+  @Test
+  public void testAllConditionsTrue() throws Exception {
+    onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
+    fillAllFields();
+    onView(withId(R.id.buttonTryToConnect)).perform(click());
 
-        checkRightHeader();
-        typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
-    }
+    checkRightHeader();
+    typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
+    onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+  }
 
-    @Test
-    public void testPasswordIncorrect() throws Exception {
-        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
-        fillAllFields();
-        onView(withId(R.id.buttonTryToConnect)).perform(click());
+  @Test
+  public void testPasswordIncorrect() throws Exception {
+    onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
+    fillAllFields();
+    onView(withId(R.id.buttonTryToConnect)).perform(click());
 
-        checkRightHeader();
-        typeAndCheckPrivateKeyPassword("password");
-        onView(withText(R.string.password_is_incorrect)).check(matches(isDisplayed()));
+    checkRightHeader();
+    typeAndCheckPrivateKeyPassword("password");
+    onView(withText(R.string.password_is_incorrect)).check(matches(isDisplayed()));
+  }
 
-        typeAndCheckPrivateKeyPassword(TestConstants.DEFAULT_PASSWORD);
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
-    }
+  @Test
+  public void testUseAnotherAccount() throws Exception {
+    onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
+    fillAllFields();
+    onView(withId(R.id.buttonTryToConnect)).perform(click());
 
-    @Test
-    public void testUseAnotherAccount() throws Exception {
-        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
-        fillAllFields();
-        onView(withId(R.id.buttonTryToConnect)).perform(click());
+    checkRightHeader();
+    onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
+    onView(withText(R.string.use_another_account)).perform(click());
+    onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed()));
+  }
 
-        checkRightHeader();
-        onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
-        onView(withText(R.string.use_another_account)).perform(click());
-        onView(withId(R.id.buttonOtherEmailProvider)).check(matches(isDisplayed()));
-    }
+  @Test
+  public void testUseExistingKey() throws Exception {
+    PrivateKeysManager.addTempPrivateKey();
 
-    @Test
-    public void testUseExistingKey() throws Exception {
-        PrivateKeysManager.addTempPrivateKey();
+    onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
+    fillAllFields();
+    onView(withId(R.id.buttonTryToConnect)).perform(click());
 
-        onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
-        fillAllFields();
-        onView(withId(R.id.buttonTryToConnect)).perform(click());
+    checkRightHeader();
+    onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
+    onView(withText(R.string.use_existing_keys)).perform(click());
 
-        checkRightHeader();
-        onView(withId(R.id.editTextKeyPassword)).perform(closeSoftKeyboard());
-        onView(withText(R.string.use_existing_keys)).perform(click());
+    onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+  }
 
-        onView(withId(R.id.textViewUserEmail)).check(matches(withText(authCredentials.getEmail())));
-    }
+  private void typeAndCheckPrivateKeyPassword(String password) {
+    onView(withId(R.id.editTextKeyPassword)).perform(clearText(), typeText(password),
+        closeSoftKeyboard());
+    onView(withId(R.id.buttonPositiveAction)).perform(click());
+  }
 
-    private void typeAndCheckPrivateKeyPassword(String password) {
-        onView(withId(R.id.editTextKeyPassword)).perform(clearText(), typeText(password),
-                closeSoftKeyboard());
-        onView(withId(R.id.buttonPositiveAction)).perform(click());
-    }
-
-    private void checkRightHeader() {
-        onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()));
-    }
+  private void checkRightHeader() {
+    onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()));
+  }
 }
