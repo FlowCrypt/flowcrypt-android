@@ -237,11 +237,11 @@ dependencies {
     implementation "com.google.android.gms:play-services-base:${PLAY_SERVICES_VERSION}"
     implementation "com.google.android.gms:play-services-auth:${PLAY_SERVICES_VERSION}"
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation('com.google.api-client:google-api-client-android:1.23.0') {
+    implementation('com.google.api-client:google-api-client-android:1.26.0') {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }
-    implementation('com.google.apis:google-api-services-gmail:v1-rev86-1.23.0') {
+    implementation('com.google.apis:google-api-services-gmail:v1-rev96-1.25.0') {
         exclude group: 'org.apache.httpcomponents'
         exclude group: 'com.google.code.findbugs'
     }
