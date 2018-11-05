@@ -40,8 +40,8 @@
                 android:background="@color/aluminum"
                 app:layout_constraintBottom_toTopOf="@+id/textViewAuthorHint"
                 app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
                 android:id="@+id/textViewAuthorHint"
@@ -51,8 +51,8 @@
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
                 android:textColor="@color/gray"
                 app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                app:layout_constraintRight_toLeftOf="@+id/guidelineRight" />
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
 
             <EditText
                 android:id="@+id/editTextUserMessage"
@@ -65,8 +65,8 @@
                 android:inputType="textMultiLine"
                 android:textColorHint="@color/silver"
                 app:layout_constraintBottom_toTopOf="@+id/viewDivider"
-                app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
 
             <android.support.constraint.Guideline

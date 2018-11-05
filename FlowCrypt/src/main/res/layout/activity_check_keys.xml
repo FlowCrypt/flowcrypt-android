@@ -18,8 +18,8 @@
             android:id="@+id/textViewTitle"
             style="@style/ScreenHeading"
             android:text="@string/set_up_flow_crypt"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <FrameLayout
@@ -74,8 +74,8 @@
             android:layout_marginTop="@dimen/default_margin_content"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/layoutPasswordHint"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle"
             tools:visibility="visible" />
 
@@ -87,8 +87,8 @@
             android:orientation="horizontal"
             android:paddingEnd="@dimen/default_four_dip"
             android:paddingStart="@dimen/default_four_dip"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle">
 
             <TextView
@@ -115,8 +115,8 @@
             app:counterEnabled="false"
             app:errorEnabled="false"
             app:hintEnabled="false"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/layoutPasswordHint"
             app:passwordToggleContentDescription="description"
             app:passwordToggleEnabled="true">
@@ -136,8 +136,8 @@
             android:layout_marginTop="@dimen/margin_top_load_account"
             android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword"
             tools:text="@string/load_account" />
 
@@ -149,8 +149,8 @@
             android:theme="@style/AppWidget.Button.White"
             android:visibility="gone"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonPositiveAction"
             tools:text="@string/use_existing_keys" />
 
@@ -162,8 +162,8 @@
             android:layout_marginTop="@dimen/margin_top_button_select_another_account"
             android:theme="@style/AppWidget.Button.White"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonNeutralAction"
             tools:text="@string/use_another_account" />
 

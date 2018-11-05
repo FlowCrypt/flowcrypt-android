@@ -30,8 +30,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -42,8 +42,8 @@
                 android:layout_marginRight="0dp"
                 android:layout_marginTop="@dimen/default_margin_very_big"
                 android:text="@string/evaluating"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
         </android.support.constraint.ConstraintLayout>
@@ -99,8 +99,8 @@
                     android:layout_marginTop="@dimen/margin_between_buttons"
                     android:text="@string/load_from_a_file"
                     android:theme="@style/AppWidget.Button.Green"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyIdOrEmail" />
 
                 <Button
@@ -110,8 +110,8 @@
                     android:layout_marginTop="@dimen/margin_between_buttons"
                     android:text="@string/load_from_clipboard"
                     android:theme="@style/AppWidget.Button.Green"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/buttonLoadFromFile" />
 
                 <android.support.constraint.Guideline

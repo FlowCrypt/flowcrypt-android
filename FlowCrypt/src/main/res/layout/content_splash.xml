@@ -13,8 +13,8 @@
         android:id="@+id/buttonPrivacy"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
         android:text="@string/privacy"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/buttonTerms"
+        app:layout_constraintEnd_toStartOf="@+id/buttonTerms"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintTop_creator="1" />
 
@@ -22,8 +22,8 @@
         android:id="@+id/buttonTerms"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
         android:text="@string/terms"
-        app:layout_constraintLeft_toRightOf="@+id/buttonPrivacy"
-        app:layout_constraintRight_toLeftOf="@+id/buttonSecurity"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSecurity"
+        app:layout_constraintStart_toEndOf="@+id/buttonPrivacy"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintTop_creator="1" />
 
@@ -31,8 +31,8 @@
         android:id="@+id/buttonSecurity"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
         android:text="@string/security"
-        app:layout_constraintLeft_toRightOf="@+id/buttonTerms"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonTerms"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintTop_creator="1" />
 
@@ -51,8 +51,8 @@
         android:textAllCaps="false"
         android:textSize="@dimen/text_size_logo_crypt"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonTerms"
         app:srcCompat="@mipmap/logo_flowcrypt" />
 
@@ -66,8 +66,8 @@
         android:textColor="@android:color/black"
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewLogo"
         app:layout_constraintVertical_bias="0.215" />
 
@@ -78,8 +78,8 @@
         android:drawableStart="@mipmap/ic_gmail"
         android:text="@string/continue_with_gmail"
         android:theme="@style/AppWidget.Button.White.ConnectAccount"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewConnectYourEmail"
         tools:layout_constraintLeft_creator="1"
         tools:layout_constraintRight_creator="1"
@@ -92,8 +92,8 @@
         android:drawableStart="@mipmap/ic_email"
         android:text="@string/other_email_provider"
         android:theme="@style/AppWidget.Button.White.ConnectAccount"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail" />
 
 </android.support.constraint.ConstraintLayout>

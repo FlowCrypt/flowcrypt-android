@@ -15,8 +15,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:contentDescription="@string/warning"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/ic_warning" />
 
@@ -29,8 +29,8 @@
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewWarning"
         tools:text="No connection" />
 </android.support.constraint.ConstraintLayout>

@@ -19,7 +19,7 @@
         android:contentDescription="@string/user_photo"
         android:src="@mipmap/ic_account_default_photo"
         app:layout_constraintBottom_toTopOf="@+id/layoutUserDetails"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/layoutUserDetails"
@@ -28,40 +28,30 @@
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:paddingBottom="@dimen/default_margin_content_small"
         android:paddingLeft="@dimen/default_margin_content"
-        android:paddingRight="@dimen/default_margin_content"
         android:paddingTop="@dimen/default_margin_content_small"
+        android:paddingRight="@dimen/default_margin_content"
+        android:paddingBottom="@dimen/default_margin_content_small"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
-
-        <ImageView
-            android:id="@+id/imageViewExpandAccountManagement"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/expand_an_account_managment"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.5"
-            app:srcCompat="@mipmap/ic_arrow_drop_down" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:id="@+id/layoutActiveUserInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/imageViewExpandAccountManagement"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/textViewActiveUserDisplayName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:singleLine="true"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 tools:text="Android Studio" />
 
@@ -73,6 +63,17 @@
                 android:singleLine="true"
                 tools:text="android.studio@android.com" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imageViewExpandAccountManagement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/expand_an_account_managment"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5"
+            app:srcCompat="@mipmap/ic_arrow_drop_down" />
 
     </android.support.constraint.ConstraintLayout>
 

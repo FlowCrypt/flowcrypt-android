@@ -32,7 +32,7 @@
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:orientation="vertical"
         app:layout_constraintEnd_toStartOf="@+id/imageButtonDeleteContact"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -44,7 +44,7 @@
             android:textSize="@dimen/default_text_size_big"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/textViewEmail"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Den Bondarenko" />
 
@@ -57,7 +57,7 @@
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewName"
             tools:text="denbond7@gmail.com" />
 
@@ -65,15 +65,15 @@
             android:id="@+id/textViewOnlyEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/default_margin_content_small"
             android:layout_marginTop="@dimen/default_margin_content_small"
+            android:layout_marginBottom="@dimen/default_margin_content_small"
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="@dimen/default_text_size_big"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="denbond7@gmail.com" />
     </android.support.constraint.ConstraintLayout>
@@ -86,7 +86,7 @@
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:background="?android:attr/selectableItemBackground"
         app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
-        app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/ic_delete" />
 </android.support.constraint.ConstraintLayout>

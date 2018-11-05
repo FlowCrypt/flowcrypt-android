@@ -24,8 +24,6 @@
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -38,8 +36,8 @@
             android:text="@string/loading"
             android:textColor="@color/dark"
             android:textSize="@dimen/default_text_size_big"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/progressBar" />
     </android.support.constraint.ConstraintLayout>
 
@@ -62,8 +60,8 @@
                 <TextView
                     android:id="@+id/textViewFirstPasswordCheckTitle"
                     style="@style/ScreenHeading"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:text="@string/set_up_flow_crypt" />
 
@@ -73,8 +71,8 @@
                     android:layout_height="@dimen/layout_height_sub_header"
                     android:layout_marginTop="@dimen/default_margin_content_big"
                     android:orientation="horizontal"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textViewFirstPasswordCheckTitle">
 
                     <TextView
@@ -104,9 +102,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_top_password_layout"
                     android:hint="@string/enter_new_pass_phrase"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/layoutPasswordHint"
                     app:passwordToggleContentDescription="description"
                     app:passwordToggleEnabled="true">
@@ -143,9 +141,9 @@
                     android:layout_marginTop="@dimen/default_margin_content_big"
                     android:text="@string/set_pass_phrase"
                     android:theme="@style/AppWidget.Button.SilverWithWhiteText"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword" />
 
                 <TextView
@@ -157,8 +155,8 @@
                     android:text="@string/loss_of_this_pass_phrase_cannot_be_recovered"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/buttonSetPassPhrase" />
 
                 <android.support.constraint.Guideline
@@ -186,8 +184,8 @@
                 <TextView
                     android:id="@+id/textViewSecondPasswordCheckTitle"
                     style="@style/ScreenHeading"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:text="@string/set_up_flow_crypt" />
 
@@ -211,9 +209,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_top_password_layout"
                     android:hint="@string/repeat_pass_phrase"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSecond"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRightSecond"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
                     app:layout_constraintTop_toBottomOf="@+id/layoutPasswordHintSecond"
                     app:passwordToggleContentDescription="description"
                     app:passwordToggleEnabled="true">
@@ -250,9 +248,9 @@
                     android:layout_marginTop="@dimen/default_margin_content_big"
                     android:text="@string/confirm_pass_phrase"
                     android:theme="@style/AppWidget.Button.Green"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSecond"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRightSecond"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
                     app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPasswordSecond" />
 
                 <Button
@@ -262,9 +260,9 @@
                     android:layout_marginTop="@dimen/margin_between_buttons"
                     android:text="@string/use_another_pass_phrase"
                     android:theme="@style/AppWidget.Button.SilverWithWhiteText"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRightSecond"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSecond"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRightSecond"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeftSecond"
                     app:layout_constraintTop_toBottomOf="@+id/buttonConfirmPassPhrases" />
 
                 <android.support.constraint.Guideline
@@ -292,8 +290,8 @@
                     android:id="@+id/textViewSuccessTitle"
                     style="@style/ScreenHeading"
                     android:layout_marginTop="@dimen/margin_top_you_are_all_set"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:text="@string/you_are_all_set" />
 
@@ -317,9 +315,9 @@
                     android:layout_width="0dp"
                     android:layout_marginTop="@dimen/margin_top_button_continue"
                     android:theme="@style/AppWidget.Button.Green"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRightSuccess"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeftSuccess"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRightSuccess"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeftSuccess"
                     app:layout_constraintTop_toBottomOf="@+id/textViewSuccessSubTitle"
                     tools:text="@string/continue_" />
 

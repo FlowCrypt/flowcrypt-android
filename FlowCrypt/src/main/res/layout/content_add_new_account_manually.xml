@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:text="@string/account_info"
             android:textColor="@android:color/holo_red_dark"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <android.support.design.widget.TextInputLayout
@@ -31,8 +31,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="@string/e_mail"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewAccountInfo">
 
             <android.support.design.widget.TextInputEditText
@@ -53,8 +53,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
             android:hint="@string/username"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutEmail">
 
             <android.support.design.widget.TextInputEditText
@@ -75,8 +75,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
             android:hint="@string/password"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutUsername"
             app:passwordToggleContentDescription="description"
             app:passwordToggleEnabled="true">
@@ -101,7 +101,7 @@
             android:layout_marginTop="@dimen/default_margin_huge"
             android:text="@string/incoming_mail_settings"
             android:textColor="@android:color/holo_red_dark"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutPassword" />
 
         <android.support.design.widget.TextInputLayout
@@ -110,8 +110,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="@string/imap_server"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewIncomingEmailSettings">
 
             <android.support.design.widget.TextInputEditText
@@ -132,8 +132,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
             android:hint="@string/imap_port"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutImapServer">
 
             <android.support.design.widget.TextInputEditText
@@ -155,7 +155,7 @@
             android:layout_height="wrap_content"
             android:text="@string/security_type"
             app:layout_constraintBottom_toBottomOf="@+id/spinnerImapSecurityType"
-            app:layout_constraintLeft_toLeftOf="@+id/layoutImapPort"
+            app:layout_constraintStart_toStartOf="@+id/layoutImapPort"
             app:layout_constraintTop_toTopOf="@+id/spinnerImapSecurityType" />
 
         <Spinner
@@ -164,8 +164,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/default_margin_content_small"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            app:layout_constraintLeft_toRightOf="@+id/textViewSecurityType"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textViewSecurityType"
             app:layout_constraintTop_toBottomOf="@+id/layoutImapPort" />
 
         <TextView
@@ -175,7 +175,7 @@
             android:layout_marginTop="@dimen/default_margin_huge"
             android:text="@string/outgoing_mail_settings"
             android:textColor="@android:color/holo_red_dark"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerImapSecurityType" />
 
         <android.support.design.widget.TextInputLayout
@@ -184,8 +184,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="@string/smtp_server"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewOutgoingEmailSettings">
 
             <android.support.design.widget.TextInputEditText
@@ -206,8 +206,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
             android:hint="@string/smtp_port"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpServer">
 
             <android.support.design.widget.TextInputEditText
@@ -229,7 +229,7 @@
             android:layout_height="wrap_content"
             android:text="@string/security_type"
             app:layout_constraintBottom_toBottomOf="@+id/spinnerSmtpSecyrityType"
-            app:layout_constraintLeft_toLeftOf="@+id/layoutSmtpPort"
+            app:layout_constraintStart_toStartOf="@+id/layoutSmtpPort"
             app:layout_constraintTop_toTopOf="@+id/spinnerSmtpSecyrityType" />
 
         <Spinner
@@ -238,8 +238,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/default_margin_content_small"
             android:layout_marginTop="@dimen/default_margin_content_small"
-            app:layout_constraintLeft_toRightOf="@+id/textViewSmtpSecurityType"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textViewSmtpSecurityType"
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpPort" />
 
         <CheckBox
@@ -248,7 +248,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content_small"
             android:text="@string/require_custom_sign_in"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerSmtpSecyrityType" />
 
         <android.support.constraint.ConstraintLayout
@@ -257,8 +257,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/checkBoxRequireSignInForSmtp"
             tools:visibility="visible">
 
@@ -269,8 +269,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:hint="@string/smtp_username"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <android.support.design.widget.TextInputEditText
@@ -291,8 +291,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:hint="@string/smtp_password"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layoutSmtpUserName"
                 app:passwordToggleContentDescription="description"
                 app:passwordToggleEnabled="true">
@@ -320,8 +320,8 @@
             android:text="@string/try_to_connect"
             android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="parent"
+            app:layout_constraintEnd_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpSignIn" />
 
 
