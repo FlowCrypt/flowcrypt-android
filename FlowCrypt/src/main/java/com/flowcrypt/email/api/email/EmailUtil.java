@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 
@@ -40,7 +41,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.common.util.CollectionUtils;
-import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -353,7 +353,7 @@ public class EmailUtil {
           .execute();
 
       MimeMessage mimeMessage = new MimeMessage(session,
-          new ByteArrayInputStream(Base64.decodeBase64(message.getRaw())));
+          new ByteArrayInputStream(Base64.decode(message.getRaw(), Base64.URL_SAFE)));
 
       String backup = getKeyFromMessageIfItExists(mimeMessage);
 
