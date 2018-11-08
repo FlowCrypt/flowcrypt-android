@@ -13,7 +13,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -71,6 +70,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.net.ssl.SSLException;
+
+import androidx.annotation.NonNull;
 
 /**
  * @author Denis Bondarenko

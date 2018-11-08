@@ -17,8 +17,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
@@ -59,6 +57,9 @@ import javax.mail.Folder;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 
 /**
  * This service will be use to download email attachments. To start load an attachment just run service via the intent

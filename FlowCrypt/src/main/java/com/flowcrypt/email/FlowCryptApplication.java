@@ -8,9 +8,6 @@ package com.flowcrypt.email;
 import android.app.Application;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.support.multidex.MultiDex;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
@@ -23,6 +20,10 @@ import org.acra.ACRA;
 import org.acra.ReportField;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
+
+import androidx.fragment.app.FragmentManager;
+import androidx.multidex.MultiDex;
+import androidx.preference.PreferenceManager;
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state.

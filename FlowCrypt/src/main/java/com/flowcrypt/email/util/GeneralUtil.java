@@ -235,9 +235,9 @@ public class GeneralUtil {
   }
 
   /**
-   * Generate a unique name for {@link android.support.test.espresso.IdlingResource}
+   * Generate a unique name for {@link androidx.test.espresso.IdlingResource}
    *
-   * @param aClass The class where we will use {@link android.support.test.espresso.IdlingResource}
+   * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
    * @return A generated name.
    */
   public static String generateNameForIdlingResources(Class<?> aClass) {

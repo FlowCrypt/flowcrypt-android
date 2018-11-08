@@ -10,14 +10,16 @@ import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
+
+import com.google.android.material.snackbar.Snackbar;
+
+import androidx.annotation.NonNull;
 
 /**
  * User interface util methods.

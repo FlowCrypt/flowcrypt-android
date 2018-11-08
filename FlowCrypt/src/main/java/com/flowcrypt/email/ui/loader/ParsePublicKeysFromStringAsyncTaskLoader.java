@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
@@ -27,6 +25,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader parses a list of {@link PublicKeyInfo} objects from an input string.

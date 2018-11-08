@@ -9,9 +9,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.app.JobIntentService;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -54,6 +51,10 @@ import java.util.UUID;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
+import androidx.core.content.FileProvider;
 
 /**
  * This service creates a new outgoing message using the given {@link OutgoingMessageInfo}.

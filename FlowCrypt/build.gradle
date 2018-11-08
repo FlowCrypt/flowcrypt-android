@@ -78,7 +78,7 @@ android {
         targetSdkVersion TARGET_SDK_VERSION as int
         versionCode APP_VERSION_CODE as int
         versionName APP_VERSION_NAME as String
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
 
     }
@@ -213,29 +213,30 @@ dependencies {
 
     releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
 
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:${ESPRESSO_VERSION}"
-    androidTestImplementation "com.android.support.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
-    androidTestImplementation "com.android.support.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation "androidx.test.espresso:espresso-core:${ESPRESSO_VERSION}"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
+    androidTestImplementation 'androidx.test:runner:1.1.0'
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
     testImplementation "junit:junit:${JUNIT_VERSION}"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation "com.android.support:support-v4:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:appcompat-v7:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:design:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:preference-v14:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:cardview-v7:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:customtabs:${ANDROID_SUPPORT_VERSION}"
-    implementation "com.android.support:recyclerview-v7:${ANDROID_SUPPORT_VERSION}"
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation 'com.android.support:multidex:1.0.3'
-    implementation "com.android.support.test.espresso:espresso-idling-resource:${ESPRESSO_VERSION}"
+    implementation "androidx.legacy:legacy-support-v4:${ANDROIDX_BASE_VERSION}"
+    implementation 'androidx.appcompat:appcompat:1.0.1'
+    implementation "androidx.legacy:legacy-preference-v14:${ANDROIDX_BASE_VERSION}"
+    implementation "androidx.cardview:cardview:${ANDROIDX_BASE_VERSION}"
+    implementation "androidx.browser:browser:${ANDROIDX_BASE_VERSION}"
+    implementation "androidx.recyclerview:recyclerview:${ANDROIDX_BASE_VERSION}"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.multidex:multidex:2.0.0'
+    implementation "androidx.test.espresso:espresso-idling-resource:${ESPRESSO_VERSION}"
 
     implementation "com.google.android.gms:play-services-base:${PLAY_SERVICES_VERSION}"
     implementation "com.google.android.gms:play-services-auth:${PLAY_SERVICES_VERSION}"
+    implementation "com.google.android.material:material:${ANDROIDX_BASE_VERSION}"
+
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation('com.google.api-client:google-api-client-android:1.26.0') {
         exclude group: 'org.apache.httpcomponents'
@@ -261,6 +262,7 @@ dependencies {
 
     implementation "com.github.bumptech.glide:glide:${GLIDE_VERSION}"
     annotationProcessor "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
+    annotationProcessor "androidx.annotation:annotation:${ANDROIDX_BASE_VERSION}"
 
     implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
     implementation 'commons-io:commons-io:2.6'

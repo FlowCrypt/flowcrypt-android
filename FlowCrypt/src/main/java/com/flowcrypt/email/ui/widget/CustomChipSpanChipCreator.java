@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.widget;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
@@ -19,6 +18,8 @@ import com.hootsuite.nachos.chip.Chip;
 import com.hootsuite.nachos.chip.ChipCreator;
 import com.hootsuite.nachos.chip.ChipSpan;
 import com.hootsuite.nachos.chip.ChipSpanChipCreator;
+
+import androidx.annotation.NonNull;
 
 /**
  * This {@link ChipSpanChipCreator} responsible for displaying {@link Chip}.

@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.rules;
 
-import android.support.test.InstrumentationRegistry;
-
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -26,6 +24,8 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+
+import androidx.test.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko

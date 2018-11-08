@@ -7,9 +7,10 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v7.preference.PreferenceManager;
 
 import java.util.Set;
+
+import androidx.preference.PreferenceManager;
 
 /**
  * @author DenBond7

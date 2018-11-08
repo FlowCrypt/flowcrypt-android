@@ -18,7 +18,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -30,6 +29,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+
+import androidx.annotation.Nullable;
 
 /**
  * This service will be used to do checking clipboard to find a valid key while the

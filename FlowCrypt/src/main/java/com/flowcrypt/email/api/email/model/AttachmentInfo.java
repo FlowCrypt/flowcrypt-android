@@ -9,9 +9,10 @@ import android.accounts.Account;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
+
+import androidx.annotation.Nullable;
 
 /**
  * Simple POJO which defines information about email attachments.

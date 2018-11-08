@@ -10,8 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -35,6 +33,9 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.loader.content.Loader;
 
 /**
  * This {@link Activity} retrieves a public keys string from the different sources and sends it to

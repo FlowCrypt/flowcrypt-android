@@ -10,8 +10,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
@@ -19,6 +17,9 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 /**
  * This manager is responsible for displaying attachment notifications.

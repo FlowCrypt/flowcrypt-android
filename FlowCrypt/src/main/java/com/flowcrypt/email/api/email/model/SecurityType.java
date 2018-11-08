@@ -8,12 +8,13 @@ package com.flowcrypt.email.api.email.model;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes settings for some security type.

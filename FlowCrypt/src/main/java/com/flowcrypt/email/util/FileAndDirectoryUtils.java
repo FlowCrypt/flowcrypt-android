@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.util;
 
-import android.support.annotation.NonNull;
-
 import java.io.File;
 import java.io.IOException;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes methods for a work with files and directories.

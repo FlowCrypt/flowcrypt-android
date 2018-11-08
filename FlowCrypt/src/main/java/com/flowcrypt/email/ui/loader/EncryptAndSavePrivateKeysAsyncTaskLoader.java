@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v4.content.AsyncTaskLoader;
 import android.util.Pair;
 
 import com.eclipsesource.v8.V8Object;
@@ -27,6 +26,8 @@ import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader try to encrypt and save encrypted key with entered password by

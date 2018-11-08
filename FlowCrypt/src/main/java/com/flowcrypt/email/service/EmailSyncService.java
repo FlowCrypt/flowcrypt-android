@@ -19,7 +19,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -67,6 +66,8 @@ import javax.mail.StoreClosedException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
+
+import androidx.annotation.NonNull;
 
 /**
  * This the email synchronization service. This class is responsible for the logic of

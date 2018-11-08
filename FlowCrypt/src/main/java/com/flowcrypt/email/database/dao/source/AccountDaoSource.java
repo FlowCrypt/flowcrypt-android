@@ -12,7 +12,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -32,6 +31,8 @@ import java.util.List;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
+import androidx.annotation.Nullable;
 
 /**
  * This class describe creating of table which has name

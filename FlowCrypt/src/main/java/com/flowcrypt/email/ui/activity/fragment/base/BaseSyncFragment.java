@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
@@ -15,6 +14,8 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.util.UIUtil;
+
+import androidx.annotation.Nullable;
 
 /**
  * The base fragment which must used when we will work with an email provider.

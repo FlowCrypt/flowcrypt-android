@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.retrofit;
 
 import android.content.Context;
-import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
@@ -17,6 +16,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.preference.PreferenceManager;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;

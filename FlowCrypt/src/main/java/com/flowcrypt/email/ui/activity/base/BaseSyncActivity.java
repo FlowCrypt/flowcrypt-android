@@ -12,7 +12,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
@@ -20,6 +19,8 @@ import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import androidx.annotation.Nullable;
 
 /**
  * This class describes a bind to the email sync service logic.

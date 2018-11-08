@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiHelper;
@@ -27,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import androidx.loader.content.AsyncTaskLoader;
 import retrofit2.Response;
 
 /**

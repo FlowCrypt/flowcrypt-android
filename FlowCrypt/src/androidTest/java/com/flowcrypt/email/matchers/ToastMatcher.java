@@ -6,12 +6,13 @@
 package com.flowcrypt.email.matchers;
 
 import android.os.IBinder;
-import android.support.test.espresso.Root;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+
+import androidx.test.espresso.Root;
 
 /**
  * An implementation of {@link TypeSafeMatcher} to test {@link Toast} using Espresso.

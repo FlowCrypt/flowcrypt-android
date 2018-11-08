@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email;
 
-import android.support.v4.content.FileProvider;
+import androidx.core.content.FileProvider;
 
 /**
  * This class contains the common constants used in the application.

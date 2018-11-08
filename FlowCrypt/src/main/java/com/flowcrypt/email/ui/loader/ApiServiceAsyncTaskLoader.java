@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
@@ -22,6 +21,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * A basic AsyncTaskLoader who make API calls.

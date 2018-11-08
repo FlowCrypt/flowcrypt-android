@@ -10,8 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +19,9 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.PreviewImportPgpContactFragment;
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 
 /**
  * This activity displays information about public keys owners and information about keys.

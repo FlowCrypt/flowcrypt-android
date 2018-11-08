@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.rules;
 
-import android.support.test.InstrumentationRegistry;
-
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -16,6 +14,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.util.List;
+
+import androidx.test.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko

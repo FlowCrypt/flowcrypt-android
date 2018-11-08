@@ -12,7 +12,6 @@ import android.preference.PreferenceManager;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -46,6 +45,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a

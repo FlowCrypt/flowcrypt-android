@@ -10,7 +10,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
@@ -25,7 +25,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutEmail"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -35,7 +35,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewAccountInfo">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -44,9 +44,9 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutUsername"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -57,7 +57,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutEmail">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextUserName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -66,9 +66,9 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutPassword"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -81,7 +81,7 @@
             app:passwordToggleContentDescription="description"
             app:passwordToggleEnabled="true">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -92,7 +92,7 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/textViewIncomingEmailSettings"
@@ -104,7 +104,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutPassword" />
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutImapServer"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -114,7 +114,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewIncomingEmailSettings">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextImapServer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -123,9 +123,9 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutImapPort"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -136,7 +136,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutImapServer">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextImapPort"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -147,7 +147,7 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/textViewSecurityType"
@@ -178,7 +178,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerImapSecurityType" />
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutSmtpServer"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -188,7 +188,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewOutgoingEmailSettings">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextSmtpServer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -197,9 +197,9 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <android.support.design.widget.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layoutSmtpPort"
             style="@style/AppWidget.TextInputLayout.GreyBottomLine"
             android:layout_width="0dp"
@@ -210,7 +210,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpServer">
 
-            <android.support.design.widget.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextSmtpPort"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -221,7 +221,7 @@
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
-        </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/textViewSmtpSecurityType"
@@ -251,7 +251,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerSmtpSecyrityType" />
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutSmtpSignIn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -262,7 +262,7 @@
             app:layout_constraintTop_toBottomOf="@+id/checkBoxRequireSignInForSmtp"
             tools:visibility="visible">
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutSmtpUserName"
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="0dp"
@@ -273,7 +273,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <android.support.design.widget.TextInputEditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextSmtpUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -282,9 +282,9 @@
                     android:maxLines="1"
                     android:paddingTop="@dimen/default_margin_medium" />
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutSmtpPassword"
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:layout_width="0dp"
@@ -297,7 +297,7 @@
                 app:passwordToggleContentDescription="description"
                 app:passwordToggleEnabled="true">
 
-                <android.support.design.widget.TextInputEditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextSmtpPassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -308,9 +308,9 @@
                     android:maxLines="1"
                     android:paddingTop="@dimen/default_margin_medium" />
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button
             android:id="@+id/buttonTryToConnect"
@@ -325,6 +325,6 @@
             app:layout_constraintTop_toBottomOf="@+id/layoutSmtpSignIn" />
 
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

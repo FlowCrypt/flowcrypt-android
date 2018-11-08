@@ -5,11 +5,6 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
-
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
@@ -25,17 +20,22 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.closeSoftKeyboard;
-import static android.support.test.espresso.Espresso.onData;
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.clearText;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withChild;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
+import androidx.test.runner.AndroidJUnit4;
+
+import static androidx.test.espresso.Espresso.closeSoftKeyboard;
+import static androidx.test.espresso.Espresso.onData;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.clearText;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withChild;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 
@@ -113,7 +113,7 @@ public class SelectContactsActivityTest extends BaseTest {
   @Test
   public void testNoResults() {
     onView(withId(R.id.menuSearch)).check(matches(isDisplayed())).perform(click());
-    onView(withId(android.support.design.R.id.search_src_text)).perform(clearText(),
+    onView(withId(com.google.android.material.R.id.search_src_text)).perform(clearText(),
         typeText("some email"));
     closeSoftKeyboard();
     onView(withId(R.id.listViewContacts)).check(matches(matchEmptyList()));
@@ -132,7 +132,7 @@ public class SelectContactsActivityTest extends BaseTest {
   }
 
   private void checkIsTypedUserFound(int viewId, String viewText) {
-    onView(withId(android.support.design.R.id.search_src_text)).perform(clearText(), typeText(viewText));
+    onView(withId(com.google.android.material.R.id.search_src_text)).perform(clearText(), typeText(viewText));
     closeSoftKeyboard();
     onView(withId(viewId)).check(matches(isDisplayed())).check(matches(withText(viewText)));
   }

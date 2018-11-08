@@ -6,9 +6,6 @@
 package com.flowcrypt.email.ui.activity.base;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.test.espresso.idling.CountingIdlingResource;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
@@ -20,6 +17,10 @@ import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.EmailManagerActivity;
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * The base {@link android.app.Activity} for displaying messages.

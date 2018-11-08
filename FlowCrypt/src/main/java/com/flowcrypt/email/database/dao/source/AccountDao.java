@@ -8,11 +8,12 @@ package com.flowcrypt.email.database.dao.source;
 import android.accounts.Account;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
+import androidx.annotation.Nullable;
 
 /**
  * The simple POJO object which describes an account information.

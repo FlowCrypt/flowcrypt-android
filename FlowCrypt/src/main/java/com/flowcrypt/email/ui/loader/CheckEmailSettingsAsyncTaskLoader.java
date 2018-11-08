@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -19,6 +18,8 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader does job of valid {@link AuthCredentials}. If incoming {@link AuthCredentials} is valid then this

@@ -6,8 +6,6 @@
 package com.flowcrypt.email.rules;
 
 import android.net.Uri;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.internal.runner.junit4.statement.UiThreadStatement;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.js.JsForUiManager;
@@ -19,6 +17,9 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.io.IOException;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 
 /**
  * The rule which clears the application settings.

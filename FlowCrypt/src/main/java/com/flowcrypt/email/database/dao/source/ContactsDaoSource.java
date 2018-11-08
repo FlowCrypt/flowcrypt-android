@@ -15,7 +15,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
@@ -23,6 +22,8 @@ import com.flowcrypt.email.model.EmailAndNamePair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describe creating of table which has name

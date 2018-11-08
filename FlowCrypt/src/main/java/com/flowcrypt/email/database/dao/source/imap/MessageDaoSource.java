@@ -18,7 +18,6 @@ import android.os.Build;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.LongSparseArray;
 
@@ -56,6 +55,8 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes the dao source for {@link GeneralMessageDetails} class.

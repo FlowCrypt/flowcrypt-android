@@ -10,8 +10,6 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -39,6 +37,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.InternetAddress;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 /**
  * The MessageListAdapter responsible for displaying the message in the list.

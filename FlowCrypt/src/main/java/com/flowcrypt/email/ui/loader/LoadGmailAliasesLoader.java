@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
@@ -20,6 +19,8 @@ import com.google.api.services.gmail.model.SendAs;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader finds and returns Gmail aliases.

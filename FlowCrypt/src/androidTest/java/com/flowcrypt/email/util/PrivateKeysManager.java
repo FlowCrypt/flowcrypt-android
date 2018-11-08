@@ -6,7 +6,6 @@
 package com.flowcrypt.email.util;
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.database.dao.KeysDao;
@@ -19,6 +18,8 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import org.apache.commons.io.IOUtils;
 
 import java.util.UUID;
+
+import androidx.test.InstrumentationRegistry;
 
 /**
  * This tool can help manage private keys in the database. For testing purposes only.

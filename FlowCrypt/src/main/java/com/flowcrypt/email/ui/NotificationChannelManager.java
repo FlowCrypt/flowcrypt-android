@@ -9,9 +9,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 
 import com.flowcrypt.email.R;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * This manager does job of register {@link NotificationChannel} of the app. The {@link NotificationChannel} was

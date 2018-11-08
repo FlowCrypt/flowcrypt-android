@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.protocol;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -20,6 +19,8 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes methods for a work with SMTP protocol.

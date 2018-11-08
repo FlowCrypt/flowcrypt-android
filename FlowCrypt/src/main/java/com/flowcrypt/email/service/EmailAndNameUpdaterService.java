@@ -7,8 +7,6 @@ package com.flowcrypt.email.service;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v4.app.JobIntentService;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.BuildConfig;
@@ -18,6 +16,9 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not

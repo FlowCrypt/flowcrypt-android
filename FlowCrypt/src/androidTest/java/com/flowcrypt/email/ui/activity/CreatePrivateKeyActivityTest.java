@@ -7,10 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
@@ -22,16 +18,21 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.clearText;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
+import androidx.test.runner.AndroidJUnit4;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.clearText;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -109,7 +110,7 @@ public class CreatePrivateKeyActivityTest {
 
     onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.pass_phrases_do_not_match)))
         .check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
   }
 
   @Test
@@ -189,7 +190,7 @@ public class CreatePrivateKeyActivityTest {
   private void checkIsNonEmptyHintShown() {
     onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.passphrase_must_be_non_empty)))
         .check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed()))
         .perform(click());
   }
 }

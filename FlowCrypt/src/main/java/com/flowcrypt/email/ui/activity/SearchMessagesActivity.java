@@ -9,8 +9,6 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,6 +22,9 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.sun.mail.imap.protocol.SearchSequence;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 
 /**
  * This {@link android.app.Activity} searches and displays messages.

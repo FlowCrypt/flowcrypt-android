@@ -7,10 +7,11 @@ package com.flowcrypt.email.ui.notifications;
 
 import android.app.Notification.InboxStyle;
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+
+import androidx.core.content.ContextCompat;
 
 /**
  * A base class for {@link android.app.Notification}

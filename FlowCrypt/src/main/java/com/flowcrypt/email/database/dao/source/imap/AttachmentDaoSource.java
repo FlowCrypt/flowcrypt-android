@@ -11,7 +11,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -19,6 +18,8 @@ import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * @author Denis Bondarenko

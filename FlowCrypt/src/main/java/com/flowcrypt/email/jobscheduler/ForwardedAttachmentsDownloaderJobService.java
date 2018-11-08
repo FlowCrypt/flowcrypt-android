@@ -13,7 +13,6 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -53,6 +52,8 @@ import javax.mail.Message;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+
+import androidx.core.content.FileProvider;
 
 /**
  * This realization of {@link JobService} downloads the attachments for forwarding purposes.

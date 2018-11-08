@@ -9,9 +9,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v7.preference.ListPreference;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceManager;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
@@ -20,6 +17,10 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+
+import androidx.preference.ListPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceManager;
 
 /**
  * This class describes notification settings.

@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.rules;
 
-import android.support.test.InstrumentationRegistry;
-
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.util.TestGeneralUtil;
@@ -14,6 +12,8 @@ import com.flowcrypt.email.util.TestGeneralUtil;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import androidx.test.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko

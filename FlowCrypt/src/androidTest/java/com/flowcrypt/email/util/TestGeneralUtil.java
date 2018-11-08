@@ -8,8 +8,6 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 import android.os.Environment;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.internal.runner.junit4.statement.UiThreadStatement;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -28,6 +26,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 
 /**
  * @author Denis Bondarenko

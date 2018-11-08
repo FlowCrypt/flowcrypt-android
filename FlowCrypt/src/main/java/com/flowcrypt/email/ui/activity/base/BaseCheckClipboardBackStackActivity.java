@@ -11,9 +11,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
+
+import androidx.annotation.Nullable;
 
 /**
  * This activity describes a logic of checking the clipboard in the background and find the private
