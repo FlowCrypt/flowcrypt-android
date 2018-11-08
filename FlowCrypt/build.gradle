@@ -216,7 +216,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${ESPRESSO_VERSION}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
     androidTestImplementation "androidx.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
-    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation "androidx.test.ext:junit:1.0.0"
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
     testImplementation "junit:junit:${JUNIT_VERSION}"
