@@ -1454,7 +1454,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             null,
             ContactsDaoSource.COL_EMAIL + " LIKE ?",
             new String[]{"%" + constraint + "%"},
-            ContactsDaoSource.COL_EMAIL + " ASC");
+            ContactsDaoSource.COL_LAST_USE + " DESC");
       }
     });
 
