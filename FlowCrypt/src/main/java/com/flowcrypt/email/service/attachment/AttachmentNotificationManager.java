@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.service.attachment;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -55,11 +56,12 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setAutoCancel(false)
         .setOngoing(true)
         .addAction(generateCancelDownloadNotificationAction(context, startId, attachmentInfo))
-        .setCategory(NotificationCompat.CATEGORY_PROGRESS)
         .setSmallIcon(android.R.drawable.stat_sys_download)
         .setContentTitle(prepareContentTitle(attachmentInfo))
         .setContentText(context.getString(R.string.waiting_to_load))
-        .setSubText(attachmentInfo.getEmail());
+        .setSubText(attachmentInfo.getEmail())
+        .setOnlyAlertOnce(true)
+        .setDefaults(Notification.DEFAULT_ALL);
     notificationManager.notify(startId, mBuilder.build());
   }
 
@@ -87,7 +89,9 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setSmallIcon(android.R.drawable.stat_sys_download)
         .setContentTitle(prepareContentTitle(attachmentInfo))
         .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
-        .setSubText(attachmentInfo.getEmail());
+        .setSubText(attachmentInfo.getEmail())
+        .setOnlyAlertOnce(true)
+        .setDefaults(Notification.DEFAULT_ALL);
     notificationManager.notify(startId, mBuilder.build());
   }
 
@@ -114,7 +118,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setOngoing(false)
         .setWhen(startId)
         .setShowWhen(false)
-        .setCategory(NotificationCompat.CATEGORY_SERVICE)
+        .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentTitle(prepareContentTitle(attachmentInfo))
         .setContentText(context.getString(R.string.download_complete))
