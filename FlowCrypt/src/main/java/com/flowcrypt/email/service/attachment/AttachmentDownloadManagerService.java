@@ -297,10 +297,11 @@ public class AttachmentDownloadManagerService extends Service {
      * Maximum number of simultaneous downloads
      */
     private static final int QUEUE_SIZE = 3;
-    private final Messenger replyMessenger;
     private ExecutorService executorService;
-    private HashMap<String, AttachmentInfo> stringAttachmentInfoHashMap;
-    private HashMap<String, Future<?>> futureMap;
+    private Messenger replyMessenger;
+
+    private volatile HashMap<String, AttachmentInfo> stringAttachmentInfoHashMap;
+    private volatile HashMap<String, Future<?>> futureMap;
 
     ServiceWorkerHandler(Looper looper, Messenger replyMessenger) {
       super(looper);
@@ -347,6 +348,11 @@ public class AttachmentDownloadManagerService extends Service {
           AttachmentInfo canceledAttInfo = (AttachmentInfo) msg.obj;
           Future future = futureMap.get(canceledAttInfo.getUniqueStringId());
           if (future != null) {
+            if (!future.isDone()) {
+              //if this thread hasn't run yet
+              onCanceled(canceledAttInfo);
+            }
+
             future.cancel(true);
           }
 
@@ -542,15 +548,20 @@ public class AttachmentDownloadManagerService extends Service {
           } finally {
             if (Thread.currentThread().isInterrupted()) {
               removeNotCompleteDownloadFile(attachmentFile);
-              onDownloadAttListener.onCanceled(attInfo);
+              if (onDownloadAttListener != null) {
+                onDownloadAttListener.onCanceled(attInfo);
+              }
             }
           }
 
           attachmentFile = decryptFileIfNeed(context, attachmentFile);
           attInfo.setName(attachmentFile.getName());
 
-          if (!Thread.currentThread().isInterrupted()) {
-            if (onDownloadAttListener != null) {
+          if (onDownloadAttListener != null) {
+            if (Thread.currentThread().isInterrupted()) {
+              removeNotCompleteDownloadFile(attachmentFile);
+              onDownloadAttListener.onCanceled(attInfo);
+            } else {
               onDownloadAttListener.onAttachmentDownloaded(attInfo, FileProvider.getUriForFile(context,
                   Constants.FILE_PROVIDER_AUTHORITY, attachmentFile));
             }
