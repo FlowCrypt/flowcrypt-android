@@ -69,6 +69,7 @@ public class Constants {
   public static final String PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE =
       "preferences_key_security_change_pass_phrase";
   public static final String PREFERENCES_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid";
+  public static final String PREFERENCES_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id";
 
   /**
    * The max total size off all attachment which can be send via the app.

@@ -21,6 +21,7 @@ import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 
 import org.apache.commons.io.IOUtils;
 
@@ -28,6 +29,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+
+import androidx.preference.PreferenceManager;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
@@ -265,5 +268,23 @@ public class GeneralUtil {
     ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
     ActivityManager.getMyMemoryState(appProcessInfo);
     return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE);
+  }
+
+  /**
+   * Generate order number for an attachment. This value will be used for the notifications ordering.
+   *
+   * @param context Interface to global information about an application environment.
+   * @return The generated order number.
+   */
+  public static int genAttOrderId(Context context) {
+    int lastId = SharedPreferencesHelper.getInt(PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
+
+    lastId++;
+
+    SharedPreferencesHelper.setInt(PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
+
+    return lastId;
   }
 }

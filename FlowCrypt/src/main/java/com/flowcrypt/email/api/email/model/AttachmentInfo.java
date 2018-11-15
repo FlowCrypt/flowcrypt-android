@@ -53,6 +53,7 @@ public class AttachmentInfo implements Parcelable {
   private Uri uri;
   private boolean isCanBeDeleted = true;
   private boolean isForwarded;
+  private int orderNumber;
 
   public AttachmentInfo() {
   }
@@ -94,6 +95,7 @@ public class AttachmentInfo implements Parcelable {
     this.uri = in.readParcelable(Uri.class.getClassLoader());
     this.isCanBeDeleted = in.readByte() != 0;
     this.isForwarded = in.readByte() != 0;
+    this.orderNumber = in.readInt();
   }
 
   @Override
@@ -112,6 +114,7 @@ public class AttachmentInfo implements Parcelable {
         ", uri=" + uri +
         ", isCanBeDeleted=" + isCanBeDeleted +
         ", isForwarded=" + isForwarded +
+        ", orderNumber=" + orderNumber +
         '}';
   }
 
@@ -135,6 +138,7 @@ public class AttachmentInfo implements Parcelable {
     dest.writeParcelable(this.uri, flags);
     dest.writeByte(this.isCanBeDeleted ? (byte) 1 : (byte) 0);
     dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
+    dest.writeInt(this.orderNumber);
   }
 
   public String getRawData() {
@@ -244,5 +248,17 @@ public class AttachmentInfo implements Parcelable {
 
   public void setForwardedUid(int forwardedUid) {
     this.forwardedUid = forwardedUid;
+  }
+
+  public int getOrderNumber() {
+    return orderNumber;
+  }
+
+  public void setOrderNumber(int orderNumber) {
+    this.orderNumber = orderNumber;
+  }
+
+  public String getUniqueStringId() {
+    return uid + "_" + id;
   }
 }

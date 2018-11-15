@@ -606,13 +606,14 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           @Override
           public void onClick(View v) {
             lastClickedAttachmentInfo = attachmentInfo;
+            lastClickedAttachmentInfo.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
               requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                   REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
             } else {
               getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
-                  (getContext(), attachmentInfo));
+                  (getContext(), lastClickedAttachmentInfo));
             }
           }
         });

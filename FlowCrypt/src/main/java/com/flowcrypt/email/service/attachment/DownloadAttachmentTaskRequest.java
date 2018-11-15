@@ -20,24 +20,18 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 
 public class DownloadAttachmentTaskRequest {
   private Context context;
-  private int startId;
   private AttachmentInfo attachmentInfo;
 
-  public DownloadAttachmentTaskRequest(Context context, int startId, AttachmentInfo attachmentInfo) {
-    this.context = context;
-    this.startId = startId;
-    this.attachmentInfo = attachmentInfo;
+  public DownloadAttachmentTaskRequest(Context context, AttachmentInfo attInfo) {
+    this.context = context != null ? context.getApplicationContext() : null;
+    this.attachmentInfo = attInfo;
   }
 
   public Context getContext() {
     return context;
   }
 
-  public int getStartId() {
-    return startId;
-  }
-
-  public AttachmentInfo getAttachmentInfo() {
+  public AttachmentInfo getAttInfo() {
     return attachmentInfo;
   }
 }

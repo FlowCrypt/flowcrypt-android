@@ -37,13 +37,13 @@ public class SharedPreferencesHelper {
     return editor.commit();
   }
 
-  public static long getLong(SharedPreferences sharedPreferences, String key, long defaultValue) {
-    return sharedPreferences.getLong(key, defaultValue);
-  }
-
   public static Set<String> getStringSet(SharedPreferences sharedPreferences, String key,
                                          Set<String> defValues) {
     return sharedPreferences.getStringSet(key, defValues);
+  }
+
+  public static long getLong(SharedPreferences sharedPreferences, String key, long defaultValue) {
+    return sharedPreferences.getLong(key, defaultValue);
   }
 
   public static boolean setLong(SharedPreferences sharedPreferences, String key, long value) {
@@ -55,6 +55,16 @@ public class SharedPreferencesHelper {
   public static boolean setString(SharedPreferences sharedPreferences, String key, String value) {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putString(key, value);
+    return editor.commit();
+  }
+
+  public static int getInt(SharedPreferences sharedPreferences, String key, int defaultValue) {
+    return sharedPreferences.getInt(key, defaultValue);
+  }
+
+  public static boolean setInt(SharedPreferences sharedPreferences, String key, int value) {
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putInt(key, value);
     return editor.commit();
   }
 
