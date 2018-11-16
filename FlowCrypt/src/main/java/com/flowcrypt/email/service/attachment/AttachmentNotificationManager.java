@@ -11,9 +11,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.ui.NotificationChannelManager;
@@ -22,6 +26,7 @@ import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 /**
@@ -34,6 +39,7 @@ import androidx.core.app.NotificationCompat;
  */
 
 public class AttachmentNotificationManager extends CustomNotificationManager {
+  public static final String GROUP_NAME_ATTACHMENTS = BuildConfig.APPLICATION_ID + ".ATTACHMENTS";
   private static final int MAX_CONTENT_TITLE_LENGTH = 30;
   private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
   private NotificationManager notificationManager;
@@ -49,21 +55,19 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param attInfo {@link AttachmentInfo} object which contains a detail information about an attachment.
    */
   public void attachmentAddedToLoadQueue(Context context, AttachmentInfo attInfo) {
-    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setWhen(attInfo.getOrderNumber())
-        .setShowWhen(false)
-        .setProgress(0, 0, true)
-        .setAutoCancel(false)
-        .setOngoing(true)
+    NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
+    builder.setProgress(0, 0, true)
         .addAction(generateCancelDownloadNotificationAction(context, attInfo))
-        .setSmallIcon(android.R.drawable.stat_sys_download)
-        .setContentTitle(prepareContentTitle(attInfo))
-        .setContentText(context.getString(R.string.waiting_to_load))
-        .setSubText(attInfo.getEmail())
-        .setOnlyAlertOnce(true)
-        .setDefaults(Notification.DEFAULT_ALL);
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), mBuilder.build());
+        .setOnlyAlertOnce(true);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      prepareAndShowNotificationsGroup(context, attInfo, true);
+      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
+    } else {
+      builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
+    }
+
+    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
   }
 
   /**
@@ -76,22 +80,22 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param timeLeftInMillisecond The time left in millisecond (approximately).
    */
   public void updateLoadingProgress(Context context, AttachmentInfo attInfo, int progress, long timeLeftInMillisecond) {
-    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0)
-        .setWhen(attInfo.getOrderNumber())
-        .setShowWhen(false)
-        .setAutoCancel(false)
-        .setOngoing(true)
+    NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
+
+    builder.setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0)
         .addAction(generateCancelDownloadNotificationAction(context, attInfo))
         .setCategory(NotificationCompat.CATEGORY_PROGRESS)
         .setSmallIcon(android.R.drawable.stat_sys_download)
-        .setContentTitle(prepareContentTitle(attInfo))
         .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
-        .setSubText(attInfo.getEmail())
-        .setOnlyAlertOnce(true)
-        .setDefaults(Notification.DEFAULT_ALL);
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), mBuilder.build());
+        .setOnlyAlertOnce(true);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
+    } else {
+      builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
+    }
+
+    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
   }
 
   /**
@@ -109,20 +113,27 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
 
     PendingIntent pendingIntentOpenFile = PendingIntent.getActivity(context, 0, intentOpenFile, 0);
 
-    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setProgress(0, 0, false)
+    NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
+
+    builder.setProgress(0, 0, false)
         .setAutoCancel(true)
         .setOngoing(false)
-        .setWhen(attInfo.getOrderNumber())
-        .setShowWhen(false)
         .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentTitle(prepareContentTitle(attInfo))
         .setContentText(context.getString(R.string.download_complete))
-        .setContentIntent(pendingIntentOpenFile)
-        .setSubText(attInfo.getEmail());
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), mBuilder.build());
+        .setContentIntent(pendingIntentOpenFile);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+    } else {
+      builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
+    }
+
+    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      prepareAndShowNotificationsGroup(context, attInfo, false);
+    }
   }
 
   /**
@@ -134,21 +145,29 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param e       The {@link Exception} which contains a detail information about happened error..
    */
   public void errorHappened(Context context, AttachmentInfo attInfo, Exception e) {
-    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context,
-        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-        .setProgress(0, 0, false)
+    NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
+
+    builder.setProgress(0, 0, false)
         .setAutoCancel(true)
         .setOngoing(false)
         .addAction(generateCancelDownloadNotificationAction(context, attInfo))
         .addAction(generateRetryDownloadNotificationAction(context, attInfo))
         .setCategory(NotificationCompat.CATEGORY_SERVICE)
-        .setSmallIcon(android.R.drawable.stat_sys_download_done)// TODO-denbond7: 18.08.2017 Need to show
-/// error icon
-        .setContentTitle(prepareContentTitle(attInfo))
+        .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentText(TextUtils.isEmpty(e.getMessage())
-            ? context.getString(R.string.error_occurred_please_try_again) : e.getMessage())
-        .setSubText(attInfo.getEmail());
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), mBuilder.build());
+            ? context.getString(R.string.error_occurred_please_try_again) : e.getMessage());
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+    } else {
+      builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
+    }
+
+    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      prepareAndShowNotificationsGroup(context, attInfo, false);
+    }
   }
 
   /**
@@ -208,5 +227,61 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
 
     return new NotificationCompat.Action.Builder(0, context.getString(R.string.retry),
         cancelDownloadPendingIntent).build();
+  }
+
+  /**
+   * Generate {@link NotificationCompat.Builder} with common values.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param attInfo {@link AttachmentInfo} object which contains a detail information about an attachment.
+   * @return Generated {@link NotificationCompat.Builder}.
+   */
+  private NotificationCompat.Builder genDefBuilder(Context context, AttachmentInfo attInfo) {
+    return new NotificationCompat.Builder(context,
+        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
+        .setAutoCancel(false)
+        .setOngoing(true)
+        .setSmallIcon(android.R.drawable.stat_sys_download)
+        .setContentTitle(prepareContentTitle(attInfo))
+        .setContentText(context.getString(R.string.waiting_to_load))
+        .setSubText(attInfo.getEmail())
+        .setDefaults(Notification.DEFAULT_ALL);
+  }
+
+  /**
+   * Prepare and show the notifications group.
+   *
+   * @param context           Interface to global information about an application environment.
+   * @param attInfo           {@link AttachmentInfo} object which contains a detail information about an attachment.
+   * @param isProgressEnabled true if need to use the progress icon as default, otherwise false.
+   */
+  @RequiresApi(api = Build.VERSION_CODES.M)
+  private void prepareAndShowNotificationsGroup(Context context, AttachmentInfo attInfo, boolean isProgressEnabled) {
+    int groupResourceId = isProgressEnabled ? android.R.drawable.stat_sys_download
+        : android.R.drawable.stat_sys_download_done;
+
+    for (StatusBarNotification stBarNotification : notificationManager.getActiveNotifications()) {
+      if (!TextUtils.isEmpty(stBarNotification.getTag()) && !stBarNotification.getTag().equals(attInfo.getId())
+          && stBarNotification.getId() != attInfo.getUid()) {
+        Notification notification = stBarNotification.getNotification();
+        if (GROUP_NAME_ATTACHMENTS.equals(notification.getGroup())) {
+          Bundle extras = notification.extras;
+          if (extras != null && extras.getInt(Notification.EXTRA_PROGRESS_MAX) == MAX_FILE_SIZE_IN_PERCENTAGE
+              && extras.getInt(Notification.EXTRA_PROGRESS) > 0) {
+            groupResourceId = android.R.drawable.stat_sys_download;
+            break;
+          }
+        }
+      }
+    }
+
+    NotificationCompat.Builder groupBuilder =
+        new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
+            .setSmallIcon(groupResourceId)
+            .setGroup(GROUP_NAME_ATTACHMENTS)
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+            .setDefaults(Notification.DEFAULT_ALL)
+            .setGroupSummary(true);
+    notificationManager.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build());
   }
 }

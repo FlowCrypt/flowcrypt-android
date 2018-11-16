@@ -75,7 +75,7 @@ public class NotificationChannelManager {
   private static NotificationChannel generateAttachmentsNotificationChannel(Context context) {
     CharSequence name = context.getString(R.string.attachments);
     String description = context.getString(R.string.download_attachments_notification_channel);
-    int importance = NotificationManager.IMPORTANCE_LOW;
+    int importance = NotificationManager.IMPORTANCE_DEFAULT;
 
     NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID_ATTACHMENTS, name, importance);
     notificationChannel.setDescription(description);

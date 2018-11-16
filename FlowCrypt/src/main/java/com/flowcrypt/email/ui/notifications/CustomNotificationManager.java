@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat;
  */
 public class CustomNotificationManager {
   public static final int NOTIFICATIONS_GROUP_MESSAGES = -1;
+  public static final int NOTIFICATIONS_GROUP_ATTACHMENTS = -2;
 
   /**
    * Prepare formatted line for {@link InboxStyle}
