@@ -96,6 +96,10 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
     }
 
     notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      prepareAndShowNotificationsGroup(context, attInfo, true);
+    }
   }
 
   /**
