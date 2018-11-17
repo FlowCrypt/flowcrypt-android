@@ -92,7 +92,10 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     if (!isLoadPrivateKeysRequestSent) {
       isLoadPrivateKeysRequestSent = true;
       loadPrivateKeys(R.id.syns_load_private_keys);
-      countingIdlingResource.increment();
+
+      if (countingIdlingResource != null) {
+        countingIdlingResource.increment();
+      }
     }
   }
 
