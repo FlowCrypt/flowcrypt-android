@@ -26,10 +26,10 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.Espresso;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -55,12 +55,12 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       Intent result = new Intent(targetContext, CheckKeysActivity.class);
       ArrayList<KeyDetails> privateKeys = new ArrayList<>();
       try {
         KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
+            (InstrumentationRegistry.getInstrumentation().getContext(), "pgp/default@denbond7.com_sec.asc"),
             KeyDetails.Type.EMAIL, true, null);
         privateKeys.add(keyDetails);
       } catch (IOException e) {
@@ -90,7 +90,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   public void testShowMessageEmptyPassPhrase() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .passphrase_must_be_non_empty));
   }
 
@@ -99,7 +99,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("some pass phrase"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string.password_is_incorrect));
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .password_is_incorrect));
   }
 
   @Test

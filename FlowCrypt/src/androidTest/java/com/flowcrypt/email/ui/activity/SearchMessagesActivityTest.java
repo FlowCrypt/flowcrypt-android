@@ -26,13 +26,13 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.IdlingResource;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.clearText;
@@ -67,7 +67,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
       .class) {
     @Override
     protected Intent getActivityIntent() {
-      return SearchMessagesActivity.newIntent(InstrumentationRegistry.getTargetContext(), QUERY,
+      return SearchMessagesActivity.newIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(), QUERY,
           new Folder(FOLDER_NAME, FOLDER_NAME, 0, null, false));
     }
   };
@@ -126,7 +126,8 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
         .check(matches(isDisplayed())).perform(click());
     onView(withId(androidx.appcompat.R.id.search_close_btn)).perform(click());
     onView(isAssignableFrom(EditText.class)).check(matches(withText(isEmptyString())))
-        .check(matches(withHint(InstrumentationRegistry.getTargetContext().getString(R.string.search))));
+        .check(matches(withHint(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .search))));
   }
 
   private static ContentValues generateContentValues() {

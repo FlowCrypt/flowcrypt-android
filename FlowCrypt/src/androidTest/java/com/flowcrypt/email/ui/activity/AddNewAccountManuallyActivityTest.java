@@ -24,10 +24,10 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.IdlingPolicies;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onData;
@@ -216,7 +216,8 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
       onView(withId(R.id.editTextEmail)).perform(scrollTo(), clearText(),
           typeText(invalidEmailAddress), closeSoftKeyboard());
       onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
-      onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.error_email_is_not_valid)))
+      onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+          .error_email_is_not_valid)))
           .check(matches(isDisplayed()));
       onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
     }
@@ -277,8 +278,10 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     onView(withId(viewId)).perform(scrollTo(), clearText());
     onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
 
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.text_must_not_be_empty,
-        InstrumentationRegistry.getTargetContext().getString(stringIdForError)))).check(matches(isDisplayed()));
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .text_must_not_be_empty,
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(stringIdForError)))).check(matches
+        (isDisplayed()));
     onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
   }
 

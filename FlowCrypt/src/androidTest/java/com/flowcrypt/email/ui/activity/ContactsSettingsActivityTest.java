@@ -22,9 +22,9 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onData;
@@ -62,7 +62,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
   public static void clearContactsFromDatabase() {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
     for (String email : EMAILS) {
-      contactsDaoSource.deletePgpContact(InstrumentationRegistry.getTargetContext(), email);
+      contactsDaoSource.deletePgpContact(InstrumentationRegistry.getInstrumentation().getTargetContext(), email);
     }
   }
 
@@ -96,7 +96,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
     for (String email : EMAILS) {
       PgpContact pgpContact = new PgpContact(email, null, "", true, null,
           false, null, null, null, 0);
-      contactsDaoSource.addRow(InstrumentationRegistry.getTargetContext(), pgpContact);
+      contactsDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpContact);
     }
   }
 }

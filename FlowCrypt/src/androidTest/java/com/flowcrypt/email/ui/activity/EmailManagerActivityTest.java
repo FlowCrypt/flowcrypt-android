@@ -36,12 +36,12 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.IdlingResource;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -166,7 +166,8 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     String menuItem = "Sent";
     onView(withId(R.id.toolbar)).check(matches(anyOf(
         ToolBarTitleMatcher.withText("INBOX"),
-        ToolBarTitleMatcher.withText(InstrumentationRegistry.getTargetContext().getString(R.string.loading)))));
+        ToolBarTitleMatcher.withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R
+            .string.loading)))));
 
     onView(withId(R.id.drawer_layout)).perform(open());
     onView(withId(R.id.navigationView)).perform(CustomNavigationViewActions.navigateTo(menuItem));
@@ -175,7 +176,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
   @Test
   public void testAddNewAccount() {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
     Intent result = new Intent();
     result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, accountDao);

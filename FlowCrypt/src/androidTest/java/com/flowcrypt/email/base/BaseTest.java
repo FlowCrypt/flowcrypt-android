@@ -23,8 +23,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.matcher.BoundedMatcher;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -196,7 +196,7 @@ public class BaseTest {
   protected void addTextToClipboard(final String label, final String text) throws Throwable {
     runOnUiThread(new Runnable() {
       public void run() {
-        ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getTargetContext()
+        ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getInstrumentation().getTargetContext()
             .getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {

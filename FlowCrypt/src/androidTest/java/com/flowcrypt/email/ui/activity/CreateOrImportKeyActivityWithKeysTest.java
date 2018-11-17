@@ -26,10 +26,10 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -60,7 +60,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
       (CreateOrImportKeyActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
       Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
       result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
@@ -77,7 +77,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
 
   @Test
   public void testClickOnButtonCreateNewKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         CreatePrivateKeyActivity.class)), hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
     onView(withId(R.id.buttonCreateNewKey)).check(matches(isDisplayed())).perform(click());
@@ -86,7 +86,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
 
   @Test
   public void testClickOnButtonImportMyKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
             ImportPrivateKeyActivity.class)),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),

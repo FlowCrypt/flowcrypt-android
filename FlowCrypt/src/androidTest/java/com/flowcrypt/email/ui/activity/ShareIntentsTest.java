@@ -33,9 +33,9 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.closeSoftKeyboard;
@@ -220,7 +220,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   private Intent generateIntentForUri(String action, String stringUri) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 
     if (action != null) {
@@ -236,7 +236,7 @@ public class ShareIntentsTest extends BaseTest {
 
   private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMessage,
                                           int attachmentsCount) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 
     if (action != null) {

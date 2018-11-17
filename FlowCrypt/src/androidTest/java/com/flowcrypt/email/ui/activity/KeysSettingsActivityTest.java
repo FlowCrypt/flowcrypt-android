@@ -25,10 +25,10 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -59,10 +59,12 @@ public class KeysSettingsActivityTest extends BaseTest {
 
   @Test
   public void testAddNewKeys() throws Throwable {
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPrivateKeyActivity
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        ImportPrivateKeyActivity
         .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
     TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
+        .getInstrumentation()
         .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());

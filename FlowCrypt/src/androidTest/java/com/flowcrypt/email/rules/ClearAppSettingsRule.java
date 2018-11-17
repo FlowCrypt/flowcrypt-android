@@ -18,8 +18,8 @@ import org.junit.runners.model.Statement;
 
 import java.io.IOException;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * The rule which clears the application settings.
@@ -49,17 +49,18 @@ public class ClearAppSettingsRule implements TestRule {
    * @throws IOException Different errors can be occurred.
    */
   private void clearApp() throws Throwable {
-    SharedPreferencesHelper.clear(InstrumentationRegistry.getTargetContext());
-    FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getTargetContext().getCacheDir());
-    InstrumentationRegistry.getTargetContext().getContentResolver().delete(Uri.parse(FlowcryptContract
+    SharedPreferencesHelper.clear(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
+    InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver().delete(Uri.parse
+        (FlowcryptContract
         .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
+        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
-            .refresh(InstrumentationRegistry.getTargetContext());
+            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
       }
     });
     Thread.sleep(1000);// Added timeout for a better sync between threads.

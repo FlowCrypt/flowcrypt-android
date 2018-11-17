@@ -18,9 +18,9 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -55,10 +55,10 @@ public class LegalSettingsActivityTest extends BaseTest {
   @Before
   public void setUp() {
     titleNames = new String[]{
-        InstrumentationRegistry.getTargetContext().getString(R.string.privacy),
-        InstrumentationRegistry.getTargetContext().getString(R.string.terms),
-        InstrumentationRegistry.getTargetContext().getString(R.string.licence),
-        InstrumentationRegistry.getTargetContext().getString(R.string.sources)
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.privacy),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.terms),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.licence),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.sources)
     };
   }
 

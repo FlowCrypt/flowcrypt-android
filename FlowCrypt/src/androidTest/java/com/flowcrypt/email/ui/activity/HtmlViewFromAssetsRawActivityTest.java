@@ -18,9 +18,9 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -50,24 +50,24 @@ public class HtmlViewFromAssetsRawActivityTest extends BaseTest {
 
   @Test
   public void testShowPrivacyTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.privacy));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.privacy));
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   @Test
   public void testShowTermsTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.terms));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.terms));
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   @Test
   public void testShowSecurityTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.security));
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   private void startActivity(String title) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, HtmlViewFromAssetsRawActivity.class);
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title);
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm");

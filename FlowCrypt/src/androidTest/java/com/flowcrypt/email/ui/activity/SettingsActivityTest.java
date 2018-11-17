@@ -17,9 +17,9 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -54,33 +54,36 @@ public class SettingsActivityTest extends BaseTest {
 
   @Test
   public void testShowBackupsScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.backups));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .backups));
   }
 
   @Test
   public void testShowSecurityScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .security));
   }
 
   @Test
   public void testShowContactsScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.contacts));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.contacts));
   }
 
   @Test
   public void testShowKeysScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.keys));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.keys));
   }
 
   @Test
   public void testShowAttesterScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.attester));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.attester));
   }
 
   @Test
   public void testShowLegalScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getTargetContext().getString(R.string.experimental),
-        InstrumentationRegistry.getTargetContext().getString(R.string.experimental_settings));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .experimental),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.experimental_settings));
   }
 
   private void checkIsScreenDisplaying(String screenName) {

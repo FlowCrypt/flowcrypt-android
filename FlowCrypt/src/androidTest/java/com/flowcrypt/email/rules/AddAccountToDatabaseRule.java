@@ -13,7 +13,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -45,7 +45,9 @@ public class AddAccountToDatabaseRule implements TestRule {
 
   private void saveAccountToDatabase() throws Exception {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.addRow(InstrumentationRegistry.getTargetContext(), accountDao.getAuthCredentials());
-    accountDaoSource.setActiveAccount(InstrumentationRegistry.getTargetContext(), accountDao.getEmail());
+    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao
+        .getAuthCredentials());
+    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao
+        .getEmail());
   }
 }

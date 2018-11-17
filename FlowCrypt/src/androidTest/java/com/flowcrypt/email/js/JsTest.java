@@ -27,9 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import androidx.annotation.NonNull;
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -74,7 +74,8 @@ public class JsTest {
 
   @BeforeClass
   public static void initCacheDirectory() throws Exception {
-    parentDirectory = new File(InstrumentationRegistry.getTargetContext().getCacheDir(), TESTS_DIRECTORY);
+    parentDirectory = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
+        TESTS_DIRECTORY);
     if (parentDirectory.exists()) {
       FileAndDirectoryUtils.cleanDirectory(parentDirectory);
     } else if (!parentDirectory.mkdirs()) {
@@ -82,7 +83,7 @@ public class JsTest {
     }
 
     storageConnectorInterface = prepareStoreConnectorInterface();
-    js = new Js(InstrumentationRegistry.getTargetContext(), storageConnectorInterface);
+    js = new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), storageConnectorInterface);
     pgpKeyPrivateBen = generatePgpKey(js, ASSETS_PATH_BEN_SEC_ASC);
     pgpKeyPublicBen = pgpKeyPrivateBen.toPublic();
     pgpKeyPrivateDen = generatePgpKey(js, ASSETS_PATH_DEN_SEC_ASC);
@@ -92,28 +93,30 @@ public class JsTest {
 
   @Test
   public void initSecurityStorageConnector() throws Exception {
-    new SecurityStorageConnector(InstrumentationRegistry.getTargetContext());
+    new SecurityStorageConnector(InstrumentationRegistry.getInstrumentation().getTargetContext());
   }
 
   @Test
   public void initJs() throws Exception {
-    new Js(InstrumentationRegistry.getTargetContext(), null);
+    new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null);
   }
 
   @Test
   public void testReadFileFromAssetsToString() throws Exception {
-    readFileFromAssetsAsString(InstrumentationRegistry.getContext(), "pgp/ben_to_den_pgp_short_mime_message.acs");
+    readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        "pgp/ben_to_den_pgp_short_mime_message.acs");
   }
 
   @Test
   public void testMimeDecode() throws Exception {
-    js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
   }
 
   @Test
   public void testDecryptText() throws Exception {
-    MimeMessage mimeMessage = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    MimeMessage mimeMessage = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
+            .getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
     String decryptedText = js.crypto_message_decrypt(mimeMessage.getText()).getString();
     Assert.assertTrue(decryptedText.equals("This is a very security encrypted text."));
@@ -156,7 +159,8 @@ public class JsTest {
 
   @Test
   public void testCryptoKeyRead() throws Exception {
-    js.crypto_key_read(readFileFromAssetsAsString(InstrumentationRegistry.getContext(), ASSETS_PATH_BEN_SEC_ASC));
+    js.crypto_key_read(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        ASSETS_PATH_BEN_SEC_ASC));
   }
 
   @Test
@@ -169,7 +173,7 @@ public class JsTest {
   public void testLoadFileFromAssets() throws Exception {
     File original_image1Mb = createTempFile();
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
   }
 
   @Test
@@ -177,7 +181,7 @@ public class JsTest {
     File decryptedFile = decryptFile(encryptedImage1Mb);
     File original_image1Mb = createTempFile();
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
 
     Assert.assertTrue(FileUtils.contentEquals(decryptedFile, original_image1Mb));
   }
@@ -187,14 +191,14 @@ public class JsTest {
     File encryptedTempFile = createTempFile();
     byte[] encryptedBytes = js.crypto_message_encrypt(
         new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()},
-        IOUtils.toByteArray(InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg")),
+        IOUtils.toByteArray(InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")),
         image1Mb.getName());
     FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
     //Assert.assertTrue(FileUtils.contentEquals(encryptedImage1Mb, encryptedTempFile));
   }
 
   private static DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
-    Js js = new Js(InstrumentationRegistry.getTargetContext(), null);
+    Js js = new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null);
 
     PgpContact[] pgpContacts = preparePgpContacts(js);
     PgpKeyInfo[] pgpKeyPrivateKeys = preparePgpKeyInfos(js);
@@ -205,7 +209,7 @@ public class JsTest {
 
   @NonNull
   private static PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
     return js.crypto_key_read(privateKey);
   }
 
@@ -219,7 +223,7 @@ public class JsTest {
   }
 
   private static PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
     PgpKey pgpKeyPrivate = js.crypto_key_read(privateKey);
     String fingerprint = js.crypto_key_fingerprint(pgpKeyPrivate);
     String longId = js.crypto_key_longid(fingerprint);
@@ -255,9 +259,9 @@ public class JsTest {
     encryptedImage1Mb = createTempFile();
     image1Mb = createTempFile();
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), encryptedImage1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), encryptedImage1Mb);
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getContext().getAssets().open("pgp/1_mb_image.jpg"), image1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), image1Mb);
   }
 
   @NonNull

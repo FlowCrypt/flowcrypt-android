@@ -37,10 +37,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
@@ -76,8 +76,8 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
       try {
         incomingMessageInfo =
             MessageUtil.getIncomingMessageInfoWithOutBody(
-                new Js(InstrumentationRegistry.getTargetContext(), null),
-                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+                new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
+                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
                     "messages/mime_message.txt"));
 
         AttachmentInfo attachmentInfo = new AttachmentInfo();
@@ -97,12 +97,12 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             .setIsSubjectEditEnable(false)
             .setIsMessageTypeCanBeSwitched(false)
             .setIsAddNewAttachmentsEnable(false)
-            .setSystemMessage(InstrumentationRegistry.getTargetContext()
+            .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
             .setAttachmentInfoList(attachmentInfoList)
             .createServiceInfo();
 
-        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getTargetContext(),
+        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
             incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
       } catch (IOException e) {
         e.printStackTrace();

@@ -13,7 +13,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -45,7 +45,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
       @Override
       public void evaluate() throws Throwable {
         TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getContext(), keyPath), passphrase, keyDetailsType);
+            (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), passphrase, keyDetailsType);
         base.evaluate();
       }
     };

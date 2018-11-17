@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -313,21 +313,21 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
 
   private void checkKeysTitle(int quantityOfKeysUsed, int totalQuantityOfKeys, int quantityOfRemainingKeys) {
     onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
-        .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
+        .check(matches(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources()
             .getQuantityString(R.plurals.not_recovered_all_keys, quantityOfRemainingKeys,
                 quantityOfKeysUsed, totalQuantityOfKeys, quantityOfRemainingKeys))));
   }
 
   private void checkKeysTitleAtStart(int totalQuantityOfKeys) {
     onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
-        .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
+        .check(matches(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources()
             .getQuantityString(R.plurals.found_backup_of_your_account_key, totalQuantityOfKeys,
                 totalQuantityOfKeys))));
   }
 
   @NonNull
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent startCheckKeysActivity = new Intent(targetContext, CheckKeysActivity.class);
     startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, getKeyDetailsListFromAssets
         (keysPaths));
@@ -346,7 +346,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
     ArrayList<KeyDetails> privateKeys = new ArrayList<>();
     for (String path : keysPaths) {
       KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-          (InstrumentationRegistry.getContext(), path), KeyDetails.Type.EMAIL,
+          (InstrumentationRegistry.getInstrumentation().getContext(), path), KeyDetails.Type.EMAIL,
           true, null);
       privateKeys.add(keyDetails);
     }

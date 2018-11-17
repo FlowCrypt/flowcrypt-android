@@ -25,7 +25,7 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -51,9 +51,11 @@ public class AddMessageToDatabaseRule implements TestRule {
     this.folder = folder;
 
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getTargetContext(),
+      Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
+              .getTargetContext(),
           accountDao);
-      Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getTargetContext(), accountDao,
+      Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getInstrumentation()
+              .getTargetContext(), accountDao,
           session);
 
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
@@ -90,7 +92,7 @@ public class AddMessageToDatabaseRule implements TestRule {
 
   private void saveMessageToDatabase() throws MessagingException {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
-    messageDaoSource.addRow(InstrumentationRegistry.getTargetContext(),
+    messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         accountDao.getEmail(),
         folder.getFolderAlias(),
         uid,

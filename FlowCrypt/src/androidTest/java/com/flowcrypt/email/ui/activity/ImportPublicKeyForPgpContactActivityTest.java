@@ -34,10 +34,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.GrantPermissionRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -75,7 +75,7 @@ public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
       (ImportPublicKeyForPgpContactActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       PgpContact pgpContact = new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
           false, null, false, null, null, null, 0);
       Intent result = new Intent(targetContext, ImportPublicKeyForPgpContactActivity.class);
@@ -97,7 +97,7 @@ public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
 
   @BeforeClass
   public static void createResources() throws IOException {
-    publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc");
     fileWithPublicKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
         + "_pub.asc", publicKey);
@@ -132,9 +132,9 @@ public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
         .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
     onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.file_has_wrong_pgp_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.public_)));
   }
 
   @Test
@@ -148,8 +148,8 @@ public class ImportPublicKeyForPgpContactActivityTest extends BaseTest {
   public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
     addTextToClipboard("not public key", SOME_TEXT);
     onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.clipboard_has_wrong_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.public_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.public_)));
   }
 }

@@ -20,9 +20,9 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.closeSoftKeyboard;
@@ -75,7 +75,7 @@ public class SelectContactsActivityTest extends BaseTest {
         pgpContact = new PgpContact(email, null, "publicKey", true, null,
             false, null, null, null, 0);
       }
-      contactsDaoSource.addRow(InstrumentationRegistry.getTargetContext(), pgpContact);
+      contactsDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpContact);
     }
   }
 
@@ -127,7 +127,7 @@ public class SelectContactsActivityTest extends BaseTest {
   private void clearContactsFromDatabase() {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
     for (String email : EMAILS) {
-      contactsDaoSource.deletePgpContact(InstrumentationRegistry.getTargetContext(), email);
+      contactsDaoSource.deletePgpContact(InstrumentationRegistry.getInstrumentation().getTargetContext(), email);
     }
   }
 

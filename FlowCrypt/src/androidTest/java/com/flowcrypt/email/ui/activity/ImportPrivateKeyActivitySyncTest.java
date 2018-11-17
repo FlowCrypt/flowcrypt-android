@@ -36,11 +36,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.GrantPermissionRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -80,7 +80,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
       (ImportPrivateKeyActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       Intent result = new Intent(targetContext, ImportPrivateKeyActivity.class);
       result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
       result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string
@@ -100,7 +100,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
 
   @BeforeClass
   public static void createResources() throws IOException {
-    privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-sec.asc");
     fileWithPrivateKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
         + "_sec.asc", privateKey);
@@ -150,9 +150,9 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey);
 
     onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.file_has_wrong_pgp_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.private_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
 
   @Test
@@ -168,9 +168,9 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
   public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
     addTextToClipboard("not private key", SOME_TEXT);
     onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.clipboard_has_wrong_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.private_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
 
   private void useIntentionToRunActivityToSelectFile(File file) {
@@ -183,7 +183,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
 
 
   private void useIntentionFromRunCheckKeysActivity() {
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         CheckKeysActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK,
         null));
   }
