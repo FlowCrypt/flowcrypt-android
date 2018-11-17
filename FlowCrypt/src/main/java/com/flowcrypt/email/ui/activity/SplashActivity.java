@@ -298,7 +298,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
       currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
 
       startService(new Intent(this, CheckClipboardToFindKeyService.class));
-      getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
     } else {
       if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
         UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus().getStatusMessage());

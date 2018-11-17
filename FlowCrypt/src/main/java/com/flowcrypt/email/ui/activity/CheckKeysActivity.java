@@ -196,7 +196,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               getSnackBar().dismiss();
             }
 
-            getSupportLoaderManager().restartLoader(R.id
+            LoaderManager.getInstance(this).restartLoader(R.id
                 .loader_id_encrypt_and_save_private_keys_infos, null, this);
           }
         }

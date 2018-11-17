@@ -261,7 +261,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         swipeRefreshLayout.setEnabled(false);
       }
 
-      getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache,
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache,
           null, loadCachedMessagesCursorLoaderCallbacks);
     }
   }
@@ -492,7 +492,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         footerProgressView.setVisibility(View.GONE);
         emptyView.setVisibility(View.GONE);
 
-        getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         DataBaseUtil.cleanFolderCache(getContext(),
             onManageEmailsListener.getCurrentAccountDao().getEmail(),
             onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -638,7 +638,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           getSnackBar().dismiss();
         }
 
-        getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
             !isItSyncOrOutboxFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
           DataBaseUtil.cleanFolderCache(getContext(),
@@ -648,7 +648,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       }
 
       if (messageListAdapter.getCount() == 0) {
-        getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache, null,
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null,
             loadCachedMessagesCursorLoaderCallbacks);
       }
     }
@@ -714,7 +714,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    * Reload the folder messages.
    */
   public void reloadMessages() {
-    getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+    LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
     DataBaseUtil.cleanFolderCache(getContext(),
         onManageEmailsListener.getCurrentAccountDao().getEmail(),
         onManageEmailsListener.getCurrentFolder().getFolderAlias());

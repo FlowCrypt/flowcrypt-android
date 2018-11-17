@@ -51,7 +51,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @Override
   public void onConfirmPassPhraseSuccess() {
-    getSupportLoaderManager().initLoader(R.id.loader_id_change_pass_phrase, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_change_pass_phrase, null, this);
     editTextKeyPassword.setText(null);
     editTextKeyPasswordSecond.setText(null);
   }
@@ -156,7 +156,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
         JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
         restartJsService();
-        getSupportLoaderManager().initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         break;
 
       case R.id.loader_id_load_private_key_backups_from_email:
@@ -164,7 +164,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         if (keyDetailsList.isEmpty()) {//need to remove "!"
           runBackupKeysActivity();
         } else {
-          getSupportLoaderManager().initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
+          LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
         }
         break;
 

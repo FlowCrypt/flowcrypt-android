@@ -35,6 +35,7 @@ import com.flowcrypt.email.util.UIUtil;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 
 /**
@@ -78,7 +79,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   public void onBackPressed() {
     if (isSearchPublicKeysOnAttesterNow) {
       this.isSearchPublicKeysOnAttesterNow = false;
-      getSupportLoaderManager().destroyLoader(R.id.loader_id_search_public_key);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key);
       UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
     } else {
       super.onBackPressed();
@@ -214,7 +215,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
 
         if (GeneralUtil.isInternetConnectionAvailable(this)) {
-          getSupportLoaderManager().restartLoader(R.id.loader_id_search_public_key, null,
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
               ImportPgpContactActivity.this);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));

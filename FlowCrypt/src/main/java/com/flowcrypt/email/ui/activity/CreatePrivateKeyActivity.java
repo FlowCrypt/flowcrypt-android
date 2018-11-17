@@ -50,7 +50,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
   @Override
   public void onConfirmPassPhraseSuccess() {
-    getSupportLoaderManager().restartLoader(R.id.loader_id_create_private_key, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_create_private_key, null, this);
   }
 
   @Override

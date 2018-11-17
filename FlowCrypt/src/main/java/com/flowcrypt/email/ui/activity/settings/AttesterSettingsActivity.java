@@ -120,6 +120,6 @@ public class AttesterSettingsActivity extends BaseBackStackActivity
     this.emptyView = findViewById(R.id.emptyView);
     listViewKeys = findViewById(R.id.listViewKeys);
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
   }
 }

@@ -101,7 +101,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
       getSupportActionBar().setTitle(title);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
   }
 
   @Override
@@ -185,14 +185,14 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
   @Override
   public boolean onQueryTextSubmit(String query) {
     this.userSearchPattern = query;
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }
 
   @Override
   public boolean onQueryTextChange(String newText) {
     this.userSearchPattern = newText;
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }
 }

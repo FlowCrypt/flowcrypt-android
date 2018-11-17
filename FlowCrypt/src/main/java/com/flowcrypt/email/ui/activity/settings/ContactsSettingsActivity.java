@@ -66,7 +66,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
       findViewById(R.id.floatActionButtonImportPublicKey).setOnClickListener(this);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
         null, this);
   }
 
@@ -114,7 +114,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     new ContactsDaoSource().deletePgpContact(this, email);
     Toast.makeText(this, getString(R.string.the_contact_was_deleted, email), Toast
         .LENGTH_SHORT).show();
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
         null, this);
   }
 

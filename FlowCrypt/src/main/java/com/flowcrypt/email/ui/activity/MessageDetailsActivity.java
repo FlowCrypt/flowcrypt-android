@@ -85,10 +85,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     updateViews();
 
     if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
-      getSupportLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
   }
 
   @Override
@@ -191,7 +191,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             new MessageDaoSource().setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
                 folder.getFolderAlias(), generalMessageDetails.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            getSupportLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database,
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_message_info_from_database,
                 null, this);
             break;
 

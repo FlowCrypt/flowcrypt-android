@@ -156,7 +156,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   @Override
   public void onBackPressed() {
     if (isPrivateKeySavingNow) {
-      getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_file);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file);
       isPrivateKeySavingNow = false;
       UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
     } else if (isPrivateKeySendingNow) {
@@ -243,7 +243,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             if (data != null && data.getData() != null) {
               try {
                 destinationUri = data.getData();
-                getSupportLoaderManager().restartLoader(R.id.loader_id_save_private_key_as_file,
+                LoaderManager.getInstance(this).restartLoader(R.id.loader_id_save_private_key_as_file,
                     null, this);
               } catch (Exception e) {
                 e.printStackTrace();

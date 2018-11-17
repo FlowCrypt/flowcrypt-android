@@ -133,7 +133,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
           GoogleApiClientHelper.generateGoogleSignInOptions());
 
       new ActionManager(this).checkAndAddActionsToQueue(accountDao);
-      getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
+      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
           GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), BuildConfig.DEBUG);
@@ -277,7 +277,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switch (requestCode) {
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
-        getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null,
             EmailManagerActivity.this);
         if (!countingIdlingResourceForLabel.isIdleNow()) {
           countingIdlingResourceForLabel.decrement();
@@ -885,7 +885,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
         updateLabels(R.id.syns_request_code_update_label_passive, true);
       }
 
-      getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);
+      LoaderManager.getInstance(EmailManagerActivity.this).restartLoader(R.id.loader_id_load_gmail_labels,
+          null, EmailManagerActivity.this);
     }
 
     @Override

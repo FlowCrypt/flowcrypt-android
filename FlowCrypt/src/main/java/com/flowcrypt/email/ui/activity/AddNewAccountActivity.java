@@ -89,7 +89,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
           if (currentGoogleSignInAccount != null) {
             if (new AccountDaoSource().getAccountInformation(this,
                 currentGoogleSignInAccount.getEmail()) == null) {
-              getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email,
                   null, this);
             } else {
               showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
@@ -149,7 +149,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
 
           case Activity.RESULT_CANCELED:
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-            getSupportLoaderManager().destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
+            LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
             break;
         }
         break;

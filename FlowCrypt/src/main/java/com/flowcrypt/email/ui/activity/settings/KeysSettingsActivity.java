@@ -68,7 +68,7 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
         switch (resultCode) {
           case Activity.RESULT_OK:
             Toast.makeText(this, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-            getSupportLoaderManager().restartLoader(R.id
+            LoaderManager.getInstance(this).restartLoader(R.id
                 .loader_id_load_contacts_with_has_pgp_true, null, this);
             break;
         }
@@ -141,7 +141,7 @@ public class KeysSettingsActivity extends BaseBackStackActivity implements Loade
       findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
 
   }
 }

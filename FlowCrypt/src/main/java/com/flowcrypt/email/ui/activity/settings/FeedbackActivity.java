@@ -94,7 +94,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
           if (isInformationValid()) {
             if (GeneralUtil.isInternetConnectionAvailable(this)) {
               UIUtil.hideSoftInput(this, editTextUserMessage);
-              getSupportLoaderManager().restartLoader(R.id.loader_id_post_help_feedback, null, this);
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this);
             } else {
               UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                   .internet_connection_is_not_available));

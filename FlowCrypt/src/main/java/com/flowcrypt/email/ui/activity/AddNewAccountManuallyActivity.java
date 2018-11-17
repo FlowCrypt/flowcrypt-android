@@ -216,7 +216,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
           authCredentials = generateAuthCredentials();
           UIUtil.hideSoftInput(this, getRootView());
           if (isNotDuplicate()) {
-            getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings, null, this);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this);
           } else {
             showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
                 authCredentials.getEmail()), Snackbar.LENGTH_LONG);
@@ -286,7 +286,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_check_email_settings:
         boolean isSettingsValid = (boolean) result;
         if (isSettingsValid) {
-          getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email,
               null, this);
         } else {
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
@@ -314,7 +314,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
               REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
         }
 
-        getSupportLoaderManager().destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
         break;
 
       default:
@@ -352,8 +352,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
-                    getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings,
-                        null, AddNewAccountManuallyActivity.this);
+                    LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
+                        .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
                   }
                 });
           }

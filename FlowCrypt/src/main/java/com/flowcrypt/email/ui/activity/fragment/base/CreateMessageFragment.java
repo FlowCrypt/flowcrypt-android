@@ -101,6 +101,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 
 /**
@@ -265,7 +266,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     super.onActivityCreated(savedInstanceState);
 
     if (accountDao != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
-      getLoaderManager().restartLoader(R.id.loader_id_load_email_aliases, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this);
     }
 
     if (incomingMessageInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext())
@@ -778,17 +779,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateRecipientsFields() {
-    getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_update_info_about_pgp_contacts_to, null, this);
 
     if (layoutCc.getVisibility() == View.VISIBLE) {
-      getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_cc, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_update_info_about_pgp_contacts_cc, null, this);
     } else {
       editTextRecipientsCc.setText((CharSequence) null);
       pgpContactsCc.clear();
     }
 
     if (layoutBcc.getVisibility() == View.VISIBLE) {
-      getLoaderManager().restartLoader(R.id.loader_id_update_info_about_pgp_contacts_bcc, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_update_info_about_pgp_contacts_bcc, null, this);
     } else {
       editTextRecipientsBcc.setText((CharSequence) null);
       pgpContactsBcc.clear();
@@ -838,7 +839,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       } else {
         if (isUpdateInfoAboutContactsEnable) {
           if (isAdded()) {
-            getLoaderManager().restartLoader(loaderId, null, this);
+            LoaderManager.getInstance(this).restartLoader(loaderId, null, this);
           }
         } else {
           progressBar.setVisibility(View.INVISIBLE);
@@ -1095,7 +1096,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           @Override
           public void onClick(View v) {
             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-              getLoaderManager().restartLoader(loaderId, null, CreateMessageFragment.this);
+              LoaderManager.getInstance(CreateMessageFragment.this).restartLoader(loaderId, null,
+                  CreateMessageFragment.this);
             } else {
               showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available));
             }
