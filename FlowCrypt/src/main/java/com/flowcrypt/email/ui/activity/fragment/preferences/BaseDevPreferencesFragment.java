@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.preferences;
 
-import android.preference.PreferenceFragment;
+import androidx.preference.PreferenceFragmentCompat;
 
 /**
  * The base debugging fragment.
@@ -15,5 +15,5 @@ import android.preference.PreferenceFragment;
  * Time: 11:07
  * E-mail: DenBond7@gmail.com
  */
-public class BaseDevPreferencesFragment extends PreferenceFragment {
+public abstract class BaseDevPreferencesFragment extends PreferenceFragmentCompat {
 }
