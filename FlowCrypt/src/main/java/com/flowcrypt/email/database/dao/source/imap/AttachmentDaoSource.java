@@ -185,7 +185,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    *               {@link AttachmentInfo} object.
    * @return A generated {@link AttachmentInfo}.
    */
-  public AttachmentInfo getAttachmentInfo(Cursor cursor) {
+  public static AttachmentInfo getAttachmentInfo(Cursor cursor) {
     AttachmentInfo attachmentInfo = new AttachmentInfo();
     attachmentInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
     attachmentInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
