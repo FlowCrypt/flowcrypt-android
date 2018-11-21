@@ -21,7 +21,6 @@
             android:gravity="center"
             android:text="@string/public_key_below_is_safe_to_share"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-            android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toTopOf="parent" />

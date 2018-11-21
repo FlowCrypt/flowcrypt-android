@@ -177,7 +177,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
       textViewLongId.setText(getString(R.string.template_longid, pgpKeyPub.getLongid()));
       textViewDate.setText(getString(R.string.template_date, DateFormat.getMediumDateFormat(getContext()).format(
           new Date(pgpKeyPub.getCreated()))));
-      textViewUsers.setText(getString(R.string.template_users, TextUtils.join("\n", emails)));
+      textViewUsers.setText(getString(R.string.template_users, TextUtils.join(", ", emails)));
     }
 
     initButtons(view);
