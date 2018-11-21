@@ -400,4 +400,18 @@ icelanders prefer real sauna</font>
     </plurals>
     <string name="cannot_send_message_unknown_error">Can\'t send message: unknown error</string>
     <string name="message_failed_to_send">Message failed to send: unknown error</string>
+    <string name="my_public_key">My Public Key</string>
+    <string name="public_key_below_is_safe_to_share">Public Key Below is safe to share with others</string>
+    <string name="show_public_key">Show public key</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="save_to_file">Save to file</string>
+    <string name="show_private_key">Show private key</string>
+    <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
+    <string name="template_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
+    <string name="template_longid">Longid: %1$s</string>
+    <string name="template_date">Date: %1$s</string>
+    <string name="template_users">User(s):\n%1$s</string>
+    <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
+    <string name="pub_key_has_copied_to_clipboard">The public key has copied to the clipboard.</string>
+    <string name="pub_key_has_saved">The public key has saved</string>
 </resources>

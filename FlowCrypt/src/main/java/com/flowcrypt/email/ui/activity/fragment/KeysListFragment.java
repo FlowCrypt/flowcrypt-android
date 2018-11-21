@@ -9,9 +9,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -37,7 +39,7 @@ import androidx.loader.content.Loader;
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-public class KeysListFragment extends BaseFragment implements View.OnClickListener {
+public class KeysListFragment extends BaseFragment implements View.OnClickListener, AdapterView.OnItemClickListener {
 
   private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0;
 
@@ -101,6 +103,15 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
   }
 
   @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().setTitle(R.string.keys);
+    }
+  }
+
+  @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
@@ -127,6 +138,20 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
     }
   }
 
+  @Override
+  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+    String keyLongId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+
+    if (!TextUtils.isEmpty(keyLongId)) {
+      getFragmentManager()
+          .beginTransaction()
+          .replace(R.id.layoutContent, KeyDetailsFragment.newInstance(keyLongId))
+          .addToBackStack(null)
+          .commit();
+    }
+  }
+
   private void runCreateOrImportKeyActivity() {
     startActivityForResult(ImportPrivateKeyActivity.newIntent(getContext(), getString(R.string.import_private_key),
         true, ImportPrivateKeyActivity.class), REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
@@ -140,6 +165,7 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
 
     ListView listViewKeys = root.findViewById(R.id.listViewKeys);
     listViewKeys.setAdapter(privateKeysListCursorAdapter);
+    listViewKeys.setOnItemClickListener(this);
 
     if (root.findViewById(R.id.floatActionButtonAddKey) != null) {
       root.findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);

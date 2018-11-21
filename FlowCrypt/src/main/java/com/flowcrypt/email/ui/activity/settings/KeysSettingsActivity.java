@@ -6,10 +6,14 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.app.Activity;
+import android.os.Bundle;
 import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.ui.activity.fragment.KeysListFragment;
+
+import androidx.annotation.Nullable;
 
 /**
  * This {@link Activity} shows information about available keys in the database.
@@ -23,6 +27,16 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
  */
 
 public class KeysSettingsActivity extends BaseBackStackActivity {
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    if (savedInstanceState == null) {
+      getSupportFragmentManager().beginTransaction().replace(R.id.layoutContent,
+          KeysListFragment.newInstance()).commitNow();
+    }
+  }
 
   @Override
   public int getContentViewResourceId() {
