@@ -412,6 +412,6 @@ icelanders prefer real sauna</font>
     <string name="template_date">Date: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
-    <string name="pub_key_has_copied_to_clipboard">Copied</string>
-    <string name="pub_key_has_saved">Saved</string>
+    <string name="copied">Copied</string>
+    <string name="saved">Saved</string>
 </resources>

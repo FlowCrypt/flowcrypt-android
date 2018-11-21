@@ -113,7 +113,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
             if (data != null && data.getData() != null) {
               try {
                 GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
-                Toast.makeText(getContext(), getString(R.string.pub_key_has_saved), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
               } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
@@ -140,7 +140,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         if (pgpKeyPub != null) {
           ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
           clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", pgpKeyPub.armor()));
-          Toast.makeText(getContext(), getString(R.string.pub_key_has_copied_to_clipboard), Toast.LENGTH_SHORT).show();
+          Toast.makeText(getContext(), getString(R.string.copied), Toast.LENGTH_SHORT).show();
         }
         break;
 
