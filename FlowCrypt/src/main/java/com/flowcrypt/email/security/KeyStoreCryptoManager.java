@@ -156,8 +156,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(plainData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec
-          (algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
 
       return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
@@ -192,8 +191,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(encryptedData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec
-          (algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
       return new String(decodedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;

@@ -22,8 +22,7 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class PostLookUpEmailModel extends BaseRequestModel {
-  public static final Creator<PostLookUpEmailModel> CREATOR
-      = new Creator<PostLookUpEmailModel>() {
+  public static final Creator<PostLookUpEmailModel> CREATOR = new Creator<PostLookUpEmailModel>() {
     @Override
     public PostLookUpEmailModel createFromParcel(Parcel source) {
       return new PostLookUpEmailModel(source);

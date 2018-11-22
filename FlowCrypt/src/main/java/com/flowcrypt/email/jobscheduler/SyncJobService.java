@@ -152,8 +152,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
   @Override
   public void onMessagesReceived(AccountDao accountDao, Folder localFolder, IMAPFolder remoteFolder, Message[]
-      messages,
-                                 String ownerKey, int requestCode) {
+      messages, String ownerKey, int requestCode) {
 
   }
 
@@ -195,8 +194,8 @@ public class SyncJobService extends JobService implements SyncListener {
       List<GeneralMessageDetails> generalMessageDetailsAfterUpdate = messageDaoSource.getNewMessages
           (getApplicationContext(), accountDao.getEmail(), folderAlias);
 
-      List<GeneralMessageDetails> generalMessageDetailsDeleteCandidate = new LinkedList<>
-          (generalMessageDetailsBeforeUpdate);
+      List<GeneralMessageDetails> generalMessageDetailsDeleteCandidate =
+          new LinkedList<>(generalMessageDetailsBeforeUpdate);
       generalMessageDetailsDeleteCandidate.removeAll(generalMessageDetailsAfterUpdate);
 
       if (!GeneralUtil.isAppForegrounded() &&

@@ -108,9 +108,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   private int lastFirstVisibleItemPositionOffAllMessages;
   private int originalStatusBarColor;
 
-  private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
-      = new LoaderManager.LoaderCallbacks<Cursor>() {
-
+  private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks = new LoaderManager
+      .LoaderCallbacks<Cursor>() {
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

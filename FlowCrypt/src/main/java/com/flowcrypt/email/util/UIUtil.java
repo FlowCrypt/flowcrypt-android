@@ -123,8 +123,7 @@ public class UIUtil {
     }
 
     secondView.setVisibility(show ? View.GONE : View.VISIBLE);
-    secondView.animate().setDuration(shortAnimTime).alpha(
-        show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+    secondView.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         secondView.setVisibility(show ? View.GONE : View.VISIBLE);
@@ -132,8 +131,7 @@ public class UIUtil {
     });
 
     firstView.setVisibility(show ? View.VISIBLE : View.GONE);
-    firstView.animate().setDuration(shortAnimTime).alpha(
-        show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+    firstView.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         firstView.setVisibility(show ? View.VISIBLE : View.GONE);

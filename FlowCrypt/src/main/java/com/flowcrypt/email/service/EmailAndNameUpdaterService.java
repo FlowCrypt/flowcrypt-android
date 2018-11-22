@@ -83,8 +83,8 @@ public class EmailAndNameUpdaterService extends JobIntentService {
                 emailAndNamePair.getName());
           }
         } else {
-          contactsDaoSource.addRow(getApplicationContext(), new PgpContact
-              (emailAndNamePair.getEmail(), emailAndNamePair.getName()));
+          contactsDaoSource.addRow(getApplicationContext(), new PgpContact(emailAndNamePair.getEmail(),
+              emailAndNamePair.getName()));
         }
       }
     }

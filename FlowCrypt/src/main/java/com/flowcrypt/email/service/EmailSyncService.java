@@ -827,8 +827,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     Map<String, Messenger> replyToMessengersWeakReference) {
       this.syncServiceWeakReference = new WeakReference<>(emailSyncService);
       this.gmailSynsManagerWeakReference = new WeakReference<>(emailSyncManager);
-      this.replyToMessengersWeakReference = new WeakReference<>
-          (replyToMessengersWeakReference);
+      this.replyToMessengersWeakReference = new WeakReference<>(replyToMessengersWeakReference);
     }
 
     @Override

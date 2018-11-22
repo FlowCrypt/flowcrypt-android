@@ -236,8 +236,8 @@ public class AttachmentDownloadManagerService extends Service {
 
         switch (message.what) {
           case MESSAGE_EXCEPTION_HAPPENED:
-            attDownloadManagerService.attachmentNotificationManager.errorHappened
-                (attDownloadManagerService, attInfo, downloadAttachmentTaskResult.getException());
+            attDownloadManagerService.attachmentNotificationManager.errorHappened(attDownloadManagerService, attInfo,
+                downloadAttachmentTaskResult.getException());
             break;
 
           case MESSAGE_TASK_ALREADY_EXISTS:
@@ -247,20 +247,20 @@ public class AttachmentDownloadManagerService extends Service {
             break;
 
           case MESSAGE_ATTACHMENT_DOWNLOAD:
-            attDownloadManagerService.attachmentNotificationManager.downloadComplete
-                (attDownloadManagerService, attInfo, uri);
+            attDownloadManagerService.attachmentNotificationManager.downloadComplete(attDownloadManagerService,
+                attInfo, uri);
             Log.d(TAG, attInfo.getName() + " is downloaded");
             break;
 
           case MESSAGE_ATTACHMENT_ADDED_TO_QUEUE:
-            attDownloadManagerService.attachmentNotificationManager.attachmentAddedToLoadQueue
-                (attDownloadManagerService, attInfo);
+            attDownloadManagerService.attachmentNotificationManager
+                .attachmentAddedToLoadQueue(attDownloadManagerService, attInfo);
             break;
 
           case MESSAGE_PROGRESS:
-            attDownloadManagerService.attachmentNotificationManager.updateLoadingProgress
-                (attDownloadManagerService, attInfo, downloadAttachmentTaskResult.getProgressInPercentage(),
-                    downloadAttachmentTaskResult.getTimeLeft());
+            attDownloadManagerService.attachmentNotificationManager.updateLoadingProgress(attDownloadManagerService,
+                attInfo, downloadAttachmentTaskResult.getProgressInPercentage(),
+                downloadAttachmentTaskResult.getTimeLeft());
             break;
 
           case MESSAGE_RELEASE_RESOURCES:

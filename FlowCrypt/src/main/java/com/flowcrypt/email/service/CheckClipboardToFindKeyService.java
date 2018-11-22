@@ -145,8 +145,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         checkClipboardToFindPrivateKeyServiceWeakReference;
 
     ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
-          (checkClipboardToFindKeyService);
+      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
@@ -181,8 +180,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
 
     ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
       super(looper);
-      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>
-          (checkClipboardToFindKeyService);
+      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
