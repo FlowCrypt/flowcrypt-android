@@ -7,10 +7,10 @@ package com.flowcrypt.email.api.retrofit;
 
 import android.content.Context;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor;
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.google.gson.GsonBuilder;
 
@@ -44,7 +44,7 @@ public class ApiHelper {
 
     okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
-    if (BuildConfig.DEBUG) {
+    if (GeneralUtil.isDebug()) {
       if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
           (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false)) {
         LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();

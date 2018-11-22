@@ -20,11 +20,11 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.JsBackgroundService;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
@@ -324,7 +324,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   protected boolean checkServiceBound(boolean isBound) {
     if (!isBound) {
-      if (BuildConfig.DEBUG) {
+      if (GeneralUtil.isDebug()) {
         Log.d(TAG, "Activity not connected to the service");
       }
       return true;

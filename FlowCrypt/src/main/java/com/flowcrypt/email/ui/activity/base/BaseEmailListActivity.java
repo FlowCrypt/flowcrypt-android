@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.base;
 
 import android.os.Bundle;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
@@ -41,7 +40,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (EmailManagerActivity.class), BuildConfig.DEBUG);
+        (EmailManagerActivity.class), GeneralUtil.isDebug());
 
   }
 

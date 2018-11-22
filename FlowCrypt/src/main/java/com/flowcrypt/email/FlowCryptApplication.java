@@ -13,6 +13,7 @@ import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
 
@@ -76,7 +77,7 @@ public class FlowCryptApplication extends Application {
     NotificationChannelManager.registerNotificationChannels(this);
 
     intiLeakCanary();
-    FragmentManager.enableDebugLogging(BuildConfig.DEBUG);
+    FragmentManager.enableDebugLogging(GeneralUtil.isDebug());
 
     JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
     if (scheduler != null) {
@@ -90,7 +91,7 @@ public class FlowCryptApplication extends Application {
     super.attachBaseContext(base);
     MultiDex.install(this);
 
-    if (!BuildConfig.DEBUG) {
+    if (!GeneralUtil.isDebug()) {
       ACRA.init(this);
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_ACRA_ENABLE, BuildConfig.IS_ACRA_ENABLE)) {

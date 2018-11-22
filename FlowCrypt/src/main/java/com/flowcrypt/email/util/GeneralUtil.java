@@ -301,4 +301,13 @@ public class GeneralUtil {
 
     return lastId;
   }
+
+  /**
+   * This method checks is it a debug build.
+   *
+   * @return true - if the current build is a debug build.
+   */
+  public static boolean isDebug() {
+    return "debug".equals(BuildConfig.BUILD_TYPE);
+  }
 }

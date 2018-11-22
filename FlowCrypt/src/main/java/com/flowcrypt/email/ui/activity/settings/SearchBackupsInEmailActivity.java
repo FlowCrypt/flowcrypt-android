@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.BackupKeysActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity;
@@ -65,7 +64,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
       finish();
     }
     countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (SearchBackupsInEmailActivity.class), BuildConfig.DEBUG);
+        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebug());
     countingIdlingResource.increment();
   }
 

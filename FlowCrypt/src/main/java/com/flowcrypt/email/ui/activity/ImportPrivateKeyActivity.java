@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
@@ -64,7 +63,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-          (ImportPrivateKeyActivity.class), BuildConfig.DEBUG);
+          (ImportPrivateKeyActivity.class), GeneralUtil.isDebug());
     } else {
       hideImportButton();
       UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);

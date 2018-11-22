@@ -27,7 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.request.RequestOptions;
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -136,7 +135,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), BuildConfig.DEBUG);
+          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebug());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -716,7 +715,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
     if (navigationMenuDevSettings != null) {
-      navigationMenuDevSettings.setVisible(BuildConfig.DEBUG);
+      navigationMenuDevSettings.setVisible(GeneralUtil.isDebug());
     }
 
     if (findViewById(R.id.floatActionButtonCompose) != null) {

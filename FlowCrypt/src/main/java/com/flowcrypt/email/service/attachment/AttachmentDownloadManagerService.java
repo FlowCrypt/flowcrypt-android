@@ -466,7 +466,7 @@ public class AttachmentDownloadManagerService extends Service {
 
     @Override
     public void run() {
-      if (BuildConfig.DEBUG) {
+      if (GeneralUtil.isDebug()) {
         Thread.currentThread().setName(AttDownloadRunnable.class.getSimpleName() + "|" + attInfo.getName());
       }
 

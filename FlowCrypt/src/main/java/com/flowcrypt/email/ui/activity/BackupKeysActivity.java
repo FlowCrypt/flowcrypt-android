@@ -76,7 +76,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     initViews();
     accountDao = new AccountDaoSource().getActiveAccountInformation(this);
     countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (BackupKeysActivity.class), BuildConfig.DEBUG);
+        (BackupKeysActivity.class), GeneralUtil.isDebug());
     countingIdlingResource.increment();
   }
 
