@@ -14,6 +14,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -35,7 +36,6 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
-import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.sun.mail.imap.IMAPFolder;
@@ -415,7 +415,7 @@ public class MessagesSenderJobService extends JobService {
 
             com.google.api.services.gmail.model.Message sentMessage
                 = new com.google.api.services.gmail.model.Message();
-            sentMessage.setRaw(Base64.encodeBase64URLSafeString(byteArrayOutputStream.toByteArray()));
+            sentMessage.setRaw(Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.URL_SAFE));
 
             if (!TextUtils.isEmpty(threadId)) {
               sentMessage.setThreadId(threadId);
