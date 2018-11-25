@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
@@ -154,6 +155,29 @@ public class MessageDaoSource extends BaseDaoSource {
     if (!message.getFlags().contains(Flags.Flag.SEEN)) {
       contentValues.put(COL_IS_NEW, isNew);
     }
+    return contentValues;
+  }
+
+  /**
+   * Prepare {@link ContentValues} using {@link OutgoingMessageInfo}
+   *
+   * @param email The email that the message linked.
+   * @param label The folder label.
+   * @param uid   The message UID.
+   * @param info  The input {@link OutgoingMessageInfo}
+   * @return generated {@link ContentValues}
+   */
+  @NonNull
+  public static ContentValues prepareContentValues(String email, String label, long uid, OutgoingMessageInfo info) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(COL_EMAIL, email);
+    contentValues.put(COL_FOLDER, label);
+    contentValues.put(COL_UID, uid);
+    contentValues.put(COL_SENT_DATE, System.currentTimeMillis());
+    contentValues.put(COL_SUBJECT, info.getSubject());
+    contentValues.put(COL_FLAGS, MessageFlag.SEEN);
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAttachmentInfoArrayList()) ||
+        !CollectionUtils.isEmpty(info.getForwardedAttachmentInfoList()));
     return contentValues;
   }
 

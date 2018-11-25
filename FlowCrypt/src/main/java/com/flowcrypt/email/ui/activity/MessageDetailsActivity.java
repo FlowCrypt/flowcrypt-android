@@ -442,6 +442,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
               case ERROR_ORIGINAL_MESSAGE_MISSING:
               case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
               case ERROR_SENDING_FAILED:
+              case ERROR_PRIVATE_KEY_NOT_FOUND:
                 actionBarSubTitle = getString(R.string.an_error_has_occurred);
                 break;
             }

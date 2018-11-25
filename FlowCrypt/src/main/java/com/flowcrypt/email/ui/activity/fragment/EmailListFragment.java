@@ -26,7 +26,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -353,6 +352,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case ERROR_CACHE_PROBLEM:
             case ERROR_DURING_CREATION:
             case ERROR_SENDING_FAILED:
+            case ERROR_PRIVATE_KEY_NOT_FOUND:
               handleOutgoingMessageWhichHasSomeError(activeMsgDetails);
               break;
 
@@ -769,8 +769,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         break;
 
       case ERROR_DURING_CREATION:
-        message = getString(R.string.error_happened_during_creation,
-            getString(R.string.support_email));
+        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email));
+        break;
+
+      case ERROR_PRIVATE_KEY_NOT_FOUND:
+        message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email));
         break;
 
       case ERROR_SENDING_FAILED:

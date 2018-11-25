@@ -35,6 +35,7 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -182,7 +183,17 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
 
-        if (newMessageUri != null) {
+        if (newMessageUri == null) {
+          ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, uid, outgoingMsgInfo);
+
+          newMessageUri = msgDaoSource.addRow(getApplicationContext(), contentValues);
+        }
+
+        if (e instanceof NoKeyAvailableException) {
+          msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND);
+        } else {
           msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_DURING_CREATION);
         }
@@ -190,8 +201,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
       if (newMessageUri != null) {
         new ImapLabelsDaoSource().updateLabelMessageCount(this, accountDao.getEmail(),
-            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this,
-                accountDao.getEmail()).size());
+            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this, accountDao.getEmail()).size());
       }
     }
   }

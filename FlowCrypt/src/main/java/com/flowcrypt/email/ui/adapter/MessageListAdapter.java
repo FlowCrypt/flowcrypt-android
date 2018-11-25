@@ -294,6 +294,7 @@ public class MessageListAdapter extends CursorAdapter {
       case ERROR_ORIGINAL_MESSAGE_MISSING:
       case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
       case ERROR_SENDING_FAILED:
+      case ERROR_PRIVATE_KEY_NOT_FOUND:
         stateTextColor = ContextCompat.getColor(context, R.color.red);
 
         switch (messageState) {
@@ -315,6 +316,10 @@ public class MessageListAdapter extends CursorAdapter {
 
           case ERROR_SENDING_FAILED:
             state = context.getString(R.string.cannot_send_message_unknown_error);
+            break;
+
+          case ERROR_PRIVATE_KEY_NOT_FOUND:
+            state = context.getString(R.string.could_not_create_no_key_available);
             break;
         }
 
