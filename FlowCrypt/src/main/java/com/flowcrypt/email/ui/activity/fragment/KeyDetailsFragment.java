@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
@@ -26,6 +27,8 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import org.apache.commons.io.FilenameUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -113,11 +116,19 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
             if (data != null && data.getData() != null) {
               try {
                 GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
+                String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
+
+                if (!TextUtils.isEmpty(fileName)) {
+                  fileName = FilenameUtils.removeExtension(fileName) + ".asc";
+                }
+
+                DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
                 Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
               } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
-                UIUtil.showInfoSnackbar(getView(), e.getMessage());
+                String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
+                UIUtil.showInfoSnackbar(getView(), error);
               }
             }
             break;
