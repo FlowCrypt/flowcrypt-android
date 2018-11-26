@@ -18,5 +18,9 @@
             <property name="arrayInitIndent" value="4" />
             <property name="lineWrappingIndentation" value="4" />
         </module>
+
+        <module name="AnonInnerLength">
+            <property name="max" value="40" />
+        </module>
     </module>
 </module>

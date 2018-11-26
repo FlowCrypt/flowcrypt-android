@@ -114,37 +114,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
       switch (id) {
         case R.id.loader_id_load_messages_from_cache:
-          emptyView.setVisibility(View.GONE);
-          statusView.setVisibility(View.GONE);
-
-          if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
-            UIUtil.exchangeViewVisibility(
-                getContext(),
-                true,
-                progressView,
-                listViewMessages);
-          }
-
-          if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
-          }
-
-          String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
-              + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
-
-          if (!GeneralUtil.isDebug() && JavaEmailConstants.FOLDER_OUTBOX
-              .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
-            selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
-                + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
-          }
-
-          return new CursorLoader(getContext(),
-              new MessageDaoSource().getBaseContentUri(),
-              null,
-              selection,
-              new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                  onManageEmailsListener.getCurrentFolder().getFolderAlias()},
-              MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+          changeViewsVisibility();
+          return prepareCursorLoader();
 
         default:
           return new Loader<>(getContext());
@@ -155,44 +126,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
       switch (loader.getId()) {
         case R.id.loader_id_load_messages_from_cache:
-          messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
-          messageListAdapter.swapCursor(data);
-          if (data != null && data.getCount() != 0) {
-            emptyView.setVisibility(View.GONE);
-            statusView.setVisibility(View.GONE);
-
-            if (!isShowOnlyEncryptedMessages && lastFirstVisibleItemPositionOffAllMessages != 0) {
-              listViewMessages.setSelection(lastFirstVisibleItemPositionOffAllMessages);
-              lastFirstVisibleItemPositionOffAllMessages = 0;
-            }
-
-            UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
-          } else {
-            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-                onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
-              isMessagesFetchedIfNotExistInCache = true;
-            }
-
-            if (!isMessagesFetchedIfNotExistInCache) {
-              isMessagesFetchedIfNotExistInCache = true;
-              if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                if (isSyncServiceConnected()) {
-                  loadNextMessages(0);
-                } else {
-                  needForceFirstLoad = true;
-                }
-              } else {
-                textViewStatusInfo.setText(R.string.no_connection);
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-                showRetrySnackBar();
-              }
-            } else {
-              emptyView.setText(isShowOnlyEncryptedMessages ?
-                  R.string.no_encrypted_messages : R.string.no_results);
-              UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
-            }
-          }
-
+          handleCursor(data);
           break;
       }
     }
@@ -753,6 +687,82 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         }
       }
     }
+  }
+
+  private void changeViewsVisibility() {
+    emptyView.setVisibility(View.GONE);
+    statusView.setVisibility(View.GONE);
+
+    if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
+      UIUtil.exchangeViewVisibility(
+          getContext(),
+          true,
+          progressView,
+          listViewMessages);
+    }
+
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
+    }
+  }
+
+  private void handleCursor(Cursor data) {
+    messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
+    messageListAdapter.swapCursor(data);
+    if (data != null && data.getCount() != 0) {
+      emptyView.setVisibility(View.GONE);
+      statusView.setVisibility(View.GONE);
+
+      if (!isShowOnlyEncryptedMessages && lastFirstVisibleItemPositionOffAllMessages != 0) {
+        listViewMessages.setSelection(lastFirstVisibleItemPositionOffAllMessages);
+        lastFirstVisibleItemPositionOffAllMessages = 0;
+      }
+
+      UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
+    } else {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
+          onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+        isMessagesFetchedIfNotExistInCache = true;
+      }
+
+      if (!isMessagesFetchedIfNotExistInCache) {
+        isMessagesFetchedIfNotExistInCache = true;
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+          if (isSyncServiceConnected()) {
+            loadNextMessages(0);
+          } else {
+            needForceFirstLoad = true;
+          }
+        } else {
+          textViewStatusInfo.setText(R.string.no_connection);
+          UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+          showRetrySnackBar();
+        }
+      } else {
+        emptyView.setText(isShowOnlyEncryptedMessages ?
+            R.string.no_encrypted_messages : R.string.no_results);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
+      }
+    }
+  }
+
+  private Loader<Cursor> prepareCursorLoader() {
+    String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
+        + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+
+    if (!GeneralUtil.isDebug() && JavaEmailConstants.FOLDER_OUTBOX
+        .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
+      selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
+          + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
+    }
+
+    return new CursorLoader(getContext(),
+        new MessageDaoSource().getBaseContentUri(),
+        null,
+        selection,
+        new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
+            onManageEmailsListener.getCurrentFolder().getFolderAlias()},
+        MessageDaoSource.COL_RECEIVED_DATE + " DESC");
   }
 
   private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails generalMessageDetails) {
