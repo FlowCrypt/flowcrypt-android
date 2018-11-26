@@ -87,6 +87,7 @@ public class MessageDaoSource extends BaseDaoSource {
   public static final String COL_IS_NEW = "is_new";
   public static final String COL_STATE = "state";
   public static final String COL_ATTACHMENTS_DIRECTORY = "attachments_directory";
+  public static final String COL_ERROR_MSG = "error_msg";
 
   public static final int ENCRYPTED_STATE_UNDEFINED = -1;
 
@@ -108,7 +109,8 @@ public class MessageDaoSource extends BaseDaoSource {
       COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
       COL_IS_NEW + " INTEGER DEFAULT -1, " +
       COL_STATE + " INTEGER DEFAULT -1, " +
-      COL_ATTACHMENTS_DIRECTORY + " TEXT " + ");";
+      COL_ATTACHMENTS_DIRECTORY + " TEXT, " +
+      COL_ERROR_MSG + " TEXT DEFAULT NULL" + ");";
 
   public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
       "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
