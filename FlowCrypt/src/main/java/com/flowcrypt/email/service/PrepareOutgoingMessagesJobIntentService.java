@@ -9,6 +9,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -191,8 +192,15 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         }
 
         if (e instanceof NoKeyAvailableException) {
-          msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
-              JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND);
+          NoKeyAvailableException exception = (NoKeyAvailableException) e;
+          String errorMsg = TextUtils.isEmpty(exception.getAlias()) ? exception.getEmail() : exception.getAlias();
+
+          ContentValues contentValues = new ContentValues();
+          contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.getValue());
+          contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg);
+
+          msgDaoSource.updateMessage(getApplicationContext(), accountDao.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, uid, contentValues);
         } else {
           msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_DURING_CREATION);

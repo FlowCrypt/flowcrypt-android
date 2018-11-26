@@ -773,7 +773,13 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         break;
 
       case ERROR_PRIVATE_KEY_NOT_FOUND:
-        message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email));
+        String errorMsg = generalMessageDetails.getErrorMsg();
+        if (errorMsg.equalsIgnoreCase(generalMessageDetails.getEmail())) {
+          message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email));
+        } else {
+          message = getString(R.string.no_key_available_for_your_emails, errorMsg, generalMessageDetails.getEmail(),
+              getString(R.string.support_email));
+        }
         break;
 
       case ERROR_SENDING_FAILED:

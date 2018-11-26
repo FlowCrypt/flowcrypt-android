@@ -558,6 +558,7 @@ public class MessageDaoSource extends BaseDaoSource {
         (COL_IS_ENCRYPTED)) == 1);
 
     generalMessageDetails.setMessageState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
+    generalMessageDetails.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
 
     try {
       String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));
