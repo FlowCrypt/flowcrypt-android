@@ -81,9 +81,9 @@ public class CustomIMAPFolder extends IMAPFolder implements FlowCryptIMAPFolder 
       // the messages that need to be prefetched.
       MessageSet[] msgsets = Utility.toMessageSetSorted(messages, condition);
 
-      if (msgsets == null)
-        // We already have what we need.
+      if (msgsets == null) {// We already have what we need.
         return;
+      }
 
       Response[] responseArray = null;
       // to collect non-FETCH responses & unsolicited FETCH FLAG responses
@@ -98,12 +98,14 @@ public class CustomIMAPFolder extends IMAPFolder implements FlowCryptIMAPFolder 
         throw new MessagingException(pex.getMessage(), pex);
       }
 
-      if (responseArray == null)
+      if (responseArray == null) {
         return;
+      }
 
       for (Response response : responseArray) {
-        if (response == null)
+        if (response == null) {
           continue;
+        }
         if (!(response instanceof FetchResponse)) {
           responseArrayList.add(response); // Unsolicited Non-FETCH response
           continue;
@@ -146,8 +148,9 @@ public class CustomIMAPFolder extends IMAPFolder implements FlowCryptIMAPFolder 
         Response[] responses = new Response[responseArrayList.size()];
         responseArrayList.toArray(responses);
         for (Response aR : responseArray) {
-          if (aR != null)
+          if (aR != null) {
             handleResponse(aR);
+          }
         }
       }
 

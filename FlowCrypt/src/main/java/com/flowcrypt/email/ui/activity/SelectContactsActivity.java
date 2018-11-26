@@ -91,9 +91,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
     this.listViewContacts = findViewById(R.id.listViewContacts);
     this.listViewContacts.setAdapter(contactsListCursorAdapter);
     this.listViewContacts.setChoiceMode(isMultiply ? ListView.CHOICE_MODE_MULTIPLE : ListView.CHOICE_MODE_SINGLE);
-    if (isMultiply) {
-      //this.listViewContacts.setMultiChoiceModeListener(this);
-    } else {
+    if (!isMultiply) {
       this.listViewContacts.setOnItemClickListener(this);
     }
 

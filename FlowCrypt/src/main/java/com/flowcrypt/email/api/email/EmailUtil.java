@@ -512,19 +512,21 @@ public class EmailUtil {
     }
 
     if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
-      if (isRev1)
+      if (isRev1) {
         command.append(first ?
             "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
-      else
+      } else {
         command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
+      }
       first = false;
     }
 
     if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
-      if (isRev1)
+      if (isRev1) {
         command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
-      else
+      } else {
         command.append(first ? "RFC822" : " RFC822");
+      }
       first = false;
     }
 
@@ -780,8 +782,9 @@ public class EmailUtil {
 
         if (serverStatusResponse.isOK()) {
           for (Response response : responses) {
-            if (!(response instanceof FetchResponse))
+            if (!(response instanceof FetchResponse)) {
               continue;
+            }
 
             FetchResponse fetchResponse = (FetchResponse) response;
 

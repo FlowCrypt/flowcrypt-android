@@ -79,8 +79,9 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
 
           if (serverStatusResponse.isOK()) {
             for (Response response : responses) {
-              if (!(response instanceof FetchResponse))
+              if (!(response instanceof FetchResponse)) {
                 continue;
+              }
 
               FetchResponse fetchResponse = (FetchResponse) response;
               BODY body = fetchResponse.getItem(BODY.class);

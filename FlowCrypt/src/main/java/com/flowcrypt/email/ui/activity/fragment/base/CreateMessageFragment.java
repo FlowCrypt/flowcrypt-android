@@ -914,9 +914,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private OutgoingMessageInfo getOutgoingMessageInfo() {
     OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
-    if (incomingMessageInfo != null && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+    /*if (incomingMessageInfo != null && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
       //todo-denbond7 Need to think how forward HTML
-    }
+    }*/
     outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
     outgoingMessageInfo.setSubject(editTextEmailSubject.getText().toString());
 

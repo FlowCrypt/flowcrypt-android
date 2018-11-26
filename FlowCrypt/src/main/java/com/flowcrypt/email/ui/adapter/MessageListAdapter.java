@@ -247,12 +247,14 @@ public class MessageListAdapter extends CursorAdapter {
   }
 
   private String generateAddresses(InternetAddress[] internetAddresses) {
-    if (internetAddresses == null)
+    if (internetAddresses == null) {
       return "null";
+    }
 
     int iMax = internetAddresses.length - 1;
-    if (iMax == -1)
+    if (iMax == -1) {
       return "";
+    }
 
     StringBuilder b = new StringBuilder();
     for (int i = 0; ; i++) {
