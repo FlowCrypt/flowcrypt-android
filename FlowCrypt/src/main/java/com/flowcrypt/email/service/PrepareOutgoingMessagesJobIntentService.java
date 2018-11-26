@@ -130,14 +130,12 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       }
 
       Log.d(TAG, "Received a new job: " + outgoingMsgInfo);
-
-      setupIfNeed();
-
-      updateContactsLastUseDateTime(outgoingMsgInfo);
-
       Uri newMessageUri = null;
 
       try {
+        setupIfNeed();
+        updateContactsLastUseDateTime(outgoingMsgInfo);
+
         String[] pubKeys = outgoingMsgInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
             SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
                 (outgoingMsgInfo), accountDao, outgoingMsgInfo.getFromPgpContact().getEmail()) : null;
