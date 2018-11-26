@@ -52,6 +52,7 @@ public class GeneralMessageDetails implements Parcelable {
   private boolean isEncrypted;
   private MessageState messageState;
   private String attachmentsDirectory;
+  private String errorMsg;
 
   public GeneralMessageDetails() {
   }
@@ -73,6 +74,7 @@ public class GeneralMessageDetails implements Parcelable {
     int tmpMessageState = in.readInt();
     this.messageState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
     this.attachmentsDirectory = in.readString();
+    this.errorMsg = in.readString();
   }
 
   @Override
@@ -115,13 +117,15 @@ public class GeneralMessageDetails implements Parcelable {
         Arrays.equals(flags, that.flags) &&
         Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments) &&
         messageState == that.messageState &&
-        Objects.equals(attachmentsDirectory, that.attachmentsDirectory);
+        Objects.equals(attachmentsDirectory, that.attachmentsDirectory) &&
+        Objects.equals(errorMsg, that.errorMsg);
   }
 
   @Override
   public int hashCode() {
     int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
-        rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState, attachmentsDirectory);
+        rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState, attachmentsDirectory,
+        errorMsg);
     result = 31 * result + Arrays.hashCode(from);
     result = 31 * result + Arrays.hashCode(to);
     result = 31 * result + Arrays.hashCode(cc);
@@ -151,6 +155,7 @@ public class GeneralMessageDetails implements Parcelable {
     dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
     dest.writeInt(this.messageState == null ? -1 : this.messageState.ordinal());
     dest.writeString(this.attachmentsDirectory);
+    dest.writeString(this.errorMsg);
   }
 
   public String getEmail() {
@@ -275,5 +280,13 @@ public class GeneralMessageDetails implements Parcelable {
 
   public void setAttachmentsDirectory(String attachmentsDirectory) {
     this.attachmentsDirectory = attachmentsDirectory;
+  }
+
+  public String getErrorMsg() {
+    return errorMsg;
+  }
+
+  public void setErrorMsg(String errorMsg) {
+    this.errorMsg = errorMsg;
   }
 }
