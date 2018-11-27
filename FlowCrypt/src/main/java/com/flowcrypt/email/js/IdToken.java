@@ -11,10 +11,10 @@ public class IdToken extends MeaningfulV8ObjectContainer {
 
   IdToken(V8Object o) {
     super(o);
-        /* keys: [
-            "azp", "aud", "sub", "email", "email_verified", "iss", "iat", "exp", "name", "picture",
-            "given_name", "family_name", "locale"
-        ] */
+    /*keys: [
+    "azp", "aud", "sub", "email", "email_verified", "iss", "iat", "exp", "name", "picture",
+        "given_name", "family_name", "locale"
+    ]*/
   }
 
   public String getEmail() {

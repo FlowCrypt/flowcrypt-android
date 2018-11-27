@@ -41,7 +41,7 @@ public class DynamicStorageConnector implements StorageConnectorInterface {
   }
 
   public PgpContact[] findPgpContacts(String[] longid) {
-    PgpContact results[] = new PgpContact[longid.length];
+    PgpContact[] results = new PgpContact[longid.length];
     for (Integer i = 0; i < longid.length; i++) {
       results[i] = findPgpContact(longid[i]);
     }
