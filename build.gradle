@@ -28,6 +28,7 @@ allprojects {
 
     task('checkstyle', type: Checkstyle) {
         configFile rootProject.file('checkstyle.xml')
+        configProperties.checkStyleConfigDir = rootProject.rootDir
         source 'src/main/java'
         ignoreFailures false
         showViolations true

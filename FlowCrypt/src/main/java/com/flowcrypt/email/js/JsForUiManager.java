@@ -23,7 +23,7 @@ import java.io.IOException;
  * E-mail: DenBond7@gmail.com
  */
 
-public class JsForUiManager {
+public final class JsForUiManager {
   private static JsForUiManager ourInstance;
 
   private Js js;

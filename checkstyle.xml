@@ -3,6 +3,10 @@
     "http://checkstyle.sourceforge.net/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkStyleConfigDir}/checkstyle_suppressions.xml" />
+    </module>
+
     <module name="TreeWalker">
         <!-- Checks for Size Violations.                    -->
         <!-- See http://checkstyle.sf.net/config_sizes.html -->
@@ -34,5 +38,11 @@
         </module>
         <module name="RightCurly" />
 
+        <!-- Checks for class design                         -->
+        <!-- See http://checkstyle.sf.net/config_design.html -->
+        <module name="FinalClass" />
+        <module name="InnerTypeLast" />
+        <module name="InterfaceIsType" />
+        <module name="OneTopLevelClass" />
     </module>
 </module>

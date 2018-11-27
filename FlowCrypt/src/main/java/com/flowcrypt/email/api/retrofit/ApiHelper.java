@@ -32,7 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Time: 13:06
  * E-mail: DenBond7@gmail.com
  */
-public class ApiHelper {
+public final class ApiHelper {
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
 
