@@ -820,10 +820,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   }
 
   private boolean isItSyncOrOutboxFolder(Folder folder) {
-    if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
-        || folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX)) {
-      return true;
-    } else return false;
+    return folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
+        || folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
   }
 
   /**

@@ -27,7 +27,7 @@
         <module name="MethodCount" />
         <module name="MethodLength" />
 
-        <!-- Block Checks.                    -->
+        <!-- Block Checks.                                            -->
         <!-- See http://checkstyle.sourceforge.net/config_blocks.html -->
         <module name="AvoidNestedBlocks" />
         <module name="EmptyBlock" />
@@ -44,5 +44,27 @@
         <module name="InnerTypeLast" />
         <module name="InterfaceIsType" />
         <module name="OneTopLevelClass" />
+
+        <!-- Checks for coding                                        -->
+        <!-- See http://checkstyle.sourceforge.net/config_coding.html -->
+        <module name="DeclarationOrder" />
+        <module name="DefaultComesLast" />
+        <module name="EmptyStatement" />
+        <module name="EqualsAvoidNull" />
+        <module name="EqualsHashCode" />
+        <module name="ExplicitInitialization" />
+        <module name="FallThrough" />
+        <module name="MultipleVariableDeclarations" />
+        <module name="NestedTryDepth" />
+        <module name="OneStatementPerLine" />
+        <module name="OverloadMethodsDeclarationOrder" />
+        <module name="ParameterAssignment" />
+        <module name="RequireThis" />
+        <module name="SimplifyBooleanExpression" />
+        <module name="SimplifyBooleanReturn" />
+        <module name="StringLiteralEquality" />
+        <module name="UnnecessaryParentheses" />
+        <module name="VariableDeclarationUsageDistance" />
+
     </module>
 </module>

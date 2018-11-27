@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
@@ -205,13 +206,11 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @return A {@link PgpContact} object.
    */
   public PgpContact getPgpContact(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     ContentResolver contentResolver = context.getContentResolver();
     Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + " = ?", new String[]{email}, null);
+        null, COL_EMAIL + " = ?", new String[]{emailInLowerCase}, null);
 
     PgpContact pgpContact = null;
 
@@ -394,17 +393,13 @@ public class ContactsDaoSource extends BaseDaoSource {
   public int updateNameOfPgpContact(Context context, String email, String name) {
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
-      if (email != null) {
-        email = email.toLowerCase();
-      }
+      String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
       ContentValues contentValues = new ContentValues();
       contentValues.put(COL_NAME, name);
 
-      return contentResolver.update(getBaseContentUri(),
-          contentValues,
-          COL_EMAIL + " = ?",
-          new String[]{email});
+      return contentResolver.update(getBaseContentUri(), contentValues, COL_EMAIL + " = ?",
+          new String[]{emailInLowerCase});
     } else return -1;
   }
 
@@ -416,14 +411,11 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @return The count of deleted rows. Will be 1 if a contact was deleted or -1 otherwise.
    */
   public int deletePgpContact(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(),
-          COL_EMAIL + " = ?", new String[]{email});
+      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ?", new String[]{emailInLowerCase});
     } else return -1;
   }
 

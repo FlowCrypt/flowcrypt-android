@@ -236,8 +236,6 @@ public class EmailUtil {
   @NonNull
   public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao,
                                                                  Session session, Js js) throws Exception {
-    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
-
     Multipart multipart = new MimeMultipart();
     BodyPart messageBodyPart = getBodyPartWithBackupText(context);
     multipart.addBodyPart(messageBodyPart);
@@ -247,6 +245,7 @@ public class EmailUtil {
     attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(attachmentsBodyPart);
 
+    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
     message.setContent(multipart);
     return message;
   }
@@ -264,12 +263,13 @@ public class EmailUtil {
   public static Message generateMessageWithPrivateKeysBackup(Context context, AccountDao accountDao, Session session,
                                                              MimeBodyPart mimeBodyPartPrivateKey)
       throws Exception {
-    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
     Multipart multipart = new MimeMultipart();
     BodyPart messageBodyPart = getBodyPartWithBackupText(context);
     multipart.addBodyPart(messageBodyPart);
     mimeBodyPartPrivateKey.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(mimeBodyPartPrivateKey);
+
+    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
     message.setContent(multipart);
     return message;
   }
@@ -776,8 +776,7 @@ public class EmailUtil {
         list.writeString("BODY.PEEK[TEXT]<0.2048>");
         args.writeArgument(list);
 
-        Response[] responses = imapProtocol.command(
-            ("UID FETCH ") + UIDSet.toString(uidSets), args);
+        Response[] responses = imapProtocol.command("UID FETCH " + UIDSet.toString(uidSets), args);
         Response serverStatusResponse = responses[responses.length - 1];
 
         if (serverStatusResponse.isOK()) {

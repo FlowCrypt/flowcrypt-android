@@ -59,33 +59,32 @@ public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan
   public void configureChip(@NonNull PGPContactChipSpan pgpContactChipSpan,
                             @NonNull ChipConfiguration chipConfiguration) {
     int chipSpacing = chipConfiguration.getChipSpacing();
-    int chipTextColor = chipConfiguration.getChipTextColor();
-    int chipTextSize = chipConfiguration.getChipTextSize();
-    int chipHeight = chipConfiguration.getChipHeight();
-    int chipVerticalSpacing = chipConfiguration.getChipVerticalSpacing();
-    int maxAvailableWidth = chipConfiguration.getMaxAvailableWidth();
-
     if (chipSpacing != -1) {
       pgpContactChipSpan.setLeftMargin(chipSpacing / 2);
       pgpContactChipSpan.setRightMargin(chipSpacing / 2);
     }
 
+    int chipTextColor = chipConfiguration.getChipTextColor();
     if (chipTextColor != -1) {
       pgpContactChipSpan.setTextColor(chipTextColor);
     }
 
+    int chipTextSize = chipConfiguration.getChipTextSize();
     if (chipTextSize != -1) {
       pgpContactChipSpan.setTextSize(chipTextSize);
     }
 
+    int chipHeight = chipConfiguration.getChipHeight();
     if (chipHeight != -1) {
       pgpContactChipSpan.setChipHeight(chipHeight);
     }
 
+    int chipVerticalSpacing = chipConfiguration.getChipVerticalSpacing();
     if (chipVerticalSpacing != -1) {
       pgpContactChipSpan.setChipVerticalSpacing(chipVerticalSpacing);
     }
 
+    int maxAvailableWidth = chipConfiguration.getMaxAvailableWidth();
     if (maxAvailableWidth != -1) {
       pgpContactChipSpan.setMaxAvailableWidth(maxAvailableWidth);
     }

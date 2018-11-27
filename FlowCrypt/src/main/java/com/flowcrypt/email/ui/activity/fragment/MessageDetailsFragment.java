@@ -761,9 +761,6 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     final ViewGroup messagePartPublicKeyView = (ViewGroup) layoutInflater.inflate(
         R.layout.message_part_public_key, layoutMessageParts, false);
 
-    TextView textViewKeyOwnerTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
-    TextView textViewKeyWordsTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyWordsTemplate);
-    TextView textViewFingerprintTemplate = messagePartPublicKeyView.findViewById(R.id.textViewFingerprintTemplate);
     final TextView textViewPgpPublicKey = messagePartPublicKeyView.findViewById(R.id.textViewPgpPublicKey);
     Switch switchShowPublicKey = messagePartPublicKeyView.findViewById(R.id.switchShowPublicKey);
 
@@ -782,14 +779,17 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     });
 
     if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
+      TextView textViewKeyOwnerTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
       textViewKeyOwnerTemplate.setText(
           getString(R.string.template_message_part_public_key_owner,
               messagePartPgpPublicKey.getKeyOwner()));
     }
 
+    TextView textViewKeyWordsTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyWordsTemplate);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
         messagePartPgpPublicKey.getKeyWords()), textViewKeyWordsTemplate);
 
+    TextView textViewFingerprintTemplate = messagePartPublicKeyView.findViewById(R.id.textViewFingerprintTemplate);
     UIUtil.setHtmlTextToTextView(
         getString(R.string.template_message_part_public_key_fingerprint,
             GeneralUtil.doSectionsInText(" ",

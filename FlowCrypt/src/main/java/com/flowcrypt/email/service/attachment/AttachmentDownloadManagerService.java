@@ -522,7 +522,8 @@ public class AttachmentDownloadManagerService extends Service {
             int numberOfReadBytes;
             int lastPercentage = 0;
             int currentPercentage = 0;
-            long startTime, elapsedTime;
+            long startTime;
+            long elapsedTime;
             long lastUpdateTime = startTime = System.currentTimeMillis();
             updateProgress(currentPercentage, 0);
             while (IOUtils.EOF != (numberOfReadBytes = inputStream.read(buffer))) {

@@ -575,27 +575,25 @@ public class EmailManagerActivity extends BaseEmailListActivity
     List<Folder> folders = foldersManager.getServerFolders();
     String[] serverFolders = new String[folders.size()];
 
-    Folder inbox, spam, trash, outbox;
-    inbox = foldersManager.getFolderInbox();
-    spam = foldersManager.getFolderSpam();
-    trash = foldersManager.getFolderTrash();
-    outbox = foldersManager.getFolderOutbox();
-
+    Folder inbox = foldersManager.getFolderInbox();
     if (inbox != null) {
       folders.remove(inbox);
       serverFolders[0] = inbox.getFolderAlias();
     }
 
+    Folder trash = foldersManager.getFolderTrash();
     if (trash != null) {
       folders.remove(trash);
       serverFolders[folders.size() + 1] = trash.getFolderAlias();
     }
 
+    Folder spam = foldersManager.getFolderSpam();
     if (spam != null) {
       folders.remove(spam);
       serverFolders[folders.size() + 1] = spam.getFolderAlias();
     }
 
+    Folder outbox = foldersManager.getFolderOutbox();
     if (outbox != null) {
       folders.remove(outbox);
       serverFolders[folders.size() + 1] = outbox.getFolderAlias();

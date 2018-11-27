@@ -209,6 +209,20 @@ public class MessageDaoSource extends BaseDaoSource {
   }
 
   /**
+   * Add a new message details to the database.
+   *
+   * @param context       Interface to global information about an application environment.
+   * @param contentValues {@link ContentValues} which contains information about a new message.
+   * @return A {@link Uri} of the created row.
+   */
+  public Uri addRow(Context context, ContentValues contentValues) {
+    ContentResolver contentResolver = context.getContentResolver();
+    if (contentValues != null && contentResolver != null) {
+      return contentResolver.insert(getBaseContentUri(), contentValues);
+    } else return null;
+  }
+
+  /**
    * This method add rows per single transaction. This method must be called in the non-UI thread.
    *
    * @param context     Interface to global information about an application environment.
@@ -1019,20 +1033,6 @@ public class MessageDaoSource extends BaseDaoSource {
       }
       return contentResolver.applyBatch(getBaseContentUri().getAuthority(), ops);
     } else return new ContentProviderResult[0];
-  }
-
-  /**
-   * Add a new message details to the database.
-   *
-   * @param context       Interface to global information about an application environment.
-   * @param contentValues {@link ContentValues} which contains information about a new message.
-   * @return A {@link Uri} of the created row.
-   */
-  public Uri addRow(Context context, ContentValues contentValues) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (contentValues != null && contentResolver != null) {
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
   }
 
   /**

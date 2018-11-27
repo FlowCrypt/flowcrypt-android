@@ -42,7 +42,7 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   /*todo-denbond7 Make sure to choose attest: false for now.
    https://github.com/FlowCrypt/flowcrypt-android/issues/71*/
   @Expose
-  private boolean attest = false;
+  private boolean attest;
 
   public InitialLegacySubmitModel() {
   }

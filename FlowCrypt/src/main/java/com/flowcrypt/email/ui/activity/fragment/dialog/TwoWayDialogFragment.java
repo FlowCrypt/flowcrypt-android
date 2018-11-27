@@ -57,14 +57,13 @@ public class TwoWayDialogFragment extends DialogFragment {
 
   public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMessage, String positiveButtonTitle,
                                                  String negativeButtonTitle, boolean isCancelable) {
-    TwoWayDialogFragment infoDialogFragment = new TwoWayDialogFragment();
-
     Bundle args = new Bundle();
     args.putString(KEY_DIALOG_TITLE, dialogTitle);
     args.putString(KEY_DIALOG_MESSAGE, dialogMessage);
     args.putString(KEY_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
     args.putString(KEY_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
     args.putBoolean(KEY_IS_CANCELABLE, isCancelable);
+    TwoWayDialogFragment infoDialogFragment = new TwoWayDialogFragment();
     infoDialogFragment.setArguments(args);
 
     return infoDialogFragment;

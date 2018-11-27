@@ -71,9 +71,9 @@ public class ExceptionUtil {
       }
     }
 
-    if ((e instanceof SSLHandshakeException
+    if (e instanceof SSLHandshakeException
         || e instanceof SSLProtocolException
-        || e instanceof MessagingException)) {
+        || e instanceof MessagingException) {
       if (!TextUtils.isEmpty(e.getMessage())) {
         if (e.getMessage().contains("Connection closed by peer")
             || e.getMessage().contains("I/O error during system call")

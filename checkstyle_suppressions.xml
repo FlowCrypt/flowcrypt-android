@@ -11,5 +11,7 @@
 
 <suppressions>
     <suppress checks=".*" files=".*Js.java" />
+    <suppress checks="ParameterAssignment"
+        files=".*AttesterKeyAdapter.java|.*DialogItemAdapter.java|.*PgpContactsNachoTextView" />
 </suppressions>
 

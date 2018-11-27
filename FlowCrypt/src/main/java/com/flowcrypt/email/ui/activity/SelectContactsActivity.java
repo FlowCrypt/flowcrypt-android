@@ -81,8 +81,8 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    boolean isMultiply = getIntent().getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false);
-    String title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
+    final boolean isMultiply = getIntent().getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false);
+    final String title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
 
     this.contactsListCursorAdapter = new ContactsListCursorAdapter(this, null, false, null, false);
 

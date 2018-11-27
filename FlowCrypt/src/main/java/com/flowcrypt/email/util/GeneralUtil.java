@@ -65,8 +65,8 @@ public class GeneralUtil {
       Network network = connManager.getActiveNetwork();
       if (network != null) {
         NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
-        return (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+        return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
       }
     }
 
@@ -281,7 +281,7 @@ public class GeneralUtil {
   public static boolean isAppForegrounded() {
     ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
     ActivityManager.getMyMemoryState(appProcessInfo);
-    return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE);
+    return appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE;
   }
 
   /**

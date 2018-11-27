@@ -174,8 +174,6 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
   }
 
   private void initViews(View root) {
-    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-
     layoutContentView = root.findViewById(R.id.layoutContentView);
     layoutProgress = root.findViewById(R.id.layoutProgress);
     buttonImportAll = root.findViewById(R.id.buttonImportAll);
@@ -184,7 +182,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     buttonImportAll.setOnClickListener(this);
     recyclerViewContacts = root.findViewById(R.id.recyclerViewContacts);
     recyclerViewContacts.setHasFixedSize(true);
-    recyclerViewContacts.setLayoutManager(layoutManager);
+    recyclerViewContacts.setLayoutManager(new LinearLayoutManager(getContext()));
     emptyView = root.findViewById(R.id.emptyView);
   }
 

@@ -57,7 +57,7 @@ public class PgpContact implements Parcelable {
     this.email = email;
     this.name = name;
     this.pubkey = pubkey;
-    this.has_pgp = (pubkey != null);
+    this.has_pgp = pubkey != null;
     this.client = client;
     this.attested = attested;
     this.fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(pubkey));

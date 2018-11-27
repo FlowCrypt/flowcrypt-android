@@ -75,8 +75,6 @@ public class MessageListAdapter extends CursorAdapter {
 
   @Override
   public void bindView(View view, Context context, Cursor cursor) {
-    GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-
     ViewHolder viewHolder = new ViewHolder();
     viewHolder.textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
     viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
@@ -84,7 +82,7 @@ public class MessageListAdapter extends CursorAdapter {
     viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
     viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
-    updateItem(context, generalMessageDetails, viewHolder);
+    updateItem(context, messageDaoSource.getMessageInfo(cursor), viewHolder);
 
     long itemId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
 

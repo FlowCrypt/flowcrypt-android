@@ -171,7 +171,7 @@ public class AccountDaoSource extends BaseDaoSource {
 
     //fixed a bug when try to decrypting the template password.
     // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-    if (originalPassword.equalsIgnoreCase("password")) {
+    if ("password".equalsIgnoreCase(originalPassword)) {
       originalPassword = "";
     }
 
@@ -262,12 +262,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return The {@link AccountDao};
    */
   public AccountDao getAccountInformation(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, AccountDaoSource.COL_EMAIL + " " +
-        "= ?", new String[]{email}, null);
+        "= ?", new String[]{emailInLowerCase}, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       return getCurrentAccountDao(context, cursor);
@@ -371,12 +369,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return The list of all added account without the active account
    */
   public List<AccountDao> getAccountsWithoutActive(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-        AccountDaoSource.COL_EMAIL + " != ?", new String[]{email}, null);
+        AccountDaoSource.COL_EMAIL + " != ?", new String[]{emailInLowerCase}, null);
 
     List<AccountDao> accountDaoList = new ArrayList<>();
     if (cursor != null) {
@@ -400,12 +396,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return true if need to show only encrypted messages
    */
   public boolean isShowOnlyEncryptedMessages(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-        AccountDaoSource.COL_EMAIL + " = ?", new String[]{email}, null);
+        AccountDaoSource.COL_EMAIL + " = ?", new String[]{emailInLowerCase}, null);
 
     boolean isShowOnlyEncryptedMessages = false;
 
@@ -430,16 +424,16 @@ public class AccountDaoSource extends BaseDaoSource {
   public int setIsShowOnlyEncryptedMessages(Context context, String email, boolean isShowOnlyEncryptedMessages) {
     if (email == null) {
       return -1;
-    } else {
-      email = email.toLowerCase();
     }
+
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
       ContentValues contentValues = new ContentValues();
       contentValues.put(COL_IS_SHOW_ONLY_ENCRYPTED, isShowOnlyEncryptedMessages);
       return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + " = ? ", new String[]{email});
+          COL_EMAIL + " = ? ", new String[]{emailInLowerCase});
     } else return -1;
   }
 
@@ -453,10 +447,9 @@ public class AccountDaoSource extends BaseDaoSource {
   public int setActiveAccount(Context context, String email) {
     if (email == null) {
       return -1;
-    } else {
-      email = email.toLowerCase();
     }
 
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
       ContentValues contentValuesDeactivateAllAccount = new ContentValues();
@@ -467,7 +460,7 @@ public class AccountDaoSource extends BaseDaoSource {
       ContentValues contentValuesActivateAccount = new ContentValues();
       contentValuesActivateAccount.put(COL_IS_ACTIVE, 1);
       updateRowCount += contentResolver.update(getBaseContentUri(), contentValuesActivateAccount,
-          COL_EMAIL + " = ? ", new String[]{email});
+          COL_EMAIL + " = ? ", new String[]{emailInLowerCase});
 
       return updateRowCount;
 

@@ -37,11 +37,12 @@ public class Action implements Parcelable {
     }
   };
 
-  @SerializedName(TAG_NAME_ACTION_TYPE)
-  private final ActionType actionType;
+
   protected long id;
   protected String email;
-  protected int version = 0;
+  @SerializedName(TAG_NAME_ACTION_TYPE)
+  private final ActionType actionType;
+  protected int version;
 
   public Action(String email, ActionType actionType) {
     this.email = email;

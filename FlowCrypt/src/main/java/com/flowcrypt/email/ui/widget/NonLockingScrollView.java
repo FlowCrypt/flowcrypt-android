@@ -58,7 +58,7 @@ public class NonLockingScrollView extends ScrollView {
    * Whether or not the contents of this view is being dragged by one of the children in
    * {@link #childrenNeedingAllTouches}.
    */
-  private boolean inCustomDrag = false;
+  private boolean inCustomDrag;
   private boolean skipWebViewScroll = true;
 
   public NonLockingScrollView(Context context) {
