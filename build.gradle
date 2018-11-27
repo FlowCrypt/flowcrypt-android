@@ -26,8 +26,12 @@ allprojects {
 
     plugins.apply('checkstyle')
 
-    task('checkstyle', type: Checkstyle) {
+    checkstyle {
         configFile rootProject.file('checkstyle.xml')
+        toolVersion '8.14';
+    }
+
+    task('checkstyle', type: Checkstyle) {
         configProperties.checkStyleConfigDir = rootProject.rootDir
         source 'src/main/java'
         ignoreFailures false
@@ -39,7 +43,7 @@ allprojects {
 
     afterEvaluate {
         Task task = tasks.findByName('check');
-        if(task != null){
+        if (task != null) {
             task.dependsOn('checkstyle')
         }
     }
