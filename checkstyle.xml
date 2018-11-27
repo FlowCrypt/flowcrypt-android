@@ -19,18 +19,11 @@
 
     <module name="NewlineAtEndOfFile" />
 
-    <module name="TreeWalker">
-        <!-- Checks for Size Violations.                    -->
-        <!-- See http://checkstyle.sf.net/config_sizes.html -->
-        <module name="LineLength">
-            <property name="max" value="120" />
-        </module>
-        <module name="AnonInnerLength">
-            <property name="max" value="40" />
-        </module>
-        <module name="MethodCount" />
-        <module name="MethodLength" />
+    <module name="FileLength">
+        <property name="max" value="2000" />
+    </module>
 
+    <module name="TreeWalker">
         <!-- Block Checks.                                            -->
         <!-- See http://checkstyle.sourceforge.net/config_blocks.html -->
         <module name="AvoidNestedBlocks" />
@@ -113,5 +106,21 @@
         <module name="ParameterName" />
         <module name="StaticVariableName" />
         <module name="TypeName" />
+
+        <!-- Checks for Size Violations.                    -->
+        <!-- See http://checkstyle.sf.net/config_sizes.html -->
+        <module name="AnonInnerLength">
+            <property name="max" value="40" />
+        </module>
+        <!--<module name="ExecutableStatementCount"/>-->
+        <module name="LineLength">
+            <property name="max" value="120" />
+        </module>
+        <module name="MethodCount" />
+        <module name="MethodLength" />
+        <module name="OuterTypeNumber" />
+        <module name="ParameterNumber">
+            <property name="max" value="10" />
+        </module>
     </module>
 </module>
