@@ -46,7 +46,7 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 public abstract class BaseActivity extends AppCompatActivity implements BaseService.OnServiceCallback {
-  protected final String TAG;
+  protected final String tag;
 
   protected Messenger jsServiceMessenger;
   protected Messenger jsServiceReplyMessenger;
@@ -60,7 +60,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   private ServiceConnection serviceConnectionJsService = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-      Log.d(TAG, "Activity connected to " + name.getClassName());
+      Log.d(tag, "Activity connected to " + name.getClassName());
       jsServiceMessenger = new Messenger(service);
       isBoundToJsService = true;
 
@@ -71,14 +71,14 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      Log.d(TAG, "Activity disconnected from " + name.getClassName());
+      Log.d(tag, "Activity disconnected from " + name.getClassName());
       jsServiceMessenger = null;
       isBoundToJsService = false;
     }
   };
 
   public BaseActivity() {
-    TAG = getClass().getSimpleName();
+    tag = getClass().getSimpleName();
     jsServiceReplyMessenger = new Messenger(new ReplyHandler(this));
   }
 
@@ -122,7 +122,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    Log.d(TAG, "onCreate");
+    Log.d(tag, "onCreate");
     setContentView(getContentViewResourceId());
     initScreenViews();
 
@@ -132,25 +132,25 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   @Override
   public void onStart() {
     super.onStart();
-    Log.d(TAG, "onStart");
+    Log.d(tag, "onStart");
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    Log.d(TAG, "onResume");
+    Log.d(tag, "onResume");
   }
 
   @Override
   public void onStop() {
     super.onStop();
-    Log.d(TAG, "onStop");
+    Log.d(tag, "onStop");
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    Log.d(tag, "onDestroy");
 
     if (isBoundToJsService) {
       if (jsServiceMessenger != null) {
@@ -325,7 +325,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   protected boolean checkServiceBound(boolean isBound) {
     if (!isBound) {
       if (GeneralUtil.isDebug()) {
-        Log.d(TAG, "Activity not connected to the service");
+        Log.d(tag, "Activity not connected to the service");
       }
       return true;
     }
@@ -334,7 +334,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
   protected void bindToService(Class<?> cls, ServiceConnection serviceConnection) {
     bindService(new Intent(this, cls), serviceConnection, Context.BIND_AUTO_CREATE);
-    Log.d(TAG, "bind to " + cls.getSimpleName());
+    Log.d(tag, "bind to " + cls.getSimpleName());
   }
 
   /**
@@ -342,7 +342,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   protected void unbindFromService(Class<?> cls, ServiceConnection serviceConnection) {
     unbindService(serviceConnection);
-    Log.d(TAG, "unbind from " + cls.getSimpleName());
+    Log.d(tag, "unbind from " + cls.getSimpleName());
   }
 
   /**

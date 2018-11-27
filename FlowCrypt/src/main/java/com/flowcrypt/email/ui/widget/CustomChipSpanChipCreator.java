@@ -50,9 +50,8 @@ public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan
   }
 
   @Override
-  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull PGPContactChipSpan
-      PGPContactChipSpan) {
-    return new PGPContactChipSpan(context, PGPContactChipSpan);
+  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull PGPContactChipSpan pgpContactChipSpan) {
+    return new PGPContactChipSpan(context, pgpContactChipSpan);
   }
 
   @Override

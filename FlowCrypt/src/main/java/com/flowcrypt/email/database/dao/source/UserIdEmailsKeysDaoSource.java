@@ -39,7 +39,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
       COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
       COL_USER_ID_EMAIL + " VARCHAR(20) NOT NULL " + ");";
 
-  public static final String INDEX_LONG_ID__USER_ID_EMAIL =
+  public static final String INDEX_LONG_ID_USER_ID_EMAIL =
       "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LONG_ID + "_" + COL_USER_ID_EMAIL + "_in_"
           + TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " ON " + TABLE_NAME_USER_ID_EMAILS_AND_KEYS
           + " (" + COL_LONG_ID + ", " + COL_USER_ID_EMAIL + ")";

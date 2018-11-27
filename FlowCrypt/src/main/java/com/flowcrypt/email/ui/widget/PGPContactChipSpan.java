@@ -25,14 +25,12 @@ import androidx.annotation.Nullable;
 public class PGPContactChipSpan extends ChipSpan {
   private Boolean isHasPgp;
 
-  public PGPContactChipSpan(@NonNull Context context, @NonNull CharSequence text, @Nullable
-      Drawable icon, Object
-                                data) {
+  public PGPContactChipSpan(@NonNull Context context, @NonNull CharSequence text, @Nullable Drawable icon,
+                            Object data) {
     super(context, text, icon, data);
   }
 
-  public PGPContactChipSpan(@NonNull Context context, @NonNull PGPContactChipSpan
-      pgpContactChipSpan) {
+  public PGPContactChipSpan(@NonNull Context context, @NonNull PGPContactChipSpan pgpContactChipSpan) {
     super(context, pgpContactChipSpan);
     this.isHasPgp = pgpContactChipSpan.isHasPgp();
   }

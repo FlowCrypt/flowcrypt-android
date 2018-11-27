@@ -892,9 +892,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   @NonNull
   private TextView generateMessagePart(MessagePart messagePart, LayoutInflater layoutInflater,
-                                       int message_part_other, ViewGroup layoutMessageParts) {
+                                       int messagePartOther, ViewGroup layoutMessageParts) {
     TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
-        message_part_other, layoutMessageParts, false);
+        messagePartOther, layoutMessageParts, false);
 
     textViewMessagePartOther.setText(messagePart.getValue());
     return textViewMessagePartOther;

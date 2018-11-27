@@ -171,18 +171,18 @@ public class JsInBackgroundManager {
    * An implementation of the worker thread.
    */
   private class JsRunnable implements Runnable {
-    private String TAG = JsRunnable.class.getSimpleName();
+    private String tag;
     private Js js;
     private String workerName;
 
     JsRunnable(String workerName) {
       this.workerName = workerName;
-      this.TAG += "|" + workerName;
+      this.tag = JsRunnable.class.getSimpleName() + "|" + workerName;
     }
 
     @Override
     public void run() {
-      Log.d(TAG, " run!");
+      Log.d(tag, " run!");
       Thread.currentThread().setName(workerName);
 
       try {
@@ -196,7 +196,7 @@ public class JsInBackgroundManager {
         boolean isInterrupted = false;
         while (!isInterrupted) {
           try {
-            Log.d(TAG, "blockingQueue size = " + blockingQueue.size());
+            Log.d(tag, "blockingQueue size = " + blockingQueue.size());
             JsTask jsTask = blockingQueue.take();
 
             if (jsTask != null) {
@@ -205,13 +205,13 @@ public class JsInBackgroundManager {
           } catch (InterruptedException e) {
             e.printStackTrace();
             isInterrupted = true;
-            Log.d(TAG, "A task was interrupted!");
+            Log.d(tag, "A task was interrupted!");
           }
         }
       } catch (Exception e) {
         e.printStackTrace();
       }
-      Log.d(TAG, " stopped!");
+      Log.d(tag, " stopped!");
     }
 
     /**
@@ -221,9 +221,9 @@ public class JsInBackgroundManager {
      */
     void runJsTask(JsTask jsTask) {
       try {
-        Log.d(TAG, "Start a new task = " + jsTask.getClass().getSimpleName());
+        Log.d(tag, "Start a new task = " + jsTask.getClass().getSimpleName());
         jsTask.runAction(js, jsListener);
-        Log.d(TAG, "The task = " + jsTask.getClass().getSimpleName() + " completed");
+        Log.d(tag, "The task = " + jsTask.getClass().getSimpleName() + " completed");
       } catch (Exception e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);

@@ -97,5 +97,21 @@
         <!-- See http://checkstyle.sourceforge.net/config_modifier.html -->
         <module name="ModifierOrder" />
         <module name="RedundantModifier" />
+
+        <!-- Checks for naming conventions                            -->
+        <!-- See http://checkstyle.sourceforge.net/config_naming.html -->
+        <module name="CatchParameterName" />
+        <module name="ConstantName" />
+        <module name="InterfaceTypeParameterName" />
+        <module name="LambdaParameterName" />
+        <module name="LocalFinalVariableName" />
+        <module name="LocalVariableName" />
+        <module name="MemberName" />
+        <module name="MethodName" />
+        <module name="MethodTypeParameterName" />
+        <module name="PackageName" />
+        <module name="ParameterName" />
+        <module name="StaticVariableName" />
+        <module name="TypeName" />
     </module>
 </module>

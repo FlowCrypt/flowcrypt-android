@@ -146,9 +146,8 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     }
   }
 
-  public void setOnInfoDialogButtonClickListener(OnInfoDialogButtonClickListener
-                                                     OnInfoDialogButtonClickListener) {
-    this.onInfoDialogButtonClickListener = OnInfoDialogButtonClickListener;
+  public void setOnInfoDialogButtonClickListener(OnInfoDialogButtonClickListener onInfoDialogButtonClickListener) {
+    this.onInfoDialogButtonClickListener = onInfoDialogButtonClickListener;
   }
 
   private void sendResult(int result) {

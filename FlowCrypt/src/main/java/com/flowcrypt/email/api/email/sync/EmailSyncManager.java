@@ -478,13 +478,13 @@ public class EmailSyncManager {
   }
 
   private abstract class BaseSyncRunnable implements Runnable {
-    protected final String TAG;
+    protected final String tag;
 
     protected Session session;
     protected Store store;
 
     BaseSyncRunnable() {
-      TAG = getClass().getSimpleName();
+      tag = getClass().getSimpleName();
     }
 
     void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException, ManualHandledException {
@@ -492,7 +492,7 @@ public class EmailSyncManager {
         if (accountDao.getAuthCredentials() != null) {
           if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
               .getUsername())) {
-            Log.d(TAG, "Connection was reset!");
+            Log.d(tag, "Connection was reset!");
 
             notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
                 R.id.progress_id_resetting_connection);
@@ -519,7 +519,7 @@ public class EmailSyncManager {
       } catch (MessagingException e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
-        Log.d(TAG, "This exception occurred when we try disconnect from the store.");
+        Log.d(tag, "This exception occurred when we try disconnect from the store.");
       }
     }
 
@@ -554,14 +554,14 @@ public class EmailSyncManager {
         resetConnectionIfNeed(syncTask);
 
         if (!isConnected()) {
-          Log.d(TAG, "Not connected. Start a reconnection ...");
+          Log.d(tag, "Not connected. Start a reconnection ...");
           notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
               R.id.progress_id_connecting_to_email_server);
           openConnectionToStore();
-          Log.d(TAG, "Reconnection done");
+          Log.d(tag, "Reconnection done");
         }
 
-        Log.d(TAG, "Start a new task = " + syncTask.getClass().getSimpleName() + " for store "
+        Log.d(tag, "Start a new task = " + syncTask.getClass().getSimpleName() + " for store "
             + store.toString());
 
         if (syncTask.isUseSMTP()) {
@@ -573,7 +573,7 @@ public class EmailSyncManager {
               R.id.progress_id_running_imap_action);
           syncTask.runIMAPAction(accountDao, session, store, syncListener);
         }
-        Log.d(TAG, "The task = " + syncTask.getClass().getSimpleName() + " completed");
+        Log.d(tag, "The task = " + syncTask.getClass().getSimpleName() + " completed");
       } catch (Exception e) {
         e.printStackTrace();
         if (e instanceof ConnectionException) {
@@ -625,17 +625,17 @@ public class EmailSyncManager {
 
     @Override
     public void run() {
-      Log.d(TAG, " run!");
+      Log.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
 
       while (!Thread.interrupted()) {
         try {
-          Log.d(TAG, "PassiveSyncTaskBlockingQueue size = " + passiveSyncTaskBlockingQueue.size());
+          Log.d(tag, "PassiveSyncTaskBlockingQueue size = " + passiveSyncTaskBlockingQueue.size());
           SyncTask syncTask = passiveSyncTaskBlockingQueue.poll(TIMEOUT_WAIT_NEXT_TASK, TimeUnit.SECONDS);
 
           if (syncTask == null) {
             closeConnection();
-            Log.d(TAG, "Disconnected. Wait new tasks.");
+            Log.d(tag, "Disconnected. Wait new tasks.");
             syncTask = passiveSyncTaskBlockingQueue.take();
           }
 
@@ -653,18 +653,18 @@ public class EmailSyncManager {
       }
 
       closeConnection();
-      Log.d(TAG, " stopped!");
+      Log.d(tag, " stopped!");
     }
   }
 
   private class ActiveSyncTaskRunnable extends BaseSyncRunnable {
     @Override
     public void run() {
-      Log.d(TAG, " run!");
+      Log.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
       while (!Thread.interrupted()) {
         try {
-          Log.d(TAG, "ActiveSyncTaskBlockingQueue size = " + activeSyncTaskBlockingQueue.size());
+          Log.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeSyncTaskBlockingQueue.size());
           SyncTask syncTask = activeSyncTaskBlockingQueue.take();
 
           runIdleInboxIfNeed();
@@ -681,7 +681,7 @@ public class EmailSyncManager {
       }
 
       closeConnection();
-      Log.d(TAG, " stopped!");
+      Log.d(tag, " stopped!");
     }
   }
 
@@ -701,7 +701,7 @@ public class EmailSyncManager {
 
     @Override
     public void run() {
-      Log.d(TAG, " run!");
+      Log.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
 
       FoldersManager foldersManager = FoldersManager.fromDatabase(syncListener.getContext(),
@@ -715,24 +715,24 @@ public class EmailSyncManager {
       idle();
       closeConnection();
 
-      Log.d(TAG, " stopped!");
+      Log.d(tag, " stopped!");
     }
 
     @Override
     public void messagesAdded(MessageCountEvent e) {
-      Log.d(TAG, "messagesAdded: " + e.getMessages().length);
+      Log.d(tag, "messagesAdded: " + e.getMessages().length);
       loadNewMessages(null, 0, localFolder);
     }
 
     @Override
     public void messagesRemoved(MessageCountEvent messageCountEvent) {
-      Log.d(TAG, "messagesRemoved");
+      Log.d(tag, "messagesRemoved");
       syncFolderState();
     }
 
     @Override
     public void messageChanged(MessageChangedEvent e) {
-      Log.d(TAG, "messageChanged");
+      Log.d(tag, "messageChanged");
       Message message = e.getMessage();
       if (message != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
         try {
@@ -745,8 +745,8 @@ public class EmailSyncManager {
           if (syncListener != null) {
             syncListener.onMessageChanged(accountDao, localFolder, remoteFolder, message, null, 0);
           }
-        } catch (MessagingException e1) {
-          e1.printStackTrace();
+        } catch (MessagingException msgException) {
+          msgException.printStackTrace();
         }
       }
     }
@@ -759,18 +759,18 @@ public class EmailSyncManager {
           try {
             //wait while a connection will be established
             TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30));
-          } catch (InterruptedException e1) {
-            e1.printStackTrace();
+          } catch (InterruptedException interruptedException) {
+            interruptedException.printStackTrace();
           }
         }
 
         if (!isConnected()) {
-          Log.d(TAG, "Not connected. Start a reconnection ...");
+          Log.d(tag, "Not connected. Start a reconnection ...");
           openConnectionToStore();
-          Log.d(TAG, "Reconnection done");
+          Log.d(tag, "Reconnection done");
         }
 
-        Log.d(TAG, "Start idling for store " + store.toString());
+        Log.d(tag, "Start idling for store " + store.toString());
 
         remoteFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
         remoteFolder.open(javax.mail.Folder.READ_ONLY);
@@ -791,7 +791,7 @@ public class EmailSyncManager {
           idle();
         } else if (e instanceof MessagingException) {
           if ("IDLE not supported".equals(e.getMessage())) {
-            Log.d(TAG, "IDLE not supported!");
+            Log.d(tag, "IDLE not supported!");
             isIdleSupport = false;
           }
         } else {
@@ -805,7 +805,7 @@ public class EmailSyncManager {
         if (accountDao.getAuthCredentials() != null) {
           if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
               .getUsername())) {
-            Log.d(TAG, "Connection was reset!");
+            Log.d(tag, "Connection was reset!");
             if (store != null) {
               store.close();
             }

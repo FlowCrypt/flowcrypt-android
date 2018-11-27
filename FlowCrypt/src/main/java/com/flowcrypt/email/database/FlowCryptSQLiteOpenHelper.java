@@ -79,7 +79,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
 
     sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
-    sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+    sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID_USER_ID_EMAIL);
   }
 
   @Override
@@ -324,7 +324,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
           " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;");
 
       sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
-      sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+      sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID_USER_ID_EMAIL);
       new ActionQueueDaoSource().addAction(sqLiteDatabase, new FillUserIdEmailsKeysTableAction());
 
       sqLiteDatabase.setTransactionSuccessful();

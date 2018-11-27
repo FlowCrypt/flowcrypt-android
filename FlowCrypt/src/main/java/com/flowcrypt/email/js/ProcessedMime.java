@@ -22,16 +22,16 @@ public class ProcessedMime extends MeaningfulV8ObjectContainer {
     return this.v8object.getObject("headers");
   }
 
-  public String getStringHeader(String header_name) {
-    return getAttributeAsString(getHeaders(), header_name);
+  public String getStringHeader(String headerName) {
+    return getAttributeAsString(getHeaders(), headerName);
   }
 
   public long getTimeHeader(String name) {
     return js.time_to_utc_timestamp(getStringHeader(name));
   }
 
-  public MimeAddress[] getAddressHeader(String header_name) {
-    V8Array addresses = getAttributeAsArray(getHeaders(), header_name);
+  public MimeAddress[] getAddressHeader(String headerName) {
+    V8Array addresses = getAttributeAsArray(getHeaders(), headerName);
     if (addresses == null) {
       return new MimeAddress[0];
     }

@@ -44,7 +44,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
   private ServiceConnection serviceConnectionSyncService = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-      Log.d(TAG, "Activity connected to " + name.getClassName());
+      Log.d(tag, "Activity connected to " + name.getClassName());
       syncServiceMessenger = new Messenger(service);
       isBoundToSyncService = true;
 
@@ -55,7 +55,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      Log.d(TAG, "Activity disconnected from " + name.getClassName());
+      Log.d(tag, "Activity disconnected from " + name.getClassName());
       syncServiceMessenger = null;
       isBoundToSyncService = false;
     }
