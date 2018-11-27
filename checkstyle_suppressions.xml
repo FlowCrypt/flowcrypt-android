@@ -13,5 +13,6 @@
     <suppress checks=".*" files=".*Js.java" />
     <suppress checks="ParameterAssignment"
         files=".*AttesterKeyAdapter.java|.*DialogItemAdapter.java|.*PgpContactsNachoTextView" />
+    <suppress checks="ParameterNumber" files=".*AuthCredentials.java" />
 </suppressions>
 
