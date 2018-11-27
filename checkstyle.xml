@@ -7,6 +7,11 @@
         <property name="file" value="${checkStyleConfigDir}/checkstyle_suppressions.xml" />
     </module>
 
+    <module name="Header">
+        <property name="header" value=" * © 2016-2018 FlowCrypt Limited." />
+        <property name="ignoreLines" value="1" />
+    </module>
+
     <module name="TreeWalker">
         <!-- Checks for Size Violations.                    -->
         <!-- See http://checkstyle.sf.net/config_sizes.html -->
