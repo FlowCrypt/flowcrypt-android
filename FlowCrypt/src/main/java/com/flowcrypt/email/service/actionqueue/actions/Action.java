@@ -40,9 +40,9 @@ public class Action implements Parcelable {
 
   protected long id;
   protected String email;
+  protected int version;
   @SerializedName(TAG_NAME_ACTION_TYPE)
   private final ActionType actionType;
-  protected int version;
 
   public Action(String email, ActionType actionType) {
     this.email = email;
