@@ -447,7 +447,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     }
   }
 
-  private static abstract class BaseAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
+  private abstract static class BaseAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
     final WeakReference<PreviewImportPgpContactFragment> weakReference;
 
     BaseAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment) {

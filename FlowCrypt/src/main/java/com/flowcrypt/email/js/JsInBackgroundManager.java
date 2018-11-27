@@ -175,7 +175,7 @@ public class JsInBackgroundManager {
     private Js js;
     private String workerName;
 
-    public JsRunnable(String workerName) {
+    JsRunnable(String workerName) {
       this.workerName = workerName;
       this.TAG += "|" + workerName;
     }

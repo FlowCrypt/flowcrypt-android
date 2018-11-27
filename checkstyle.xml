@@ -77,7 +77,7 @@
         <module name="RedundantImport" />
         <module name="UnusedImports" />
 
-        <!-- Checks for miscellaneous                                        -->
+        <!-- Checks for miscellaneous                               -->
         <!-- See http://checkstyle.sourceforge.net/config_misc.html -->
         <module name="ArrayTypeStyle" />
         <module name="AvoidEscapedUnicodeCharacters" />
@@ -92,5 +92,10 @@
         </module>
         <module name="OuterTypeFilename" />
         <module name="UpperEll" />
+
+        <!-- Checks for modifiers                                       -->
+        <!-- See http://checkstyle.sourceforge.net/config_modifier.html -->
+        <module name="ModifierOrder" />
+        <module name="RedundantModifier" />
     </module>
 </module>
