@@ -71,5 +71,11 @@
         <module name="UnnecessaryParentheses" />
         <module name="VariableDeclarationUsageDistance" />
 
+        <!-- Checks for imports                                        -->
+        <!-- See http://checkstyle.sourceforge.net/config_imports.html -->
+        <module name="AvoidStarImport" />
+        <module name="IllegalImport" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports" />
     </module>
 </module>
