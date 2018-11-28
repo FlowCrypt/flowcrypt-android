@@ -41,7 +41,6 @@ public class PrivateKeysManager {
         ("pgp/temp-sec.asc"), "UTF-8");
     Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Js js = new Js(appContext, null);
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
     String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
     PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
@@ -59,6 +58,8 @@ public class PrivateKeysManager {
       randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
           (pgpKey.getLongid());
     }
+
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
 
     String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);

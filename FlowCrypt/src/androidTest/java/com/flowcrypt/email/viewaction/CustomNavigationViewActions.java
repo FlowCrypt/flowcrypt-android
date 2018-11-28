@@ -5,28 +5,10 @@
 
 package com.flowcrypt.email.viewaction;
 
-import android.content.res.Resources;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SubMenu;
-import android.view.View;
-
-import com.google.android.material.internal.NavigationMenu;
 import com.google.android.material.navigation.NavigationView;
 
-import org.hamcrest.Matcher;
-
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.test.espresso.PerformException;
-import androidx.test.espresso.UiController;
 import androidx.test.espresso.ViewAction;
-import androidx.test.espresso.matcher.ViewMatchers;
-import androidx.test.espresso.util.HumanReadables;
-
-import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast;
-import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
-import static org.hamcrest.Matchers.allOf;
 
 /**
  * View actions for interacting with {@link NavigationView}
@@ -61,84 +43,6 @@ public final class CustomNavigationViewActions {
    * @return a {@link ViewAction} that navigates on a menu item
    */
   public static ViewAction navigateTo(final String menuItemName) {
-
-    return new ViewAction() {
-
-      @Override
-      public void perform(UiController uiController, View view) {
-        NavigationView navigationView = (NavigationView) view;
-        NavigationMenu navigationMenu = (NavigationMenu) navigationView.getMenu();
-
-        MenuItem matchedMenuItem = null;
-
-        for (int i = 0; i < navigationMenu.size(); i++) {
-          MenuItem menuItem = navigationMenu.getItem(i);
-          if (menuItem.hasSubMenu()) {
-            SubMenu subMenu = menuItem.getSubMenu();
-            for (int j = 0; j < subMenu.size(); j++) {
-              MenuItem subMenuItem = subMenu.getItem(j);
-              if (subMenuItem.getTitle().equals(menuItemName)) {
-                matchedMenuItem = subMenuItem;
-              }
-            }
-          } else {
-            if (menuItem.getTitle().equals(menuItemName)) {
-              matchedMenuItem = menuItem;
-            }
-          }
-        }
-
-        if (matchedMenuItem == null) {
-          throw new PerformException.Builder()
-              .withActionDescription(this.getDescription())
-              .withViewDescription(HumanReadables.describe(view))
-              .withCause(new RuntimeException(getErrorMessage(navigationMenu, view)))
-              .build();
-        }
-        navigationMenu.performItemAction(matchedMenuItem, 0);
-      }
-
-      @Override
-      public String getDescription() {
-        return "click on menu item with id";
-      }
-
-      @Override
-      public Matcher<View> getConstraints() {
-        return allOf(
-            isAssignableFrom(NavigationView.class),
-            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
-            isDisplayingAtLeast(90));
-      }
-
-      private String getErrorMessage(Menu menu, View view) {
-        String newLine = System.getProperty("line.separator");
-        StringBuilder errorMessage =
-            new StringBuilder("Menu item was not found, " + "available menu items:")
-                .append(newLine);
-        for (int position = 0; position < menu.size(); position++) {
-          errorMessage.append("[MenuItem] position=").append(position);
-          MenuItem menuItem = menu.getItem(position);
-          if (menuItem != null) {
-            CharSequence itemTitle = menuItem.getTitle();
-            if (itemTitle != null) {
-              errorMessage.append(", title=").append(itemTitle);
-            }
-            if (view.getResources() != null) {
-              int itemId = menuItem.getItemId();
-              try {
-                errorMessage.append(", id=");
-                String menuItemResourceName = view.getResources().getResourceName(itemId);
-                errorMessage.append(menuItemResourceName);
-              } catch (Resources.NotFoundException nfe) {
-                errorMessage.append("not found");
-              }
-            }
-            errorMessage.append(newLine);
-          }
-        }
-        return errorMessage.toString();
-      }
-    };
+    return new NavigateToItemViewAction(menuItemName);
   }
 }

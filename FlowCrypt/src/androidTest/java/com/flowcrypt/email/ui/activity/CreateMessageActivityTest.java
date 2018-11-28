@@ -329,9 +329,9 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
         .perform(typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard());
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.template_remove_recipient,
-        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))).check(matches(isDisplayed())).perform(click
-        ());
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
+        R.string.template_remove_recipient, TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))).check(
+        matches(isDisplayed())).perform(click());
     onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(matches(withText(not
         (containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))));
   }
@@ -344,12 +344,12 @@ public class CreateMessageActivityTest extends BaseTest {
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
     Intent result = new Intent();
     result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, getPgpContact());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(), SelectContactsActivity
-        .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, result));
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        SelectContactsActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, result));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
     onView(withText(R.string.copy_from_other_contact)).check(matches(isDisplayed())).perform(click());
-    checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R
-        .string.key_successfully_copied));
+    checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getInstrumentation()
+        .getTargetContext().getString(R.string.key_successfully_copied));
     Intents.release();
   }
 
@@ -374,8 +374,8 @@ public class CreateMessageActivityTest extends BaseTest {
 
   @NonNull
   private PgpContact getPgpContact() throws IOException {
-    String publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-        "pgp/not_attester_user@denbond7.com-pub.asc");
+    String publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
+        .getContext(), "pgp/not_attester_user@denbond7.com-pub.asc");
     return new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, publicKey, true, null,
         false, null, null, null, 0);
   }

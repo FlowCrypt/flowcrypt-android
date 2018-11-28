@@ -24,7 +24,6 @@ import java.util.Date;
  */
 public class MessageUtil {
   public static IncomingMessageInfo getIncomingMessageInfoWithOutBody(Js js, String rawMessage) {
-    IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
     ProcessedMime processedMime = js.mime_process(rawMessage);
     ArrayList<String> addressesFrom = new ArrayList<>();
     ArrayList<String> addressesTo = new ArrayList<>();
@@ -42,6 +41,7 @@ public class MessageUtil {
       addressesCc.add(mimeAddress.getAddress());
     }
 
+    IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
     incomingMessageInfo.setFrom(addressesFrom);
     incomingMessageInfo.setTo(addressesTo);
     incomingMessageInfo.setCc(addressesCc);

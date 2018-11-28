@@ -119,7 +119,7 @@ public class JsTest {
             .getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
     String decryptedText = js.crypto_message_decrypt(mimeMessage.getText()).getString();
-    Assert.assertTrue(decryptedText.equals("This is a very security encrypted text."));
+    Assert.assertEquals("This is a very security encrypted text.", decryptedText);
   }
 
   @Test
@@ -171,30 +171,28 @@ public class JsTest {
 
   @Test
   public void testLoadFileFromAssets() throws Exception {
-    File original_image1Mb = createTempFile();
-    FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+    File originalImage1Mb = createTempFile();
+    FileUtils.copyInputStreamToFile(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
+        .open("pgp/1_mb_image.jpg"), originalImage1Mb);
   }
 
   @Test
   public void testDecryptFileWithCompareResults() throws Exception {
     File decryptedFile = decryptFile(encryptedImage1Mb);
-    File original_image1Mb = createTempFile();
-    FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+    File originalImage1Mb = createTempFile();
+    FileUtils.copyInputStreamToFile(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
+        .open("pgp/1_mb_image.jpg"), originalImage1Mb);
 
-    Assert.assertTrue(FileUtils.contentEquals(decryptedFile, original_image1Mb));
+    Assert.assertTrue(FileUtils.contentEquals(decryptedFile, originalImage1Mb));
   }
 
   @Test
   public void testEncryptFile() throws Exception {
     File encryptedTempFile = createTempFile();
     byte[] encryptedBytes = js.crypto_message_encrypt(
-        new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()},
-        IOUtils.toByteArray(InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")),
-        image1Mb.getName());
+        new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()}, IOUtils.toByteArray(InstrumentationRegistry
+            .getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")), image1Mb.getName());
     FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-    //Assert.assertTrue(FileUtils.contentEquals(encryptedImage1Mb, encryptedTempFile));
   }
 
   private static DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
@@ -209,7 +207,8 @@ public class JsTest {
 
   @NonNull
   private static PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        privateKeyName);
     return js.crypto_key_read(privateKey);
   }
 
@@ -223,7 +222,8 @@ public class JsTest {
   }
 
   private static PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        privateKeyName);
     PgpKey pgpKeyPrivate = js.crypto_key_read(privateKey);
     String fingerprint = js.crypto_key_fingerprint(pgpKeyPrivate);
     String longId = js.crypto_key_longid(fingerprint);
@@ -259,7 +259,8 @@ public class JsTest {
     encryptedImage1Mb = createTempFile();
     image1Mb = createTempFile();
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), encryptedImage1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"),
+        encryptedImage1Mb);
     FileUtils.copyInputStreamToFile(
         InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), image1Mb);
   }

@@ -64,8 +64,8 @@ public class ShareIntentsTest extends BaseTest {
   private static File[] attachments;
   private static String[] recipients;
 
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>
-      (CreateMessageActivity.class, false, false);
+  private ActivityTestRule activityTestRule =
+      new ActivityTestRule<>(CreateMessageActivity.class, false, false);
 
   @Rule
   public TestRule ruleChain = RuleChain
@@ -93,21 +93,21 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   @Test
-  public void testTo_Subject_Body() {
+  public void testToSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
-  public void testToParam_Subject_Body() {
+  public void testToParamSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
-  public void testTo_ToParam_Subject_Body() {
+  public void testToToParamSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
@@ -115,7 +115,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   @Test
-  public void testToParam_To_Subject_Body() {
+  public void testToParamToSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
@@ -123,7 +123,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   @Test
-  public void testMultiTo_Subject_Body() {
+  public void testMultiToSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
@@ -131,7 +131,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   @Test
-  public void testMultiToParam_Subject_Body() {
+  public void testMultiToParamSubjectBody() {
     activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT +
             "&body=" + ENCODED_BODY));
@@ -146,63 +146,63 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   @Test
-  public void testSend_ExtSubject() {
+  public void testSendExtSubject() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         null, 0));
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0);
   }
 
   @Test
-  public void testSend_ExtBody() {
+  public void testSendExtBody() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
         Intent.EXTRA_TEXT, 0));
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0);
   }
 
   @Test
-  public void testSend_Att() {
+  public void testSendAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
         null, 1));
     checkViewsOnScreen(0, null, null, 1);
   }
 
   @Test
-  public void testSend_ExtSubject_ExtBody() {
+  public void testSendExtSubjectExtBody() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 0));
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0);
   }
 
   @Test
-  public void testSend_ExtSubject_Att() {
+  public void testSendExtSubjectAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         null, 1));
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1);
   }
 
   @Test
-  public void testSend_ExtBody_Att() {
+  public void testSendExtBodyAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
         Intent.EXTRA_TEXT, 1));
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1);
   }
 
   @Test
-  public void testSend_ExtSubject_ExtBody_Att() {
+  public void testSendExtSubjectExtBodyAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 1));
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1);
   }
 
   @Test
-  public void testSendMultiple_MultiAtt() {
+  public void testSendMultipleMultiAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null,
         null, attachments.length));
     checkViewsOnScreen(0, null, null, attachments.length);
   }
 
   @Test
-  public void testSendMultiple_ExtSubject_ExtBody_MultiAtt() {
+  public void testSendMultipleExtSubjectExtBodyMultiAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, attachments.length));
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, attachments.length);

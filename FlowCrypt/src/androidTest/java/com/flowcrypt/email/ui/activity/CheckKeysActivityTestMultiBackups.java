@@ -51,8 +51,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class CheckKeysActivityTestMultiBackups extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>
-      (CheckKeysActivity.class, false, false);
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(CheckKeysActivity.class, false, false);
 
   @Rule
   public TestRule ruleChain = RuleChain

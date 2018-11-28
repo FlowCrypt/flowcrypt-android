@@ -72,16 +72,16 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class EmailManagerActivityTest extends BaseEmailListActivityTest {
-  private static final List<Folder> folders;
+  private static final List<Folder> FOLDERS;
   private static final Folder INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT =
       new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false);
 
   static {
-    folders = new ArrayList<>();
-    folders.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
-    folders.add(new Folder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
-    folders.add(new Folder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
-    folders.add(new Folder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
+    FOLDERS = new ArrayList<>();
+    FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
+    FOLDERS.add(new Folder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
+    FOLDERS.add(new Folder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
+    FOLDERS.add(new Folder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
   }
 
   private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
@@ -92,7 +92,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule(userWithoutLetters))
       .around(new AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
-      .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, folders))
+      .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, FOLDERS))
       .around(new AddMessageToDatabaseRule(userWithMoreThan21LettersAccount,
           INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(intentsTestRule);
