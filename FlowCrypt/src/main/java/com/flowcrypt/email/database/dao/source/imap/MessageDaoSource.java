@@ -1087,6 +1087,27 @@ public class MessageDaoSource extends BaseDaoSource {
     return deletedRows;
   }
 
+  /**
+   * Add the messages which have a current state equal {@link MessageState#SENDING} to the sending queue again.
+   *
+   * @param context Interface to global information about an application environment
+   * @param email   The email that the message linked
+   * @return The count of the updated row or -1 up.
+   */
+  public int resetMsgsWithSendingState(Context context, String email) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(COL_STATE, MessageState.QUEUED.getValue());
+
+    ContentResolver contentResolver = context.getContentResolver();
+    if (email != null && contentResolver != null) {
+      return contentResolver.update(getBaseContentUri(), contentValues,
+          COL_EMAIL + "= ? AND "
+              + COL_FOLDER + " = ? AND "
+              + COL_STATE + " = ? ",
+          new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENDING.getValue())});
+    } else return -1;
+  }
+
   private static String[] parseArray(String attributesAsString, String regex) {
     if (attributesAsString != null && attributesAsString.length() > 0) {
       return attributesAsString.split(regex);
