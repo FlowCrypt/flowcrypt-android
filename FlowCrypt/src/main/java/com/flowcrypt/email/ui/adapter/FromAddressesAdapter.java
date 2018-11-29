@@ -88,4 +88,14 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
       infoAboutKeysAvailable.put(emailAddress, hasPgp);
     }
   }
+
+  /**
+   * Check is given email address has a private key.
+   *
+   * @param emailAddress The given email address
+   * @return true if the given email address has a private key, otherwise false.
+   */
+  public boolean hasPrvKey(String emailAddress) {
+    return infoAboutKeysAvailable.containsKey(emailAddress) && infoAboutKeysAvailable.get(emailAddress);
+  }
 }

@@ -566,7 +566,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
               new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), email)));
         }
 
-        prepareAliasForReplyIfNeed(aliases);
+        if (incomingMessageInfo != null) {
+          prepareAliasForReplyIfNeed(aliases);
+        } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+          showFirstMatchedAliasWithPrvKey(aliases);
+        }
 
         if (fromAddressesArrayAdapter.getCount() == 1) {
           if (imageButtonAliases.getVisibility() == View.VISIBLE) {
@@ -885,35 +889,58 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @param aliases A list of Gmail aliases.
    */
   private void prepareAliasForReplyIfNeed(List<String> aliases) {
-    if (incomingMessageInfo != null) {
-      ArrayList<String> toAddresses;
-      if (folderType == FoldersManager.FolderType.SENT) {
-        toAddresses = incomingMessageInfo.getFrom();
-      } else {
-        toAddresses = incomingMessageInfo.getTo();
+    MessageEncryptionType messageEncryptionType = onChangeMessageEncryptedTypeListener.getMessageEncryptionType();
+
+    ArrayList<String> toAddresses;
+    if (folderType == FoldersManager.FolderType.SENT) {
+      toAddresses = incomingMessageInfo.getFrom();
+    } else {
+      toAddresses = incomingMessageInfo.getTo();
+    }
+
+    if (toAddresses != null) {
+      String firstFoundedAlias = null;
+      for (String toAddress : toAddresses) {
+        if (firstFoundedAlias == null) {
+          for (String alias : aliases) {
+            if (alias.equalsIgnoreCase(toAddress)) {
+              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+                if (fromAddressesArrayAdapter.hasPrvKey(alias)) {
+                  firstFoundedAlias = alias;
+                }
+              } else {
+                firstFoundedAlias = alias;
+              }
+              break;
+            }
+          }
+        } else {
+          break;
+        }
       }
 
-      if (toAddresses != null) {
-        String firstFoundedAlias = null;
-        for (String toAddress : toAddresses) {
-          if (firstFoundedAlias == null) {
-            for (String alias : aliases) {
-              if (alias.equalsIgnoreCase(toAddress)) {
-                firstFoundedAlias = alias;
-                break;
-              }
-            }
-          } else {
-            break;
-          }
+      if (firstFoundedAlias != null) {
+        int position = fromAddressesArrayAdapter.getPosition(firstFoundedAlias);
+        if (position != -1) {
+          spinnerFrom.setSelection(position);
         }
+      }
+    }
+  }
 
-        if (firstFoundedAlias != null) {
-          int position = fromAddressesArrayAdapter.getPosition(firstFoundedAlias);
-          if (position != -1) {
-            spinnerFrom.setSelection(position);
-          }
-        }
+  private void showFirstMatchedAliasWithPrvKey(List<String> aliases) {
+    String firstFoundedAliasWithPrvKey = null;
+    for (String alias : aliases) {
+      if (fromAddressesArrayAdapter.hasPrvKey(alias)) {
+        firstFoundedAliasWithPrvKey = alias;
+        break;
+      }
+    }
+
+    if (firstFoundedAliasWithPrvKey != null) {
+      int position = fromAddressesArrayAdapter.getPosition(firstFoundedAliasWithPrvKey);
+      if (position != -1) {
+        spinnerFrom.setSelection(position);
       }
     }
   }
