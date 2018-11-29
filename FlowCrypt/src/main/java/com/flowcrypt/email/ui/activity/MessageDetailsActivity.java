@@ -9,10 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
@@ -21,6 +17,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
@@ -31,6 +28,13 @@ import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 /**
  * This activity describe details of some message.
@@ -84,10 +88,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     updateViews();
 
     if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
-      getSupportLoaderManager().initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
   }
 
   @Override
@@ -111,6 +115,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             null,
             MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
                 + MessageDaoSource.COL_UID + " = ? ",
+            new String[]{generalMessageDetails.getEmail(), folder.getFolderAlias(),
+                String.valueOf(generalMessageDetails.getUid())}, null);
+
+      case R.id.loader_id_load_attachments:
+        return new CursorLoader(this, new AttachmentDaoSource().getBaseContentUri(),
+            null, AttachmentDaoSource.COL_EMAIL + " = ?" + " AND " + AttachmentDaoSource.COL_FOLDER
+            + " = ?" + " AND " + AttachmentDaoSource.COL_UID + " = ?",
             new String[]{generalMessageDetails.getEmail(), folder.getFolderAlias(),
                 String.valueOf(generalMessageDetails.getUid())}, null);
 
@@ -155,6 +166,17 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
           updateViews();
         }
         break;
+
+      case R.id.loader_id_load_attachments:
+        if (cursor != null) {
+          ArrayList<AttachmentInfo> attInfolist = new ArrayList<>();
+          while (cursor.moveToNext()) {
+            attInfolist.add(AttachmentDaoSource.getAttachmentInfo(cursor));
+          }
+
+          updateAttsInfo(attInfolist);
+        }
+        break;
     }
   }
 
@@ -167,6 +189,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       case R.id.loader_id_subscribe_to_message_changes:
         generalMessageDetails = null;
         updateViews();
+        break;
+
+      case R.id.loader_id_load_attachments:
+        updateAttsInfo(new ArrayList<AttachmentInfo>());
         break;
     }
   }
@@ -190,8 +216,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             new MessageDaoSource().setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
                 folder.getFolderAlias(), generalMessageDetails.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            getSupportLoaderManager().restartLoader(R.id.loader_id_load_message_info_from_database,
-                null, this);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
             break;
 
           case EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND:
@@ -246,6 +271,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
           if (messageDetailsFragment != null) {
             messageDetailsFragment.showIncomingMessageInfo(incomingMessageInfo);
+            LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
           }
         }
         break;
@@ -373,6 +399,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
   }
 
+  private void updateAttsInfo(ArrayList<AttachmentInfo> list) {
+    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+        .findFragmentById(R.id.messageDetailsFragment);
+
+    if (messageDetailsFragment != null) {
+      messageDetailsFragment.updateAttInfos(list);
+    }
+  }
+
   private void updateViews() {
     if (getSupportActionBar() != null) {
       String actionBarTitle = null;
@@ -407,6 +442,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
               case ERROR_ORIGINAL_MESSAGE_MISSING:
               case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
               case ERROR_SENDING_FAILED:
+              case ERROR_PRIVATE_KEY_NOT_FOUND:
                 actionBarSubTitle = getString(R.string.an_error_has_occurred);
                 break;
             }

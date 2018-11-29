@@ -6,11 +6,12 @@
 package com.flowcrypt.email.ui.widget;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.hootsuite.nachos.NachoTextView;
 import com.hootsuite.nachos.chip.ChipCreator;
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer;
+
+import androidx.annotation.NonNull;
 
 /**
  * Define a custom chip separator in {@link NachoTextView}

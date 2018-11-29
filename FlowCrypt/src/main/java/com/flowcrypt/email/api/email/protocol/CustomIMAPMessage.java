@@ -60,18 +60,16 @@ public class CustomIMAPMessage extends IMAPMessage implements FlowCryptIMAPMessa
         || item instanceof UID
         || item instanceof RFC822DATA) {
       return handleFetchItem(item, hdrs, allHeaders);
-    }
-
-    // Check for header items
-    else if (item instanceof BODY) {
+    } else if (item instanceof BODY) {// Check for header items
       ByteArrayInputStream bodyStream;
       bodyStream = ((BODY) item).getByteArrayInputStream();
 
       if (!((BODY) item).isHeader()) {
         content = ASCIIUtility.toString(bodyStream).getBytes();
       }
-    } else
+    } else {
       return false;    // not handled
+    }
     return true;        // something above handled it
   }
 

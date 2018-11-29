@@ -6,7 +6,6 @@
 package com.flowcrypt.email.util;
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.database.dao.KeysDao;
@@ -19,6 +18,8 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType;
 import org.apache.commons.io.IOUtils;
 
 import java.util.UUID;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * This tool can help manage private keys in the database. For testing purposes only.
@@ -35,9 +36,10 @@ public class PrivateKeysManager {
   private static final String TEMP_PRIVATE_KEY_LONGID = "6C0DD31D159DF3EF";
 
   public static void addTempPrivateKey() throws Exception {
-    String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getContext().getAssets().open
+    String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
+        .open
         ("pgp/temp-sec.asc"), "UTF-8");
-    Context appContext = InstrumentationRegistry.getTargetContext();
+    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Js js = new Js(appContext, null);
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
     String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);

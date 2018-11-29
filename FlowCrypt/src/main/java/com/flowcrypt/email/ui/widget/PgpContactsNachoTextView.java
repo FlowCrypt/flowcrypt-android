@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.widget;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Spannable;
@@ -31,6 +30,8 @@ import com.hootsuite.nachos.chip.Chip;
 
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * The custom realization of {@link NachoTextView}.

@@ -10,13 +10,6 @@ import android.app.Instrumentation;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
-import android.support.test.espresso.intent.Intents;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -43,26 +36,34 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
-import static android.support.test.espresso.action.ViewActions.clearText;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasCategories;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtra;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasType;
-import static android.support.test.espresso.matcher.ViewMatchers.hasSibling;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withChild;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.annotation.NonNull;
+import androidx.test.espresso.Espresso;
+import androidx.test.espresso.intent.Intents;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
+import static androidx.test.espresso.action.ViewActions.clearText;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
+import static androidx.test.espresso.matcher.ViewMatchers.hasSibling;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withChild;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -109,7 +110,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   public Intent getIntent() {
-    return CreateMessageActivity.generateIntent(InstrumentationRegistry.getTargetContext(), null,
+    return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(), null,
         MessageEncryptionType.ENCRYPTED);
   }
 
@@ -124,8 +125,9 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(
         matches(withText(isEmptyString())));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.text_must_not_be_empty,
-        InstrumentationRegistry.getTargetContext().getString(R.string.prompt_recipients_to))))
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .text_must_not_be_empty,
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.prompt_recipients_to))))
         .check(matches(isDisplayed()));
   }
 
@@ -138,8 +140,9 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed())).perform(scrollTo(), typeText
         ("subject"), clearText()).check(matches(withText(isEmptyString())));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.text_must_not_be_empty,
-        InstrumentationRegistry.getTargetContext().getString(R.string.prompt_subject))))
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .text_must_not_be_empty,
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.prompt_subject))))
         .check(matches(isDisplayed()));
   }
 
@@ -153,7 +156,8 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
         .check(matches(withText(isEmptyString())));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.your_message_must_be_non_empty)))
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .your_message_must_be_non_empty)))
         .check(matches(isDisplayed()));
   }
 
@@ -162,7 +166,7 @@ public class CreateMessageActivityTest extends BaseTest {
     activityTestRule.launchActivity(getIntent());
 
     if (getDefaultMessageEncryptionType() != MessageEncryptionType.STANDARD) {
-      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_standard_email)).check(matches(isDisplayed())).perform(click());
     }
 
@@ -174,7 +178,7 @@ public class CreateMessageActivityTest extends BaseTest {
     activityTestRule.launchActivity(getIntent());
 
     if (getDefaultMessageEncryptionType() != MessageEncryptionType.ENCRYPTED) {
-      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_secure_email)).check(matches(isDisplayed())).perform(click());
     }
     checkIsDisplayedEncryptedAttributes();
@@ -188,12 +192,12 @@ public class CreateMessageActivityTest extends BaseTest {
 
     if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
       checkIsDisplayedEncryptedAttributes();
-      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_standard_email)).check(matches(isDisplayed())).perform(click());
       checkIsDisplayedStandardAttributes();
     } else {
       checkIsDisplayedStandardAttributes();
-      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+      openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_secure_email)).check(matches(isDisplayed())).perform(click());
       checkIsDisplayedEncryptedAttributes();
     }
@@ -203,7 +207,7 @@ public class CreateMessageActivityTest extends BaseTest {
   public void testShowHelpScreen() {
     activityTestRule.launchActivity(getIntent());
 
-    openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+    openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
     onView(withText(R.string.help)).check(matches(isDisplayed())).perform(click());
 
     onView(withId(R.id.textViewAuthorHint)).check(matches(isDisplayed()))
@@ -238,9 +242,10 @@ public class CreateMessageActivityTest extends BaseTest {
           closeSoftKeyboard());
       onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
 
-      onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.error_some_email_is_not_valid,
+      onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+              .error_some_email_is_not_valid,
           invalidEmailAddress))).check(matches(isDisplayed()));
-      onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
+      onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
     }
   }
 
@@ -256,9 +261,9 @@ public class CreateMessageActivityTest extends BaseTest {
         (TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
 
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .please_update_information_about_contacts))).check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
   }
 
   @Test
@@ -295,7 +300,7 @@ public class CreateMessageActivityTest extends BaseTest {
     activityTestRule.launchActivity(getIntent());
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         ImportPublicKeyForPgpContactActivity.class)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
@@ -324,7 +329,7 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
         .perform(typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard());
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.template_remove_recipient,
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.template_remove_recipient,
         TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))).check(matches(isDisplayed())).perform(click
         ());
     onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).check(matches(withText(not
@@ -339,11 +344,11 @@ public class CreateMessageActivityTest extends BaseTest {
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
     Intent result = new Intent();
     result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, getPgpContact());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), SelectContactsActivity
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(), SelectContactsActivity
         .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, result));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
     onView(withText(R.string.copy_from_other_contact)).check(matches(isDisplayed())).perform(click());
-    checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getTargetContext().getString(R
+    checkIsToastDisplayed(activityTestRule.getActivity(), InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R
         .string.key_successfully_copied));
     Intents.release();
   }
@@ -358,18 +363,18 @@ public class CreateMessageActivityTest extends BaseTest {
   private void checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView)).check(doesNotExist());
     onView(withId(R.id.appBarLayout)).check(matches(matchAppBarLayoutBackgroundColor(
-        UIUtil.getColor(InstrumentationRegistry.getTargetContext(), R.color.colorPrimary))));
+        UIUtil.getColor(InstrumentationRegistry.getInstrumentation().getTargetContext(), R.color.colorPrimary))));
   }
 
   private void savePublicKeyInDatabase() throws IOException {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
     PgpContact pgpContact = getPgpContact();
-    contactsDaoSource.addRow(InstrumentationRegistry.getTargetContext(), pgpContact);
+    contactsDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpContact);
   }
 
   @NonNull
   private PgpContact getPgpContact() throws IOException {
-    String publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    String publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/not_attester_user@denbond7.com-pub.asc");
     return new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, publicKey, true, null,
         false, null, null, null, 0);
@@ -401,7 +406,7 @@ public class CreateMessageActivityTest extends BaseTest {
     onView(withId(R.id.underToolbarTextTextView)).check(matches(isDisplayed())).
         check(matches(withText(R.string.this_message_will_not_be_encrypted)));
     onView(withId(R.id.appBarLayout)).check(matches(matchAppBarLayoutBackgroundColor(UIUtil.getColor
-        (InstrumentationRegistry.getTargetContext(), R.color.red))));
+        (InstrumentationRegistry.getInstrumentation().getTargetContext(), R.color.red))));
   }
 
   private void fillInAllFields(String recipient) {

@@ -11,7 +11,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -19,6 +18,8 @@ import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * @author Denis Bondarenko
@@ -86,6 +87,33 @@ public class AttachmentDaoSource extends BaseDaoSource {
     contentValues.put(COL_FORWARDED_FOLDER, attachmentInfo.getForwardedFolder());
     contentValues.put(COL_FORWARDED_UID, attachmentInfo.getForwardedUid());
     return contentValues;
+  }
+
+  /**
+   * Generate an {@link AttachmentInfo} object from the current cursor position.
+   *
+   * @param cursor The {@link Cursor} which contains information about an
+   *               {@link AttachmentInfo} object.
+   * @return A generated {@link AttachmentInfo}.
+   */
+  public static AttachmentInfo getAttachmentInfo(Cursor cursor) {
+    AttachmentInfo attachmentInfo = new AttachmentInfo();
+    attachmentInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+    attachmentInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
+    attachmentInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
+    attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
+    attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
+    attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
+    attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
+    String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
+    if (!TextUtils.isEmpty(uriString)) {
+      attachmentInfo.setUri(Uri.parse(uriString));
+    }
+    attachmentInfo.setForwardedFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
+    attachmentInfo.setForwardedUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
+    attachmentInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
+        && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
+    return attachmentInfo;
   }
 
   @Override
@@ -171,37 +199,9 @@ public class AttachmentDaoSource extends BaseDaoSource {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
       return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND "
-              + COL_ATTACHMENT_ID + " = ? ", new String[]{email, label, String.valueOf(uid),
-              attachmentId});
+          COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID + " = ? ",
+          new String[]{email, label, String.valueOf(uid), attachmentId});
     } else return -1;
-  }
-
-  /**
-   * Generate an {@link AttachmentInfo} object from the current cursor position.
-   *
-   * @param cursor The {@link Cursor} which contains information about an
-   *               {@link AttachmentInfo} object.
-   * @return A generated {@link AttachmentInfo}.
-   */
-  public AttachmentInfo getAttachmentInfo(Cursor cursor) {
-    AttachmentInfo attachmentInfo = new AttachmentInfo();
-    attachmentInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
-    attachmentInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-    attachmentInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
-    attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
-    attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
-    attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
-    attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
-    String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
-    if (!TextUtils.isEmpty(uriString)) {
-      attachmentInfo.setUri(Uri.parse(uriString));
-    }
-    attachmentInfo.setForwardedFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
-    attachmentInfo.setForwardedUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
-    attachmentInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
-        && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
-    return attachmentInfo;
   }
 
   /**

@@ -17,12 +17,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
@@ -38,6 +32,13 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 /**
  * The base import key activity. This activity defines a logic of import a key (private or
@@ -159,7 +160,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     initViews();
 
     if (keyImportModel != null) {
-      getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
     }
   }
 
@@ -169,7 +170,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     if (isCheckClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
       keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
       if (keyImportModel != null) {
-        getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
       }
     }
   }
@@ -236,8 +237,8 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   @Override
   public void onBackPressed() {
     if (isCheckingPrivateKeyNow) {
-      getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_file);
-      getSupportLoaderManager().destroyLoader(R.id.loader_id_validate_key_from_clipboard);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard);
       isCheckingPrivateKeyNow = false;
       UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
     } else {
@@ -278,7 +279,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
             keyImportModel = new KeyImportModel(null, privateKeyFromClipboard.toString(),
                 isPrivateKeyChecking(), KeyDetails.Type.CLIPBOARD);
 
-            getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
           } else {
             showClipboardIsEmptyInfoDialog();
           }
@@ -389,7 +390,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
    */
   protected void handleSelectedFile(Uri uri) {
     keyImportModel = new KeyImportModel(uri, null, isPrivateKeyChecking(), KeyDetails.Type.FILE);
-    getSupportLoaderManager().restartLoader(R.id.loader_id_validate_key_from_file, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this);
   }
 
   protected void initViews() {

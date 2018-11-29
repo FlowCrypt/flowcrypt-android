@@ -97,4 +97,13 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
 
     return pgpContacts.toArray(new PgpContact[0]);
   }
+
+  /**
+   * Generate a file name for the given key.
+   *
+   * @return The generated file name.
+   */
+  public String genFileName() {
+    return "0x" + getLongid();
+  }
 }

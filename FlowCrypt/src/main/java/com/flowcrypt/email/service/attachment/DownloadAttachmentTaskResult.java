@@ -19,29 +19,26 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  */
 
 public class DownloadAttachmentTaskResult {
-  private int startId;
-  private AttachmentInfo attachmentInfo;
+  private AttachmentInfo attInfo;
   private Exception exception;
   private Uri uri;
   private int progressInPercentage;
   private long timeLeft;
+  private boolean isLast;
 
-  public DownloadAttachmentTaskResult(int startId, AttachmentInfo attachmentInfo, Exception exception, Uri uri,
-                                      int progressInPercentage, long timeLeft) {
-    this.startId = startId;
-    this.attachmentInfo = attachmentInfo;
-    this.exception = exception;
+  public DownloadAttachmentTaskResult(AttachmentInfo attInfo, Exception e, Uri uri, int progressInPercentage, long
+      timeLeft,
+                                      boolean isLast) {
+    this.attInfo = attInfo;
+    this.exception = e;
     this.uri = uri;
     this.progressInPercentage = progressInPercentage;
     this.timeLeft = timeLeft;
-  }
-
-  public int getStartId() {
-    return startId;
+    this.isLast = isLast;
   }
 
   public AttachmentInfo getAttachmentInfo() {
-    return attachmentInfo;
+    return attInfo;
   }
 
   public Exception getException() {
@@ -60,21 +57,20 @@ public class DownloadAttachmentTaskResult {
     return timeLeft;
   }
 
+  public boolean isLast() {
+    return isLast;
+  }
+
   public static class Builder {
-    private int startId;
-    private AttachmentInfo attachmentInfo;
+    private AttachmentInfo attInfo;
     private Exception exception;
     private Uri uri;
     private int progressInPercentage;
     private long timeLeft;
+    private boolean isLast;
 
-    public Builder setStartId(int startId) {
-      this.startId = startId;
-      return this;
-    }
-
-    public Builder setAttachmentInfo(AttachmentInfo attachmentInfo) {
-      this.attachmentInfo = attachmentInfo;
+    public Builder setAttachmentInfo(AttachmentInfo attInfo) {
+      this.attInfo = attInfo;
       return this;
     }
 
@@ -98,9 +94,13 @@ public class DownloadAttachmentTaskResult {
       return this;
     }
 
+    public Builder setLast(boolean last) {
+      isLast = last;
+      return this;
+    }
+
     public DownloadAttachmentTaskResult build() {
-      return new DownloadAttachmentTaskResult(startId, attachmentInfo, exception, uri, progressInPercentage,
-          timeLeft);
+      return new DownloadAttachmentTaskResult(attInfo, exception, uri, progressInPercentage, timeLeft, isLast);
     }
   }
 }

@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -25,6 +24,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader prepares information about the user private keys as a list of {@link AttachmentInfo} objects.

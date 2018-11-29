@@ -41,31 +41,7 @@ public class MessagePart implements Parcelable {
           : MessagePartType.values()[tmpMessageBlockType];
 
       if (messagePartType != null) {
-        switch (messagePartType) {
-          case TEXT:
-            return new MessagePartText(source);
-
-          case PGP_MESSAGE:
-            return new MessagePartPgpMessage(source);
-
-          case PGP_PUBLIC_KEY:
-            return new MessagePartPgpPublicKey(source);
-
-          case PGP_SIGNED_MESSAGE:
-            return new MessagePartSignedMessage(source);
-
-          case VERIFICATION:
-            return new MessagePartVerification(source);
-
-          case ATTEST_PACKET:
-            return new MessagePartAttestPacket(source);
-
-          case PGP_PASSWORD_MESSAGE:
-            return new MessagePartPgpPasswordMessage(source);
-
-          default:
-            throw new AssertionError("An unknown " + MessagePart.class.getSimpleName());
-        }
+        return genMsgPartFromType(source, messagePartType);
       } else {
         return new MessagePart(source);
       }
@@ -114,5 +90,33 @@ public class MessagePart implements Parcelable {
 
   public String getValue() {
     return value;
+  }
+
+  private static MessagePart genMsgPartFromType(Parcel source, MessagePartType messagePartType) {
+    switch (messagePartType) {
+      case TEXT:
+        return new MessagePartText(source);
+
+      case PGP_MESSAGE:
+        return new MessagePartPgpMessage(source);
+
+      case PGP_PUBLIC_KEY:
+        return new MessagePartPgpPublicKey(source);
+
+      case PGP_SIGNED_MESSAGE:
+        return new MessagePartSignedMessage(source);
+
+      case VERIFICATION:
+        return new MessagePartVerification(source);
+
+      case ATTEST_PACKET:
+        return new MessagePartAttestPacket(source);
+
+      case PGP_PASSWORD_MESSAGE:
+        return new MessagePartPgpPasswordMessage(source);
+
+      default:
+        throw new AssertionError("An unknown " + MessagePart.class.getSimpleName());
+    }
   }
 }

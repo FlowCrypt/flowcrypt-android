@@ -10,10 +10,6 @@ import android.app.Instrumentation;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
@@ -30,15 +26,20 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 
@@ -59,7 +60,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
       (CreateOrImportKeyActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
       Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
       result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
@@ -76,7 +77,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
 
   @Test
   public void testClickOnButtonCreateNewKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         CreatePrivateKeyActivity.class)), hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
     onView(withId(R.id.buttonCreateNewKey)).check(matches(isDisplayed())).perform(click());
@@ -85,7 +86,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
 
   @Test
   public void testClickOnButtonImportMyKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
             ImportPrivateKeyActivity.class)),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),

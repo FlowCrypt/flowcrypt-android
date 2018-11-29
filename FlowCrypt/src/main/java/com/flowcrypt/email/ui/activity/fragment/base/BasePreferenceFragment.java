@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base;
 
-import android.support.v7.preference.ListPreference;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.ListPreference;
+import androidx.preference.PreferenceFragmentCompat;
 
 /**
  * The base realization of {@link PreferenceFragmentCompat}.

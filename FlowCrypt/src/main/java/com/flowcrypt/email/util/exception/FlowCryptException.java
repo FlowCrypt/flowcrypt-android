@@ -6,7 +6,8 @@
 package com.flowcrypt.email.util.exception;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * The base exception class.

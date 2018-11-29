@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
@@ -21,6 +20,8 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+
+import androidx.annotation.NonNull;
 
 /**
  * The base realization of {@link SyncTask}.

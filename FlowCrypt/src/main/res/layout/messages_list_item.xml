@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -20,8 +20,8 @@
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="@+id/textViewDate"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/imageViewAttachments"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAttachments"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         app:layout_goneMarginRight="@dimen/gone_margin_right_attachment_icon"
         tools:text="human@flowcrypt.com" />
@@ -33,8 +33,8 @@
         android:layout_marginEnd="@dimen/default_margin_small"
         android:layout_marginStart="@dimen/default_margin_small"
         android:contentDescription="@string/attachment"
-        app:layout_constraintLeft_toRightOf="@+id/textViewSenderAddress"
-        app:layout_constraintRight_toLeftOf="@+id/textViewDate"
+        app:layout_constraintEnd_toStartOf="@+id/textViewDate"
+        app:layout_constraintStart_toEndOf="@+id/textViewSenderAddress"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         app:srcCompat="@mipmap/ic_attachment" />
 
@@ -49,8 +49,8 @@
         android:textColor="@color/gray"
         android:textSize="@dimen/default_text_size_medium"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-        app:layout_constraintRight_toLeftOf="@+id/imageViewAttachments"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAttachments"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
         tools:text="What up man" />
 
@@ -78,32 +78,32 @@
         app:layout_constraintStart_toEndOf="@+id/textViewSubject"
         app:layout_constraintTop_toTopOf="@+id/textViewSubject" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineLeft"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_begin="@dimen/default_margin_content" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineTop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_begin="@dimen/default_margin_content_small" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineRight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="@dimen/default_margin_content" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineBottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_end="@dimen/default_margin_content_small" />
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

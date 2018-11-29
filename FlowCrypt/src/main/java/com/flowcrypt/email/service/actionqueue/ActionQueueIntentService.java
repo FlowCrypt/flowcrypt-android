@@ -10,9 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.JobIntentService;
 import android.util.Log;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
@@ -20,6 +17,10 @@ import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.util.GeneralUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.JobIntentService;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests ({@link Action}) in

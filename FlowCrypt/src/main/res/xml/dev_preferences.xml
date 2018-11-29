@@ -5,7 +5,7 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/preferences_title_debugging">
-        <com.flowcrypt.email.ui.activity.fragment.preferences.BuildConfigInfoPreferencesFragment
+        <com.flowcrypt.email.ui.activity.fragment.preferences.BuildConfInfoPreference
             android:key="@string/preferences_key_build_config_info"
             android:title="@string/preferences_title_build_config_info" />
         <CheckBoxPreference

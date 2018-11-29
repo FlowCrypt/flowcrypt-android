@@ -46,7 +46,7 @@
                     android:dropDownVerticalOffset="@dimen/drop_down_vertical_offset_spinner_from"
                     android:visibility="invisible" />
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -64,7 +64,7 @@
                         android:paddingEnd="@dimen/drop_down_size"
                         android:paddingTop="@dimen/default_margin_medium" />
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <ImageButton
                     android:id="@+id/imageButtonAliases"
@@ -82,7 +82,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:hint="@string/prompt_recipients_to"
                     android:layout_width="match_parent"
@@ -101,7 +101,7 @@
                         <requestFocus />
                     </com.flowcrypt.email.ui.widget.PgpContactsNachoTextView>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <LinearLayout
                     android:id="@+id/progressBarAndButtonLayout"
@@ -136,7 +136,7 @@
                 android:layout_height="wrap_content"
                 android:visibility="gone">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
                     android:hint="@string/prompt_recipients_cc"
@@ -152,7 +152,7 @@
                         android:paddingTop="@dimen/default_margin_small"
                         android:shrinkColumns="0, true" />
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <ProgressBar
                     android:id="@+id/progressBarCc"
@@ -170,7 +170,7 @@
                 android:layout_height="wrap_content"
                 android:visibility="gone">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
                     android:hint="@string/prompt_recipients_bcc"
@@ -186,7 +186,7 @@
                         android:paddingTop="@dimen/default_margin_small"
                         android:shrinkColumns="0, true" />
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <ProgressBar
                     android:id="@+id/progressBarBcc"
@@ -198,13 +198,13 @@
 
             </FrameLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                 android:hint="@string/prompt_subject"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <android.support.design.widget.TextInputEditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextEmailSubject"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -213,16 +213,16 @@
                     android:maxLines="1"
                     android:paddingTop="@dimen/default_margin_content" />
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutEmailMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/prompt_compose_security_email"
                 android:background="@drawable/bg_bottom_line_transparent">
 
-                <android.support.design.widget.TextInputEditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextEmailMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -230,7 +230,7 @@
                     android:inputType="textCapSentences|textMultiLine|textAutoCorrect"
                     android:paddingTop="@dimen/default_margin_small" />
 
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
                 android:id="@+id/layoutAttachments"

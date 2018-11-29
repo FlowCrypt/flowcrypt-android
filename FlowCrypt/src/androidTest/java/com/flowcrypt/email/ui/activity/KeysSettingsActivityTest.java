@@ -8,10 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.ComponentName;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -29,13 +25,18 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -58,10 +59,12 @@ public class KeysSettingsActivityTest extends BaseTest {
 
   @Test
   public void testAddNewKeys() throws Throwable {
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(), ImportPrivateKeyActivity
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        ImportPrivateKeyActivity
         .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
     TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
+        .getInstrumentation()
         .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());

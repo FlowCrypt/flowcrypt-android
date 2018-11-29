@@ -5,12 +5,13 @@
 
 package com.flowcrypt.email.matchers;
 
-import android.support.test.espresso.matcher.BoundedMatcher;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.test.espresso.matcher.BoundedMatcher;
 
 import static com.google.android.gms.common.internal.Preconditions.checkNotNull;
 import static org.hamcrest.CoreMatchers.is;

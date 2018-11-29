@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment.preferences;
 
 import android.os.Bundle;
-import android.support.v7.preference.Preference;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
@@ -16,6 +15,8 @@ import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 import com.flowcrypt.email.util.UIUtil;
+
+import androidx.preference.Preference;
 
 /**
  * This fragment contains actions which related to Security options.

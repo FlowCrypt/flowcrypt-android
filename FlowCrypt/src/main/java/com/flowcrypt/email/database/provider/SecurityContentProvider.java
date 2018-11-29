@@ -17,7 +17,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
@@ -33,6 +32,8 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
 
 
 /**

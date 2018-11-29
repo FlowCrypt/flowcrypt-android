@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.ui.activity;
 
-import android.os.Bundle;
-import android.preference.PreferenceActivity;
+import android.view.View;
 
-import com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFragment;
+import com.flowcrypt.email.R;
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 
 /**
  * The developer setting activity. This activity will be used to setup the debug process.
@@ -18,11 +18,14 @@ import com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFr
  * Time: 10:55
  * E-mail: DenBond7@gmail.com
  */
-public class DevSettingsActivity extends PreferenceActivity {
+public class DevSettingsActivity extends BaseBackStackActivity {
   @Override
-  public void onCreate(final Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    getFragmentManager().beginTransaction().replace(android.R.id.content,
-        new MainDevPreferencesFragment()).commit();
+  public int getContentViewResourceId() {
+    return R.layout.activity_dev_settings;
+  }
+
+  @Override
+  public View getRootView() {
+    return null;
   }
 }

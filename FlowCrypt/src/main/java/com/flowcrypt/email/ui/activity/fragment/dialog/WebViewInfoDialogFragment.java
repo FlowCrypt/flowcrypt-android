@@ -7,9 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment.dialog;
 
 import android.app.Dialog;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebView;
@@ -18,6 +15,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.util.GeneralUtil;
 
 import java.nio.charset.StandardCharsets;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 
 /**
  * This class can be used to show an info dialog to the user using {@link WebView}.

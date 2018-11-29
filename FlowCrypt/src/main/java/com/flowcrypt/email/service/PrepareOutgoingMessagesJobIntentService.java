@@ -9,9 +9,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.app.JobIntentService;
-import android.support.v4.content.FileProvider;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.flowcrypt.email.Constants;
@@ -38,6 +36,7 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -54,6 +53,10 @@ import java.util.UUID;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
+import androidx.core.content.FileProvider;
 
 /**
  * This service creates a new outgoing message using the given {@link OutgoingMessageInfo}.
@@ -127,14 +130,12 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       }
 
       Log.d(TAG, "Received a new job: " + outgoingMsgInfo);
-
-      setupIfNeed();
-
-      updateContactsLastUseDateTime(outgoingMsgInfo);
-
       Uri newMessageUri = null;
 
       try {
+        setupIfNeed();
+        updateContactsLastUseDateTime(outgoingMsgInfo);
+
         String[] pubKeys = outgoingMsgInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
             SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
                 (outgoingMsgInfo), accountDao, outgoingMsgInfo.getFromPgpContact().getEmail()) : null;
@@ -181,7 +182,24 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
 
-        if (newMessageUri != null) {
+        if (newMessageUri == null) {
+          ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, uid, outgoingMsgInfo);
+
+          newMessageUri = msgDaoSource.addRow(getApplicationContext(), contentValues);
+        }
+
+        if (e instanceof NoKeyAvailableException) {
+          NoKeyAvailableException exception = (NoKeyAvailableException) e;
+          String errorMsg = TextUtils.isEmpty(exception.getAlias()) ? exception.getEmail() : exception.getAlias();
+
+          ContentValues contentValues = new ContentValues();
+          contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.getValue());
+          contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg);
+
+          msgDaoSource.updateMessage(getApplicationContext(), accountDao.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, uid, contentValues);
+        } else {
           msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_DURING_CREATION);
         }
@@ -189,8 +207,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
       if (newMessageUri != null) {
         new ImapLabelsDaoSource().updateLabelMessageCount(this, accountDao.getEmail(),
-            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this,
-                accountDao.getEmail()).size());
+            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this, accountDao.getEmail()).size());
       }
     }
   }

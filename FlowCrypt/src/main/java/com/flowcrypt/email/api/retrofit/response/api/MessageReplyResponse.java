@@ -26,8 +26,7 @@ import com.google.gson.annotations.Expose;
  */
 
 public class MessageReplyResponse extends BaseApiResponse {
-  public static final Creator<MessageReplyResponse> CREATOR = new Creator<MessageReplyResponse>
-      () {
+  public static final Creator<MessageReplyResponse> CREATOR = new Creator<MessageReplyResponse>() {
     @Override
     public MessageReplyResponse createFromParcel(Parcel source) {
       return new MessageReplyResponse(source);

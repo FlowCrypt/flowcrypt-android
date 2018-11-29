@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.js.Js;
@@ -16,6 +15,8 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader tries to save the backup of the private key as a file.

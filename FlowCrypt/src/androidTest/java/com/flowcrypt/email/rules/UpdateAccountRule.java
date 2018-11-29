@@ -7,7 +7,6 @@ package com.flowcrypt.email.rules;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -16,6 +15,8 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * This {@link Rule} updates <b>an existed account</b> with given {@link ContentValues}
@@ -46,7 +47,7 @@ public class UpdateAccountRule implements TestRule {
   }
 
   private void updateAccount() {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     accountDaoSource.updateAccountInformation(targetContext, accountDao.getAccount(), contentValues);
   }

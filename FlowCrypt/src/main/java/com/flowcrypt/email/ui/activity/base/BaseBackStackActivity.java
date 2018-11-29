@@ -14,7 +14,7 @@ import android.view.MenuItem;
  * extended class must implement {@link BaseBackStackActivity#getContentViewResourceId()} method
  * to define the content view resources id. And the in {@link Activity#onCreate(Bundle)} method
  * we setup the toolbar if it exist in the contents and call
- * {@link android.support.v7.app.ActionBar#setDisplayHomeAsUpEnabled(boolean)} to implement the
+ * {@link androidx.appcompat.app.ActionBar#setDisplayHomeAsUpEnabled(boolean)} to implement the
  * back stack functionality.
  *
  * @author DenBond7

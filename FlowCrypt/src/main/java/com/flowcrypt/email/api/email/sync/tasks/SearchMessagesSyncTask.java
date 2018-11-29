@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.content.Context;
 import android.os.Messenger;
-import android.support.annotation.NonNull;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -27,6 +26,8 @@ import javax.mail.search.AndTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.StringTerm;
 import javax.mail.search.SubjectTerm;
+
+import androidx.annotation.NonNull;
 
 /**
  * This task finds messages on some folder.

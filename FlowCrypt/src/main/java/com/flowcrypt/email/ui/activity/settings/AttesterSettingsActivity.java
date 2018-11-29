@@ -6,9 +6,6 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.ListView;
 
@@ -22,6 +19,10 @@ import com.flowcrypt.email.ui.loader.LoadAccountKeysInfoFromAttester;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 /**
  * Basically, this Activity gets all known addresses of the user, and then submits one call with all addresses to
@@ -119,6 +120,6 @@ public class AttesterSettingsActivity extends BaseBackStackActivity
     this.emptyView = findViewById(R.id.emptyView);
     listViewKeys = findViewById(R.id.listViewKeys);
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
   }
 }

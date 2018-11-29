@@ -344,6 +344,7 @@ icelanders prefer real sauna</font>
     <string name="notification_level">Notification level</string>
     <string name="receive_notifications_for">Receive notifications for:</string>
     <string name="no_key_available_for_your_email_account">No key available for your email account. Please write %1$s for help.</string>
+    <string name="no_key_available_for_your_emails">No key available for your email addresses %1$s and %2$s. Please write %3$s for help.</string>
     <string name="done">Done!</string>
     <string name="pass_phrase_changed">Pass phrase successfully changed.</string>
     <string name="back_up_updated_key">You should back up your updated key.</string>
@@ -384,6 +385,7 @@ icelanders prefer real sauna</font>
     <string name="original_message_missing">Could not forward: original message missing</string>
     <string name="original_attachment_not_found">Could not forward: some attachments are not available</string>
     <string name="could_not_create">Could not create: an unknown error</string>
+    <string name="could_not_create_no_key_available">Could not create: no key available</string>
     <string name="message_failed_to_forward">Message failed to send. Please forward the message again</string>
     <string name="there_is_problem_with_cache">There is a problem with a temp cache directory. Please create the message again</string>
     <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.</string>
@@ -400,4 +402,19 @@ icelanders prefer real sauna</font>
     </plurals>
     <string name="cannot_send_message_unknown_error">Can\'t send message: unknown error</string>
     <string name="message_failed_to_send">Message failed to send: unknown error</string>
+    <string name="my_public_key">My Public Key</string>
+    <string name="public_key_below_is_safe_to_share">Public Keys are safe to share</string>
+    <string name="show_public_key">Show public key</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="save_to_file">Save to file</string>
+    <string name="show_private_key">Show private key</string>
+    <string name="template_fingerprint" formatted="false"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
+    <string name="template_key_words" formatted="false"><![CDATA[KeyWords: <font color=\'#088447\'>%1$s</font>]]></string>
+    <string name="template_longid">Longid: %1$s</string>
+    <string name="template_date">Date: %1$s</string>
+    <string name="template_users">Users: %1$s</string>
+    <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
+    <string name="copied">Copied</string>
+    <string name="saved">Saved</string>
+    <string name="no_key_available">No key available for your email account</string>
 </resources>

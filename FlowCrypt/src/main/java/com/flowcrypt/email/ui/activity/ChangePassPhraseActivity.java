@@ -9,10 +9,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.Toast;
 
@@ -28,6 +24,11 @@ import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -50,7 +51,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @Override
   public void onConfirmPassPhraseSuccess() {
-    getSupportLoaderManager().initLoader(R.id.loader_id_change_pass_phrase, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_change_pass_phrase, null, this);
     editTextKeyPassword.setText(null);
     editTextKeyPasswordSecond.setText(null);
   }
@@ -155,7 +156,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
         JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
         restartJsService();
-        getSupportLoaderManager().initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         break;
 
       case R.id.loader_id_load_private_key_backups_from_email:
@@ -163,7 +164,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         if (keyDetailsList.isEmpty()) {//need to remove "!"
           runBackupKeysActivity();
         } else {
-          getSupportLoaderManager().initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
+          LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this);
         }
         break;
 

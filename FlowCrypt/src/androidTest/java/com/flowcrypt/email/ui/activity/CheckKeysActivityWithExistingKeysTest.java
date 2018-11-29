@@ -8,11 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -31,15 +26,21 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import androidx.test.espresso.Espresso;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -54,12 +55,12 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       Intent result = new Intent(targetContext, CheckKeysActivity.class);
       ArrayList<KeyDetails> privateKeys = new ArrayList<>();
       try {
         KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getContext(), "pgp/default@denbond7.com_sec.asc"),
+            (InstrumentationRegistry.getInstrumentation().getContext(), "pgp/default@denbond7.com_sec.asc"),
             KeyDetails.Type.EMAIL, true, null);
         privateKeys.add(keyDetails);
       } catch (IOException e) {
@@ -89,7 +90,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   public void testShowMessageEmptyPassPhrase() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .passphrase_must_be_non_empty));
   }
 
@@ -98,7 +99,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("some pass phrase"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(R.string.password_is_incorrect));
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .password_is_incorrect));
   }
 
   @Test

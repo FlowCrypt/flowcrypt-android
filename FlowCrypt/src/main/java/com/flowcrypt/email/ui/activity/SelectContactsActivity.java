@@ -9,11 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,6 +24,12 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 /**
  * This activity can be used for select single or multiply contacts (not implemented yet) from the local database. The
@@ -90,9 +91,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
     this.listViewContacts = findViewById(R.id.listViewContacts);
     this.listViewContacts.setAdapter(contactsListCursorAdapter);
     this.listViewContacts.setChoiceMode(isMultiply ? ListView.CHOICE_MODE_MULTIPLE : ListView.CHOICE_MODE_SINGLE);
-    if (isMultiply) {
-      //this.listViewContacts.setMultiChoiceModeListener(this);
-    } else {
+    if (!isMultiply) {
       this.listViewContacts.setOnItemClickListener(this);
     }
 
@@ -100,7 +99,7 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
       getSupportActionBar().setTitle(title);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
   }
 
   @Override
@@ -184,14 +183,14 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
   @Override
   public boolean onQueryTextSubmit(String query) {
     this.userSearchPattern = query;
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }
 
   @Override
   public boolean onQueryTextChange(String newText) {
     this.userSearchPattern = newText;
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }
 }

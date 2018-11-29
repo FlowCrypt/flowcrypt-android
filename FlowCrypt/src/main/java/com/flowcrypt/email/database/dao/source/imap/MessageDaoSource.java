@@ -18,7 +18,6 @@ import android.os.Build;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.LongSparseArray;
 
@@ -28,6 +27,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
@@ -57,6 +57,8 @@ import javax.mail.Part;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import androidx.annotation.NonNull;
+
 /**
  * This class describes the dao source for {@link GeneralMessageDetails} class.
  *
@@ -85,6 +87,7 @@ public class MessageDaoSource extends BaseDaoSource {
   public static final String COL_IS_NEW = "is_new";
   public static final String COL_STATE = "state";
   public static final String COL_ATTACHMENTS_DIRECTORY = "attachments_directory";
+  public static final String COL_ERROR_MSG = "error_msg";
 
   public static final int ENCRYPTED_STATE_UNDEFINED = -1;
 
@@ -106,7 +109,8 @@ public class MessageDaoSource extends BaseDaoSource {
       COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
       COL_IS_NEW + " INTEGER DEFAULT -1, " +
       COL_STATE + " INTEGER DEFAULT -1, " +
-      COL_ATTACHMENTS_DIRECTORY + " TEXT " + ");";
+      COL_ATTACHMENTS_DIRECTORY + " TEXT, " +
+      COL_ERROR_MSG + " TEXT DEFAULT NULL" + ");";
 
   public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
       "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
@@ -153,6 +157,29 @@ public class MessageDaoSource extends BaseDaoSource {
     if (!message.getFlags().contains(Flags.Flag.SEEN)) {
       contentValues.put(COL_IS_NEW, isNew);
     }
+    return contentValues;
+  }
+
+  /**
+   * Prepare {@link ContentValues} using {@link OutgoingMessageInfo}
+   *
+   * @param email The email that the message linked.
+   * @param label The folder label.
+   * @param uid   The message UID.
+   * @param info  The input {@link OutgoingMessageInfo}
+   * @return generated {@link ContentValues}
+   */
+  @NonNull
+  public static ContentValues prepareContentValues(String email, String label, long uid, OutgoingMessageInfo info) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(COL_EMAIL, email);
+    contentValues.put(COL_FOLDER, label);
+    contentValues.put(COL_UID, uid);
+    contentValues.put(COL_SENT_DATE, System.currentTimeMillis());
+    contentValues.put(COL_SUBJECT, info.getSubject());
+    contentValues.put(COL_FLAGS, MessageFlag.SEEN);
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAttachmentInfoArrayList()) ||
+        !CollectionUtils.isEmpty(info.getForwardedAttachmentInfoList()));
     return contentValues;
   }
 
@@ -531,6 +558,7 @@ public class MessageDaoSource extends BaseDaoSource {
         (COL_IS_ENCRYPTED)) == 1);
 
     generalMessageDetails.setMessageState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
+    generalMessageDetails.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
 
     try {
       String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));
@@ -1057,6 +1085,27 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     return deletedRows;
+  }
+
+  /**
+   * Add the messages which have a current state equal {@link MessageState#SENDING} to the sending queue again.
+   *
+   * @param context Interface to global information about an application environment
+   * @param email   The email that the message linked
+   * @return The count of the updated row or -1 up.
+   */
+  public int resetMsgsWithSendingState(Context context, String email) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(COL_STATE, MessageState.QUEUED.getValue());
+
+    ContentResolver contentResolver = context.getContentResolver();
+    if (email != null && contentResolver != null) {
+      return contentResolver.update(getBaseContentUri(), contentValues,
+          COL_EMAIL + "= ? AND "
+              + COL_FOLDER + " = ? AND "
+              + COL_STATE + " = ? ",
+          new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENDING.getValue())});
+    } else return -1;
   }
 
   private static String[] parseArray(String attributesAsString, String regex) {

@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.rules;
 
-import android.support.test.InstrumentationRegistry;
-
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -16,6 +14,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.util.List;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -45,7 +45,8 @@ public class AddLabelsToDatabaseRule implements TestRule {
 
   private void saveLabelsToDatabase() {
     ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-    imapLabelsDaoSource.addRows(InstrumentationRegistry.getTargetContext(), accountDao.getEmail(), folders);
+    imapLabelsDaoSource.addRows(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao.getEmail
+        (), folders);
   }
 }
 

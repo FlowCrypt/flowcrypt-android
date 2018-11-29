@@ -19,7 +19,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -67,6 +66,8 @@ import javax.mail.StoreClosedException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
+
+import androidx.annotation.NonNull;
 
 /**
  * This the email synchronization service. This class is responsible for the logic of
@@ -620,10 +621,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
       if (connectivityManager != null) {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        boolean isInternetConnectionAvailable = networkInfo != null && networkInfo
-            .isConnectedOrConnecting();
-
-        if (isInternetConnectionAvailable) {
+        if (GeneralUtil.isInternetConnectionAvailable(this)) {
           Log.d(TAG, "networkInfo = " + networkInfo);
           if (emailSyncManager != null) {
             emailSyncManager.beginSync(false);
@@ -829,8 +827,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                     Map<String, Messenger> replyToMessengersWeakReference) {
       this.syncServiceWeakReference = new WeakReference<>(emailSyncService);
       this.gmailSynsManagerWeakReference = new WeakReference<>(emailSyncManager);
-      this.replyToMessengersWeakReference = new WeakReference<>
-          (replyToMessengersWeakReference);
+      this.replyToMessengersWeakReference = new WeakReference<>(replyToMessengersWeakReference);
     }
 
     @Override

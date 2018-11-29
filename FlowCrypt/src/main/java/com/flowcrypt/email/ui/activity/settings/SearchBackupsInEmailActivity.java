@@ -8,14 +8,10 @@ package com.flowcrypt.email.ui.activity.settings;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.test.espresso.idling.CountingIdlingResource;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.BackupKeysActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity;
@@ -23,6 +19,10 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * This activity helps a user to backup his private keys via next methods:
@@ -64,7 +64,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
       finish();
     }
     countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (SearchBackupsInEmailActivity.class), BuildConfig.DEBUG);
+        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebug());
     countingIdlingResource.increment();
   }
 

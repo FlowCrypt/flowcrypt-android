@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,6 +30,8 @@ import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeLis
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+
+import androidx.annotation.Nullable;
 
 /**
  * This activity describes a logic of send encrypted or standard message.

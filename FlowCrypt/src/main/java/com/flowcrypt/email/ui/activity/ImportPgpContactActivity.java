@@ -10,8 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -35,6 +33,10 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 /**
  * This {@link Activity} retrieves a public keys string from the different sources and sends it to
@@ -77,7 +79,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   public void onBackPressed() {
     if (isSearchPublicKeysOnAttesterNow) {
       this.isSearchPublicKeysOnAttesterNow = false;
-      getSupportLoaderManager().destroyLoader(R.id.loader_id_search_public_key);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key);
       UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
     } else {
       super.onBackPressed();
@@ -213,7 +215,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
 
         if (GeneralUtil.isInternetConnectionAvailable(this)) {
-          getSupportLoaderManager().restartLoader(R.id.loader_id_search_public_key, null,
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
               ImportPgpContactActivity.this);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));

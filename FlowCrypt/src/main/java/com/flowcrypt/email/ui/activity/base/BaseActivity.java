@@ -16,25 +16,26 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.Loader;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.JsBackgroundService;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.ref.WeakReference;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.loader.content.Loader;
 
 /**
  * This is a base activity. This class describes a base logic for all activities.
@@ -323,7 +324,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   protected boolean checkServiceBound(boolean isBound) {
     if (!isBound) {
-      if (BuildConfig.DEBUG) {
+      if (GeneralUtil.isDebug()) {
         Log.d(TAG, "Activity not connected to the service");
       }
       return true;

@@ -9,9 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.customtabs.CustomTabsIntent;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -22,6 +19,10 @@ import android.webkit.WebViewClient;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
+
+import androidx.annotation.RequiresApi;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 
 /**
  * The custom realization of {@link WebView}

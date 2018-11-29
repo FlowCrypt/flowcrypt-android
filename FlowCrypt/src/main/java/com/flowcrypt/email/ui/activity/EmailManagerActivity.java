@@ -12,22 +12,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.annotation.VisibleForTesting;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.test.espresso.idling.CountingIdlingResource;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -43,7 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.request.RequestOptions;
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
@@ -73,9 +56,26 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.sun.mail.imap.protocol.SearchSequence;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.preference.PreferenceManager;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * This activity used to show messages list.
@@ -132,10 +132,10 @@ public class EmailManagerActivity extends BaseEmailListActivity
           GoogleApiClientHelper.generateGoogleSignInOptions());
 
       new ActionManager(this).checkAndAddActionsToQueue(accountDao);
-      getSupportLoaderManager().initLoader(R.id.loader_id_load_gmail_labels, null, this);
+      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), BuildConfig.DEBUG);
+          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebug());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -276,7 +276,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switch (requestCode) {
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
-        getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null,
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null,
             EmailManagerActivity.this);
         if (!countingIdlingResourceForLabel.isIdleNow()) {
           countingIdlingResourceForLabel.decrement();
@@ -715,7 +715,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
     if (navigationMenuDevSettings != null) {
-      navigationMenuDevSettings.setVisible(BuildConfig.DEBUG);
+      navigationMenuDevSettings.setVisible(GeneralUtil.isDebug());
     }
 
     if (findViewById(R.id.floatActionButtonCompose) != null) {
@@ -884,7 +884,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
         updateLabels(R.id.syns_request_code_update_label_passive, true);
       }
 
-      getSupportLoaderManager().restartLoader(R.id.loader_id_load_gmail_labels, null, EmailManagerActivity.this);
+      LoaderManager.getInstance(EmailManagerActivity.this).restartLoader(R.id.loader_id_load_gmail_labels,
+          null, EmailManagerActivity.this);
     }
 
     @Override

@@ -6,8 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
-import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -32,6 +30,9 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+
+import androidx.annotation.Nullable;
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.

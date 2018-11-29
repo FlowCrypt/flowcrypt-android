@@ -5,10 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.preferences;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.preference.DialogPreference;
-import android.util.AttributeSet;
+import android.os.Bundle;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -16,6 +13,9 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import java.lang.reflect.Field;
 import java.util.Formatter;
 import java.util.Locale;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceDialogFragmentCompat;
 
 /**
  * This fragment shows a general information about the current build.
@@ -25,9 +25,22 @@ import java.util.Locale;
  * Time: 12:11
  * E-mail: DenBond7@gmail.com
  */
-public class BuildConfigInfoPreferencesFragment extends DialogPreference {
-  public BuildConfigInfoPreferencesFragment(Context context, AttributeSet attrs) {
-    super(context, attrs);
+public class BuildConfigInfoPreferencesFragment extends PreferenceDialogFragmentCompat {
+
+  private String message;
+
+  public static BuildConfigInfoPreferencesFragment newInstance(String key) {
+    BuildConfigInfoPreferencesFragment fragment = new BuildConfigInfoPreferencesFragment();
+    Bundle bundle = new Bundle(1);
+    bundle.putString(ARG_KEY, key);
+    fragment.setArguments(bundle);
+    return fragment;
+  }
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
     Class clazz = BuildConfig.class;
     Field[] fields = clazz.getDeclaredFields();
 
@@ -42,16 +55,18 @@ public class BuildConfigInfoPreferencesFragment extends DialogPreference {
       }
     }
 
-    setDialogMessage(formatter.toString());
-  }
-
-  public BuildConfigInfoPreferencesFragment(Context context) {
-    this(context, null);
+    message = formatter.toString();
   }
 
   @Override
   protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
     super.onPrepareDialogBuilder(builder);
-    builder.setPositiveButton(null, null);
+    builder.setMessage(message);
+    builder.setNegativeButton(null, null);
+  }
+
+  @Override
+  public void onDialogClosed(boolean positiveResult) {
+
   }
 }

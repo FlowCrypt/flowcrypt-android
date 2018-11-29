@@ -8,12 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
-import android.support.v7.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -43,6 +37,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.mail.util.MailConnectException;
@@ -51,6 +46,12 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import javax.mail.AuthenticationFailedException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+import androidx.preference.PreferenceManager;
 
 /**
  * This activity describes a logic of adding a new account of other email providers.
@@ -215,7 +216,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
           authCredentials = generateAuthCredentials();
           UIUtil.hideSoftInput(this, getRootView());
           if (isNotDuplicate()) {
-            getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings, null, this);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this);
           } else {
             showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
                 authCredentials.getEmail()), Snackbar.LENGTH_LONG);
@@ -285,7 +286,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_check_email_settings:
         boolean isSettingsValid = (boolean) result;
         if (isSettingsValid) {
-          getSupportLoaderManager().restartLoader(R.id.loader_id_load_private_key_backups_from_email,
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email,
               null, this);
         } else {
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
@@ -313,7 +314,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
               REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
         }
 
-        getSupportLoaderManager().destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
         break;
 
       default:
@@ -351,8 +352,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                 getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
-                    getSupportLoaderManager().restartLoader(R.id.loader_id_check_email_settings,
-                        null, AddNewAccountManuallyActivity.this);
+                    LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
+                        .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
                   }
                 });
           }

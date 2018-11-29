@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
@@ -22,6 +21,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * A basic AsyncTaskLoader who make API calls.
@@ -45,8 +46,9 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
   @Override
   public void onStartLoading() {
-    if (takeContentChanged())
+    if (takeContentChanged()) {
       forceLoad();
+    }
   }
 
   @Override
@@ -146,10 +148,12 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
     ApiServiceAsyncTaskLoader that = (ApiServiceAsyncTaskLoader) o;
 
     if (apiHelper != null ? !apiHelper.equals(that.apiHelper) : that
-        .apiHelper != null)
+        .apiHelper != null) {
       return false;
-    if (baseRequest != null ? !baseRequest.equals(that.baseRequest) : that.baseRequest != null)
+    }
+    if (baseRequest != null ? !baseRequest.equals(that.baseRequest) : that.baseRequest != null) {
       return false;
+    }
     return !(apiService != null ? !apiService.equals(that.apiService) : that.apiService !=
         null);
 

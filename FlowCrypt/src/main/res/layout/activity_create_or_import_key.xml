@@ -9,7 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -17,8 +17,8 @@
             android:id="@+id/textViewTitle"
             style="@style/ScreenHeading"
             android:text="@string/set_up_flow_crypt"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
@@ -29,8 +29,8 @@
             android:text="@string/create_a_new_key"
             android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textViewTitle" />
 
         <Button
@@ -41,8 +41,8 @@
             android:text="@string/import_my_key"
             android:theme="@style/AppWidget.Button.Green"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonCreateNewKey" />
 
         <Button
@@ -53,8 +53,8 @@
             android:text="@string/use_another_account"
             android:theme="@style/AppWidget.Button.White"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonImportMyKey" />
 
         <Button
@@ -66,25 +66,25 @@
             android:theme="@style/AppWidget.Button.White"
             android:visibility="gone"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-            app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonSelectAnotherAccount"
             tools:visibility="visible" />
 
-        <android.support.constraint.Guideline
+        <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
 
-        <android.support.constraint.Guideline
+        <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

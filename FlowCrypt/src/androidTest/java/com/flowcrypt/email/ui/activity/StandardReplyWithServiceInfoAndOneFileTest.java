@@ -7,10 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
@@ -41,15 +37,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.isFocusable;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isFocusable;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -75,8 +76,8 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
       try {
         incomingMessageInfo =
             MessageUtil.getIncomingMessageInfoWithOutBody(
-                new Js(InstrumentationRegistry.getTargetContext(), null),
-                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+                new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
+                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
                     "messages/mime_message.txt"));
 
         AttachmentInfo attachmentInfo = new AttachmentInfo();
@@ -96,12 +97,12 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             .setIsSubjectEditEnable(false)
             .setIsMessageTypeCanBeSwitched(false)
             .setIsAddNewAttachmentsEnable(false)
-            .setSystemMessage(InstrumentationRegistry.getTargetContext()
+            .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
             .setAttachmentInfoList(attachmentInfoList)
             .createServiceInfo();
 
-        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getTargetContext(),
+        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
             incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
       } catch (IOException e) {
         e.printStackTrace();

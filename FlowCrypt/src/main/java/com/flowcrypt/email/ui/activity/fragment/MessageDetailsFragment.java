@@ -12,10 +12,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
@@ -46,7 +42,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
@@ -69,10 +64,15 @@ import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.common.util.CollectionUtils;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 /**
  * This fragment describe details of some message.
@@ -392,6 +392,11 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     }
   }
 
+  public void updateAttInfos(ArrayList<AttachmentInfo> attInfoList) {
+    this.attachmentInfoList = attInfoList;
+    showAttachmentsIfTheyExist();
+  }
+
   protected void updateMessageBody() {
     if (incomingMessageInfo != null) {
       updateMessageView();
@@ -586,57 +591,57 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   private void showAttachmentsIfTheyExist() {
     if (generalMessageDetails != null && generalMessageDetails.isMessageHasAttachment()) {
-      attachmentInfoList = new AttachmentDaoSource()
-          .getAttachmentInfoList(getContext(), generalMessageDetails.getEmail(),
-              generalMessageDetails.getLabel(), generalMessageDetails.getUid());
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
-      for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
-        View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
+      if (!CollectionUtils.isEmpty(attachmentInfoList)) {
+        for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
+          View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
 
-        TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
-        textViewAttachmentName.setText(attachmentInfo.getName());
+          TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
+          textViewAttachmentName.setText(attachmentInfo.getName());
 
-        TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
-        textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
+          TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
+          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
 
-        final View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
-        imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            lastClickedAttachmentInfo = attachmentInfo;
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-              requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                  REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
-            } else {
-              getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
-                  (getContext(), attachmentInfo));
-            }
-          }
-        });
-
-        if (attachmentInfo.getUri() != null) {
-          View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
-          layoutAttachment.setOnClickListener(new View.OnClickListener() {
+          final View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+          imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              if (attachmentInfo.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
-                imageButtonDownloadAttachment.performClick();
+              lastClickedAttachmentInfo = attachmentInfo;
+              lastClickedAttachmentInfo.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
+              if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                  != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
               } else {
-                Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());
-                intentOpenFile.setAction(Intent.ACTION_VIEW);
-                intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
-                  startActivity(intentOpenFile);
-                }
+                getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+                    (getContext(), lastClickedAttachmentInfo));
               }
             }
           });
-        }
 
-        layoutMessageParts.addView(rootView);
+          if (attachmentInfo.getUri() != null) {
+            View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
+            layoutAttachment.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+                if (attachmentInfo.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
+                  imageButtonDownloadAttachment.performClick();
+                } else {
+                  Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());
+                  intentOpenFile.setAction(Intent.ACTION_VIEW);
+                  intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                  intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                  if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
+                    startActivity(intentOpenFile);
+                  }
+                }
+              }
+            });
+          }
+
+          layoutMessageParts.addView(rootView);
+        }
       }
     }
   }
@@ -654,8 +659,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       emailWebView.setLayoutParams(layoutParams);
 
       emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
-          "text/html",
-          StandardCharsets.UTF_8.displayName(), null);
+          "text/html", StandardCharsets.UTF_8.displayName(), null);
 
       layoutMessageParts.addView(emailWebView);
       emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {

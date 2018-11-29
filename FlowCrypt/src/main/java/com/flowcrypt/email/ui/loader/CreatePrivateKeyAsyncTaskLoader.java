@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.Nullable;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
@@ -47,6 +45,8 @@ import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
 
+import androidx.annotation.Nullable;
+import androidx.loader.content.AsyncTaskLoader;
 import retrofit2.Response;
 
 /**

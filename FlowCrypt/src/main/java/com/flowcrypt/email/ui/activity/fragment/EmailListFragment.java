@@ -10,14 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.test.espresso.idling.CountingIdlingResource;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.TextUtils;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
@@ -34,7 +26,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
@@ -58,11 +49,20 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.AuthenticationFailedException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -107,45 +107,15 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   private int lastFirstVisibleItemPositionOffAllMessages;
   private int originalStatusBarColor;
 
-  private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks
-      = new LoaderManager.LoaderCallbacks<Cursor>() {
-
+  private LoaderManager.LoaderCallbacks<Cursor> loadCachedMessagesCursorLoaderCallbacks = new LoaderManager
+      .LoaderCallbacks<Cursor>() {
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
       switch (id) {
         case R.id.loader_id_load_messages_from_cache:
-          emptyView.setVisibility(View.GONE);
-          statusView.setVisibility(View.GONE);
-
-          if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
-            UIUtil.exchangeViewVisibility(
-                getContext(),
-                true,
-                progressView,
-                listViewMessages);
-          }
-
-          if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
-          }
-
-          String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
-              + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
-
-          if (!BuildConfig.DEBUG && JavaEmailConstants.FOLDER_OUTBOX
-              .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
-            selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
-                + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
-          }
-
-          return new CursorLoader(getContext(),
-              new MessageDaoSource().getBaseContentUri(),
-              null,
-              selection,
-              new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
-                  onManageEmailsListener.getCurrentFolder().getFolderAlias()},
-              MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+          changeViewsVisibility();
+          return prepareCursorLoader();
 
         default:
           return new Loader<>(getContext());
@@ -156,44 +126,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
       switch (loader.getId()) {
         case R.id.loader_id_load_messages_from_cache:
-          messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
-          messageListAdapter.swapCursor(data);
-          if (data != null && data.getCount() != 0) {
-            emptyView.setVisibility(View.GONE);
-            statusView.setVisibility(View.GONE);
-
-            if (!isShowOnlyEncryptedMessages && lastFirstVisibleItemPositionOffAllMessages != 0) {
-              listViewMessages.setSelection(lastFirstVisibleItemPositionOffAllMessages);
-              lastFirstVisibleItemPositionOffAllMessages = 0;
-            }
-
-            UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
-          } else {
-            if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-                onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
-              isMessagesFetchedIfNotExistInCache = true;
-            }
-
-            if (!isMessagesFetchedIfNotExistInCache) {
-              isMessagesFetchedIfNotExistInCache = true;
-              if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
-                if (isSyncServiceConnected()) {
-                  loadNextMessages(0);
-                } else {
-                  needForceFirstLoad = true;
-                }
-              } else {
-                textViewStatusInfo.setText(R.string.no_connection);
-                UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-                showRetrySnackBar();
-              }
-            } else {
-              emptyView.setText(isShowOnlyEncryptedMessages ?
-                  R.string.no_encrypted_messages : R.string.no_results);
-              UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
-            }
-          }
-
+          handleCursor(data);
           break;
       }
     }
@@ -260,7 +193,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         swipeRefreshLayout.setEnabled(false);
       }
 
-      getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache,
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache,
           null, loadCachedMessagesCursorLoaderCallbacks);
     }
   }
@@ -353,6 +286,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case ERROR_CACHE_PROBLEM:
             case ERROR_DURING_CREATION:
             case ERROR_SENDING_FAILED:
+            case ERROR_PRIVATE_KEY_NOT_FOUND:
               handleOutgoingMessageWhichHasSomeError(activeMsgDetails);
               break;
 
@@ -491,7 +425,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         footerProgressView.setVisibility(View.GONE);
         emptyView.setVisibility(View.GONE);
 
-        getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         DataBaseUtil.cleanFolderCache(getContext(),
             onManageEmailsListener.getCurrentAccountDao().getEmail(),
             onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -637,7 +571,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           getSnackBar().dismiss();
         }
 
-        getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         if (TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFolderAlias()) ||
             !isItSyncOrOutboxFolder(onManageEmailsListener.getCurrentFolder()) || isNeedToForceClearCache) {
           DataBaseUtil.cleanFolderCache(getContext(),
@@ -647,7 +581,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       }
 
       if (messageListAdapter.getCount() == 0) {
-        getLoaderManager().restartLoader(R.id.loader_id_load_messages_from_cache, null,
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null,
             loadCachedMessagesCursorLoaderCallbacks);
       }
     }
@@ -713,7 +647,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    * Reload the folder messages.
    */
   public void reloadMessages() {
-    getLoaderManager().destroyLoader(R.id.loader_id_load_messages_from_cache);
+    LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
     DataBaseUtil.cleanFolderCache(getContext(),
         onManageEmailsListener.getCurrentAccountDao().getEmail(),
         onManageEmailsListener.getCurrentFolder().getFolderAlias());
@@ -755,6 +689,82 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     }
   }
 
+  private void changeViewsVisibility() {
+    emptyView.setVisibility(View.GONE);
+    statusView.setVisibility(View.GONE);
+
+    if (!isMessagesFetchedIfNotExistInCache || messageListAdapter.getCount() == 0) {
+      UIUtil.exchangeViewVisibility(
+          getContext(),
+          true,
+          progressView,
+          listViewMessages);
+    }
+
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().setTitle(onManageEmailsListener.getCurrentFolder().getUserFriendlyName());
+    }
+  }
+
+  private void handleCursor(Cursor data) {
+    messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
+    messageListAdapter.swapCursor(data);
+    if (data != null && data.getCount() != 0) {
+      emptyView.setVisibility(View.GONE);
+      statusView.setVisibility(View.GONE);
+
+      if (!isShowOnlyEncryptedMessages && lastFirstVisibleItemPositionOffAllMessages != 0) {
+        listViewMessages.setSelection(lastFirstVisibleItemPositionOffAllMessages);
+        lastFirstVisibleItemPositionOffAllMessages = 0;
+      }
+
+      UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
+    } else {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
+          onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+        isMessagesFetchedIfNotExistInCache = true;
+      }
+
+      if (!isMessagesFetchedIfNotExistInCache) {
+        isMessagesFetchedIfNotExistInCache = true;
+        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+          if (isSyncServiceConnected()) {
+            loadNextMessages(0);
+          } else {
+            needForceFirstLoad = true;
+          }
+        } else {
+          textViewStatusInfo.setText(R.string.no_connection);
+          UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+          showRetrySnackBar();
+        }
+      } else {
+        emptyView.setText(isShowOnlyEncryptedMessages ?
+            R.string.no_encrypted_messages : R.string.no_results);
+        UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
+      }
+    }
+  }
+
+  private Loader<Cursor> prepareCursorLoader() {
+    String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
+        + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+
+    if (!GeneralUtil.isDebug() && JavaEmailConstants.FOLDER_OUTBOX
+        .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
+      selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
+          + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
+    }
+
+    return new CursorLoader(getContext(),
+        new MessageDaoSource().getBaseContentUri(),
+        null,
+        selection,
+        new String[]{onManageEmailsListener.getCurrentAccountDao().getEmail(),
+            onManageEmailsListener.getCurrentFolder().getFolderAlias()},
+        MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+  }
+
   private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails generalMessageDetails) {
     String message = null;
 
@@ -769,8 +779,17 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         break;
 
       case ERROR_DURING_CREATION:
-        message = getString(R.string.error_happened_during_creation,
-            getString(R.string.support_email));
+        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email));
+        break;
+
+      case ERROR_PRIVATE_KEY_NOT_FOUND:
+        String errorMsg = generalMessageDetails.getErrorMsg();
+        if (errorMsg.equalsIgnoreCase(generalMessageDetails.getEmail())) {
+          message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email));
+        } else {
+          message = getString(R.string.no_key_available_for_your_emails, errorMsg, generalMessageDetails.getEmail(),
+              getString(R.string.support_email));
+        }
         break;
 
       case ERROR_SENDING_FAILED:

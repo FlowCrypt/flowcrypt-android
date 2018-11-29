@@ -12,8 +12,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.service.actionqueue.actions.Action.ActionType;
@@ -23,6 +21,9 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * This object describes a logic of working with {@link Action} in the local database.

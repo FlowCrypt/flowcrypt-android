@@ -11,10 +11,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 
@@ -39,8 +37,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.common.util.ArrayUtils;
-import com.google.api.client.util.Base64;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
@@ -92,6 +89,10 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.search.BodyTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.util.ByteArrayDataSource;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.preference.PreferenceManager;
 
 /**
  * @author Denis Bondarenko
@@ -295,7 +296,7 @@ public class EmailUtil {
    */
   public static boolean isDebugEnable(Context context) {
     Context appContext = context.getApplicationContext();
-    return BuildConfig.DEBUG && SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+    return GeneralUtil.isDebug() && SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
         (appContext), Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE, BuildConfig.IS_MAIL_DEBUG_ENABLE);
   }
 
@@ -353,7 +354,7 @@ public class EmailUtil {
           .execute();
 
       MimeMessage mimeMessage = new MimeMessage(session,
-          new ByteArrayInputStream(Base64.decodeBase64(message.getRaw())));
+          new ByteArrayInputStream(Base64.decode(message.getRaw(), Base64.URL_SAFE)));
 
       String backup = getKeyFromMessageIfItExists(mimeMessage);
 
@@ -511,19 +512,21 @@ public class EmailUtil {
     }
 
     if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
-      if (isRev1)
+      if (isRev1) {
         command.append(first ?
             "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
-      else
+      } else {
         command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
+      }
       first = false;
     }
 
     if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
-      if (isRev1)
+      if (isRev1) {
         command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
-      else
+      } else {
         command.append(first ? "RFC822" : " RFC822");
+      }
       first = false;
     }
 
@@ -748,11 +751,16 @@ public class EmailUtil {
   @NonNull
   public static LongSparseArray<Boolean> getInfoAreMessagesEncrypted(IMAPFolder imapFolder, List<Long> uidList)
       throws MessagingException {
-    if (uidList.isEmpty()) {
+    if (CollectionUtils.isEmpty(uidList)) {
       return new LongSparseArray<>();
     }
+    long[] uidArray = new long[uidList.size()];
 
-    final UIDSet[] uidSets = UIDSet.createUIDSets(ArrayUtils.toLongArray(uidList));
+    for (int i = 0; i < uidList.size(); i++) {
+      uidArray[i] = uidList.get(i);
+    }
+
+    final UIDSet[] uidSets = UIDSet.createUIDSets(uidArray);
 
     if (uidSets == null || uidSets.length == 0) {
       return new LongSparseArray<>();
@@ -774,8 +782,9 @@ public class EmailUtil {
 
         if (serverStatusResponse.isOK()) {
           for (Response response : responses) {
-            if (!(response instanceof FetchResponse))
+            if (!(response instanceof FetchResponse)) {
               continue;
+            }
 
             FetchResponse fetchResponse = (FetchResponse) response;
 

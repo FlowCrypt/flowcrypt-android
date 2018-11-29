@@ -8,10 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -37,12 +33,17 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 
-import static android.support.test.espresso.Espresso.closeSoftKeyboard;
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.closeSoftKeyboard;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -219,7 +220,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
   private Intent generateIntentForUri(String action, String stringUri) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 
     if (action != null) {
@@ -235,7 +236,7 @@ public class ShareIntentsTest extends BaseTest {
 
   private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMessage,
                                           int attachmentsCount) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 
     if (action != null) {

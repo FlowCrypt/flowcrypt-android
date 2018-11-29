@@ -8,13 +8,14 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.View;
 import android.webkit.WebView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import androidx.annotation.Nullable;
 
 /**
  * This activity displays a html text from some source (from the assets folder).

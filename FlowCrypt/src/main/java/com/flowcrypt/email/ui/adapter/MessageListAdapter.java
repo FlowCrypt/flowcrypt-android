@@ -10,8 +10,6 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -39,6 +37,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.InternetAddress;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 /**
  * The MessageListAdapter responsible for displaying the message in the list.
@@ -246,12 +247,14 @@ public class MessageListAdapter extends CursorAdapter {
   }
 
   private String generateAddresses(InternetAddress[] internetAddresses) {
-    if (internetAddresses == null)
+    if (internetAddresses == null) {
       return "null";
+    }
 
     int iMax = internetAddresses.length - 1;
-    if (iMax == -1)
+    if (iMax == -1) {
       return "";
+    }
 
     StringBuilder b = new StringBuilder();
     for (int i = 0; ; i++) {
@@ -293,6 +296,7 @@ public class MessageListAdapter extends CursorAdapter {
       case ERROR_ORIGINAL_MESSAGE_MISSING:
       case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
       case ERROR_SENDING_FAILED:
+      case ERROR_PRIVATE_KEY_NOT_FOUND:
         stateTextColor = ContextCompat.getColor(context, R.color.red);
 
         switch (messageState) {
@@ -314,6 +318,10 @@ public class MessageListAdapter extends CursorAdapter {
 
           case ERROR_SENDING_FAILED:
             state = context.getString(R.string.cannot_send_message_unknown_error);
+            break;
+
+          case ERROR_PRIVATE_KEY_NOT_FOUND:
+            state = context.getString(R.string.could_not_create_no_key_available);
             break;
         }
 

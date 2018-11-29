@@ -8,11 +8,6 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -30,15 +25,21 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -312,21 +313,21 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
 
   private void checkKeysTitle(int quantityOfKeysUsed, int totalQuantityOfKeys, int quantityOfRemainingKeys) {
     onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
-        .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
+        .check(matches(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources()
             .getQuantityString(R.plurals.not_recovered_all_keys, quantityOfRemainingKeys,
                 quantityOfKeysUsed, totalQuantityOfKeys, quantityOfRemainingKeys))));
   }
 
   private void checkKeysTitleAtStart(int totalQuantityOfKeys) {
     onView(withId(R.id.textViewSubTitle)).check(matches(isDisplayed()))
-        .check(matches(withText(InstrumentationRegistry.getTargetContext().getResources()
+        .check(matches(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources()
             .getQuantityString(R.plurals.found_backup_of_your_account_key, totalQuantityOfKeys,
                 totalQuantityOfKeys))));
   }
 
   @NonNull
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent startCheckKeysActivity = new Intent(targetContext, CheckKeysActivity.class);
     startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, getKeyDetailsListFromAssets
         (keysPaths));
@@ -345,7 +346,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
     ArrayList<KeyDetails> privateKeys = new ArrayList<>();
     for (String path : keysPaths) {
       KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-          (InstrumentationRegistry.getContext(), path), KeyDetails.Type.EMAIL,
+          (InstrumentationRegistry.getInstrumentation().getContext(), path), KeyDetails.Type.EMAIL,
           true, null);
       privateKeys.add(keyDetails);
     }

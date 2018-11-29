@@ -7,10 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
@@ -22,16 +18,21 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.clearText;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.clearText;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -60,7 +61,7 @@ public class CreatePrivateKeyActivityTest {
       .around(new ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-          Context targetContext = InstrumentationRegistry.getTargetContext();
+          Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
           Intent result = new Intent(targetContext, CreatePrivateKeyActivity.class);
           result.putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO,
               AccountDaoManager.getDefaultAccountDao());
@@ -107,9 +108,10 @@ public class CreatePrivateKeyActivityTest {
         .perform(scrollTo(), typeText("some text"), closeSoftKeyboard());
     onView(withId(R.id.buttonConfirmPassPhrases)).perform(click());
 
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.pass_phrases_do_not_match)))
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .pass_phrases_do_not_match)))
         .check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed())).perform(click());
   }
 
   @Test
@@ -153,12 +155,12 @@ public class CreatePrivateKeyActivityTest {
         GOOD_PASSWORD, GREAT_PASSWORD, PERFECT_PASSWORD};
 
     String[] degreeOfReliabilityOfPassPhrase = {
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_weak),
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_poor),
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_reasonable),
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_good),
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_great),
-        InstrumentationRegistry.getTargetContext().getString(R.string.password_quality_perfect),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_weak),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_poor),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_reasonable),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_good),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_great),
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.password_quality_perfect),
     };
 
     for (int i = 0; i < passPhrases.length; i++) {
@@ -179,7 +181,8 @@ public class CreatePrivateKeyActivityTest {
           closeSoftKeyboard());
       onView(withId(R.id.buttonSetPassPhrase)).check(matches(isDisplayed())).perform(click());
 
-      onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.select_stronger_pass_phrase)))
+      onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+          .select_stronger_pass_phrase)))
           .check(matches(isDisplayed()));
       onView(withId(android.R.id.button1)).check(matches(isDisplayed())).perform(click());
       onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(clearText());
@@ -187,9 +190,10 @@ public class CreatePrivateKeyActivityTest {
   }
 
   private void checkIsNonEmptyHintShown() {
-    onView(withText(InstrumentationRegistry.getTargetContext().getString(R.string.passphrase_must_be_non_empty)))
+    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+        .passphrase_must_be_non_empty)))
         .check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed()))
         .perform(click());
   }
 }

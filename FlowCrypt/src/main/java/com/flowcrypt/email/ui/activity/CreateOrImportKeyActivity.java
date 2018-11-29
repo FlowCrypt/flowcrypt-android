@@ -9,7 +9,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.flowcrypt.email.R;
@@ -18,6 +17,8 @@ import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import androidx.annotation.Nullable;
 
 /**
  * This activity describes a logic for create ot import private keys.

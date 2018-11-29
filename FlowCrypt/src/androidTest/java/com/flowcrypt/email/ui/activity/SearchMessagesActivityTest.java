@@ -7,13 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.IdlingRegistry;
-import android.support.test.espresso.IdlingResource;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.espresso.matcher.ViewMatchers;
-import android.support.test.filters.LargeTest;
-import android.support.test.runner.AndroidJUnit4;
 import android.widget.EditText;
 
 import com.flowcrypt.email.R;
@@ -33,18 +26,26 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.clearText;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
-import static android.support.test.espresso.matcher.ViewMatchers.withHint;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.espresso.IdlingRegistry;
+import androidx.test.espresso.IdlingResource;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.espresso.matcher.ViewMatchers;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.clearText;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.pressImeActionButton;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
+import static androidx.test.espresso.matcher.ViewMatchers.withHint;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -66,7 +67,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
       .class) {
     @Override
     protected Intent getActivityIntent() {
-      return SearchMessagesActivity.newIntent(InstrumentationRegistry.getTargetContext(), QUERY,
+      return SearchMessagesActivity.newIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(), QUERY,
           new Folder(FOLDER_NAME, FOLDER_NAME, 0, null, false));
     }
   };
@@ -123,9 +124,10 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   public void testClearSearchView() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed())).perform(click());
-    onView(withId(android.support.v7.appcompat.R.id.search_close_btn)).perform(click());
+    onView(withId(androidx.appcompat.R.id.search_close_btn)).perform(click());
     onView(isAssignableFrom(EditText.class)).check(matches(withText(isEmptyString())))
-        .check(matches(withHint(InstrumentationRegistry.getTargetContext().getString(R.string.search))));
+        .check(matches(withHint(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+            .search))));
   }
 
   private static ContentValues generateContentValues() {

@@ -14,13 +14,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.preference.Preference;
 
 /**
  * The main developer options fragment.
@@ -31,8 +34,7 @@ import com.flowcrypt.email.R;
  * E-mail: DenBond7@gmail.com
  */
 public class MainDevPreferencesFragment extends BaseDevPreferencesFragment implements
-    SharedPreferences
-        .OnSharedPreferenceChangeListener {
+    SharedPreferences.OnSharedPreferenceChangeListener {
   private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS = 100;
 
   private SharedPreferences sharedPreferences;
@@ -41,7 +43,22 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
   public void onCreate(final Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+  }
+
+  @Override
+  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
     addPreferencesFromResource(R.xml.dev_preferences);
+  }
+
+  @Override
+  public void onDisplayPreferenceDialog(Preference preference) {
+    if (preference instanceof BuildConfInfoPreference) {
+      DialogFragment dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey());
+      dialogFragment.setTargetFragment(this, 0);
+      dialogFragment.show(getFragmentManager(), null);
+    } else {
+      super.onDisplayPreferenceDialog(preference);
+    }
   }
 
   @Override

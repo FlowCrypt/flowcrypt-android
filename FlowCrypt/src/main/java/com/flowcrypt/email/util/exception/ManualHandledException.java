@@ -6,9 +6,10 @@
 package com.flowcrypt.email.util.exception;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 
 import org.acra.ACRA;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * This class is using with {@link ACRA} when we handle some exception <b>manually</b> and send logs to the server.

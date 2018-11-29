@@ -10,30 +10,31 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.Snackbar;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.matcher.BoundedMatcher;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.RootMatchers.withDecorView;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static android.support.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread;
+import androidx.test.espresso.matcher.BoundedMatcher;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -167,7 +168,7 @@ public class BaseTest {
    */
   protected void checkIsSnackbarDisplayed(String message) {
     onView(withText(message)).check(matches(isDisplayed()));
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()))
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed()))
         .perform(click());
   }
 
@@ -175,14 +176,14 @@ public class BaseTest {
    * Test is a {@link Snackbar} displayed.
    */
   protected void checkIsSnackBarDisplayed() {
-    onView(withId(android.support.design.R.id.snackbar_action)).check(matches(isDisplayed()));
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed()));
   }
 
   /**
    * Test is a {@link Snackbar} not displayed.
    */
   protected void checkIsSnackBarNotDisplayed() {
-    onView(withId(android.support.design.R.id.snackbar_action)).check(doesNotExist());
+    onView(withId(com.google.android.material.R.id.snackbar_action)).check(doesNotExist());
   }
 
   /**
@@ -195,7 +196,7 @@ public class BaseTest {
   protected void addTextToClipboard(final String label, final String text) throws Throwable {
     runOnUiThread(new Runnable() {
       public void run() {
-        ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getTargetContext()
+        ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getInstrumentation().getTargetContext()
             .getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {

@@ -7,10 +7,6 @@ package com.flowcrypt.email.ui.activity.settings;
 
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -20,6 +16,11 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
+
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 /**
  * This Activity show information about contacts where has_pgp == true.
@@ -65,7 +66,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
       findViewById(R.id.floatActionButtonImportPublicKey).setOnClickListener(this);
     }
 
-    getSupportLoaderManager().initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
         null, this);
   }
 
@@ -113,7 +114,7 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
     new ContactsDaoSource().deletePgpContact(this, email);
     Toast.makeText(this, getString(R.string.the_contact_was_deleted, email), Toast
         .LENGTH_SHORT).show();
-    getSupportLoaderManager().restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
         null, this);
   }
 

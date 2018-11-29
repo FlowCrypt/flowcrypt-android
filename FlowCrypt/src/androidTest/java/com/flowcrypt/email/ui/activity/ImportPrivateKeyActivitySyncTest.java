@@ -12,12 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcelable;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.IdlingRegistry;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.GrantPermissionRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
@@ -42,18 +36,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasCategories;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtra;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasType;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import androidx.test.espresso.IdlingRegistry;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
@@ -79,7 +80,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
       (ImportPrivateKeyActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getTargetContext();
+      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       Intent result = new Intent(targetContext, ImportPrivateKeyActivity.class);
       result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true);
       result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, targetContext.getString(R.string
@@ -99,7 +100,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
 
   @BeforeClass
   public static void createResources() throws IOException {
-    privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getContext(),
+    privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-sec.asc");
     fileWithPrivateKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
         + "_sec.asc", privateKey);
@@ -149,9 +150,9 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey);
 
     onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.file_has_wrong_pgp_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.private_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
 
   @Test
@@ -167,9 +168,9 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
   public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
     addTextToClipboard("not private key", SOME_TEXT);
     onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getTargetContext().getString(
+    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.clipboard_has_wrong_structure,
-        InstrumentationRegistry.getTargetContext().getString(R.string.private_)));
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
 
   private void useIntentionToRunActivityToSelectFile(File file) {
@@ -182,7 +183,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
 
 
   private void useIntentionFromRunCheckKeysActivity() {
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getTargetContext(),
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         CheckKeysActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK,
         null));
   }

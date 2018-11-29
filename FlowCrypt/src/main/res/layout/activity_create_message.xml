@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/screenContent"
     android:layout_width="match_parent"
@@ -16,4 +16,4 @@
         android:id="@+id/layoutContent"
         layout="@layout/content_create_message" />
 
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

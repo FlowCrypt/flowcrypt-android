@@ -5,12 +5,13 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog;
 
-import android.support.v4.app.DialogFragment;
-import android.support.v4.content.Loader;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
+
+import androidx.fragment.app.DialogFragment;
+import androidx.loader.content.Loader;
 
 /**
  * The base dialog fragment.

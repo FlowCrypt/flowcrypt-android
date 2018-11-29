@@ -9,10 +9,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -44,6 +40,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 /**
  * This class describes checking the received private keys. Here we validate and save encrypted
@@ -195,7 +196,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               getSnackBar().dismiss();
             }
 
-            getSupportLoaderManager().restartLoader(R.id
+            LoaderManager.getInstance(this).restartLoader(R.id
                 .loader_id_encrypt_and_save_private_keys_infos, null, this);
           }
         }

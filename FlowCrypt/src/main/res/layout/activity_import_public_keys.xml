@@ -18,7 +18,7 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutProgress"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -30,8 +30,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -42,18 +42,18 @@
                 android:layout_marginRight="0dp"
                 android:layout_marginTop="@dimen/default_margin_very_big"
                 android:text="@string/evaluating"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ScrollView
             android:id="@+id/layoutContentView"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <android.support.constraint.ConstraintLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -69,7 +69,7 @@
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textInputLayoutKeyIdOrEmail"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -82,7 +82,7 @@
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
 
-                    <android.support.design.widget.TextInputEditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextKeyIdOrEmail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -90,7 +90,7 @@
                         android:imeOptions="actionSearch"
                         android:inputType="text" />
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <Button
                     android:id="@+id/buttonLoadFromFile"
@@ -99,8 +99,8 @@
                     android:layout_marginTop="@dimen/margin_between_buttons"
                     android:text="@string/load_from_a_file"
                     android:theme="@style/AppWidget.Button.Green"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyIdOrEmail" />
 
                 <Button
@@ -110,28 +110,28 @@
                     android:layout_marginTop="@dimen/margin_between_buttons"
                     android:text="@string/load_from_clipboard"
                     android:theme="@style/AppWidget.Button.Green"
-                    app:layout_constraintLeft_toLeftOf="@+id/guidelineLeft"
-                    app:layout_constraintRight_toLeftOf="@+id/guidelineRight"
+                    app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                    app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/buttonLoadFromFile" />
 
-                <android.support.constraint.Guideline
+                <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guidelineLeft"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     app:layout_constraintGuide_begin="@dimen/padding_guideline_setup_screen" />
 
-                <android.support.constraint.Guideline
+                <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guidelineRight"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     app:layout_constraintGuide_end="@dimen/padding_guideline_setup_screen" />
 
-            </android.support.constraint.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutPublicKeysContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -150,7 +150,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewContacts"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -163,7 +163,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/buttonImportAll"
                 tools:listitem="@layout/import_pgp_contact_item" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
 

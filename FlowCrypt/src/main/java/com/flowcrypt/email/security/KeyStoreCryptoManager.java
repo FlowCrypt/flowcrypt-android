@@ -12,7 +12,6 @@ import android.preference.PreferenceManager;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -46,6 +45,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a
@@ -122,9 +123,10 @@ public class KeyStoreCryptoManager {
   public static String normalizeAlgorithmParameterSpecString(String rawString) {
     if (!TextUtils.isEmpty(rawString) && rawString.length() >= SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
       return rawString.substring(0, SIZE_OF_ALGORITHM_PARAMETER_SPEC);
-    } else
+    } else {
       throw new IllegalArgumentException("The rawString must be equals or longer then " +
           SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes");
+    }
   }
 
   /**
@@ -155,8 +157,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(plainData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec
-          (algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
 
       return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
@@ -191,8 +192,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(encryptedData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec
-          (algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
       return new String(decodedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;

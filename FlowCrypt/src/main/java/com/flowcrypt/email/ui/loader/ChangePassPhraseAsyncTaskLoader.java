@@ -7,8 +7,6 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.ContentProviderResult;
 import android.content.Context;
-import android.support.annotation.Nullable;
-import android.support.v4.content.AsyncTaskLoader;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -25,6 +23,9 @@ import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.Nullable;
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * This loader can be used for changing a pass phrase of private keys of some account.

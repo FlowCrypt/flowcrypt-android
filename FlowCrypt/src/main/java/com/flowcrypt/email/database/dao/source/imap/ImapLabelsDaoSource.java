@@ -15,7 +15,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.Folder;
@@ -24,6 +23,8 @@ import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes the structure of IMAP labels for different accounts and methods which

@@ -39,9 +39,12 @@ public abstract class BaseRequest<T> {
 
     BaseRequest<?> that = (BaseRequest<?>) o;
 
-    if (queryMap != null ? !queryMap.equals(that.queryMap) : that.queryMap != null)
+    if (queryMap != null ? !queryMap.equals(that.queryMap) : that.queryMap != null) {
       return false;
-    if (apiName != that.apiName) return false;
+    }
+    if (apiName != that.apiName) {
+      return false;
+    }
     return requestModel != null ? requestModel.equals(that.requestModel) : that.requestModel
         == null;
 

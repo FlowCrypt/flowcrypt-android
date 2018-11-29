@@ -6,7 +6,6 @@
 package com.flowcrypt.email.js.tasks;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
@@ -33,6 +32,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+
+import androidx.annotation.NonNull;
 
 /**
  * This task can be used for decryption a raw MIME message.

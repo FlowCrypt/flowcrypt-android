@@ -7,10 +7,11 @@ package com.flowcrypt.email.ui.widget;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.hootsuite.nachos.chip.ChipSpan;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * This class describes the representation of {@link ChipSpan} with PGP existing.

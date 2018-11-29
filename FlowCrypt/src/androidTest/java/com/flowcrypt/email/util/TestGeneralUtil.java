@@ -8,8 +8,6 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 import android.os.Environment;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.internal.runner.junit4.statement.UiThreadStatement;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -28,6 +26,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * @author Denis Bondarenko
@@ -56,27 +57,28 @@ public class TestGeneralUtil {
   public static void saveKeyToDatabase(String privetKey, String passphrase, KeyDetails.Type type) throws Throwable {
     KeysDaoSource keysDaoSource = new KeysDaoSource();
     KeyDetails keyDetails = new KeyDetails(privetKey, type);
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
         .getTargetContext());
     String armoredPrivateKey = keyDetails.getValue();
 
-    Js js = new Js(InstrumentationRegistry.getTargetContext(), null);
+    Js js = new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null);
     String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
     PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-    keysDaoSource.addRow(InstrumentationRegistry.getTargetContext(),
+    keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
 
-    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getTargetContext(), pgpKey.getLongid(),
+    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpKey
+            .getLongid(),
         pgpKey.getPrimaryUserId().getEmail());
 
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getTargetContext())
+        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
-            .refresh(InstrumentationRegistry.getTargetContext());
+            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
       }
     });
     Thread.sleep(1000);// Added timeout for a better sync between threads.
@@ -91,7 +93,7 @@ public class TestGeneralUtil {
   }
 
   public static File createFile(String fileName, String fileText) {
-    File file = new File(InstrumentationRegistry.getTargetContext().getExternalFilesDir(Environment
+    File file = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(Environment
         .DIRECTORY_DOCUMENTS), fileName);
     try (FileOutputStream outputStream = new FileOutputStream(file)) {
       outputStream.write(fileText.getBytes());

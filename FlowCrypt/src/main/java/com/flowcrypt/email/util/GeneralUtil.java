@@ -13,14 +13,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 
 import org.apache.commons.io.IOUtils;
 
@@ -28,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+
+import androidx.preference.PreferenceManager;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
@@ -48,12 +54,23 @@ public class GeneralUtil {
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
+  @SuppressWarnings("deprecation")
   public static boolean isInternetConnectionAvailable(Context context) {
-    ConnectivityManager connectivityManager =
-        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-    NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-    return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+      return networkInfo != null && networkInfo.isConnectedOrConnecting();
+    } else {
+      Network network = connManager.getActiveNetwork();
+      if (network != null) {
+        NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
+        return (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -235,9 +252,9 @@ public class GeneralUtil {
   }
 
   /**
-   * Generate a unique name for {@link android.support.test.espresso.IdlingResource}
+   * Generate a unique name for {@link androidx.test.espresso.IdlingResource}
    *
-   * @param aClass The class where we will use {@link android.support.test.espresso.IdlingResource}
+   * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
    * @return A generated name.
    */
   public static String generateNameForIdlingResources(Class<?> aClass) {
@@ -265,5 +282,32 @@ public class GeneralUtil {
     ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
     ActivityManager.getMyMemoryState(appProcessInfo);
     return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE);
+  }
+
+  /**
+   * Generate order number for an attachment. This value will be used for the notifications ordering.
+   *
+   * @param context Interface to global information about an application environment.
+   * @return The generated order number.
+   */
+  public static int genAttOrderId(Context context) {
+    int lastId = SharedPreferencesHelper.getInt(PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
+
+    lastId++;
+
+    SharedPreferencesHelper.setInt(PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
+
+    return lastId;
+  }
+
+  /**
+   * This method checks is it a debug build.
+   *
+   * @return true - if the current build is a debug build.
+   */
+  public static boolean isDebug() {
+    return "debug".equals(BuildConfig.BUILD_TYPE);
   }
 }

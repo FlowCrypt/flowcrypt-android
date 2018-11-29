@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.email;
 
-import android.support.annotation.NonNull;
-
 import javax.mail.Message;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -16,6 +14,8 @@ import javax.mail.search.OrTerm;
 import javax.mail.search.RecipientTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
+
+import androidx.annotation.NonNull;
 
 /**
  * This class describes methods for search private key backups.

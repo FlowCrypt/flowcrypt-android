@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textViewHeader"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:gravity="center"
+            android:text="@string/public_key_below_is_safe_to_share"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnShowPubKey"
+            style="@style/AppWidget.Button.Green"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content"
+            android:text="@string/show_public_key"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewHeader" />
+
+        <Button
+            android:id="@+id/btnCopyToClipboard"
+            style="@style/AppWidget.Button.Green"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content"
+            android:text="@string/copy_to_clipboard"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
+
+        <Button
+            android:id="@+id/btnSaveToFile"
+            style="@style/AppWidget.Button.Green"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content"
+            android:text="@string/save_to_file"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.Button.Green"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
+
+        <TextView
+            android:id="@+id/textViewKeyWords"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
+            tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
+
+        <TextView
+            android:id="@+id/textViewFingerprint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewKeyWords"
+            tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+        <TextView
+            android:id="@+id/textViewLongId"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+            tools:text="Longid: 0045 .... 045E" />
+
+        <TextView
+            android:id="@+id/textViewDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewLongId"
+            tools:text="Date: Nov 3, 2017" />
+
+        <TextView
+            android:id="@+id/textViewUsers"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewDate"
+            tools:text="Users: email@domain.com, email2@domain.com" />
+
+        <Button
+            android:id="@+id/btnShowPrKey"
+            style="@style/AppWidget.Button.Red"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/default_margin_content"
+            android:text="@string/show_private_key"
+            android:textAllCaps="true"
+            android:theme="@style/AppWidget.Button.Red"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUsers" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

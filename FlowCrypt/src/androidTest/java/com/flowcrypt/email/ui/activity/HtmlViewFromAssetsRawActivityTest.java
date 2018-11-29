@@ -7,10 +7,6 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
@@ -22,12 +18,17 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withParent;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withParent;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
 /**
@@ -49,24 +50,24 @@ public class HtmlViewFromAssetsRawActivityTest extends BaseTest {
 
   @Test
   public void testShowPrivacyTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.privacy));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.privacy));
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   @Test
   public void testShowTermsTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.terms));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.terms));
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   @Test
   public void testShowSecurityTitle() {
-    startActivity(InstrumentationRegistry.getTargetContext().getString(R.string.security));
+    startActivity(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.security));
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
   private void startActivity(String title) {
-    Context targetContext = InstrumentationRegistry.getTargetContext();
+    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, HtmlViewFromAssetsRawActivity.class);
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title);
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm");
