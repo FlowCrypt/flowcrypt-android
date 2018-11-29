@@ -105,7 +105,7 @@ android {
             signingConfig signingConfigs.release
             shrinkResources true
             minifyEnabled true
-            proguardFiles 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId

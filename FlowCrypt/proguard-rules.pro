@@ -1,12 +1,11 @@
 #/*
-# * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
-# * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+# * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
 # * Contributors: DenBond7
 # */
 
 # Add project specific ProGuard rules here.
 # By default, the flags in this file are appended to flags specified
-# in E:\AndroidSdkTools/tools/proguard/proguard-android.txt
+# in the default proguard-android.txt
 # You can edit the include path and order by changing the proguardFiles
 # directive in build.gradle.
 #
@@ -31,13 +30,16 @@
 #-renamesourcefileattribute SourceFile
 
 ############################################# Android ##############################################
--keep class android.support.** { *; }
--keep interface android.support.** { *; }
--dontwarn android.support.**
+# Remove Logging statements
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** e(...);
+    public static *** i(...);
+}
 
 ####################################### Application config #########################################
 -dontobfuscate
--optimizations !code/simplification/arithmetic,!field/*,!class/merging/*,!code/allocation/variable
 
 -keep class com.flowcrypt.email.** { *; }
 -keep interface com.flowcrypt.email.** { *; }
@@ -52,14 +54,6 @@
 -keepclassmembernames interface com.flowcrypt.email.** { *; }
 -keepclassmembernames enum com.flowcrypt.email.** { *; }
 -dontwarn com.flowcrypt.email.**
-
-# Remove Logging statements
--assumenosideeffects class android.util.Log {
-    public static *** d(...);
-    public static *** v(...);
-    public static *** e(...);
-    public static *** i(...);
-}
 
 ########################################## GSON ####################################################
 # Gson uses generic type information stored in a class file when working with fields. Proguard
