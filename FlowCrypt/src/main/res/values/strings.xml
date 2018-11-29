@@ -416,4 +416,5 @@ icelanders prefer real sauna</font>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
+    <string name="no_key_available">No key available for your email account</string>
 </resources>
