@@ -297,7 +297,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getImapSecurityTypeOption()))).perform(click());
+        matchOption(authCredentials.getImapOpt()))).perform(click());
     onView(withId(R.id.editTextImapPort)).perform(clearText(),
         typeText(String.valueOf(authCredentials.getImapPort())), closeSoftKeyboard());
 
@@ -305,7 +305,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getSmtpSecurityTypeOption()))).perform(click());
+        matchOption(authCredentials.getSmtpOpt()))).perform(click());
     onView(withId(R.id.editTextSmtpPort)).perform(clearText(),
         typeText(String.valueOf(authCredentials.getSmtpPort())), closeSoftKeyboard());
 

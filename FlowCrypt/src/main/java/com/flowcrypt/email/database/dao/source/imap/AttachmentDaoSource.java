@@ -84,8 +84,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
     if (attachmentInfo.getUri() != null) {
       contentValues.put(COL_FILE_URI, attachmentInfo.getUri().toString());
     }
-    contentValues.put(COL_FORWARDED_FOLDER, attachmentInfo.getForwardedFolder());
-    contentValues.put(COL_FORWARDED_UID, attachmentInfo.getForwardedUid());
+    contentValues.put(COL_FORWARDED_FOLDER, attachmentInfo.getFwdFolder());
+    contentValues.put(COL_FORWARDED_UID, attachmentInfo.getFwdUid());
     return contentValues;
   }
 
@@ -109,8 +109,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
     if (!TextUtils.isEmpty(uriString)) {
       attachmentInfo.setUri(Uri.parse(uriString));
     }
-    attachmentInfo.setForwardedFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
-    attachmentInfo.setForwardedUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
+    attachmentInfo.setFwdFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
+    attachmentInfo.setFwdUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
     attachmentInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
         && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
     return attachmentInfo;

@@ -178,8 +178,8 @@ public class MessageDaoSource extends BaseDaoSource {
     contentValues.put(COL_SENT_DATE, System.currentTimeMillis());
     contentValues.put(COL_SUBJECT, info.getSubject());
     contentValues.put(COL_FLAGS, MessageFlag.SEEN);
-    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAttachmentInfoArrayList()) ||
-        !CollectionUtils.isEmpty(info.getForwardedAttachmentInfoList()));
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAttachments()) ||
+        !CollectionUtils.isEmpty(info.getForwardedAttachments()));
     return contentValues;
   }
 
@@ -566,12 +566,12 @@ public class MessageDaoSource extends BaseDaoSource {
         (COL_FLAGS))));
     generalMessageDetails.setRawMessageWithoutAttachments(
         cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
-    generalMessageDetails.setMessageHasAttachment(cursor.getInt(cursor.getColumnIndex
+    generalMessageDetails.setHasAttachments(cursor.getInt(cursor.getColumnIndex
         (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
     generalMessageDetails.setEncrypted(cursor.getInt(cursor.getColumnIndex
         (COL_IS_ENCRYPTED)) == 1);
 
-    generalMessageDetails.setMessageState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
+    generalMessageDetails.setMsgState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
     generalMessageDetails.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
 
     try {
@@ -596,7 +596,7 @@ public class MessageDaoSource extends BaseDaoSource {
       e.printStackTrace();
     }
 
-    generalMessageDetails.setAttachmentsDirectory(cursor.getString(cursor.getColumnIndex
+    generalMessageDetails.setAttachmentsDir(cursor.getString(cursor.getColumnIndex
         (COL_ATTACHMENTS_DIRECTORY)));
 
     return generalMessageDetails;
@@ -869,7 +869,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param label   The label name.
    * @return The list of UID of selected messages in the database for some label.
    */
-  public List<Long> getUIDsOfMessagesWhichWereNotCheckedToEncryption(Context context, String email, String label) {
+  public List<Long> getNotCheckedUIDs(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     List<Long> uidList = new ArrayList<>();
 
@@ -1061,7 +1061,7 @@ public class MessageDaoSource extends BaseDaoSource {
           JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
               generalMessageDetails.getEmail()).size());
 
-      if (generalMessageDetails.isMessageHasAttachment()) {
+      if (generalMessageDetails.hasAttachments()) {
         AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
 
         List<AttachmentInfo> attachmentInfoList =
@@ -1072,10 +1072,10 @@ public class MessageDaoSource extends BaseDaoSource {
           new AttachmentDaoSource().deleteAttachments(context, generalMessageDetails.getEmail(),
               generalMessageDetails.getLabel(), generalMessageDetails.getUid());
 
-          if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+          if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDir())) {
             try {
               FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
-                  Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDirectory()));
+                  Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDir()));
             } catch (IOException e) {
               e.printStackTrace();
             }

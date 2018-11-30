@@ -179,7 +179,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
               if (!CollectionUtils.isEmpty(attachmentInfoList)) {
                 for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                  attachmentInfo.setCanBeDeleted(false);
+                  attachmentInfo.setProtected(true);
                 }
                 sendTemplateMessageWithPublicKey(attachmentInfoList.get(0));
               }
@@ -265,7 +265,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             }
           }
 
-          incomingMessageInfo.setAttachmentInfoList(attachmentInfoList);
+          incomingMessageInfo.setAttachments(attachmentInfoList);
         }
         startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
             MessageType.FORWARD, messageEncryptionType));
@@ -448,7 +448,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     List<AttachmentInfo> attachmentInfoList = null;
     if (attachmentInfo != null) {
       attachmentInfoList = new ArrayList<>();
-      attachmentInfo.setCanBeDeleted(false);
+      attachmentInfo.setProtected(true);
       attachmentInfoList.add(attachmentInfo);
     }
 
@@ -590,7 +590,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   private void showAttachmentsIfTheyExist() {
-    if (generalMessageDetails != null && generalMessageDetails.isMessageHasAttachment()) {
+    if (generalMessageDetails != null && generalMessageDetails.hasAttachments()) {
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
       if (!CollectionUtils.isEmpty(attachmentInfoList)) {
@@ -648,7 +648,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   private void updateMessageView() {
     layoutMessageParts.removeAllViews();
-    if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+    if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMsg())) {
       EmailWebView emailWebView = new EmailWebView(getContext());
       emailWebView.configure();
 
@@ -658,7 +658,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       layoutParams.setMargins(margin, 0, margin, 0);
       emailWebView.setLayoutParams(layoutParams);
 
-      emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMessage()),
+      emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMsg()),
           "text/html", StandardCharsets.UTF_8.displayName(), null);
 
       layoutMessageParts.addView(emailWebView);

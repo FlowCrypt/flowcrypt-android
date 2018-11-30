@@ -44,10 +44,10 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     addPreferencesFromResource(R.xml.preferences_notifications_settings);
 
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+    AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
 
     boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(getContext(),
-        accountDao.getEmail());
+        account.getEmail());
 
     if (isShowOnlyEncryptedMessages) {
       notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,

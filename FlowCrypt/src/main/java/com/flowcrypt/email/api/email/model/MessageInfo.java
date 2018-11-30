@@ -9,7 +9,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Simple POJO class which describe a message model.
+ * Simple POJO class which describe a msg model.
  *
  * @author DenBond7
  * Date: 04.05.2017
@@ -32,14 +32,14 @@ public class MessageInfo implements Parcelable {
   };
 
   private String subject;
-  private String message;
+  private String msg;
 
   public MessageInfo() {
   }
 
   protected MessageInfo(Parcel in) {
     this.subject = in.readString();
-    this.message = in.readString();
+    this.msg = in.readString();
   }
 
   @Override
@@ -50,14 +50,14 @@ public class MessageInfo implements Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.subject);
-    dest.writeString(this.message);
+    dest.writeString(this.msg);
   }
 
   @Override
   public String toString() {
     return "MessageInfo{" +
         "subject='" + subject + '\'' +
-        ", message='" + message + '\'' +
+        ", msg='" + msg + '\'' +
         '}';
   }
 
@@ -70,10 +70,10 @@ public class MessageInfo implements Parcelable {
   }
 
   public String getMessage() {
-    return message;
+    return msg;
   }
 
   public void setMessage(String message) {
-    this.message = message;
+    this.msg = message;
   }
 }

@@ -64,7 +64,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   private Button buttonBackupAction;
 
   private Uri destinationUri;
-  private AccountDao accountDao;
+  private AccountDao account;
 
   private boolean isPrivateKeySendingNow;
   private boolean isPrivateKeySavingNow;
@@ -73,7 +73,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     initViews();
-    accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    account = new AccountDaoSource().getActiveAccountInformation(this);
     countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
         (BackupKeysActivity.class), GeneralUtil.isDebug());
     countingIdlingResource.increment();
@@ -112,7 +112,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 @Override
                 public void onClick(View v) {
                   startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else if (e instanceof DifferentPassPhrasesException) {
@@ -124,7 +124,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 @Override
                 public void onClick(View v) {
                   startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else if (e instanceof NoPrivateKeysAvailableException) {
@@ -180,9 +180,9 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     switch (v.getId()) {
       case R.id.buttonBackupAction:
         if (CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-            (getApplicationContext(), accountDao.getEmail()))) {
+            (getApplicationContext(), account.getEmail()))) {
           showInfoSnackbar(getRootView(), getString(R.string.there_are_no_private_keys,
-              accountDao.getEmail()), Snackbar.LENGTH_LONG);
+              account.getEmail()), Snackbar.LENGTH_LONG);
         } else {
           switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
             case R.id.radioButtonEmail:
@@ -268,7 +268,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
       case R.id.loader_id_save_private_key_as_file:
         isPrivateKeySavingNow = true;
         UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-        return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(), accountDao, destinationUri);
+        return new SavePrivateKeyAsFileAsyncTaskLoader(getApplicationContext(), account, destinationUri);
       default:
         return new Loader<>(this);
     }
@@ -321,7 +321,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 @Override
                 public void onClick(View v) {
                   startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else if (e instanceof DifferentPassPhrasesException) {
@@ -333,7 +333,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 @Override
                 public void onClick(View v) {
                   startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      accountDao), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else {
@@ -377,7 +377,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);
-    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(accountDao.getEmail()));
+    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account.getEmail()));
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
   }
 }

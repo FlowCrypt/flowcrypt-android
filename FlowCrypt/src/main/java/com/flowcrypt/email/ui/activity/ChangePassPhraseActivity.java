@@ -43,9 +43,9 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   public static final int REQUEST_CODE_BACKUP_WITH_OPTION = 100;
 
-  public static Intent newIntent(Context context, AccountDao accountDao) {
+  public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, ChangePassPhraseActivity.class);
-    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
+    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account);
     return intent;
   }
 
@@ -119,14 +119,14 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
         isBackEnable = false;
         UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-        return new ChangePassPhraseAsyncTaskLoader(this, accountDao,
+        return new ChangePassPhraseAsyncTaskLoader(this, account,
             editTextKeyPassword.getText().toString());
 
       case R.id.loader_id_load_private_key_backups_from_email:
-        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       case R.id.loader_id_save_backup_to_inbox:
-        return new SaveBackupToInboxAsyncTaskLoader(this, accountDao);
+        return new SaveBackupToInboxAsyncTaskLoader(this, account);
 
       default:
         return new Loader<>(this);

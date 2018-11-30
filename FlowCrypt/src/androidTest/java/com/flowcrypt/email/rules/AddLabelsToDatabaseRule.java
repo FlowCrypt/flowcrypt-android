@@ -24,11 +24,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 public class AddLabelsToDatabaseRule implements TestRule {
-  private AccountDao accountDao;
+  private AccountDao account;
   private List<Folder> folders;
 
-  public AddLabelsToDatabaseRule(AccountDao accountDao, List<Folder> folders) {
-    this.accountDao = accountDao;
+  public AddLabelsToDatabaseRule(AccountDao account, List<Folder> folders) {
+    this.account = account;
     this.folders = folders;
   }
 
@@ -45,7 +45,7 @@ public class AddLabelsToDatabaseRule implements TestRule {
 
   private void saveLabelsToDatabase() {
     ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
-    imapLabelsDaoSource.addRows(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao.getEmail
+    imapLabelsDaoSource.addRows(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getEmail
         (), folders);
   }
 }

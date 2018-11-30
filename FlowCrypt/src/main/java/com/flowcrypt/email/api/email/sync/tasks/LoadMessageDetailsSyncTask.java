@@ -56,12 +56,12 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws
       Exception {
     IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
     imapFolder.open(Folder.READ_WRITE);
 
-    if (syncListener != null) {
+    if (listener != null) {
       String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
         public Object doCommand(IMAPProtocol imapProtocol)
             throws ProtocolException {
@@ -103,7 +103,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
         message.setFlag(Flags.Flag.SEEN, true);
       }
 
-      syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, message, rawMessage,
+      listener.onMessageDetailsReceived(account, localFolder, imapFolder, uid, message, rawMessage,
           ownerKey, requestCode);
     }
 

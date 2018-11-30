@@ -47,11 +47,11 @@ public class GeneralMessageDetails implements Parcelable {
   private InternetAddress[] cc;
   private String subject;
   private String[] flags;
-  private String rawMessageWithoutAttachments;
-  private boolean isMessageHasAttachment;
+  private String rawMessageWithoutAtts;
+  private boolean hasAtts;
   private boolean isEncrypted;
-  private MessageState messageState;
-  private String attachmentsDirectory;
+  private MessageState msgState;
+  private String attsDir;
   private String errorMsg;
 
   public GeneralMessageDetails() {
@@ -68,12 +68,12 @@ public class GeneralMessageDetails implements Parcelable {
     this.cc = (InternetAddress[]) in.readSerializable();
     this.subject = in.readString();
     this.flags = in.createStringArray();
-    this.rawMessageWithoutAttachments = in.readString();
-    this.isMessageHasAttachment = in.readByte() != 0;
+    this.rawMessageWithoutAtts = in.readString();
+    this.hasAtts = in.readByte() != 0;
     this.isEncrypted = in.readByte() != 0;
     int tmpMessageState = in.readInt();
-    this.messageState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
-    this.attachmentsDirectory = in.readString();
+    this.msgState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
+    this.attsDir = in.readString();
     this.errorMsg = in.readString();
   }
 
@@ -90,11 +90,11 @@ public class GeneralMessageDetails implements Parcelable {
         ", cc=" + Arrays.toString(cc) +
         ", subject='" + subject + '\'' +
         ", flags=" + Arrays.toString(flags) +
-        ", rawMessageWithoutAttachments='" + rawMessageWithoutAttachments + '\'' +
-        ", isMessageHasAttachment=" + isMessageHasAttachment +
+        ", rawMessageWithoutAtts='" + rawMessageWithoutAtts + '\'' +
+        ", hasAtts=" + hasAtts +
         ", isEncrypted=" + isEncrypted +
-        ", messageState=" + messageState +
-        ", attachmentsDirectory=" + attachmentsDirectory +
+        ", msgState=" + msgState +
+        ", attsDir=" + attsDir +
         '}';
   }
 
@@ -106,7 +106,7 @@ public class GeneralMessageDetails implements Parcelable {
     return uid == that.uid &&
         receivedDateInMillisecond == that.receivedDateInMillisecond &&
         sentDateInMillisecond == that.sentDateInMillisecond &&
-        isMessageHasAttachment == that.isMessageHasAttachment &&
+        hasAtts == that.hasAtts &&
         isEncrypted == that.isEncrypted &&
         Objects.equals(email, that.email) &&
         Objects.equals(label, that.label) &&
@@ -115,16 +115,16 @@ public class GeneralMessageDetails implements Parcelable {
         Arrays.equals(cc, that.cc) &&
         Objects.equals(subject, that.subject) &&
         Arrays.equals(flags, that.flags) &&
-        Objects.equals(rawMessageWithoutAttachments, that.rawMessageWithoutAttachments) &&
-        messageState == that.messageState &&
-        Objects.equals(attachmentsDirectory, that.attachmentsDirectory) &&
+        Objects.equals(rawMessageWithoutAtts, that.rawMessageWithoutAtts) &&
+        msgState == that.msgState &&
+        Objects.equals(attsDir, that.attsDir) &&
         Objects.equals(errorMsg, that.errorMsg);
   }
 
   @Override
   public int hashCode() {
     int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
-        rawMessageWithoutAttachments, isMessageHasAttachment, isEncrypted, messageState, attachmentsDirectory,
+        rawMessageWithoutAtts, hasAtts, isEncrypted, msgState, attsDir,
         errorMsg);
     result = 31 * result + Arrays.hashCode(from);
     result = 31 * result + Arrays.hashCode(to);
@@ -150,11 +150,11 @@ public class GeneralMessageDetails implements Parcelable {
     dest.writeSerializable(this.cc);
     dest.writeString(this.subject);
     dest.writeStringArray(this.flags);
-    dest.writeString(this.rawMessageWithoutAttachments);
-    dest.writeByte(this.isMessageHasAttachment ? (byte) 1 : (byte) 0);
+    dest.writeString(this.rawMessageWithoutAtts);
+    dest.writeByte(this.hasAtts ? (byte) 1 : (byte) 0);
     dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
-    dest.writeInt(this.messageState == null ? -1 : this.messageState.ordinal());
-    dest.writeString(this.attachmentsDirectory);
+    dest.writeInt(this.msgState == null ? -1 : this.msgState.ordinal());
+    dest.writeString(this.attsDir);
     dest.writeString(this.errorMsg);
   }
 
@@ -243,19 +243,19 @@ public class GeneralMessageDetails implements Parcelable {
   }
 
   public String getRawMessageWithoutAttachments() {
-    return rawMessageWithoutAttachments;
+    return rawMessageWithoutAtts;
   }
 
   public void setRawMessageWithoutAttachments(String rawMessageWithoutAttachments) {
-    this.rawMessageWithoutAttachments = rawMessageWithoutAttachments;
+    this.rawMessageWithoutAtts = rawMessageWithoutAttachments;
   }
 
-  public boolean isMessageHasAttachment() {
-    return isMessageHasAttachment;
+  public boolean hasAttachments() {
+    return hasAtts;
   }
 
-  public void setMessageHasAttachment(boolean messageHasAttachment) {
-    isMessageHasAttachment = messageHasAttachment;
+  public void setHasAttachments(boolean hasAtts) {
+    this.hasAtts = hasAtts;
   }
 
   public boolean isEncrypted() {
@@ -266,20 +266,20 @@ public class GeneralMessageDetails implements Parcelable {
     isEncrypted = encrypted;
   }
 
-  public MessageState getMessageState() {
-    return messageState;
+  public MessageState getMsgState() {
+    return msgState;
   }
 
-  public void setMessageState(MessageState messageState) {
-    this.messageState = messageState;
+  public void setMsgState(MessageState msgState) {
+    this.msgState = msgState;
   }
 
-  public String getAttachmentsDirectory() {
-    return attachmentsDirectory;
+  public String getAttachmentsDir() {
+    return attsDir;
   }
 
-  public void setAttachmentsDirectory(String attachmentsDirectory) {
-    this.attachmentsDirectory = attachmentsDirectory;
+  public void setAttachmentsDir(String attachmentsDirectory) {
+    this.attsDir = attachmentsDirectory;
   }
 
   public String getErrorMsg() {

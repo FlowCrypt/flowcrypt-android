@@ -39,16 +39,16 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws
       Exception {
     IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
     imapFolder.open(Folder.READ_ONLY);
 
     int messagesCount = imapFolder.getMessageCount();
 
-    if (syncListener != null) {
+    if (listener != null) {
       if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-        syncListener.onMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onMessagesReceived(account, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         Message[] messages;
 
@@ -66,7 +66,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
 
         imapFolder.fetch(messages, fetchProfile);
 
-        syncListener.onMessagesReceived(accountDao, folder, imapFolder, messages, ownerKey, requestCode);
+        listener.onMessagesReceived(account, folder, imapFolder, messages, ownerKey, requestCode);
       }
     }
 

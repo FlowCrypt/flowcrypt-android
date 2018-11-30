@@ -27,11 +27,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 public class UpdateAccountRule implements TestRule {
-  private AccountDao accountDao;
+  private AccountDao account;
   private ContentValues contentValues;
 
-  public UpdateAccountRule(AccountDao accountDao, ContentValues contentValues) {
-    this.accountDao = accountDao;
+  public UpdateAccountRule(AccountDao account, ContentValues contentValues) {
+    this.account = account;
     this.contentValues = contentValues;
   }
 
@@ -49,6 +49,6 @@ public class UpdateAccountRule implements TestRule {
   private void updateAccount() {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.updateAccountInformation(targetContext, accountDao.getAccount(), contentValues);
+    accountDaoSource.updateAccountInformation(targetContext, account.getAccount(), contentValues);
   }
 }

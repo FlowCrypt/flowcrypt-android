@@ -35,18 +35,16 @@ import javax.mail.UIDFolder;
 public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncTask {
   protected com.flowcrypt.email.api.email.Folder localFolder;
 
-  public CheckNewMessagesSyncTask(String ownerKey, int requestCode,
-                                  com.flowcrypt.email.api.email.Folder localFolder) {
+  public CheckNewMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder) {
     super(ownerKey, requestCode, localFolder);
     this.localFolder = localFolder;
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-      throws Exception {
-    if (syncListener != null) {
-      boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          syncListener.getContext(), accountDao.getEmail());
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    if (listener != null) {
+      boolean isOnlyEncryptedMsgsEnabled = new AccountDaoSource().isShowOnlyEncryptedMessages(
+          listener.getContext(), account.getEmail());
 
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
       imapFolder.open(Folder.READ_ONLY);
@@ -55,13 +53,13 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
 
       Message[] newMessages = new Message[0];
 
-      int newestCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(syncListener.getContext(),
-          accountDao.getEmail(), localFolder.getFolderAlias());
+      int newestCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(listener.getContext(),
+          account.getEmail(), localFolder.getFolderAlias());
 
       if (newestCachedUID < nextUID - 1) {
-        if (isShowOnlyEncryptedMessages) {
+        if (isOnlyEncryptedMsgsEnabled) {
           Message[] foundMessages =
-              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));
+              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -84,7 +82,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
       }
 
       LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
-      if (isShowOnlyEncryptedMessages) {
+      if (isOnlyEncryptedMsgsEnabled) {
         for (Message message : newMessages) {
           booleanLongSparseArray.put(imapFolder.getUID(message), true);
         }
@@ -98,7 +96,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
         booleanLongSparseArray = EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList);
       }
 
-      syncListener.onNewMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
+      listener.onNewMessagesReceived(account, localFolder, imapFolder, newMessages,
           booleanLongSparseArray, ownerKey, requestCode);
 
       imapFolder.close(false);

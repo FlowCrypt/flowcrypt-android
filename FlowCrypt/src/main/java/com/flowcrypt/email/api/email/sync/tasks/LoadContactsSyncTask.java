@@ -58,11 +58,11 @@ public class LoadContactsSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
       throws Exception {
-    if (syncListener != null) {
+    if (listener != null) {
       FoldersManager foldersManager
-          = FoldersManager.fromDatabase(syncListener.getContext(), accountDao.getEmail());
+          = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
 
       if (foldersManager.getFolderSent() != null) {
         IMAPFolder imapFolder =
@@ -86,7 +86,7 @@ public class LoadContactsSyncTask extends BaseSyncTask {
           }
 
           ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-          List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(syncListener
+          List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener
               .getContext());
 
           Set<String> contactsInDatabaseSet = new HashSet<>();
@@ -118,14 +118,14 @@ public class LoadContactsSyncTask extends BaseSyncTask {
             }
           }
 
-          contactsDaoSource.updatePgpContacts(syncListener.getContext(), updateCandidate);
-          contactsDaoSource.addRows(syncListener.getContext(), newCandidate);
+          contactsDaoSource.updatePgpContacts(listener.getContext(), updateCandidate);
+          contactsDaoSource.addRows(listener.getContext(), newCandidate);
 
           ContentValues contentValues = new ContentValues();
           contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
 
-          new AccountDaoSource().updateAccountInformation(syncListener.getContext(),
-              accountDao.getAccount(), contentValues);
+          new AccountDaoSource().updateAccountInformation(listener.getContext(),
+              account.getAccount(), contentValues);
         }
 
         imapFolder.close(false);

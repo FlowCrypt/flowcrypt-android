@@ -61,9 +61,9 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
         @Override
         protected Intent getActivityIntent() {
           Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-          AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
+          AccountDao account = AccountDaoManager.getDefaultAccountDao();
           Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
-          result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
+          result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, account);
           result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
           return result;
         }

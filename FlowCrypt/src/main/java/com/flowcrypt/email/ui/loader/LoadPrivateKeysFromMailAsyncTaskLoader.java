@@ -47,14 +47,14 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
   /**
    * An user account.
    */
-  private AccountDao accountDao;
+  private AccountDao account;
   private LoaderResult data;
   private boolean isActionStarted;
   private boolean isLoaderReset;
 
-  public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao accountDao) {
+  public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao account) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
   }
 
   @Override
@@ -76,12 +76,12 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
+      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
 
-      switch (accountDao.getAccountType()) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
           privateKeyDetailsList.addAll(
-              EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), accountDao, session, js));
+              EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), account, session, js));
           break;
 
         default:
@@ -123,7 +123,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(getContext(), accountDao, session);
+      store = OpenStoreHelper.openAndConnectToStore(getContext(), account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
@@ -132,7 +132,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
           folder.open(Folder.READ_ONLY);
 
           Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
+              SearchBackupsUtil.generateSearchTerms(account.getEmail()));
 
           for (Message message : foundMessages) {
             String backup = EmailUtil.getKeyFromMessageIfItExists(message);

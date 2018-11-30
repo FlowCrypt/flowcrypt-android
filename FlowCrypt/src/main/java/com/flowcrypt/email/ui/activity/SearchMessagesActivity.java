@@ -43,7 +43,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
       "EXTRA_KEY_FOLDER", SearchMessagesActivity.class);
 
   private SearchView searchView;
-  private AccountDao accountDao;
+  private AccountDao account;
   private String initQuery;
   private Folder folder;
 
@@ -74,7 +74,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     super.onCreate(savedInstanceState);
 
     //// TODO-denbond7: 26.04.2018 Need to add saving the query and restoring it
-    this.accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    this.account = new AccountDaoSource().getActiveAccountInformation(this);
     if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_FOLDER)) {
       this.initQuery = getIntent().getStringExtra(EXTRA_KEY_QUERY);
       this.folder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
@@ -161,7 +161,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   public boolean onQueryTextSubmit(String query) {
     this.initQuery = query;
 
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
       return true;
@@ -180,7 +180,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
 
   @Override
   public AccountDao getCurrentAccountDao() {
-    return accountDao;
+    return account;
   }
 
   @Override

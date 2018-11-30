@@ -87,11 +87,11 @@ public class EmailSyncManager {
 
   private volatile Future<?> idleSyncRunnableFuture;
   private volatile SyncListener syncListener;
-  private volatile AccountDao accountDao;
+  private volatile AccountDao account;
   private volatile boolean isIdleSupport = true;
 
-  public EmailSyncManager(AccountDao accountDao) {
-    this.accountDao = accountDao;
+  public EmailSyncManager(AccountDao account) {
+    this.account = account;
     this.activeSyncTaskBlockingQueue = new LinkedBlockingQueue<>();
     this.passiveSyncTaskBlockingQueue = new LinkedBlockingQueue<>();
     this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT);
@@ -206,7 +206,7 @@ public class EmailSyncManager {
    * Load contacts info from the SENT folder.
    */
   public void loadContactsInfoIfNeed() {
-    if (accountDao != null && !accountDao.isContactsLoaded()) {
+    if (account != null && !account.isContactsLoaded()) {
       //we need to update labels before we can use the SENT folder for retrieve contacts
       updateLabels(null, 0, passiveSyncTaskBlockingQueue);
       try {
@@ -398,12 +398,12 @@ public class EmailSyncManager {
   }
 
   public AccountDao getAccountDao() {
-    return accountDao;
+    return account;
   }
 
-  public void switchAccount(AccountDao accountDao) {
-    this.accountDao = accountDao;
-    if (accountDao != null) {
+  public void switchAccount(AccountDao account) {
+    this.account = account;
+    if (account != null) {
       this.isIdleSupport = true;
       beginSync(true);
     } else {
@@ -473,7 +473,7 @@ public class EmailSyncManager {
    */
   private void notifyAboutActionProgress(String ownerKey, int requestCode, int resultCode) {
     if (syncListener != null) {
-      syncListener.onActionProgress(accountDao, ownerKey, requestCode, resultCode);
+      syncListener.onActionProgress(account, ownerKey, requestCode, resultCode);
     }
   }
 
@@ -488,9 +488,9 @@ public class EmailSyncManager {
     }
 
     void resetConnectionIfNeed(SyncTask syncTask) throws MessagingException, ManualHandledException {
-      if (store != null && accountDao != null) {
-        if (accountDao.getAuthCredentials() != null) {
-          if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
+      if (store != null && account != null) {
+        if (account.getAuthCredentials() != null) {
+          if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCredentials()
               .getUsername())) {
             Log.d(tag, "Connection was reset!");
 
@@ -526,8 +526,8 @@ public class EmailSyncManager {
     void openConnectionToStore() throws IOException,
         GoogleAuthException, MessagingException {
       patchingSecurityProvider(syncListener.getContext());
-      session = OpenStoreHelper.getSessionForAccountDao(syncListener.getContext(), accountDao);
-      store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), accountDao, session);
+      session = OpenStoreHelper.getSessionForAccountDao(syncListener.getContext(), account);
+      store = OpenStoreHelper.openAndConnectToStore(syncListener.getContext(), account, session);
     }
 
     /**
@@ -564,14 +564,14 @@ public class EmailSyncManager {
         Log.d(tag, "Start a new task = " + syncTask.getClass().getSimpleName() + " for store "
             + store.toString());
 
-        if (syncTask.isUseSMTP()) {
+        if (syncTask.isSMTPRequired()) {
           notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
               R.id.progress_id_running_smtp_action);
-          syncTask.runSMTPAction(accountDao, session, store, syncListener);
+          syncTask.runSMTPAction(account, session, store, syncListener);
         } else {
           notifyAboutActionProgress(syncTask.getOwnerKey(), syncTask.getRequestCode(),
               R.id.progress_id_running_imap_action);
-          syncTask.runIMAPAction(accountDao, session, store, syncListener);
+          syncTask.runIMAPAction(account, session, store, syncListener);
         }
         Log.d(tag, "The task = " + syncTask.getClass().getSimpleName() + " completed");
       } catch (Exception e) {
@@ -581,11 +581,11 @@ public class EmailSyncManager {
             runSyncTask(syncTask, false);
           } else {
             ExceptionUtil.handleError(e);
-            syncTask.handleException(accountDao, e, syncListener);
+            syncTask.handleException(account, e, syncListener);
           }
         } else {
           ExceptionUtil.handleError(e);
-          syncTask.handleException(accountDao, e, syncListener);
+          syncTask.handleException(account, e, syncListener);
         }
       }
     }
@@ -641,7 +641,7 @@ public class EmailSyncManager {
 
           runIdleInboxIfNeed();
 
-          if (accountDao != null) {
+          if (account != null) {
             runSyncTask(syncTask, true);
           } else {
             //There is no an active account. Finishing a work.
@@ -669,7 +669,7 @@ public class EmailSyncManager {
 
           runIdleInboxIfNeed();
 
-          if (accountDao != null) {
+          if (account != null) {
             runSyncTask(syncTask, true);
           } else {
             //There is no an active account. Finishing a work.
@@ -705,7 +705,7 @@ public class EmailSyncManager {
       Thread.currentThread().setName(getClass().getSimpleName());
 
       FoldersManager foldersManager = FoldersManager.fromDatabase(syncListener.getContext(),
-          accountDao.getEmail());
+          account.getEmail());
       localFolder = foldersManager.findInboxFolder();
 
       if (localFolder == null) {
@@ -737,13 +737,13 @@ public class EmailSyncManager {
       if (message != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
         try {
           messageDaoSource.updateFlagsForLocalMessage(syncListener.getContext(),
-              accountDao.getEmail(),
+              account.getEmail(),
               localFolder.getFolderAlias(),
               remoteFolder.getUID(message),
               message.getFlags());
 
           if (syncListener != null) {
-            syncListener.onMessageChanged(accountDao, localFolder, remoteFolder, message, null, 0);
+            syncListener.onMessageChanged(account, localFolder, remoteFolder, message, null, 0);
           }
         } catch (MessagingException msgException) {
           msgException.printStackTrace();
@@ -801,9 +801,9 @@ public class EmailSyncManager {
     }
 
     void resetConnectionIfNeed() throws MessagingException, ManualHandledException {
-      if (store != null && accountDao != null) {
-        if (accountDao.getAuthCredentials() != null) {
-          if (!store.getURLName().getUsername().equalsIgnoreCase(accountDao.getAuthCredentials()
+      if (store != null && account != null) {
+        if (account.getAuthCredentials() != null) {
+          if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCredentials()
               .getUsername())) {
             Log.d(tag, "Connection was reset!");
             if (store != null) {

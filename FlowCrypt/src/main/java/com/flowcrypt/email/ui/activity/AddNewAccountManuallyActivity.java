@@ -186,7 +186,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.spinnerImapSecurityType:
         SecurityType securityTypeForImap = (SecurityType) parent.getAdapter().getItem(position);
         if (isImapSpinnerInitAfterStart) {
-          editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefaultImapPort()));
+          editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefImapPort()));
         } else {
           isImapSpinnerInitAfterStart = true;
         }
@@ -260,9 +260,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
 
       case R.id.loader_id_load_private_key_backups_from_email:
         UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
-        AccountDao accountDao = new AccountDao(authCredentials.getEmail(), null
+        AccountDao account = new AccountDao(authCredentials.getEmail(), null
             , authCredentials.getUsername(), null, null, null, authCredentials, false);
-        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       default:
         return new Loader<>(this);
@@ -297,9 +297,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_load_private_key_backups_from_email:
         ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
         if (keyDetailsList.isEmpty()) {
-          AccountDao accountDao = new AccountDao(authCredentials.getEmail(),
+          AccountDao account = new AccountDao(authCredentials.getEmail(),
               null, authCredentials.getUsername(), null, null, null, authCredentials, false);
-          startActivityForResult(CreateOrImportKeyActivity.newIntent(this, accountDao, true),
+          startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_ADD_NEW_ACCOUNT);
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
         } else {
@@ -418,7 +418,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     spinnerSmtpSecyrityType = findViewById(R.id.spinnerSmtpSecyrityType);
 
     ArrayAdapter<SecurityType> userAdapter = new ArrayAdapter<>(this,
-        android.R.layout.simple_spinner_dropdown_item, SecurityType.generateAvailableSecurityTypes(this));
+        android.R.layout.simple_spinner_dropdown_item, SecurityType.generateSecurityTypes(this));
 
     spinnerImapSecyrityType.setAdapter(userAdapter);
     spinnerSmtpSecyrityType.setAdapter(userAdapter);
@@ -452,7 +452,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
 
       int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();
       for (int i = 0; i < imapOptionsCount; i++) {
-        if (authCredentials.getImapSecurityTypeOption() ==
+        if (authCredentials.getImapOpt() ==
             ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOption()) {
           spinnerImapSecyrityType.setSelection(i);
         }
@@ -460,7 +460,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
 
       int smtpOptionsCount = spinnerSmtpSecyrityType.getAdapter().getCount();
       for (int i = 0; i < smtpOptionsCount; i++) {
-        if (authCredentials.getSmtpSecurityTypeOption() ==
+        if (authCredentials.getSmtpOpt() ==
             ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOption()) {
           spinnerSmtpSecyrityType.setSelection(i);
         }

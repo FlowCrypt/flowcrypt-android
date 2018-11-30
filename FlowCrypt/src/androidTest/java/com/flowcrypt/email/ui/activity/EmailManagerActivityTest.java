@@ -177,9 +177,9 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   @Test
   public void testAddNewAccount() {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
+    AccountDao account = AccountDaoManager.getDefaultAccountDao();
     Intent result = new Intent();
-    result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, accountDao);
+    result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, account);
     intending(hasComponent(new ComponentName(targetContext, AddNewAccountActivity.class)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, result));
 
@@ -188,8 +188,8 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     try {
       AccountDaoSource accountDaoSource = new AccountDaoSource();
-      accountDaoSource.addRow(targetContext, accountDao.getAuthCredentials());
-      accountDaoSource.setActiveAccount(targetContext, accountDao.getEmail());
+      accountDaoSource.addRow(targetContext, account.getAuthCredentials());
+      accountDaoSource.setActiveAccount(targetContext, account.getEmail());
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -198,7 +198,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     onView(withId(R.id.drawer_layout)).perform(open());
     onView(withId(R.id.textViewActiveUserEmail)).check(matches(isDisplayed()))
-        .check(matches(withText(accountDao.getEmail())));
+        .check(matches(withText(account.getEmail())));
   }
 
   @Test

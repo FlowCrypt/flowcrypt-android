@@ -38,9 +38,9 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
       throws Exception {
-    if (syncListener != null) {
+    if (listener != null) {
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
       imapFolder.open(Folder.READ_ONLY);
 
@@ -50,20 +50,20 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
 
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(syncListener.getContext(), accountDao
+      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(listener.getContext(), account
           .getEmail(), localFolder.getFolderAlias());
 
-      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
-          accountDao.getEmail(),
+      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(listener.getContext(),
+          account.getEmail(),
           localFolder.getFolderAlias());
 
       boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          syncListener.getContext(), accountDao.getEmail());
+          listener.getContext(), account.getEmail());
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
         if (isShowOnlyEncryptedMessages) {
           Message[] foundMessages =
-              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));
+              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -87,15 +87,15 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
 
       Message[] updatedMessages;
       if (isShowOnlyEncryptedMessages) {
-        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(syncListener.getContext(),
-            accountDao.getEmail(), localFolder.getFolderAlias());
+        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(listener.getContext(),
+            account.getEmail(), localFolder.getFolderAlias());
         updatedMessages = EmailUtil.getUpdatedMessagesByUID(imapFolder, oldestCachedUID, newestCachedUID);
       } else {
         int countOfNewMessages = newMessages != null ? newMessages.length : 0;
         updatedMessages = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
       }
 
-      syncListener.onRefreshMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
+      listener.onRefreshMessagesReceived(account, localFolder, imapFolder, newMessages,
           updatedMessages, ownerKey, requestCode);
 
       imapFolder.close(false);

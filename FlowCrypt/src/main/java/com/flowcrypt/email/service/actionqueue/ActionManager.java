@@ -58,10 +58,10 @@ public class ActionManager implements ActionResultReceiver.ResultReceiverCallBac
   /**
    * Check and add actions to the worker queue.
    *
-   * @param accountDao The {@link AccountDao} which has some actions.
+   * @param account The {@link AccountDao} which has some actions.
    */
-  public void checkAndAddActionsToQueue(AccountDao accountDao) {
-    List<Action> actions = actionQueueDaoSource.getActions(context, accountDao);
+  public void checkAndAddActionsToQueue(AccountDao account) {
+    List<Action> actions = actionQueueDaoSource.getActions(context, account);
     ArrayList<Action> candidates = new ArrayList<>();
     for (Action action : actions) {
       if (!completedActionsSet.contains(action.getId()) && runningActionsSparseArray.indexOfValue(action) < 0) {

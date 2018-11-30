@@ -51,7 +51,7 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws
       Exception {
     IMAPFolder sourceImapFolder =
         (IMAPFolder) store.getFolder(sourceFolderName.getServerFullFolderName());
@@ -80,20 +80,20 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
       destinationImapFolder.open(Folder.READ_WRITE);
       sourceImapFolder.moveMessages(messages, destinationImapFolder);
       if (isSingleMoving) {
-        syncListener.onMessageMoved(accountDao, sourceImapFolder, destinationImapFolder, messages[0],
+        listener.onMessageMoved(account, sourceImapFolder, destinationImapFolder, messages[0],
             ownerKey, requestCode);
       } else {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, messages,
+        listener.onMessagesMoved(account, sourceImapFolder, destinationImapFolder, messages,
             ownerKey, requestCode);
       }
 
       destinationImapFolder.close(false);
     } else {
       if (isSingleMoving) {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, null,
+        listener.onMessagesMoved(account, sourceImapFolder, destinationImapFolder, null,
             ownerKey, requestCode);
       } else {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, new Message[]{},
+        listener.onMessagesMoved(account, sourceImapFolder, destinationImapFolder, new Message[]{},
             ownerKey, requestCode);
       }
     }

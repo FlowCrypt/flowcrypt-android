@@ -31,11 +31,11 @@ import androidx.loader.content.AsyncTaskLoader;
 
 public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
   private Uri destinationUri;
-  private AccountDao accountDao;
+  private AccountDao account;
 
-  public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao accountDao, Uri destinationUri) {
+  public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao account, Uri destinationUri) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     this.destinationUri = destinationUri;
     onContentChanged();
   }
@@ -45,7 +45,7 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
       return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
-          SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao, false)) > 0, null);
+          SecurityUtils.generatePrivateKeysBackup(getContext(), js, account, false)) > 0, null);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);

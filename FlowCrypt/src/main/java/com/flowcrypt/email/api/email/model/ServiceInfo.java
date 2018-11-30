@@ -31,38 +31,37 @@ public class ServiceInfo implements Parcelable {
       return new ServiceInfo[size];
     }
   };
-  private boolean isToFieldEditEnable;
-  private boolean isFromFieldEditEnable;
-  private boolean isMessageEditEnable;
-  private boolean isSubjectEditEnable;
-  private boolean isMessageTypeCanBeSwitched;
-  private boolean isAddNewAttachmentsEnable;
-  private String systemMessage;
-  private List<AttachmentInfo> attachmentInfoList;
+  private boolean isToFieldEditEnabled;
+  private boolean isFromFieldEditEnabled;
+  private boolean isMsgEditEnabled;
+  private boolean isSubjEditEnabled;
+  private boolean isMsgTypeSwitchEnabled;
+  private boolean isAddNewAttEnabled;
+  private String systemMsg;
+  private List<AttachmentInfo> atts;
 
-  public ServiceInfo(boolean isToFieldEditEnable, boolean isFromFieldEditEnable, boolean isMessageEditEnable,
-                     boolean isSubjectEditEnable, boolean isMessageTypeCanBeSwitched, boolean
-                         isAddNewAttachmentsEnable,
-                     String systemMessage, List<AttachmentInfo> attachmentInfoList) {
-    this.isToFieldEditEnable = isToFieldEditEnable;
-    this.isFromFieldEditEnable = isFromFieldEditEnable;
-    this.isMessageEditEnable = isMessageEditEnable;
-    this.isSubjectEditEnable = isSubjectEditEnable;
-    this.isMessageTypeCanBeSwitched = isMessageTypeCanBeSwitched;
-    this.isAddNewAttachmentsEnable = isAddNewAttachmentsEnable;
-    this.systemMessage = systemMessage;
-    this.attachmentInfoList = attachmentInfoList;
+  public ServiceInfo(boolean isToFieldEditEnabled, boolean isFromFieldEditEnabled, boolean isMessageEditEnable,
+                     boolean isSubjectEditEnable, boolean isMsgTypeSwitchEnabled, boolean isAddNewAttachmentsEnable,
+                     String systemMsg, List<AttachmentInfo> atts) {
+    this.isToFieldEditEnabled = isToFieldEditEnabled;
+    this.isFromFieldEditEnabled = isFromFieldEditEnabled;
+    this.isMsgEditEnabled = isMessageEditEnable;
+    this.isSubjEditEnabled = isSubjectEditEnable;
+    this.isMsgTypeSwitchEnabled = isMsgTypeSwitchEnabled;
+    this.isAddNewAttEnabled = isAddNewAttachmentsEnable;
+    this.systemMsg = systemMsg;
+    this.atts = atts;
   }
 
   protected ServiceInfo(Parcel in) {
-    this.isToFieldEditEnable = in.readByte() != 0;
-    this.isFromFieldEditEnable = in.readByte() != 0;
-    this.isMessageEditEnable = in.readByte() != 0;
-    this.isSubjectEditEnable = in.readByte() != 0;
-    this.isMessageTypeCanBeSwitched = in.readByte() != 0;
-    this.isAddNewAttachmentsEnable = in.readByte() != 0;
-    this.systemMessage = in.readString();
-    this.attachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
+    this.isToFieldEditEnabled = in.readByte() != 0;
+    this.isFromFieldEditEnabled = in.readByte() != 0;
+    this.isMsgEditEnabled = in.readByte() != 0;
+    this.isSubjEditEnabled = in.readByte() != 0;
+    this.isMsgTypeSwitchEnabled = in.readByte() != 0;
+    this.isAddNewAttEnabled = in.readByte() != 0;
+    this.systemMsg = in.readString();
+    this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
   }
 
   @Override
@@ -72,46 +71,46 @@ public class ServiceInfo implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeByte(this.isToFieldEditEnable ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.isFromFieldEditEnable ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.isMessageEditEnable ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.isSubjectEditEnable ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.isMessageTypeCanBeSwitched ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.isAddNewAttachmentsEnable ? (byte) 1 : (byte) 0);
-    dest.writeString(this.systemMessage);
-    dest.writeTypedList(this.attachmentInfoList);
+    dest.writeByte(this.isToFieldEditEnabled ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isFromFieldEditEnabled ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isMsgEditEnabled ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isSubjEditEnabled ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isMsgTypeSwitchEnabled ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isAddNewAttEnabled ? (byte) 1 : (byte) 0);
+    dest.writeString(this.systemMsg);
+    dest.writeTypedList(this.atts);
   }
 
-  public boolean isToFieldEditEnable() {
-    return isToFieldEditEnable;
+  public boolean isToFieldEditEnabled() {
+    return isToFieldEditEnabled;
   }
 
-  public boolean isFromFieldEditEnable() {
-    return isFromFieldEditEnable;
+  public boolean isFromFieldEditEnabled() {
+    return isFromFieldEditEnabled;
   }
 
-  public boolean isMessageEditEnable() {
-    return isMessageEditEnable;
+  public boolean isMessageEditEnabled() {
+    return isMsgEditEnabled;
   }
 
-  public boolean isMessageTypeCanBeSwitched() {
-    return isMessageTypeCanBeSwitched;
+  public boolean isMessageTypeSwitchEnabled() {
+    return isMsgTypeSwitchEnabled;
   }
 
   public String getSystemMessage() {
-    return systemMessage;
+    return systemMsg;
   }
 
-  public List<AttachmentInfo> getAttachmentInfoList() {
-    return attachmentInfoList;
+  public List<AttachmentInfo> getAtts() {
+    return atts;
   }
 
-  public boolean isSubjectEditEnable() {
-    return isSubjectEditEnable;
+  public boolean isSubjectEditEnabled() {
+    return isSubjEditEnabled;
   }
 
-  public boolean isAddNewAttachmentsEnable() {
-    return isAddNewAttachmentsEnable;
+  public boolean isAddNewAttachmentEnabled() {
+    return isAddNewAttEnabled;
   }
 
   public static class Builder {

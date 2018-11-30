@@ -471,7 +471,7 @@ public class AttachmentDownloadManagerService extends Service {
       }
 
       File attachmentFile = prepareAttFile();
-      AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, attInfo.getEmail());
+      AccountDao account = new AccountDaoSource().getAccountInformation(context, attInfo.getEmail());
 
       try {
         checkMaxDecryptedFileSize();
@@ -494,8 +494,8 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
 
-        Session session = OpenStoreHelper.getAttachmentSession(context, accountDao);
-        Store store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+        Session session = OpenStoreHelper.getAttachmentSession(context, account);
+        Store store = OpenStoreHelper.openAndConnectToStore(context, account, session);
 
         com.flowcrypt.email.api.email.Folder folder = new ImapLabelsDaoSource()
             .getFolderByAlias(context, attInfo.getEmail(), attInfo.getFolder());

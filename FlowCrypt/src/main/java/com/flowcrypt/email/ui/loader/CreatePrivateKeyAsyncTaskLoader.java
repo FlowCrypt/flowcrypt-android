@@ -62,13 +62,13 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
   private static final int DEFAULT_KEY_SIZE = 2048;
 
   private final String passphrase;
-  private final AccountDao accountDao;
+  private final AccountDao account;
   private boolean isActionStarted;
   private LoaderResult data;
 
-  public CreatePrivateKeyAsyncTaskLoader(Context context, AccountDao accountDao, String passphrase) {
+  public CreatePrivateKeyAsyncTaskLoader(Context context, AccountDao account, String passphrase) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     this.passphrase = passphrase;
   }
 
@@ -109,17 +109,17 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       ActionQueueDaoSource actionQueueDaoSource = new ActionQueueDaoSource();
 
       if (!saveCreatedPrivateKeyAsBackupToInbox(pgpKey)) {
-        actionQueueDaoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(accountDao.getEmail(),
+        actionQueueDaoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(account.getEmail(),
             pgpKey.getLongid()));
       }
 
       if (!registerUserPublicKey(pgpKey)) {
-        actionQueueDaoSource.addAction(getContext(), new RegisterUserPublicKeyAction(accountDao.getEmail(),
+        actionQueueDaoSource.addAction(getContext(), new RegisterUserPublicKeyAction(account.getEmail(),
             pgpKey.toPublic().armor()));
       }
 
       if (!requestingTestMessageWithNewPublicKey(pgpKey)) {
-        actionQueueDaoSource.addAction(getContext(), new SendWelcomeTestEmailAction(accountDao.getEmail(),
+        actionQueueDaoSource.addAction(getContext(), new SendWelcomeTestEmailAction(account.getEmail(),
             pgpKey.toPublic().armor()));
       }
 
@@ -146,10 +146,10 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    */
   private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) {
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
-      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
-      Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), accountDao, session,
-          EmailUtil.generateAttachmentBodyPartWithPrivateKey(accountDao, pgpKey.armor()));
+      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
+      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, account);
+      Message message = EmailUtil.generateMessageWithPrivateKeysBackup(getContext(), account, session,
+          EmailUtil.generateAttachmentBodyPartWithPrivateKey(account, pgpKey.armor()));
       transport.sendMessage(message, message.getAllRecipients());
     } catch (Exception e) {
       e.printStackTrace();
@@ -165,13 +165,13 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    * @throws IOException Some exceptions can be throw.
    */
   private PgpKey createPgpKey() throws Exception {
-    PgpContact pgpContactMain = new PgpContact(accountDao.getEmail(), accountDao.getDisplayName());
+    PgpContact pgpContactMain = new PgpContact(account.getEmail(), account.getDisplayName());
     PgpContact[] pgpContacts;
-    switch (accountDao.getAccountType()) {
+    switch (account.getAccountType()) {
       case AccountDao.ACCOUNT_TYPE_GOOGLE:
         List<PgpContact> pgpContactList = new ArrayList<>();
         pgpContactList.add(pgpContactMain);
-        Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
+        Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
         ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
             .execute();
         for (SendAs alias : aliases.getSendAs()) {
@@ -203,7 +203,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
       Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
-          new InitialLegacySubmitModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+          new InitialLegacySubmitModel(account.getEmail(), pgpKey.toPublic().armor())).execute();
 
       InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
 
@@ -226,7 +226,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
       Response<TestWelcomeResponse> response = apiService.postTestWelcome(
-          new TestWelcomeModel(accountDao.getEmail(), pgpKey.toPublic().armor())).execute();
+          new TestWelcomeModel(account.getEmail(), pgpKey.toPublic().armor())).execute();
 
       TestWelcomeResponse testWelcomeResponse = response.body();
       return testWelcomeResponse != null && testWelcomeResponse.isSent();

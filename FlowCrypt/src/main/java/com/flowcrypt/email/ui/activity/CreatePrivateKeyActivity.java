@@ -42,9 +42,9 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   private String createdPrivateKeyLongId;
   private boolean isBackEnable = true;
 
-  public static Intent newIntent(Context context, AccountDao accountDao) {
+  public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, CreatePrivateKeyActivity.class);
-    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
+    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account);
     return intent;
   }
 
@@ -116,7 +116,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
         if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
           isBackEnable = false;
           UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-          return new CreatePrivateKeyAsyncTaskLoader(this, accountDao,
+          return new CreatePrivateKeyAsyncTaskLoader(this, account,
               editTextKeyPassword.getText().toString());
         } else {
           return null;

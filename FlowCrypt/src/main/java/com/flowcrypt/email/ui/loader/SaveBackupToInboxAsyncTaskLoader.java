@@ -32,13 +32,13 @@ import androidx.loader.content.AsyncTaskLoader;
  * E-mail: DenBond7@gmail.com
  */
 public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private final AccountDao accountDao;
+  private final AccountDao account;
   private boolean isActionStarted;
   private LoaderResult data;
 
-  public SaveBackupToInboxAsyncTaskLoader(Context context, AccountDao accountDao) {
+  public SaveBackupToInboxAsyncTaskLoader(Context context, AccountDao account) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
   }
 
   @Override
@@ -57,9 +57,9 @@ public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResu
     isActionStarted = true;
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
-      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, accountDao);
-      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(getContext(), accountDao, session, js);
+      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
+      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, account);
+      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(getContext(), account, session, js);
       transport.sendMessage(message, message.getAllRecipients());
       return new LoaderResult(true, null);
     } catch (Exception e) {

@@ -47,12 +47,12 @@ public class LoadNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncT
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
       throws Exception {
     IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
     imapFolder.open(Folder.READ_ONLY);
 
-    if (syncListener != null && messageIds != null) {
+    if (listener != null && messageIds != null) {
       Message[] messages = imapFolder.getMessages(messageIds);
       EmailUtil.fetchMessagesInfo(imapFolder, messages);
 
@@ -63,12 +63,12 @@ public class LoadNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncT
       }
 
       if (uidList.isEmpty()) {
-        syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages, new LongSparseArray
+        listener.onNewMessagesReceived(account, folder, imapFolder, messages, new LongSparseArray
             <Boolean>(), ownerKey, requestCode);
         return;
       }
 
-      syncListener.onNewMessagesReceived(accountDao, folder, imapFolder, messages,
+      listener.onNewMessagesReceived(account, folder, imapFolder, messages,
           EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList), ownerKey, requestCode);
     }
 

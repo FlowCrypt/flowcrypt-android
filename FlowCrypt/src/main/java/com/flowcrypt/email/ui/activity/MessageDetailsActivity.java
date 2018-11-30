@@ -324,7 +324,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
           .generalMessageDetails.getEmail(), this.generalMessageDetails.getLabel(), this
           .generalMessageDetails.getUid());
 
-      if (generalMessageDetails == null || generalMessageDetails.getMessageState() == MessageState.SENDING) {
+      if (generalMessageDetails == null || generalMessageDetails.getMsgState() == MessageState.SENDING) {
         Toast.makeText(this, generalMessageDetails == null ? R.string.can_not_delete_sent_message
             : R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show();
       } else {
@@ -417,8 +417,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
           actionBarTitle = getString(R.string.outgoing);
 
-          if (generalMessageDetails.getMessageState() != null) {
-            switch (generalMessageDetails.getMessageState()) {
+          if (generalMessageDetails.getMsgState() != null) {
+            switch (generalMessageDetails.getMsgState()) {
               case NEW:
               case NEW_FORWARDED:
                 actionBarSubTitle = getString(R.string.preparing);

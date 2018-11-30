@@ -43,11 +43,11 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
   /**
    * An user account.
    */
-  private AccountDao accountDao;
+  private AccountDao account;
 
-  public LoadAccountKeysInfoFromAttester(Context context, AccountDao accountDao) {
+  public LoadAccountKeysInfoFromAttester(Context context, AccountDao account) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     onContentChanged();
   }
 
@@ -60,16 +60,16 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
 
   @Override
   public LoaderResult loadInBackground() {
-    if (accountDao != null) {
+    if (account != null) {
       List<String> emails = new ArrayList<>();
       try {
-        switch (accountDao.getAccountType()) {
+        switch (account.getAccountType()) {
           case AccountDao.ACCOUNT_TYPE_GOOGLE:
-            emails.addAll(getAvailableGmailAliases(accountDao));
+            emails.addAll(getAvailableGmailAliases(account));
             break;
 
           default:
-            emails.add(accountDao.getEmail());
+            emails.add(account.getEmail());
             break;
         }
 
@@ -92,15 +92,15 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
   /**
    * Get available Gmail aliases for an input {@link AccountDao}.
    *
-   * @param accountDao The {@link AccountDao} object which contains information about an email account.
+   * @param account The {@link AccountDao} object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
-  private Collection<? extends String> getAvailableGmailAliases(AccountDao accountDao) {
+  private Collection<? extends String> getAvailableGmailAliases(AccountDao account) {
     List<String> aliasEmails = new ArrayList<>();
-    aliasEmails.add(accountDao.getEmail());
+    aliasEmails.add(account.getEmail());
 
     try {
-      Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
+      Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
       ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
           .execute();
       for (SendAs alias : aliases.getSendAs()) {

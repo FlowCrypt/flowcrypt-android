@@ -241,17 +241,17 @@ public class AccountDaoSource extends BaseDaoSource {
     Cursor cursor = context.getContentResolver().query(
         getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE + " = ?", new String[]{"1"}, null);
 
-    AccountDao accountDao = null;
+    AccountDao account = null;
 
     if (cursor != null && cursor.moveToFirst()) {
-      accountDao = getCurrentAccountDao(context, cursor);
+      account = getCurrentAccountDao(context, cursor);
     }
 
     if (cursor != null) {
       cursor.close();
     }
 
-    return accountDao;
+    return account;
   }
 
   /**
@@ -332,21 +332,21 @@ public class AccountDaoSource extends BaseDaoSource {
    * Delete information about some {@link AccountDao}.
    *
    * @param context    Interface to global information about an application environment.
-   * @param accountDao The object which contains information about an email account.
+   * @param account The object which contains information about an email account.
    * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
    * deleted or -1 otherwise.
    */
-  public int deleteAccountInformation(Context context, AccountDao accountDao) {
-    if (accountDao != null) {
+  public int deleteAccountInformation(Context context, AccountDao account) {
+    if (account != null) {
 
-      String email = accountDao.getEmail();
+      String email = account.getEmail();
       if (email == null) {
         return -1;
       } else {
         email = email.toLowerCase();
       }
 
-      String type = accountDao.getAccountType();
+      String type = account.getAccountType();
       if (type == null) {
         return -1;
       } else {
@@ -529,15 +529,15 @@ public class AccountDaoSource extends BaseDaoSource {
     contentValues.put(COL_IMAP_SERVER, authCredentials.getImapServer());
     contentValues.put(COL_IMAP_PORT, authCredentials.getImapPort());
     contentValues.put(COL_IMAP_IS_USE_SSL_TLS,
-        authCredentials.getImapSecurityTypeOption() == SecurityType.Option.SSL_TLS);
+        authCredentials.getImapOpt() == SecurityType.Option.SSL_TLS);
     contentValues.put(COL_IMAP_IS_USE_STARTTLS,
-        authCredentials.getImapSecurityTypeOption() == SecurityType.Option.STARTLS);
+        authCredentials.getImapOpt() == SecurityType.Option.STARTLS);
     contentValues.put(COL_SMTP_SERVER, authCredentials.getSmtpServer());
     contentValues.put(COL_SMTP_PORT, authCredentials.getSmtpPort());
     contentValues.put(COL_SMTP_IS_USE_SSL_TLS,
-        authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.SSL_TLS);
+        authCredentials.getSmtpOpt() == SecurityType.Option.SSL_TLS);
     contentValues.put(COL_SMTP_IS_USE_STARTTLS,
-        authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.STARTLS);
+        authCredentials.getSmtpOpt() == SecurityType.Option.STARTLS);
     contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.isUseCustomSignInForSmtp());
     contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
     contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials

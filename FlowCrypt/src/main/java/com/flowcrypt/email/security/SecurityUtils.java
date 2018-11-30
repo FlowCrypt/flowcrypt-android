@@ -115,23 +115,23 @@ public class SecurityUtils {
    *
    * @param context               Interface to global information about an application environment.
    * @param js                    An instance of {@link Js}
-   * @param accountDao            The given account
+   * @param account            The given account
    * @param isWeakCheckingEnabled true if need to check is a pass phrase is too weak.
    * @return A string which includes private keys
    */
-  public static String generatePrivateKeysBackup(Context context, Js js, AccountDao accountDao,
+  public static String generatePrivateKeysBackup(Context context, Js js, AccountDao account,
                                                  boolean isWeakCheckingEnabled) throws
       PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException {
     StringBuilder armoredPrivateKeysBackupStringBuilder = new StringBuilder();
     Zxcvbn zxcvbn = new Zxcvbn();
     List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-        (context, accountDao.getEmail());
+        (context, account.getEmail());
 
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
         (longIdListOfAccountPrivateKeys.toArray(new String[0]));
 
     if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
-      throw new NoPrivateKeysAvailableException(context, accountDao.getEmail());
+      throw new NoPrivateKeysAvailableException(context, account.getEmail());
     }
 
     String firstPassPhrase = null;
@@ -176,12 +176,12 @@ public class SecurityUtils {
    * @param context     Interface to global information about an application environment.
    * @param js          An instance of {@link Js}
    * @param pgpContacts An array which contains recipients
-   * @param accountDao  The given account
+   * @param account  The given account
    * @param senderEmail The sender email
    * @return <tt>String[]</tt> An array of public keys.
    * @throws NoKeyAvailableException
    */
-  public static String[] getRecipientsPubKeys(Context context, Js js, PgpContact[] pgpContacts, AccountDao accountDao,
+  public static String[] getRecipientsPubKeys(Context context, Js js, PgpContact[] pgpContacts, AccountDao account,
                                               String senderEmail) throws NoKeyAvailableException {
     ArrayList<String> publicKeys = new ArrayList<>();
     for (PgpContact pgpContact : pgpContacts) {
@@ -190,7 +190,7 @@ public class SecurityUtils {
       }
     }
 
-    publicKeys.add(getSenderPublicKey(context, js, accountDao, senderEmail));
+    publicKeys.add(getSenderPublicKey(context, js, account, senderEmail));
 
     return publicKeys.toArray(new String[0]);
   }
@@ -200,23 +200,23 @@ public class SecurityUtils {
    *
    * @param context     Interface to global information about an application environment.
    * @param js          An instance of {@link Js}
-   * @param accountDao  The given account
+   * @param account  The given account
    * @param senderEmail The sender email
    * @return <tt>String</tt> The sender public key.
    * @throws NoKeyAvailableException
    */
-  public static String getSenderPublicKey(Context context, Js js, AccountDao accountDao, String senderEmail) throws
+  public static String getSenderPublicKey(Context context, Js js, AccountDao account, String senderEmail) throws
       NoKeyAvailableException {
     UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
     List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail);
 
     if (longIds.isEmpty()) {
-      if (accountDao.getEmail().equalsIgnoreCase(senderEmail)) {
-        throw new NoKeyAvailableException(context, accountDao.getEmail(), null);
+      if (account.getEmail().equalsIgnoreCase(senderEmail)) {
+        throw new NoKeyAvailableException(context, account.getEmail(), null);
       } else {
-        longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, accountDao.getEmail());
+        longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, account.getEmail());
         if (longIds.isEmpty()) {
-          throw new NoKeyAvailableException(context, accountDao.getEmail(), senderEmail);
+          throw new NoKeyAvailableException(context, account.getEmail(), senderEmail);
         }
       }
     }

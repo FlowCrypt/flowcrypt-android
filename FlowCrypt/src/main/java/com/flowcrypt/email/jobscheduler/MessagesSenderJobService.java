@@ -157,34 +157,34 @@ public class MessagesSenderJobService extends JobService {
       try {
         if (messagesSenderJobServiceWeakReference.get() != null) {
           Context context = messagesSenderJobServiceWeakReference.get().getApplicationContext();
-          AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(context);
+          AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
           MessageDaoSource messageDaoSource = new MessageDaoSource();
           ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
 
           File attachmentsCacheDirectory = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
-          if (accountDao != null) {
-            messageDaoSource.resetMsgsWithSendingState(context, accountDao.getEmail());
+          if (account != null) {
+            messageDaoSource.resetMsgsWithSendingState(context, account.getEmail());
 
             List<GeneralMessageDetails> listOfQueuedMessages = messageDaoSource.getOutboxMessages
-                (context, accountDao.getEmail(), MessageState.QUEUED);
+                (context, account.getEmail(), MessageState.QUEUED);
 
             List<GeneralMessageDetails> listOfSentButNotSavedMessages = messageDaoSource.getOutboxMessages
-                (context, accountDao.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY);
+                (context, account.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY);
 
             if (!CollectionUtils.isEmpty(listOfQueuedMessages)
                 || !CollectionUtils.isEmpty(listOfSentButNotSavedMessages)) {
-              session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
-              store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+              session = OpenStoreHelper.getSessionForAccountDao(context, account);
+              store = OpenStoreHelper.openAndConnectToStore(context, account, session);
             }
 
             if (!CollectionUtils.isEmpty(listOfQueuedMessages)) {
-              sendQueuedMessages(context, accountDao, messageDaoSource, imapLabelsDaoSource,
+              sendQueuedMessages(context, account, messageDaoSource, imapLabelsDaoSource,
                   attachmentsCacheDirectory);
             }
 
             if (!CollectionUtils.isEmpty(listOfSentButNotSavedMessages)) {
-              saveCopyOfAlreadySentMessages(context, accountDao, messageDaoSource, imapLabelsDaoSource,
+              saveCopyOfAlreadySentMessages(context, account, messageDaoSource, imapLabelsDaoSource,
                   attachmentsCacheDirectory);
             }
 
@@ -221,13 +221,13 @@ public class MessagesSenderJobService extends JobService {
       isFailed = values[0];
     }
 
-    private void sendQueuedMessages(Context context, AccountDao accountDao, MessageDaoSource msgDaoSource,
+    private void sendQueuedMessages(Context context, AccountDao account, MessageDaoSource msgDaoSource,
                                     ImapLabelsDaoSource imapLabelsDaoSource, File attsCacheDir)
         throws InterruptedException {
       List<GeneralMessageDetails> genMsgDetailsList;
       int uidOfLastMessage = 0;
       while (!CollectionUtils.isEmpty(genMsgDetailsList = msgDaoSource.getOutboxMessages(context,
-          accountDao.getEmail(), MessageState.QUEUED))) {
+          account.getEmail(), MessageState.QUEUED))) {
         Iterator<GeneralMessageDetails> iterator = genMsgDetailsList.iterator();
         GeneralMessageDetails genMsgDetails = null;
 
@@ -246,35 +246,35 @@ public class MessagesSenderJobService extends JobService {
         uidOfLastMessage = genMsgDetails.getUid();
 
         try {
-          msgDaoSource.resetMsgsWithSendingState(context, accountDao.getEmail());
+          msgDaoSource.resetMsgsWithSendingState(context, account.getEmail());
           msgDaoSource.updateMessageState(context, genMsgDetails.getEmail(), genMsgDetails.getLabel(),
               genMsgDetails.getUid(), MessageState.SENDING);
           Thread.sleep(2000);
 
           AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
           List<AttachmentInfo> attInfoList =
-              attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+              attachmentDaoSource.getAttachmentInfoList(context, account.getEmail(),
                   JavaEmailConstants.FOLDER_OUTBOX, genMsgDetails.getUid());
 
-          boolean isMessageSent = sendMessage(context, accountDao, msgDaoSource, genMsgDetails, attInfoList);
+          boolean isMessageSent = sendMessage(context, account, msgDaoSource, genMsgDetails, attInfoList);
 
           if (!isMessageSent) {
             continue;
           }
 
-          genMsgDetails = msgDaoSource.getMessage(context, accountDao.getEmail(),
+          genMsgDetails = msgDaoSource.getMessage(context, account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, genMsgDetails.getUid());
 
-          if (genMsgDetails.getMessageState() == MessageState.SENT) {
-            msgDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+          if (genMsgDetails.getMsgState() == MessageState.SENT) {
+            msgDaoSource.deleteMessageFromFolder(context, account.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, genMsgDetails.getUid());
 
             if (!CollectionUtils.isEmpty(attInfoList)) {
-              deleteMessageAttachments(context, accountDao, attsCacheDir,
+              deleteMessageAttachments(context, account, attsCacheDir,
                   genMsgDetails, attachmentDaoSource);
             }
 
-            imapLabelsDaoSource.updateLabelMessageCount(context, accountDao.getEmail(),
+            imapLabelsDaoSource.updateLabelMessageCount(context, account.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(context,
                     genMsgDetails.getEmail()).size());
           }
@@ -283,7 +283,7 @@ public class MessagesSenderJobService extends JobService {
           ExceptionUtil.handleError(e);
 
           if (!GeneralUtil.isInternetConnectionAvailable(context)) {
-            if (genMsgDetails.getMessageState() != MessageState.SENT) {
+            if (genMsgDetails.getMsgState() != MessageState.SENT) {
               msgDaoSource.updateMessageState(context, genMsgDetails.getEmail(),
                   genMsgDetails.getLabel(), genMsgDetails.getUid(), MessageState.QUEUED);
             }
@@ -322,34 +322,34 @@ public class MessagesSenderJobService extends JobService {
       }
     }
 
-    private void saveCopyOfAlreadySentMessages(Context context, AccountDao accountDao,
+    private void saveCopyOfAlreadySentMessages(Context context, AccountDao account,
                                                MessageDaoSource messageDaoSource,
                                                ImapLabelsDaoSource imapLabelsDaoSource,
                                                File attachmentsCacheDirectory) {
       List<GeneralMessageDetails> generalMessageDetailsList;
 
       while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
-          .getOutboxMessages(context, accountDao.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY))) {
+          .getOutboxMessages(context, account.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY))) {
         GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
         try {
           AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
           List<AttachmentInfo> attachmentInfoList =
-              attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+              attachmentDaoSource.getAttachmentInfoList(context, account.getEmail(),
                   JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
           MimeMessage mimeMessage = createMimeMessage(context, session,
               generalMessageDetails, attachmentInfoList);
-          boolean isMessageSavedInSentFolder = saveCopyOfSentMessage(accountDao, store, context, mimeMessage);
+          boolean isMessageSavedInSentFolder = saveCopyOfSentMessage(account, store, context, mimeMessage);
 
           if (!isMessageSavedInSentFolder) {
             continue;
           }
 
-          messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+          messageDaoSource.deleteMessageFromFolder(context, account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
           if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-            deleteMessageAttachments(context, accountDao, attachmentsCacheDirectory,
+            deleteMessageAttachments(context, account, attachmentsCacheDirectory,
                 generalMessageDetails, attachmentDaoSource);
           }
         } catch (Exception e) {
@@ -366,7 +366,7 @@ public class MessagesSenderJobService extends JobService {
 
           if (e.getCause() != null) {
             if (e.getCause() instanceof FileNotFoundException) {
-              messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+              messageDaoSource.deleteMessageFromFolder(context, account.getEmail(),
                   JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
             } else {
               messageDaoSource.updateMessageState(context,
@@ -374,38 +374,38 @@ public class MessagesSenderJobService extends JobService {
                   generalMessageDetails.getUid(), MessageState.SENT_WITHOUT_LOCAL_COPY);
             }
           } else {
-            messageDaoSource.deleteMessageFromFolder(context, accountDao.getEmail(),
+            messageDaoSource.deleteMessageFromFolder(context, account.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
           }
         }
       }
     }
 
-    private void deleteMessageAttachments(Context context, AccountDao accountDao, File attachmentsCacheDirectory,
+    private void deleteMessageAttachments(Context context, AccountDao account, File attachmentsCacheDirectory,
                                           GeneralMessageDetails generalMessageDetails,
                                           AttachmentDaoSource attachmentDaoSource) throws IOException {
-      attachmentDaoSource.deleteAttachments(context, accountDao.getEmail(),
+      attachmentDaoSource.deleteAttachments(context, account.getEmail(),
           JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
-      if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDirectory())) {
+      if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDir())) {
         FileAndDirectoryUtils.deleteDirectory(new File(attachmentsCacheDirectory,
-            generalMessageDetails.getAttachmentsDirectory()));
+            generalMessageDetails.getAttachmentsDir()));
       }
     }
 
-    private boolean sendMessage(Context context, AccountDao accountDao,
+    private boolean sendMessage(Context context, AccountDao account,
                                 MessageDaoSource messageDaoSource, GeneralMessageDetails generalMessageDetails,
                                 List<AttachmentInfo> attachmentInfoList)
         throws IOException, MessagingException, GoogleAuthException {
       MimeMessage mimeMessage = createMimeMessage(context, session, generalMessageDetails, attachmentInfoList);
 
-      switch (accountDao.getAccountType()) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          if (accountDao.getEmail().equalsIgnoreCase(generalMessageDetails.getFrom()[0].getAddress())) {
-            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+          if (account.getEmail().equalsIgnoreCase(generalMessageDetails.getFrom()[0].getAddress())) {
+            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
             transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
           } else {
-            Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
+            Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, account);
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             mimeMessage.writeTo(byteArrayOutputStream);
 
@@ -443,7 +443,7 @@ public class MessagesSenderJobService extends JobService {
           break;
 
         case AccountDao.ACCOUNT_TYPE_OUTLOOK:
-          Transport outlookTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+          Transport outlookTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
           outlookTransport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
 
           messageDaoSource.updateMessageState(context,
@@ -452,14 +452,14 @@ public class MessagesSenderJobService extends JobService {
           break;
 
         default:
-          Transport defaultTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+          Transport defaultTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
           defaultTransport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
 
           messageDaoSource.updateMessageState(context,
               generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
               generalMessageDetails.getUid(), MessageState.SENT_WITHOUT_LOCAL_COPY);
 
-          if (saveCopyOfSentMessage(accountDao, store, context, mimeMessage)) {
+          if (saveCopyOfSentMessage(account, store, context, mimeMessage)) {
             messageDaoSource.updateMessageState(context,
                 generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
                 generalMessageDetails.getUid(), MessageState.SENT);
@@ -542,14 +542,14 @@ public class MessagesSenderJobService extends JobService {
     /**
      * Save a copy of the sent message to the account SENT folder.
      *
-     * @param accountDao  The object which contains information about an email account.
+     * @param account  The object which contains information about an email account.
      * @param store       The connected and opened {@link Store} object.
      * @param context     Interface to global information about an application environment.
      * @param mimeMessage The original {@link MimeMessage} which will be saved to the SENT folder.
      */
-    private boolean saveCopyOfSentMessage(AccountDao accountDao, Store store, Context context,
+    private boolean saveCopyOfSentMessage(AccountDao account, Store store, Context context,
                                           MimeMessage mimeMessage) {
-      FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
+      FoldersManager foldersManager = FoldersManager.fromDatabase(context, account.getEmail());
       com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
 
       try {

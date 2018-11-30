@@ -38,21 +38,20 @@ public class GmailApiHelper {
    * Generate {@link Gmail} using incoming {@link AccountDao}. The {@link} Gmail is the main point in using Gmail API.
    *
    * @param context    Interface to global information about an application environment.
-   * @param accountDao The {@link AccountDao} object which contains information about an email account.
+   * @param account The {@link AccountDao} object which contains information about an email account.
    * @return Generated {@link Gmail}.
    */
-  public static Gmail generateGmailApiService(Context context, AccountDao accountDao) {
-    if (accountDao == null || accountDao.getAccount() == null) {
+  public static Gmail generateGmailApiService(Context context, AccountDao account) {
+    if (account == null || account.getAccount() == null) {
       throw new IllegalArgumentException("AccountDao is not valid.");
     }
 
-    GoogleAccountCredential googleAccountCredential = generateGoogleAccountCredential(context,
-        accountDao.getAccount());
+    GoogleAccountCredential credential = generateGoogleAccountCredential(context, account.getAccount());
 
-    HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
-    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-    return new Gmail.Builder(httpTransport, jsonFactory, googleAccountCredential)
-        .setApplicationName(context.getString(R.string.app_name)).build();
+    HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    JsonFactory factory = JacksonFactory.getDefaultInstance();
+    String appName = context.getString(R.string.app_name);
+    return new Gmail.Builder(transport, factory, credential).setApplicationName(appName).build();
   }
 
   /**
@@ -63,10 +62,6 @@ public class GmailApiHelper {
    * @return Generated {@link GoogleAccountCredential}.
    */
   private static GoogleAccountCredential generateGoogleAccountCredential(Context context, Account account) {
-    GoogleAccountCredential googleAccountCredential = GoogleAccountCredential
-        .usingOAuth2(context.getApplicationContext(), Arrays.asList(SCOPES));
-    googleAccountCredential.setSelectedAccount(account);
-
-    return googleAccountCredential;
+    return GoogleAccountCredential.usingOAuth2(context, Arrays.asList(SCOPES)).setSelectedAccount(account);
   }
 }

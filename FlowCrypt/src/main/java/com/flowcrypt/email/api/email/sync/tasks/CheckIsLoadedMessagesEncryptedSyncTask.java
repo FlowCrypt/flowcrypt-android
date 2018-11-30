@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.Context;
 import android.os.Messenger;
 import android.util.LongSparseArray;
 
@@ -45,18 +46,19 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-      throws Exception {
-    super.runIMAPAction(accountDao, session, store, syncListener);
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    super.runIMAPAction(account, session, store, listener);
+
+    Context context = listener.getContext();
+    String folder = localFolder.getFolderAlias();
 
     if (localFolder == null) {
       return;
     }
 
-    MessageDaoSource messageDaoSource = new MessageDaoSource();
+    MessageDaoSource msgDaoSource = new MessageDaoSource();
 
-    List<Long> uidList = messageDaoSource.getUIDsOfMessagesWhichWereNotCheckedToEncryption(syncListener
-        .getContext(), accountDao.getEmail(), localFolder.getFolderAlias());
+    List<Long> uidList = msgDaoSource.getNotCheckedUIDs(context, account.getEmail(), folder);
 
     if (uidList == null || uidList.isEmpty()) {
       return;
@@ -68,11 +70,10 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
     LongSparseArray<Boolean> booleanLongSparseArray = EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList);
 
     if (booleanLongSparseArray.size() > 0) {
-      messageDaoSource.updateMessagesEncryptionStateByUID(syncListener.getContext(), accountDao.getEmail(),
-          localFolder.getFolderAlias(), booleanLongSparseArray);
+      msgDaoSource.updateMessagesEncryptionStateByUID(context, account.getEmail(), folder, booleanLongSparseArray);
     }
 
-    syncListener.onIdentificationToEncryptionCompleted(accountDao, localFolder, imapFolder, ownerKey, requestCode);
+    listener.onIdentificationToEncryptionCompleted(account, localFolder, imapFolder, ownerKey, requestCode);
 
     imapFolder.close(false);
   }

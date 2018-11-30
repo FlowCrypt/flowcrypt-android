@@ -168,17 +168,17 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
 
           js = new Js(context, new SecurityStorageConnector(context));
 
-          AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(context);
+          AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
           MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-          if (accountDao != null) {
+          if (account != null) {
             List<GeneralMessageDetails> listOfNewMessages = messageDaoSource.getOutboxMessages
-                (context, accountDao.getEmail(), MessageState.NEW_FORWARDED);
+                (context, account.getEmail(), MessageState.NEW_FORWARDED);
 
             if (!CollectionUtils.isEmpty(listOfNewMessages)) {
-              session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
-              store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
-              downloadForwardedAttachments(context, js, accountDao, messageDaoSource);
+              session = OpenStoreHelper.getSessionForAccountDao(context, account);
+              store = OpenStoreHelper.openAndConnectToStore(context, account, session);
+              downloadForwardedAttachments(context, js, account, messageDaoSource);
             }
 
             if (store != null && store.isConnected()) {
@@ -215,23 +215,23 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       isFailed = values[0];
     }
 
-    private void downloadForwardedAttachments(Context context, Js js, AccountDao accountDao,
+    private void downloadForwardedAttachments(Context context, Js js, AccountDao account,
                                               MessageDaoSource messageDaoSource) {
       List<GeneralMessageDetails> generalMessageDetailsList;
       AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
 
       while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
-          .getOutboxMessages(context, accountDao.getEmail(), MessageState.NEW_FORWARDED))) {
+          .getOutboxMessages(context, account.getEmail(), MessageState.NEW_FORWARDED))) {
         GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
         File messageAttachmentsDir =
-            new File(attachmentCacheDir, generalMessageDetails.getAttachmentsDirectory());
+            new File(attachmentCacheDir, generalMessageDetails.getAttachmentsDir());
         try {
           String[] pubKeys = generalMessageDetails.isEncrypted() ? SecurityUtils.getRecipientsPubKeys(context,
-              js, EmailUtil.getAllRecipients(context, generalMessageDetails), accountDao,
+              js, EmailUtil.getAllRecipients(context, generalMessageDetails), account,
               EmailUtil.getFirstAddressString(generalMessageDetails.getFrom())) : null;
 
           List<AttachmentInfo> attachmentInfoList =
-              attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
+              attachmentDaoSource.getAttachmentInfoList(context, account.getEmail(),
                   JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
 
           if (CollectionUtils.isEmpty(attachmentInfoList)) {
@@ -253,13 +253,13 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
               if (folderOfForwardedMessage == null) {
                 folderOfForwardedMessage = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
                     .getFolderByAlias(context, attachmentInfo.getEmail(),
-                        attachmentInfo.getForwardedFolder()).getServerFullFolderName());
+                        attachmentInfo.getFwdFolder()).getServerFullFolderName());
                 folderOfForwardedMessage.open(Folder.READ_ONLY);
               }
 
               if (forwardedMessage == null) {
                 forwardedMessage = folderOfForwardedMessage
-                    .getMessageByUID(attachmentInfo.getForwardedUid());
+                    .getMessageByUID(attachmentInfo.getFwdUid());
               }
 
               if (forwardedMessage == null) {

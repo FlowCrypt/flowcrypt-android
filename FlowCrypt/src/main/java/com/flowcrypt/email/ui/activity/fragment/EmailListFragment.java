@@ -164,9 +164,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     this.messageListAdapter = new MessageListAdapter(getContext(), null);
 
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+    AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
     this.isShowOnlyEncryptedMessages = accountDaoSource.isShowOnlyEncryptedMessages(getContext(),
-        accountDao.getEmail());
+        account.getEmail());
   }
 
   @Override
@@ -279,8 +279,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           || !TextUtils.isEmpty(activeMsgDetails.getRawMessageWithoutAttachments())
           || GeneralUtil.isInternetConnectionAvailable(getContext())) {
 
-        if (activeMsgDetails.getMessageState() != null) {
-          switch (activeMsgDetails.getMessageState()) {
+        if (activeMsgDetails.getMsgState() != null) {
+          switch (activeMsgDetails.getMsgState()) {
             case ERROR_ORIGINAL_MESSAGE_MISSING:
             case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
             case ERROR_CACHE_PROBLEM:
@@ -768,7 +768,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails generalMessageDetails) {
     String message = null;
 
-    switch (generalMessageDetails.getMessageState()) {
+    switch (generalMessageDetails.getMsgState()) {
       case ERROR_ORIGINAL_MESSAGE_MISSING:
       case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
         message = getString(R.string.message_failed_to_forward);

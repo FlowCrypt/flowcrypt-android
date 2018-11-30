@@ -146,7 +146,7 @@ public class MessageListAdapter extends CursorAdapter {
 
           case OUTBOX:
             viewHolder.textViewSenderAddress.setText(generateOutboxStatus(viewHolder.textViewSenderAddress
-                .getContext(), generalMessageDetails.getMessageState()));
+                .getContext(), generalMessageDetails.getMsgState()));
             break;
 
           default:
@@ -176,7 +176,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
       }
 
-      viewHolder.imageViewAttachments.setVisibility(generalMessageDetails.isMessageHasAttachment()
+      viewHolder.imageViewAttachments.setVisibility(generalMessageDetails.hasAttachments()
           ? View.VISIBLE : View.GONE);
       viewHolder.viewIsEncrypted.setVisibility(generalMessageDetails.isEncrypted() ? View.VISIBLE : View.GONE);
     } else {

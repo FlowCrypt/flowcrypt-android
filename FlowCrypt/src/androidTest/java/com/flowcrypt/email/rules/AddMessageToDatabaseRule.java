@@ -34,28 +34,28 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 public class AddMessageToDatabaseRule implements TestRule {
-  private AccountDao accountDao;
+  private AccountDao account;
   private Folder folder;
   private long uid;
   private Message message;
 
-  public AddMessageToDatabaseRule(AccountDao accountDao, Folder folder, long uid, Message message) {
-    this.accountDao = accountDao;
+  public AddMessageToDatabaseRule(AccountDao account, Folder folder, long uid, Message message) {
+    this.account = account;
     this.folder = folder;
     this.uid = uid;
     this.message = message;
   }
 
-  public AddMessageToDatabaseRule(AccountDao accountDao, Folder folder) {
-    this.accountDao = accountDao;
+  public AddMessageToDatabaseRule(AccountDao account, Folder folder) {
+    this.account = account;
     this.folder = folder;
 
     try {
       Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(),
-          accountDao);
+          account);
       Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getInstrumentation()
-              .getTargetContext(), accountDao,
+              .getTargetContext(), account,
           session);
 
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
@@ -93,7 +93,7 @@ public class AddMessageToDatabaseRule implements TestRule {
   private void saveMessageToDatabase() throws MessagingException {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
     messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        accountDao.getEmail(),
+        account.getEmail(),
         folder.getFolderAlias(),
         uid,
         message, false);

@@ -48,17 +48,17 @@ abstract class BaseSyncTask implements SyncTask {
   }
 
   @Override
-  public boolean isUseSMTP() {
+  public boolean isSMTPRequired() {
     return false;
   }
 
   @Override
-  public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener syncListener)
       throws Exception {
   }
 
   @Override
-  public void handleException(AccountDao accountDao, Exception e, SyncListener syncListener) {
+  public void handleException(AccountDao account, Exception e, SyncListener syncListener) {
     if (syncListener != null) {
       int errorType;
 
@@ -68,7 +68,7 @@ abstract class BaseSyncTask implements SyncTask {
         errorType = SyncErrorTypes.TASK_RUNNING_ERROR;
       }
 
-      syncListener.onError(accountDao, errorType, e, ownerKey, requestCode);
+      syncListener.onError(account, errorType, e, ownerKey, requestCode);
     }
   }
 
@@ -83,14 +83,13 @@ abstract class BaseSyncTask implements SyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
 
   }
 
   @NonNull
-  protected Transport prepareTransportForSmtp(Context context, Session session, AccountDao accountDao) throws
+  protected Transport prepareTransportForSmtp(Context context, Session session, AccountDao account) throws
       MessagingException, IOException, GoogleAuthException {
-    return SmtpProtocolUtil.prepareTransportForSmtp(context, session, accountDao);
+    return SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
   }
 }

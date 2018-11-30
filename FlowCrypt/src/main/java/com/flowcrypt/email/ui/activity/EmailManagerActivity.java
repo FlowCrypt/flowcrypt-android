@@ -94,7 +94,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   private static final int REQUEST_CODE_SIGN_IN = 101;
 
   private GoogleApiClient googleApiClient;
-  private AccountDao accountDao;
+  private AccountDao account;
   private FoldersManager foldersManager;
   private Folder folder;
   private CountingIdlingResource countingIdlingResourceForLabel;
@@ -125,13 +125,13 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    account = new AccountDaoSource().getActiveAccountInformation(this);
 
-    if (accountDao != null) {
+    if (account != null) {
       googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this,
           GoogleApiClientHelper.generateGoogleSignInOptions());
 
-      new ActionManager(this).checkAndAddActionsToQueue(accountDao);
+      new ActionManager(this).checkAndAddActionsToQueue(account);
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
@@ -147,7 +147,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @Override
   public void onResume() {
     super.onResume();
-    new MessagesNotificationManager(this).cancelAll(this, accountDao);
+    new MessagesNotificationManager(this).cancelAll(this, account);
   }
 
   @Override
@@ -177,7 +177,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
     if (switchView != null) {
-      switchView.setChecked(new AccountDaoSource().isShowOnlyEncryptedMessages(this, accountDao.getEmail()));
+      switchView.setChecked(new AccountDaoSource().isShowOnlyEncryptedMessages(this, account.getEmail()));
 
       switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
@@ -188,7 +188,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
           cancelAllSyncTasks(0);
           new AccountDaoSource().setIsShowOnlyEncryptedMessages(EmailManagerActivity.this,
-              accountDao.getEmail(), isChecked);
+              account.getEmail(), isChecked);
           onShowOnlyEncryptedMessages(isChecked);
 
           Toast.makeText(EmailManagerActivity.this, isChecked ? R.string.showing_only_encrypted_messages
@@ -208,7 +208,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     if (folder != null) {
       if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
         itemSwitch.setVisible(false);
-        itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType()));
+        itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()));
       } else {
         itemSwitch.setVisible(true);
         itemSearch.setVisible(true);
@@ -406,7 +406,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switch (id) {
       case R.id.loader_id_load_gmail_labels:
         return new CursorLoader(this, new ImapLabelsDaoSource().getBaseContentUri(), null,
-            ImapLabelsDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
+            ImapLabelsDaoSource.COL_EMAIL + " = ?", new String[]{account.getEmail()}, null);
       default:
         return new Loader<>(this.getApplicationContext());
     }
@@ -495,7 +495,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   @Override
   public AccountDao getCurrentAccountDao() {
-    return accountDao;
+    return account;
   }
 
   @Override
@@ -526,15 +526,15 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   @Override
   public boolean onQueryTextSubmit(String query) {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
       return true;
     }
 
     menuItemSearch.collapseActionView();
-    DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+    DataBaseUtil.cleanFolderCache(this, account.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
       Folder allMail = foldersManager.getFolderAll();
       if (allMail != null) {
         startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager.getFolderAll()));
@@ -555,7 +555,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   @Override
   public void refreshFoldersInfoFromCache() {
-    foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
+    foldersManager = FoldersManager.fromDatabase(this, account.getEmail());
     if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
       folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
     }
@@ -613,9 +613,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   private void logout() {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, accountDao.getEmail());
+    List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, account.getEmail());
 
-    switch (accountDao.getAccountType()) {
+    switch (account.getAccountType()) {
       case AccountDao.ACCOUNT_TYPE_GOOGLE:
         if (googleApiClient != null && googleApiClient.isConnected()) {
           GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
@@ -625,9 +625,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
         break;
     }
 
-    if (accountDao != null) {
+    if (account != null) {
       getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{account.getEmail()});
     }
 
     if (accountDaoList != null && !accountDaoList.isEmpty()) {
@@ -733,17 +733,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
     TextView textViewUserDisplayName = view.findViewById(R.id.textViewActiveUserDisplayName);
     TextView textViewUserEmail = view.findViewById(R.id.textViewActiveUserEmail);
 
-    if (accountDao != null) {
-      if (TextUtils.isEmpty(accountDao.getDisplayName())) {
+    if (account != null) {
+      if (TextUtils.isEmpty(account.getDisplayName())) {
         textViewUserDisplayName.setVisibility(View.GONE);
       } else {
-        textViewUserDisplayName.setText(accountDao.getDisplayName());
+        textViewUserDisplayName.setText(account.getDisplayName());
       }
-      textViewUserEmail.setText(accountDao.getEmail());
+      textViewUserEmail.setText(account.getEmail());
 
-      if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+      if (!TextUtils.isEmpty(account.getPhotoUrl())) {
         GlideApp.with(this)
-            .load(accountDao.getPhotoUrl())
+            .load(account.getPhotoUrl())
             .apply(new RequestOptions()
                 .centerCrop()
                 .transform(new CircleTransformation())
@@ -792,9 +792,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     accountManagementLayout.setVisibility(View.GONE);
 
-    List<AccountDao> accountDaoList = new AccountDaoSource().getAccountsWithoutActive(this, accountDao.getEmail());
-    for (final AccountDao accountDao : accountDaoList) {
-      accountManagementLayout.addView(generateAccountItemView(accountDao));
+    List<AccountDao> accountDaoList = new AccountDaoSource().getAccountsWithoutActive(this, account.getEmail());
+    for (final AccountDao account : accountDaoList) {
+      accountManagementLayout.addView(generateAccountItemView(account));
     }
 
     View addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account,
@@ -805,26 +805,26 @@ public class EmailManagerActivity extends BaseEmailListActivity
     return accountManagementLayout;
   }
 
-  private View generateAccountItemView(final AccountDao accountDao) {
+  private View generateAccountItemView(final AccountDao account) {
     View accountItemView = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item,
         accountManagementLayout, false);
-    accountItemView.setTag(accountDao);
+    accountItemView.setTag(account);
 
     ImageView imageViewActiveUserPhoto = accountItemView.findViewById(R.id.imageViewActiveUserPhoto);
     TextView textViewActiveUserDisplayName = accountItemView.findViewById(R.id.textViewUserDisplayName);
     TextView textViewActiveUserEmail = accountItemView.findViewById(R.id.textViewUserEmail);
 
-    if (accountDao != null) {
-      if (TextUtils.isEmpty(accountDao.getDisplayName())) {
+    if (account != null) {
+      if (TextUtils.isEmpty(account.getDisplayName())) {
         textViewActiveUserDisplayName.setVisibility(View.GONE);
       } else {
-        textViewActiveUserDisplayName.setText(accountDao.getDisplayName());
+        textViewActiveUserDisplayName.setText(account.getDisplayName());
       }
-      textViewActiveUserEmail.setText(accountDao.getEmail());
+      textViewActiveUserEmail.setText(account.getEmail());
 
-      if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+      if (!TextUtils.isEmpty(account.getPhotoUrl())) {
         GlideApp.with(this)
-            .load(accountDao.getPhotoUrl())
+            .load(account.getPhotoUrl())
             .apply(new RequestOptions()
                 .centerCrop()
                 .transform(new CircleTransformation())
@@ -837,8 +837,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
       @Override
       public void onClick(View v) {
         finish();
-        if (accountDao != null) {
-          new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, accountDao.getEmail());
+        if (account != null) {
+          new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, account.getEmail());
           EmailSyncService.switchAccount(EmailManagerActivity.this);
           runEmailManagerActivity(EmailManagerActivity.this);
         }

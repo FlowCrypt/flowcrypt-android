@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.protocol.CustomFetchProfileItem;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.Js;
@@ -206,16 +205,16 @@ public class EmailUtil {
   /**
    * Generate a {@link BodyPart} with a private key as an attachment.
    *
-   * @param accountDao        The given account;
+   * @param account        The given account;
    * @param armoredPrivateKey The armored private key.
    * @return {@link BodyPart} with private key as an attachment.
    * @throws Exception will occur when generate this {@link BodyPart}.
    */
   @NonNull
-  public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(AccountDao accountDao,
+  public static MimeBodyPart generateAttachmentBodyPartWithPrivateKey(AccountDao account,
                                                                       String armoredPrivateKey) throws Exception {
     MimeBodyPart attachmentsBodyPart = new MimeBodyPart();
-    String attachmentName = SecurityUtils.generateNameForPrivateKey(accountDao.getEmail());
+    String attachmentName = SecurityUtils.generateNameForPrivateKey(account.getEmail());
 
     DataSource dataSource = new ByteArrayDataSource(armoredPrivateKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
     attachmentsBodyPart.setDataHandler(new DataHandler(dataSource));
@@ -227,25 +226,25 @@ public class EmailUtil {
    * Generate a message with the html pattern and the private key(s) as an attachment.
    *
    * @param context    Interface to global information about an application environment;
-   * @param accountDao The given account;
+   * @param account The given account;
    * @param session    The current session.
    * @param js         An instance of {@link Js}
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
   @NonNull
-  public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao accountDao,
+  public static Message generateMessageWithAllPrivateKeysBackups(Context context, AccountDao account,
                                                                  Session session, Js js) throws Exception {
     Multipart multipart = new MimeMultipart();
     BodyPart messageBodyPart = getBodyPartWithBackupText(context);
     multipart.addBodyPart(messageBodyPart);
 
-    MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(accountDao,
-        SecurityUtils.generatePrivateKeysBackup(context, js, accountDao, true));
+    MimeBodyPart attachmentsBodyPart = generateAttachmentBodyPartWithPrivateKey(account,
+        SecurityUtils.generatePrivateKeysBackup(context, js, account, true));
     attachmentsBodyPart.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(attachmentsBodyPart);
 
-    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
+    Message message = generateMessageWithBackupTemplate(context, account, session);
     message.setContent(multipart);
     return message;
   }
@@ -254,13 +253,13 @@ public class EmailUtil {
    * Generate a message with the html pattern and the private key as an attachment.
    *
    * @param context    Interface to global information about an application environment;
-   * @param accountDao The given account;
+   * @param account The given account;
    * @param session    The current session.
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
   @NonNull
-  public static Message generateMessageWithPrivateKeysBackup(Context context, AccountDao accountDao, Session session,
+  public static Message generateMessageWithPrivateKeysBackup(Context context, AccountDao account, Session session,
                                                              MimeBodyPart mimeBodyPartPrivateKey)
       throws Exception {
     Multipart multipart = new MimeMultipart();
@@ -269,7 +268,7 @@ public class EmailUtil {
     mimeBodyPartPrivateKey.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(mimeBodyPartPrivateKey);
 
-    Message message = generateMessageWithBackupTemplate(context, accountDao, session);
+    Message message = generateMessageWithBackupTemplate(context, account, session);
     message.setContent(multipart);
     return message;
   }
@@ -304,7 +303,7 @@ public class EmailUtil {
    * Get a list of {@link KeyDetails} using the <b>Gmail API</b>
    *
    * @param context    context Interface to global information about an application environment;
-   * @param accountDao An {@link AccountDao} object.
+   * @param account An {@link AccountDao} object.
    * @param session    A {@link Session} object.
    * @param js         An instance of {@link Js}
    * @return A list of {@link KeyDetails}
@@ -312,12 +311,12 @@ public class EmailUtil {
    * @throws IOException
    */
   public static Collection<? extends KeyDetails> getPrivateKeyBackupsUsingGmailAPI(Context context,
-                                                                                   AccountDao accountDao,
+                                                                                   AccountDao account,
                                                                                    Session session, Js js)
       throws IOException, MessagingException {
     ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
-    String search = js.api_gmail_query_backups(accountDao.getEmail());
-    Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, accountDao);
+    String search = js.api_gmail_query_backups(account.getEmail());
+    Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, account);
 
     ListMessagesResponse listMessagesResponse = gmailApiService
         .users()
@@ -413,12 +412,12 @@ public class EmailUtil {
   }
 
   @NonNull
-  public static Message generateMessageWithBackupTemplate(Context context, AccountDao accountDao, Session session)
+  public static Message generateMessageWithBackupTemplate(Context context, AccountDao account, Session session)
       throws MessagingException {
     Message message = new MimeMessage(session);
 
-    message.setFrom(new InternetAddress(accountDao.getEmail()));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(accountDao.getEmail()));
+    message.setFrom(new InternetAddress(account.getEmail()));
+    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.getEmail()));
     message.setSubject(context.getString(R.string.your_key_backup));
     return message;
   }
@@ -477,82 +476,6 @@ public class EmailUtil {
 
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN_FORWARDED_DATE, Locale.US);
     return simpleDateFormat.format(date);
-  }
-
-  /**
-   * Prepare a fetch command from the given {@link FetchProfile}
-   *
-   * @param fetchProfile    The given {@link FetchProfile}
-   * @param isRev1          The protocol revision number
-   * @param envelopeCommand The envelope command
-   * @return A generated fetch command
-   */
-  public static StringBuilder prepareFetchCommand(FetchProfile fetchProfile, boolean isRev1, String envelopeCommand) {
-    StringBuilder command = new StringBuilder();
-    boolean first = true;
-
-    if (fetchProfile.contains(FetchProfile.Item.ENVELOPE)) {
-      command.append(envelopeCommand);
-      first = false;
-    }
-
-    if (fetchProfile.contains(FetchProfile.Item.FLAGS)) {
-      command.append(first ? "FLAGS" : " FLAGS");
-      first = false;
-    }
-
-    if (fetchProfile.contains(FetchProfile.Item.CONTENT_INFO)) {
-      command.append(first ? "BODYSTRUCTURE" : " BODYSTRUCTURE");
-      first = false;
-    }
-
-    if (fetchProfile.contains(UIDFolder.FetchProfileItem.UID)) {
-      command.append(first ? "UID" : " UID");
-      first = false;
-    }
-
-    if (fetchProfile.contains(IMAPFolder.FetchProfileItem.HEADERS)) {
-      if (isRev1) {
-        command.append(first ?
-            "BODY.PEEK[HEADER]" : " BODY.PEEK[HEADER]");
-      } else {
-        command.append(first ? "RFC822.HEADER" : " RFC822.HEADER");
-      }
-      first = false;
-    }
-
-    if (fetchProfile.contains(IMAPFolder.FetchProfileItem.MESSAGE)) {
-      if (isRev1) {
-        command.append(first ? "BODY.PEEK[]" : " BODY.PEEK[]");
-      } else {
-        command.append(first ? "RFC822" : " RFC822");
-      }
-      first = false;
-    }
-
-    if (fetchProfile.contains(FetchProfile.Item.SIZE) ||
-        fetchProfile.contains(IMAPFolder.FetchProfileItem.SIZE)) {
-      command.append(first ? "RFC822.SIZE" : " RFC822.SIZE");
-      first = false;
-    }
-
-    if (fetchProfile.contains(IMAPFolder.FetchProfileItem.INTERNALDATE)) {
-      command.append(first ? "INTERNALDATE" : " INTERNALDATE");
-      first = false;
-    }
-
-    for (FetchProfile.Item item : fetchProfile.getItems()) {
-      if (item instanceof CustomFetchProfileItem) {
-        CustomFetchProfileItem customFetchProfileItem = (CustomFetchProfileItem) item;
-        if (!first) {
-          command.append(" ");
-        }
-
-        command.append(customFetchProfileItem.getValue());
-      }
-    }
-
-    return command;
   }
 
   /**
@@ -810,12 +733,12 @@ public class EmailUtil {
   /**
    * Generate a {@link SearchTerm} for encrypted messages which depends on an input {@link AccountDao}.
    *
-   * @param accountDao An input {@link AccountDao}
+   * @param account An input {@link AccountDao}
    * @return A generated {@link SearchTerm}.
    */
   @NonNull
-  public static SearchTerm generateSearchTermForEncryptedMessages(AccountDao accountDao) {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+  public static SearchTerm generateSearchTermForEncryptedMessages(AccountDao account) {
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
       return new GmailRawSearchTerm(
           "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg");
     } else {
@@ -836,7 +759,7 @@ public class EmailUtil {
                                                             String[] pubKeys) {
     String messageText = null;
 
-    switch (outgoingMessageInfo.getMessageEncryptionType()) {
+    switch (outgoingMessageInfo.getEncryptionType()) {
       case ENCRYPTED:
         messageText = js.crypto_message_encrypt(pubKeys, outgoingMessageInfo.getMessage());
         break;

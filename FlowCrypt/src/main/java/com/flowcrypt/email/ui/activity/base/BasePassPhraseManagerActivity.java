@@ -74,7 +74,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   protected Js js;
   protected Zxcvbn zxcvbn;
   protected PasswordStrength passwordStrength;
-  protected AccountDao accountDao;
+  protected AccountDao account;
   protected boolean isBackEnable = true;
 
   public abstract void onConfirmPassPhraseSuccess();
@@ -97,9 +97,9 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
       finish();
     }
 
-    this.accountDao = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO);
+    this.account = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO);
 
-    if (accountDao == null) {
+    if (account == null) {
       finish();
     }
 

@@ -49,7 +49,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   private View layoutContent;
   private EditText editTextUserMessage;
 
-  private AccountDao accountDao;
+  private AccountDao account;
   private boolean isMessageSent;
 
   @Override
@@ -71,7 +71,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
 
     initViews();
 
-    accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    account = new AccountDaoSource().getActiveAccountInformation(this);
   }
 
   @Override
@@ -120,7 +120,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
             + BuildConfig.VERSION_CODE;
 
         return new ApiServiceAsyncTaskLoader(getApplicationContext(),
-            new PostHelpFeedbackRequest(new PostHelpFeedbackModel(accountDao.getEmail(), text)));
+            new PostHelpFeedbackRequest(new PostHelpFeedbackModel(account.getEmail(), text)));
       default:
         return null;
     }

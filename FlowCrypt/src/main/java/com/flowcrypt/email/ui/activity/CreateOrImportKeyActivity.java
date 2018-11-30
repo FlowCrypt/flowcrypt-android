@@ -39,11 +39,11 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
       GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
           CreateOrImportKeyActivity.class);
   private boolean isShowAnotherAccountButton = true;
-  private AccountDao accountDao;
+  private AccountDao account;
 
-  public static Intent newIntent(Context context, AccountDao accountDao, boolean isShowAnotherAccount) {
+  public static Intent newIntent(Context context, AccountDao account, boolean isShowAnotherAccount) {
     Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
-    intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, accountDao);
+    intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
     intent.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, isShowAnotherAccount);
     return intent;
   }
@@ -54,7 +54,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     if (getIntent() != null) {
       this.isShowAnotherAccountButton = getIntent().getBooleanExtra
           (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-      this.accountDao = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
+      this.account = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
     }
 
     initViews();
@@ -84,7 +84,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonCreateNewKey:
-        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, accountDao),
+        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account),
             REQUEST_CODE_CREATE_KEY_ACTIVITY);
         break;
 
@@ -101,7 +101,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
       case R.id.buttonSelectAnotherAccount:
         Intent intent = new Intent();
-        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, accountDao);
+        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
         setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent);
         finish();
         break;

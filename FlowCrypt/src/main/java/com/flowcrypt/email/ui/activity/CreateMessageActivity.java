@@ -88,8 +88,8 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
-    AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(this);
-    if (accountDao == null) {
+    AccountDao account = new AccountDaoSource().getActiveAccountInformation(this);
+    if (account == null) {
       Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
       finish();
     }
@@ -138,11 +138,11 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
         R.string.switch_to_secure_email : R.string.switch_to_standard_email);
 
     if (serviceInfo != null) {
-      if (!serviceInfo.isMessageTypeCanBeSwitched()) {
+      if (!serviceInfo.isMessageTypeSwitchEnabled()) {
         menu.removeItem(R.id.menuActionSwitchType);
       }
 
-      if (!serviceInfo.isAddNewAttachmentsEnable()) {
+      if (!serviceInfo.isAddNewAttachmentEnabled()) {
         menu.removeItem(R.id.menuActionAttachFile);
       }
     }

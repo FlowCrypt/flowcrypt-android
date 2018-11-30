@@ -75,7 +75,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   private MessageDaoSource msgDaoSource;
   private Js js;
   private Session session;
-  private AccountDao accountDao;
+  private AccountDao account;
   private File attsCacheDir;
 
   /**
@@ -99,8 +99,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     super.onCreate();
     Log.d(TAG, "onCreate");
     msgDaoSource = new MessageDaoSource();
-    accountDao = new AccountDaoSource().getActiveAccountInformation(getApplicationContext());
-    session = OpenStoreHelper.getSessionForAccountDao(getApplicationContext(), accountDao);
+    account = new AccountDaoSource().getActiveAccountInformation(getApplicationContext());
+    session = OpenStoreHelper.getSessionForAccountDao(getApplicationContext(), account);
   }
 
   @Override
@@ -123,7 +123,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       long uid = outgoingMsgInfo.getUid();
 
       if (msgDaoSource.getMessage(getApplicationContext(),
-          accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, uid) != null) {
+          account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, uid) != null) {
         //todo-DenBond7 need to think about resolving a situation, when a message was created but the
         // attachments were not added.
         return;
@@ -136,9 +136,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         setupIfNeed();
         updateContactsLastUseDateTime(outgoingMsgInfo);
 
-        String[] pubKeys = outgoingMsgInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED ?
+        String[] pubKeys = outgoingMsgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED ?
             SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
-                (outgoingMsgInfo), accountDao, outgoingMsgInfo.getFromPgpContact().getEmail()) : null;
+                (outgoingMsgInfo), account, outgoingMsgInfo.getFromPgpContact().getEmail()) : null;
 
         String rawMsg = EmailUtil.generateRawMessageWithoutAttachments(outgoingMsgInfo, js, pubKeys);
         MimeMessage mimeMessage = new MimeMessage(session,
@@ -152,16 +152,16 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         newMessageUri = msgDaoSource.addRow(getApplicationContext(), contentValues);
 
         if (newMessageUri != null) {
-          new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), accountDao.getEmail(),
+          new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(getApplicationContext(),
-                  accountDao.getEmail()).size());
+                  account.getEmail()).size());
 
-          if (!CollectionUtils.isEmpty(outgoingMsgInfo.getAttachmentInfoArrayList())
-              || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachmentInfoList())) {
+          if (!CollectionUtils.isEmpty(outgoingMsgInfo.getAttachments())
+              || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments())) {
             if (!msgAttsCacheDir.exists()) {
               if (!msgAttsCacheDir.mkdir()) {
                 Log.e(TAG, "Create cache directory " + attsCacheDir.getName() + " filed!");
-                msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+                msgDaoSource.updateMessageState(getApplicationContext(), account.getEmail(),
                     JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_CACHE_PROBLEM);
                 return;
               }
@@ -170,8 +170,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             addAttachmentsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir);
           }
 
-          if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachmentInfoList())) {
-            msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+          if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments())) {
+            msgDaoSource.updateMessageState(getApplicationContext(), account.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.QUEUED);
             MessagesSenderJobService.schedule(getApplicationContext());
           } else {
@@ -183,7 +183,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         ExceptionUtil.handleError(e);
 
         if (newMessageUri == null) {
-          ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
+          ContentValues contentValues = MessageDaoSource.prepareContentValues(account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, outgoingMsgInfo);
 
           newMessageUri = msgDaoSource.addRow(getApplicationContext(), contentValues);
@@ -197,17 +197,17 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.getValue());
           contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg);
 
-          msgDaoSource.updateMessage(getApplicationContext(), accountDao.getEmail(),
+          msgDaoSource.updateMessage(getApplicationContext(), account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, contentValues);
         } else {
-          msgDaoSource.updateMessageState(getApplicationContext(), accountDao.getEmail(),
+          msgDaoSource.updateMessageState(getApplicationContext(), account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, uid, MessageState.ERROR_DURING_CREATION);
         }
       }
 
       if (newMessageUri != null) {
-        new ImapLabelsDaoSource().updateLabelMessageCount(this, accountDao.getEmail(),
-            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this, accountDao.getEmail()).size());
+        new ImapLabelsDaoSource().updateLabelMessageCount(this, account.getEmail(),
+            JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this, account.getEmail()).size());
       }
     }
   }
@@ -217,16 +217,16 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
                                              long generatedUID, MimeMessage mimeMessage,
                                              String rawMessage, File attachmentsCacheDirectory)
       throws MessagingException {
-    ContentValues contentValues = MessageDaoSource.prepareContentValues(accountDao.getEmail(),
+    ContentValues contentValues = MessageDaoSource.prepareContentValues(account.getEmail(),
         JavaEmailConstants.FOLDER_OUTBOX, mimeMessage, generatedUID, false);
 
     contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMessage);
     contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN);
     contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS,
-        !CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())
-            || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList()));
+        !CollectionUtils.isEmpty(outgoingMessageInfo.getAttachments())
+            || !CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachments()));
     contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED,
-        outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED);
+        outgoingMessageInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED);
     contentValues.put(MessageDaoSource.COL_STATE, outgoingMessageInfo.isForwarded()
         ? MessageState.NEW_FORWARDED.getValue() : MessageState.NEW.getValue());
     contentValues.put(MessageDaoSource.COL_ATTACHMENTS_DIRECTORY, attachmentsCacheDirectory.getName());
@@ -239,9 +239,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
     List<AttachmentInfo> cachedAttachments = new ArrayList<>();
 
-    if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachmentInfoArrayList())) {
-      if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
+    if (!CollectionUtils.isEmpty(outgoingMessageInfo.getAttachments())) {
+      if (outgoingMessageInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachments()) {
           try {
             Uri uriOfOriginalFile = attachmentInfo.getUri();
 
@@ -266,7 +266,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           }
         }
       } else {
-        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachmentInfoArrayList()) {
+        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getAttachments()) {
           try {
             Uri uriOfOriginalFile = attachmentInfo.getUri();
 
@@ -290,22 +290,22 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       }
     }
 
-    if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachmentInfoList())) {
-      if (outgoingMessageInfo.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+    if (!CollectionUtils.isEmpty(outgoingMessageInfo.getForwardedAttachments())) {
+      if (outgoingMessageInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachments()) {
           AttachmentInfo attachmentInfoEncrypted =
               new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo);
           attachmentInfoEncrypted.setName(attachmentInfoEncrypted.getName() + Constants.PGP_FILE_EXT);
           cachedAttachments.add(attachmentInfoEncrypted);
         }
       } else {
-        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachmentInfoList()) {
+        for (AttachmentInfo attachmentInfo : outgoingMessageInfo.getForwardedAttachments()) {
           cachedAttachments.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, attachmentInfo));
         }
       }
     }
 
-    attachmentDaoSource.addRows(getApplicationContext(), accountDao.getEmail(), JavaEmailConstants.FOLDER_OUTBOX,
+    attachmentDaoSource.addRows(getApplicationContext(), account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX,
         generatedUID, cachedAttachments);
   }
 

@@ -137,7 +137,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private FoldersManager.FolderType folderType;
   private IncomingMessageInfo incomingMessageInfo;
   private ServiceInfo serviceInfo;
-  private AccountDao accountDao;
+  private AccountDao account;
   private FromAddressesAdapter<String> fromAddressesArrayAdapter;
   private PgpContact pgpContactWithNoPublicKey;
   private ExtraActionInfo extraActionInfo;
@@ -200,16 +200,16 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     initDraftCacheDirectory();
 
-    accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
+    account = new AccountDaoSource().getActiveAccountInformation(getContext());
     fromAddressesArrayAdapter = new FromAddressesAdapter<>(getContext(),
         android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
     fromAddressesArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     fromAddressesArrayAdapter.setUseKeysInfo(onChangeMessageEncryptedTypeListener.getMessageEncryptionType()
         == MessageEncryptionType.ENCRYPTED);
-    if (accountDao != null) {
-      fromAddressesArrayAdapter.add(accountDao.getEmail());
-      fromAddressesArrayAdapter.updateKeyAvailable(accountDao.getEmail(), !CollectionUtils.isEmpty(
-          new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), accountDao.getEmail())));
+    if (account != null) {
+      fromAddressesArrayAdapter.add(account.getEmail());
+      fromAddressesArrayAdapter.updateKeyAvailable(account.getEmail(), !CollectionUtils.isEmpty(
+          new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
     js = JsForUiManager.getInstance(getContext()).getJs();
@@ -224,7 +224,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
 
-        if (isListHasExternalStorageUriAttachments(extraActionInfo.getAttachmentInfoList())) {
+        if (isListHasExternalStorageUriAttachments(extraActionInfo.getAttachments())) {
           if (ContextCompat.checkSelfPermission(getContext(),
               Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -244,8 +244,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           this.folderType = FoldersManager.getFolderTypeForImapFolder(incomingMessageInfo.getFolder());
         }
 
-        if (this.serviceInfo != null && this.serviceInfo.getAttachmentInfoList() != null) {
-          attachmentInfoList.addAll(this.serviceInfo.getAttachmentInfoList());
+        if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {
+          attachmentInfoList.addAll(this.serviceInfo.getAtts());
         }
       }
     }
@@ -273,7 +273,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
-    if (accountDao != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+    if (account != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this);
     }
 
@@ -508,7 +508,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             selectOnlyValidEmails(editTextRecipientsBcc.getChipAndTokenValues()));
 
       case R.id.loader_id_load_email_aliases:
-        return new LoadGmailAliasesLoader(getContext(), accountDao);
+        return new LoadGmailAliasesLoader(getContext(), account);
 
       default:
         return super.onCreateLoader(id, args);
@@ -552,7 +552,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       case R.id.loader_id_load_email_aliases:
         List<AccountAliasesDao> accountAliasesDaoList = (List<AccountAliasesDao>) result;
         List<String> aliases = new ArrayList<>();
-        aliases.add(accountDao.getEmail());
+        aliases.add(account.getEmail());
 
         for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
           aliases.add(accountAliasesDao.getSendAsEmail());
@@ -577,14 +577,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             imageButtonAliases.setVisibility(View.INVISIBLE);
           }
         } else {
-          if (serviceInfo == null || serviceInfo.isFromFieldEditEnable()) {
+          if (serviceInfo == null || serviceInfo.isFromFieldEditEnabled()) {
             imageButtonAliases.setVisibility(View.VISIBLE);
           } else {
             imageButtonAliases.setVisibility(View.INVISIBLE);
           }
         }
 
-        new AccountAliasesDaoSource().updateAliases(getContext(), accountDao, accountAliasesDaoList);
+        new AccountAliasesDaoSource().updateAliases(getContext(), account, accountAliasesDaoList);
         break;
 
       default:
@@ -782,7 +782,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     String maxTotalAttachmentSizeWarning = getString(R.string.template_warning_max_total_attachments_size,
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
 
-    for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachmentInfoList()) {
+    for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachments()) {
       if (isAttachmentCanBeAdded(attachmentInfo)) {
         File draftAttachment = new File(draftCacheDir, attachmentInfo.getName());
 
@@ -969,7 +969,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private OutgoingMessageInfo getOutgoingMessageInfo() {
     OutgoingMessageInfo outgoingMessageInfo = new OutgoingMessageInfo();
-    /*if (incomingMessageInfo != null && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+    /*if (incomingMessageInfo != null && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMsg())) {
       //todo-denbond7 Need to think how forward HTML
     }*/
     outgoingMessageInfo.setMessage(editTextEmailMessage.getText().toString());
@@ -980,7 +980,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
     if (incomingMessageInfo != null) {
-      outgoingMessageInfo.setRawReplyMessage(incomingMessageInfo.getOriginalRawMessageWithoutAttachments());
+      outgoingMessageInfo.setRawReplyMessage(incomingMessageInfo.getOriginalRawMessageWithoutAtts());
     }
 
     if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -1295,15 +1295,15 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsFromServiceInfo() {
-    editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditEnable());
-    editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditEnable());
+    editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditEnabled());
+    editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditEnabled());
     //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
 
-    editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnable());
-    editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnable());
+    editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnabled());
+    editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnabled());
 
-    editTextEmailMessage.setFocusable(serviceInfo.isMessageEditEnable());
-    editTextEmailMessage.setFocusableInTouchMode(serviceInfo.isMessageEditEnable());
+    editTextEmailMessage.setFocusable(serviceInfo.isMessageEditEnabled());
+    editTextEmailMessage.setFocusableInTouchMode(serviceInfo.isMessageEditEnabled());
 
     if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
       editTextEmailMessage.setText(serviceInfo.getSystemMessage());
@@ -1348,11 +1348,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
           if (incomingMessageInfo.getTo() != null && !incomingMessageInfo.getTo().isEmpty()) {
             ArrayList<String> toRecipients = new ArrayList<>(incomingMessageInfo.getTo());
-            toRecipients.remove(accountDao.getEmail());
+            toRecipients.remove(account.getEmail());
 
-            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
+            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
               List<AccountAliasesDao> accountAliasesDaoList =
-                  new AccountAliasesDaoSource().getAliases(getContext(), accountDao);
+                  new AccountAliasesDaoSource().getAliases(getContext(), account);
               for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
                 toRecipients.remove(accountAliasesDao.getSendAsEmail());
               }
@@ -1363,7 +1363,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
           if (incomingMessageInfo.getCc() != null) {
             ArrayList<String> ccRecipients = incomingMessageInfo.getCc();
-            ccRecipients.remove(accountDao.getEmail());
+            ccRecipients.remove(account.getEmail());
             ccSet.addAll(ccRecipients);
           }
 
@@ -1380,9 +1380,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         break;
 
       case FORWARD:
-        if (incomingMessageInfo.getAttachmentInfoList() != null
-            && !incomingMessageInfo.getAttachmentInfoList().isEmpty()) {
-          for (AttachmentInfo attachmentInfo : incomingMessageInfo.getAttachmentInfoList()) {
+        if (incomingMessageInfo.getAttachments() != null
+            && !incomingMessageInfo.getAttachments().isEmpty()) {
+          for (AttachmentInfo attachmentInfo : incomingMessageInfo.getAttachments()) {
             if (isAttachmentCanBeAdded(attachmentInfo)) {
               attachmentInfoList.add(attachmentInfo);
             } else {
@@ -1425,8 +1425,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
               }
             }
           }
-        } else if (!incomingMessageInfo.isPlainTextExists()
-            && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMessage())) {
+        } else if (!incomingMessageInfo.hasPlainText()
+            && !TextUtils.isEmpty(incomingMessageInfo.getHtmlMsg())) {
           Toast.makeText(getContext(), R.string.cannot_forward_html_emails,
               Toast.LENGTH_LONG).show();
         }
@@ -1592,9 +1592,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.attachmentInfoList);
     attachmentInfoList.removeAll(forwardedAttachmentInfoList);
 
-    outgoingMessageInfo.setAttachmentInfoArrayList(attachmentInfoList);
-    outgoingMessageInfo.setForwardedAttachmentInfoList(forwardedAttachmentInfoList);
-    outgoingMessageInfo.setMessageEncryptionType(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
+    outgoingMessageInfo.setAttachments(attachmentInfoList);
+    outgoingMessageInfo.setForwardedAttachments(forwardedAttachmentInfoList);
+    outgoingMessageInfo.setEncryptionType(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
     outgoingMessageInfo.setForwarded(messageType == MessageType.FORWARD);
 
     if (onMessageSendListener != null) {
@@ -1644,7 +1644,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
         imageButtonDownloadAttachment.setVisibility(View.GONE);
 
-        if (attachmentInfo.isCanBeDeleted()) {
+        if (!attachmentInfo.isProtected()) {
           View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
           imageButtonClearAttachment.setVisibility(View.VISIBLE);
           imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {

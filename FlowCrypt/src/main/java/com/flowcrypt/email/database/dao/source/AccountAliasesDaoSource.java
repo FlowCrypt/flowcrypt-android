@@ -118,15 +118,15 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
    * Get the list of {@link AccountAliasesDao} object from the local database for some email.
    *
    * @param context    Interface to global information about an application environment.
-   * @param accountDao An account information.
+   * @param account An account information.
    * @return The list of {@link AccountAliasesDao};
    */
-  public List<AccountAliasesDao> getAliases(Context context, AccountDao accountDao) {
+  public List<AccountAliasesDao> getAliases(Context context, AccountDao account) {
     List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
-    if (accountDao != null) {
+    if (account != null) {
       Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
           AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?",
-          new String[]{accountDao.getEmail(), accountDao.getAccountType()}, null);
+          new String[]{account.getEmail(), account.getAccountType()}, null);
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
@@ -146,13 +146,13 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
    * Update information about aliases of some {@link AccountDao}.
    *
    * @param context               Interface to global information about an application environment.
-   * @param accountDao            The object which contains information about an email account.
+   * @param account            The object which contains information about an email account.
    * @param accountAliasesDaoList The list of an account aliases.
    * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
    * updated or -1 otherwise.
    */
-  public int updateAliases(Context context, AccountDao accountDao, List<AccountAliasesDao> accountAliasesDaoList) {
-    deleteAccountAliases(context, accountDao);
+  public int updateAliases(Context context, AccountDao account, List<AccountAliasesDao> accountAliasesDaoList) {
+    deleteAccountAliases(context, account);
     return addRows(context, accountAliasesDaoList);
   }
 
@@ -160,20 +160,20 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
    * Delete information about aliases of some {@link AccountDao}.
    *
    * @param context    Interface to global information about an application environment.
-   * @param accountDao The object which contains information about an email account.
+   * @param account The object which contains information about an email account.
    * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
    * deleted or -1 otherwise.
    */
-  public int deleteAccountAliases(Context context, AccountDao accountDao) {
-    if (accountDao != null) {
-      String email = accountDao.getEmail();
+  public int deleteAccountAliases(Context context, AccountDao account) {
+    if (account != null) {
+      String email = account.getEmail();
       if (email == null) {
         return -1;
       } else {
         email = email.toLowerCase();
       }
 
-      String type = accountDao.getAccountType();
+      String type = account.getAccountType();
       if (type == null) {
         return -1;
       } else {

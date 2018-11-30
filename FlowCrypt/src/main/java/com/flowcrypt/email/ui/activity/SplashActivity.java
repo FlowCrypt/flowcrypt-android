@@ -57,7 +57,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   private View signInView;
   private View splashView;
 
-  private AccountDao accountDao;
+  private AccountDao account;
   private boolean isStartCheckKeysActivityEnable;
 
   @Override
@@ -71,8 +71,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     initViews();
 
-    accountDao = new AccountDaoSource().getActiveAccountInformation(this);
-    if (accountDao != null) {
+    account = new AccountDaoSource().getActiveAccountInformation(this);
+    if (account != null) {
       if (SecurityUtils.isBackupKeysExist(this)) {
         EmailSyncService.startEmailSyncService(this);
         EmailManagerActivity.runEmailManagerActivity(this);
@@ -146,10 +146,10 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
                 accountDaoSource.addRow(this, authCredentials);
                 EmailSyncService.startEmailSyncService(this);
 
-                AccountDao accountDao =
+                AccountDao account =
                     accountDaoSource.getAccountInformation(this, authCredentials.getEmail());
 
-                if (accountDao != null) {
+                if (account != null) {
                   EmailManagerActivity.runEmailManagerActivity(this);
                   finish();
                 } else {
@@ -169,7 +169,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             break;
 
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-            this.accountDao = null;
+            this.account = null;
             if (data != null) {
               clearInfoAboutOldAccount((AccountDao) data.getParcelableExtra(CreateOrImportKeyActivity
                   .EXTRA_KEY_ACCOUNT_DAO));
@@ -217,12 +217,12 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
       case R.id.loader_id_load_private_key_backups_from_email:
         isStartCheckKeysActivityEnable = true;
 
-        AccountDao accountDao = null;
+        AccountDao account = null;
         UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
         if (currentGoogleSignInAccount != null) {
-          accountDao = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
+          account = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
         }
-        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       default:
         return new Loader<>(this);
@@ -271,8 +271,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   private void runEmailManagerActivityWithCurrentGmailAccount() {
     EmailSyncService.startEmailSyncService(this);
 
-    AccountDao accountDao = addGmailAccount(currentGoogleSignInAccount);
-    if (accountDao != null) {
+    AccountDao account = addGmailAccount(currentGoogleSignInAccount);
+    if (account != null) {
       EmailManagerActivity.runEmailManagerActivity(this);
       finish();
     } else {
@@ -284,12 +284,12 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   /**
    * Clear information about created but a not used account.
    *
-   * @param accountDao The account which will be deleted from the local database.
+   * @param account The account which will be deleted from the local database.
    */
-  private void clearInfoAboutOldAccount(AccountDao accountDao) {
-    if (accountDao != null) {
+  private void clearInfoAboutOldAccount(AccountDao account) {
+    if (account != null) {
       getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{account.getEmail()});
     }
   }
 

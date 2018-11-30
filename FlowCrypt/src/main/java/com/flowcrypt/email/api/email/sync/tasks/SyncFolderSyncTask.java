@@ -41,12 +41,12 @@ public class SyncFolderSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws
       Exception {
 
-    if (syncListener != null) {
+    if (listener != null) {
       boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          syncListener.getContext(), accountDao.getEmail());
+          listener.getContext(), account.getEmail());
 
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
       imapFolder.open(javax.mail.Folder.READ_ONLY);
@@ -54,17 +54,17 @@ public class SyncFolderSyncTask extends BaseSyncTask {
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
       long nextUID = imapFolder.getUIDNext();
-      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(syncListener.getContext(),
-          accountDao.getEmail(), localFolder.getFolderAlias());
-      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(syncListener.getContext(),
-          accountDao.getEmail(), localFolder.getFolderAlias());
+      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(listener.getContext(),
+          account.getEmail(), localFolder.getFolderAlias());
+      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(listener.getContext(),
+          account.getEmail(), localFolder.getFolderAlias());
 
       Message[] newMessages = new Message[0];
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
         if (isShowOnlyEncryptedMessages) {
           Message[] foundMessages =
-              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));
+              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -88,14 +88,14 @@ public class SyncFolderSyncTask extends BaseSyncTask {
 
       Message[] updatedMessages;
       if (isShowOnlyEncryptedMessages) {
-        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(syncListener.getContext(),
-            accountDao.getEmail(), localFolder.getFolderAlias());
+        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(listener.getContext(),
+            account.getEmail(), localFolder.getFolderAlias());
         updatedMessages = EmailUtil.getUpdatedMessagesByUID(imapFolder, oldestCachedUID, newestCachedUID);
       } else {
         updatedMessages = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages, newMessages.length);
       }
 
-      syncListener.onRefreshMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
+      listener.onRefreshMessagesReceived(account, localFolder, imapFolder, newMessages,
           updatedMessages, ownerKey, requestCode);
 
       if (newMessages.length > 0) {
@@ -114,7 +114,7 @@ public class SyncFolderSyncTask extends BaseSyncTask {
           booleanLongSparseArray = EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList);
         }
 
-        syncListener.onNewMessagesReceived(accountDao, localFolder, imapFolder, newMessages,
+        listener.onNewMessagesReceived(account, localFolder, imapFolder, newMessages,
             booleanLongSparseArray, ownerKey, requestCode);
       }
 

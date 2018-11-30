@@ -52,25 +52,25 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
       throws Exception {
-    super.runIMAPAction(accountDao, session, store, syncListener);
+    super.runIMAPAction(account, session, store, listener);
 
-    if (syncListener != null) {
+    if (listener != null) {
       ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
       List<String> keys = new ArrayList<>();
 
-      Js js = new Js(syncListener.getContext(), null);
+      Js js = new Js(listener.getContext(), null);
 
-      switch (accountDao.getAccountType()) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(syncListener.getContext(),
-              accountDao, session, js));
+          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(listener.getContext(),
+              account, session, js));
           break;
 
         default:
-          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(syncListener.getContext(),
-              accountDao, session, js));
+          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(listener.getContext(),
+              account, session, js));
           break;
       }
 
@@ -78,7 +78,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         keys.add(keyDetails.getValue());
       }
 
-      syncListener.onPrivateKeyFound(accountDao, keys, ownerKey, requestCode);
+      listener.onPrivateKeyFound(account, keys, ownerKey, requestCode);
     }
   }
 
@@ -93,13 +93,13 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
    * @throws GoogleAuthException
    */
   private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Context context,
-                                                                                AccountDao accountDao,
+                                                                                AccountDao account,
                                                                                 Session session, Js js)
       throws MessagingException, IOException, GoogleAuthException {
     ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+      store = OpenStoreHelper.openAndConnectToStore(context, account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
@@ -107,7 +107,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
           folder.open(Folder.READ_ONLY);
 
           Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
+              SearchBackupsUtil.generateSearchTerms(account.getEmail()));
 
           for (Message message : foundMessages) {
             String backup = EmailUtil.getKeyFromMessageIfItExists(message);

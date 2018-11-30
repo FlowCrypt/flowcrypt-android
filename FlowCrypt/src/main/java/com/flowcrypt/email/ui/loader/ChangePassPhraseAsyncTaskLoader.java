@@ -38,13 +38,13 @@ import androidx.loader.content.AsyncTaskLoader;
 public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
   private final String newPassphrase;
-  private final AccountDao accountDao;
+  private final AccountDao account;
   private boolean isActionStarted;
   private LoaderResult data;
 
-  public ChangePassPhraseAsyncTaskLoader(Context context, AccountDao accountDao, String newPassphrase) {
+  public ChangePassPhraseAsyncTaskLoader(Context context, AccountDao account, String newPassphrase) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     this.newPassphrase = newPassphrase;
   }
 
@@ -66,13 +66,13 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
       List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-          (getContext(), accountDao.getEmail());
+          (getContext(), account.getEmail());
 
       PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
           (longIdListOfAccountPrivateKeys.toArray(new String[0]));
 
       if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
-        throw new NoPrivateKeysAvailableException(getContext(), accountDao.getEmail());
+        throw new NoPrivateKeysAvailableException(getContext(), account.getEmail());
       }
 
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
