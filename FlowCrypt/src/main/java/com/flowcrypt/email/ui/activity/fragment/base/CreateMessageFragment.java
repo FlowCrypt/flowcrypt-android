@@ -1313,15 +1313,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void updateViewsFromIncomingMessageInfo() {
     switch (messageType) {
       case REPLY:
-        switch (folderType) {
-          case SENT:
-          case OUTBOX:
-            editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
-            break;
+        if (folderType != null) {
+          switch (folderType) {
+            case SENT:
+            case OUTBOX:
+              editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getTo()));
+              break;
 
-          default:
-            editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
-            break;
+            default:
+              editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
+              break;
+          }
+        } else {
+          editTextRecipientsTo.setText(prepareRecipients(incomingMessageInfo.getFrom()));
         }
 
         if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
