@@ -1057,7 +1057,7 @@ public class MessageDaoSource extends BaseDaoSource {
     }
 
     if (deletedRows > 0) {
-      new ImapLabelsDaoSource().updateLabelMessageCount(context, generalMessageDetails.getEmail(),
+      new ImapLabelsDaoSource().updateLabelMessagesCount(context, generalMessageDetails.getEmail(),
           JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
               generalMessageDetails.getEmail()).size());
 

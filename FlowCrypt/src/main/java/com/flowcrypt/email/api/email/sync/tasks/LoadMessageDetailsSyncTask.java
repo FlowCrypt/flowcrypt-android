@@ -56,23 +56,20 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws
-      Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
     imapFolder.open(Folder.READ_WRITE);
 
     if (listener != null) {
-      String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-        public Object doCommand(IMAPProtocol imapProtocol)
-            throws ProtocolException {
-          String rawMessage = null;
+      String rawMsg = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+        public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+          String rawMsg = null;
 
           Argument args = new Argument();
           Argument list = new Argument();
           list.writeString("RFC822.SIZE");
           list.writeString("BODY[]<0.204800>");
           args.writeArgument(list);
-
 
           Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
           Response serverStatusResponse = responses[responses.length - 1];
@@ -86,7 +83,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
               FetchResponse fetchResponse = (FetchResponse) response;
               BODY body = fetchResponse.getItem(BODY.class);
               if (body != null && body.getByteArrayInputStream() != null) {
-                rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+                rawMsg = ASCIIUtility.toString(body.getByteArrayInputStream());
               }
             }
           }
@@ -94,7 +91,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
           imapProtocol.notifyResponseHandlers(responses);
           imapProtocol.handleResult(serverStatusResponse);
 
-          return rawMessage;
+          return rawMsg;
         }
       });
 
@@ -103,8 +100,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
         message.setFlag(Flags.Flag.SEEN, true);
       }
 
-      listener.onMessageDetailsReceived(account, localFolder, imapFolder, uid, message, rawMessage,
-          ownerKey, requestCode);
+      listener.onMessageDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode);
     }
 
     imapFolder.close(false);

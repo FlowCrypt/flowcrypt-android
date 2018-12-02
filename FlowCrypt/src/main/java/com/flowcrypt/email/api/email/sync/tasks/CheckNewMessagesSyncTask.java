@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.Context;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
@@ -43,63 +44,44 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
   @Override
   public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     if (listener != null) {
-      boolean isOnlyEncryptedMsgsEnabled = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          listener.getContext(), account.getEmail());
+      Context context = listener.getContext();
+      String email = account.getEmail();
+      String folderAlias = localFolder.getFolderAlias();
+      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, email);
 
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
-      imapFolder.open(Folder.READ_ONLY);
+      IMAPFolder folder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+      folder.open(Folder.READ_ONLY);
 
-      long nextUID = imapFolder.getUIDNext();
-
-      Message[] newMessages = new Message[0];
-
-      int newestCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(listener.getContext(),
-          account.getEmail(), localFolder.getFolderAlias());
+      long nextUID = folder.getUIDNext();
+      int newestCachedUID = new MessageDaoSource().getLastUIDOfMessageInLabel(context, email, folderAlias);
+      Message[] newMsgs = new Message[0];
 
       if (newestCachedUID < nextUID - 1) {
-        if (isOnlyEncryptedMsgsEnabled) {
-          Message[] foundMessages =
-              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+        if (isEncryptedModeEnabled) {
+          Message[] foundMsgs = folder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
 
-          imapFolder.fetch(foundMessages, fetchProfile);
+          folder.fetch(foundMsgs, fetchProfile);
 
-          List<Message> newMessagesList = new ArrayList<>();
+          List<Message> newMsgsList = new ArrayList<>();
 
-          for (Message message : foundMessages) {
-            if (imapFolder.getUID(message) > newestCachedUID) {
-              newMessagesList.add(message);
+          for (Message msg : foundMsgs) {
+            if (folder.getUID(msg) > newestCachedUID) {
+              newMsgsList.add(msg);
             }
           }
 
-          newMessages = EmailUtil.fetchMessagesInfo(imapFolder, newMessagesList.toArray(new Message[0]));
+          newMsgs = EmailUtil.fetchMessagesInfo(folder, newMsgsList.toArray(new Message[0]));
         } else {
-          newMessages = EmailUtil.fetchMessagesInfo(imapFolder,
-              imapFolder.getMessagesByUID(newestCachedUID + 1, nextUID - 1));
+          newMsgs = EmailUtil.fetchMessagesInfo(folder, folder.getMessagesByUID(newestCachedUID + 1, nextUID - 1));
         }
       }
 
-      LongSparseArray<Boolean> booleanLongSparseArray = new LongSparseArray<>();
-      if (isOnlyEncryptedMsgsEnabled) {
-        for (Message message : newMessages) {
-          booleanLongSparseArray.put(imapFolder.getUID(message), true);
-        }
-      } else {
-        List<Long> uidList = new ArrayList<>();
-
-        for (Message message : newMessages) {
-          uidList.add(imapFolder.getUID(message));
-        }
-
-        booleanLongSparseArray = EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList);
-      }
-
-      listener.onNewMessagesReceived(account, localFolder, imapFolder, newMessages,
-          booleanLongSparseArray, ownerKey, requestCode);
-
-      imapFolder.close(false);
+      LongSparseArray<Boolean> array = EmailUtil.getMessagesEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs);
+      listener.onNewMessagesReceived(account, localFolder, folder, newMsgs, array, ownerKey, requestCode);
+      folder.close(false);
     }
   }
 }

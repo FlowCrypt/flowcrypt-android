@@ -177,7 +177,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
     if (switchView != null) {
-      switchView.setChecked(new AccountDaoSource().isShowOnlyEncryptedMessages(this, account.getEmail()));
+      switchView.setChecked(new AccountDaoSource().isEncryptedModeEnabled(this, account.getEmail()));
 
       switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override

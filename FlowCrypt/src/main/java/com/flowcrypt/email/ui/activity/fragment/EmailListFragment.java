@@ -165,7 +165,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
-    this.isShowOnlyEncryptedMessages = accountDaoSource.isShowOnlyEncryptedMessages(getContext(),
+    this.isShowOnlyEncryptedMessages = accountDaoSource.isEncryptedModeEnabled(getContext(),
         account.getEmail());
   }
 

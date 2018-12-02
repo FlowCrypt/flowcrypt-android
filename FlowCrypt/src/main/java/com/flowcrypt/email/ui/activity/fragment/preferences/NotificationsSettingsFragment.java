@@ -46,7 +46,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
 
-    boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(getContext(),
+    boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isEncryptedModeEnabled(getContext(),
         account.getEmail());
 
     if (isShowOnlyEncryptedMessages) {

@@ -274,7 +274,7 @@ public class MessagesSenderJobService extends JobService {
                   genMsgDetails, attachmentDaoSource);
             }
 
-            imapLabelsDaoSource.updateLabelMessageCount(context, account.getEmail(),
+            imapLabelsDaoSource.updateLabelMessagesCount(context, account.getEmail(),
                 JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(context,
                     genMsgDetails.getEmail()).size());
           }

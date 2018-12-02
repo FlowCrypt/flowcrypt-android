@@ -52,25 +52,23 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     super.runIMAPAction(account, session, store, listener);
 
     if (listener != null) {
+      Context context = listener.getContext();
       ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
       List<String> keys = new ArrayList<>();
 
-      Js js = new Js(listener.getContext(), null);
+      Js js = new Js(context, null);
 
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(listener.getContext(),
-              account, session, js));
+          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(context, account, session, js));
           break;
 
         default:
-          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(listener.getContext(),
-              account, session, js));
+          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(context, account, session, js));
           break;
       }
 
@@ -96,7 +94,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
                                                                                 AccountDao account,
                                                                                 Session session, Js js)
       throws MessagingException, IOException, GoogleAuthException {
-    ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
     Store store = null;
     try {
       store = OpenStoreHelper.openAndConnectToStore(context, account, session);
@@ -106,25 +104,22 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
           folder.open(Folder.READ_ONLY);
 
-          Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(account.getEmail()));
-
-          for (Message message : foundMessages) {
+          Message[] foundMsgs = folder.search(SearchBackupsUtil.generateSearchTerms(account.getEmail()));
+          for (Message message : foundMsgs) {
             String backup = EmailUtil.getKeyFromMessageIfItExists(message);
 
             if (TextUtils.isEmpty(backup)) {
               continue;
             }
 
-            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
+            MessageBlock[] msgBlocks = js.crypto_armor_detect_blocks(backup);
 
-            for (MessageBlock messageBlock : messageBlocks) {
+            for (MessageBlock messageBlock : msgBlocks) {
               if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-                if (!TextUtils.isEmpty(messageBlock.getContent())
-                    && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock
-                    .getContent())) {
-                  privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
-                      KeyDetails.Type.EMAIL));
+                String content = messageBlock.getContent();
+                boolean isContentEmpty = TextUtils.isEmpty(content);
+                if (!isContentEmpty && EmailUtil.isKeyNotExistsInList(keyDetailsList, content)) {
+                  keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
                 }
               }
             }
@@ -142,6 +137,6 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
       }
       throw e;
     }
-    return privateKeyDetailsList;
+    return keyDetailsList;
   }
 }

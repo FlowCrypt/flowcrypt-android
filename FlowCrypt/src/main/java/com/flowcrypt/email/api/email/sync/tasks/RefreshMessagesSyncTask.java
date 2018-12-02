@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import android.content.Context;
+
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -38,32 +40,25 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     if (listener != null) {
+      Context context = listener.getContext();
+      String folderName = localFolder.getFolderAlias();
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
       imapFolder.open(Folder.READ_ONLY);
 
       long nextUID = imapFolder.getUIDNext();
 
-      Message[] newMessages = new Message[0];
-
+      Message[] newMsgs = new Message[0];
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(listener.getContext(), account
-          .getEmail(), localFolder.getFolderAlias());
-
-      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(listener.getContext(),
-          account.getEmail(),
-          localFolder.getFolderAlias());
-
-      boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          listener.getContext(), account.getEmail());
+      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(context, account.getEmail(), folderName);
+      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(context, account.getEmail(), folderName);
+      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
-        if (isShowOnlyEncryptedMessages) {
-          Message[] foundMessages =
-              imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+        if (isEncryptedModeEnabled) {
+          Message[] foundMessages = imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -78,25 +73,23 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
             }
           }
 
-          newMessages = EmailUtil.fetchMessagesInfo(imapFolder, newMessagesList.toArray(new Message[0]));
+          newMsgs = EmailUtil.fetchMessagesInfo(imapFolder, newMessagesList.toArray(new Message[0]));
         } else {
-          newMessages = EmailUtil.fetchMessagesInfo(imapFolder,
-              imapFolder.getMessagesByUID(newestCachedUID + 1, nextUID - 1));
+          Message[] msgs = imapFolder.getMessagesByUID(newestCachedUID + 1, nextUID - 1);
+          newMsgs = EmailUtil.fetchMessagesInfo(imapFolder, msgs);
         }
       }
 
-      Message[] updatedMessages;
-      if (isShowOnlyEncryptedMessages) {
-        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(listener.getContext(),
-            account.getEmail(), localFolder.getFolderAlias());
-        updatedMessages = EmailUtil.getUpdatedMessagesByUID(imapFolder, oldestCachedUID, newestCachedUID);
+      Message[] updatedMsgs;
+      if (isEncryptedModeEnabled) {
+        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(context, account.getEmail(), folderName);
+        updatedMsgs = EmailUtil.getUpdatedMessagesByUID(imapFolder, oldestCachedUID, newestCachedUID);
       } else {
-        int countOfNewMessages = newMessages != null ? newMessages.length : 0;
-        updatedMessages = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
+        int countOfNewMessages = newMsgs != null ? newMsgs.length : 0;
+        updatedMsgs = EmailUtil.getUpdatedMessages(imapFolder, countOfLoadedMessages, countOfNewMessages);
       }
 
-      listener.onRefreshMessagesReceived(account, localFolder, imapFolder, newMessages,
-          updatedMessages, ownerKey, requestCode);
+      listener.onRefreshMessagesReceived(account, localFolder, imapFolder, newMsgs, updatedMsgs, ownerKey, requestCode);
 
       imapFolder.close(false);
     }

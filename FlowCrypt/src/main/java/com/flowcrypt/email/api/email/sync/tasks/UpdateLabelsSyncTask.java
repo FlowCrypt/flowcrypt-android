@@ -36,8 +36,7 @@ public class UpdateLabelsSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     super.runIMAPAction(account, session, store, listener);
     Folder[] folders = store.getDefaultFolder().list("*");
     if (listener != null) {

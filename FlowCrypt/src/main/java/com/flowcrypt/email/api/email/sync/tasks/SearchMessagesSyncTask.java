@@ -56,8 +56,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     super.runIMAPAction(account, session, store, listener);
 
     if (listener != null) {
@@ -68,22 +67,21 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
         countOfAlreadyLoadedMessages = 0;
       }
 
-      Message[] foundMessages = imapFolder.search(generateSearchTerm(listener.getContext(), account));
+      Message[] foundMsgs = imapFolder.search(generateSearchTerm(listener.getContext(), account));
 
-      int messagesCount = foundMessages.length;
+      int messagesCount = foundMsgs.length;
       int end = messagesCount - countOfAlreadyLoadedMessages;
       int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
       if (end < 1) {
-        listener.onSearchMessagesReceived(account, folder, imapFolder, new Message[]{}, ownerKey,
-            requestCode);
+        listener.onSearchMessagesReceived(account, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         if (start < 1) {
           start = 1;
         }
 
-        Message[] bufferedMessages = new Message[end - start + 1];
-        System.arraycopy(foundMessages, start - 1, bufferedMessages, 0, end - start + 1);
+        Message[] bufferedMsgs = new Message[end - start + 1];
+        System.arraycopy(foundMsgs, start - 1, bufferedMsgs, 0, end - start + 1);
 
         FetchProfile fetchProfile = new FetchProfile();
         fetchProfile.add(FetchProfile.Item.ENVELOPE);
@@ -91,10 +89,9 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
         fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
         fetchProfile.add(UIDFolder.FetchProfileItem.UID);
 
-        imapFolder.fetch(bufferedMessages, fetchProfile);
+        imapFolder.fetch(bufferedMsgs, fetchProfile);
 
-        listener.onSearchMessagesReceived(account, folder, imapFolder, bufferedMessages,
-            ownerKey, requestCode);
+        listener.onSearchMessagesReceived(account, folder, imapFolder, bufferedMsgs, ownerKey, requestCode);
       }
 
       imapFolder.close(false);
@@ -104,16 +101,15 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
   /**
    * Generate a {@link SearchTerm} depend on an input {@link AccountDao}.
    *
-   * @param context    Interface to global information about an application environment.
+   * @param context Interface to global information about an application environment.
    * @param account An input {@link AccountDao}
    * @return A generated {@link SearchTerm}.
    */
   @NonNull
   private SearchTerm generateSearchTerm(Context context, AccountDao account) {
-    boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-        context, account.getEmail());
+    boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
-    if (isShowOnlyEncryptedMessages) {
+    if (isEncryptedModeEnabled) {
       SearchTerm searchTerm = EmailUtil.generateSearchTermForEncryptedMessages(account);
 
       if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {

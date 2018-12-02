@@ -395,7 +395,7 @@ public class AccountDaoSource extends BaseDaoSource {
    * @param email   An email of the active account.
    * @return true if need to show only encrypted messages
    */
-  public boolean isShowOnlyEncryptedMessages(Context context, String email) {
+  public boolean isEncryptedModeEnabled(Context context, String email) {
     String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,

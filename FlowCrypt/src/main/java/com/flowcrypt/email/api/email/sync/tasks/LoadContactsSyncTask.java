@@ -58,74 +58,69 @@ public class LoadContactsSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener)
-      throws Exception {
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     if (listener != null) {
-      FoldersManager foldersManager
-          = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
+      FoldersManager foldersManager = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
 
       if (foldersManager.getFolderSent() != null) {
-        IMAPFolder imapFolder =
-            (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
         imapFolder.open(Folder.READ_ONLY);
 
-        Message[] messages = imapFolder.getMessages();
+        Message[] msgs = imapFolder.getMessages();
 
-        if (messages.length > 0) {
+        if (msgs.length > 0) {
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase());
           fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase());
           fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase());
-          imapFolder.fetch(messages, fetchProfile);
+          imapFolder.fetch(msgs, fetchProfile);
 
           ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
-          for (Message message : messages) {
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(message, Message.RecipientType.TO)));
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(message, Message.RecipientType.CC)));
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(message, Message.RecipientType.BCC)));
+          for (Message msg : msgs) {
+            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.TO)));
+            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.CC)));
+            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.BCC)));
           }
 
           ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-          List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener
-              .getContext());
+          List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener.getContext());
 
-          Set<String> contactsInDatabaseSet = new HashSet<>();
-          Set<String> contactsWhichWillBeUpdatedSet = new HashSet<>();
-          Set<String> contactsWhichWillBeCreatedSet = new HashSet<>();
+          Set<String> contactsInDatabase = new HashSet<>();
+          Set<String> contactsWhichWillBeUpdated = new HashSet<>();
+          Set<String> contactsWhichWillBeCreated = new HashSet<>();
           Map<String, String> emailNamePairsMap = new HashMap<>();
 
-          ArrayList<EmailAndNamePair> newCandidate = new ArrayList<>();
-          ArrayList<EmailAndNamePair> updateCandidate = new ArrayList<>();
+          ArrayList<EmailAndNamePair> newCandidates = new ArrayList<>();
+          ArrayList<EmailAndNamePair> updateCandidates = new ArrayList<>();
 
           for (PgpContact pgpContact : availablePgpContacts) {
-            contactsInDatabaseSet.add(pgpContact.getEmail().toLowerCase());
+            contactsInDatabase.add(pgpContact.getEmail().toLowerCase());
             emailNamePairsMap.put(pgpContact.getEmail().toLowerCase(), pgpContact.getName());
           }
 
           for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
-            if (contactsInDatabaseSet.contains(emailAndNamePair.getEmail())) {
+            if (contactsInDatabase.contains(emailAndNamePair.getEmail())) {
               if (TextUtils.isEmpty(emailNamePairsMap.get(emailAndNamePair.getEmail()))) {
-                if (!contactsWhichWillBeUpdatedSet.contains(emailAndNamePair.getEmail())) {
-                  contactsWhichWillBeUpdatedSet.add(emailAndNamePair.getEmail());
-                  updateCandidate.add(emailAndNamePair);
+                if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.getEmail())) {
+                  contactsWhichWillBeUpdated.add(emailAndNamePair.getEmail());
+                  updateCandidates.add(emailAndNamePair);
                 }
               }
             } else {
-              if (!contactsWhichWillBeCreatedSet.contains(emailAndNamePair.getEmail())) {
-                contactsWhichWillBeCreatedSet.add(emailAndNamePair.getEmail());
-                newCandidate.add(emailAndNamePair);
+              if (!contactsWhichWillBeCreated.contains(emailAndNamePair.getEmail())) {
+                contactsWhichWillBeCreated.add(emailAndNamePair.getEmail());
+                newCandidates.add(emailAndNamePair);
               }
             }
           }
 
-          contactsDaoSource.updatePgpContacts(listener.getContext(), updateCandidate);
-          contactsDaoSource.addRows(listener.getContext(), newCandidate);
+          contactsDaoSource.updatePgpContacts(listener.getContext(), updateCandidates);
+          contactsDaoSource.addRows(listener.getContext(), newCandidates);
 
           ContentValues contentValues = new ContentValues();
           contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
 
-          new AccountDaoSource().updateAccountInformation(listener.getContext(),
-              account.getAccount(), contentValues);
+          new AccountDaoSource().updateAccountInformation(listener.getContext(), account.getAccount(), contentValues);
         }
 
         imapFolder.close(false);
@@ -134,45 +129,24 @@ public class LoadContactsSyncTask extends BaseSyncTask {
   }
 
   /**
-   * Remove duplicates from the input list.
-   *
-   * @param emailAndNamePairs The input list.
-   * @return A list with unique elements.
-   */
-  private ArrayList<EmailAndNamePair> removeDuplicates(ArrayList<EmailAndNamePair> emailAndNamePairs) {
-    Set<String> savedEmails = new HashSet<>();
-    ArrayList<EmailAndNamePair> cleanedEmailAndNamePairs = new ArrayList<>();
-
-    for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
-      if (!savedEmails.contains(emailAndNamePair.getEmail())) {
-        savedEmails.add(emailAndNamePair.getEmail());
-        cleanedEmailAndNamePairs.add(emailAndNamePair);
-      }
-    }
-
-    return cleanedEmailAndNamePairs;
-  }
-
-  /**
    * Generate an array of {@link EmailAndNamePair} objects from the input message.
    * This information will be retrieved from "to" , "cc" or "bcc" headers.
    *
-   * @param message       The input {@link Message}.
+   * @param msg           The input {@link Message}.
    * @param recipientType The input {@link Message.RecipientType}.
    * @return An array of EmailAndNamePair objects, which contains information about emails and names.
    */
-  private EmailAndNamePair[] parseRecipients(Message message, Message.RecipientType recipientType) {
-    if (message != null && recipientType != null) {
+  private EmailAndNamePair[] parseRecipients(Message msg, Message.RecipientType recipientType) {
+    if (msg != null && recipientType != null) {
       try {
-        String[] header = message.getHeader(recipientType.toString());
+        String[] header = msg.getHeader(recipientType.toString());
         if (header != null && header.length > 0) {
           if (!TextUtils.isEmpty(header[0])) {
-            InternetAddress[] internetAddresses = InternetAddress.parse(header[0]);
-            EmailAndNamePair[] emailAndNamePairs = new EmailAndNamePair[internetAddresses.length];
-            for (int i = 0; i < internetAddresses.length; i++) {
-              InternetAddress internetAddress = internetAddresses[i];
-              emailAndNamePairs[i] = new EmailAndNamePair(internetAddress.getAddress().toLowerCase(),
-                  internetAddress.getPersonal());
+            InternetAddress[] addresses = InternetAddress.parse(header[0]);
+            EmailAndNamePair[] emailAndNamePairs = new EmailAndNamePair[addresses.length];
+            for (int i = 0; i < addresses.length; i++) {
+              InternetAddress address = addresses[i];
+              emailAndNamePairs[i] = new EmailAndNamePair(address.getAddress().toLowerCase(), address.getPersonal());
             }
 
             return emailAndNamePairs;

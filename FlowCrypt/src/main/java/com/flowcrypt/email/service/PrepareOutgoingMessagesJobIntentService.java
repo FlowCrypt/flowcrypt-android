@@ -152,7 +152,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         newMessageUri = msgDaoSource.addRow(getApplicationContext(), contentValues);
 
         if (newMessageUri != null) {
-          new ImapLabelsDaoSource().updateLabelMessageCount(getApplicationContext(), account.getEmail(),
+          new ImapLabelsDaoSource().updateLabelMessagesCount(getApplicationContext(), account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(getApplicationContext(),
                   account.getEmail()).size());
 
@@ -206,7 +206,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       }
 
       if (newMessageUri != null) {
-        new ImapLabelsDaoSource().updateLabelMessageCount(this, account.getEmail(),
+        new ImapLabelsDaoSource().updateLabelMessagesCount(this, account.getEmail(),
             JavaEmailConstants.FOLDER_OUTBOX, msgDaoSource.getOutboxMessages(this, account.getEmail()).size());
       }
     }

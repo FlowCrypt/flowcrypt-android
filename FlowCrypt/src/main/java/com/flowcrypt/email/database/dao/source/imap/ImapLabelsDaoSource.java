@@ -191,7 +191,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
    * @return The count of updated rows. Will be 1 if information about {@link Folder} was
    * updated or -1 otherwise.
    */
-  public int updateLabelMessageCount(Context context, String email, String folderName, int newMessageCount) {
+  public int updateLabelMessagesCount(Context context, String email, String folderName, int newMessageCount) {
     if (context != null && !TextUtils.isEmpty(folderName)) {
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {

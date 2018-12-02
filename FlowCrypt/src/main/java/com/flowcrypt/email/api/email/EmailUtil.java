@@ -205,7 +205,7 @@ public class EmailUtil {
   /**
    * Generate a {@link BodyPart} with a private key as an attachment.
    *
-   * @param account        The given account;
+   * @param account           The given account;
    * @param armoredPrivateKey The armored private key.
    * @return {@link BodyPart} with private key as an attachment.
    * @throws Exception will occur when generate this {@link BodyPart}.
@@ -225,10 +225,10 @@ public class EmailUtil {
   /**
    * Generate a message with the html pattern and the private key(s) as an attachment.
    *
-   * @param context    Interface to global information about an application environment;
+   * @param context Interface to global information about an application environment;
    * @param account The given account;
-   * @param session    The current session.
-   * @param js         An instance of {@link Js}
+   * @param session The current session.
+   * @param js      An instance of {@link Js}
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
@@ -252,9 +252,9 @@ public class EmailUtil {
   /**
    * Generate a message with the html pattern and the private key as an attachment.
    *
-   * @param context    Interface to global information about an application environment;
+   * @param context Interface to global information about an application environment;
    * @param account The given account;
-   * @param session    The current session.
+   * @param session The current session.
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
@@ -302,10 +302,10 @@ public class EmailUtil {
   /**
    * Get a list of {@link KeyDetails} using the <b>Gmail API</b>
    *
-   * @param context    context Interface to global information about an application environment;
+   * @param context context Interface to global information about an application environment;
    * @param account An {@link AccountDao} object.
-   * @param session    A {@link Session} object.
-   * @param js         An instance of {@link Js}
+   * @param session A {@link Session} object.
+   * @param js      An instance of {@link Js}
    * @return A list of {@link KeyDetails}
    * @throws MessagingException
    * @throws IOException
@@ -843,5 +843,33 @@ public class EmailUtil {
         .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, lastUid);
 
     return lastUid;
+  }
+
+  /**
+   * Get information about the encryption state for the given messages.
+   *
+   * @param isEncryptedModeEnabled If true we show only encrypted messages
+   * @param folder                 The folder which contains input messages
+   * @param newMsgs                The input messages
+   * @return An array which contains information about the encryption state of the given messages.
+   * @throws MessagingException
+   */
+  public static LongSparseArray<Boolean> getMessagesEncryptionInfo(boolean isEncryptedModeEnabled, IMAPFolder folder,
+                                                                   Message[] newMsgs) throws MessagingException {
+    LongSparseArray<Boolean> array = new LongSparseArray<>();
+    if (isEncryptedModeEnabled) {
+      for (Message message : newMsgs) {
+        array.put(folder.getUID(message), true);
+      }
+    } else {
+      List<Long> uidList = new ArrayList<>();
+
+      for (Message message : newMsgs) {
+        uidList.add(folder.getUID(message));
+      }
+
+      array = EmailUtil.getInfoAreMessagesEncrypted(folder, uidList);
+    }
+    return array;
   }
 }

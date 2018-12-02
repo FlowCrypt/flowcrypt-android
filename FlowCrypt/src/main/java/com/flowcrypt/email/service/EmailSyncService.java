@@ -326,7 +326,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
         "count: " + messages.length);
     try {
       boolean isShowOnlyEncryptedMessages =
-          new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), account.getEmail());
+          new AccountDaoSource().isEncryptedModeEnabled(getApplicationContext(), account.getEmail());
 
       MessageDaoSource messageDaoSource = new MessageDaoSource();
       messageDaoSource.addRows(getApplicationContext(),
@@ -399,7 +399,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     Log.d(TAG, "onSearchMessagesReceived: message count: " + messages.length);
     try {
       boolean isShowOnlyEncryptedMessages =
-          new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), account.getEmail());
+          new AccountDaoSource().isEncryptedModeEnabled(getApplicationContext(), account.getEmail());
 
       MessageDaoSource messageDaoSource = new MessageDaoSource();
       messageDaoSource.addRows(getApplicationContext(),
@@ -468,7 +468,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
           remoteFolder, newMessages);
 
       boolean isShowOnlyEncryptedMessages =
-          new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), account.getEmail());
+          new AccountDaoSource().isEncryptedModeEnabled(getApplicationContext(), account.getEmail());
 
       messageDaoSource.addRows(getApplicationContext(),
           account.getEmail(),

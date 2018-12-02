@@ -44,19 +44,16 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
   }
 
   @Override
-  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener syncListener) throws
-      Exception {
-    super.runSMTPAction(account, session, store, syncListener);
+  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    super.runSMTPAction(account, session, store, listener);
 
-    if (syncListener != null && account != null) {
-      Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, account);
-
-      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
-          account, session, new Js(syncListener.getContext(),
-              new SecurityStorageConnector(syncListener.getContext())));
+    if (listener != null && account != null) {
+      Transport transport = prepareTransportForSmtp(listener.getContext(), session, account);
+      Js js = new Js(listener.getContext(), new SecurityStorageConnector(listener.getContext()));
+      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(listener.getContext(), account, session, js);
       transport.sendMessage(message, message.getAllRecipients());
 
-      syncListener.onMessageWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
+      listener.onMessageWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
     }
   }
 }

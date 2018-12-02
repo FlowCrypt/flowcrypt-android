@@ -252,7 +252,7 @@ public class SyncJobService extends JobService implements SyncListener {
                                         ownerKey, int requestCode) {
     try {
       boolean isShowOnlyEncryptedMessages =
-          new AccountDaoSource().isShowOnlyEncryptedMessages(getApplicationContext(), account.getEmail());
+          new AccountDaoSource().isEncryptedModeEnabled(getApplicationContext(), account.getEmail());
 
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
