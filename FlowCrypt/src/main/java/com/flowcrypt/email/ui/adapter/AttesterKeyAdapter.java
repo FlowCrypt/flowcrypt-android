@@ -77,7 +77,7 @@ public class AttesterKeyAdapter extends BaseAdapter {
 
     viewHolder.textViewKeyOwner.setText(lookUpEmailResponse.getEmail());
 
-    if (TextUtils.isEmpty(lookUpEmailResponse.getPubkey())) {
+    if (TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange));
     } else if (isMatchedPublicKey(lookUpEmailResponse)) {

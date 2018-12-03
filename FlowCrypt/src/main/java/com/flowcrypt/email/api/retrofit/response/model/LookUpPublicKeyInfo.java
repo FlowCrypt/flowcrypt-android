@@ -41,7 +41,7 @@ public class LookUpPublicKeyInfo implements Parcelable {
 
   @SerializedName("pubkey")
   @Expose
-  private String publicKey;
+  private String pubKey;
 
   @Expose
   private String query;
@@ -54,7 +54,7 @@ public class LookUpPublicKeyInfo implements Parcelable {
 
   protected LookUpPublicKeyInfo(Parcel in) {
     this.longId = in.readString();
-    this.publicKey = in.readString();
+    this.pubKey = in.readString();
     this.query = in.readString();
     this.attests = in.createStringArrayList();
   }
@@ -67,7 +67,7 @@ public class LookUpPublicKeyInfo implements Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.longId);
-    dest.writeString(this.publicKey);
+    dest.writeString(this.pubKey);
     dest.writeString(this.query);
     dest.writeStringList(this.attests);
   }
@@ -76,8 +76,8 @@ public class LookUpPublicKeyInfo implements Parcelable {
     return longId;
   }
 
-  public String getPublicKey() {
-    return publicKey;
+  public String getPubKey() {
+    return pubKey;
   }
 
   public String getQuery() {

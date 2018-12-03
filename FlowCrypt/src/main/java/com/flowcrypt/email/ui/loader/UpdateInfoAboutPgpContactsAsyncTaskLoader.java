@@ -150,13 +150,13 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
     LookUpEmailResponse lookUpEmailResponse = getLookUpEmailResponse(email);
 
     if (lookUpEmailResponse != null) {
-      if (!TextUtils.isEmpty(lookUpEmailResponse.getPubkey())) {
-        String client = lookUpEmailResponse.getPubkey() == null ? null : lookUpEmailResponse
+      if (!TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
+        String client = lookUpEmailResponse.getPubKey() == null ? null : lookUpEmailResponse
             .isHasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource
             .CLIENT_PGP;
 
         return new PgpContact(js, email, null,
-            lookUpEmailResponse.getPubkey(), client, lookUpEmailResponse.isAttested());
+            lookUpEmailResponse.getPubKey(), client, lookUpEmailResponse.isAttested());
       } else {
         return new PgpContact(js, email, null, null, null, false);
       }

@@ -34,20 +34,20 @@ public class InitialConfirmModel extends BaseRequestModel {
 
   @SerializedName("signed_message")
   @Expose
-  private String signedMessage;
+  private String signedMsg;
 
   public InitialConfirmModel() {
   }
 
 
   protected InitialConfirmModel(Parcel in) {
-    this.signedMessage = in.readString();
+    this.signedMsg = in.readString();
   }
 
   @Override
   public String toString() {
     return "InitialConfirmModel{" +
-        "signedMessage='" + signedMessage + '\'' +
+        "signedMsg='" + signedMsg + '\'' +
         "} " + super.toString();
   }
 
@@ -58,10 +58,10 @@ public class InitialConfirmModel extends BaseRequestModel {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.signedMessage);
+    dest.writeString(this.signedMsg);
   }
 
   public void setSignedMessage(String signedMessage) {
-    this.signedMessage = signedMessage;
+    this.signedMsg = signedMessage;
   }
 }

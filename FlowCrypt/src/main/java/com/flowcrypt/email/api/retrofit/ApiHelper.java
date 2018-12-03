@@ -33,20 +33,23 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * E-mail: DenBond7@gmail.com
  */
 public final class ApiHelper {
+  private static final int TIMEOUT = 10;
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
 
   private ApiHelper(Context context) {
     OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS);
+        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT, TimeUnit.SECONDS);
 
     okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
     if (GeneralUtil.isDebugBuild()) {
-      if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false)) {
+      boolean isWriteLogsEnabled = SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false);
+
+      if (isWriteLogsEnabled) {
         LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();
         loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.BODY);
         okHttpClientBuilder.addInterceptor(loggingInFileInterceptor);

@@ -28,8 +28,7 @@ public class ApiVersionInterceptor implements Interceptor {
 
   @Override
   public Response intercept(Chain chain) throws IOException {
-    Request request = chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION,
-        API_VERSION_VALUE).build();
+    Request request = chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION, API_VERSION_VALUE).build();
     return chain.proceed(request);
   }
 }

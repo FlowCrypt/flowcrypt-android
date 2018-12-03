@@ -37,47 +37,47 @@ public interface ApiService {
   /**
    * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup/email"
    *
-   * @param postLookUpEmailModel POJO model for requests
+   * @param body POJO model for requests
    * @return {@link Call<LookUpEmailResponse>}
    */
   @POST("/lookup/email")
-  Call<LookUpEmailResponse> postLookUpEmail(@Body PostLookUpEmailModel postLookUpEmailModel);
+  Call<LookUpEmailResponse> postLookUpEmail(@Body PostLookUpEmailModel body);
 
   /**
    * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup/email"
    *
-   * @param postLookUpEmailsModel POJO model for requests
+   * @param body POJO model for requests
    * @return {@link Call<LookUpEmailsResponse>}
    */
   @POST("/lookup/email")
-  Call<LookUpEmailsResponse> postLookUpEmails(@Body PostLookUpEmailsModel postLookUpEmailsModel);
+  Call<LookUpEmailsResponse> postLookUpEmails(@Body PostLookUpEmailsModel body);
 
   /**
    * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/initial/legacy_submit"
    *
-   * @param initialLegacySubmitModel POJO model for requests
+   * @param body POJO model for requests
    * @return {@link Call<InitialLegacySubmitResponse>}
    */
   @POST("/initial/legacy_submit")
-  Call<InitialLegacySubmitResponse> postInitialLegacySubmit(@Body InitialLegacySubmitModel initialLegacySubmitModel);
+  Call<InitialLegacySubmitResponse> postInitialLegacySubmit(@Body InitialLegacySubmitModel body);
 
   /**
    * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/test/welcome"
    *
-   * @param testWelcomeModel POJO model for requests
+   * @param body POJO model for requests
    * @return {@link Call<TestWelcomeResponse>}
    */
   @POST("/test/welcome")
-  Call<TestWelcomeResponse> postTestWelcome(@Body TestWelcomeModel testWelcomeModel);
+  Call<TestWelcomeResponse> postTestWelcome(@Body TestWelcomeModel body);
 
   /**
    * This method create a {@link Call} object for the API "https://flowcrypt.com/api/help/feedback"
    *
-   * @param postHelpFeedbackModel POJO model for requests
+   * @param body POJO model for requests
    * @return {@link Call<PostHelpFeedbackResponse>}
    */
   @POST(Constants.FLOWCRYPT_API_URL + "/help/feedback")
-  Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel postHelpFeedbackModel);
+  Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel body);
 
   /**
    * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup"

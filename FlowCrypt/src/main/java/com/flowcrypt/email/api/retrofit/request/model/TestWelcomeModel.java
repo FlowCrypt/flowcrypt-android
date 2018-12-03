@@ -38,24 +38,24 @@ public class TestWelcomeModel extends BaseRequestModel {
 
   @SerializedName("pubkey")
   @Expose
-  private String pubkey;
+  private String pubKey;
 
-  public TestWelcomeModel(String email, String pubkey) {
+  public TestWelcomeModel(String email, String pubKey) {
     this.email = email;
-    this.pubkey = pubkey;
+    this.pubKey = pubKey;
   }
 
 
   protected TestWelcomeModel(Parcel in) {
     this.email = in.readString();
-    this.pubkey = in.readString();
+    this.pubKey = in.readString();
   }
 
   @Override
   public String toString() {
     return "TestWelcomeModel{" +
         "email='" + email + '\'' +
-        ", pubkey='" + pubkey + '\'' +
+        ", pubKey='" + pubKey + '\'' +
         "} " + super.toString();
   }
 
@@ -67,6 +67,6 @@ public class TestWelcomeModel extends BaseRequestModel {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.email);
-    dest.writeString(this.pubkey);
+    dest.writeString(this.pubKey);
   }
 }

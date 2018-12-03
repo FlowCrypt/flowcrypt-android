@@ -9,6 +9,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * This POJO object describes a base error from the API.
@@ -36,8 +37,9 @@ public class ApiError implements Parcelable {
   @Expose
   private int code;
 
+  @SerializedName("message")
   @Expose
-  private String message;
+  private String msg;
 
   @Expose
   private String internal;
@@ -47,7 +49,7 @@ public class ApiError implements Parcelable {
 
   protected ApiError(Parcel in) {
     this.code = in.readInt();
-    this.message = in.readString();
+    this.msg = in.readString();
     this.internal = in.readString();
   }
 
@@ -55,7 +57,7 @@ public class ApiError implements Parcelable {
   public String toString() {
     return "ApiError{" +
         "code=" + code +
-        ", message='" + message + '\'' +
+        ", msg='" + msg + '\'' +
         ", internal='" + internal + '\'' +
         '}';
   }
@@ -68,7 +70,7 @@ public class ApiError implements Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeInt(this.code);
-    dest.writeString(this.message);
+    dest.writeString(this.msg);
     dest.writeString(this.internal);
   }
 
@@ -77,7 +79,7 @@ public class ApiError implements Parcelable {
   }
 
   public String getMessage() {
-    return message;
+    return msg;
   }
 
   public String getInternal() {

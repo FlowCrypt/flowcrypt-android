@@ -9,6 +9,7 @@ import android.os.Parcel;
 
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * The model of {@link PostHelpFeedbackRequest}.
@@ -36,27 +37,28 @@ public class PostHelpFeedbackModel extends BaseRequestModel {
   @Expose
   private String email;
 
+  @SerializedName("message")
   @Expose
-  private String message;
+  private String msg;
 
   public PostHelpFeedbackModel() {
   }
 
-  public PostHelpFeedbackModel(String email, String message) {
+  public PostHelpFeedbackModel(String email, String msg) {
     this.email = email;
-    this.message = message;
+    this.msg = msg;
   }
 
   public PostHelpFeedbackModel(Parcel in) {
     this.email = in.readString();
-    this.message = in.readString();
+    this.msg = in.readString();
   }
 
   @Override
   public String toString() {
     return "PostHelpFeedbackModel{" +
         "email='" + email + '\'' +
-        ", message='" + message + '\'' +
+        ", msg='" + msg + '\'' +
         "} " + super.toString();
   }
 
@@ -68,7 +70,7 @@ public class PostHelpFeedbackModel extends BaseRequestModel {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.email);
-    dest.writeString(this.message);
+    dest.writeString(this.msg);
   }
 
   public String getEmail() {
@@ -80,10 +82,10 @@ public class PostHelpFeedbackModel extends BaseRequestModel {
   }
 
   public String getMessage() {
-    return message;
+    return msg;
   }
 
   public void setMessage(String message) {
-    this.message = message;
+    this.msg = message;
   }
 }

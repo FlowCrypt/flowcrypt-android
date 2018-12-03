@@ -174,7 +174,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
 
                 for (LookUpPublicKeyInfo lookUpPublicKeyInfo : lookUpPublicKeyInfoArrayList) {
                   if (lookUpPublicKeyInfo != null) {
-                    stringBuilder.append(lookUpPublicKeyInfo.getPublicKey());
+                    stringBuilder.append(lookUpPublicKeyInfo.getPubKey());
                   }
                 }
 

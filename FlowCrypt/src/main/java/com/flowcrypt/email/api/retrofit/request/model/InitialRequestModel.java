@@ -38,20 +38,20 @@ public class InitialRequestModel extends BaseRequestModel {
 
   @SerializedName("pubkey")
   @Expose
-  private String pubkey;
+  private String pubKey;
 
   @SerializedName("attest")
   @Expose
   private boolean attest;
 
-  public InitialRequestModel(String email, String pubkey) {
+  public InitialRequestModel(String email, String pubKey) {
     this.email = email;
-    this.pubkey = pubkey;
+    this.pubKey = pubKey;
   }
 
   protected InitialRequestModel(Parcel in) {
     this.email = in.readString();
-    this.pubkey = in.readString();
+    this.pubKey = in.readString();
     this.attest = in.readByte() != 0;
   }
 
@@ -59,7 +59,7 @@ public class InitialRequestModel extends BaseRequestModel {
   public String toString() {
     return "InitialRequestModel{" +
         "email='" + email + '\'' +
-        ", pubkey='" + pubkey + '\'' +
+        ", pubKey='" + pubKey + '\'' +
         ", attest=" + attest +
         "} " + super.toString();
   }
@@ -72,7 +72,7 @@ public class InitialRequestModel extends BaseRequestModel {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.email);
-    dest.writeString(this.pubkey);
+    dest.writeString(this.pubKey);
     dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
   }
 

@@ -20,16 +20,16 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 public class BaseResponse<T extends BaseApiResponse> implements Serializable {
-  private Response<T> baseResponseModelResponse;
+  private Response<T> modelResponse;
   private Exception e;
   private ApiName apiName;
 
   public T getResponseModel() {
-    return baseResponseModelResponse != null ? baseResponseModelResponse.body() : null;
+    return modelResponse != null ? modelResponse.body() : null;
   }
 
   public void setResponse(Response<T> response) {
-    this.baseResponseModelResponse = response;
+    this.modelResponse = response;
   }
 
   public Exception getException() {
@@ -49,6 +49,6 @@ public class BaseResponse<T extends BaseApiResponse> implements Serializable {
   }
 
   public int getResponseCode() {
-    return baseResponseModelResponse != null ? baseResponseModelResponse.code() : -1;
+    return modelResponse != null ? modelResponse.code() : -1;
   }
 }

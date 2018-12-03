@@ -34,33 +34,33 @@ public class ReplaceRequestModel extends BaseRequestModel {
 
   @SerializedName("signed_message")
   @Expose
-  private String signedMessage;
+  private String signedMsg;
 
   @SerializedName("new_pubkey")
   @Expose
-  private String newPubkey;
+  private String newPubKey;
 
   @SerializedName("email")
   @Expose
   private String email;
 
-  public ReplaceRequestModel(String signedMessage, String newPubkey, String email) {
-    this.signedMessage = signedMessage;
-    this.newPubkey = newPubkey;
+  public ReplaceRequestModel(String signedMsg, String newPubKey, String email) {
+    this.signedMsg = signedMsg;
+    this.newPubKey = newPubKey;
     this.email = email;
   }
 
   protected ReplaceRequestModel(Parcel in) {
-    this.signedMessage = in.readString();
-    this.newPubkey = in.readString();
+    this.signedMsg = in.readString();
+    this.newPubKey = in.readString();
     this.email = in.readString();
   }
 
   @Override
   public String toString() {
     return "ReplaceRequestModel{" +
-        "signedMessage='" + signedMessage + '\'' +
-        ", newPubkey='" + newPubkey + '\'' +
+        "signedMsg='" + signedMsg + '\'' +
+        ", newPubKey='" + newPubKey + '\'' +
         ", email='" + email + '\'' +
         "} " + super.toString();
   }
@@ -72,8 +72,8 @@ public class ReplaceRequestModel extends BaseRequestModel {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.signedMessage);
-    dest.writeString(this.newPubkey);
+    dest.writeString(this.signedMsg);
+    dest.writeString(this.newPubKey);
     dest.writeString(this.email);
   }
 }

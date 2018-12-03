@@ -42,8 +42,9 @@ public class LookUpEmailResponse extends BaseApiResponse {
   @Expose
   private boolean hasCryptup;
 
+  @SerializedName("pubkey")
   @Expose
-  private String pubkey;
+  private String pubKey;
 
   @Expose
   private String email;
@@ -59,7 +60,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
     super(in);
     this.attested = in.readByte() != 0;
     this.hasCryptup = in.readByte() != 0;
-    this.pubkey = in.readString();
+    this.pubKey = in.readString();
     this.email = in.readString();
     this.longId = in.readString();
   }
@@ -69,7 +70,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
     return "LookUpEmailResponse{" +
         "attested=" + attested +
         ", hasCryptup=" + hasCryptup +
-        ", pubkey='" + pubkey + '\'' +
+        ", pubKey='" + pubKey + '\'' +
         ", email='" + email + '\'' +
         ", longId='" + longId + '\'' +
         "} " + super.toString();
@@ -85,7 +86,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
     super.writeToParcel(dest, flags);
     dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
     dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
-    dest.writeString(this.pubkey);
+    dest.writeString(this.pubKey);
     dest.writeString(this.email);
     dest.writeString(this.longId);
   }
@@ -98,8 +99,8 @@ public class LookUpEmailResponse extends BaseApiResponse {
     return hasCryptup;
   }
 
-  public String getPubkey() {
-    return pubkey;
+  public String getPubKey() {
+    return pubKey;
   }
 
   public String getEmail() {
