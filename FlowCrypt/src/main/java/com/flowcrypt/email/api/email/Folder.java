@@ -33,24 +33,24 @@ public class Folder implements Parcelable {
       return new Folder[size];
     }
   };
-  private String serverFullFolderName;
+  private String fullName;
   private String folderAlias;
   private String userFriendlyName;
   private String[] attributes;
   private boolean isCustomLabel;
-  private int messageCount;
+  private int msgCount;
   private String searchQuery;
 
-  public Folder(String serverFullFolderName, String folderAlias, int messageCount,
+  public Folder(String fullName, String folderAlias, int msgCount,
                 String[] attributes, boolean isCustomLabel) {
-    this(serverFullFolderName, folderAlias, messageCount, attributes, isCustomLabel, null);
+    this(fullName, folderAlias, msgCount, attributes, isCustomLabel, null);
   }
 
-  public Folder(String serverFullFolderName, String folderAlias, int messageCount,
+  public Folder(String fullName, String folderAlias, int msgCount,
                 String[] attributes, boolean isCustomLabel, String searchQuery) {
-    this.serverFullFolderName = serverFullFolderName;
+    this.fullName = fullName;
     this.folderAlias = folderAlias;
-    this.messageCount = messageCount;
+    this.msgCount = msgCount;
     this.userFriendlyName = folderAlias;
     this.attributes = attributes;
     this.isCustomLabel = isCustomLabel;
@@ -58,9 +58,9 @@ public class Folder implements Parcelable {
   }
 
   protected Folder(Parcel in) {
-    this.serverFullFolderName = in.readString();
+    this.fullName = in.readString();
     this.folderAlias = in.readString();
-    this.messageCount = in.readInt();
+    this.msgCount = in.readInt();
     this.userFriendlyName = in.readString();
     this.attributes = in.createStringArray();
     this.isCustomLabel = in.readByte() != 0;
@@ -70,12 +70,12 @@ public class Folder implements Parcelable {
   @Override
   public String toString() {
     return "Folder{" +
-        "serverFullFolderName='" + serverFullFolderName + '\'' +
+        "fullName='" + fullName + '\'' +
         ", folderAlias='" + folderAlias + '\'' +
         ", userFriendlyName='" + userFriendlyName + '\'' +
         ", attributes=" + Arrays.toString(attributes) +
         ", isCustomLabel=" + isCustomLabel +
-        ", messageCount=" + messageCount +
+        ", msgCount=" + msgCount +
         ", searchQuery=" + searchQuery +
         '}';
   }
@@ -87,9 +87,9 @@ public class Folder implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.serverFullFolderName);
+    dest.writeString(this.fullName);
     dest.writeString(this.folderAlias);
-    dest.writeInt(this.messageCount);
+    dest.writeInt(this.msgCount);
     dest.writeString(this.userFriendlyName);
     dest.writeStringArray(this.attributes);
     dest.writeByte(this.isCustomLabel ? (byte) 1 : (byte) 0);
@@ -102,8 +102,8 @@ public class Folder implements Parcelable {
     if (o == null || getClass() != o.getClass()) return false;
     Folder folder = (Folder) o;
     return isCustomLabel == folder.isCustomLabel &&
-        messageCount == folder.messageCount &&
-        Objects.equals(serverFullFolderName, folder.serverFullFolderName) &&
+        msgCount == folder.msgCount &&
+        Objects.equals(fullName, folder.fullName) &&
         Objects.equals(folderAlias, folder.folderAlias) &&
         Objects.equals(userFriendlyName, folder.userFriendlyName) &&
         Arrays.equals(attributes, folder.attributes) &&
@@ -112,7 +112,7 @@ public class Folder implements Parcelable {
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(serverFullFolderName, folderAlias, userFriendlyName, isCustomLabel, messageCount,
+    int result = Objects.hash(fullName, folderAlias, userFriendlyName, isCustomLabel, msgCount,
         searchQuery);
     result = 31 * result + Arrays.hashCode(attributes);
     return result;
@@ -126,8 +126,8 @@ public class Folder implements Parcelable {
     this.folderAlias = folderAlias;
   }
 
-  public String getServerFullFolderName() {
-    return serverFullFolderName;
+  public String getFullName() {
+    return fullName;
   }
 
   public boolean isCustomLabel() {
@@ -151,7 +151,7 @@ public class Folder implements Parcelable {
   }
 
   public int getMessageCount() {
-    return messageCount;
+    return msgCount;
   }
 
   public String getSearchQuery() {

@@ -63,7 +63,7 @@ public class LoadContactsSyncTask extends BaseSyncTask {
       FoldersManager foldersManager = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
 
       if (foldersManager.getFolderSent() != null) {
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getServerFullFolderName());
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(foldersManager.getFolderSent().getFullName());
         imapFolder.open(Folder.READ_ONLY);
 
         Message[] msgs = imapFolder.getMessages();

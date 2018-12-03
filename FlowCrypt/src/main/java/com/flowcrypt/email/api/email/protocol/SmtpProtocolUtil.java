@@ -54,7 +54,7 @@ public class SmtpProtocolUtil {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
           if (account.getAccount() != null) {
             String userName = account.getEmail();
-            String password = EmailUtil.getTokenForGmailAccount(context, account.getAccount());
+            String password = EmailUtil.getGmailAccountToken(context, account.getAccount());
             transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password);
           } else throw new NullPointerException("The Account can't be a null when we try to receiving a token!");
           break;

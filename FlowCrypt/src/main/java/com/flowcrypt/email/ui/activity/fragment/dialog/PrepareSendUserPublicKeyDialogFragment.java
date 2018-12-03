@@ -145,7 +145,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
         if (publicKey != null) {
           PgpContact primaryUserId = pgpKey.getPrimaryUserId();
           if (primaryUserId != null) {
-            attachmentInfoList.add(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
+            attachmentInfoList.add(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
           }
         }
       }

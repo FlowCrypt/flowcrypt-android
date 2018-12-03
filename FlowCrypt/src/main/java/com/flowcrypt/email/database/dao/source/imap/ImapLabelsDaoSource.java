@@ -224,7 +224,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
       for (Folder oldFolder : oldFolders) {
         boolean isFolderFound = false;
         for (Folder newFolder : newFolders) {
-          if (newFolder.getServerFullFolderName().equals(oldFolder.getServerFullFolderName())) {
+          if (newFolder.getFullName().equals(oldFolder.getFullName())) {
             isFolderFound = true;
             break;
           }
@@ -239,7 +239,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
       for (Folder newFolder : newFolders) {
         boolean isFolderFound = false;
         for (Folder oldFolder : oldFolders) {
-          if (oldFolder.getServerFullFolderName().equals(newFolder.getServerFullFolderName())) {
+          if (oldFolder.getFullName().equals(newFolder.getFullName())) {
             isFolderFound = true;
             break;
           }
@@ -253,7 +253,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
       for (Folder folder : deleteCandidates) {
         contentProviderOperations.add(ContentProviderOperation.newDelete(getBaseContentUri())
             .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ",
-                new String[]{email, folder.getServerFullFolderName()})
+                new String[]{email, folder.getFullName()})
             .withYieldAllowed(true)
             .build());
       }
@@ -272,7 +272,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   private ContentValues prepareContentValues(String accountName, Folder folder) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(COL_EMAIL, accountName);
-    contentValues.put(COL_FOLDER_NAME, folder.getServerFullFolderName());
+    contentValues.put(COL_FOLDER_NAME, folder.getFullName());
     contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
     contentValues.put(COL_MESSAGE_COUNT, folder.getMessageCount());
     contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());

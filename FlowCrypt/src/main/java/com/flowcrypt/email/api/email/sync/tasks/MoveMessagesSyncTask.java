@@ -52,8 +52,8 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
 
   @Override
   public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    IMAPFolder srcFolder = (IMAPFolder) store.getFolder(sourceFolderName.getServerFullFolderName());
-    IMAPFolder destFolder = (IMAPFolder) store.getFolder(destinationFolderName.getServerFullFolderName());
+    IMAPFolder srcFolder = (IMAPFolder) store.getFolder(sourceFolderName.getFullName());
+    IMAPFolder destFolder = (IMAPFolder) store.getFolder(destinationFolderName.getFullName());
 
     if (srcFolder == null || !srcFolder.exists()) {
       throw new IllegalArgumentException("The invalid source folder: " + "\"" + sourceFolderName + "\"");

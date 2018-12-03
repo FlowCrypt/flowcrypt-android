@@ -275,7 +275,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     activeMsgDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
     if (activeMsgDetails != null) {
       if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
-          .getServerFullFolderName())
+          .getFullName())
           || !TextUtils.isEmpty(activeMsgDetails.getRawMessageWithoutAttachments())
           || GeneralUtil.isInternetConnectionAvailable(getContext())) {
 
@@ -316,9 +316,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     }
 
     if (onManageEmailsListener.getCurrentFolder() == null
-        || TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getServerFullFolderName())
+        || TextUtils.isEmpty(onManageEmailsListener.getCurrentFolder().getFullName())
         || JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(onManageEmailsListener.getCurrentFolder()
-        .getServerFullFolderName())) {
+        .getFullName())) {
       swipeRefreshLayout.setRefreshing(false);
     } else {
       emptyView.setVisibility(View.GONE);
@@ -394,7 +394,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           && isMoreMessageAvailable
           && firstVisibleItem + visibleItemCount >= totalItemCount - LOADING_SHIFT_IN_ITEMS
           && !JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-          onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+          onManageEmailsListener.getCurrentFolder().getFullName())) {
         loadNextMessages(messageListAdapter.getCount());
       }
     }
@@ -558,7 +558,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       if (isFolderChanged) {
         messageListAdapter.clearSelection();
         if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-            onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+            onManageEmailsListener.getCurrentFolder().getFullName())) {
           listViewMessages.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         } else {
           listViewMessages.setChoiceMode(ListView.CHOICE_MODE_NONE);
@@ -721,7 +721,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       UIUtil.exchangeViewVisibility(getContext(), false, progressView, listViewMessages);
     } else {
       if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-          onManageEmailsListener.getCurrentFolder().getServerFullFolderName())) {
+          onManageEmailsListener.getCurrentFolder().getFullName())) {
         isMessagesFetchedIfNotExistInCache = true;
       }
 
@@ -750,7 +750,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
         + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
 
-    if (!GeneralUtil.isDebug() && JavaEmailConstants.FOLDER_OUTBOX
+    if (!GeneralUtil.isDebugBuild() && JavaEmailConstants.FOLDER_OUTBOX
         .equalsIgnoreCase(onManageEmailsListener.getCurrentFolder().getFolderAlias())) {
       selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
           + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
@@ -820,8 +820,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   }
 
   private boolean isItSyncOrOutboxFolder(Folder folder) {
-    return folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
-        || folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
+    return folder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
+        || folder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
   }
 
   /**

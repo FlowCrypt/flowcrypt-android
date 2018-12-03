@@ -64,7 +64,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
       finish();
     }
     countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebug());
+        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebugBuild());
     countingIdlingResource.increment();
   }
 

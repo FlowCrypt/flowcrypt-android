@@ -104,7 +104,7 @@ public class GeneralUtil {
    * @param text The given string.
    * @return <tt>{@link String}</tt> which doesn't contain HTML comments.
    */
-  public static String removeAllCommentsInHTML(String text) {
+  public static String removeAllComments(String text) {
     return TextUtils.isEmpty(text) ? text : text.replaceAll("<!--[\\s\\S]*?-->", "");
   }
 
@@ -307,7 +307,7 @@ public class GeneralUtil {
    *
    * @return true - if the current build is a debug build.
    */
-  public static boolean isDebug() {
+  public static boolean isDebugBuild() {
     return "debug".equals(BuildConfig.BUILD_TYPE);
   }
 }

@@ -77,7 +77,7 @@ public class FlowCryptApplication extends Application {
     NotificationChannelManager.registerNotificationChannels(this);
 
     intiLeakCanary();
-    FragmentManager.enableDebugLogging(GeneralUtil.isDebug());
+    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild());
 
     JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
     if (scheduler != null) {
@@ -91,7 +91,7 @@ public class FlowCryptApplication extends Application {
     super.attachBaseContext(base);
     MultiDex.install(this);
 
-    if (!GeneralUtil.isDebug()) {
+    if (!GeneralUtil.isDebugBuild()) {
       ACRA.init(this);
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_ACRA_ENABLE, BuildConfig.IS_ACRA_ENABLE)) {

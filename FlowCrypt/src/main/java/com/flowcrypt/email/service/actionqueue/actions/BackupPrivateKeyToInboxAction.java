@@ -64,8 +64,8 @@ public class BackupPrivateKeyToInboxAction extends Action {
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
       Session session = OpenStoreHelper.getSessionForAccountDao(context, account);
       Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
-      Message message = EmailUtil.generateMessageWithPrivateKeysBackup(context, account, session,
-          EmailUtil.generateAttachmentBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate()));
+      Message message = EmailUtil.genMessageWithPrivateKeys(context, account, session,
+          EmailUtil.genBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate()));
       transport.sendMessage(message, message.getAllRecipients());
     }
   }

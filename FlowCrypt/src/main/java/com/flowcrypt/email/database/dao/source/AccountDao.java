@@ -44,7 +44,7 @@ public class AccountDao implements Parcelable {
   private String givenName;
   private String familyName;
   private String photoUrl;
-  private boolean isContactsLoaded;
+  private boolean areContactsLoaded;
   private AuthCredentials authCredentials;
 
   public AccountDao(String email, String accountType) {
@@ -52,7 +52,7 @@ public class AccountDao implements Parcelable {
   }
 
   public AccountDao(String email, String accountType, String displayName, String givenName,
-                    String familyName, String photoUrl, AuthCredentials authCredentials, boolean isContactsLoaded) {
+                    String familyName, String photoUrl, AuthCredentials authCredentials, boolean areContactsLoaded) {
     this.email = email;
     if (TextUtils.isEmpty(accountType)) {
       if (!TextUtils.isEmpty(email)) {
@@ -66,7 +66,7 @@ public class AccountDao implements Parcelable {
     this.familyName = familyName;
     this.photoUrl = photoUrl;
     this.authCredentials = authCredentials;
-    this.isContactsLoaded = isContactsLoaded;
+    this.areContactsLoaded = areContactsLoaded;
   }
 
   public AccountDao(GoogleSignInAccount googleSignInAccount) {
@@ -92,7 +92,7 @@ public class AccountDao implements Parcelable {
     this.givenName = in.readString();
     this.familyName = in.readString();
     this.photoUrl = in.readString();
-    this.isContactsLoaded = in.readByte() != 0;
+    this.areContactsLoaded = in.readByte() != 0;
     this.authCredentials = in.readParcelable(AuthCredentials.class.getClassLoader());
   }
 
@@ -109,7 +109,7 @@ public class AccountDao implements Parcelable {
     dest.writeString(this.givenName);
     dest.writeString(this.familyName);
     dest.writeString(this.photoUrl);
-    dest.writeByte(this.isContactsLoaded ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.areContactsLoaded ? (byte) 1 : (byte) 0);
     dest.writeParcelable(this.authCredentials, flags);
   }
 
@@ -146,7 +146,7 @@ public class AccountDao implements Parcelable {
     return authCredentials;
   }
 
-  public boolean isContactsLoaded() {
-    return isContactsLoaded;
+  public boolean areContactsLoaded() {
+    return areContactsLoaded;
   }
 }

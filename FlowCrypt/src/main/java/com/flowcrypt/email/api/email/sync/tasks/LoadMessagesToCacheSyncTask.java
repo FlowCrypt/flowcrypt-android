@@ -47,8 +47,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
   @Override
   public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
     if (listener != null) {
-      Context context = listener.getContext();
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store);
       imapFolder.open(Folder.READ_ONLY);
 
@@ -56,12 +55,13 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
         countOfAlreadyLoadedMessages = 0;
       }
 
+      Context context = listener.getContext();
       boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
       Message[] foundMsgs = new Message[0];
       int msgsCount;
 
       if (isEncryptedModeEnabled) {
-        foundMsgs = imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
         msgsCount = foundMsgs.length;
       } else {
         msgsCount = imapFolder.getMessageCount();

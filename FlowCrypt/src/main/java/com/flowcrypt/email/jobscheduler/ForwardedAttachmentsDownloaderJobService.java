@@ -253,7 +253,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
               if (folderOfForwardedMessage == null) {
                 folderOfForwardedMessage = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
                     .getFolderByAlias(context, attachmentInfo.getEmail(),
-                        attachmentInfo.getFwdFolder()).getServerFullFolderName());
+                        attachmentInfo.getFwdFolder()).getFullName());
                 folderOfForwardedMessage.open(Folder.READ_ONLY);
               }
 

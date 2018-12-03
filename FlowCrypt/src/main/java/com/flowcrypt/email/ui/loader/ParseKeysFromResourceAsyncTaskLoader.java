@@ -87,7 +87,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
               if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
                 String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
                 PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                if (js.is_valid_key(normalizedKey, true) && EmailUtil.isKeyNotExistsInList(
+                if (js.is_valid_key(normalizedKey, true) && !EmailUtil.isKeyExisted(
                     privateKeyDetailsList, normalizedKey)) {
                   KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
                   keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
@@ -98,7 +98,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
               if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
                 String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
                 PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                if (js.is_valid_key(normalizedKey, false) && EmailUtil.isKeyNotExistsInList(
+                if (js.is_valid_key(normalizedKey, false) && !EmailUtil.isKeyExisted(
                     privateKeyDetailsList, normalizedKey)) {
                   KeyDetails keyDetails = new KeyDetails(null, normalizedKey,
                       keyImportModel.getType(), false);

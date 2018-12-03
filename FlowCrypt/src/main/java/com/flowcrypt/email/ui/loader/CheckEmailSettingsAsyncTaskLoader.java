@@ -51,7 +51,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
   public LoaderResult loadInBackground() {
     Session session = Session.getInstance(
         PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
-    session.setDebug(EmailUtil.isDebugEnable(getContext()));
+    session.setDebug(EmailUtil.isDebugEnabled(getContext()));
 
     try {
       testImapConnection(session);

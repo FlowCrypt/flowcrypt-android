@@ -135,7 +135,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebug());
+          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -206,7 +206,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     MenuItem itemSearch = menu.findItem(R.id.menuSearch);
 
     if (folder != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getFullName())) {
         itemSwitch.setVisible(false);
         itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()));
       } else {
@@ -386,8 +386,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
       case Menu.NONE:
         Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
         if (newFolder != null) {
-          if (folder == null || !folder.getServerFullFolderName()
-              .equals(newFolder.getServerFullFolderName())) {
+          if (folder == null || !folder.getFullName()
+              .equals(newFolder.getFullName())) {
             this.folder = newFolder;
             updateEmailsListFragmentAfterFolderChange();
             invalidateOptionsMenu();
@@ -713,7 +713,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
     MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
     if (navigationMenuDevSettings != null) {
-      navigationMenuDevSettings.setVisible(GeneralUtil.isDebug());
+      navigationMenuDevSettings.setVisible(GeneralUtil.isDebugBuild());
     }
 
     if (findViewById(R.id.floatActionButtonCompose) != null) {

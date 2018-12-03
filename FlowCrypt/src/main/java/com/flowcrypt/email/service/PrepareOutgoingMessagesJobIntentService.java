@@ -140,7 +140,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             SecurityUtils.getRecipientsPubKeys(getApplicationContext(), js, EmailUtil.getAllRecipients
                 (outgoingMsgInfo), account, outgoingMsgInfo.getFromPgpContact().getEmail()) : null;
 
-        String rawMsg = EmailUtil.generateRawMessageWithoutAttachments(outgoingMsgInfo, js, pubKeys);
+        String rawMsg = EmailUtil.genRawMessageWithoutAttachments(outgoingMsgInfo, js, pubKeys);
         MimeMessage mimeMessage = new MimeMessage(session,
             IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
 

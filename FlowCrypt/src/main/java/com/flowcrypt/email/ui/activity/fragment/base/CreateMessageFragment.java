@@ -1008,7 +1008,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     outgoingMessageInfo.setCcPgpContacts(pgpContactsCc.toArray(new PgpContact[0]));
     outgoingMessageInfo.setBccPgpContacts(pgpContactsBcc.toArray(new PgpContact[0]));
     outgoingMessageInfo.setFromPgpContact(new PgpContact(editTextFrom.getText().toString(), null));
-    outgoingMessageInfo.setUid(EmailUtil.generateOutboxUID(getContext()));
+    outgoingMessageInfo.setUid(EmailUtil.genOutboxUID(getContext()));
 
     return outgoingMessageInfo;
   }
@@ -1397,7 +1397,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
         editTextEmailMessage.setText(getString(R.string.forward_template,
             incomingMessageInfo.getFrom().get(0),
-            EmailUtil.prepareDateForForwardedMessage(incomingMessageInfo.getReceiveDate()),
+            EmailUtil.genForwardedMessageDate(incomingMessageInfo.getReceiveDate()),
             incomingMessageInfo.getSubject(),
             prepareRecipientsLineForForwarding(incomingMessageInfo.getTo())));
 

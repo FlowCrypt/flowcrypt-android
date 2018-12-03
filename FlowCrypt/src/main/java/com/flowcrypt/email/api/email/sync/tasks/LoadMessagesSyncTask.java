@@ -40,7 +40,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
 
   @Override
   public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
     imapFolder.open(Folder.READ_ONLY);
 
     int msgsCount = imapFolder.getMessageCount();

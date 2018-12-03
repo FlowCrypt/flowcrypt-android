@@ -63,7 +63,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-          (ImportPrivateKeyActivity.class), GeneralUtil.isDebug());
+          (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
     } else {
       hideImportButton();
       UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);

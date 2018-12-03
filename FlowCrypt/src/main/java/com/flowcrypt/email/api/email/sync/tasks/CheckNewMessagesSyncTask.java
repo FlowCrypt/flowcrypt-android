@@ -49,7 +49,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
       String folderAlias = localFolder.getFolderAlias();
       boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, email);
 
-      IMAPFolder folder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+      IMAPFolder folder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       folder.open(Folder.READ_ONLY);
 
       long nextUID = folder.getUIDNext();
@@ -58,7 +58,7 @@ public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSync
 
       if (newestCachedUID < nextUID - 1) {
         if (isEncryptedModeEnabled) {
-          Message[] foundMsgs = folder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+          Message[] foundMsgs = folder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);

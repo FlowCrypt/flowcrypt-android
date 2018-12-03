@@ -554,7 +554,7 @@ public class MessagesSenderJobService extends JobService {
 
       try {
         if (sentFolder != null) {
-          IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getServerFullFolderName());
+          IMAPFolder sentImapFolder = (IMAPFolder) store.getFolder(sentFolder.getFullName());
 
           if (sentImapFolder == null || !sentImapFolder.exists()) {
             throw new IllegalArgumentException("The SENT folder doesn't exists. Can't create a " +

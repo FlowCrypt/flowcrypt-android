@@ -124,14 +124,14 @@ public class FoldersManager {
         }
       }
 
-      if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
-        if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+      if (!TextUtils.isEmpty(folder.getFullName())) {
+        if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(folder.getFullName())) {
           return FolderType.INBOX;
         }
       }
 
-      if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+      if (!TextUtils.isEmpty(folder.getFullName())) {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getFullName())) {
           return FolderType.OUTBOX;
         }
       }
@@ -195,7 +195,7 @@ public class FoldersManager {
    */
   public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
     if (imapFolder != null
-        && !EmailUtil.isFolderHasNoSelectAttribute(imapFolder)
+        && !EmailUtil.isNoSelectAttributePresented(imapFolder)
         && !TextUtils.isEmpty(imapFolder.getFullName())
         && !folders.containsKey(imapFolder.getFullName())) {
       this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
@@ -209,8 +209,8 @@ public class FoldersManager {
    *               remote folder.
    */
   public void addFolder(Folder folder) {
-    if (folder != null && !TextUtils.isEmpty(folder.getServerFullFolderName())
-        && !folders.containsKey(folder.getServerFullFolderName())) {
+    if (folder != null && !TextUtils.isEmpty(folder.getFullName())
+        && !folders.containsKey(folder.getFullName())) {
       this.folders.put(prepareFolderKey(folder), folder);
     }
   }
@@ -271,7 +271,7 @@ public class FoldersManager {
 
   public Folder findInboxFolder() {
     for (Folder folder : getAllFolders()) {
-      if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+      if (folder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
         return folder;
       }
     }
@@ -295,7 +295,7 @@ public class FoldersManager {
   private String prepareFolderKey(Folder folder) {
     FolderType folderType = getFolderTypeForImapFolder(folder);
     if (folderType == null) {
-      return folder.getServerFullFolderName();
+      return folder.getFullName();
     } else {
       return folderType.value;
     }

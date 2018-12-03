@@ -64,10 +64,10 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
       return;
     }
 
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
     imapFolder.open(Folder.READ_ONLY);
 
-    LongSparseArray<Boolean> booleanLongSparseArray = EmailUtil.getInfoAreMessagesEncrypted(imapFolder, uidList);
+    LongSparseArray<Boolean> booleanLongSparseArray = EmailUtil.getMessagesEncryptionState(imapFolder, uidList);
 
     if (booleanLongSparseArray.size() > 0) {
       msgDaoSource.updateMessagesEncryptionStateByUID(context, account.getEmail(), folder, booleanLongSparseArray);

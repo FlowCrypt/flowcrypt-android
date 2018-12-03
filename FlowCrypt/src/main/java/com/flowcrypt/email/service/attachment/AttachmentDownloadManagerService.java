@@ -466,7 +466,7 @@ public class AttachmentDownloadManagerService extends Service {
 
     @Override
     public void run() {
-      if (GeneralUtil.isDebug()) {
+      if (GeneralUtil.isDebugBuild()) {
         Thread.currentThread().setName(AttDownloadRunnable.class.getSimpleName() + "|" + attInfo.getName());
       }
 
@@ -505,7 +505,7 @@ public class AttachmentDownloadManagerService extends Service {
               "the local cache");
         }
 
-        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+        IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
         imapFolder.open(Folder.READ_ONLY);
 
         javax.mail.Message message = imapFolder.getMessageByUID(attInfo.getUid());

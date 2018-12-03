@@ -44,7 +44,7 @@ public final class ApiHelper {
 
     okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
-    if (GeneralUtil.isDebug()) {
+    if (GeneralUtil.isDebugBuild()) {
       if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
           (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false)) {
         LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();

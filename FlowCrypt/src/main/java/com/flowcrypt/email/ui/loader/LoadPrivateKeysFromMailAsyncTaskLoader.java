@@ -81,7 +81,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
           privateKeyDetailsList.addAll(
-              EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), account, session, js));
+              EmailUtil.getPrivateKeyBackupsViaGmailAPI(getContext(), account, session, js));
           break;
 
         default:
@@ -128,14 +128,14 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
 
       for (Folder folder : folders) {
         if (!isLoadInBackgroundCanceled() && !isLoaderReset
-            && !EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+            && !EmailUtil.isNoSelectAttributePresented((IMAPFolder) folder)) {
           folder.open(Folder.READ_ONLY);
 
           Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(account.getEmail()));
+              SearchBackupsUtil.genSearchTerms(account.getEmail()));
 
           for (Message message : foundMessages) {
-            String backup = EmailUtil.getKeyFromMessageIfItExists(message);
+            String backup = EmailUtil.getKeyFromMimeMessage(message);
 
             if (TextUtils.isEmpty(backup)) {
               continue;
@@ -146,7 +146,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
             for (MessageBlock messageBlock : messageBlocks) {
               if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
                 if (!TextUtils.isEmpty(messageBlock.getContent())
-                    && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock
+                    && !EmailUtil.isKeyExisted(privateKeyDetailsList, messageBlock
                     .getContent())) {
                   privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
                       KeyDetails.Type.EMAIL));

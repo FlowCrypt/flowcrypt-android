@@ -658,7 +658,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       layoutParams.setMargins(margin, 0, margin, 0);
       emailWebView.setLayoutParams(layoutParams);
 
-      emailWebView.loadDataWithBaseURL(null, EmailUtil.prepareViewportHtml(incomingMessageInfo.getHtmlMsg()),
+      emailWebView.loadDataWithBaseURL(null, EmailUtil.genViewportHtml(incomingMessageInfo.getHtmlMsg()),
           "text/html", StandardCharsets.UTF_8.displayName(), null);
 
       layoutMessageParts.addView(emailWebView);
@@ -973,7 +973,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         if (publicKey == null) {
           showSendersPublicKeyDialog();
         } else {
-          sendTemplateMessageWithPublicKey(EmailUtil.generateAttachmentInfoFromPublicKey(publicKey));
+          sendTemplateMessageWithPublicKey(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
         }
       }
     });

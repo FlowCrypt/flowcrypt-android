@@ -44,7 +44,7 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
     if (listener != null) {
       Context context = listener.getContext();
       String folderName = localFolder.getFolderAlias();
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       imapFolder.open(Folder.READ_ONLY);
 
       long nextUID = imapFolder.getUIDNext();
@@ -58,7 +58,7 @@ public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
         if (isEncryptedModeEnabled) {
-          Message[] foundMessages = imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+          Message[] foundMessages = imapFolder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);

@@ -58,7 +58,7 @@ public class AddMessageToDatabaseRule implements TestRule {
               .getTargetContext(), account,
           session);
 
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
       imapFolder.open(javax.mail.Folder.READ_ONLY);
 
       Message[] messages;

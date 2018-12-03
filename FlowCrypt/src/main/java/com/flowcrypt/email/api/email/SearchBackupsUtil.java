@@ -35,7 +35,7 @@ public class SearchBackupsUtil {
    * @return Generated {@link SearchTerm}.
    */
   @NonNull
-  public static SearchTerm generateSearchTerms(String email) throws AddressException {
+  public static SearchTerm genSearchTerms(String email) throws AddressException {
     SearchTerm subjectTerms = new OrTerm(new SearchTerm[]{
         new SubjectTerm("Your CryptUp Backup"),
         new SubjectTerm("Your FlowCrypt Backup"),

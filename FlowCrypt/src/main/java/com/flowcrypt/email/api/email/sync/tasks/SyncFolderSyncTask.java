@@ -48,7 +48,7 @@ public class SyncFolderSyncTask extends BaseSyncTask {
       String folderName = localFolder.getFolderAlias();
       boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
-      IMAPFolder folder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+      IMAPFolder folder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       folder.open(javax.mail.Folder.READ_ONLY);
 
       MessageDaoSource messageDaoSource = new MessageDaoSource();
@@ -61,7 +61,7 @@ public class SyncFolderSyncTask extends BaseSyncTask {
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
         if (isEncryptedModeEnabled) {
-          Message[] foundMsgs = folder.search(EmailUtil.generateSearchTermForEncryptedMessages(account));
+          Message[] foundMsgs = folder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);

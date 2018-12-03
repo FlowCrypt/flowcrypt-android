@@ -60,7 +60,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
     super.runIMAPAction(account, session, store, listener);
 
     if (listener != null) {
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
       imapFolder.open(Folder.READ_ONLY);
 
       if (countOfAlreadyLoadedMessages < 0) {
@@ -110,7 +110,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
     boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
     if (isEncryptedModeEnabled) {
-      SearchTerm searchTerm = EmailUtil.generateSearchTermForEncryptedMessages(account);
+      SearchTerm searchTerm = EmailUtil.genEncryptedMessagesSearchTerm(account);
 
       if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
         StringTerm stringTerm = (StringTerm) searchTerm;

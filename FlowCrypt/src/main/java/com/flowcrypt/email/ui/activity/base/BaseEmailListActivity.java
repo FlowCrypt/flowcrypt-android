@@ -40,7 +40,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (EmailManagerActivity.class), GeneralUtil.isDebug());
+        (EmailManagerActivity.class), GeneralUtil.isDebugBuild());
 
   }
 
@@ -200,7 +200,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     }
 
     if (getCurrentFolder() != null &&
-        JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getServerFullFolderName())) {
+        JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName())) {
       ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
       MessagesSenderJobService.schedule(getApplicationContext());
     }

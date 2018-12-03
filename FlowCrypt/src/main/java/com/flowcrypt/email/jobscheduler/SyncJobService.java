@@ -132,40 +132,40 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessagesMoved(AccountDao account, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
-                              Message[] messages, String ownerKey, int requestCode) {
+  public void onMessagesMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
+                              Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessageMoved(AccountDao account, IMAPFolder sourceImapFolder, IMAPFolder destinationImapFolder,
-                             Message message, String ownerKey, int requestCode) {
+  public void onMessageMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
+                             Message msg, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessageDetailsReceived(AccountDao account, Folder localFolder, IMAPFolder imapFolder, long uid,
-                                       Message message, String rawMessageWithOutAttachments, String ownerKey,
+  public void onMessageDetailsReceived(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, long uid,
+                                       Message msg, String rawMsgWithOutAtts, String ownerKey,
                                        int requestCode) {
 
   }
 
   @Override
   public void onMessagesReceived(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, Message[]
-      messages, String ownerKey, int requestCode) {
+      msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
   public void onSearchMessagesReceived(AccountDao account, Folder folder, IMAPFolder remoteFolder,
-                                       Message[] messages, String ownerKey, int requestCode) {
+                                       Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
   public void onRefreshMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
-                                        IMAPFolder remoteFolder, Message[] newMessages,
-                                        Message[] updateMessages, String ownerKey, int requestCode) {
+                                        IMAPFolder remoteFolder, Message[] newMsgs,
+                                        Message[] updateMsgs, String ownerKey, int requestCode) {
     try {
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
@@ -174,8 +174,8 @@ public class SyncJobService extends JobService implements SyncListener {
 
       Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
 
-      Collection<Long> deleteCandidatesUIDList = EmailUtil.generateDeleteCandidates(messagesUIDsInLocalDatabase,
-          remoteFolder, updateMessages);
+      Collection<Long> deleteCandidatesUIDList = EmailUtil.genDeleteCandidates(messagesUIDsInLocalDatabase,
+          remoteFolder, updateMsgs);
 
       String folderAlias = localFolder.getFolderAlias();
       List<GeneralMessageDetails> generalMessageDetailsBeforeUpdate = messageDaoSource.getNewMessages
@@ -188,8 +188,8 @@ public class SyncJobService extends JobService implements SyncListener {
           account.getEmail(),
           localFolder.getFolderAlias(),
           remoteFolder,
-          EmailUtil.generateUpdateCandidates(messagesUIDWithFlagsInLocalDatabase,
-              remoteFolder, updateMessages));
+          EmailUtil.genUpdateCandidates(messagesUIDWithFlagsInLocalDatabase,
+              remoteFolder, updateMsgs));
 
       List<GeneralMessageDetails> generalMessageDetailsAfterUpdate = messageDaoSource.getNewMessages
           (getApplicationContext(), account.getEmail(), folderAlias);
@@ -235,7 +235,7 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageChanged(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, Message message,
+  public void onMessageChanged(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, Message msg,
                                String ownerKey, int requestCode) {
 
   }
@@ -248,7 +248,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
   @Override
   public void onNewMessagesReceived(final AccountDao account, Folder localFolder, IMAPFolder remoteFolder,
-                                    Message[] newMessages, LongSparseArray<Boolean> isMessageEncryptedInfo, String
+                                    Message[] newMsgs, LongSparseArray<Boolean> msgsEncryptionStates, String
                                         ownerKey, int requestCode) {
     try {
       boolean isShowOnlyEncryptedMessages =
@@ -261,15 +261,15 @@ public class SyncJobService extends JobService implements SyncListener {
 
       Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
 
-      javax.mail.Message[] messagesNewCandidates = EmailUtil.generateNewCandidates(messagesUIDsInLocalDatabase,
-          remoteFolder, newMessages);
+      javax.mail.Message[] messagesNewCandidates = EmailUtil.genNewCandidates(messagesUIDsInLocalDatabase,
+          remoteFolder, newMsgs);
 
       messageDaoSource.addRows(getApplicationContext(),
           account.getEmail(),
           localFolder.getFolderAlias(),
           remoteFolder,
           messagesNewCandidates,
-          isMessageEncryptedInfo,
+          msgsEncryptionStates,
           !GeneralUtil.isAppForegrounded(), isShowOnlyEncryptedMessages);
 
       if (!GeneralUtil.isAppForegrounded()) {

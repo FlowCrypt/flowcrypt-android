@@ -324,7 +324,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   protected boolean checkServiceBound(boolean isBound) {
     if (!isBound) {
-      if (GeneralUtil.isDebug()) {
+      if (GeneralUtil.isDebugBuild()) {
         Log.d(tag, "Activity not connected to the service");
       }
       return true;
