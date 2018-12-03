@@ -113,11 +113,11 @@ public class MessageDaoSource extends BaseDaoSource {
       COL_ERROR_MSG + " TEXT DEFAULT NULL" + ");";
 
   public static final String CREATE_INDEX_EMAIL_IN_MESSAGES =
-      "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
+      INDEX_PREFIX + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
           " ON " + TABLE_NAME_MESSAGES + " (" + COL_EMAIL + ")";
 
   public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES =
-      "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
+      UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
           + "_in_" + TABLE_NAME_MESSAGES +
           " ON " + TABLE_NAME_MESSAGES +
           " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
@@ -126,35 +126,35 @@ public class MessageDaoSource extends BaseDaoSource {
    * Prepare the content values for insert to the database. This method must be called in the
    * non-UI thread.
    *
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param message The message which will be added to the database.
-   * @param uid     The message UID.
-   * @param isNew   true if need to mark a given message as new
+   * @param email The email that the message linked.
+   * @param label The folder label.
+   * @param msg   The message which will be added to the database.
+   * @param uid   The message UID.
+   * @param isNew true if need to mark a given message as new
    * @return generated {@link ContentValues}
    * @throws MessagingException This exception may be occured when we call methods of thr
    *                            {@link Message} object</code>
    */
   @NonNull
-  public static ContentValues prepareContentValues(String email, String label, Message message, long uid, boolean
-      isNew) throws MessagingException {
+  public static ContentValues prepareContentValues(String email, String label, Message msg, long uid, boolean isNew)
+      throws MessagingException {
     ContentValues contentValues = new ContentValues();
     contentValues.put(COL_EMAIL, email);
     contentValues.put(COL_FOLDER, label);
     contentValues.put(COL_UID, uid);
-    if (message.getReceivedDate() != null) {
-      contentValues.put(COL_RECEIVED_DATE, message.getReceivedDate().getTime());
+    if (msg.getReceivedDate() != null) {
+      contentValues.put(COL_RECEIVED_DATE, msg.getReceivedDate().getTime());
     }
-    if (message.getSentDate() != null) {
-      contentValues.put(COL_SENT_DATE, message.getSentDate().getTime());
+    if (msg.getSentDate() != null) {
+      contentValues.put(COL_SENT_DATE, msg.getSentDate().getTime());
     }
-    contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(message.getFrom()));
-    contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.TO)));
-    contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(message.getRecipients(Message.RecipientType.CC)));
-    contentValues.put(COL_SUBJECT, message.getSubject());
-    contentValues.put(COL_FLAGS, message.getFlags().toString().toUpperCase());
-    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, isMessageHasAttachment(message));
-    if (!message.getFlags().contains(Flags.Flag.SEEN)) {
+    contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(msg.getFrom()));
+    contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)));
+    contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)));
+    contentValues.put(COL_SUBJECT, msg.getSubject());
+    contentValues.put(COL_FLAGS, msg.getFlags().toString().toUpperCase());
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAttachment(msg));
+    if (!msg.getFlags().contains(Flags.Flag.SEEN)) {
       contentValues.put(COL_IS_NEW, isNew);
     }
     return contentValues;
@@ -228,125 +228,124 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param context     Interface to global information about an application environment.
    * @param email       The email that the message linked.
    * @param label       The folder label.
-   * @param imapFolder  The {@link IMAPFolder} object which contains information about a
+   * @param folder      The {@link IMAPFolder} object which contains information about a
    *                    remote folder.
-   * @param messages    The messages array.
+   * @param msgs        The messages array.
    * @param isNew       true if need to mark messages as new.
    * @param isEncrypted true if the given messages are encrypted.
    * @return the number of newly created rows.
    * @throws MessagingException This exception may be occured when we call <code>mapFolder
    *                            .getUID(message)</code>
    */
-  public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
+  public int addRows(Context context, String email, String label, IMAPFolder folder, Message[] msgs,
                      boolean isNew, boolean isEncrypted) throws MessagingException {
-    return addRows(context, email, label, imapFolder, messages, new LongSparseArray<Boolean>(), isNew, isEncrypted);
+    return addRows(context, email, label, folder, msgs, new LongSparseArray<Boolean>(), isNew, isEncrypted);
   }
 
   /**
    * This method add rows per single transaction. This method must be called in the non-UI thread.
    *
-   * @param context                 Interface to global information about an application environment.
-   * @param email                   The email that the message linked.
-   * @param label                   The folder label.
-   * @param imapFolder              The {@link IMAPFolder} object which contains information about a
-   *                                remote folder.
-   * @param messages                The messages array.
-   * @param isMessageEncryptedInfo  An array which contains info about a message encryption state
-   * @param areAllMessagesEncrypted true if the given messages are encrypted.
+   * @param context              Interface to global information about an application environment.
+   * @param email                The email that the message linked.
+   * @param label                The folder label.
+   * @param folder               The {@link IMAPFolder} object which contains information about a
+   *                             remote folder.
+   * @param msgs                 The messages array.
+   * @param msgsEncryptionStates An array which contains info about a message encryption state
+   * @param areAllMsgsEncrypted  true if the given messages are encrypted.
    * @return the number of newly created rows.
    * @throws MessagingException This exception may be occured when we call <code>mapFolder
    *                            .getUID(message)</code>
    */
-  public int addRows(Context context, String email, String label, IMAPFolder imapFolder, Message[] messages,
-                     LongSparseArray<Boolean> isMessageEncryptedInfo, boolean isNew, boolean areAllMessagesEncrypted)
+  public int addRows(Context context, String email, String label, IMAPFolder folder, Message[] msgs,
+                     LongSparseArray<Boolean> msgsEncryptionStates, boolean isNew, boolean areAllMsgsEncrypted)
       throws MessagingException {
-    if (messages != null) {
+    if (msgs != null) {
       ContentResolver contentResolver = context.getContentResolver();
-      ArrayList<ContentValues> contentValuesArrayList = new ArrayList<>();
+      ArrayList<ContentValues> contentValuesList = new ArrayList<>();
 
       boolean isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER.equals
           (SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
               Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-      boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+      boolean onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
           .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
               Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-      for (Message message : messages) {
+      for (Message msg : msgs) {
         try {
-          ContentValues contentValues = prepareContentValues(email, label, message,
-              imapFolder.getUID(message), isNew);
+          ContentValues contentValues = prepareContentValues(email, label, msg,
+              folder.getUID(msg), isNew);
 
           if (isNotificationDisabled) {
             contentValues.put(COL_IS_NEW, false);
           }
 
-          Boolean isMessageEncrypted = areAllMessagesEncrypted ? Boolean.valueOf(true)
-              : isMessageEncryptedInfo.get(imapFolder.getUID(message));
-          if (isMessageEncrypted != null) {
-            contentValues.put(COL_IS_ENCRYPTED, isMessageEncrypted);
+          Boolean isMsgEncrypted = areAllMsgsEncrypted ? Boolean.valueOf(true) :
+              msgsEncryptionStates.get(folder.getUID(msg));
+          if (isMsgEncrypted != null) {
+            contentValues.put(COL_IS_ENCRYPTED, isMsgEncrypted);
 
-            if (isEncryptedMessagesOnly && !isMessageEncrypted) {
+            if (onlyEncryptedMsgs && !isMsgEncrypted) {
               contentValues.put(COL_IS_NEW, false);
             }
           }
 
-          contentValuesArrayList.add(contentValues);
+          contentValuesList.add(contentValues);
         } catch (MessageRemovedException e) {
           e.printStackTrace();
         }
       }
 
-      return contentResolver.bulkInsert(getBaseContentUri(),
-          contentValuesArrayList.toArray(new ContentValues[0]));
+      return contentResolver.bulkInsert(getBaseContentUri(), contentValuesList.toArray(new ContentValues[0]));
     } else return 0;
   }
 
   /**
    * This method delete cached messages.
    *
-   * @param context     Interface to global information about an application environment.
-   * @param email       The email that the message linked.
-   * @param label       The folder label.
-   * @param messagesUID The list of messages UID.
+   * @param context Interface to global information about an application environment.
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param msgsUID The list of messages UID.
    */
-  public void deleteMessagesByUID(Context context, String email, String label, Collection<Long> messagesUID) throws
+  public void deleteMessagesByUID(Context context, String email, String label, Collection<Long> msgsUID) throws
       RemoteException, OperationApplicationException {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      int numberOfMaxInPerStep = 50;
+      int step = 50;
 
       List<String> selectionArgs = new LinkedList<>();
       selectionArgs.add(email);
       selectionArgs.add(label);
 
-      ArrayList<Long> list = new ArrayList<>(messagesUID);
+      ArrayList<Long> list = new ArrayList<>(msgsUID);
 
-      if (messagesUID.size() <= numberOfMaxInPerStep) {
-        for (Long uid : messagesUID) {
+      if (msgsUID.size() <= step) {
+        for (Long uid : msgsUID) {
           selectionArgs.add(String.valueOf(uid));
         }
 
-        contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
-                + COL_FOLDER + " = ? AND "
-                + COL_UID + " IN (" + prepareSelectionArgsString(messagesUID.toArray()) + ");",
-            selectionArgs.toArray(new String[0]));
+        String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " IN (" +
+            prepareSelectionArgsString(msgsUID.toArray()) + ");";
+
+        contentResolver.delete(getBaseContentUri(), where, selectionArgs.toArray(new String[0]));
       } else {
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-        for (int i = 0; i < list.size(); i += numberOfMaxInPerStep) {
-          List<Long> stepUIDs = (list.size() - i > numberOfMaxInPerStep) ? list.subList(i, i +
-              numberOfMaxInPerStep) : list.subList(i, list.size());
+        for (int i = 0; i < list.size(); i += step) {
+          List<Long> stepUIDs = (list.size() - i > step) ? list.subList(i, i + step) : list.subList(i, list.size());
           List<String> selectionArgsForStep = new LinkedList<>(selectionArgs);
 
           for (Long uid : stepUIDs) {
             selectionArgsForStep.add(String.valueOf(uid));
           }
 
+          String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID
+              + " IN (" + prepareSelectionArgsString(stepUIDs.toArray()) + ");";
+
           ops.add(ContentProviderOperation.newDelete(getBaseContentUri())
-              .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID
-                      + " IN (" + prepareSelectionArgsString(stepUIDs.toArray()) + ");",
-                  selectionArgsForStep.toArray(new String[0]))
+              .withSelection(selection, selectionArgsForStep.toArray(new String[0]))
               .withYieldAllowed(true)
               .build());
         }
@@ -359,28 +358,27 @@ public class MessageDaoSource extends BaseDaoSource {
   /**
    * This method update cached messages.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param email      The email that the message linked.
-   * @param label      The folder label.
-   * @param imapFolder The {@link IMAPFolder} object which contains information about a
-   *                   remote folder.
-   * @param messages   The messages array.
+   * @param context Interface to global information about an application environment.
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param folder  The {@link IMAPFolder} object which contains information about a
+   *                remote folder.
+   * @param msgs    The messages array.
    * @return the {@link ContentProviderResult} array.
    */
   public ContentProviderResult[] updateMessagesByUID(Context context, String email, String label,
-                                                     IMAPFolder imapFolder, Message[] messages)
+                                                     IMAPFolder folder, Message[] msgs)
       throws RemoteException, OperationApplicationException, MessagingException {
     ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null && messages != null && messages.length > 0) {
+    if (email != null && label != null && contentResolver != null && msgs != null && msgs.length > 0) {
 
       ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-      for (Message message : messages) {
+      for (Message message : msgs) {
+        String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+
         ContentProviderOperation.Builder builder = ContentProviderOperation.newUpdate(getBaseContentUri())
             .withValue(COL_FLAGS, message.getFlags().toString().toUpperCase())
-            .withSelection(COL_EMAIL + "= ? AND "
-                    + COL_FOLDER + " = ? AND "
-                    + COL_UID + " = ? ",
-                new String[]{email, label, String.valueOf(imapFolder.getUID(message))})
+            .withSelection(selection, new String[]{email, label, String.valueOf(folder.getUID(message))})
             .withYieldAllowed(true);
 
         if (message.getFlags().contains(Flags.Flag.SEEN)) {
@@ -403,36 +401,31 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param raw     The raw message text which will be added to the database.
    * @return The count of the updated row or -1 up.
    */
-  public int updateMessageRawText(Context context, String email, String label, long uid,
-                                  String raw) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      ContentValues contentValues = new ContentValues();
-      contentValues.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, raw);
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+  public int updateMessageRawText(Context context, String email, String label, long uid, String raw) {
+    ContentResolver resolver = context.getContentResolver();
+    if (email != null && label != null && resolver != null) {
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      ContentValues values = new ContentValues();
+      values.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, raw);
+      return resolver.update(getBaseContentUri(), values, where, new String[]{email, label, String.valueOf(uid)});
     } else return -1;
   }
 
   /**
    * Update some message by the given parameters.
    *
-   * @param context       Interface to global information about an application environment.
-   * @param email         The email that the message linked.
-   * @param label         The folder label.
-   * @param uid           The message UID.
-   * @param contentValues The {@link ContentValues} which contains new information.
+   * @param context Interface to global information about an application environment.
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param uid     The message UID.
+   * @param values  The {@link ContentValues} which contains new information.
    * @return The count of the updated row or -1 up.
    */
-  public int updateMessage(Context context, String email, String label, long uid, ContentValues contentValues) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+  public int updateMessage(Context context, String email, String label, long uid, ContentValues values) {
+    ContentResolver resolver = context.getContentResolver();
+    if (email != null && label != null && resolver != null) {
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      return resolver.update(getBaseContentUri(), values, where, new String[]{email, label, String.valueOf(uid)});
     } else return -1;
   }
 
@@ -463,14 +456,13 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return The count of the updated row or -1 up.
    */
   public int setSeenStatusForLocalMessage(Context context, String email, String label, long uid) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      ContentValues contentValues = new ContentValues();
-      contentValues.put(COL_FLAGS, MessageFlag.SEEN);
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+    ContentResolver resolver = context.getContentResolver();
+    if (email != null && label != null && resolver != null) {
+      ContentValues values = new ContentValues();
+      values.put(COL_FLAGS, MessageFlag.SEEN);
+
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      return resolver.update(getBaseContentUri(), values, where, new String[]{email, label, String.valueOf(uid)});
     } else return -1;
   }
 
@@ -487,8 +479,8 @@ public class MessageDaoSource extends BaseDaoSource {
     if (email != null && label != null && contentResolver != null) {
       ContentValues contentValues = new ContentValues();
       contentValues.put(COL_IS_NEW, false);
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?", new String[]{email, label});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?";
+      return contentResolver.update(getBaseContentUri(), contentValues, where, new String[]{email, label});
     } else return -1;
   }
 
@@ -512,11 +504,10 @@ public class MessageDaoSource extends BaseDaoSource {
       args.add(1, label);
       args.addAll(uidList);
 
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_UID + " IN (" + TextUtils.join(",", Collections.nCopies(uidList.size(), "?")) + ")",
-          args.toArray(new String[]{}));
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " IN (" + TextUtils.join(",",
+          Collections.nCopies(uidList.size(), "?")) + ")";
+
+      return contentResolver.update(getBaseContentUri(), contentValues, where, args.toArray(new String[]{}));
     } else return -1;
   }
 
@@ -531,17 +522,15 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return The count of the updated row or -1 up.
    */
   public int updateFlagsForLocalMessage(Context context, String email, String label, long uid, @NonNull Flags flags) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      ContentValues contentValues = new ContentValues();
-      contentValues.put(COL_FLAGS, flags.toString().toUpperCase());
+    ContentResolver resolver = context.getContentResolver();
+    if (email != null && label != null && resolver != null) {
+      ContentValues values = new ContentValues();
+      values.put(COL_FLAGS, flags.toString().toUpperCase());
       if (flags.contains(Flags.Flag.SEEN)) {
-        contentValues.put(COL_IS_NEW, false);
+        values.put(COL_IS_NEW, false);
       }
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      return resolver.update(getBaseContentUri(), values, where, new String[]{email, label, String.valueOf(uid)});
     } else return -1;
   }
 
@@ -552,54 +541,46 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return A generated {@link Folder}.
    */
   public GeneralMessageDetails getMessageInfo(Cursor cursor) {
-    GeneralMessageDetails generalMessageDetails = new GeneralMessageDetails();
+    GeneralMessageDetails details = new GeneralMessageDetails();
 
-    generalMessageDetails.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
-    generalMessageDetails.setLabel(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-    generalMessageDetails.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
-    generalMessageDetails.setReceivedDateInMillisecond(
-        cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
-    generalMessageDetails.setSentDateInMillisecond(
-        cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)));
-    generalMessageDetails.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
-    generalMessageDetails.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex
-        (COL_FLAGS))));
-    generalMessageDetails.setRawMessageWithoutAttachments(
+    details.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+    details.setLabel(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
+    details.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
+    details.setReceivedDateInMillisecond(cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
+    details.setSentDateInMillisecond(cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)));
+    details.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
+    details.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS))));
+    details.setRawMessageWithoutAttachments(
         cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
-    generalMessageDetails.setHasAttachments(cursor.getInt(cursor.getColumnIndex
-        (COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
-    generalMessageDetails.setEncrypted(cursor.getInt(cursor.getColumnIndex
-        (COL_IS_ENCRYPTED)) == 1);
-
-    generalMessageDetails.setMsgState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
-    generalMessageDetails.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
+    details.setHasAttachments(cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
+    details.setEncrypted(cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1);
+    details.setMsgState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
+    details.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
 
     try {
       String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));
-      generalMessageDetails.setFrom(TextUtils.isEmpty(fromAddresses) ? null
-          : InternetAddress.parse(fromAddresses));
+      details.setFrom(TextUtils.isEmpty(fromAddresses) ? null : InternetAddress.parse(fromAddresses));
     } catch (AddressException e) {
       e.printStackTrace();
     }
 
     try {
       String toAddresses = cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES));
-      generalMessageDetails.setTo(TextUtils.isEmpty(toAddresses) ? null : InternetAddress.parse(toAddresses));
+      details.setTo(TextUtils.isEmpty(toAddresses) ? null : InternetAddress.parse(toAddresses));
     } catch (AddressException e) {
       e.printStackTrace();
     }
 
     try {
       String ccAddresses = cursor.getString(cursor.getColumnIndex(COL_CC_ADDRESSES));
-      generalMessageDetails.setCc(TextUtils.isEmpty(ccAddresses) ? null : InternetAddress.parse(ccAddresses));
+      details.setCc(TextUtils.isEmpty(ccAddresses) ? null : InternetAddress.parse(ccAddresses));
     } catch (AddressException e) {
       e.printStackTrace();
     }
 
-    generalMessageDetails.setAttachmentsDir(cursor.getString(cursor.getColumnIndex
-        (COL_ATTACHMENTS_DIRECTORY)));
+    details.setAttachmentsDir(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)));
 
-    return generalMessageDetails;
+    return details;
   }
 
   /**
@@ -612,9 +593,8 @@ public class MessageDaoSource extends BaseDaoSource {
    */
   public List<GeneralMessageDetails> getMessages(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + "= ? AND "
-            + COL_FOLDER + " = ?", new String[]{email, label}, null);
+    String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?";
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, new String[]{email, label}, null);
 
     List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 
@@ -631,16 +611,17 @@ public class MessageDaoSource extends BaseDaoSource {
   /**
    * Get all messages of the outbox folder.
    *
-   * @param context      Interface to global information about an application environment.
-   * @param email        The email of the {@link Folder}.
-   * @param messageState The message state which will be used for filter results.
+   * @param context  Interface to global information about an application environment.
+   * @param email    The email of the {@link Folder}.
+   * @param msgState The message state which will be used for filter results.
    * @return A  list of {@link GeneralMessageDetails} objects.
    */
-  public List<GeneralMessageDetails> getOutboxMessages(Context context, String email, MessageState messageState) {
+  public List<GeneralMessageDetails> getOutboxMessages(Context context, String email, MessageState msgState) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " = ?",
-        new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(messageState.getValue())}, null);
+    String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " = ?";
+    String folder = JavaEmailConstants.FOLDER_OUTBOX;
+    String[] selectionArgs = new String[]{email, folder, String.valueOf(msgState.getValue())};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
 
     List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 
@@ -663,11 +644,10 @@ public class MessageDaoSource extends BaseDaoSource {
    */
   public List<GeneralMessageDetails> getOutboxMessages(Context context, String email) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " NOT IN (?, ?)",
-        new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENT.getValue()),
-            String.valueOf(MessageState.SENT_WITHOUT_LOCAL_COPY.getValue())},
-        null);
+    String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " NOT IN (?, ?)";
+    String[] selectionArgs = new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENT
+        .getValue()), String.valueOf(MessageState.SENT_WITHOUT_LOCAL_COPY.getValue())};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
 
     List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
 
@@ -699,20 +679,21 @@ public class MessageDaoSource extends BaseDaoSource {
       orderType = "DESC";
     }
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_IS_NEW + " = 1 ",
-        new String[]{email, label}, COL_RECEIVED_DATE + " " + orderType);
+    String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_IS_NEW + " = 1 ";
+    String[] selectionArgs = new String[]{email, label};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs,
+        COL_RECEIVED_DATE + " " + orderType);
 
-    List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
+    List<GeneralMessageDetails> detailsList = new ArrayList<>();
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        generalMessageDetailsList.add(getMessageInfo(cursor));
+        detailsList.add(getMessageInfo(cursor));
       }
       cursor.close();
     }
 
-    return generalMessageDetailsList;
+    return detailsList;
   }
 
   /**
@@ -726,20 +707,20 @@ public class MessageDaoSource extends BaseDaoSource {
    */
   public GeneralMessageDetails getMessage(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ",
-        new String[]{email, label, String.valueOf(uid)}, null);
+    String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+    String[] selectionArgs = new String[]{email, label, String.valueOf(uid)};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
 
-    GeneralMessageDetails generalMessageDetails = null;
+    GeneralMessageDetails details = null;
 
     if (cursor != null) {
       if (cursor.moveToFirst()) {
-        generalMessageDetails = getMessageInfo(cursor);
+        details = getMessageInfo(cursor);
       }
       cursor.close();
     }
 
-    return generalMessageDetails;
+    return details;
   }
 
   /**
@@ -749,10 +730,11 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param uid     The UID of the message.
    * @return true if message exists in the database, false otherwise.
    */
-  public boolean isMessageExistsInDatabase(Context context, long uid) {
+  public boolean hasMassage(Context context, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_UID + " = ?", new String[]{String.valueOf(uid)}, null);
+    String selection = COL_UID + " = ?";
+    String[] selectionArgs = new String[]{String.valueOf(uid)};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
 
     if (cursor != null) {
       boolean result = cursor.getCount() == 1;
@@ -771,12 +753,14 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param label   The label name.
    * @return The minimum UID for the current label or -1 if it not exists.
    */
-  public int getMinUIDforLabel(Context context, String email, String label) {
+  public int getLabelMinUID(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{"min(" + COL_UID + ")"}, COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
-        new String[]{email, label}, null);
+    String[] projection = new String[]{"min(" + COL_UID + ")"};
+    String selection = COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       int uid = cursor.getInt(0);
@@ -798,9 +782,11 @@ public class MessageDaoSource extends BaseDaoSource {
   public int getLastUIDOfMessageInLabel(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{"max(" + COL_UID + ")"}, COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
-        new String[]{email, label}, null);
+    String[] projection = new String[]{"max(" + COL_UID + ")"};
+    String selection = COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       int uid = cursor.getInt(0);
@@ -822,9 +808,11 @@ public class MessageDaoSource extends BaseDaoSource {
   public int getOldestUIDOfMessageInLabel(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{"min(" + COL_UID + ")"}, COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
-        new String[]{email, label}, null);
+    String[] projection = new String[]{"min(" + COL_UID + ")"};
+    String selection = COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       int uid = cursor.getInt(0);
@@ -847,9 +835,11 @@ public class MessageDaoSource extends BaseDaoSource {
     ContentResolver contentResolver = context.getContentResolver();
     List<String> uidList = new ArrayList<>();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{COL_UID}, COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?",
-        new String[]{email, label}, null);
+    String[] projection = new String[]{COL_UID};
+    String selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
@@ -873,11 +863,12 @@ public class MessageDaoSource extends BaseDaoSource {
     ContentResolver contentResolver = context.getContentResolver();
     List<Long> uidList = new ArrayList<>();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{COL_UID}, COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?" + " AND "
-            + COL_IS_ENCRYPTED + " = " + ENCRYPTED_STATE_UNDEFINED,
-        new String[]{email, label},
-        null);
+    String[] projection = new String[]{COL_UID};
+    String selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?" + " AND " + COL_IS_ENCRYPTED + " = " +
+        ENCRYPTED_STATE_UNDEFINED;
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
@@ -901,10 +892,11 @@ public class MessageDaoSource extends BaseDaoSource {
   public Map<Long, String> getMapOfUIDAndMessagesFlags(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     Map<Long, String> uidList = new HashMap<>();
+    String[] projection = new String[]{COL_UID, COL_FLAGS};
+    String selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{COL_UID, COL_FLAGS}, COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?",
-        new String[]{email, label}, null);
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
@@ -928,13 +920,15 @@ public class MessageDaoSource extends BaseDaoSource {
   @SuppressLint("UseSparseArrays")
   public List<Integer> getUIDOfUnseenMessages(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
+
+    String[] projection = new String[]{COL_UID};
+    String selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ? AND " + COL_FLAGS + " NOT LIKE '%"
+        + MessageFlag.SEEN + "%'";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
+
     List<Integer> uidList = new ArrayList<>();
-
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{COL_UID}, COL_EMAIL + " = ? AND " + COL_FOLDER + " = ? AND "
-            + COL_FLAGS + " NOT LIKE '%" + MessageFlag.SEEN + "%'",
-        new String[]{email, label}, null);
-
     if (cursor != null) {
       while (cursor.moveToNext()) {
         uidList.add(cursor.getInt(cursor.getColumnIndex(COL_UID)));
@@ -956,11 +950,11 @@ public class MessageDaoSource extends BaseDaoSource {
   public int getCountOfMessagesForLabel(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
 
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{FlowCryptSQLiteOpenHelper.COLUMN_NAME_COUNT},
-        COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?",
-        new String[]{email, label},
-        null);
+    String[] projection = new String[]{FlowCryptSQLiteOpenHelper.COLUMN_NAME_COUNT};
+    String selection = COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?";
+    String[] selectionArgs = new String[]{email, label};
+
+    Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       int uid = cursor.getInt(cursor.getColumnIndex(FlowCryptSQLiteOpenHelper
@@ -984,8 +978,9 @@ public class MessageDaoSource extends BaseDaoSource {
   public int deleteMessageFromFolder(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
-          + COL_FOLDER + " = ? AND " + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      String[] selectionArgs = new String[]{email, label, String.valueOf(uid)};
+      return contentResolver.delete(getBaseContentUri(), where, selectionArgs);
     } else return -1;
   }
 
@@ -1000,34 +995,36 @@ public class MessageDaoSource extends BaseDaoSource {
   public int deleteCachedMessagesOfFolder(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
-          + COL_FOLDER + " = ?", new String[]{email, label});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ?";
+      String[] selectionArgs = new String[]{email, label};
+      return contentResolver.delete(getBaseContentUri(), where, selectionArgs);
     } else return -1;
   }
 
   /**
-   * @param context                Interface to global information about an application environment.
-   * @param email                  The email that the message linked.
-   * @param label                  The folder label.
-   * @param booleanLongSparseArray The array which contains information about an encrypted state of some messages
+   * @param context              Interface to global information about an application environment.
+   * @param email                The email that the message linked.
+   * @param label                The folder label.
+   * @param msgsEncryptionStates The array which contains information about an encrypted state of some messages
    * @return the {@link ContentProviderResult} array.
    * @throws RemoteException
    * @throws OperationApplicationException
    */
   public ContentProviderResult[] updateMessagesEncryptionStateByUID(Context context, String email, String label,
-                                                                    LongSparseArray<Boolean> booleanLongSparseArray)
+                                                                    LongSparseArray<Boolean> msgsEncryptionStates)
       throws RemoteException, OperationApplicationException {
     ContentResolver contentResolver = context.getContentResolver();
 
-    if (booleanLongSparseArray != null && booleanLongSparseArray.size() > 0) {
+    if (msgsEncryptionStates != null && msgsEncryptionStates.size() > 0) {
       ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-      for (int i = 0, arraySize = booleanLongSparseArray.size(); i < arraySize; i++) {
-        long uid = booleanLongSparseArray.keyAt(i);
-        Boolean b = booleanLongSparseArray.get(uid);
+      for (int i = 0, arraySize = msgsEncryptionStates.size(); i < arraySize; i++) {
+        long uid = msgsEncryptionStates.keyAt(i);
+        Boolean b = msgsEncryptionStates.get(uid);
+        String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+
         ops.add(ContentProviderOperation.newUpdate(getBaseContentUri())
             .withValue(COL_IS_ENCRYPTED, b)
-            .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ",
-                new String[]{email, label, String.valueOf(uid)})
+            .withSelection(selection, new String[]{email, label, String.valueOf(uid)})
             .withYieldAllowed(true)
             .build());
       }
@@ -1038,44 +1035,43 @@ public class MessageDaoSource extends BaseDaoSource {
   /**
    * Delete an outgoing message.
    *
-   * @param context               Interface to global information about an application environment.
-   * @param generalMessageDetails Input details about the outgoing message.
+   * @param context Interface to global information about an application environment.
+   * @param details Input details about the outgoing message.
    * @return The number of rows deleted.
    */
-  public int deleteOutgoingMessage(Context context, GeneralMessageDetails generalMessageDetails) {
+  public int deleteOutgoingMessage(Context context, GeneralMessageDetails details) {
     int deletedRows;
     ContentResolver contentResolver = context.getContentResolver();
 
-    if (generalMessageDetails.getEmail() != null && generalMessageDetails.getLabel() != null && contentResolver
+    if (details.getEmail() != null && details.getLabel() != null && contentResolver
         != null) {
-      deletedRows = contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND" +
-              " " + COL_UID + " = ? AND " + COL_STATE + " != " + MessageState.SENDING.getValue(),
-          new String[]{generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-              String.valueOf(generalMessageDetails.getUid())});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND" +
+          " " + COL_UID + " = ? AND " + COL_STATE + " != " + MessageState.SENDING.getValue();
+      String[] selectionArgs = new String[]{details.getEmail(), details.getLabel(), String.valueOf(details.getUid())};
+      deletedRows = contentResolver.delete(getBaseContentUri(), where, selectionArgs);
     } else {
       deletedRows = -1;
     }
 
     if (deletedRows > 0) {
-      new ImapLabelsDaoSource().updateLabelMessagesCount(context, generalMessageDetails.getEmail(),
+      new ImapLabelsDaoSource().updateLabelMessagesCount(context, details.getEmail(),
           JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMessages(context,
-              generalMessageDetails.getEmail()).size());
+              details.getEmail()).size());
 
-      if (generalMessageDetails.hasAttachments()) {
-        AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+      if (details.hasAttachments()) {
+        AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
-        List<AttachmentInfo> attachmentInfoList =
-            attachmentDaoSource.getAttachmentInfoList(context, generalMessageDetails.getEmail(),
-                JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+        List<AttachmentInfo> attachmentInfoList = attDaoSource.getAttachmentInfoList(context, details
+            .getEmail(), JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
         if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-          new AttachmentDaoSource().deleteAttachments(context, generalMessageDetails.getEmail(),
-              generalMessageDetails.getLabel(), generalMessageDetails.getUid());
+          attDaoSource.deleteAttachments(context, details.getEmail(),
+              details.getLabel(), details.getUid());
 
-          if (!TextUtils.isEmpty(generalMessageDetails.getAttachmentsDir())) {
+          if (!TextUtils.isEmpty(details.getAttachmentsDir())) {
             try {
               FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
-                  Constants.ATTACHMENTS_CACHE_DIR), generalMessageDetails.getAttachmentsDir()));
+                  Constants.ATTACHMENTS_CACHE_DIR), details.getAttachmentsDir()));
             } catch (IOException e) {
               e.printStackTrace();
             }
@@ -1094,17 +1090,16 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param email   The email that the message linked
    * @return The count of the updated row or -1 up.
    */
-  public int resetMsgsWithSendingState(Context context, String email) {
+  public int resetMessagesWithSendingState(Context context, String email) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(COL_STATE, MessageState.QUEUED.getValue());
 
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && contentResolver != null) {
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND "
-              + COL_FOLDER + " = ? AND "
-              + COL_STATE + " = ? ",
-          new String[]{email, JavaEmailConstants.FOLDER_OUTBOX, String.valueOf(MessageState.SENDING.getValue())});
+      String selection = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_STATE + " = ? ";
+      String[] selectionArgs = new String[]{email, JavaEmailConstants.FOLDER_OUTBOX,
+          String.valueOf(MessageState.SENDING.getValue())};
+      return contentResolver.update(getBaseContentUri(), contentValues, selection, selectionArgs);
     } else return -1;
   }
 
@@ -1125,15 +1120,15 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param part The parent part.
    * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise or if an error has occurred.
    */
-  private static boolean isMessageHasAttachment(Part part) {
+  private static boolean hasAttachment(Part part) {
     try {
       if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         Multipart multiPart = (Multipart) part.getContent();
-        int numberOfParts = multiPart.getCount();
-        for (int partCount = 0; partCount < numberOfParts; partCount++) {
+        int partsNumber = multiPart.getCount();
+        for (int partCount = 0; partCount < partsNumber; partCount++) {
           BodyPart bodyPart = multiPart.getBodyPart(partCount);
           if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            boolean isMessageHasAttachment = isMessageHasAttachment(bodyPart);
+            boolean isMessageHasAttachment = hasAttachment(bodyPart);
             if (isMessageHasAttachment) {
               return true;
             }

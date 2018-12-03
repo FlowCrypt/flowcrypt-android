@@ -48,7 +48,7 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
       COL_IS_DEFAULT + " INTEGER DEFAULT 0, " +
       COL_VERIFICATION_STATUS + " TEXT NOT NULL " + ");";
 
-  public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES = "CREATE UNIQUE INDEX IF NOT EXISTS "
+  public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES = UNIQUE_INDEX_PREFIX
       + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_" + COL_SEND_AS_EMAIL + "_in_" + TABLE_NAME_ACCOUNTS_ALIASES
       + " ON " + TABLE_NAME_ACCOUNTS_ALIASES + " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ", " +
       COL_SEND_AS_EMAIL + ")";
@@ -59,17 +59,17 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
    * @param cursor The cursor from which to get the data.
    * @return {@link AccountAliasesDao}.
    */
-  public static AccountAliasesDao getCurrentAccountAliasesDao(Cursor cursor) {
-    AccountAliasesDao accountAliasesDao = new AccountAliasesDao();
+  public static AccountAliasesDao getCurrent(Cursor cursor) {
+    AccountAliasesDao dao = new AccountAliasesDao();
     String accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL));
-    accountAliasesDao.setEmail(accountEmail != null ? accountEmail.toLowerCase() : null);
-    accountAliasesDao.setAccountType(cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE)));
+    dao.setEmail(accountEmail != null ? accountEmail.toLowerCase() : null);
+    dao.setAccountType(cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE)));
     String sendAsEmail = cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL));
-    accountAliasesDao.setSendAsEmail(sendAsEmail != null ? sendAsEmail.toLowerCase() : null);
-    accountAliasesDao.setDisplayName(cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)));
-    accountAliasesDao.setDefault(cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1);
-    accountAliasesDao.setVerificationStatus(cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS)));
-    return accountAliasesDao;
+    dao.setSendAsEmail(sendAsEmail != null ? sendAsEmail.toLowerCase() : null);
+    dao.setDisplayName(cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)));
+    dao.setDefault(cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1);
+    dao.setVerificationStatus(cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS)));
+    return dao;
   }
 
   @Override
@@ -80,14 +80,14 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
   /**
    * Save information about an account alias using the {@link AccountAliasesDao};
    *
-   * @param context           Interface to global information about an application environment;
-   * @param accountAliasesDao The user's alias information.
+   * @param context Interface to global information about an application environment;
+   * @param dao     The user's alias information.
    * @return The created {@link Uri} or null;
    */
-  public Uri addRow(Context context, AccountAliasesDao accountAliasesDao) {
+  public Uri addRow(Context context, AccountAliasesDao dao) {
     ContentResolver contentResolver = context.getContentResolver();
-    if (accountAliasesDao != null && contentResolver != null) {
-      ContentValues contentValues = generateContentValues(accountAliasesDao);
+    if (dao != null && contentResolver != null) {
+      ContentValues contentValues = generateContentValues(dao);
       if (contentValues == null) return null;
 
       return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -97,16 +97,16 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
   /**
    * This method add rows per single transaction.
    *
-   * @param context               Interface to global information about an application environment.
-   * @param accountAliasesDaoList The list of an account aliases.
+   * @param context Interface to global information about an application environment.
+   * @param list    The list of an account aliases.
    */
-  public int addRows(Context context, List<AccountAliasesDao> accountAliasesDaoList) {
-    if (accountAliasesDaoList != null && !accountAliasesDaoList.isEmpty()) {
+  public int addRows(Context context, List<AccountAliasesDao> list) {
+    if (list != null && !list.isEmpty()) {
       ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[accountAliasesDaoList.size()];
+      ContentValues[] contentValuesArray = new ContentValues[list.size()];
 
-      for (int i = 0; i < accountAliasesDaoList.size(); i++) {
-        AccountAliasesDao accountAliasesDao = accountAliasesDaoList.get(i);
+      for (int i = 0; i < list.size(); i++) {
+        AccountAliasesDao accountAliasesDao = list.get(i);
         contentValuesArray[i] = generateContentValues(accountAliasesDao);
       }
 
@@ -117,20 +117,20 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
   /**
    * Get the list of {@link AccountAliasesDao} object from the local database for some email.
    *
-   * @param context    Interface to global information about an application environment.
+   * @param context Interface to global information about an application environment.
    * @param account An account information.
    * @return The list of {@link AccountAliasesDao};
    */
   public List<AccountAliasesDao> getAliases(Context context, AccountDao account) {
     List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
     if (account != null) {
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-          AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?",
-          new String[]{account.getEmail(), account.getAccountType()}, null);
+      String selection = AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?";
+      String[] selectionArgs = new String[]{account.getEmail(), account.getAccountType()};
+      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
-          accountAliasesDaoList.add(getCurrentAccountAliasesDao(cursor));
+          accountAliasesDaoList.add(getCurrent(cursor));
         }
       }
 
@@ -145,21 +145,21 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
   /**
    * Update information about aliases of some {@link AccountDao}.
    *
-   * @param context               Interface to global information about an application environment.
-   * @param account            The object which contains information about an email account.
-   * @param accountAliasesDaoList The list of an account aliases.
+   * @param context Interface to global information about an application environment.
+   * @param account The object which contains information about an email account.
+   * @param list    The list of an account aliases.
    * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
    * updated or -1 otherwise.
    */
-  public int updateAliases(Context context, AccountDao account, List<AccountAliasesDao> accountAliasesDaoList) {
+  public int updateAliases(Context context, AccountDao account, List<AccountAliasesDao> list) {
     deleteAccountAliases(context, account);
-    return addRows(context, accountAliasesDaoList);
+    return addRows(context, list);
   }
 
   /**
    * Delete information about aliases of some {@link AccountDao}.
    *
-   * @param context    Interface to global information about an application environment.
+   * @param context Interface to global information about an application environment.
    * @param account The object which contains information about an email account.
    * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
    * deleted or -1 otherwise.
@@ -182,8 +182,8 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
-            new String[]{email, type});
+        String where = COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?";
+        return contentResolver.delete(getBaseContentUri(), where, new String[]{email, type});
       } else return -1;
     } else return -1;
   }

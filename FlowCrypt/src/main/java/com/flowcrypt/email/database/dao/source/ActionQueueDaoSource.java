@@ -51,9 +51,7 @@ public class ActionQueueDaoSource extends BaseDaoSource {
   private Gson gson;
 
   public ActionQueueDaoSource() {
-    gson = new GsonBuilder()
-        .registerTypeAdapter(Action.class, new ActionJsonDeserializer())
-        .create();
+    gson = new GsonBuilder().registerTypeAdapter(Action.class, new ActionJsonDeserializer()).create();
   }
 
   @Override
@@ -117,16 +115,16 @@ public class ActionQueueDaoSource extends BaseDaoSource {
   /**
    * Get the list of {@link Action} object from the local database for some email.
    *
-   * @param context    Interface to global information about an application environment.
+   * @param context Interface to global information about an application environment.
    * @param account An account information.
    * @return The list of {@link Action};
    */
   public List<Action> getActions(Context context, AccountDao account) {
     List<Action> actions = new ArrayList<>();
     if (account != null) {
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-          ActionQueueDaoSource.COL_EMAIL + " = ? OR " + ActionQueueDaoSource.COL_EMAIL + " = ?",
-          new String[]{account.getEmail(), Action.USER_SYSTEM}, null);
+      String selection = ActionQueueDaoSource.COL_EMAIL + " = ? OR " + ActionQueueDaoSource.COL_EMAIL + " = ?";
+      String[] selectionArgs = new String[]{account.getEmail(), Action.USER_SYSTEM};
+      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
@@ -146,7 +144,7 @@ public class ActionQueueDaoSource extends BaseDaoSource {
    * Get the list of {@link Action} object from the local database for some email using some {@link ActionType}.
    *
    * @param context    Interface to global information about an application environment.
-   * @param account An account information.
+   * @param account    An account information.
    * @param actionType An action type.
    * @return The list of {@link Action};
    */
@@ -154,9 +152,9 @@ public class ActionQueueDaoSource extends BaseDaoSource {
   public List<Action> getActionsByType(Context context, AccountDao account, ActionType actionType) {
     List<Action> actions = new ArrayList<>();
     if (account != null && actionType != null) {
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-          ActionQueueDaoSource.COL_EMAIL + " = ? AND " + ActionQueueDaoSource.COL_ACTION_TYPE + " = ?",
-          new String[]{account.getEmail(), actionType.getValue()}, null);
+      String selection = ActionQueueDaoSource.COL_EMAIL + " = ? AND " + ActionQueueDaoSource.COL_ACTION_TYPE + " = ?";
+      String[] selectionArgs = new String[]{account.getEmail(), actionType.getValue()};
+      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
@@ -184,8 +182,8 @@ public class ActionQueueDaoSource extends BaseDaoSource {
     if (action != null) {
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri().buildUpon().appendPath(String.valueOf(action.getId()))
-            .build(), null, null);
+        String actionId = String.valueOf(action.getId());
+        return contentResolver.delete(getBaseContentUri().buildUpon().appendPath(actionId).build(), null, null);
       } else return -1;
     } else return -1;
   }

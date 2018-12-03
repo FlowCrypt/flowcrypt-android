@@ -16,6 +16,7 @@ import android.provider.BaseColumns;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.js.PgpKey;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,9 +50,8 @@ public class KeysDaoSource extends BaseDaoSource {
       COL_PRIVATE_KEY + " BLOB NOT NULL, " +
       COL_PASSPHRASE + " varchar(100) DEFAULT NULL " + ");";
 
-  public static final String CREATE_INDEX_LONG_ID_IN_KEYS =
-      "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LONG_ID + "_in_" + TABLE_NAME_KEYS +
-          " ON " + TABLE_NAME_KEYS + " (" + COL_LONG_ID + ")";
+  public static final String CREATE_INDEX_LONG_ID_IN_KEYS = UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_in_" +
+      TABLE_NAME_KEYS + " ON " + TABLE_NAME_KEYS + " (" + COL_LONG_ID + ")";
 
   @Override
   public String getTableName() {
@@ -90,8 +90,7 @@ public class KeysDaoSource extends BaseDaoSource {
    */
   public boolean isKeyExist(Context context, String longId) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_LONG_ID + " = ?", new String[]{longId}, null);
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_LONG_ID + " = ?", new String[]{longId}, null);
 
     boolean result = false;
 
@@ -113,8 +112,7 @@ public class KeysDaoSource extends BaseDaoSource {
    */
   public List<String> getAllKeysLongIds(Context context) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        new String[]{COL_LONG_ID}, null, null, null);
+    Cursor cursor = contentResolver.query(getBaseContentUri(), new String[]{COL_LONG_ID}, null, null, null);
 
     List<String> longIds = new ArrayList<>();
 
@@ -141,8 +139,7 @@ public class KeysDaoSource extends BaseDaoSource {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(),
-            COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
+        return contentResolver.delete(getBaseContentUri(), COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
       } else return -1;
     } else return -1;
   }
@@ -150,15 +147,15 @@ public class KeysDaoSource extends BaseDaoSource {
   /**
    * This method update information about some private keys.
    *
-   * @param context           Interface to global information about an application environment.
-   * @param keysDaoCollection The list of {@link KeysDao} which contains information about the private keys.
+   * @param context Interface to global information about an application environment.
+   * @param keys    The list of {@link KeysDao} which contains information about the private keys.
    * @return the {@link ContentProviderResult} array.
    */
-  public ContentProviderResult[] updateKeys(Context context, Collection<KeysDao> keysDaoCollection) throws Exception {
+  public ContentProviderResult[] updateKeys(Context context, Collection<KeysDao> keys) throws Exception {
     ContentResolver contentResolver = context.getContentResolver();
-    if (keysDaoCollection != null && contentResolver != null) {
+    if (!CollectionUtils.isEmpty(keys)) {
       ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
-      for (KeysDao keysDao : keysDaoCollection) {
+      for (KeysDao keysDao : keys) {
         contentProviderOperations.add(ContentProviderOperation.newUpdate(getBaseContentUri())
             .withValue(COL_PRIVATE_KEY, keysDao.getPrivateKey())
             .withValue(COL_PASSPHRASE, keysDao.getPassphrase())

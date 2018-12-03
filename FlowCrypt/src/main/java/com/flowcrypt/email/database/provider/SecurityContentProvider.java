@@ -71,8 +71,7 @@ public class SecurityContentProvider extends ContentProvider {
   private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
   static {
-    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, KeysDaoSource.TABLE_NAME_KEYS,
-        MATCHED_CODE_KEYS_TABLE);
+    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, KeysDaoSource.TABLE_NAME_KEYS, MATCHED_CODE_KEYS_TABLE);
     URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, KeysDaoSource.TABLE_NAME_KEYS +
         SINGLE_APPENDED_SUFFIX, MATCHED_CODE_KEYS_TABLE_SINGLE_ROW);
     URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.CLEAN_DATABASE,
@@ -87,11 +86,9 @@ public class SecurityContentProvider extends ContentProvider {
         MATCHED_CODE_IMAP_LABELS_TABLE);
     URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS +
         SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_LABELS_SINGLE_ROW);
-    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource
-            .TABLE_NAME_MESSAGES,
+    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource.TABLE_NAME_MESSAGES,
         MATCHED_CODE_IMAP_MESSAGES_TABLE);
-    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource
-        .TABLE_NAME_MESSAGES +
+    URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource.TABLE_NAME_MESSAGES +
         SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW);
     URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS,
         MATCHED_CODE_ACCOUNTS_TABLE);
@@ -211,8 +208,7 @@ public class SecurityContentProvider extends ContentProvider {
           switch (URI_MATCHER.match(uri)) {
             case MATCHED_CODE_IMAP_MESSAGES_TABLE:
               for (ContentValues contentValues : values) {
-                long id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null,
-                    contentValues);
+                long id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null, contentValues);
 
                 //if message not inserted, try to update message with some UID
                 if (id <= 0) {
@@ -261,11 +257,7 @@ public class SecurityContentProvider extends ContentProvider {
     if (hotelDBHelper != null) {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
       if (sqLiteDatabase != null) {
-        rowsCount = sqLiteDatabase.update(
-            getMatchedTableName(uri),
-            values,
-            selection,
-            selectionArgs);
+        rowsCount = sqLiteDatabase.update(getMatchedTableName(uri), values, selection, selectionArgs);
 
         if (getContext() != null && rowsCount != 0) {
           getContext().getContentResolver().notifyChange(uri, null, false);
@@ -326,18 +318,11 @@ public class SecurityContentProvider extends ContentProvider {
   }
 
   @Override
-  public Cursor query(@NonNull Uri uri, String[] projection, String selection,
-                      String[] selectionArgs, String sortOrder) {
+  public Cursor query(@NonNull Uri uri, String[] proj, String selection, String[] selectionArgs, String sortOrder) {
     SQLiteDatabase sqLiteDatabase = hotelDBHelper.getReadableDatabase();
 
-    Cursor cursor = sqLiteDatabase.query(getMatchedTableName(uri),
-        projection,
-        selection,
-        selectionArgs,
-        null,
-        null,
-        sortOrder,
-        null);
+    String table = getMatchedTableName(uri);
+    Cursor cursor = sqLiteDatabase.query(table, proj, selection, selectionArgs, null, null, sortOrder, null);
 
     if (getContext() != null && cursor != null) {
       cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -487,13 +472,10 @@ public class SecurityContentProvider extends ContentProvider {
     String folder = contentValues.getAsString(MessageDaoSource.COL_FOLDER);
     String uid = contentValues.getAsString(MessageDaoSource.COL_UID);
 
-    id = sqLiteDatabase.update(
-        new MessageDaoSource().getTableName(),
-        contentValues,
-        MessageDaoSource.COL_EMAIL + "= ? AND "
-            + MessageDaoSource.COL_FOLDER + " = ? AND "
-            + MessageDaoSource.COL_UID + " = ? ",
-        new String[]{email, folder, uid});
+    String selection = MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
+        + MessageDaoSource.COL_UID + " = ? ";
+    String[] selectionArgs = new String[]{email, folder, uid};
+    id = sqLiteDatabase.update(new MessageDaoSource().getTableName(), contentValues, selection, selectionArgs);
     return id;
   }
 

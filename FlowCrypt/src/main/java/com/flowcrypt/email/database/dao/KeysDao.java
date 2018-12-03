@@ -49,9 +49,7 @@ public class KeysDao extends BaseDao {
   }
 
   public KeysDao(String longId, PrivateKeySourceType privateKeySourceType, String publicKey,
-                 String
-                     privateKey, String
-                     passphrase) {
+                 String privateKey, String passphrase) {
     this.longId = longId;
     this.privateKeySourceType = privateKeySourceType;
     this.publicKey = publicKey;
@@ -112,8 +110,8 @@ public class KeysDao extends BaseDao {
    * @param pgpKey                A normalized key;
    * @param passphrase            A passphrase which user provided;
    */
-  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey,
-                                        String passphrase) throws Exception {
+  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey, String passphrase)
+      throws Exception {
     KeysDao keysDao = new KeysDao();
     keysDao.setLongId(pgpKey.getLongid());
 
@@ -121,11 +119,9 @@ public class KeysDao extends BaseDao {
 
     if (TextUtils.isEmpty(pgpKey.getLongid())) {
       randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-          UUID.randomUUID().toString().substring(0,
-              KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+          UUID.randomUUID().toString().substring(0, KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
     } else {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
-          (pgpKey.getLongid());
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(pgpKey.getLongid());
     }
 
     String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);

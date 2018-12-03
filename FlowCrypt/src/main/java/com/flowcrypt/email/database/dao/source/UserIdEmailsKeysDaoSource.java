@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import com.flowcrypt.email.js.PgpKey;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +40,9 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
       COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
       COL_USER_ID_EMAIL + " VARCHAR(20) NOT NULL " + ");";
 
-  public static final String INDEX_LONG_ID_USER_ID_EMAIL =
-      "CREATE UNIQUE INDEX IF NOT EXISTS " + COL_LONG_ID + "_" + COL_USER_ID_EMAIL + "_in_"
-          + TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " ON " + TABLE_NAME_USER_ID_EMAILS_AND_KEYS
-          + " (" + COL_LONG_ID + ", " + COL_USER_ID_EMAIL + ")";
+  public static final String INDEX_LONG_ID_USER_ID_EMAIL = UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_" +
+      COL_USER_ID_EMAIL + "_in_" + TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " ON " + TABLE_NAME_USER_ID_EMAILS_AND_KEYS
+      + " (" + COL_LONG_ID + ", " + COL_USER_ID_EMAIL + ")";
 
   @Override
   public String getTableName() {
@@ -77,7 +77,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
    * @return the number of newly created rows.
    */
   public int addRows(Context context, List<Pair<String, String>> pairs) {
-    if (pairs != null && !pairs.isEmpty()) {
+    if (!CollectionUtils.isEmpty(pairs)) {
       ContentResolver contentResolver = context.getContentResolver();
       ContentValues[] contentValuesArray = new ContentValues[pairs.size()];
 
@@ -105,8 +105,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(),
-            COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
+        return contentResolver.delete(getBaseContentUri(), COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
       } else return -1;
     } else return -1;
   }
@@ -121,8 +120,9 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
   public List<String> getLongIdsByEmail(Context context, String email) {
     List<String> longIdsList = new ArrayList<>();
     if (!TextUtils.isEmpty(email)) {
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-          COL_USER_ID_EMAIL + " = ?", new String[]{email.toLowerCase()}, null);
+      String selection = COL_USER_ID_EMAIL + " = ?";
+      String[] selectionArgs = new String[]{email.toLowerCase()};
+      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
       if (cursor != null) {
         while (cursor.moveToNext()) {

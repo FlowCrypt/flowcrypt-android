@@ -56,36 +56,35 @@ public class AttachmentDaoSource extends BaseDaoSource {
       COL_FORWARDED_FOLDER + " TEXT, " +
       COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");";
 
-  public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT =
-      "CREATE INDEX IF NOT EXISTS " + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
-          + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
-          " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
+  public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT = INDEX_PREFIX + COL_EMAIL + "_" + COL_UID +
+      "_" + COL_FOLDER + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
+      " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
 
   /**
    * Prepare the content values for insert to the database.
    *
-   * @param email          The email that the message linked.
-   * @param label          The folder label.
-   * @param uid            The message UID.
-   * @param attachmentInfo The attachment info which will be added to the database.
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param uid     The message UID.
+   * @param attInfo The attachment info which will be added to the database.
    * @return generated {@link ContentValues}
    */
   @NonNull
   public static ContentValues prepareContentValues(String email, String label, long uid,
-                                                   AttachmentInfo attachmentInfo) {
+                                                   AttachmentInfo attInfo) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(COL_EMAIL, email);
     contentValues.put(COL_FOLDER, label);
     contentValues.put(COL_UID, uid);
-    contentValues.put(COL_NAME, attachmentInfo.getName());
-    contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attachmentInfo.getEncodedSize());
-    contentValues.put(COL_TYPE, attachmentInfo.getType());
-    contentValues.put(COL_ATTACHMENT_ID, attachmentInfo.getId());
-    if (attachmentInfo.getUri() != null) {
-      contentValues.put(COL_FILE_URI, attachmentInfo.getUri().toString());
+    contentValues.put(COL_NAME, attInfo.getName());
+    contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attInfo.getEncodedSize());
+    contentValues.put(COL_TYPE, attInfo.getType());
+    contentValues.put(COL_ATTACHMENT_ID, attInfo.getId());
+    if (attInfo.getUri() != null) {
+      contentValues.put(COL_FILE_URI, attInfo.getUri().toString());
     }
-    contentValues.put(COL_FORWARDED_FOLDER, attachmentInfo.getFwdFolder());
-    contentValues.put(COL_FORWARDED_UID, attachmentInfo.getFwdUid());
+    contentValues.put(COL_FORWARDED_FOLDER, attInfo.getFwdFolder());
+    contentValues.put(COL_FORWARDED_UID, attInfo.getFwdUid());
     return contentValues;
   }
 
@@ -97,23 +96,23 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @return A generated {@link AttachmentInfo}.
    */
   public static AttachmentInfo getAttachmentInfo(Cursor cursor) {
-    AttachmentInfo attachmentInfo = new AttachmentInfo();
-    attachmentInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
-    attachmentInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-    attachmentInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
-    attachmentInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
-    attachmentInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
-    attachmentInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
-    attachmentInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
+    AttachmentInfo attInfo = new AttachmentInfo();
+    attInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
+    attInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
+    attInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
+    attInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
+    attInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
+    attInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
+    attInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
     String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
     if (!TextUtils.isEmpty(uriString)) {
-      attachmentInfo.setUri(Uri.parse(uriString));
+      attInfo.setUri(Uri.parse(uriString));
     }
-    attachmentInfo.setFwdFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
-    attachmentInfo.setFwdUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
-    attachmentInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
+    attInfo.setFwdFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
+    attInfo.setFwdUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
+    attInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
         && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
-    return attachmentInfo;
+    return attInfo;
   }
 
   @Override
@@ -124,19 +123,18 @@ public class AttachmentDaoSource extends BaseDaoSource {
   /**
    * Add a new attachment details to the database.
    *
-   * @param context        Interface to global information about an application environment.
-   * @param email          The email that the message linked.
-   * @param label          The folder label where exists message which contains a current
-   *                       attachment.
-   * @param uid            The message UID.
-   * @param attachmentInfo The attachment details which will be added to the database.
+   * @param context Interface to global information about an application environment.
+   * @param email   The email that the message linked.
+   * @param label   The folder label where exists message which contains a current
+   *                attachment.
+   * @param uid     The message UID.
+   * @param attInfo The attachment details which will be added to the database.
    * @return A {@link Uri} of the created row.
    */
-  public Uri addRow(Context context, String email, String label, long uid,
-                    AttachmentInfo attachmentInfo) {
+  public Uri addRow(Context context, String email, String label, long uid, AttachmentInfo attInfo) {
     ContentResolver contentResolver = context.getContentResolver();
-    if (attachmentInfo != null && label != null && contentResolver != null) {
-      ContentValues contentValues = prepareContentValues(email, label, uid, attachmentInfo);
+    if (attInfo != null && label != null && contentResolver != null) {
+      ContentValues contentValues = prepareContentValues(email, label, uid, attInfo);
       return contentResolver.insert(getBaseContentUri(), contentValues);
     } else return null;
   }
@@ -144,22 +142,21 @@ public class AttachmentDaoSource extends BaseDaoSource {
   /**
    * This method add rows per single transaction.
    *
-   * @param context            Interface to global information about an application environment.
-   * @param email              The email that the message linked.
-   * @param label              The folder label where exists message which contains the current
-   *                           attachments.
-   * @param uid                The message UID.
-   * @param attachmentInfoList The attachments list.
+   * @param context     Interface to global information about an application environment.
+   * @param email       The email that the message linked.
+   * @param label       The folder label where exists message which contains the current
+   *                    attachments.
+   * @param uid         The message UID.
+   * @param attInfoList The attachments list.
    * @return the number of newly created rows.
    */
-  public int addRows(Context context, String email, String label, long uid,
-                     List<AttachmentInfo> attachmentInfoList) {
-    if (attachmentInfoList != null) {
+  public int addRows(Context context, String email, String label, long uid, List<AttachmentInfo> attInfoList) {
+    if (attInfoList != null) {
       ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[attachmentInfoList.size()];
+      ContentValues[] contentValuesArray = new ContentValues[attInfoList.size()];
 
-      for (int i = 0; i < attachmentInfoList.size(); i++) {
-        AttachmentInfo attachmentInfo = attachmentInfoList.get(i);
+      for (int i = 0; i < attInfoList.size(); i++) {
+        AttachmentInfo attachmentInfo = attInfoList.get(i);
         ContentValues contentValues = prepareContentValues(email, label, uid, attachmentInfo);
 
         contentValuesArray[i] = contentValues;
@@ -190,17 +187,17 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param email         The email that the attachment linked.
    * @param label         The folder that the attachment linked.
    * @param uid           The message UID that the attachment linked.
-   * @param attachmentId  The unique attachment id.
+   * @param attId         The unique attachment id.
    * @param contentValues The {@link ContentValues} which contains new information.
    * @return The count of the updated row or -1 up.
    */
-  public int update(Context context, String email, String label, long uid, String attachmentId,
-                    ContentValues contentValues) {
+  public int update(Context context, String email, String label, long uid, String attId, ContentValues contentValues) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID + " = ? ",
-          new String[]{email, label, String.valueOf(uid), attachmentId});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID +
+          " = ? ";
+      String[] selectionArgs = new String[]{email, label, String.valueOf(uid), attId};
+      return contentResolver.update(getBaseContentUri(), contentValues, where, selectionArgs);
     } else return -1;
   }
 
@@ -212,23 +209,22 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param uid   The message UID.
    * @return A  list of {@link AttachmentInfo} objects.
    */
-  public ArrayList<AttachmentInfo> getAttachmentInfoList(Context context, String email,
-                                                         String label, long uid) {
+  public ArrayList<AttachmentInfo> getAttachmentInfoList(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(),
-        null, COL_EMAIL + " = ?" + " AND " + COL_FOLDER + " = ?" + " AND " + COL_UID +
-            " = ?", new String[]{email, label, String.valueOf(uid)}, null);
+    String selection = COL_EMAIL + " = ?" + " AND " + COL_FOLDER + " = ?" + " AND " + COL_UID + " = ?";
+    String[] selectionArgs = new String[]{email, label, String.valueOf(uid)};
+    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
 
-    ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+    ArrayList<AttachmentInfo> attInfoList = new ArrayList<>();
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        attachmentInfoList.add(getAttachmentInfo(cursor));
+        attInfoList.add(getAttachmentInfo(cursor));
       }
       cursor.close();
     }
 
-    return attachmentInfoList;
+    return attInfoList;
   }
 
   /**
@@ -239,11 +235,11 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param label   The folder label.
    * @return The number of deleted rows.
    */
-  public int deleteCachedAttachmentInfoOfFolder(Context context, String email, String label) {
+  public int deleteCachedAttachmentInfo(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND "
-          + COL_FOLDER + " = ?", new String[]{email, label});
+      String where = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?";
+      return contentResolver.delete(getBaseContentUri(), where, new String[]{email, label});
     } else return -1;
   }
 
@@ -259,9 +255,8 @@ public class AttachmentDaoSource extends BaseDaoSource {
   public int deleteAttachments(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + "= ? AND "
-          + COL_FOLDER + " = ? AND "
-          + COL_UID + " = ? ", new String[]{email, label, String.valueOf(uid)});
+      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
+      return contentResolver.delete(getBaseContentUri(), where, new String[]{email, label, String.valueOf(uid)});
     } else return -1;
   }
 }

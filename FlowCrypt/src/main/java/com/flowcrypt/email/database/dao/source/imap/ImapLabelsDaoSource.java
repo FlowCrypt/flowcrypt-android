@@ -176,29 +176,28 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   public int deleteFolders(Context context, String email) {
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
-      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ?",
-          new String[]{email});
+      return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ?", new String[]{email});
     } else return -1;
   }
 
   /**
    * Update a message count of some {@link Folder}.
    *
-   * @param context         Interface to global information about an application environment.
-   * @param email           The account email.
-   * @param folderName      A server folder name. Links to {@link #COL_FOLDER_NAME}
-   * @param newMessageCount A new message count.
+   * @param context     Interface to global information about an application environment.
+   * @param email       The account email.
+   * @param folderName  A server folder name. Links to {@link #COL_FOLDER_NAME}
+   * @param newMsgCount A new message count.
    * @return The count of updated rows. Will be 1 if information about {@link Folder} was
    * updated or -1 otherwise.
    */
-  public int updateLabelMessagesCount(Context context, String email, String folderName, int newMessageCount) {
+  public int updateLabelMessagesCount(Context context, String email, String folderName, int newMsgCount) {
     if (context != null && !TextUtils.isEmpty(folderName)) {
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_MESSAGE_COUNT, newMessageCount);
-        return contentResolver.update(getBaseContentUri(), contentValues, COL_EMAIL + "= ? AND " +
-            COL_FOLDER_NAME + " = ? ", new String[]{email, folderName});
+        contentValues.put(COL_MESSAGE_COUNT, newMsgCount);
+        String where = COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ";
+        return contentResolver.update(getBaseContentUri(), contentValues, where, new String[]{email, folderName});
       } else return -1;
     } else return -1;
   }
@@ -212,8 +211,8 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
    * @param newFolders The list of new {@link Folder} object.
    * @return the {@link ContentProviderResult} array.
    */
-  public ContentProviderResult[] updateLabels(Context context, String email,
-                                              Collection<Folder> oldFolders, Collection<Folder> newFolders)
+  public ContentProviderResult[] updateLabels(Context context, String email, Collection<Folder> oldFolders,
+                                              Collection<Folder> newFolders)
       throws RemoteException, OperationApplicationException {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && contentResolver != null) {
@@ -251,9 +250,10 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
       }
 
       for (Folder folder : deleteCandidates) {
+        String[] args = new String[]{email, folder.getFullName()};
+
         contentProviderOperations.add(ContentProviderOperation.newDelete(getBaseContentUri())
-            .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ",
-                new String[]{email, folder.getFullName()})
+            .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ", args)
             .withYieldAllowed(true)
             .build());
       }
@@ -276,8 +276,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
     contentValues.put(COL_MESSAGE_COUNT, folder.getMessageCount());
     contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
-    contentValues.put(COL_FOLDER_ATTRIBUTES,
-        prepareAttributesToSaving(folder.getAttributes()));
+    contentValues.put(COL_FOLDER_ATTRIBUTES, prepareAttributesToSaving(folder.getAttributes()));
     return contentValues;
   }
 

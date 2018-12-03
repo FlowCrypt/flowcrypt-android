@@ -23,6 +23,8 @@ import java.util.List;
 
 public abstract class BaseDaoSource implements BaseColumns {
   public static final String URI_PATH_GROUPED = "Grouped";
+  public static final String INDEX_PREFIX = "CREATE INDEX IF NOT EXISTS ";
+  public static final String UNIQUE_INDEX_PREFIX = "CREATE UNIQUE INDEX IF NOT EXISTS ";
 
   public abstract String getTableName();
 

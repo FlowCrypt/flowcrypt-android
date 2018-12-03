@@ -164,7 +164,7 @@ public class MessagesSenderJobService extends JobService {
           File attachmentsCacheDirectory = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
           if (account != null) {
-            messageDaoSource.resetMsgsWithSendingState(context, account.getEmail());
+            messageDaoSource.resetMessagesWithSendingState(context, account.getEmail());
 
             List<GeneralMessageDetails> listOfQueuedMessages = messageDaoSource.getOutboxMessages
                 (context, account.getEmail(), MessageState.QUEUED);
@@ -246,7 +246,7 @@ public class MessagesSenderJobService extends JobService {
         uidOfLastMessage = genMsgDetails.getUid();
 
         try {
-          msgDaoSource.resetMsgsWithSendingState(context, account.getEmail());
+          msgDaoSource.resetMessagesWithSendingState(context, account.getEmail());
           msgDaoSource.updateMessageState(context, genMsgDetails.getEmail(), genMsgDetails.getLabel(),
               genMsgDetails.getUid(), MessageState.SENDING);
           Thread.sleep(2000);
