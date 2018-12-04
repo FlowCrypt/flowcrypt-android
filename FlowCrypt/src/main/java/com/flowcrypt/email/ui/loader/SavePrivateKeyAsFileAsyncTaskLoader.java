@@ -9,7 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;

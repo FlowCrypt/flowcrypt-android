@@ -7,6 +7,8 @@ package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 public class MimeMessage extends MeaningfulV8ObjectContainer {
 
@@ -18,7 +20,7 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
   }
 
   public String getText() {
-    return this.getAttributeAsString("text");
+    return getAttributeAsString("text");
   }
 
   public String getHtml() {

@@ -7,6 +7,7 @@ package com.flowcrypt.email.js;
 
 import android.util.Log;
 
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.js.tasks.DecryptRawMimeMessageJsTask;
 import com.flowcrypt.email.js.tasks.JsTask;
 import com.flowcrypt.email.security.SecurityStorageConnector;

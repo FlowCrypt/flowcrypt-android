@@ -3,11 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.js;
+package com.flowcrypt.email.js.core;
 
 import android.content.Context;
-import android.os.Build;
-import android.text.Html;
 import android.text.TextUtils;
 
 import com.eclipsesource.v8.JavaCallback;
@@ -17,29 +15,28 @@ import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8ArrayBuffer;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
-import com.eclipsesource.v8.V8ResultUndefined;
 import com.eclipsesource.v8.V8TypedArray;
 import com.eclipsesource.v8.V8Value;
 import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.js.Attachment;
+import com.flowcrypt.email.js.MessageBlock;
+import com.flowcrypt.email.js.MimeMessage;
+import com.flowcrypt.email.js.PasswordStrength;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.ProcessedMime;
+import com.flowcrypt.email.js.StorageConnectorInterface;
 
-import org.acra.ACRA;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.SecureRandom;
-import java.security.spec.KeySpec;
-import java.security.spec.RSAPrivateKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.crypto.Cipher;
 
 
 @SuppressWarnings("WeakerAccess")
@@ -371,232 +368,4 @@ public class Js { // Create one object per thread and use them separately. Not t
     });
   }
 
-}
-
-@SuppressWarnings("WeakerAccess")
-class MeaningfulV8ObjectContainer {
-
-  protected V8Object v8object;
-
-  MeaningfulV8ObjectContainer(V8Object o) {
-    v8object = o;
-  }
-
-  static V8Array getAttributeAsArray(V8Object obj, String k) {
-    try {
-      V8Array a = obj.getArray(k);
-      return a.isUndefined() ? null : a;
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  static V8Object getAttributeAsObject(V8Object obj, String k) {
-    try {
-      V8Object result = obj.getObject(k);
-      return result.isUndefined() ? null : result;
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  static Boolean getAttributeAsBoolean(V8Object obj, String k) {
-    try {
-      return obj.getBoolean(k);
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  static Integer getAttributeAsInteger(V8Object obj, String k) {
-    try {
-      return obj.getInteger(k);
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  static String getAttributeAsString(V8Object obj, String k) {
-    try {
-      return obj.getString(k);
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  static byte[] getAttributeAsBytes(V8Object obj, String k) {
-    try {
-      V8TypedArray typedArray = (V8TypedArray) obj.getObject(k);
-      return typedArray.getBytes(0, typedArray.length());
-    } catch (V8ResultUndefined e) {
-      return null;
-    }
-  }
-
-  V8Array getAttributeAsArray(String k) {
-    return getAttributeAsArray(v8object, k);
-  }
-
-  V8Object getAttributeAsObject(String name) {
-    return getAttributeAsObject(v8object, name);
-  }
-
-  Boolean getAttributeAsBoolean(String name) {
-    return getAttributeAsBoolean(v8object, name);
-  }
-
-  Integer getAttributeAsInteger(String name) {
-    return getAttributeAsInteger(v8object, name);
-  }
-
-  String getAttributeAsString(String k) {
-    return getAttributeAsString(v8object, k);
-  }
-
-  byte[] getAttributeAsBytes(String k) {
-    return getAttributeAsBytes(v8object, k);
-  }
-
-  V8Object getV8Object() {
-    return v8object;
-  }
-}
-
-
-class JavaScriptError extends Exception {
-  JavaScriptError(String msg) {
-    super(msg);
-  }
-}
-
-class JavaScriptReport extends Exception {
-  JavaScriptReport(String msg) {
-    super(msg);
-  }
-}
-
-class JavaMethodsForJavaScript {
-
-  private final StorageConnectorInterface storage;
-  private final V8 v8;
-
-  JavaMethodsForJavaScript(V8 v8, StorageConnectorInterface storage) {
-    this.storage = storage;
-    this.v8 = v8;
-  }
-
-  public V8Object storage_keys_get(String account_email, String longid) {
-    PgpKeyInfo ki = this.storage.getPgpPrivateKey(longid);
-    if (ki == null) {
-      return null;
-    }
-    return new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid());
-  }
-
-  public V8Array storage_keys_get(String account_email) {
-    V8Array result = new V8Array(v8);
-    for (PgpKeyInfo ki : this.storage.getAllPgpPrivateKeys()) {
-      result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
-    }
-    return result;
-  }
-
-  public V8Array storage_keys_get(String account_email, V8Array longid) {
-    V8Array result = new V8Array(v8);
-    for (PgpKeyInfo ki : this.storage.getFilteredPgpPrivateKeys(longid.getStrings(0, longid.length()))) {
-      result.push(new V8Object(v8).add("private", ki.getPrivate()).add("longid", ki.getLongid()));
-    }
-    return result;
-  }
-
-  public String storage_passphrase_get(String account_email, String longid) {
-    return this.storage.getPassphrase(longid);
-  }
-
-  public void console_log(String message) {
-    System.out.println("[JAVASCRIPT.CONSOLE.LOG] " + message);
-  }
-
-  public void console_error(String message) {
-    System.err.println("[JAVASCRIPT.CONSOLE.ERROR] " + message);
-  }
-
-  public void report(Boolean isError, String title, String stack_trace, String details) {
-    console_error(title);
-    console_error(stack_trace);
-    if (details.length() > 0) {
-      console_error(details);
-    }
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_TITLE", title);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_STACK_TRACE", stack_trace);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_DETAILS", details);
-    if (isError) {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptError(title));
-    } else {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptReport(title));
-    }
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_TITLE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_STACK_TRACE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_DETAILS");
-  }
-
-  public String mod_pow_strings(String b, String e, String m) {
-    return mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
-  }
-
-  public String html_to_text(String html) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString();
-    } else {
-      return Html.fromHtml(html).toString();
-    }
-  }
-
-  public BigInteger mod_pow(BigInteger b, BigInteger e, BigInteger m) {
-    // Do modular exponentiation for the expression b^e mod m (b to the power e, modulo m).
-    BigInteger zero = new BigInteger("0");
-    BigInteger one = new BigInteger("1");
-    BigInteger two = one.add(one);
-    if (e.equals(zero)) {
-      return one;
-    }
-    if (e.equals(one)) {
-      return b.mod(m);
-    }
-    if (e.mod(two).equals(zero)) {
-      BigInteger answer = mod_pow(b, e.divide(two), m); // Calculates the square root of the answer
-      return (answer.multiply(answer)).mod(m); // Reuses the result of the square root
-    }
-    return (b.multiply(mod_pow(b, e.subtract(one), m))).mod(m);
-  }
-
-  public String rsa_decrypt(String modulus, String exponent, V8Array encrypted) {
-    try {
-      KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-      KeySpec keySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(exponent));
-      PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-      Cipher decryptCipher = Cipher.getInstance("RSA/ECB/NoPadding");
-      decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
-      byte[] decrypted_bytes = decryptCipher.doFinal(encrypted.getBytes(0, encrypted.length()));
-      return new BigInteger(decrypted_bytes).toString();
-    } catch (Exception e) {
-      System.out.println("JAVA RSA ERROR:" + e.getClass() + " --- " + e.getMessage());
-    }
-    return "";
-  }
-
-  public V8Array secure_random(Integer byte_length) {
-    SecureRandom random = new SecureRandom();
-    byte bytes[] = new byte[byte_length];
-    random.nextBytes(bytes);
-    V8Array array = new V8Array(v8);
-    for (Integer i = 0; i < byte_length; i++) {
-      array.push((int) bytes[i] + 128); // signed to unsigned conversion to get random 0-255
-    }
-    return array;
-  }
-
-  public void alert(final String message) {
-    System.out.println("[JAVASCRIPT.ALERT] " + message);
-  }
 }

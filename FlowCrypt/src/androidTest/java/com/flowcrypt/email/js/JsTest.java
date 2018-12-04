@@ -8,6 +8,7 @@ package com.flowcrypt.email.js;
 import android.content.Context;
 import android.util.Log;
 
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 

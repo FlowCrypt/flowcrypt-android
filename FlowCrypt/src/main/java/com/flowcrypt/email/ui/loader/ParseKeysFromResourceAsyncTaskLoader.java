@@ -10,9 +10,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.model.results.LoaderResult;

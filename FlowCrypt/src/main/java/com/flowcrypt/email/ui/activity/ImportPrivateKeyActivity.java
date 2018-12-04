@@ -13,9 +13,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;

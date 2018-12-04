@@ -6,6 +6,7 @@
 package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 public class MimeAddress extends MeaningfulV8ObjectContainer {
 

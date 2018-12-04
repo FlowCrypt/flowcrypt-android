@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
 
 public class PgpContact implements Parcelable {
 

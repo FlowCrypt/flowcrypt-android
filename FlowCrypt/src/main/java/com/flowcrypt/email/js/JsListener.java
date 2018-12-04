@@ -8,6 +8,7 @@ package com.flowcrypt.email.js;
 import android.content.Context;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.js.core.Js;
 
 /**
  * This class can be used for communication with {@link JsInBackgroundManager}

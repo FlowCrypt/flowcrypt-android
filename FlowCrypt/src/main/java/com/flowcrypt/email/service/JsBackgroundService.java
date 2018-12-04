@@ -15,9 +15,9 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsInBackgroundManager;
 import com.flowcrypt.email.js.JsListener;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.lang.ref.WeakReference;

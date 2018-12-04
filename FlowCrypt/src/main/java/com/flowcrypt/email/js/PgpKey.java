@@ -9,6 +9,8 @@ import android.text.TextUtils;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 import java.util.ArrayList;
 

@@ -7,13 +7,15 @@ package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 
 public class ProcessedMime extends MeaningfulV8ObjectContainer {
 
   private Js js;
 
-  ProcessedMime(V8Object o, Js js) {
+  public ProcessedMime(V8Object o, Js js) {
     super(o);
     this.js = js;
   }

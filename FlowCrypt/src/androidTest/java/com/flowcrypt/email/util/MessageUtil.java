@@ -7,9 +7,9 @@ package com.flowcrypt.email.util;
 
 import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.ProcessedMime;
+import com.flowcrypt.email.js.core.Js;
 
 import java.util.ArrayList;
 import java.util.Date;
