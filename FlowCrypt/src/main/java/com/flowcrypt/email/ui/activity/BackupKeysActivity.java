@@ -377,7 +377,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);
-    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.generateNameForPrivateKey(account.getEmail()));
+    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genNameForPrivateKey(account.getEmail()));
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
   }
 }

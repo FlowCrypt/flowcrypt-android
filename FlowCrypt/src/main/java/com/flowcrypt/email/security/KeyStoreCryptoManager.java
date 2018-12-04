@@ -18,7 +18,6 @@ import android.util.Base64;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -85,7 +84,7 @@ public class KeyStoreCryptoManager {
   private Context context;
   private PrivateKey privateKey;
   private PublicKey publicKey;
-  private SecretKeySpec secretKeySpec;
+  private SecretKeySpec secKeySpec;
 
   /**
    * This constructor do initialization of symmetric (AES) and asymmetric keys (RSA).
@@ -157,7 +156,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(plainData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
 
       return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
@@ -192,7 +191,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(encryptedData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.DECRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
       return new String(decodedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;
@@ -213,10 +212,9 @@ public class KeyStoreCryptoManager {
    * @throws InvalidKeyException
    * @throws BadPaddingException
    * @throws IllegalBlockSizeException
-   * @throws IOException
    */
   public String encryptWithRSA(String plainData) throws NoSuchPaddingException, NoSuchAlgorithmException,
-      InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException {
+      InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
     if (!TextUtils.isEmpty(plainData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
       cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -244,7 +242,6 @@ public class KeyStoreCryptoManager {
    * @throws NoSuchAlgorithmException
    * @throws BadPaddingException
    * @throws IllegalBlockSizeException
-   * @throws IOException
    */
   public String decryptWithRSA(String encryptedData) throws InvalidKeyException, NoSuchPaddingException,
       NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
@@ -273,7 +270,7 @@ public class KeyStoreCryptoManager {
 
     String decryptedSecretKey = decryptWithRSA(encryptedSecretKey);
 
-    secretKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
+    secKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
   }
 
   /**
@@ -412,18 +409,14 @@ public class KeyStoreCryptoManager {
    * Generate an encrypted secret key for the AES symmetric algorithm.
    *
    * @return <tt>{@link String}</tt> An encrypted secret key with the RSA asymmetric algorithm.
-   * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
-   * @throws InvalidAlgorithmParameterException
    * @throws IllegalBlockSizeException
    * @throws InvalidKeyException
    * @throws BadPaddingException
    * @throws NoSuchPaddingException
-   * @throws IOException
    */
-  private String generateEncodedSecretKey() throws NoSuchProviderException, NoSuchAlgorithmException,
-      InvalidAlgorithmParameterException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, NoSuchPaddingException, IOException {
+  private String generateEncodedSecretKey() throws NoSuchAlgorithmException, IllegalBlockSizeException,
+      InvalidKeyException, BadPaddingException, NoSuchPaddingException {
     KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
     SecureRandom secureRandom = SecureRandom.getInstance(ALGORITHM_SHA1PRNG);
     keyGenerator.init(KEY_SIZE_128, secureRandom);

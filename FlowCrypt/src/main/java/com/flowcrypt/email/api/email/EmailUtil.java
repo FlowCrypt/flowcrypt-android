@@ -215,7 +215,7 @@ public class EmailUtil {
     MimeBodyPart part = new MimeBodyPart();
     DataSource dataSource = new ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
     part.setDataHandler(new DataHandler(dataSource));
-    part.setFileName(SecurityUtils.generateNameForPrivateKey(account.getEmail()));
+    part.setFileName(SecurityUtils.genNameForPrivateKey(account.getEmail()));
     return part;
   }
 
@@ -232,7 +232,7 @@ public class EmailUtil {
   @NonNull
   public static Message generateMessageWithAllPrivateKeys(Context context, AccountDao account,
                                                           Session session, Js js) throws Exception {
-    String keys = SecurityUtils.generatePrivateKeysBackup(context, js, account, true);
+    String keys = SecurityUtils.genPrivateKeysBackup(context, js, account, true);
 
     Multipart multipart = new MimeMultipart();
     multipart.addBodyPart(getBodyPartWithBackupText(context));

@@ -151,7 +151,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
     if (findViewById(R.id.buttonSkipSetup) != null) {
       View buttonSkipSetup = findViewById(R.id.buttonSkipSetup);
-      if (SecurityUtils.isBackupKeysExist(this)) {
+      if (SecurityUtils.isKeysBackupExist(this)) {
         buttonSkipSetup.setVisibility(View.VISIBLE);
         buttonSkipSetup.setOnClickListener(this);
       } else {

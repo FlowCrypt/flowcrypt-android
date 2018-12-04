@@ -21,8 +21,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
  */
 
 public class PrivateKeyInfo implements Parcelable {
-  public static final Parcelable.Creator<PrivateKeyInfo> CREATOR = new Parcelable
-      .Creator<PrivateKeyInfo>() {
+  public static final Parcelable.Creator<PrivateKeyInfo> CREATOR = new Parcelable.Creator<PrivateKeyInfo>() {
     @Override
     public PrivateKeyInfo createFromParcel(Parcel source) {
       return new PrivateKeyInfo(source);
