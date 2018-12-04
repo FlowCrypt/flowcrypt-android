@@ -249,7 +249,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
             Toast.makeText(this, toastMessageResourcesId, Toast.LENGTH_SHORT).show();
 
-            new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+            new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
                 folder.getFolderAlias(), generalMessageDetails.getUid());
             new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
                 folder.getFolderAlias(), generalMessageDetails.getUid());
@@ -354,7 +354,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   }
 
   private void messageNotAvailableInFolder() {
-    new MessageDaoSource().deleteMessageFromFolder(this, generalMessageDetails.getEmail(),
+    new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
         folder.getFolderAlias(), generalMessageDetails.getUid());
     new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
         folder.getFolderAlias(), generalMessageDetails.getUid());

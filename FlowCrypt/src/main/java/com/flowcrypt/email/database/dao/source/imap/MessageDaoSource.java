@@ -889,7 +889,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return The map of UID and flags of all messages in the database for some label.
    */
   @SuppressLint("UseSparseArrays")
-  public Map<Long, String> getMapOfUIDAndMessagesFlags(Context context, String email, String label) {
+  public Map<Long, String> getMapOfUIDAndMessageFlags(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     Map<Long, String> uidList = new HashMap<>();
     String[] projection = new String[]{COL_UID, COL_FLAGS};
@@ -975,7 +975,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param uid     The message UID.
    * @return The number of rows deleted.
    */
-  public int deleteMessageFromFolder(Context context, String email, String label, long uid) {
+  public int deleteMessage(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
       String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";

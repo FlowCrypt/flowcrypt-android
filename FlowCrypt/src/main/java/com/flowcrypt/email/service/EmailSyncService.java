@@ -438,7 +438,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     try {
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
-      Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessagesFlags
+      Map<Long, String> messagesUIDWithFlagsInLocalDatabase = messageDaoSource.getMapOfUIDAndMessageFlags
           (getApplicationContext(), account.getEmail(), localFolder.getFolderAlias());
 
       Collection<Long> messagesUIDsInLocalDatabase = new HashSet<>(messagesUIDWithFlagsInLocalDatabase.keySet());
