@@ -37,11 +37,10 @@ public class MessagePart implements Parcelable {
     @Override
     public MessagePart createFromParcel(Parcel source) {
       int tmpMessageBlockType = source.readInt();
-      MessagePartType messagePartType = tmpMessageBlockType == -1 ? null
-          : MessagePartType.values()[tmpMessageBlockType];
+      MessagePartType partType = tmpMessageBlockType == -1 ? null : MessagePartType.values()[tmpMessageBlockType];
 
-      if (messagePartType != null) {
-        return genMsgPartFromType(source, messagePartType);
+      if (partType != null) {
+        return genMsgPartFromType(source, partType);
       } else {
         return new MessagePart(source);
       }
@@ -53,11 +52,11 @@ public class MessagePart implements Parcelable {
     }
   };
 
-  protected MessagePartType messagePartType;
+  protected MessagePartType msgPartType;
   private String value;
 
-  public MessagePart(MessagePartType messagePartType, String value) {
-    this.messagePartType = messagePartType;
+  public MessagePart(MessagePartType msgPartType, String value) {
+    this.msgPartType = msgPartType;
     this.value = value;
   }
 
@@ -72,20 +71,20 @@ public class MessagePart implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(this.messagePartType == null ? -1 : this.messagePartType.ordinal());
+    dest.writeInt(this.msgPartType == null ? -1 : this.msgPartType.ordinal());
     dest.writeString(this.value);
   }
 
   @Override
   public String toString() {
     return "MessagePart{" +
-        "messagePartType=" + messagePartType +
+        "msgPartType=" + msgPartType +
         ", value='" + value + '\'' +
         '}';
   }
 
   public MessagePartType getMessagePartType() {
-    return messagePartType;
+    return msgPartType;
   }
 
   public String getValue() {

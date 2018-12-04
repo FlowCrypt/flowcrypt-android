@@ -29,22 +29,21 @@ public class MessagePartPgpMessage extends MessagePart {
     }
   };
   private String errorMessage;
-  private PgpMessageDecryptError pgpMessageDecryptError;
+  private PgpMessageDecryptError pgpMsgDecryptError;
 
-  public MessagePartPgpMessage(String value, String errorMessage, PgpMessageDecryptError pgpMessageDecryptError) {
+  public MessagePartPgpMessage(String value, String errorMessage, PgpMessageDecryptError pgpMsgDecryptError) {
     super(MessagePartType.PGP_MESSAGE, value);
     this.errorMessage = errorMessage;
-    this.pgpMessageDecryptError = pgpMessageDecryptError;
+    this.pgpMsgDecryptError = pgpMsgDecryptError;
   }
 
 
   protected MessagePartPgpMessage(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.PGP_MESSAGE;
+    this.msgPartType = MessagePartType.PGP_MESSAGE;
     this.errorMessage = in.readString();
-    int tmpPgpMessageDecryptError = in.readInt();
-    this.pgpMessageDecryptError = tmpPgpMessageDecryptError == -1 ? null : PgpMessageDecryptError.values()
-        [tmpPgpMessageDecryptError];
+    int tmp = in.readInt();
+    this.pgpMsgDecryptError = tmp == -1 ? null : PgpMessageDecryptError.values()[tmp];
   }
 
   @Override
@@ -56,7 +55,7 @@ public class MessagePartPgpMessage extends MessagePart {
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
     dest.writeString(this.errorMessage);
-    dest.writeInt(this.pgpMessageDecryptError == null ? -1 : this.pgpMessageDecryptError.ordinal());
+    dest.writeInt(this.pgpMsgDecryptError == null ? -1 : this.pgpMsgDecryptError.ordinal());
   }
 
   public String getErrorMessage() {
@@ -64,7 +63,7 @@ public class MessagePartPgpMessage extends MessagePart {
   }
 
   public PgpMessageDecryptError getPgpMessageDecryptError() {
-    return pgpMessageDecryptError;
+    return pgpMsgDecryptError;
   }
 
   public enum PgpMessageDecryptError {

@@ -21,6 +21,6 @@ public class MessagePartPgpPasswordMessage extends MessagePart {
 
   public MessagePartPgpPasswordMessage(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.PGP_PASSWORD_MESSAGE;
+    this.msgPartType = MessagePartType.PGP_PASSWORD_MESSAGE;
   }
 }

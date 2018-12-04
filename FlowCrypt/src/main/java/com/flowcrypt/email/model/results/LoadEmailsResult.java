@@ -20,12 +20,12 @@ import java.util.List;
  */
 
 public class LoadEmailsResult {
-  private int endPositionOfLoadedEmails;
+  private int loadedEmailsEndPosition;
   private List<GeneralMessageDetails> generalMessageDetailsList;
 
-  public LoadEmailsResult(int endPositionOfLoadedEmails, List<GeneralMessageDetails>
+  public LoadEmailsResult(int loadedEmailsEndPosition, List<GeneralMessageDetails>
       generalMessageDetailsList) {
-    this.endPositionOfLoadedEmails = endPositionOfLoadedEmails;
+    this.loadedEmailsEndPosition = loadedEmailsEndPosition;
     this.generalMessageDetailsList = generalMessageDetailsList;
   }
 
@@ -35,8 +35,8 @@ public class LoadEmailsResult {
    *
    * @return <tt>int</tt> An end position.
    */
-  public int getEndPositionOfLoadedEmails() {
-    return endPositionOfLoadedEmails;
+  public int getLoadedEmailsEndPosition() {
+    return loadedEmailsEndPosition;
   }
 
   /**

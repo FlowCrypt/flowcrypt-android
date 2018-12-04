@@ -23,6 +23,6 @@ public class MessagePartSignedMessage extends MessagePart {
 
   public MessagePartSignedMessage(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.PGP_SIGNED_MESSAGE;
+    this.msgPartType = MessagePartType.PGP_SIGNED_MESSAGE;
   }
 }

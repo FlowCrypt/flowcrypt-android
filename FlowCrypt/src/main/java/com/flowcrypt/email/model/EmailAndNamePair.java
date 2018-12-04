@@ -18,8 +18,7 @@ import android.os.Parcelable;
  */
 
 public class EmailAndNamePair implements Parcelable {
-  public static final Parcelable.Creator<EmailAndNamePair> CREATOR = new Parcelable
-      .Creator<EmailAndNamePair>() {
+  public static final Parcelable.Creator<EmailAndNamePair> CREATOR = new Parcelable.Creator<EmailAndNamePair>() {
     @Override
     public EmailAndNamePair createFromParcel(Parcel source) {
       return new EmailAndNamePair(source);

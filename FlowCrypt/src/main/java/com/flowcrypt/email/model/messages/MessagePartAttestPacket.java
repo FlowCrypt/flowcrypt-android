@@ -21,6 +21,6 @@ public class MessagePartAttestPacket extends MessagePart {
 
   public MessagePartAttestPacket(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.ATTEST_PACKET;
+    this.msgPartType = MessagePartType.ATTEST_PACKET;
   }
 }
