@@ -22,12 +22,12 @@ public class DynamicStorageConnector implements StorageConnectorInterface {
 
   private PgpContact[] pgpContacts;
   private PgpKeyInfo[] pgpKeyInfos;
-  private String[] passphraseStrings;
+  private String[] passphrases;
 
-  public DynamicStorageConnector(PgpContact[] pgpContacts, PgpKeyInfo[] pgpKeyInfos, String[] passphraseStrings) {
+  public DynamicStorageConnector(PgpContact[] pgpContacts, PgpKeyInfo[] pgpKeyInfos, String[] passphrases) {
     this.pgpContacts = pgpContacts;
     this.pgpKeyInfos = pgpKeyInfos;
-    this.passphraseStrings = passphraseStrings;
+    this.passphrases = passphrases;
   }
 
 
@@ -77,7 +77,7 @@ public class DynamicStorageConnector implements StorageConnectorInterface {
   public String getPassphrase(String longid) {
     for (Integer i = 0; i < this.pgpKeyInfos.length; i++) {
       if (this.pgpKeyInfos[i].getLongid().equals(longid)) {
-        return this.passphraseStrings[i];
+        return this.passphrases[i];
       }
     }
     return null;

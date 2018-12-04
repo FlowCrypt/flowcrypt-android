@@ -14,12 +14,12 @@ public class MimeAddress extends MeaningfulV8ObjectContainer {
   }
 
   public static String stringify(MimeAddress[] addresses) {
-    String stringified = "";
+    StringBuilder builder = new StringBuilder();
     for (Integer i = 0; i < addresses.length; i++) {
-      stringified += stringify(addresses[i].getName(), addresses[i].getAddress()) + (i < addresses.length - 1 ? "," :
-          "");
+      builder.append(stringify(addresses[i].getName(), addresses[i].getAddress()));
+      builder.append(i < addresses.length - 1 ? "," : "");
     }
-    return stringified;
+    return builder.toString();
   }
 
   public static String stringify(String name, String address) {

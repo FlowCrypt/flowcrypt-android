@@ -12,7 +12,6 @@ import com.flowcrypt.email.js.tasks.JsTask;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
-import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,10 +41,10 @@ public class JsInBackgroundManager {
    * This fields created as volatile because will be used in different threads.
    */
   private volatile JsListener jsListener;
-  private volatile BlockingQueue<JsTask> blockingQueue;
+  private volatile BlockingQueue<JsTask> queue;
 
   public JsInBackgroundManager() {
-    this.blockingQueue = new LinkedBlockingQueue<>();
+    this.queue = new LinkedBlockingQueue<>();
     this.executorService = Executors.newFixedThreadPool(JS_THREADS_COUNT);
   }
 
@@ -54,15 +53,15 @@ public class JsInBackgroundManager {
    */
   public void init() {
     Log.d(TAG, "init");
-    if (!isThreadAlreadyWork(futureFirst)) {
+    if (!isThreadAlreadyWorking(futureFirst)) {
       futureFirst = executorService.submit(new JsRunnable("FirstJsWorker"));
     }
 
-    if (!isThreadAlreadyWork(futureSecond)) {
+    if (!isThreadAlreadyWorking(futureSecond)) {
       futureSecond = executorService.submit(new JsRunnable("SecondJsWorker"));
     }
 
-    if (!isThreadAlreadyWork(futureThird)) {
+    if (!isThreadAlreadyWorking(futureThird)) {
       futureThird = executorService.submit(new JsRunnable("ThirdJsWorker"));
     }
   }
@@ -84,8 +83,8 @@ public class JsInBackgroundManager {
    */
   public void cancelAllTasks() {
     Log.d(TAG, "cancelAllTasks");
-    if (blockingQueue != null) {
-      blockingQueue.clear();
+    if (queue != null) {
+      queue.clear();
     }
   }
 
@@ -107,7 +106,7 @@ public class JsInBackgroundManager {
    */
   public void decryptMessage(String ownerKey, int requestCode, String rawMessage) {
     try {
-      blockingQueue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMessage));
+      queue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMessage));
     } catch (InterruptedException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -128,7 +127,7 @@ public class JsInBackgroundManager {
    *
    * @return true if already work, otherwise false.
    */
-  private boolean isThreadAlreadyWork(Future<?> future) {
+  private boolean isThreadAlreadyWorking(Future<?> future) {
     return future != null && !future.isCancelled() && !future.isDone();
   }
 
@@ -149,21 +148,6 @@ public class JsInBackgroundManager {
 
     if (futureThird != null) {
       futureThird.cancel(true);
-    }
-  }
-
-  /**
-   * Remove old tasks from the queue.
-   *
-   * @param cls           The task type.
-   * @param blockingQueue The queue of the tasks.
-   */
-  private void removeOldTasksFromBlockingQueue(Class<?> cls, BlockingQueue<JsTask> blockingQueue) {
-    Iterator<?> iterator = blockingQueue.iterator();
-    while (iterator.hasNext()) {
-      if (cls.isInstance(iterator.next())) {
-        iterator.remove();
-      }
     }
   }
 
@@ -196,8 +180,8 @@ public class JsInBackgroundManager {
         boolean isInterrupted = false;
         while (!isInterrupted) {
           try {
-            Log.d(tag, "blockingQueue size = " + blockingQueue.size());
-            JsTask jsTask = blockingQueue.take();
+            Log.d(tag, "queue size = " + queue.size());
+            JsTask jsTask = queue.take();
 
             if (jsTask != null) {
               runJsTask(jsTask);

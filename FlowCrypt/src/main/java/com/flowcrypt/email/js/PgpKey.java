@@ -42,8 +42,7 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
   }
 
   public PgpKey toPublic() {
-    return new PgpKey(this.v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())),
-        this.js);
+    return new PgpKey(v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())), this.js);
   }
 
   /**
@@ -53,8 +52,8 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
    */
   public long getCreated() {
     V8Object created = getAttributeAsObject("primaryKey").getObject("created");
-    return this.js.time_to_utc_timestamp(created.executeStringFunction("toString", new V8Array(this.v8object
-        .getRuntime())));
+    return this.js.time_to_utc_timestamp(created.executeStringFunction("toString",
+        new V8Array(this.v8object.getRuntime())));
   }
 
   /**

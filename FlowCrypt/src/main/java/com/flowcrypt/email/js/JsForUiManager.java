@@ -47,7 +47,7 @@ public final class JsForUiManager {
   }
 
   public static JsForUiManager getInstance(Context context) {
-    checkIsUIThread();
+    checkUIThread();
 
     if (ourInstance == null) {
       ourInstance = new JsForUiManager(context);
@@ -62,7 +62,7 @@ public final class JsForUiManager {
   /**
    * The check that this method called from the UI thread.
    */
-  private static void checkIsUIThread() {
+  private static void checkUIThread() {
     if (Looper.myLooper() != Looper.getMainLooper()) {
       throw new IllegalStateException("Can't use this class in the non-Ui thread");
     }
