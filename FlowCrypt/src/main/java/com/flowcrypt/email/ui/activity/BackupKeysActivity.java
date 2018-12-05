@@ -289,7 +289,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   }
 
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_save_private_key_as_file:
         isPrivateKeySavingNow = false;
@@ -303,12 +303,12 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_save_private_key_as_file:
         isPrivateKeySavingNow = false;
@@ -344,7 +344,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
     }
   }
 

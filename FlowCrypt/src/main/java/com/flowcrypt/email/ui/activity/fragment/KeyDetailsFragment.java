@@ -46,8 +46,7 @@ import androidx.fragment.app.Fragment;
  * E-mail: DenBond7@gmail.com
  */
 public class KeyDetailsFragment extends BaseFragment implements View.OnClickListener {
-  private static final String KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_LONG_ID",
-      KeyDetailsFragment.class);
+  private static final String KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_LONG_ID", KeyDetailsFragment.class);
   private static final int REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1;
 
   private String longId;

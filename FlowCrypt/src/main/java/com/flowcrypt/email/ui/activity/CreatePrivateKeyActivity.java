@@ -143,7 +143,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
         isBackEnable = true;
@@ -156,13 +156,13 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
         break;
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
         isBackEnable = true;
@@ -172,7 +172,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
         break;
     }
   }
@@ -186,7 +186,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
     textViewSuccessTitle.setText(R.string.you_are_all_set);
     textViewSuccessSubTitle.setText(R.string.you_can_send_and_receive_encrypted_emails);
-    buttonSuccess.setText(R.string.continue_);
+    btnSuccess.setText(R.string.continue_);
 
     if (!TextUtils.isEmpty(this.createdPrivateKeyLongId)) {
       layoutProgress.setVisibility(View.GONE);

@@ -301,7 +301,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return true;
   }
 
@@ -312,12 +312,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
         if (!countingIdlingResourceForMessages.isIdleNow()) {
           countingIdlingResourceForMessages.decrement();
         }
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
 
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         if (!countingIdlingResourceForLabel.isIdleNow()) {
           countingIdlingResourceForLabel.decrement();
         }
@@ -389,7 +389,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
           if (localFolder == null || !localFolder.getFullName()
               .equals(newLocalFolder.getFullName())) {
             this.localFolder = newLocalFolder;
-            updateEmailsListFragmentAfterFolderChange();
+            onFolderChanged();
             invalidateOptionsMenu();
           }
         }
@@ -462,7 +462,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
               localFolder = foldersManager.findInboxFolder();
             }
 
-            updateEmailsListFragmentAfterFolderChange();
+            onFolderChanged();
           } else {
             LocalFolder newestLocalFolderInfo = foldersManager.getFolderByAlias(localFolder.getFolderAlias());
             if (newestLocalFolderInfo != null) {
@@ -554,7 +554,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void refreshFoldersInfoFromCache() {
+  public void refreshFoldersFromCache() {
     foldersManager = FoldersManager.fromDatabase(this, account.getEmail());
     if (localFolder != null && !TextUtils.isEmpty(localFolder.getFolderAlias())) {
       localFolder = foldersManager.getFolderByAlias(localFolder.getFolderAlias());

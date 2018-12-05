@@ -72,7 +72,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   @Override
   public void onPause() {
     super.onPause();
-    isCheckClipboardFromServiceEnable = false;
+    isCheckingClipboardEnabled = false;
   }
 
   @Override
@@ -136,7 +136,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   }
 
   @Override
-  public boolean isPrivateKeyChecking() {
+  public boolean isPrivateKeyMode() {
     return false;
   }
 
@@ -155,7 +155,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   }
 
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_search_public_key:
         this.isSearchPublicKeysOnAttesterNow = false;
@@ -204,7 +204,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
     }
   }
 
@@ -227,7 +227,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_search_public_key:
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
@@ -236,7 +236,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
     }
   }
 

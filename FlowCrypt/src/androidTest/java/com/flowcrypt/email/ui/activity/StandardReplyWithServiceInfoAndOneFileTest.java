@@ -100,7 +100,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
             .setAttachmentInfoList(attachmentInfoList)
-            .createServiceInfo();
+            .build();
 
         return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
             incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);

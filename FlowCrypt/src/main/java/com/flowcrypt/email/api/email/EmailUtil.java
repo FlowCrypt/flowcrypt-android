@@ -794,7 +794,7 @@ public class EmailUtil {
 
     //todo-denbond7 need to add support BCC
 
-    return new ContactsDaoSource().getPgpContactsListFromDatabase(context, emails).toArray(new PgpContact[0]);
+    return new ContactsDaoSource().getPgpContacts(context, emails).toArray(new PgpContact[0]);
   }
 
   /**

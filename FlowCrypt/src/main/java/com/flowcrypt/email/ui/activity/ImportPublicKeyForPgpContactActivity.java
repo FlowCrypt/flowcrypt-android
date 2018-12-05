@@ -72,7 +72,7 @@ public class ImportPublicKeyForPgpContactActivity extends BaseImportKeyActivity 
   }
 
   @Override
-  public boolean isPrivateKeyChecking() {
+  public boolean isPrivateKeyMode() {
     return false;
   }
 

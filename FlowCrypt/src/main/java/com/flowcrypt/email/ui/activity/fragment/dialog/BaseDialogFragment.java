@@ -27,9 +27,9 @@ public class BaseDialogFragment extends DialogFragment {
   public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
     if (loaderResult != null) {
       if (loaderResult.getResult() != null) {
-        handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
+        onSuccess(loader.getId(), loaderResult.getResult());
       } else if (loaderResult.getException() != null) {
-        handleFailureLoaderResult(loader.getId(), loaderResult.getException());
+        onError(loader.getId(), loaderResult.getException());
       } else {
         showToast(getString(R.string.unknown_error));
       }
@@ -38,11 +38,11 @@ public class BaseDialogFragment extends DialogFragment {
     }
   }
 
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
 
   }
 
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
 
   }
 

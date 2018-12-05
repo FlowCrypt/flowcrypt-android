@@ -90,8 +90,8 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
       case R.id.buttonImportMyKey:
         KeyImportModel keyImportModel = null;
-        if (isServiceBound) {
-          keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
+        if (isBound) {
+          keyImportModel = service.getKeyImportModel();
         }
 
         startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,

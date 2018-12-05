@@ -55,7 +55,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return true;
   }
 
@@ -65,7 +65,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   }
 
   @Override
-  public void refreshFoldersInfoFromCache() {
+  public void refreshFoldersFromCache() {
 
   }
 
@@ -118,7 +118,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
         if (!countingIdlingResourceForMessages.isIdleNow()) {
           countingIdlingResourceForMessages.decrement();
         }
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
     }
   }
@@ -168,7 +168,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     }
 
     localFolder.setSearchQuery(initQuery);
-    updateEmailsListFragmentAfterFolderChange();
+    onFolderChanged();
     return false;
   }
 

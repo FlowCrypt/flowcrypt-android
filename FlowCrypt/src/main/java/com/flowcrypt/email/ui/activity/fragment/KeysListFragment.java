@@ -46,9 +46,9 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
   private View progressBar;
   private View emptyView;
   private View layoutContent;
-  private PrivateKeysListCursorAdapter privateKeysListCursorAdapter;
+  private PrivateKeysListCursorAdapter adapter;
 
-  private LoaderManager.LoaderCallbacks<Cursor> cursorLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+  private LoaderManager.LoaderCallbacks<Cursor> callbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
       switch (id) {
@@ -67,7 +67,7 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
           UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
 
           if (data != null && data.getCount() > 0) {
-            privateKeysListCursorAdapter.swapCursor(data);
+            adapter.swapCursor(data);
           } else {
             UIUtil.exchangeViewVisibility(getContext(), true, emptyView, layoutContent);
           }
@@ -79,7 +79,7 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
     public void onLoaderReset(Loader<Cursor> loader) {
       switch (loader.getId()) {
         case R.id.loader_id_load_contacts_with_has_pgp_true:
-          privateKeysListCursorAdapter.swapCursor(null);
+          adapter.swapCursor(null);
           break;
       }
     }
@@ -118,8 +118,8 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
         switch (resultCode) {
           case Activity.RESULT_OK:
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-            LoaderManager.getInstance(this).restartLoader(R.id
-                .loader_id_load_contacts_with_has_pgp_true, null, cursorLoaderCallbacks);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null,
+                callbacks);
             break;
         }
         break;
@@ -161,18 +161,16 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
     this.progressBar = root.findViewById(R.id.progressBar);
     this.layoutContent = root.findViewById(R.id.groupContent);
     this.emptyView = root.findViewById(R.id.emptyView);
-    this.privateKeysListCursorAdapter = new PrivateKeysListCursorAdapter(getContext(), null);
+    this.adapter = new PrivateKeysListCursorAdapter(getContext(), null);
 
     ListView listViewKeys = root.findViewById(R.id.listViewKeys);
-    listViewKeys.setAdapter(privateKeysListCursorAdapter);
+    listViewKeys.setAdapter(adapter);
     listViewKeys.setOnItemClickListener(this);
 
     if (root.findViewById(R.id.floatActionButtonAddKey) != null) {
       root.findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
     }
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null,
-        cursorLoaderCallbacks);
-
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, callbacks);
   }
 }

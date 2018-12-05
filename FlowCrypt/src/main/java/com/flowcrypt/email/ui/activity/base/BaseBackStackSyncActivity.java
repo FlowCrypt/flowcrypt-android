@@ -23,7 +23,7 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return true;
   }
 

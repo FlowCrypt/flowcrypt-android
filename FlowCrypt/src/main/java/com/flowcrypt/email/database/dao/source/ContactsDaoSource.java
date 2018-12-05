@@ -249,7 +249,7 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @return <tt>List<PgpContact></tt> Return a list of existed(created) {@link PgpContact}
    * objects from the search by emails.
    */
-  public List<PgpContact> getPgpContactsListFromDatabase(Context context, List<String> emails) {
+  public List<PgpContact> getPgpContacts(Context context, List<String> emails) {
     ListIterator<String> iterator = emails.listIterator();
     while (iterator.hasNext()) {
       iterator.set(iterator.next().toLowerCase());

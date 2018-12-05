@@ -109,7 +109,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
     textViewSuccessTitle.setText(R.string.done);
     textViewSuccessSubTitle.setText(R.string.pass_phrase_changed);
-    buttonSuccess.setText(R.string.back);
+    btnSuccess.setText(R.string.back);
   }
 
   @NonNull
@@ -151,7 +151,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
         JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
@@ -176,13 +176,13 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
         break;
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
         isBackEnable = true;
@@ -197,7 +197,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
     }
   }
 

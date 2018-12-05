@@ -33,37 +33,36 @@ import androidx.annotation.Nullable;
 
 public abstract class BaseSyncActivity extends BaseActivity {
   // Messengers for communicating with the service.
-  protected Messenger syncServiceMessenger;
-  protected Messenger syncServiceReplyMessenger;
+  protected Messenger syncMessenger;
+  protected Messenger syncReplyMessenger;
 
   /**
    * Flag indicating whether we have called bind on the {@link EmailSyncService}.
    */
   protected boolean isBoundToSyncService;
 
-  private ServiceConnection serviceConnectionSyncService = new ServiceConnection() {
+  private ServiceConnection syncConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       Log.d(tag, "Activity connected to " + name.getClassName());
-      syncServiceMessenger = new Messenger(service);
+      syncMessenger = new Messenger(service);
       isBoundToSyncService = true;
 
-      registerReplyMessenger(EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, syncServiceMessenger,
-          syncServiceReplyMessenger);
+      registerReplyMessenger(EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, syncMessenger, syncReplyMessenger);
       onSyncServiceConnected();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
       Log.d(tag, "Activity disconnected from " + name.getClassName());
-      syncServiceMessenger = null;
+      syncMessenger = null;
       isBoundToSyncService = false;
     }
   };
 
   public BaseSyncActivity() {
     super();
-    syncServiceReplyMessenger = new Messenger(new ReplyHandler(this));
+    syncReplyMessenger = new Messenger(new ReplyHandler(this));
   }
 
   /**
@@ -71,28 +70,27 @@ public abstract class BaseSyncActivity extends BaseActivity {
    *
    * @return true - if sync enable, false - otherwise.
    */
-  public abstract boolean isSyncEnable();
+  public abstract boolean isSyncEnabled();
 
   public abstract void onSyncServiceConnected();
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    if (isSyncEnable()) {
-      bindToService(EmailSyncService.class, serviceConnectionSyncService);
+    if (isSyncEnabled()) {
+      bindService(EmailSyncService.class, syncConn);
     }
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (isSyncEnable() && isBoundToSyncService) {
-      if (syncServiceMessenger != null) {
-        unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncServiceMessenger,
-            syncServiceReplyMessenger);
+    if (isSyncEnabled() && isBoundToSyncService) {
+      if (syncMessenger != null) {
+        unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncMessenger, syncReplyMessenger);
       }
 
-      unbindFromService(EmailSyncService.class, serviceConnectionSyncService);
+      unbindService(EmailSyncService.class, syncConn);
       isBoundToSyncService = false;
     }
   }
@@ -112,12 +110,10 @@ public abstract class BaseSyncActivity extends BaseActivity {
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP,
-        action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -134,11 +130,10 @@ public abstract class BaseSyncActivity extends BaseActivity {
     try {
       BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
-      Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS,
-          action);
-      message.replyTo = syncServiceReplyMessenger;
+      Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS, action);
+      msg.replyTo = syncReplyMessenger;
 
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -149,21 +144,19 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Load messages from some localFolder in some range.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param localFolder      {@link LocalFolder} object.
+   * @param localFolder {@link LocalFolder} object.
    * @param start       The position of the start.
    * @param end         The position of the end.
    */
   public void loadMessages(int requestCode, LocalFolder localFolder, int start, int end) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, localFolder);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
-        action);
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -173,23 +166,21 @@ public abstract class BaseSyncActivity extends BaseActivity {
   /**
    * Start a job to load message to cache.
    *
-   * @param requestCode                  The unique request code for identify the current action.
-   * @param localFolder                       {@link LocalFolder} object.
-   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the localFolder.
+   * @param requestCode            The unique request code for identify the current action.
+   * @param localFolder            {@link LocalFolder} object.
+   * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
-  public void loadNextMessages(int requestCode, LocalFolder localFolder, int countOfAlreadyLoadedMessages) {
+  public void loadNextMessages(int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
-        countOfAlreadyLoadedMessages, 0, action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES, alreadyLoadedMsgsCount, 0, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -199,21 +190,19 @@ public abstract class BaseSyncActivity extends BaseActivity {
   /**
    * Start a job to load searched messages to the cache.
    *
-   * @param requestCode                  The unique request code for identify the current action.
-   * @param localFolder                       {@link LocalFolder} object which contains the search query.
-   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the localFolder.
+   * @param requestCode            The unique request code for identify the current action.
+   * @param localFolder            {@link LocalFolder} object which contains the search query.
+   * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
-  public void searchNextMessages(int requestCode, LocalFolder localFolder, int countOfAlreadyLoadedMessages) {
+  public void searchNextMessages(int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES,
-        countOfAlreadyLoadedMessages, 0, action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES, alreadyLoadedMsgsCount, 0, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -229,14 +218,12 @@ public abstract class BaseSyncActivity extends BaseActivity {
   public void updateLabels(int requestCode, boolean isInBackground) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, null);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS,
-        isInBackground ? 1 : 0, 0, action);
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, isInBackground ? 1 : 0, 0, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -246,19 +233,18 @@ public abstract class BaseSyncActivity extends BaseActivity {
   /**
    * Load the last messages which not exist in the database.
    *
-   * @param requestCode   The unique request code for identify the current action.
+   * @param requestCode        The unique request code for identify the current action.
    * @param currentLocalFolder {@link LocalFolder} object.
    */
   public void refreshMessages(int requestCode, LocalFolder currentLocalFolder) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, currentLocalFolder);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, currentLocalFolder);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action);
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -269,21 +255,18 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Start a job to load message details.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param localFolder      {@link LocalFolder} object.
+   * @param localFolder {@link LocalFolder} object.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
    */
   public void loadMessageDetails(int requestCode, LocalFolder localFolder, int uid) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, localFolder);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
-        uid, 0, action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS, uid, 0, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -293,26 +276,23 @@ public abstract class BaseSyncActivity extends BaseActivity {
   /**
    * Move the message to an another folder.
    *
-   * @param requestCode       The unique request code for identify the current action.
+   * @param requestCode            The unique request code for identify the current action.
    * @param sourcesLocalFolder     The message {@link LocalFolder} object.
    * @param destinationLocalFolder The new destionation {@link LocalFolder} object.
-   * @param uid               The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
-   *                          .Message ).
+   * @param uid                    The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
+   *                               .Message ).
    */
   public void moveMessage(int requestCode, LocalFolder sourcesLocalFolder,
                           LocalFolder destinationLocalFolder, int uid) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     LocalFolder[] localFolders = new LocalFolder[]{sourcesLocalFolder, destinationLocalFolder};
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, localFolders);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolders);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
-        uid, 0, action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE, uid, 0, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -329,11 +309,10 @@ public abstract class BaseSyncActivity extends BaseActivity {
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
-    Message message = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_ALL_TASKS, action);
-
-    message.replyTo = syncServiceReplyMessenger;
+    Message msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_ALL_TASKS, action);
+    msg.replyTo = syncReplyMessenger;
     try {
-      syncServiceMessenger.send(message);
+      syncMessenger.send(msg);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);

@@ -32,31 +32,30 @@ import androidx.test.espresso.idling.CountingIdlingResource;
 public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     EmailListFragment.OnManageEmailsListener {
   protected CountingIdlingResource countingIdlingResourceForMessages;
-  protected boolean isMoreMessagesAvailable = true;
+  protected boolean hasMoreMsgs = true;
 
-  public abstract void refreshFoldersInfoFromCache();
+  public abstract void refreshFoldersFromCache();
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    countingIdlingResourceForMessages = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (EmailManagerActivity.class), GeneralUtil.isDebugBuild());
-
+    String name = GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class);
+    countingIdlingResourceForMessages = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
   }
 
   @Override
   public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
-        refreshFoldersInfoFromCache();
+        refreshFoldersFromCache();
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
-            isMoreMessagesAvailable = true;
+            hasMoreMsgs = true;
             onNextMessagesLoaded(true);
             break;
 
           default:
-            isMoreMessagesAvailable = false;
+            hasMoreMsgs = false;
             onNextMessagesLoaded(false);
             break;
         }
@@ -75,7 +74,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         if (!countingIdlingResourceForMessages.isIdleNow()) {
           countingIdlingResourceForMessages.decrement();
         }
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
     }
   }
@@ -143,13 +142,13 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   }
 
   @Override
-  public boolean isMoreMessagesAvailable() {
-    return isMoreMessagesAvailable;
+  public boolean hasMoreMessages() {
+    return hasMoreMsgs;
   }
 
   @Override
   public void onSyncServiceConnected() {
-    notifyEmailListFragmentSyncServiceConnected();
+    syncServiceConnected();
   }
 
   @Override
@@ -161,7 +160,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   /**
    * Notify {@link EmailListFragment} that the activity already connected to the {@link EmailSyncService}
    */
-  protected void notifyEmailListFragmentSyncServiceConnected() {
+  protected void syncServiceConnected() {
     EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
@@ -177,7 +176,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
    * @param errorType   The {@link SyncErrorTypes}
    * @param e           The exception which happened.
    */
-  protected void notifyEmailListFragmentAboutError(int requestCode, int errorType, Exception e) {
+  protected void onErrorOccurred(int requestCode, int errorType, Exception e) {
     EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
@@ -190,7 +189,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   /**
    * Update the list of emails after changing the folder.
    */
-  protected void updateEmailsListFragmentAfterFolderChange() {
+  protected void onFolderChanged() {
     EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
@@ -199,8 +198,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
       updateActionProgressState(100, null);
     }
 
-    if (getCurrentFolder() != null &&
-        JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName())) {
+    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName());
+    if (getCurrentFolder() != null && isOutbox) {
       ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
       MessagesSenderJobService.schedule(getApplicationContext());
     }
@@ -235,5 +234,4 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
       emailListFragment.setActionProgress(100, null);
     }
   }
-
 }

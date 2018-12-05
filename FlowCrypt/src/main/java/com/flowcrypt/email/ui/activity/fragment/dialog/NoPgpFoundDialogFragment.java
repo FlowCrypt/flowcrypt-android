@@ -41,17 +41,17 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
   public static final String EXTRA_KEY_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey
       ("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment.class);
 
-  private static final String EXTRA_KEY_IS_SHOW_REMOVE_ACTION = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_IS_SHOW_REMOVE_ACTION", NoPgpFoundDialogFragment.class);
+  private static final String EXTRA_KEY_IS_REMOVE_ACTION_ENABLED = GeneralUtil.generateUniqueExtraKey
+      ("EXTRA_KEY_IS_REMOVE_ACTION_ENABLED", NoPgpFoundDialogFragment.class);
 
   private PgpContact pgpContact;
-  private List<DialogItem> dialogItemList;
-  private boolean isShowRemoveAction;
+  private List<DialogItem> dialogItems;
+  private boolean isRemoveActionEnabled;
 
   public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact, boolean isShowRemoveAction) {
     Bundle args = new Bundle();
     args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact);
-    args.putBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION, isShowRemoveAction);
+    args.putBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED, isShowRemoveAction);
     NoPgpFoundDialogFragment noPgpFoundDialogFragment = new NoPgpFoundDialogFragment();
     noPgpFoundDialogFragment.setArguments(args);
     return noPgpFoundDialogFragment;
@@ -63,20 +63,19 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
 
     if (getArguments() != null) {
       this.pgpContact = getArguments().getParcelable(EXTRA_KEY_PGP_CONTACT);
-      this.isShowRemoveAction = getArguments().getBoolean(EXTRA_KEY_IS_SHOW_REMOVE_ACTION);
+      this.isRemoveActionEnabled = getArguments().getBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED);
     }
 
-    dialogItemList = new ArrayList<>();
+    dialogItems = new ArrayList<>();
 
-    dialogItemList.add(new DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
+    dialogItems.add(new DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
         RESULT_CODE_SWITCH_TO_STANDARD_EMAIL));
-    dialogItemList.add(new DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
+    dialogItems.add(new DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
         RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY));
-    dialogItemList.add(new DialogItem(R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
+    dialogItems.add(new DialogItem(R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
         RESULT_CODE_COPY_FROM_OTHER_CONTACT));
-    if (isShowRemoveAction) {
-      dialogItemList.add(new DialogItem(
-          R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
+    if (isRemoveActionEnabled) {
+      dialogItems.add(new DialogItem(R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
           pgpContact.getEmail()), RESULT_CODE_REMOVE_CONTACT));
     }
   }
@@ -85,7 +84,7 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-    DialogItemAdapter dialogItemAdapter = new DialogItemAdapter(getContext(), dialogItemList);
+    DialogItemAdapter dialogItemAdapter = new DialogItemAdapter(getContext(), dialogItems);
 
     builder.setTitle(R.string.recipient_does_not_use_pgp);
     builder.setAdapter(dialogItemAdapter, this);
@@ -94,7 +93,7 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
 
   @Override
   public void onClick(DialogInterface dialog, int which) {
-    DialogItem dialogItem = dialogItemList.get(which);
+    DialogItem dialogItem = dialogItems.get(which);
     sendResult(dialogItem.getId());
   }
 

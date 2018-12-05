@@ -14,6 +14,7 @@ import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -39,7 +40,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   /**
    * The main entry point for Google Play services integration.
    */
-  protected GoogleApiClient googleApiClient;
+  protected GoogleApiClient client;
   protected boolean isRunSignInWithGmailNeeded;
 
   protected GoogleSignInAccount currentGoogleSignInAccount;
@@ -82,14 +83,12 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonSignInWithGmail:
-        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-            REQUEST_CODE_SIGN_IN);
+        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
         break;
 
       case R.id.buttonOtherEmailProvider:
         if (GeneralUtil.isInternetConnectionAvailable(this)) {
-          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class),
-              REQUEST_CODE_ADD_OTHER_ACCOUNT);
+          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class), REQUEST_CODE_ADD_OTHER_ACCOUNT);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
         }
@@ -101,8 +100,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   public void onConnected(@Nullable Bundle bundle) {
     if (this.isRunSignInWithGmailNeeded) {
       this.isRunSignInWithGmailNeeded = false;
-      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-          REQUEST_CODE_SIGN_IN);
+      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
     }
   }
 
@@ -122,8 +120,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   }
 
   protected void initGoogleApiClient() {
-    googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
-        .generateGoogleSignInOptions());
+    GoogleSignInOptions googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions();
+    client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions);
   }
 
   private void initViews() {

@@ -48,8 +48,8 @@ import androidx.loader.content.Loader;
 public abstract class BaseActivity extends AppCompatActivity implements BaseService.OnServiceCallback {
   protected final String tag;
 
-  protected Messenger jsServiceMessenger;
-  protected Messenger jsServiceReplyMessenger;
+  protected Messenger jsMessenger;
+  protected Messenger jsReplyMessenger;
   /**
    * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
    */
@@ -57,29 +57,28 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   private Snackbar snackbar;
   private Toolbar toolbar;
   private AppBarLayout appBarLayout;
-  private ServiceConnection serviceConnectionJsService = new ServiceConnection() {
+  private ServiceConnection jsServiceConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       Log.d(tag, "Activity connected to " + name.getClassName());
-      jsServiceMessenger = new Messenger(service);
+      jsMessenger = new Messenger(service);
       isBoundToJsService = true;
 
-      registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsServiceMessenger,
-          jsServiceReplyMessenger);
+      registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
       onJsServiceConnected();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
       Log.d(tag, "Activity disconnected from " + name.getClassName());
-      jsServiceMessenger = null;
+      jsMessenger = null;
       isBoundToJsService = false;
     }
   };
 
   public BaseActivity() {
     tag = getClass().getSimpleName();
-    jsServiceReplyMessenger = new Messenger(new ReplyHandler(this));
+    jsReplyMessenger = new Messenger(new ReplyHandler(this));
   }
 
   /**
@@ -126,7 +125,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     setContentView(getContentViewResourceId());
     initScreenViews();
 
-    bindToService(JsBackgroundService.class, serviceConnectionJsService);
+    bindService(JsBackgroundService.class, jsServiceConn);
   }
 
   @Override
@@ -153,12 +152,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     Log.d(tag, "onDestroy");
 
     if (isBoundToJsService) {
-      if (jsServiceMessenger != null) {
-        unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsServiceMessenger,
-            jsServiceReplyMessenger);
+      if (jsMessenger != null) {
+        unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
       }
 
-      unbindFromService(JsBackgroundService.class, serviceConnectionJsService);
+      unbindService(JsBackgroundService.class, jsServiceConn);
       isBoundToJsService = false;
     }
   }
@@ -203,12 +201,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param duration    How long to display the message.
    */
   public void showInfoSnackbar(View view, String messageText, int duration) {
-    snackbar = Snackbar.make(view, messageText, duration)
-        .setAction(android.R.string.ok, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-          }
-        });
+    snackbar = Snackbar.make(view, messageText, duration).setAction(android.R.string.ok, new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+      }
+    });
     snackbar.show();
   }
 
@@ -236,8 +233,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   public void showSnackbar(View view, String messageText, String buttonName, int duration,
                            @NonNull View.OnClickListener onClickListener) {
-    snackbar = Snackbar.make(view, messageText, duration)
-        .setAction(buttonName, onClickListener);
+    snackbar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener);
     snackbar.show();
   }
 
@@ -254,9 +250,9 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
     if (loaderResult != null) {
       if (loaderResult.getResult() != null) {
-        handleSuccessLoaderResult(loader.getId(), loaderResult.getResult());
+        onSuccess(loader.getId(), loaderResult.getResult());
       } else if (loaderResult.getException() != null) {
-        handleFailureLoaderResult(loader.getId(), loaderResult.getException());
+        onError(loader.getId(), loaderResult.getException());
       } else {
         showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
       }
@@ -265,11 +261,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     }
   }
 
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
 
   }
 
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
 
   }
 
@@ -280,19 +276,19 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   /**
    * Start a job to decrypt a raw MIME message.
    *
-   * @param requestCode    The unique request code for identify the current action.
-   * @param rawMimeMessage The raw MIME message.
+   * @param requestCode The unique request code for identify the current action.
+   * @param rawMimeMsg  The raw MIME message.
    */
-  public void decryptMessage(int requestCode, String rawMimeMessage) {
+  public void decryptMessage(int requestCode, String rawMimeMsg) {
     if (checkServiceBound(isBoundToJsService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMessage);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMsg);
 
     Message message = Message.obtain(null, JsBackgroundService.MESSAGE_DECRYPT_MESSAGE, 0, 0, action);
 
-    message.replyTo = jsServiceReplyMessenger;
+    message.replyTo = jsReplyMessenger;
     try {
-      jsServiceMessenger.send(message);
+      jsMessenger.send(message);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -308,9 +304,9 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
         R.id.js_refresh_storage_connector, null);
     Message message = Message.obtain(null, JsBackgroundService.MESSAGE_REFRESH_STORAGE_CONNECTOR, 0, 0, action);
-    message.replyTo = jsServiceReplyMessenger;
+    message.replyTo = jsReplyMessenger;
     try {
-      jsServiceMessenger.send(message);
+      jsMessenger.send(message);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -332,16 +328,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     return false;
   }
 
-  protected void bindToService(Class<?> cls, ServiceConnection serviceConnection) {
-    bindService(new Intent(this, cls), serviceConnection, Context.BIND_AUTO_CREATE);
+  protected void bindService(Class<?> cls, ServiceConnection conn) {
+    bindService(new Intent(this, cls), conn, Context.BIND_AUTO_CREATE);
     Log.d(tag, "bind to " + cls.getSimpleName());
   }
 
   /**
    * Disconnect from a service
    */
-  protected void unbindFromService(Class<?> cls, ServiceConnection serviceConnection) {
-    unbindService(serviceConnection);
+  protected void unbindService(Class<?> cls, ServiceConnection conn) {
+    unbindService(conn);
     Log.d(tag, "unbind from " + cls.getSimpleName());
   }
 
@@ -387,10 +383,10 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
   private void initScreenViews() {
     appBarLayout = findViewById(R.id.appBarLayout);
-    setupToolbarIfItExists();
+    setupToolbar();
   }
 
-  private void setupToolbarIfItExists() {
+  private void setupToolbar() {
     toolbar = findViewById(R.id.toolbar);
     if (toolbar != null) {
       setSupportActionBar(toolbar);
@@ -406,16 +402,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * components.
    */
   protected static class ReplyHandler extends Handler {
-    private final WeakReference<BaseService.OnServiceCallback> onServiceCallbackWeakReference;
+    private final WeakReference<BaseService.OnServiceCallback> weakReference;
 
     ReplyHandler(BaseService.OnServiceCallback onServiceCallback) {
-      this.onServiceCallbackWeakReference = new WeakReference<>(onServiceCallback);
+      this.weakReference = new WeakReference<>(onServiceCallback);
     }
 
     @Override
     public void handleMessage(Message message) {
-      if (onServiceCallbackWeakReference.get() != null) {
-        BaseService.OnServiceCallback onServiceCallback = onServiceCallbackWeakReference.get();
+      if (weakReference.get() != null) {
+        BaseService.OnServiceCallback onServiceCallback = weakReference.get();
         switch (message.what) {
           case BaseService.REPLY_OK:
             onServiceCallback.onReplyReceived(message.arg1, message.arg2, message.obj);

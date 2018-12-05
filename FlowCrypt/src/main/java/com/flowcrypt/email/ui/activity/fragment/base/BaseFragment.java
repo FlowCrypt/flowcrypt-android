@@ -32,7 +32,7 @@ import androidx.loader.content.Loader;
 
 public abstract class BaseFragment extends Fragment implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  private boolean isBackPressedEnable = true;
+  private boolean isBackPressedEnabled = true;
   private Snackbar snackbar;
 
   @Override
@@ -56,7 +56,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager.Loa
    * @param loaderId The loader id.
    * @param result   The object which contains information about the loader results
    */
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
 
   }
 
@@ -67,7 +67,7 @@ public abstract class BaseFragment extends Fragment implements LoaderManager.Loa
    * @param loaderId The loader id.
    * @param e        The exception which happened when loader does it work.
    */
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     UIUtil.showInfoSnackbar(getView(), e.getMessage());
   }
 
@@ -89,33 +89,33 @@ public abstract class BaseFragment extends Fragment implements LoaderManager.Loa
    *
    * @return true if a back press action enable at current moment, false otherwise.
    */
-  public boolean isBackPressedEnable() {
-    return isBackPressedEnable;
+  public boolean isBackPressedEnabled() {
+    return isBackPressedEnabled;
   }
 
-  public void setBackPressedEnable(boolean backPressedEnable) {
-    isBackPressedEnable = backPressedEnable;
-  }
-
-  /**
-   * Show information as Snackbar.
-   *
-   * @param view        The view to find a parent from.
-   * @param messageText The text to show.  Can be formatted text.
-   */
-  public void showInfoSnackbar(View view, String messageText) {
-    showInfoSnackbar(view, messageText, Snackbar.LENGTH_INDEFINITE);
+  public void setBackPressedEnabled(boolean backPressedEnabled) {
+    isBackPressedEnabled = backPressedEnabled;
   }
 
   /**
    * Show information as Snackbar.
    *
-   * @param view        The view to find a parent from.
-   * @param messageText The text to show.  Can be formatted text.
-   * @param duration    How long to display the message.
+   * @param view    The view to find a parent from.
+   * @param msgText The text to show.  Can be formatted text.
    */
-  public void showInfoSnackbar(View view, String messageText, int duration) {
-    snackbar = Snackbar.make(view, messageText, duration)
+  public void showInfoSnackbar(View view, String msgText) {
+    showInfoSnackbar(view, msgText, Snackbar.LENGTH_INDEFINITE);
+  }
+
+  /**
+   * Show information as Snackbar.
+   *
+   * @param view     The view to find a parent from.
+   * @param msgText  The text to show.  Can be formatted text.
+   * @param duration How long to display the message.
+   */
+  public void showInfoSnackbar(View view, String msgText, int duration) {
+    snackbar = Snackbar.make(view, msgText, duration)
         .setAction(android.R.string.ok, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
@@ -128,28 +128,27 @@ public abstract class BaseFragment extends Fragment implements LoaderManager.Loa
    * Show some information as Snackbar with custom message, action button mame and listener.
    *
    * @param view            he view to find a parent from
-   * @param messageText     The text to show.  Can be formatted text
-   * @param buttonName      The text of the Snackbar button
+   * @param msgText         The text to show.  Can be formatted text
+   * @param btnName         The text of the Snackbar button
    * @param onClickListener The Snackbar button click listener.
    */
-  public void showSnackbar(View view, String messageText, String buttonName,
+  public void showSnackbar(View view, String msgText, String btnName,
                            @NonNull View.OnClickListener onClickListener) {
-    showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener);
+    showSnackbar(view, msgText, btnName, Snackbar.LENGTH_INDEFINITE, onClickListener);
   }
 
   /**
    * Show some information as Snackbar with custom message, action button mame and listener.
    *
    * @param view            he view to find a parent from
-   * @param messageText     The text to show.  Can be formatted text
-   * @param buttonName      The text of the Snackbar button
+   * @param msgText         The text to show.  Can be formatted text
+   * @param btnName         The text of the Snackbar button
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  public void showSnackbar(View view, String messageText, String buttonName, int duration,
+  public void showSnackbar(View view, String msgText, String btnName, int duration,
                            @NonNull View.OnClickListener onClickListener) {
-    snackbar = Snackbar.make(view, messageText, duration)
-        .setAction(buttonName, onClickListener);
+    snackbar = Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener);
     snackbar.show();
   }
 
@@ -170,9 +169,9 @@ public abstract class BaseFragment extends Fragment implements LoaderManager.Loa
   protected void handleLoaderResult(int loaderId, LoaderResult loaderResult) {
     if (loaderResult != null) {
       if (loaderResult.getResult() != null) {
-        handleSuccessLoaderResult(loaderId, loaderResult.getResult());
+        onSuccess(loaderId, loaderResult.getResult());
       } else if (loaderResult.getException() != null) {
-        handleFailureLoaderResult(loaderId, loaderResult.getException());
+        onError(loaderId, loaderResult.getException());
       } else {
         UIUtil.showInfoSnackbar(getView(), getString(R.string.unknown_error));
       }

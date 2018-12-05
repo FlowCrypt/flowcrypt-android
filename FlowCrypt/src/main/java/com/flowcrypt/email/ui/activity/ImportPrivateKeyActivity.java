@@ -60,7 +60,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     super.onCreate(savedInstanceState);
     this.js = JsForUiManager.getInstance(this).getJs();
 
-    if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
+    if (isSyncEnabled() && GeneralUtil.isInternetConnectionAvailable(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
           (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
@@ -201,7 +201,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_CHECK_PRIVATE_KEYS:
-        isCheckClipboardFromServiceEnable = false;
+        isCheckingClipboardEnabled = false;
 
         switch (resultCode) {
           case Activity.RESULT_OK:
@@ -241,7 +241,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   @Override
-  public boolean isPrivateKeyChecking() {
+  public boolean isPrivateKeyMode() {
     return true;
   }
 

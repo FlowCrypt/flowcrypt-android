@@ -91,27 +91,27 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   private TextView textViewDate;
   private TextView textViewSubject;
   private View viewFooterOfHeader;
-  private ViewGroup layoutMessageParts;
+  private ViewGroup layoutMsgParts;
   private View layoutContent;
-  private View imageButtonReplyAll;
+  private View imageBtnReplyAll;
   private View progressBarActionRunning;
-  private View layoutMessageContainer;
-  private View layoutReplyButtons;
+  private View layoutMsgContainer;
+  private View layoutReplyBtns;
 
   private java.text.DateFormat dateFormat;
-  private IncomingMessageInfo incomingMessageInfo;
-  private GeneralMessageDetails generalMessageDetails;
+  private IncomingMessageInfo msgInfo;
+  private GeneralMessageDetails details;
   private LocalFolder localFolder;
   private FoldersManager.FolderType folderType;
 
-  private boolean isAdditionalActionEnable;
-  private boolean isDeleteActionEnable;
-  private boolean isArchiveActionEnable;
-  private boolean isMoveToInboxActionEnable;
+  private boolean isAdditionalActionEnabled;
+  private boolean isDeleteActionEnabled;
+  private boolean isArchiveActionEnabled;
+  private boolean isMoveToInboxActionEnabled;
   private OnActionListener onActionListener;
-  private AttachmentInfo lastClickedAttachmentInfo;
-  private MessageEncryptionType messageEncryptionType = MessageEncryptionType.STANDARD;
-  private ArrayList<AttachmentInfo> attachmentInfoList;
+  private AttachmentInfo lastClickedAtt;
+  private MessageEncryptionType msgEncryptType = MessageEncryptionType.STANDARD;
+  private ArrayList<AttachmentInfo> atts;
 
   public MessageDetailsFragment() {
   }
@@ -134,8 +134,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     Intent activityIntent = getActivity().getIntent();
 
     if (activityIntent != null) {
-      this.generalMessageDetails = activityIntent.getParcelableExtra(MessageDetailsActivity
-          .EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+      this.details = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
       this.localFolder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER);
     }
 
@@ -162,9 +161,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           case Activity.RESULT_OK:
             getBaseActivity().restartJsService();
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMessageContainer);
-            getBaseActivity().decryptMessage(R.id.js_decrypt_message,
-                generalMessageDetails.getRawMessageWithoutAttachments());
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
+            getBaseActivity().decryptMessage(R.id.js_decrypt_message, details.getRawMessageWithoutAttachments());
             break;
         }
         break;
@@ -172,16 +170,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION:
         switch (resultCode) {
           case Activity.RESULT_OK:
-            List<AttachmentInfo> attachmentInfoList;
+            List<AttachmentInfo> atts;
             if (data != null) {
-              attachmentInfoList = data.getParcelableArrayListExtra
-                  (PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
+              atts = data.getParcelableArrayListExtra(PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
-              if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-                for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-                  attachmentInfo.setProtected(true);
+              if (!CollectionUtils.isEmpty(atts)) {
+                for (AttachmentInfo att : atts) {
+                  att.setProtected(true);
                 }
-                sendTemplateMessageWithPublicKey(attachmentInfoList.get(0));
+                sendTemplateMessageWithPublicKey(atts.get(0));
               }
             }
 
@@ -196,7 +193,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   @Override
   public View getContentView() {
-    return layoutMessageContainer;
+    return layoutMsgContainer;
   }
 
   @Override
@@ -214,15 +211,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     MenuItem menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox);
 
     if (menuItemArchiveMessage != null) {
-      menuItemArchiveMessage.setVisible(isArchiveActionEnable && isAdditionalActionEnable);
+      menuItemArchiveMessage.setVisible(isArchiveActionEnabled && isAdditionalActionEnabled);
     }
 
     if (menuItemDeleteMessage != null) {
-      menuItemDeleteMessage.setVisible(isDeleteActionEnable && isAdditionalActionEnable);
+      menuItemDeleteMessage.setVisible(isDeleteActionEnabled && isAdditionalActionEnabled);
     }
 
     if (menuActionMoveToInbox != null) {
-      menuActionMoveToInbox.setVisible(isMoveToInboxActionEnable && isAdditionalActionEnable);
+      menuActionMoveToInbox.setVisible(isMoveToInboxActionEnabled && isAdditionalActionEnabled);
     }
   }
 
@@ -244,31 +241,29 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.layoutReplyButton:
-        startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
-            MessageType.REPLY, messageEncryptionType));
+        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY, msgEncryptType));
         break;
 
       case R.id.imageButtonReplyAll:
       case R.id.layoutReplyAllButton:
-        startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
-            MessageType.REPLY_ALL, messageEncryptionType));
+        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY_ALL,
+            msgEncryptType));
         break;
 
       case R.id.layoutForwardButton:
-        if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+        if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
           Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
               Toast.LENGTH_LONG).show();
         } else {
-          if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-            for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-              attachmentInfo.setForwarded(true);
+          if (!CollectionUtils.isEmpty(atts)) {
+            for (AttachmentInfo att : atts) {
+              att.setForwarded(true);
             }
           }
 
-          incomingMessageInfo.setAttachments(attachmentInfoList);
+          msgInfo.setAttachments(atts);
         }
-        startActivity(CreateMessageActivity.generateIntent(getContext(), incomingMessageInfo,
-            MessageType.FORWARD, messageEncryptionType));
+        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.FORWARD, msgEncryptType));
         break;
     }
   }
@@ -276,7 +271,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   @Override
   public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
     super.onErrorOccurred(requestCode, errorType, e);
-    isAdditionalActionEnable = true;
+    isAdditionalActionEnabled = true;
     UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
@@ -293,7 +288,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                     ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
                         R.id.syns_request_code_load_message_details, localFolder,
-                        generalMessageDetails.getUid());
+                        details.getUid());
                   }
                 });
             return;
@@ -303,9 +298,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case R.id.syns_request_archive_message:
       case R.id.syns_request_delete_message:
       case R.id.syns_request_move_message_to_inbox:
-        UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMessageContainer);
-        showSnackbar(getView(), e.getMessage(),
-            getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+        UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMsgContainer);
+        showSnackbar(getView(), e.getMessage(), getString(R.string.retry), Snackbar.LENGTH_LONG,
+            new View.OnClickListener() {
               @Override
               public void onClick(View v) {
                 switch (requestCode) {
@@ -328,16 +323,14 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                         @NonNull int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     switch (requestCode) {
       case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent(
-              getContext(), lastClickedAttachmentInfo));
+          Intent intent = AttachmentDownloadManagerService.newAttachmentDownloadIntent(getContext(), lastClickedAtt);
+          getContext().startService(intent);
         } else {
-          Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission,
-              Toast.LENGTH_LONG).show();
+          Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show();
         }
         break;
 
@@ -349,56 +342,54 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   /**
    * Show an incoming message info.
    *
-   * @param incomingMessageInfo An incoming message info which have received from {@link JsBackgroundService}
+   * @param msgInfo An incoming message info which have received from {@link JsBackgroundService}
    */
-  public void showIncomingMessageInfo(IncomingMessageInfo incomingMessageInfo) {
-    this.incomingMessageInfo = incomingMessageInfo;
-    imageButtonReplyAll.setVisibility(View.VISIBLE);
-    isAdditionalActionEnable = true;
+  public void showIncomingMessageInfo(IncomingMessageInfo msgInfo) {
+    this.msgInfo = msgInfo;
+    imageBtnReplyAll.setVisibility(View.VISIBLE);
+    isAdditionalActionEnabled = true;
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
     }
-    incomingMessageInfo.setLocalFolder(localFolder);
-    incomingMessageInfo.setUid(generalMessageDetails.getUid());
+    msgInfo.setLocalFolder(localFolder);
+    msgInfo.setUid(details.getUid());
     updateMessageBody();
-    UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageContainer);
+    UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMsgContainer);
   }
 
   /**
    * Update message details.
    *
-   * @param generalMessageDetails This object contains general message details.
+   * @param details This object contains general message details.
    */
-  public void updateMessageDetails(GeneralMessageDetails generalMessageDetails) {
-    this.generalMessageDetails = generalMessageDetails;
+  public void updateMessageDetails(GeneralMessageDetails details) {
+    this.details = details;
   }
 
   public void notifyUserAboutActionError(int requestCode) {
-    isAdditionalActionEnable = true;
+    isAdditionalActionEnabled = true;
     getActivity().invalidateOptionsMenu();
 
     UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
 
     switch (requestCode) {
       case R.id.syns_request_archive_message:
-        UIUtil.showInfoSnackbar(getView(),
-            getString(R.string.error_occurred_while_archiving_message));
+        UIUtil.showInfoSnackbar(getView(), getString(R.string.error_occurred_while_archiving_message));
         break;
 
       case R.id.syns_request_delete_message:
-        UIUtil.showInfoSnackbar(getView(),
-            getString(R.string.error_occurred_while_deleting_message));
+        UIUtil.showInfoSnackbar(getView(), getString(R.string.error_occurred_while_deleting_message));
         break;
     }
   }
 
   public void updateAttInfos(ArrayList<AttachmentInfo> attInfoList) {
-    this.attachmentInfoList = attInfoList;
+    this.atts = attInfoList;
     showAttachmentsIfTheyExist();
   }
 
   protected void updateMessageBody() {
-    if (incomingMessageInfo != null) {
+    if (msgInfo != null) {
       updateMessageView();
       showAttachmentsIfTheyExist();
     }
@@ -418,7 +409,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
       if (pgpKey != null) {
         PgpContact primaryUserId = pgpKey.getPrimaryUserId();
-        if (generalMessageDetails.getEmail().equalsIgnoreCase(primaryUserId.getEmail())) {
+        if (details.getEmail().equalsIgnoreCase(primaryUserId.getEmail())) {
           matchedPgpKey = pgpKey;
         }
       }
@@ -431,37 +422,34 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private void showSendersPublicKeyDialog() {
-    PrepareSendUserPublicKeyDialogFragment prepareSendUserPublicKeyDialogFragment
-        = new PrepareSendUserPublicKeyDialogFragment();
-    prepareSendUserPublicKeyDialogFragment.setTargetFragment(MessageDetailsFragment.this,
-        REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
-    prepareSendUserPublicKeyDialogFragment.show(getFragmentManager(),
-        PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
+    PrepareSendUserPublicKeyDialogFragment fragment = new PrepareSendUserPublicKeyDialogFragment();
+    fragment.setTargetFragment(MessageDetailsFragment.this, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
+    fragment.show(getFragmentManager(), PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
   }
 
   /**
    * Send a template message with a sender public key.
    *
-   * @param attachmentInfo An {@link AttachmentInfo} object which contains information about a sender public key.
+   * @param att An {@link AttachmentInfo} object which contains information about a sender public key.
    */
-  private void sendTemplateMessageWithPublicKey(AttachmentInfo attachmentInfo) {
-    List<AttachmentInfo> attachmentInfoList = null;
-    if (attachmentInfo != null) {
-      attachmentInfoList = new ArrayList<>();
-      attachmentInfo.setProtected(true);
-      attachmentInfoList.add(attachmentInfo);
+  private void sendTemplateMessageWithPublicKey(AttachmentInfo att) {
+    List<AttachmentInfo> atts = null;
+    if (att != null) {
+      atts = new ArrayList<>();
+      att.setProtected(true);
+      atts.add(att);
     }
 
-    startActivity(CreateMessageActivity.generateIntent(getContext(),
-        incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
+    startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY,
+        MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
             .setIsFromFieldEditEnable(false)
             .setIsToFieldEditEnable(false)
             .setIsSubjectEditEnable(false)
             .setIsMessageTypeCanBeSwitched(false)
             .setIsAddNewAttachmentsEnable(false)
             .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachmentInfoList(attachmentInfoList)
-            .createServiceInfo()));
+            .setAttachmentInfoList(atts)
+            .build()));
   }
 
   /**
@@ -475,39 +463,38 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     if (folderType != null) {
       switch (folderType) {
         case INBOX:
-          if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equalsIgnoreCase(
-              EmailUtil.getDomain(generalMessageDetails.getEmail()))) {
-            isArchiveActionEnable = true;
+          if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equalsIgnoreCase(EmailUtil.getDomain(details.getEmail()))) {
+            isArchiveActionEnabled = true;
           }
-          isDeleteActionEnable = true;
+          isDeleteActionEnabled = true;
           break;
 
         case SENT:
-          isDeleteActionEnable = true;
+          isDeleteActionEnabled = true;
           break;
 
         case TRASH:
-          isMoveToInboxActionEnable = true;
-          isDeleteActionEnable = false;
+          isMoveToInboxActionEnabled = true;
+          isDeleteActionEnabled = false;
           break;
 
         case DRAFTS:
         case OUTBOX:
-          isMoveToInboxActionEnable = false;
-          isArchiveActionEnable = false;
-          isDeleteActionEnable = true;
+          isMoveToInboxActionEnabled = false;
+          isArchiveActionEnabled = false;
+          isDeleteActionEnabled = true;
           break;
 
         default:
-          isMoveToInboxActionEnable = true;
-          isArchiveActionEnable = false;
-          isDeleteActionEnable = true;
+          isMoveToInboxActionEnabled = true;
+          isArchiveActionEnabled = false;
+          isDeleteActionEnabled = true;
           break;
       }
     } else {
-      isArchiveActionEnable = false;
-      isMoveToInboxActionEnable = false;
-      isDeleteActionEnable = true;
+      isArchiveActionEnabled = false;
+      isMoveToInboxActionEnabled = false;
+      isDeleteActionEnabled = true;
     }
 
     getActivity().invalidateOptionsMenu();
@@ -519,10 +506,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @param menuId The action menu id.
    */
   private void runMessageAction(final int menuId) {
-    if (GeneralUtil.isInternetConnectionAvailable(getContext())
-        || JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
-      if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
-        isAdditionalActionEnable = false;
+    boolean isOubox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
+    if (GeneralUtil.isInternetConnectionAvailable(getContext()) || isOubox) {
+      if (!isOubox) {
+        isAdditionalActionEnabled = false;
         getActivity().invalidateOptionsMenu();
         statusView.setVisibility(View.GONE);
         UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
@@ -542,9 +529,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           break;
       }
     } else {
-      showSnackbar(getView(),
-          getString(R.string.internet_connection_is_not_available),
-          getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+      showSnackbar(getView(), getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
+          Snackbar.LENGTH_LONG, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
               runMessageAction(menuId);
@@ -558,31 +544,30 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     textViewDate = view.findViewById(R.id.textViewDate);
     textViewSubject = view.findViewById(R.id.textViewSubject);
     viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
-    layoutMessageParts = view.findViewById(R.id.layoutMessageParts);
-    layoutMessageContainer = view.findViewById(R.id.layoutMessageContainer);
-    layoutReplyButtons = view.findViewById(R.id.layoutReplyButtons);
+    layoutMsgParts = view.findViewById(R.id.layoutMessageParts);
+    layoutMsgContainer = view.findViewById(R.id.layoutMessageContainer);
+    layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons);
     progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
 
     layoutContent = view.findViewById(R.id.layoutContent);
-    imageButtonReplyAll = view.findViewById(R.id.imageButtonReplyAll);
-    imageButtonReplyAll.setOnClickListener(this);
+    imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll);
+    imageBtnReplyAll.setOnClickListener(this);
   }
 
   private void updateViews() {
-    if (generalMessageDetails != null) {
-      String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ? getString(R.string.no_subject) :
-          generalMessageDetails.getSubject();
+    if (details != null) {
+      String subject = TextUtils.isEmpty(details.getSubject()) ? getString(R.string.no_subject) : details.getSubject();
 
       if (folderType == FoldersManager.FolderType.SENT) {
-        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getTo()));
+        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(details.getTo()));
       } else {
-        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()));
+        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(details.getFrom()));
       }
       textViewSubject.setText(subject);
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
-        textViewDate.setText(dateFormat.format(generalMessageDetails.getSentDateInMillisecond()));
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel())) {
+        textViewDate.setText(dateFormat.format(details.getSentDateInMillisecond()));
       } else {
-        textViewDate.setText(dateFormat.format(generalMessageDetails.getReceivedDateInMillisecond()));
+        textViewDate.setText(dateFormat.format(details.getReceivedDateInMillisecond()));
       }
     }
 
@@ -590,45 +575,46 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   private void showAttachmentsIfTheyExist() {
-    if (generalMessageDetails != null && generalMessageDetails.hasAttachments()) {
+    if (details != null && details.hasAttachments()) {
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
-      if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-        for (final AttachmentInfo attachmentInfo : attachmentInfoList) {
-          View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMessageParts, false);
+      if (!CollectionUtils.isEmpty(atts)) {
+        for (final AttachmentInfo att : atts) {
+          View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false);
 
           TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
-          textViewAttachmentName.setText(attachmentInfo.getName());
+          textViewAttachmentName.setText(att.getName());
 
           TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
-          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), attachmentInfo.getEncodedSize()));
+          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
 
-          final View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
-          imageButtonDownloadAttachment.setOnClickListener(new View.OnClickListener() {
+          final View button = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+          button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              lastClickedAttachmentInfo = attachmentInfo;
-              lastClickedAttachmentInfo.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
-              if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                  != PackageManager.PERMISSION_GRANTED) {
+              lastClickedAtt = att;
+              lastClickedAtt.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
+              boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
+                  Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
+              if (isPermissionGranted) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
               } else {
                 getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
-                    (getContext(), lastClickedAttachmentInfo));
+                    (getContext(), lastClickedAtt));
               }
             }
           });
 
-          if (attachmentInfo.getUri() != null) {
+          if (att.getUri() != null) {
             View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
             layoutAttachment.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View v) {
-                if (attachmentInfo.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
-                  imageButtonDownloadAttachment.performClick();
+                if (att.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
+                  button.performClick();
                 } else {
-                  Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, attachmentInfo.getUri());
+                  Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, att.getUri());
                   intentOpenFile.setAction(Intent.ACTION_VIEW);
                   intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                   intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -640,15 +626,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             });
           }
 
-          layoutMessageParts.addView(rootView);
+          layoutMsgParts.addView(rootView);
         }
       }
     }
   }
 
   private void updateMessageView() {
-    layoutMessageParts.removeAllViews();
-    if (!TextUtils.isEmpty(incomingMessageInfo.getHtmlMsg())) {
+    layoutMsgParts.removeAllViews();
+    if (!TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
       EmailWebView emailWebView = new EmailWebView(getContext());
       emailWebView.configure();
 
@@ -658,42 +644,40 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       layoutParams.setMargins(margin, 0, margin, 0);
       emailWebView.setLayoutParams(layoutParams);
 
-      emailWebView.loadDataWithBaseURL(null, EmailUtil.genViewportHtml(incomingMessageInfo.getHtmlMsg()),
+      emailWebView.loadDataWithBaseURL(null, EmailUtil.genViewportHtml(msgInfo.getHtmlMsg()),
           "text/html", StandardCharsets.UTF_8.displayName(), null);
 
-      layoutMessageParts.addView(emailWebView);
+      layoutMsgParts.addView(emailWebView);
       emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
         public void onPageFinished() {
           updateReplyButtons();
         }
       });
-    } else if (incomingMessageInfo.getMessageParts() != null && !incomingMessageInfo.getMessageParts().isEmpty()) {
+    } else if (msgInfo.getMessageParts() != null && !msgInfo.getMessageParts().isEmpty()) {
       boolean isFirstMessagePartIsText = true;
-      for (MessagePart messagePart : incomingMessageInfo.getMessageParts()) {
+      for (MessagePart messagePart : msgInfo.getMessageParts()) {
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
         if (messagePart != null) {
           switch (messagePart.getMessagePartType()) {
             case PGP_MESSAGE:
-              messageEncryptionType = MessageEncryptionType.ENCRYPTED;
-              layoutMessageParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart,
-                  layoutInflater));
+              msgEncryptType = MessageEncryptionType.ENCRYPTED;
+              layoutMsgParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart, layoutInflater));
               break;
 
             case TEXT:
-              layoutMessageParts.addView(generateTextPart(messagePart, layoutInflater));
+              layoutMsgParts.addView(generateTextPart(messagePart, layoutInflater));
               if (isFirstMessagePartIsText) {
                 viewFooterOfHeader.setVisibility(View.VISIBLE);
               }
               break;
 
             case PGP_PUBLIC_KEY:
-              layoutMessageParts.addView(generatePublicKeyPart(
-                  (MessagePartPgpPublicKey) messagePart, layoutInflater));
+              layoutMsgParts.addView(generatePublicKeyPart((MessagePartPgpPublicKey) messagePart, layoutInflater));
               break;
 
             default:
-              layoutMessageParts.addView(generateMessagePart(messagePart, layoutInflater,
-                  R.layout.message_part_other, layoutMessageParts));
+              layoutMsgParts.addView(generateMessagePart(messagePart, layoutInflater, R.layout.message_part_other,
+                  layoutMsgParts));
               break;
           }
         }
@@ -701,7 +685,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
       updateReplyButtons();
     } else {
-      layoutMessageParts.removeAllViews();
+      layoutMsgParts.removeAllViews();
       updateReplyButtons();
     }
   }
@@ -710,16 +694,16 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Update the reply buttons layout depending on the {@link MessageEncryptionType}
    */
   private void updateReplyButtons() {
-    if (layoutReplyButtons != null) {
-      ImageView imageViewReply = layoutReplyButtons.findViewById(R.id.imageViewReply);
-      ImageView imageViewReplyAll = layoutReplyButtons.findViewById(R.id.imageViewReplyAll);
-      ImageView imageViewForward = layoutReplyButtons.findViewById(R.id.imageViewForward);
+    if (layoutReplyBtns != null) {
+      ImageView imageViewReply = layoutReplyBtns.findViewById(R.id.imageViewReply);
+      ImageView imageViewReplyAll = layoutReplyBtns.findViewById(R.id.imageViewReplyAll);
+      ImageView imageViewForward = layoutReplyBtns.findViewById(R.id.imageViewForward);
 
-      TextView textViewReply = layoutReplyButtons.findViewById(R.id.textViewReply);
-      TextView textViewReplyAll = layoutReplyButtons.findViewById(R.id.textViewReplyAll);
-      TextView textViewForward = layoutReplyButtons.findViewById(R.id.textViewForward);
+      TextView textViewReply = layoutReplyBtns.findViewById(R.id.textViewReply);
+      TextView textViewReplyAll = layoutReplyBtns.findViewById(R.id.textViewReplyAll);
+      TextView textViewForward = layoutReplyBtns.findViewById(R.id.textViewForward);
 
-      if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
+      if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
         imageViewReply.setImageResource(R.mipmap.ic_reply_green);
         imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green);
         imageViewForward.setImageResource(R.mipmap.ic_forward_green);
@@ -737,11 +721,11 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         textViewForward.setText(R.string.forward);
       }
 
-      layoutReplyButtons.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
-      layoutReplyButtons.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
-      layoutReplyButtons.findViewById(R.id.layoutForwardButton).setOnClickListener(this);
+      layoutReplyBtns.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
+      layoutReplyBtns.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
+      layoutReplyBtns.findViewById(R.id.layoutForwardButton).setOnClickListener(this);
 
-      layoutReplyButtons.setVisibility(View.VISIBLE);
+      layoutReplyBtns.setVisibility(View.VISIBLE);
     }
   }
 
@@ -751,98 +735,77 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param messagePartPgpPublicKey The {@link MessagePartPgpPublicKey} object which contains
    *                                information about a public key and his owner.
-   * @param layoutInflater          The {@link LayoutInflater} instance.
+   * @param inflater                The {@link LayoutInflater} instance.
    * @return The generated view.
    */
   @NonNull
-  private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey,
-                                     LayoutInflater layoutInflater) {
+  private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey, LayoutInflater inflater) {
 
-    final ViewGroup messagePartPublicKeyView = (ViewGroup) layoutInflater.inflate(
-        R.layout.message_part_public_key, layoutMessageParts, false);
+    final ViewGroup pubKeyView = (ViewGroup) inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false);
+    final TextView textViewPgpPublicKey = pubKeyView.findViewById(R.id.textViewPgpPublicKey);
+    Switch switchShowPublicKey = pubKeyView.findViewById(R.id.switchShowPublicKey);
 
-    final TextView textViewPgpPublicKey = messagePartPublicKeyView.findViewById(R.id.textViewPgpPublicKey);
-    Switch switchShowPublicKey = messagePartPublicKeyView.findViewById(R.id.switchShowPublicKey);
-
-    switchShowPublicKey.setOnCheckedChangeListener(new CompoundButton
-        .OnCheckedChangeListener() {
+    switchShowPublicKey.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
       @Override
-      public void onCheckedChanged(CompoundButton buttonView, boolean
-          isChecked) {
-        TransitionManager.beginDelayedTransition(messagePartPublicKeyView);
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        TransitionManager.beginDelayedTransition(pubKeyView);
         textViewPgpPublicKey.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-
-        buttonView.setText(isChecked ? R.string.hide_the_public_key :
-            R.string.show_the_public_key);
+        buttonView.setText(isChecked ? R.string.hide_the_public_key : R.string.show_the_public_key);
       }
     });
 
     if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
-      TextView textViewKeyOwnerTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
-      textViewKeyOwnerTemplate.setText(
-          getString(R.string.template_message_part_public_key_owner,
-              messagePartPgpPublicKey.getKeyOwner()));
+      TextView textViewKeyOwnerTemplate = pubKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
+      textViewKeyOwnerTemplate.setText(getString(R.string.template_message_part_public_key_owner,
+          messagePartPgpPublicKey.getKeyOwner()));
     }
 
-    TextView textViewKeyWordsTemplate = messagePartPublicKeyView.findViewById(R.id.textViewKeyWordsTemplate);
+    TextView textViewKeyWordsTemplate = pubKeyView.findViewById(R.id.textViewKeyWordsTemplate);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
         messagePartPgpPublicKey.getKeyWords()), textViewKeyWordsTemplate);
 
-    TextView textViewFingerprintTemplate = messagePartPublicKeyView.findViewById(R.id.textViewFingerprintTemplate);
-    UIUtil.setHtmlTextToTextView(
-        getString(R.string.template_message_part_public_key_fingerprint,
-            GeneralUtil.doSectionsInText(" ",
-                messagePartPgpPublicKey.getFingerprint(), 4)),
+    TextView textViewFingerprintTemplate = pubKeyView.findViewById(R.id.textViewFingerprintTemplate);
+    UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
+        GeneralUtil.doSectionsInText(" ", messagePartPgpPublicKey.getFingerprint(), 4)),
         textViewFingerprintTemplate);
 
     textViewPgpPublicKey.setText(messagePartPgpPublicKey.getValue());
 
     if (messagePartPgpPublicKey.isPgpContactExists()) {
       if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
-        initUpdateContactButton(messagePartPgpPublicKey, messagePartPublicKeyView);
+        initUpdateContactButton(messagePartPgpPublicKey, pubKeyView);
       }
     } else {
-      initSaveContactButton(messagePartPgpPublicKey, messagePartPublicKeyView);
+      initSaveContactButton(messagePartPgpPublicKey, pubKeyView);
     }
 
-    return messagePartPublicKeyView;
+    return pubKeyView;
   }
 
   /**
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param messagePartPgpPublicKey  The {@link MessagePartPgpPublicKey} object which contains
+   * @param msgPart                  The {@link MessagePartPgpPublicKey} object which contains
    *                                 information about a public key and his owner.
    * @param messagePartPublicKeyView The public key view container.
    */
-  private void initSaveContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
-                                     View messagePartPublicKeyView) {
+  private void initSaveContactButton(final MessagePartPgpPublicKey msgPart, View messagePartPublicKeyView) {
     Button buttonSaveContact = messagePartPublicKeyView.findViewById(R.id.buttonSaveContact);
     if (buttonSaveContact != null) {
       buttonSaveContact.setVisibility(View.VISIBLE);
       buttonSaveContact.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          Uri uri = new ContactsDaoSource().addRow(getContext(),
-              new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
-                  null,
-                  messagePartPgpPublicKey.getValue(),
-                  false,
-                  null,
-                  false,
-                  messagePartPgpPublicKey.getFingerprint(),
-                  messagePartPgpPublicKey.getLongId(),
-                  messagePartPgpPublicKey.getKeyWords(), 0));
+          PgpContact pgpContact = new PgpContact(msgPart.getKeyOwner(), null, msgPart.getValue(), false, null, false,
+              msgPart.getFingerprint(), msgPart.getLongId(), msgPart.getKeyWords(), 0);
+          Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
           if (uri != null) {
-            Toast.makeText(getContext(),
-                R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
             v.setVisibility(View.GONE);
           } else {
-            Toast.makeText(getContext(),
-                R.string.error_occurred_while_saving_contact,
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
           }
         }
       });
@@ -853,37 +816,25 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param messagePartPgpPublicKey  The {@link MessagePartPgpPublicKey} object which contains
-   *                                 information about a public key and his owner.
-   * @param messagePartPublicKeyView The public key view container.
+   * @param messagePartPgpPublicKey The {@link MessagePartPgpPublicKey} object which contains
+   *                                information about a public key and his owner.
+   * @param view                    The public key view container.
    */
-  private void initUpdateContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey,
-                                       View messagePartPublicKeyView) {
-    Button buttonUpdateContact = messagePartPublicKeyView.findViewById(R.id.buttonUpdateContact);
+  private void initUpdateContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey, View view) {
+    Button buttonUpdateContact = view.findViewById(R.id.buttonUpdateContact);
     if (buttonUpdateContact != null) {
       buttonUpdateContact.setVisibility(View.VISIBLE);
       buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          boolean isUpdated = new ContactsDaoSource().updatePgpContact
-              (getContext(),
-                  new PgpContact(messagePartPgpPublicKey.getKeyOwner(),
-                      null,
-                      messagePartPgpPublicKey.getValue(),
-                      false,
-                      null,
-                      false,
-                      messagePartPgpPublicKey.getFingerprint(),
-                      messagePartPgpPublicKey.getLongId(),
-                      messagePartPgpPublicKey.getKeyWords(), 0)) > 0;
+          PgpContact pgpContact = new PgpContact(messagePartPgpPublicKey.getKeyOwner(), null,
+              messagePartPgpPublicKey.getValue(), false, null, false, messagePartPgpPublicKey.getFingerprint(),
+              messagePartPgpPublicKey.getLongId(), messagePartPgpPublicKey.getKeyWords(), 0);
+          boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
           if (isUpdated) {
-            Toast.makeText(getContext(),
-                R.string.contact_successfully_updated,
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
           } else {
-            Toast.makeText(getContext(),
-                R.string.error_occurred_while_updating_contact,
-                Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
           }
         }
       });
@@ -891,48 +842,42 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   @NonNull
-  private TextView generateMessagePart(MessagePart messagePart, LayoutInflater layoutInflater,
-                                       int messagePartOther, ViewGroup layoutMessageParts) {
-    TextView textViewMessagePartOther = (TextView) layoutInflater.inflate(
-        messagePartOther, layoutMessageParts, false);
-
-    textViewMessagePartOther.setText(messagePart.getValue());
+  private TextView generateMessagePart(MessagePart part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
+    TextView textViewMessagePartOther = (TextView) inflater.inflate(res, viewGroup, false);
+    textViewMessagePartOther.setText(part.getValue());
     return textViewMessagePartOther;
   }
 
   @NonNull
   private TextView generateTextPart(MessagePart messagePart, LayoutInflater layoutInflater) {
-    return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_text, layoutMessageParts);
+    return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
   }
 
   @NonNull
-  private View generatePgpMessagePart(MessagePartPgpMessage messagePartPgpMessage,
-                                      LayoutInflater layoutInflater) {
-    if (messagePartPgpMessage != null) {
-      if (TextUtils.isEmpty(messagePartPgpMessage.getErrorMessage())) {
-        return generateMessagePart(messagePartPgpMessage, layoutInflater, R.layout.message_part_pgp_message,
-            layoutMessageParts);
+  private View generatePgpMessagePart(MessagePartPgpMessage part, LayoutInflater layoutInflater) {
+    if (part != null) {
+      if (TextUtils.isEmpty(part.getErrorMessage())) {
+        return generateMessagePart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
       } else {
-        switch (messagePartPgpMessage.getPgpMessageDecryptError()) {
+        switch (part.getPgpMessageDecryptError()) {
           case FORMAT_ERROR:
             final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
-                R.layout.message_part_pgp_message_format_error, layoutMessageParts, false);
+                R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
             TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
-            textViewFormatError.setText(messagePartPgpMessage.getErrorMessage());
+            textViewFormatError.setText(part.getErrorMessage());
             formatErrorLayout.addView(generateShowOriginalMessageLayout
-                (messagePartPgpMessage.getValue(), layoutInflater, formatErrorLayout));
+                (part.getValue(), layoutInflater, formatErrorLayout));
             return formatErrorLayout;
 
           case MISSING_PRIVATE_KEY:
-            return generateMissingPrivateKeyLayout(messagePartPgpMessage, layoutInflater);
+            return generateMissingPrivateKeyLayout(part, layoutInflater);
 
           default:
             ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
-                R.layout.message_part_pgp_message_error, layoutMessageParts, false);
+                R.layout.message_part_pgp_message_error, layoutMsgParts, false);
             TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
-            textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
-            viewGroup.addView(generateShowOriginalMessageLayout
-                (messagePartPgpMessage.getValue(), layoutInflater, viewGroup));
+            textViewErrorMessage.setText(part.getErrorMessage());
+            viewGroup.addView(generateShowOriginalMessageLayout(part.getValue(), layoutInflater, viewGroup));
 
             return viewGroup;
         }
@@ -943,19 +888,18 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   /**
    * Generate a layout which describes the missing private keys situation.
    *
-   * @param messagePartPgpMessage The {@link MessagePartPgpMessage} which contains info about an error.
-   * @param layoutInflater        The {@link LayoutInflater} instance.
+   * @param part     The {@link MessagePartPgpMessage} which contains info about an error.
+   * @param inflater The {@link LayoutInflater} instance.
    * @return Generated layout.
    */
   @NonNull
-  private View generateMissingPrivateKeyLayout(MessagePartPgpMessage messagePartPgpMessage,
-                                               LayoutInflater layoutInflater) {
-    ViewGroup missingPrivateKeyLayout = (ViewGroup) layoutInflater.inflate(
-        R.layout.message_part_pgp_message_missing_private_key, layoutMessageParts, false);
-    TextView textViewErrorMessage = missingPrivateKeyLayout.findViewById(R.id.textViewErrorMessage);
-    textViewErrorMessage.setText(messagePartPgpMessage.getErrorMessage());
+  private View generateMissingPrivateKeyLayout(MessagePartPgpMessage part, LayoutInflater inflater) {
+    ViewGroup viewGroup = (ViewGroup) inflater.inflate(
+        R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false);
+    TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
+    textViewErrorMessage.setText(part.getErrorMessage());
 
-    Button buttonImportPrivateKey = missingPrivateKeyLayout.findViewById(R.id.buttonImportPrivateKey);
+    Button buttonImportPrivateKey = viewGroup.findViewById(R.id.buttonImportPrivateKey);
     buttonImportPrivateKey.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -965,7 +909,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    Button buttonSendOwnPublicKey = missingPrivateKeyLayout.findViewById(R.id.buttonSendOwnPublicKey);
+    Button buttonSendOwnPublicKey = viewGroup.findViewById(R.id.buttonSendOwnPublicKey);
     buttonSendOwnPublicKey.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -978,31 +922,27 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    missingPrivateKeyLayout.addView(generateShowOriginalMessageLayout
-        (messagePartPgpMessage.getValue(), layoutInflater, missingPrivateKeyLayout));
-    return missingPrivateKeyLayout;
+    viewGroup.addView(generateShowOriginalMessageLayout(part.getValue(), inflater, viewGroup));
+    return viewGroup;
   }
 
   /**
    * Generate a layout with switch button which will be regulate visibility of original message info.
    *
-   * @param originalPgpMessage The original pgp message info.
-   * @param layoutInflater     The {@link LayoutInflater} instance.
-   * @param rootView           The root view which will be used while we create a new layout using
-   *                           {@link LayoutInflater}.
+   * @param msg            The original pgp message info.
+   * @param layoutInflater The {@link LayoutInflater} instance.
+   * @param rootView       The root view which will be used while we create a new layout using
+   *                       {@link LayoutInflater}.
    * @return A generated layout.
    */
   @NonNull
-  private ViewGroup generateShowOriginalMessageLayout(String originalPgpMessage, LayoutInflater layoutInflater,
+  private ViewGroup generateShowOriginalMessageLayout(String msg, LayoutInflater layoutInflater,
                                                       final ViewGroup rootView) {
-    ViewGroup showOriginalMessageLayout = (ViewGroup) layoutInflater.inflate(
-        R.layout.pgp_show_original_message, rootView, false);
-    final TextView textViewOriginalPgpMessage
-        = showOriginalMessageLayout.findViewById(R.id.textViewOriginalPgpMessage);
-    textViewOriginalPgpMessage.setText(originalPgpMessage);
+    ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false);
+    final TextView textViewOriginalPgpMessage = viewGroup.findViewById(R.id.textViewOriginalPgpMessage);
+    textViewOriginalPgpMessage.setText(msg);
 
-    Switch switchShowOriginalMessage = showOriginalMessageLayout.findViewById(R.id
-        .switchShowOriginalMessage);
+    Switch switchShowOriginalMessage = viewGroup.findViewById(R.id.switchShowOriginalMessage);
 
     switchShowOriginalMessage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
@@ -1012,7 +952,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
       }
     });
-    return showOriginalMessageLayout;
+    return viewGroup;
   }
 
   public interface OnActionListener {

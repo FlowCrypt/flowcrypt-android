@@ -257,7 +257,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.GONE);
@@ -269,7 +269,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.GONE);

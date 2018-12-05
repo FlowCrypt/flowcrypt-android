@@ -21,16 +21,14 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat {
   /**
    * This method helps to generate a summary for {@link ListPreference}
    *
-   * @param currentValue The preference current value;
-   * @param entryValues  The preferences entry values;
-   * @param entries      The preferences entries;
+   * @param value   The preference current value;
+   * @param values  The preferences entry values;
+   * @param entries The preferences entries;
    * @return A generated summary.
    */
-  protected CharSequence generateSummaryListPreferences(String currentValue,
-                                                        CharSequence[] entryValues,
-                                                        CharSequence[] entries) {
-    for (int i = 0; i < entryValues.length; i++) {
-      if (entryValues[i].equals(currentValue)) {
+  protected CharSequence generateSummary(String value, CharSequence[] values, CharSequence[] entries) {
+    for (int i = 0; i < values.length; i++) {
+      if (values[i].equals(value)) {
         return entries[i];
       }
     }

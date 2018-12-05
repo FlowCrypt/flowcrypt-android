@@ -164,7 +164,7 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public ServiceInfo createServiceInfo() {
+    public ServiceInfo build() {
       return new ServiceInfo(isToFieldEditEnable, isFromFieldEditEnable, isMessageEditEnable,
           isSubjectEditEnable, isMessageTypeCanBeSwitched, isAddNewAttachmentsEnable, systemMessage,
           attachmentInfoList);

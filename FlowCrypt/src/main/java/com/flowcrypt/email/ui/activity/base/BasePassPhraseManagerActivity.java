@@ -57,7 +57,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
   protected View layoutProgress;
   protected View layoutContentView;
-  protected View buttonSetPassPhrase;
+  protected View btnSetPassPhrase;
   protected View layoutSecondPasswordCheck;
   protected View layoutFirstPasswordCheck;
   protected View layoutSuccess;
@@ -69,7 +69,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   protected TextView textViewSuccessSubTitle;
   protected TextView textViewFirstPasswordCheckTitle;
   protected TextView textViewSecondPasswordCheckTitle;
-  protected Button buttonSuccess;
+  protected Button btnSuccess;
 
   protected Js js;
   protected Zxcvbn zxcvbn;
@@ -114,8 +114,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
     switch (v.getId()) {
       case R.id.buttonSetPassPhrase:
         if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
-          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty),
-              Snackbar.LENGTH_LONG);
+          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG);
         } else {
           if (getSnackBar() != null) {
             getSnackBar().dismiss();
@@ -125,16 +124,13 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
             switch (passwordStrength.getWord()) {
               case Constants.PASSWORD_QUALITY_WEAK:
               case Constants.PASSWORD_QUALITY_POOR:
-                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(
-                    "",
+                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance("",
                     getString(R.string.select_stronger_pass_phrase));
-                infoDialogFragment.show(getSupportFragmentManager(),
-                    InfoDialogFragment.class.getSimpleName());
+                infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
                 break;
 
               default:
-                UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck,
-                    layoutFirstPasswordCheck);
+                UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck, layoutFirstPasswordCheck);
                 break;
             }
           }
@@ -149,8 +145,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
         try {
           WebViewInfoDialogFragment webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
               IOUtils.toString(getAssets().open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8));
-          webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class
-              .getSimpleName());
+          webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class.getSimpleName());
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -163,26 +158,22 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
         editTextKeyPasswordSecond.setText(null);
         editTextKeyPassword.setText(null);
-        UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck,
-            layoutFirstPasswordCheck);
+        UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck, layoutFirstPasswordCheck);
         break;
 
       case R.id.buttonConfirmPassPhrases:
         if (TextUtils.isEmpty(editTextKeyPasswordSecond.getText().toString())) {
-          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty),
-              Snackbar.LENGTH_LONG);
+          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG);
         } else {
           if (getSnackBar() != null) {
             getSnackBar().dismiss();
           }
 
-          if (editTextKeyPassword.getText().toString().equals(
-              editTextKeyPasswordSecond.getText().toString())) {
+          if (editTextKeyPassword.getText().toString().equals(editTextKeyPasswordSecond.getText().toString())) {
             onConfirmPassPhraseSuccess();
           } else {
             editTextKeyPasswordSecond.setText(null);
-            showInfoSnackbar(getRootView(), getString(R.string.pass_phrases_do_not_match),
-                Snackbar.LENGTH_LONG);
+            showInfoSnackbar(getRootView(), getString(R.string.pass_phrases_do_not_match), Snackbar.LENGTH_LONG);
           }
         }
         break;
@@ -206,12 +197,12 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
   @Override
   public void afterTextChanged(Editable editable) {
-    passwordStrength = js.crypto_password_estimate_strength(
-        zxcvbn.measure(editable.toString(), js.crypto_password_weak_words()).getGuesses());
+    double measure = zxcvbn.measure(editable.toString(), js.crypto_password_weak_words()).getGuesses();
+    passwordStrength = js.crypto_password_estimate_strength(measure);
 
     updatePasswordQualityProgressBar(passwordStrength);
     updatePasswordQualityInfo(passwordStrength);
-    updateBackgroundOfSetPassPhraseButton();
+    updateSetPassButtonBackground();
 
     if (TextUtils.isEmpty(editable)) {
       textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty);
@@ -228,31 +219,31 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
     textViewSuccessSubTitle = findViewById(R.id.textViewSuccessSubTitle);
     textViewFirstPasswordCheckTitle = findViewById(R.id.textViewFirstPasswordCheckTitle);
     textViewSecondPasswordCheckTitle = findViewById(R.id.textViewSecondPasswordCheckTitle);
-    buttonSuccess = findViewById(R.id.buttonSuccess);
+    btnSuccess = findViewById(R.id.buttonSuccess);
 
     editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
     editTextKeyPassword.addTextChangedListener(this);
     editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond);
     progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality);
     textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo);
-    buttonSetPassPhrase = findViewById(R.id.buttonSetPassPhrase);
-    buttonSetPassPhrase.setOnClickListener(this);
+    btnSetPassPhrase = findViewById(R.id.buttonSetPassPhrase);
+    btnSetPassPhrase.setOnClickListener(this);
     findViewById(R.id.imageButtonShowPasswordHint).setOnClickListener(this);
     findViewById(R.id.buttonConfirmPassPhrases).setOnClickListener(this);
     findViewById(R.id.buttonUseAnotherPassPhrase).setOnClickListener(this);
-    buttonSuccess.setOnClickListener(this);
+    btnSuccess.setOnClickListener(this);
   }
 
-  private void updateBackgroundOfSetPassPhraseButton() {
+  private void updateSetPassButtonBackground() {
     switch (passwordStrength.getWord()) {
       case Constants.PASSWORD_QUALITY_WEAK:
       case Constants.PASSWORD_QUALITY_POOR:
-        buttonSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.silver),
+        btnSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.silver),
             PorterDuff.Mode.MULTIPLY);
         break;
 
       default:
-        buttonSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
+        btnSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
             PorterDuff.Mode.MULTIPLY);
         break;
     }
