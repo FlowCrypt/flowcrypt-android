@@ -45,7 +45,7 @@ public class ExceptionUtil {
    * @param e A happened error
    * @return true if need to handle such exception with {@link ACRA} and send logs to the backend, false - otherwise.
    */
-  public static boolean isErrorHandleWithACRA(Exception e) {
+  public static boolean isHandlingNeeded(Exception e) {
     if ((e instanceof MailConnectException)
         || (e instanceof SMTPSendFailedException)
         || (e instanceof UnknownHostException)
@@ -112,7 +112,7 @@ public class ExceptionUtil {
    * @param e An input {@link Exception}
    */
   public static void handleError(Exception e) {
-    if (ExceptionUtil.isErrorHandleWithACRA(e)) {
+    if (ExceptionUtil.isHandlingNeeded(e)) {
       if (ACRA.isInitialised()) {
         ACRA.getErrorReporter().handleException(new ManualHandledException(e));
       }

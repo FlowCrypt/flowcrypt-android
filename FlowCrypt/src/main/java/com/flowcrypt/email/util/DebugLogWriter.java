@@ -37,9 +37,8 @@ public class DebugLogWriter {
   private DateFormat dateFormat;
 
   public DebugLogWriter(String fileName) {
-    this(new File(Environment.getExternalStorageDirectory() + "/" + BuildConfig
-        .APPLICATION_ID + "_" + fileName + "" +
-        ".log"));
+    this(new File(Environment.getExternalStorageDirectory() + "/" + BuildConfig.APPLICATION_ID
+        + "_" + fileName + ".log"));
   }
 
   public DebugLogWriter(File fileLog) {
@@ -59,8 +58,8 @@ public class DebugLogWriter {
 
   public void writeLog(String message) {
     try {
-      FileUtils.writeStringToFile(fileLog, String.format(LOG_MESSAGE_PATTERN,
-          dateFormat.format(new Date()), ""), Charset.defaultCharset(), true);
+      String date = String.format(LOG_MESSAGE_PATTERN, dateFormat.format(new Date()), "");
+      FileUtils.writeStringToFile(fileLog, date, Charset.defaultCharset(), true);
       FileUtils.writeStringToFile(fileLog, message, Charset.defaultCharset(), true);
       FileUtils.writeStringToFile(fileLog, "\n", Charset.defaultCharset(), true);
     } catch (IOException e) {

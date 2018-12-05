@@ -30,6 +30,8 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -94,8 +96,8 @@ public class GeneralUtil {
    * @throws IOException will thrown for example if the file not found
    */
   public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
-    return IOUtils.toString(context.getContentResolver().openInputStream(uri),
-        StandardCharsets.UTF_8);
+    InputStream inputStream = context.getContentResolver().openInputStream(uri);
+    return inputStream != null ? IOUtils.toString(inputStream, StandardCharsets.UTF_8) : null;
   }
 
   /**
@@ -181,11 +183,10 @@ public class GeneralUtil {
    * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
    * @throws IOException if an I/O error occurs
    */
-  public static int writeFileFromStringToUri(Context context, Uri uri, String data)
-      throws IOException {
-    return IOUtils.copy(
-        IOUtils.toInputStream(data, StandardCharsets.UTF_8),
-        context.getContentResolver().openOutputStream(uri));
+  public static int writeFileFromStringToUri(Context context, Uri uri, String data) throws IOException {
+    InputStream inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8);
+    OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
+    return IOUtils.copy(inputStream, outputStream);
   }
 
   /**
@@ -209,10 +210,7 @@ public class GeneralUtil {
    */
   public static String doSectionsInText(String template, String originalString, int groupSize) {
 
-    if (template == null
-        || originalString == null
-        || groupSize <= 0
-        || originalString.length() <= groupSize) {
+    if (template == null || originalString == null || groupSize <= 0 || originalString.length() <= groupSize) {
       return originalString;
     }
 
@@ -291,13 +289,13 @@ public class GeneralUtil {
    * @return The generated order number.
    */
   public static int genAttOrderId(Context context) {
-    int lastId = SharedPreferencesHelper.getInt(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
+    int lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
 
     lastId++;
 
-    SharedPreferencesHelper.setInt(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
+    SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
 
     return lastId;
   }

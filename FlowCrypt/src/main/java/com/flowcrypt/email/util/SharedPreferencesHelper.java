@@ -20,25 +20,21 @@ import androidx.preference.PreferenceManager;
  */
 public class SharedPreferencesHelper {
 
-  public static String getString(SharedPreferences sharedPreferences, String key, String
-      defaultValue) {
+  public static String getString(SharedPreferences sharedPreferences, String key, String defaultValue) {
     return sharedPreferences.getString(key, defaultValue);
   }
 
-  public static boolean getBoolean(SharedPreferences sharedPreferences, String key,
-                                   boolean defaultValue) {
+  public static boolean getBoolean(SharedPreferences sharedPreferences, String key, boolean defaultValue) {
     return sharedPreferences.getBoolean(key, defaultValue);
   }
 
-  public static boolean setBoolean(SharedPreferences sharedPreferences, String key,
-                                   boolean value) {
+  public static boolean setBoolean(SharedPreferences sharedPreferences, String key, boolean value) {
     SharedPreferences.Editor editor = sharedPreferences.edit();
     editor.putBoolean(key, value);
     return editor.commit();
   }
 
-  public static Set<String> getStringSet(SharedPreferences sharedPreferences, String key,
-                                         Set<String> defValues) {
+  public static Set<String> getStringSet(SharedPreferences sharedPreferences, String key, Set<String> defValues) {
     return sharedPreferences.getStringSet(key, defValues);
   }
 

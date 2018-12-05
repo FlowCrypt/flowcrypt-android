@@ -34,11 +34,11 @@ public class UIUtil {
   /**
    * Show some information as Snackbar.
    *
-   * @param view        he view to find a parent from.
-   * @param messageText The text to show.  Can be formatted text..
+   * @param view    The view to find a parent from.
+   * @param msgText The text to show.  Can be formatted text..
    */
-  public static Snackbar showInfoSnackbar(View view, String messageText) {
-    Snackbar snackbar = Snackbar.make(view, messageText, Snackbar.LENGTH_INDEFINITE)
+  public static Snackbar showInfoSnackbar(View view, String msgText) {
+    Snackbar snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
         .setAction(android.R.string.ok, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
@@ -52,29 +52,29 @@ public class UIUtil {
   /**
    * Show some information as Snackbar with custom message, action button mame and listener. .
    *
-   * @param view            he view to find a parent from.
-   * @param messageText     The text to show.  Can be formatted text..
+   * @param view            The view to find a parent from.
+   * @param msgText         The text to show.  Can be formatted text..
    * @param buttonName      The text of the Snackbar button;
    * @param onClickListener The Snackbar button click listener.
    */
-  public static Snackbar showSnackbar(View view, String messageText, String buttonName,
+  public static Snackbar showSnackbar(View view, String msgText, String buttonName,
                                       @NonNull View.OnClickListener onClickListener) {
-    return showSnackbar(view, messageText, buttonName, onClickListener, Snackbar.LENGTH_INDEFINITE);
+    return showSnackbar(view, msgText, buttonName, onClickListener, Snackbar.LENGTH_INDEFINITE);
   }
 
   /**
    * Show some information as Snackbar with custom message, action button mame and listener. .
    *
-   * @param view            he view to find a parent from.
-   * @param messageText     The text to show.  Can be formatted text..
+   * @param view            The view to find a parent from.
+   * @param msgText         The text to show.  Can be formatted text..
    * @param buttonName      The text of the Snackbar button;
    * @param onClickListener The Snackbar button click listener.
    * @param duration        How long to display the message.  Either {@link Snackbar#LENGTH_SHORT} or {@link
    *                        Snackbar#LENGTH_LONG}
    */
-  public static Snackbar showSnackbar(View view, String messageText, String buttonName,
+  public static Snackbar showSnackbar(View view, String msgText, String buttonName,
                                       @NonNull View.OnClickListener onClickListener, int duration) {
-    Snackbar snackbar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener);
+    Snackbar snackbar = Snackbar.make(view, msgText, duration).setAction(buttonName, onClickListener);
     snackbar.show();
 
     return snackbar;
@@ -98,42 +98,39 @@ public class UIUtil {
   /**
    * This method can be used to exchange views visibility for some interactions.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param show       When true we show the firstView, when false we show the secondView;
-   * @param firstView  The first view;
-   * @param secondView The second view.
+   * @param context Interface to global information about an application environment.
+   * @param show    When true we show the firstView, when false we show the secondView;
+   * @param first   The first view;
+   * @param second  The second view.
    */
-  public static void exchangeViewVisibility(Context context, final boolean show,
-                                            final View firstView, final View secondView) {
+  public static void exchangeViewVisibility(Context context, final boolean show, final View first, final View second) {
     if (context == null) {
       return;
     }
 
-    if (show && firstView.getVisibility() == View.VISIBLE
-        && secondView.getVisibility() == View.GONE) {
+    if (show && first.getVisibility() == View.VISIBLE && second.getVisibility() == View.GONE) {
       return;
     }
 
-    if (!show && secondView.getVisibility() == View.VISIBLE
-        && firstView.getVisibility() == View.GONE) {
+    if (!show && second.getVisibility() == View.VISIBLE && first.getVisibility() == View.GONE) {
       return;
     }
 
     int shortAnimTime = context.getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-    secondView.setVisibility(show ? View.GONE : View.VISIBLE);
-    secondView.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+    second.setVisibility(show ? View.GONE : View.VISIBLE);
+    second.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
-        secondView.setVisibility(show ? View.GONE : View.VISIBLE);
+        second.setVisibility(show ? View.GONE : View.VISIBLE);
       }
     });
 
-    firstView.setVisibility(show ? View.VISIBLE : View.GONE);
-    firstView.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+    first.setVisibility(show ? View.VISIBLE : View.GONE);
+    first.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
-        firstView.setVisibility(show ? View.VISIBLE : View.GONE);
+        first.setVisibility(show ? View.VISIBLE : View.GONE);
       }
     });
   }
@@ -181,8 +178,7 @@ public class UIUtil {
   @SuppressWarnings("deprecation")
   public static int getColor(Context context, int colorResourcesId) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      return context.getResources().getColor
-          (colorResourcesId, context.getTheme());
+      return context.getResources().getColor(colorResourcesId, context.getTheme());
     } else {
       return context.getResources().getColor(colorResourcesId);
     }

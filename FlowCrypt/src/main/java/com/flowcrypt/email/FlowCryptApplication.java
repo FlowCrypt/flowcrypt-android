@@ -103,8 +103,7 @@ public class FlowCryptApplication extends Application {
    * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
    */
   private void intiLeakCanary() {
-    if (SharedPreferencesHelper.getBoolean(
-        PreferenceManager.getDefaultSharedPreferences(this),
+    if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE, false)) {
       if (LeakCanary.isInAnalyzerProcess(this)) {
         // This process is dedicated to LeakCanary for heap analysis.
@@ -114,6 +113,4 @@ public class FlowCryptApplication extends Application {
       LeakCanary.install(this);
     }
   }
-
-
 }

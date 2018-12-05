@@ -40,7 +40,7 @@ public class RFC6068Parser {
   }
 
   public static ExtraActionInfo parse(Uri uri) throws NullPointerException, IllegalArgumentException {
-    if (uri == null || uri.toString() == null) {
+    if (uri == null) {
       throw new NullPointerException("Argument 'uri' must not be null");
     }
 
@@ -54,8 +54,8 @@ public class RFC6068Parser {
       end = schemaSpecific.length();
     }
 
-    CaseInsensitiveParamWrapper params =
-        new CaseInsensitiveParamWrapper(Uri.parse("foo://bar?" + uri.getEncodedQuery()));
+    Uri newUri = Uri.parse("foo://bar?" + uri.getEncodedQuery());
+    CaseInsensitiveParamWrapper params = new CaseInsensitiveParamWrapper(newUri);
 
     // Extract the recipient's email address from the mailto URI if there's one.
     String recipient = Uri.decode(schemaSpecific.substring(0, end));
@@ -78,7 +78,8 @@ public class RFC6068Parser {
         .setCcAddresses(ccList)
         .setBccAddresses(bccList)
         .setSubject(subject)
-        .setBody(body).create();
+        .setBody(body)
+        .create();
   }
 
   private static ArrayList<String> checkToList(ArrayList<String> toList) {
@@ -100,7 +101,6 @@ public class RFC6068Parser {
 
   private static String getFirstParameterValue(CaseInsensitiveParamWrapper params, String paramName) {
     List<String> paramValues = params.getQueryParameters(paramName);
-
     return (paramValues.isEmpty()) ? null : paramValues.get(0);
   }
 

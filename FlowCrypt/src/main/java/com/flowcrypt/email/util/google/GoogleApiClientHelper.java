@@ -43,12 +43,11 @@ public class GoogleApiClientHelper {
   }
 
   public static GoogleApiClient generateGoogleApiClient(Context context, FragmentActivity fragmentActivity,
-                                                        GoogleApiClient.OnConnectionFailedListener
-                                                            onConnectionFailedListener,
+                                                        GoogleApiClient.OnConnectionFailedListener listener,
                                                         GoogleApiClient.ConnectionCallbacks connectionCallbacks,
                                                         GoogleSignInOptions googleSignInOptions) {
     return new GoogleApiClient.Builder(context)
-        .enableAutoManage(fragmentActivity, onConnectionFailedListener)
+        .enableAutoManage(fragmentActivity, listener)
         .addConnectionCallbacks(connectionCallbacks)
         .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
         .build();
@@ -63,8 +62,7 @@ public class GoogleApiClientHelper {
           @Override
           public void onResult(@NonNull Status status) {
             if (!status.isSuccess()) {
-              Toast.makeText(context,
-                  R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
+              Toast.makeText(context, R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show();
             }
           }
         });
@@ -86,12 +84,10 @@ public class GoogleApiClientHelper {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
         baseActivity.startActivityForResult(signInIntent, requestCode);
       } else {
-        baseActivity.showInfoSnackbar(rootView,
-            baseActivity.getString(R.string.google_api_is_not_available));
+        baseActivity.showInfoSnackbar(rootView, baseActivity.getString(R.string.google_api_is_not_available));
       }
     } else {
-      baseActivity.showInfoSnackbar(rootView,
-          baseActivity.getString(R.string.internet_connection_is_not_available));
+      baseActivity.showInfoSnackbar(rootView, baseActivity.getString(R.string.internet_connection_is_not_available));
     }
   }
 }
