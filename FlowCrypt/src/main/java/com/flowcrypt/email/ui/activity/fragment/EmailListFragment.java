@@ -27,8 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.DataBaseUtil;
@@ -707,7 +707,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   }
 
   private void handleCursor(Cursor data) {
-    messageListAdapter.setFolder(onManageEmailsListener.getCurrentFolder());
+    messageListAdapter.setLocalFolder(onManageEmailsListener.getCurrentFolder());
     messageListAdapter.swapCursor(data);
     if (data != null && data.getCount() != 0) {
       emptyView.setVisibility(View.GONE);
@@ -819,9 +819,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     infoDialogFragment.show(getActivity().getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
   }
 
-  private boolean isItSyncOrOutboxFolder(Folder folder) {
-    return folder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
-        || folder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
+  private boolean isItSyncOrOutboxFolder(LocalFolder localFolder) {
+    return localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
+        || localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
   }
 
   /**
@@ -908,7 +908,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     AccountDao getCurrentAccountDao();
 
-    Folder getCurrentFolder();
+    LocalFolder getCurrentFolder();
 
     void onRetryGoogleAuth();
 

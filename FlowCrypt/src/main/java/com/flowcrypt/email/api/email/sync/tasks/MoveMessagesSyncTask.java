@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -29,8 +30,8 @@ import javax.mail.Store;
  */
 
 public class MoveMessagesSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder sourceFolderName;
-  private com.flowcrypt.email.api.email.Folder destinationFolderName;
+  private LocalFolder sourceLocalFolderName;
+  private LocalFolder destinationLocalFolderName;
   private long[] uids;
 
   /**
@@ -38,25 +39,25 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
    *
    * @param ownerKey          The name of the reply to {@link Messenger}.
    * @param requestCode       The unique request code for the reply to {@link Messenger}.
-   * @param sourceFolder      A local implementation of the remote folder which is the source.
-   * @param destinationFolder A local implementation of the remote folder which is the destination.
+   * @param sourceLocalFolder      A local implementation of the remote folder which is the source.
+   * @param destinationLocalFolder A local implementation of the remote folder which is the destination.
    * @param uids              The {@link com.sun.mail.imap.protocol.UID} of the moving
    */
-  public MoveMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder sourceFolder,
-                              com.flowcrypt.email.api.email.Folder destinationFolder, long[] uids) {
+  public MoveMessagesSyncTask(String ownerKey, int requestCode, LocalFolder sourceLocalFolder,
+                              LocalFolder destinationLocalFolder, long[] uids) {
     super(ownerKey, requestCode);
-    this.sourceFolderName = sourceFolder;
-    this.destinationFolderName = destinationFolder;
+    this.sourceLocalFolderName = sourceLocalFolder;
+    this.destinationLocalFolderName = destinationLocalFolder;
     this.uids = uids;
   }
 
   @Override
   public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    IMAPFolder srcFolder = (IMAPFolder) store.getFolder(sourceFolderName.getFullName());
-    IMAPFolder destFolder = (IMAPFolder) store.getFolder(destinationFolderName.getFullName());
+    IMAPFolder srcFolder = (IMAPFolder) store.getFolder(sourceLocalFolderName.getFullName());
+    IMAPFolder destFolder = (IMAPFolder) store.getFolder(destinationLocalFolderName.getFullName());
 
     if (srcFolder == null || !srcFolder.exists()) {
-      throw new IllegalArgumentException("The invalid source folder: " + "\"" + sourceFolderName + "\"");
+      throw new IllegalArgumentException("The invalid source folder: " + "\"" + sourceLocalFolderName + "\"");
     }
 
     srcFolder.open(Folder.READ_WRITE);

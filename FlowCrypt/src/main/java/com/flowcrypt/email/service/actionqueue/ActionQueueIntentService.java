@@ -8,6 +8,7 @@ package com.flowcrypt.email.service.actionqueue;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.util.Log;
@@ -90,13 +91,13 @@ public class ActionQueueIntentService extends JobIntentService {
             Log.d(TAG, "Run " + action.getClass().getSimpleName());
             try {
               action.run(getApplicationContext());
-              resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK,
-                  ActionResultReceiver.generateSuccessBundle(action));
+              Bundle successBundle = ActionResultReceiver.generateSuccessBundle(action);
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK, successBundle);
               Log.d(TAG, action.getClass().getSimpleName() + ": success");
             } catch (Exception e) {
               e.printStackTrace();
-              resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR,
-                  ActionResultReceiver.generateErrorBundle(action, e));
+              Bundle errorBundle = ActionResultReceiver.generateErrorBundle(action, e);
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle);
               Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
             }
           }

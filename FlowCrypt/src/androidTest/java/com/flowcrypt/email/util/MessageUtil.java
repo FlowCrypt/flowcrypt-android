@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.ProcessedMime;
@@ -47,7 +47,7 @@ public class MessageUtil {
     incomingMessageInfo.setCc(addressesCc);
     incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
     incomingMessageInfo.setOriginalRawMessageWithoutAtts(rawMessage);
-    incomingMessageInfo.setFolder(new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false));
+    incomingMessageInfo.setLocalFolder(new LocalFolder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false));
 
     long timestamp = processedMime.getTimeHeader("date");
     if (timestamp != -1) {

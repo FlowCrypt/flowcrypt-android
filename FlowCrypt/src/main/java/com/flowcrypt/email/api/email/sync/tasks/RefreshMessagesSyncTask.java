@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 import android.content.Context;
 
 import com.flowcrypt.email.api.email.EmailUtil;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -35,7 +36,7 @@ import javax.mail.UIDFolder;
  */
 
 public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
-  public RefreshMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder) {
+  public RefreshMessagesSyncTask(String ownerKey, int requestCode, LocalFolder localFolder) {
     super(ownerKey, requestCode, localFolder);
   }
 

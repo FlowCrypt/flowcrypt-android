@@ -57,7 +57,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
   public void attachmentAddedToLoadQueue(Context context, AttachmentInfo attInfo) {
     NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
     builder.setProgress(0, 0, true)
-        .addAction(generateCancelDownloadNotificationAction(context, attInfo))
+        .addAction(genCancelDownloadAction(context, attInfo))
         .setOnlyAlertOnce(true);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -83,7 +83,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
     NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
 
     builder.setProgress(MAX_FILE_SIZE_IN_PERCENTAGE, progress, timeLeftInMillisecond == 0)
-        .addAction(generateCancelDownloadNotificationAction(context, attInfo))
+        .addAction(genCancelDownloadAction(context, attInfo))
         .setCategory(NotificationCompat.CATEGORY_PROGRESS)
         .setSmallIcon(android.R.drawable.stat_sys_download)
         .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
@@ -109,13 +109,13 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param attInfo {@link AttachmentInfo} object which contains a detail information about an attachment.
    * @param uri     The {@link Uri} of the downloaded attachment.
    */
-  public void downloadComplete(Context context, AttachmentInfo attInfo, Uri uri) {
-    Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, uri);
-    intentOpenFile.setAction(Intent.ACTION_VIEW);
-    intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+  public void downloadCompleted(Context context, AttachmentInfo attInfo, Uri uri) {
+    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+    intent.setAction(Intent.ACTION_VIEW);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-    PendingIntent pendingIntentOpenFile = PendingIntent.getActivity(context, 0, intentOpenFile, 0);
+    PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
     NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
 
@@ -125,7 +125,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentText(context.getString(R.string.download_complete))
-        .setContentIntent(pendingIntentOpenFile);
+        .setContentIntent(pendingIntent);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
@@ -151,15 +151,17 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
   public void errorHappened(Context context, AttachmentInfo attInfo, Exception e) {
     NotificationCompat.Builder builder = genDefBuilder(context, attInfo);
 
+    String contentText = TextUtils.isEmpty(e.getMessage()) ? context.getString(R.string
+        .error_occurred_please_try_again) : e.getMessage();
+
     builder.setProgress(0, 0, false)
         .setAutoCancel(true)
         .setOngoing(false)
-        .addAction(generateCancelDownloadNotificationAction(context, attInfo))
-        .addAction(generateRetryDownloadNotificationAction(context, attInfo))
+        .addAction(genCancelDownloadAction(context, attInfo))
+        .addAction(genRetryDownloadingAction(context, attInfo))
         .setCategory(NotificationCompat.CATEGORY_SERVICE)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentText(TextUtils.isEmpty(e.getMessage())
-            ? context.getString(R.string.error_occurred_please_try_again) : e.getMessage());
+        .setContentText(contentText);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
@@ -179,7 +181,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    *
    * @param attInfo The {@link AttachmentInfo} object.
    */
-  public void loadCanceledByUser(AttachmentInfo attInfo) {
+  public void loadingCanceledByUser(AttachmentInfo attInfo) {
     notificationManager.cancel(attInfo.getId(), attInfo.getUid());
   }
 
@@ -204,14 +206,13 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @return The created {@link NotificationCompat.Action}.
    */
   @NonNull
-  private NotificationCompat.Action generateCancelDownloadNotificationAction(Context context, AttachmentInfo attInfo) {
+  private NotificationCompat.Action genCancelDownloadAction(Context context, AttachmentInfo attInfo) {
     Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
     intent.setAction(AttachmentDownloadManagerService.ACTION_CANCEL_DOWNLOAD_ATTACHMENT);
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo);
 
-    PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, new Random().nextInt(), intent, 0);
-    return new NotificationCompat.Action.Builder(0, context.getString(R.string.cancel),
-        cancelDownloadPendingIntent).build();
+    PendingIntent pendingIntent = PendingIntent.getService(context, new Random().nextInt(), intent, 0);
+    return new NotificationCompat.Action.Builder(0, context.getString(R.string.cancel), pendingIntent).build();
   }
 
   /**
@@ -222,15 +223,13 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @return The created {@link NotificationCompat.Action}.
    */
   @NonNull
-  private NotificationCompat.Action generateRetryDownloadNotificationAction(Context context, AttachmentInfo attInfo) {
+  private NotificationCompat.Action genRetryDownloadingAction(Context context, AttachmentInfo attInfo) {
     Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
     intent.setAction(AttachmentDownloadManagerService.ACTION_RETRY_DOWNLOAD_ATTACHMENT);
     intent.putExtra(AttachmentDownloadManagerService.EXTRA_KEY_ATTACHMENT_INFO, attInfo);
 
-    PendingIntent cancelDownloadPendingIntent = PendingIntent.getService(context, new Random().nextInt(), intent, 0);
-
-    return new NotificationCompat.Action.Builder(0, context.getString(R.string.retry),
-        cancelDownloadPendingIntent).build();
+    PendingIntent pendingIntent = PendingIntent.getService(context, new Random().nextInt(), intent, 0);
+    return new NotificationCompat.Action.Builder(0, context.getString(R.string.retry), pendingIntent).build();
   }
 
   /**
@@ -279,13 +278,13 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
       }
     }
 
-    NotificationCompat.Builder groupBuilder =
-        new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
-            .setSmallIcon(groupResourceId)
-            .setGroup(GROUP_NAME_ATTACHMENTS)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
-            .setDefaults(Notification.DEFAULT_ALL)
-            .setGroupSummary(true);
+    NotificationCompat.Builder groupBuilder = new NotificationCompat.Builder(context,
+        NotificationChannelManager.CHANNEL_ID_ATTACHMENTS)
+        .setSmallIcon(groupResourceId)
+        .setGroup(GROUP_NAME_ATTACHMENTS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+        .setDefaults(Notification.DEFAULT_ALL)
+        .setGroupSummary(true);
     notificationManager.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build());
   }
 }

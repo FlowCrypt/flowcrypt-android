@@ -12,7 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.matchers.ToolBarTitleMatcher;
@@ -72,16 +72,16 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class EmailManagerActivityTest extends BaseEmailListActivityTest {
-  private static final List<Folder> FOLDERS;
-  private static final Folder INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT =
-      new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false);
+  private static final List<LocalFolder> LOCAL_FOLDERS;
+  private static final LocalFolder INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT =
+      new LocalFolder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false);
 
   static {
-    FOLDERS = new ArrayList<>();
-    FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
-    FOLDERS.add(new Folder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
-    FOLDERS.add(new Folder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
-    FOLDERS.add(new Folder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
+    LOCAL_FOLDERS = new ArrayList<>();
+    LOCAL_FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT);
+    LOCAL_FOLDERS.add(new LocalFolder("Drafts", "Drafts", 0, new String[]{"\\HasNoChildren", "\\Drafts"}, false));
+    LOCAL_FOLDERS.add(new LocalFolder("Sent", "Sent", 0, new String[]{"\\HasNoChildren", "\\Sent"}, false));
+    LOCAL_FOLDERS.add(new LocalFolder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
   }
 
   private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
@@ -92,7 +92,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule(userWithoutLetters))
       .around(new AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
-      .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, FOLDERS))
+      .around(new AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
       .around(new AddMessageToDatabaseRule(userWithMoreThan21LettersAccount,
           INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(intentsTestRule);

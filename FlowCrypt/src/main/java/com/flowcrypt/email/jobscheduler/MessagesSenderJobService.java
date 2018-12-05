@@ -20,6 +20,7 @@ import android.util.Log;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
@@ -523,11 +524,11 @@ public class MessagesSenderJobService extends JobService {
      */
     private boolean saveCopyOfSentMessage(AccountDao account, Store store, Context context, MimeMessage mimeMsg) {
       FoldersManager foldersManager = FoldersManager.fromDatabase(context, account.getEmail());
-      com.flowcrypt.email.api.email.Folder sentFolder = foldersManager.getFolderSent();
+      LocalFolder sentLocalFolder = foldersManager.getFolderSent();
 
       try {
-        if (sentFolder != null) {
-          IMAPFolder sentRemoteFolder = (IMAPFolder) store.getFolder(sentFolder.getFullName());
+        if (sentLocalFolder != null) {
+          IMAPFolder sentRemoteFolder = (IMAPFolder) store.getFolder(sentLocalFolder.getFullName());
 
           if (sentRemoteFolder == null || !sentRemoteFolder.exists()) {
             throw new IllegalArgumentException("The SENT folder doesn't exists. Can't create a " +

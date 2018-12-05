@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.rules;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 
@@ -25,11 +25,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
  */
 public class AddLabelsToDatabaseRule implements TestRule {
   private AccountDao account;
-  private List<Folder> folders;
+  private List<LocalFolder> localFolders;
 
-  public AddLabelsToDatabaseRule(AccountDao account, List<Folder> folders) {
+  public AddLabelsToDatabaseRule(AccountDao account, List<LocalFolder> localFolders) {
     this.account = account;
-    this.folders = folders;
+    this.localFolders = localFolders;
   }
 
   @Override
@@ -46,7 +46,7 @@ public class AddLabelsToDatabaseRule implements TestRule {
   private void saveLabelsToDatabase() {
     ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
     imapLabelsDaoSource.addRows(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getEmail
-        (), folders);
+        (), localFolders);
   }
 }
 

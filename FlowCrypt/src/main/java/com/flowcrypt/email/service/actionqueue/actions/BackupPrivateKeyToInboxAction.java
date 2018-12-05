@@ -20,6 +20,7 @@ import com.flowcrypt.email.security.SecurityStorageConnector;
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.MimeBodyPart;
 
 /**
  * This action describes a task which backups a private key to INBOX.
@@ -64,8 +65,8 @@ public class BackupPrivateKeyToInboxAction extends Action {
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
       Session session = OpenStoreHelper.getSessionForAccountDao(context, account);
       Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
-      Message message = EmailUtil.genMessageWithPrivateKeys(context, account, session,
-          EmailUtil.genBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate()));
+      MimeBodyPart mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate());
+      Message message = EmailUtil.genMessageWithPrivateKeys(context, account, session, mimeBodyPart);
       transport.sendMessage(message, message.getAllRecipients());
     }
   }

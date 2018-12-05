@@ -45,7 +45,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
         refreshFoldersInfoFromCache();
@@ -69,7 +69,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
         if (!countingIdlingResourceForMessages.isIdleNow()) {
@@ -81,7 +81,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   }
 
   @Override
-  public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
         switch (resultCode) {

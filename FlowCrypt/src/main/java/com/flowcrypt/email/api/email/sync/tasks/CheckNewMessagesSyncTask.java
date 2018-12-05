@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -34,9 +35,9 @@ import javax.mail.UIDFolder;
  * E-mail: DenBond7@gmail.com
  */
 public class CheckNewMessagesSyncTask extends CheckIsLoadedMessagesEncryptedSyncTask {
-  protected com.flowcrypt.email.api.email.Folder localFolder;
+  protected LocalFolder localFolder;
 
-  public CheckNewMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder localFolder) {
+  public CheckNewMessagesSyncTask(String ownerKey, int requestCode, LocalFolder localFolder) {
     super(ownerKey, requestCode, localFolder);
     this.localFolder = localFolder;
   }

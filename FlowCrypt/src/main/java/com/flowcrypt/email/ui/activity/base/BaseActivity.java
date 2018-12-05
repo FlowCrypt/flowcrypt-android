@@ -105,17 +105,17 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   public abstract void onJsServiceConnected();
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
 
   }
 
   @Override
-  public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
 
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
 
   }
 
@@ -418,7 +418,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
         BaseService.OnServiceCallback onServiceCallback = onServiceCallbackWeakReference.get();
         switch (message.what) {
           case BaseService.REPLY_OK:
-            onServiceCallback.onReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
+            onServiceCallback.onReplyReceived(message.arg1, message.arg2, message.obj);
             break;
 
           case BaseService.REPLY_ERROR:
@@ -428,11 +428,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
               exception = (Exception) message.obj;
             }
 
-            onServiceCallback.onErrorFromServiceReceived(message.arg1, message.arg2, exception);
+            onServiceCallback.onErrorHappened(message.arg1, message.arg2, exception);
             break;
 
           case BaseService.REPLY_ACTION_PROGRESS:
-            onServiceCallback.onProgressReplyFromServiceReceived(message.arg1, message.arg2, message.obj);
+            onServiceCallback.onProgressReplyReceived(message.arg1, message.arg2, message.obj);
             break;
         }
       }

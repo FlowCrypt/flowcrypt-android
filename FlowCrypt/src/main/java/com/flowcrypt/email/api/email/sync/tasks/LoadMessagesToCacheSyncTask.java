@@ -10,6 +10,7 @@ import android.content.Context;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -34,11 +35,11 @@ import javax.mail.UIDFolder;
 
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
   private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
-  private com.flowcrypt.email.api.email.Folder localFolder;
+  private LocalFolder localFolder;
   private int countOfAlreadyLoadedMessages;
 
   public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode,
-                                     com.flowcrypt.email.api.email.Folder localFolder, int countOfAlreadyLoadedMsgs) {
+                                     LocalFolder localFolder, int countOfAlreadyLoadedMsgs) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
     this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMsgs;

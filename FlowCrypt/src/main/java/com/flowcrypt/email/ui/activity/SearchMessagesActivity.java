@@ -16,7 +16,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
@@ -45,12 +45,12 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   private SearchView searchView;
   private AccountDao account;
   private String initQuery;
-  private Folder folder;
+  private LocalFolder localFolder;
 
-  public static Intent newIntent(Context context, String query, Folder folder) {
+  public static Intent newIntent(Context context, String query, LocalFolder localFolder) {
     Intent intent = new Intent(context, SearchMessagesActivity.class);
     intent.putExtra(EXTRA_KEY_QUERY, query);
-    intent.putExtra(EXTRA_KEY_FOLDER, folder);
+    intent.putExtra(EXTRA_KEY_FOLDER, localFolder);
     return intent;
   }
 
@@ -77,10 +77,10 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
     this.account = new AccountDaoSource().getActiveAccountInformation(this);
     if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_FOLDER)) {
       this.initQuery = getIntent().getStringExtra(EXTRA_KEY_QUERY);
-      this.folder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
-      if (folder != null) {
-        folder.setFolderAlias(SEARCH_FOLDER_NAME);
-        folder.setSearchQuery(initQuery);
+      this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
+      if (localFolder != null) {
+        localFolder.setFolderAlias(SEARCH_FOLDER_NAME);
+        localFolder.setSearchQuery(initQuery);
       }
     } else {
       finish();
@@ -99,20 +99,20 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.sync_request_code_search_messages:
-        super.onReplyFromServiceReceived(R.id.syns_request_code_load_next_messages, resultCode, obj);
+        super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj);
         break;
 
       default:
-        super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+        super.onReplyReceived(requestCode, resultCode, obj);
         break;
     }
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.sync_request_code_search_messages:
         if (!countingIdlingResourceForMessages.isIdleNow()) {
@@ -167,7 +167,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
       return true;
     }
 
-    folder.setSearchQuery(initQuery);
+    localFolder.setSearchQuery(initQuery);
     updateEmailsListFragmentAfterFolderChange();
     return false;
   }
@@ -184,8 +184,8 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   }
 
   @Override
-  public Folder getCurrentFolder() {
-    return folder;
+  public LocalFolder getCurrentFolder() {
+    return localFolder;
   }
 
   @Override

@@ -57,8 +57,8 @@ public class RegisterUserPublicKeyAction extends Action {
   @Override
   public void run(Context context) throws IOException {
     ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(
-        new InitialLegacySubmitModel(email, publicKey)).execute();
+    InitialLegacySubmitModel body = new InitialLegacySubmitModel(email, publicKey);
+    Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(body).execute();
 
     InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
     if (initialLegacySubmitResponse == null) {
@@ -66,8 +66,8 @@ public class RegisterUserPublicKeyAction extends Action {
     }
 
     if (initialLegacySubmitResponse.getApiError() != null) {
-      if (initialLegacySubmitResponse.getApiError().getCode() < 400
-          || initialLegacySubmitResponse.getApiError().getCode() >= 500) {
+      int code = initialLegacySubmitResponse.getApiError().getCode();
+      if (code < 400 || code >= 500) {
         throw new ApiException(initialLegacySubmitResponse.getApiError());
       }
     }

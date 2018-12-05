@@ -14,9 +14,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
@@ -54,16 +54,16 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       ("EXTRA_KEY_GENERAL_MESSAGE_DETAILS", MessageDetailsActivity.class);
 
   private GeneralMessageDetails generalMessageDetails;
-  private Folder folder;
+  private LocalFolder localFolder;
   private boolean isNeedToReceiveMessageBody;
   private boolean isBackEnable = true;
   private boolean isRequestMessageDetailsStarted;
   private boolean isNeedToRetrieveIncomingMsg = true;
 
-  public static Intent getIntent(Context context, Folder folder, GeneralMessageDetails generalMessageDetails) {
+  public static Intent getIntent(Context context, LocalFolder localFolder, GeneralMessageDetails details) {
     Intent intent = new Intent(context, MessageDetailsActivity.class);
-    intent.putExtra(EXTRA_KEY_FOLDER, folder);
-    intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, generalMessageDetails);
+    intent.putExtra(EXTRA_KEY_FOLDER, localFolder);
+    intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, details);
     return intent;
   }
 
@@ -81,7 +81,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (getIntent() != null) {
-      this.folder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
+      this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
       this.generalMessageDetails = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
     }
 
@@ -115,14 +115,14 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             null,
             MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
                 + MessageDaoSource.COL_UID + " = ? ",
-            new String[]{generalMessageDetails.getEmail(), folder.getFolderAlias(),
+            new String[]{generalMessageDetails.getEmail(), localFolder.getFolderAlias(),
                 String.valueOf(generalMessageDetails.getUid())}, null);
 
       case R.id.loader_id_load_attachments:
         return new CursorLoader(this, new AttachmentDaoSource().getBaseContentUri(),
             null, AttachmentDaoSource.COL_EMAIL + " = ?" + " AND " + AttachmentDaoSource.COL_FOLDER
             + " = ?" + " AND " + AttachmentDaoSource.COL_UID + " = ?",
-            new String[]{generalMessageDetails.getEmail(), folder.getFolderAlias(),
+            new String[]{generalMessageDetails.getEmail(), localFolder.getFolderAlias(),
                 String.valueOf(generalMessageDetails.getUid())}, null);
 
       default:
@@ -144,7 +144,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
               this.isRequestMessageDetailsStarted = true;
               loadMessageDetails(R.id.syns_request_code_load_message_details,
-                  folder, generalMessageDetails.getUid());
+                  localFolder, generalMessageDetails.getUid());
             } else {
               isNeedToReceiveMessageBody = true;
             }
@@ -152,7 +152,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             isNeedToRetrieveIncomingMsg = false;
             isNeedToReceiveMessageBody = false;
             messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
-                folder.getFolderAlias(), generalMessageDetails.getUid());
+                localFolder.getFolderAlias(), generalMessageDetails.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             decryptMessage(R.id.js_decrypt_message, generalMessageDetails
                 .getRawMessageWithoutAttachments());
@@ -202,19 +202,19 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onSyncServiceConnected() {
     super.onSyncServiceConnected();
     if (isNeedToReceiveMessageBody) {
-      loadMessageDetails(R.id.syns_request_code_load_message_details, folder, generalMessageDetails.getUid());
+      loadMessageDetails(R.id.syns_request_code_load_message_details, localFolder, generalMessageDetails.getUid());
     }
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_load_message_details:
         isRequestMessageDetailsStarted = false;
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
             new MessageDaoSource().setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
-                folder.getFolderAlias(), generalMessageDetails.getUid());
+                localFolder.getFolderAlias(), generalMessageDetails.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
             break;
@@ -250,9 +250,9 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             Toast.makeText(this, toastMessageResourcesId, Toast.LENGTH_SHORT).show();
 
             new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
-                folder.getFolderAlias(), generalMessageDetails.getUid());
+                localFolder.getFolderAlias(), generalMessageDetails.getUid());
             new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-                folder.getFolderAlias(), generalMessageDetails.getUid());
+                localFolder.getFolderAlias(), generalMessageDetails.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             finish();
             break;
@@ -287,7 +287,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_message_details:
         isRequestMessageDetailsStarted = false;
@@ -311,7 +311,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onArchiveMessageClicked() {
     isBackEnable = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-    moveMessage(R.id.syns_request_archive_message, folder,
+    moveMessage(R.id.syns_request_archive_message, localFolder,
         foldersManager.getFolderArchive(), generalMessageDetails.getUid());
   }
 
@@ -340,7 +340,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       finish();
     } else {
       FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-      moveMessage(R.id.syns_request_delete_message, folder,
+      moveMessage(R.id.syns_request_delete_message, localFolder,
           foldersManager.getFolderTrash(), generalMessageDetails.getUid());
     }
   }
@@ -349,15 +349,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onMoveMessageToInboxClicked() {
     isBackEnable = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-    moveMessage(R.id.syns_request_move_message_to_inbox, folder,
+    moveMessage(R.id.syns_request_move_message_to_inbox, localFolder,
         foldersManager.getFolderInbox(), generalMessageDetails.getUid());
   }
 
   private void messageNotAvailableInFolder() {
     new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
-        folder.getFolderAlias(), generalMessageDetails.getUid());
+        localFolder.getFolderAlias(), generalMessageDetails.getUid());
     new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-        folder.getFolderAlias(), generalMessageDetails.getUid());
+        localFolder.getFolderAlias(), generalMessageDetails.getUid());
     setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
     Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
         Toast.LENGTH_LONG).show();

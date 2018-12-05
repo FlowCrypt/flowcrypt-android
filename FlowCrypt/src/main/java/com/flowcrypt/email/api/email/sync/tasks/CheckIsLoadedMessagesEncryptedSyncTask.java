@@ -10,6 +10,7 @@ import android.os.Messenger;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -30,7 +31,7 @@ import javax.mail.Store;
  * E-mail: DenBond7@gmail.com
  */
 public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder localFolder;
+  private LocalFolder localFolder;
 
   /**
    * The base constructor.
@@ -40,7 +41,7 @@ public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
    * @param localFolder The local implementation of the remote folder
    */
   public CheckIsLoadedMessagesEncryptedSyncTask(String ownerKey, int requestCode,
-                                                com.flowcrypt.email.api.email.Folder localFolder) {
+                                                LocalFolder localFolder) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
   }

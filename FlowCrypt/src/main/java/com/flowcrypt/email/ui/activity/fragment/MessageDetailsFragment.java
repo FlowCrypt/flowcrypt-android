@@ -33,9 +33,9 @@ import android.widget.Toast;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
@@ -101,7 +101,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   private java.text.DateFormat dateFormat;
   private IncomingMessageInfo incomingMessageInfo;
   private GeneralMessageDetails generalMessageDetails;
-  private Folder folder;
+  private LocalFolder localFolder;
   private FoldersManager.FolderType folderType;
 
   private boolean isAdditionalActionEnable;
@@ -136,10 +136,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     if (activityIntent != null) {
       this.generalMessageDetails = activityIntent.getParcelableExtra(MessageDetailsActivity
           .EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
-      this.folder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER);
+      this.localFolder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER);
     }
 
-    updateActionsVisibility(folder);
+    updateActionsVisibility(localFolder);
   }
 
   @Override
@@ -292,7 +292,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                   public void onClick(View v) {
                     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
                     ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
-                        R.id.syns_request_code_load_message_details, folder,
+                        R.id.syns_request_code_load_message_details, localFolder,
                         generalMessageDetails.getUid());
                   }
                 });
@@ -358,7 +358,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     if (getActivity() != null) {
       getActivity().invalidateOptionsMenu();
     }
-    incomingMessageInfo.setFolder(folder);
+    incomingMessageInfo.setLocalFolder(localFolder);
     incomingMessageInfo.setUid(generalMessageDetails.getUid());
     updateMessageBody();
     UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMessageContainer);
@@ -467,10 +467,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   /**
    * Update actions visibility using {@link FoldersManager.FolderType}
    *
-   * @param folder The folder where current message exists.
+   * @param localFolder The localFolder where current message exists.
    */
-  private void updateActionsVisibility(Folder folder) {
-    folderType = FoldersManager.getFolderTypeForImapFolder(folder);
+  private void updateActionsVisibility(LocalFolder localFolder) {
+    folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
 
     if (folderType != null) {
       switch (folderType) {

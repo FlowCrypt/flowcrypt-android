@@ -9,7 +9,7 @@ import android.content.Context;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -34,9 +34,9 @@ import javax.mail.UIDFolder;
  * E-mail: DenBond7@gmail.com
  */
 public class SyncFolderSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder localFolder;
+  private LocalFolder localFolder;
 
-  public SyncFolderSyncTask(String ownerKey, int requestCode, Folder localFolder) {
+  public SyncFolderSyncTask(String ownerKey, int requestCode, LocalFolder localFolder) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
   }

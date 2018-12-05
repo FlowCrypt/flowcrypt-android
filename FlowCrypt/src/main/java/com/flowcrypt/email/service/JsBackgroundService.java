@@ -226,9 +226,13 @@ public class JsBackgroundService extends BaseService implements JsListener {
       if (jsInBackgroundManagerWeakReference.get() != null) {
         JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakReference.get();
         BaseService.Action action = null;
+        String ownerKey = null;
+        int requestCode = -1;
 
         if (message.obj instanceof BaseService.Action) {
           action = (BaseService.Action) message.obj;
+          ownerKey = action.getOwnerKey();
+          requestCode = action.getRequestCode();
         }
 
         switch (message.what) {
@@ -236,7 +240,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
 
             if (replyToMessengersForAdd != null && action != null) {
-              replyToMessengersForAdd.put(action.getOwnerKey(), message.replyTo);
+              replyToMessengersForAdd.put(ownerKey, message.replyTo);
             }
             break;
 
@@ -244,7 +248,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakReference.get();
 
             if (replyToMessengersForRemove != null && action != null) {
-              replyToMessengersForRemove.remove(action.getOwnerKey());
+              replyToMessengersForRemove.remove(ownerKey);
             }
             break;
 
@@ -252,8 +256,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             if (jsInBackgroundManager != null && action != null) {
               String rawMessage = (String) action.getObject();
 
-              jsInBackgroundManager.decryptMessage(action.getOwnerKey(), action.getRequestCode(),
-                  rawMessage);
+              jsInBackgroundManager.decryptMessage(ownerKey, requestCode, rawMessage);
             }
             break;
 

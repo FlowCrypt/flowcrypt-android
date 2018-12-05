@@ -19,8 +19,8 @@ import android.util.Log;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
@@ -121,7 +121,7 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onPrivateKeyFound(AccountDao account, List<String> keys, String ownerKey, int requestCode) {
+  public void onPrivateKeysFound(AccountDao account, List<String> keys, String ownerKey, int requestCode) {
 
   }
 
@@ -143,25 +143,25 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageDetailsReceived(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, long uid,
+  public void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
                                        Message msg, String rawMsgWithOutAtts, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessagesReceived(AccountDao account, Folder localFolder, IMAPFolder remoteFolder,
+  public void onMessagesReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
                                  Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onSearchMessagesReceived(AccountDao account, Folder folder, IMAPFolder remoteFolder,
+  public void onSearchMessagesReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
                                        Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onRefreshMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  public void onRefreshMessagesReceived(AccountDao account, LocalFolder localFolder,
                                         IMAPFolder remoteFolder, Message[] newMsgs,
                                         Message[] updateMsgs, String ownerKey, int requestCode) {
     try {
@@ -224,19 +224,19 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageChanged(AccountDao account, Folder localFolder, IMAPFolder remoteFolder, Message msg,
+  public void onMessageChanged(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message msg,
                                String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onIdentificationToEncryptionCompleted(AccountDao account, Folder localFolder, IMAPFolder remoteFolder,
-                                                    String ownerKey, int requestCode) {
+  public void onIdentificationToEncryptionCompleted(AccountDao account, LocalFolder localFolder,
+                                                    IMAPFolder remoteFolder, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onNewMessagesReceived(final AccountDao account, Folder localFolder, IMAPFolder remoteFolder,
+  public void onNewMessagesReceived(final AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
                                     Message[] newMsgs, LongSparseArray<Boolean> msgsEncryptionStates,
                                     String ownerKey, int requestCode) {
     try {
@@ -300,7 +300,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
           if (account != null) {
             FoldersManager foldersManager = FoldersManager.fromDatabase(context, account.getEmail());
-            Folder localFolder = foldersManager.findInboxFolder();
+            LocalFolder localFolder = foldersManager.findInboxFolder();
 
             if (localFolder != null) {
               sess = OpenStoreHelper.getSessionForAccountDao(context, account);

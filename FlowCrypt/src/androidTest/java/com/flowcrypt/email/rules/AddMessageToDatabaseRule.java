@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.rules;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -35,20 +35,20 @@ import androidx.test.platform.app.InstrumentationRegistry;
  */
 public class AddMessageToDatabaseRule implements TestRule {
   private AccountDao account;
-  private Folder folder;
+  private LocalFolder localFolder;
   private long uid;
   private Message message;
 
-  public AddMessageToDatabaseRule(AccountDao account, Folder folder, long uid, Message message) {
+  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder, long uid, Message message) {
     this.account = account;
-    this.folder = folder;
+    this.localFolder = localFolder;
     this.uid = uid;
     this.message = message;
   }
 
-  public AddMessageToDatabaseRule(AccountDao account, Folder folder) {
+  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder) {
     this.account = account;
-    this.folder = folder;
+    this.localFolder = localFolder;
 
     try {
       Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
@@ -58,7 +58,7 @@ public class AddMessageToDatabaseRule implements TestRule {
               .getTargetContext(), account,
           session);
 
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       imapFolder.open(javax.mail.Folder.READ_ONLY);
 
       Message[] messages;
@@ -94,7 +94,7 @@ public class AddMessageToDatabaseRule implements TestRule {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
     messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         account.getEmail(),
-        folder.getFolderAlias(),
+        localFolder.getFolderAlias(),
         uid,
         message, false);
   }

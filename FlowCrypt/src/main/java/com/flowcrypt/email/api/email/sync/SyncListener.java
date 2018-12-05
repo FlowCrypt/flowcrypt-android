@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 import android.content.Context;
 import android.util.LongSparseArray;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -55,7 +56,7 @@ public interface SyncListener {
    * @param requestCode The unique request code for the reply to
    *                    {@link android.os.Messenger}.
    */
-  void onPrivateKeyFound(AccountDao account, List<String> keys, String ownerKey, int requestCode);
+  void onPrivateKeysFound(AccountDao account, List<String> keys, String ownerKey, int requestCode);
 
   /**
    * This method called when a message was sent.
@@ -110,7 +111,7 @@ public interface SyncListener {
    * @param requestCode       The unique request code for the reply to
    *                          {@link android.os.Messenger}.
    */
-  void onMessageDetailsReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder,
                                 IMAPFolder remoteFolder, long uid, Message msg, String rawMsgWithOutAtts,
                                 String ownerKey, int requestCode);
 
@@ -126,7 +127,7 @@ public interface SyncListener {
    * @param requestCode  The unique request code for the reply to
    *                     {@link android.os.Messenger}.
    */
-  void onMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onMessagesReceived(AccountDao account, LocalFolder localFolder,
                           IMAPFolder remoteFolder, Message[] msgs, String ownerKey, int requestCode);
 
   /**
@@ -140,7 +141,7 @@ public interface SyncListener {
    * @param ownerKey             The name of the reply to {@link android.os.Messenger}.
    * @param requestCode          The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onNewMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onNewMessagesReceived(AccountDao account, LocalFolder localFolder,
                              IMAPFolder remoteFolder, Message[] newMsgs,
                              LongSparseArray<Boolean> msgsEncryptionStates, String ownerKey, int requestCode);
 
@@ -156,7 +157,7 @@ public interface SyncListener {
    * @param requestCode  The unique request code for the reply to
    *                     {@link android.os.Messenger}.
    */
-  void onSearchMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onSearchMessagesReceived(AccountDao account, LocalFolder localFolder,
                                 IMAPFolder remoteFolder, Message[] msgs, String ownerKey, int requestCode);
 
   /**
@@ -170,7 +171,7 @@ public interface SyncListener {
    * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
    * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onRefreshMessagesReceived(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onRefreshMessagesReceived(AccountDao account, LocalFolder localFolder,
                                  IMAPFolder remoteFolder, Message[] newMsgs, Message[] updateMsgs,
                                  String ownerKey, int requestCode);
 
@@ -215,7 +216,7 @@ public interface SyncListener {
    * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
    * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onMessageChanged(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onMessageChanged(AccountDao account, LocalFolder localFolder,
                         IMAPFolder remoteFolder, Message msg, String ownerKey, int requestCode);
 
   /**
@@ -228,6 +229,6 @@ public interface SyncListener {
    * @param requestCode  The unique request code for the reply to
    *                     {@link android.os.Messenger}.
    */
-  void onIdentificationToEncryptionCompleted(AccountDao account, com.flowcrypt.email.api.email.Folder localFolder,
+  void onIdentificationToEncryptionCompleted(AccountDao account, LocalFolder localFolder,
                                              IMAPFolder remoteFolder, String ownerKey, int requestCode);
 }

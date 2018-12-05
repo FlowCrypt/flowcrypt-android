@@ -19,26 +19,25 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  */
 
 public class DownloadAttachmentTaskResult {
-  private AttachmentInfo attInfo;
+  private AttachmentInfo att;
   private Exception exception;
   private Uri uri;
   private int progressInPercentage;
   private long timeLeft;
   private boolean isLast;
 
-  public DownloadAttachmentTaskResult(AttachmentInfo attInfo, Exception e, Uri uri, int progressInPercentage, long
-      timeLeft,
+  public DownloadAttachmentTaskResult(AttachmentInfo att, Exception e, Uri uri, int progress, long timeLeft,
                                       boolean isLast) {
-    this.attInfo = attInfo;
+    this.att = att;
     this.exception = e;
     this.uri = uri;
-    this.progressInPercentage = progressInPercentage;
+    this.progressInPercentage = progress;
     this.timeLeft = timeLeft;
     this.isLast = isLast;
   }
 
   public AttachmentInfo getAttachmentInfo() {
-    return attInfo;
+    return att;
   }
 
   public Exception getException() {
@@ -84,7 +83,7 @@ public class DownloadAttachmentTaskResult {
       return this;
     }
 
-    public Builder setProgressInPercentage(int progressInPercentage) {
+    public Builder setProgress(int progressInPercentage) {
       this.progressInPercentage = progressInPercentage;
       return this;
     }

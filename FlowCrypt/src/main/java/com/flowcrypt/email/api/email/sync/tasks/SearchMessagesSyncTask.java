@@ -10,6 +10,7 @@ import android.os.Messenger;
 
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -30,7 +31,7 @@ import javax.mail.search.SubjectTerm;
 import androidx.annotation.NonNull;
 
 /**
- * This task finds messages on some folder.
+ * This task finds messages on some localFolder.
  *
  * @author DenBond7
  * Date: 26.04.2018
@@ -39,7 +40,7 @@ import androidx.annotation.NonNull;
  */
 
 public class SearchMessagesSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder folder;
+  private LocalFolder localFolder;
   private int countOfAlreadyLoadedMessages;
 
   /**
@@ -48,10 +49,10 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
    * @param ownerKey    The name of the reply to {@link Messenger}.
    * @param requestCode The unique request code for the reply to {@link Messenger}.
    */
-  public SearchMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
+  public SearchMessagesSyncTask(String ownerKey, int requestCode, LocalFolder localFolder,
                                 int countOfAlreadyLoadedMessages) {
     super(ownerKey, requestCode);
-    this.folder = folder;
+    this.localFolder = localFolder;
     this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
   }
 
@@ -60,7 +61,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
     super.runIMAPAction(account, session, store, listener);
 
     if (listener != null) {
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getFullName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       imapFolder.open(Folder.READ_ONLY);
 
       if (countOfAlreadyLoadedMessages < 0) {
@@ -74,7 +75,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
       int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
       if (end < 1) {
-        listener.onSearchMessagesReceived(account, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onSearchMessagesReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         if (start < 1) {
           start = 1;
@@ -91,7 +92,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
         imapFolder.fetch(bufferedMsgs, fetchProfile);
 
-        listener.onSearchMessagesReceived(account, folder, imapFolder, bufferedMsgs, ownerKey, requestCode);
+        listener.onSearchMessagesReceived(account, localFolder, imapFolder, bufferedMsgs, ownerKey, requestCode);
       }
 
       imapFolder.close(false);
@@ -114,15 +115,15 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
       if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
         StringTerm stringTerm = (StringTerm) searchTerm;
-        return new GmailRawSearchTerm(folder.getSearchQuery() + " AND (" + stringTerm.getPattern() + ")");
+        return new GmailRawSearchTerm(localFolder.getSearchQuery() + " AND (" + stringTerm.getPattern() + ")");
       } else {
-        return new AndTerm(searchTerm, new SubjectTerm(folder.getSearchQuery()));
+        return new AndTerm(searchTerm, new SubjectTerm(localFolder.getSearchQuery()));
       }
     } else {
       if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-        return new GmailRawSearchTerm(folder.getSearchQuery());
+        return new GmailRawSearchTerm(localFolder.getSearchQuery());
       } else {
-        return new SubjectTerm(folder.getSearchQuery());
+        return new SubjectTerm(localFolder.getSearchQuery());
       }
     }
   }

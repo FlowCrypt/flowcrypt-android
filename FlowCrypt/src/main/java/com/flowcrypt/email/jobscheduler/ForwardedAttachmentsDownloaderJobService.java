@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -221,8 +222,12 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
         String detLabel = details.getLabel();
         File msgAttsDir = new File(attCacheDir, details.getAttachmentsDir());
         try {
-          String[] pubKeys = details.isEncrypted() ? SecurityUtils.getRecipientsPubKeys(context, js, EmailUtil
-              .getAllRecipients(context, details), account, EmailUtil.getFirstAddressString(details.getFrom())) : null;
+          String[] pubKeys = null;
+          if (details.isEncrypted()) {
+            PgpContact[] pgpContacts = EmailUtil.getAllRecipients(context, details);
+            String senderEmail = EmailUtil.getFirstAddressString(details.getFrom());
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, js, pgpContacts, account, senderEmail);
+          }
 
           List<AttachmentInfo> atts = attDaoSource.getAttachmentInfoList(context, account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, details.getUid());

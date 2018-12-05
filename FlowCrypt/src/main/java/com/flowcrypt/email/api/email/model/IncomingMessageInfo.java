@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.model.messages.MessagePart;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class IncomingMessageInfo extends MessageInfo {
   private Date receiveDate;
   private String originalRawMessageWithoutAtts;
   private List<MessagePart> msgParts;
-  private Folder folder;
+  private LocalFolder localFolder;
   private String htmlMsg;
   private boolean hasPlainText;
 
@@ -62,7 +62,7 @@ public class IncomingMessageInfo extends MessageInfo {
     this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
     this.originalRawMessageWithoutAtts = in.readString();
     this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
-    this.folder = in.readParcelable(Folder.class.getClassLoader());
+    this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
     this.htmlMsg = in.readString();
     this.hasPlainText = in.readByte() != 0;
   }
@@ -76,7 +76,7 @@ public class IncomingMessageInfo extends MessageInfo {
         ", receiveDate=" + receiveDate +
         ", originalRawMessageWithoutAtts='" + originalRawMessageWithoutAtts + '\'' +
         ", msgParts=" + msgParts +
-        ", folder=" + folder +
+        ", localFolder=" + localFolder +
         ", htmlMsg='" + htmlMsg + '\'' +
         ", hasPlainText=" + hasPlainText +
         "} " + super.toString();
@@ -98,7 +98,7 @@ public class IncomingMessageInfo extends MessageInfo {
     dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
     dest.writeString(this.originalRawMessageWithoutAtts);
     dest.writeTypedList(this.msgParts);
-    dest.writeParcelable(this.folder, flags);
+    dest.writeParcelable(this.localFolder, flags);
     dest.writeString(this.htmlMsg);
     dest.writeByte(this.hasPlainText ? (byte) 1 : (byte) 0);
   }
@@ -141,12 +141,12 @@ public class IncomingMessageInfo extends MessageInfo {
     this.msgParts = messageParts;
   }
 
-  public Folder getFolder() {
-    return folder;
+  public LocalFolder getLocalFolder() {
+    return localFolder;
   }
 
-  public void setFolder(Folder folder) {
-    this.folder = folder;
+  public void setLocalFolder(LocalFolder localFolder) {
+    this.localFolder = localFolder;
   }
 
   public ArrayList<String> getTo() {

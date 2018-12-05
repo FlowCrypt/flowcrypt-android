@@ -240,8 +240,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         this.incomingMessageInfo = intent.getParcelableExtra(
             CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
 
-        if (incomingMessageInfo != null && incomingMessageInfo.getFolder() != null) {
-          this.folderType = FoldersManager.getFolderTypeForImapFolder(incomingMessageInfo.getFolder());
+        if (incomingMessageInfo != null && incomingMessageInfo.getLocalFolder() != null) {
+          this.folderType = FoldersManager.getFolderTypeForImapFolder(incomingMessageInfo.getLocalFolder());
         }
 
         if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {

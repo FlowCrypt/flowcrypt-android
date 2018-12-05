@@ -76,7 +76,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         keys.add(keyDetails.getValue());
       }
 
-      listener.onPrivateKeyFound(account, keys, ownerKey, requestCode);
+      listener.onPrivateKeysFound(account, keys, ownerKey, requestCode);
     }
   }
 

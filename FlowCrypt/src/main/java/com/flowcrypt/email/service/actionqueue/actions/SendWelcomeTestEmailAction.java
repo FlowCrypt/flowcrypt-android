@@ -45,7 +45,6 @@ public class SendWelcomeTestEmailAction extends Action {
     this.publicKey = publicKey;
   }
 
-
   protected SendWelcomeTestEmailAction(Parcel in) {
     super(in);
     this.publicKey = in.readString();
@@ -54,8 +53,8 @@ public class SendWelcomeTestEmailAction extends Action {
   @Override
   public void run(Context context) throws Exception {
     ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    Response<TestWelcomeResponse> response = apiService.postTestWelcome(new TestWelcomeModel(email,
-        publicKey)).execute();
+    TestWelcomeModel body = new TestWelcomeModel(email, publicKey);
+    Response<TestWelcomeResponse> response = apiService.postTestWelcome(body).execute();
 
     TestWelcomeResponse testWelcomeResponse = response.body();
 

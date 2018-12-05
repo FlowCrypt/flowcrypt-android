@@ -81,7 +81,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
 
   @SuppressWarnings("unchecked")
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_send_backup_with_private_key_to_key_owner:
         isPrivateKeySendingNow = false;
@@ -95,7 +95,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_send_backup_with_private_key_to_key_owner:
         isPrivateKeySendingNow = false;

@@ -42,8 +42,7 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CheckClipboardToFindKeyService extends Service implements ClipboardManager
-    .OnPrimaryClipChangedListener {
+public class CheckClipboardToFindKeyService extends Service implements ClipboardManager.OnPrimaryClipChangedListener {
   public static final String TAG = CheckClipboardToFindKeyService.class.getSimpleName();
 
   private volatile Looper serviceWorkerLooper;
@@ -141,27 +140,23 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
    */
   private static class ReplyHandler extends Handler {
     static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService>
-        checkClipboardToFindPrivateKeyServiceWeakReference;
+    private final WeakReference<CheckClipboardToFindKeyService> weakReference;
 
     ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>(checkClipboardToFindKeyService);
+      this.weakReference = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
     public void handleMessage(Message message) {
       switch (message.what) {
         case MESSAGE_WHAT:
-          if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
-            CheckClipboardToFindKeyService
-                checkClipboardToFindKeyService =
-                checkClipboardToFindPrivateKeyServiceWeakReference.get();
+          if (weakReference.get() != null) {
+            CheckClipboardToFindKeyService checkClipboardToFindKeyService = weakReference.get();
 
             String key = (String) message.obj;
 
             checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
-                checkClipboardToFindPrivateKeyServiceWeakReference.get().isMustBePrivateKey,
-                KeyDetails.Type.CLIPBOARD);
+                weakReference.get().isMustBePrivateKey, KeyDetails.Type.CLIPBOARD);
             Log.d(TAG, "Found a valid private key in clipboard");
           }
           break;
@@ -175,12 +170,12 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
    */
   private static final class ServiceWorkerHandler extends Handler {
     static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService> checkClipboardToFindPrivateKeyServiceWeakReference;
+    private final WeakReference<CheckClipboardToFindKeyService> weakReference;
     private Js js;
 
     ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
       super(looper);
-      this.checkClipboardToFindPrivateKeyServiceWeakReference = new WeakReference<>(checkClipboardToFindKeyService);
+      this.weakReference = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
@@ -189,8 +184,8 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         case MESSAGE_WHAT:
           if (js == null) {
             try {
-              if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null) {
-                js = new Js(checkClipboardToFindPrivateKeyServiceWeakReference.get(), null);
+              if (weakReference.get() != null) {
+                js = new Js(weakReference.get(), null);
               }
             } catch (IOException e) {
               e.printStackTrace();
@@ -205,9 +200,8 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
               String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
               PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
-              if (checkClipboardToFindPrivateKeyServiceWeakReference.get() != null &&
-                  js.is_valid_key(pgpKey, checkClipboardToFindPrivateKeyServiceWeakReference.get()
-                      .isMustBePrivateKey)) {
+              if (weakReference.get() != null &&
+                  js.is_valid_key(pgpKey, weakReference.get().isMustBePrivateKey)) {
                 try {
                   Messenger messenger = msg.replyTo;
                   messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));

@@ -17,7 +17,7 @@ import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;
@@ -66,14 +66,14 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   /**
    * @param context     Interface to global information about an application environment.
    * @param accountName The account name which are an owner of the folder.
-   * @param folder      The {@link Folder} object which contains information about
+   * @param localFolder The {@link LocalFolder} object which contains information about
    *                    {@link com.sun.mail.imap.IMAPFolder}.
    * @return A {@link Uri} of the created row.
    */
-  public Uri addRow(Context context, String accountName, Folder folder) {
+  public Uri addRow(Context context, String accountName, LocalFolder localFolder) {
     ContentResolver contentResolver = context.getContentResolver();
-    if (!TextUtils.isEmpty(accountName) && folder != null && contentResolver != null) {
-      ContentValues contentValues = prepareContentValues(accountName, folder);
+    if (!TextUtils.isEmpty(accountName) && localFolder != null && contentResolver != null) {
+      ContentValues contentValues = prepareContentValues(accountName, localFolder);
       return contentResolver.insert(getBaseContentUri(), contentValues);
     } else return null;
   }
@@ -81,21 +81,21 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   /**
    * Add information about folders to local the database.
    *
-   * @param context     Interface to global information about an application environment.
-   * @param accountName The account name which are an owner of the folder.
-   * @param folders     The folders array.
+   * @param context      Interface to global information about an application environment.
+   * @param accountName  The account name which are an owner of the folder.
+   * @param localFolders The folders array.
    * @return @return the number of newly created rows.
    */
-  public int addRows(Context context, String accountName, Collection<Folder> folders) {
-    if (folders != null) {
+  public int addRows(Context context, String accountName, Collection<LocalFolder> localFolders) {
+    if (localFolders != null) {
       ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[folders.size()];
+      ContentValues[] contentValuesArray = new ContentValues[localFolders.size()];
 
-      Folder[] foldersArray = folders.toArray(new Folder[0]);
+      LocalFolder[] foldersArray = localFolders.toArray(new LocalFolder[0]);
 
-      for (int i = 0; i < folders.size(); i++) {
-        Folder folder = foldersArray[i];
-        ContentValues contentValues = prepareContentValues(accountName, folder);
+      for (int i = 0; i < localFolders.size(); i++) {
+        LocalFolder localFolder = foldersArray[i];
+        ContentValues contentValues = prepareContentValues(accountName, localFolder);
         contentValuesArray[i] = contentValues;
       }
 
@@ -104,13 +104,13 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Generate a {@link Folder} object from the current cursor position.
+   * Generate a {@link LocalFolder} object from the current cursor position.
    *
-   * @param cursor The {@link Cursor} which contains information about {@link Folder}.
-   * @return A generated {@link Folder}.
+   * @param cursor The {@link Cursor} which contains information about {@link LocalFolder}.
+   * @return A generated {@link LocalFolder}.
    */
-  public Folder getFolder(Cursor cursor) {
-    return new Folder(
+  public LocalFolder getFolder(Cursor cursor) {
+    return new LocalFolder(
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
         cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
@@ -120,57 +120,57 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Get all {@link Folder} objects from the database by an email.
+   * Get all {@link LocalFolder} objects from the database by an email.
    *
-   * @param email The email of the {@link Folder}.
-   * @return A  list of {@link Folder} objects.
+   * @param email The email of the {@link LocalFolder}.
+   * @return A  list of {@link LocalFolder} objects.
    */
-  public List<Folder> getFolders(Context context, String email) {
+  public List<LocalFolder> getFolders(Context context, String email) {
     ContentResolver contentResolver = context.getContentResolver();
     Cursor cursor = contentResolver.query(getBaseContentUri(),
         null, COL_EMAIL + " = ?", new String[]{email}, null);
 
-    List<Folder> folders = new ArrayList<>();
+    List<LocalFolder> localFolders = new ArrayList<>();
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        folders.add(getFolder(cursor));
+        localFolders.add(getFolder(cursor));
       }
       cursor.close();
     }
 
-    return folders;
+    return localFolders;
   }
 
   /**
-   * Get a {@link Folder} from the database by an email and an alias.
+   * Get a {@link LocalFolder} from the database by an email and an alias.
    *
-   * @param email       The email of the {@link Folder}.
+   * @param email       The email of the {@link LocalFolder}.
    * @param folderAlias The folder alias.
-   * @return {@link Folder} or null if such folder not found.
+   * @return {@link LocalFolder} or null if such folder not found.
    */
-  public Folder getFolderByAlias(Context context, String email, String folderAlias) {
+  public LocalFolder getFolderByAlias(Context context, String email, String folderAlias) {
     ContentResolver contentResolver = context.getContentResolver();
     Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_EMAIL + " = ?" + " AND " +
         COL_FOLDER_ALIAS + " = ?", new String[]{email, folderAlias}, null);
 
-    Folder folder = null;
+    LocalFolder localFolder = null;
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        folder = getFolder(cursor);
+        localFolder = getFolder(cursor);
       }
       cursor.close();
     }
 
-    return folder;
+    return localFolder;
   }
 
   /**
    * Delete all folders of some email.
    *
    * @param context Interface to global information about an application environment.
-   * @param email   The email of the {@link Folder}.
+   * @param email   The email of the {@link LocalFolder}.
    * @return The count of deleted rows. Will be >1 if a folder(s) was deleted or -1 otherwise.
    */
   public int deleteFolders(Context context, String email) {
@@ -181,13 +181,13 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Update a message count of some {@link Folder}.
+   * Update a message count of some {@link LocalFolder}.
    *
    * @param context     Interface to global information about an application environment.
    * @param email       The account email.
    * @param folderName  A server folder name. Links to {@link #COL_FOLDER_NAME}
    * @param newMsgCount A new message count.
-   * @return The count of updated rows. Will be 1 if information about {@link Folder} was
+   * @return The count of updated rows. Will be 1 if information about {@link LocalFolder} was
    * updated or -1 otherwise.
    */
   public int updateLabelMessagesCount(Context context, String email, String folderName, int newMsgCount) {
@@ -205,52 +205,52 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   /**
    * This method update the local labels info. Here we will remove deleted and create new folders.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param email      The account email.
-   * @param oldFolders The list of old {@link Folder} object.
-   * @param newFolders The list of new {@link Folder} object.
+   * @param context         Interface to global information about an application environment.
+   * @param email           The account email.
+   * @param oldLocalFolders The list of old {@link LocalFolder} object.
+   * @param newLocalFolders The list of new {@link LocalFolder} object.
    * @return the {@link ContentProviderResult} array.
    */
-  public ContentProviderResult[] updateLabels(Context context, String email, Collection<Folder> oldFolders,
-                                              Collection<Folder> newFolders)
+  public ContentProviderResult[] updateLabels(Context context, String email, Collection<LocalFolder> oldLocalFolders,
+                                              Collection<LocalFolder> newLocalFolders)
       throws RemoteException, OperationApplicationException {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && contentResolver != null) {
 
       ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
 
-      List<Folder> deleteCandidates = new ArrayList<>();
-      for (Folder oldFolder : oldFolders) {
+      List<LocalFolder> deleteCandidates = new ArrayList<>();
+      for (LocalFolder oldLocalFolder : oldLocalFolders) {
         boolean isFolderFound = false;
-        for (Folder newFolder : newFolders) {
-          if (newFolder.getFullName().equals(oldFolder.getFullName())) {
+        for (LocalFolder newLocalFolder : newLocalFolders) {
+          if (newLocalFolder.getFullName().equals(oldLocalFolder.getFullName())) {
             isFolderFound = true;
             break;
           }
         }
 
         if (!isFolderFound) {
-          deleteCandidates.add(oldFolder);
+          deleteCandidates.add(oldLocalFolder);
         }
       }
 
-      List<Folder> newCandidates = new ArrayList<>();
-      for (Folder newFolder : newFolders) {
+      List<LocalFolder> newCandidates = new ArrayList<>();
+      for (LocalFolder newLocalFolder : newLocalFolders) {
         boolean isFolderFound = false;
-        for (Folder oldFolder : oldFolders) {
-          if (oldFolder.getFullName().equals(newFolder.getFullName())) {
+        for (LocalFolder oldLocalFolder : oldLocalFolders) {
+          if (oldLocalFolder.getFullName().equals(newLocalFolder.getFullName())) {
             isFolderFound = true;
             break;
           }
         }
 
         if (!isFolderFound) {
-          newCandidates.add(newFolder);
+          newCandidates.add(newLocalFolder);
         }
       }
 
-      for (Folder folder : deleteCandidates) {
-        String[] args = new String[]{email, folder.getFullName()};
+      for (LocalFolder localFolder : deleteCandidates) {
+        String[] args = new String[]{email, localFolder.getFullName()};
 
         contentProviderOperations.add(ContentProviderOperation.newDelete(getBaseContentUri())
             .withSelection(COL_EMAIL + "= ? AND " + COL_FOLDER_NAME + " = ? ", args)
@@ -258,9 +258,9 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
             .build());
       }
 
-      for (Folder folder : newCandidates) {
+      for (LocalFolder localFolder : newCandidates) {
         contentProviderOperations.add(ContentProviderOperation.newInsert(getBaseContentUri())
-            .withValues(prepareContentValues(email, folder))
+            .withValues(prepareContentValues(email, localFolder))
             .withYieldAllowed(true)
             .build());
       }
@@ -269,14 +269,14 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   @NonNull
-  private ContentValues prepareContentValues(String accountName, Folder folder) {
+  private ContentValues prepareContentValues(String accountName, LocalFolder localFolder) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(COL_EMAIL, accountName);
-    contentValues.put(COL_FOLDER_NAME, folder.getFullName());
-    contentValues.put(COL_FOLDER_ALIAS, folder.getFolderAlias());
-    contentValues.put(COL_MESSAGE_COUNT, folder.getMessageCount());
-    contentValues.put(COL_IS_CUSTOM_LABEL, folder.isCustomLabel());
-    contentValues.put(COL_FOLDER_ATTRIBUTES, prepareAttributesToSaving(folder.getAttributes()));
+    contentValues.put(COL_FOLDER_NAME, localFolder.getFullName());
+    contentValues.put(COL_FOLDER_ALIAS, localFolder.getFolderAlias());
+    contentValues.put(COL_MESSAGE_COUNT, localFolder.getMessageCount());
+    contentValues.put(COL_IS_CUSTOM_LABEL, localFolder.isCustomLabel());
+    contentValues.put(COL_FOLDER_ATTRIBUTES, prepareAttributesToSaving(localFolder.getAttributes()));
     return contentValues;
   }
 

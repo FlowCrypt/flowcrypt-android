@@ -29,9 +29,9 @@ import android.widget.Toast;
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.DataBaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -96,7 +96,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   private GoogleApiClient googleApiClient;
   private AccountDao account;
   private FoldersManager foldersManager;
-  private Folder folder;
+  private LocalFolder localFolder;
   private CountingIdlingResource countingIdlingResourceForLabel;
   private MenuItem menuItemSearch;
 
@@ -205,8 +205,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
     MenuItem itemSwitch = menu.findItem(R.id.menuSwitch);
     MenuItem itemSearch = menu.findItem(R.id.menuSearch);
 
-    if (folder != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getFullName())) {
+    if (localFolder != null) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName())) {
         itemSwitch.setVisible(false);
         itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()));
       } else {
@@ -272,7 +272,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
@@ -292,11 +292,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.syns_request_code_load_next_messages:
         switchView.setEnabled(true);
-        super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+        super.onReplyReceived(requestCode, resultCode, obj);
         break;
 
       default:
-        super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+        super.onReplyReceived(requestCode, resultCode, obj);
     }
   }
 
@@ -306,7 +306,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
         if (!countingIdlingResourceForMessages.isIdleNow()) {
@@ -325,11 +325,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.syns_request_code_load_next_messages:
         switchView.setEnabled(true);
-        super.onErrorFromServiceReceived(requestCode, errorType, e);
+        super.onErrorHappened(requestCode, errorType, e);
         break;
 
       default:
-        super.onErrorFromServiceReceived(requestCode, errorType, e);
+        super.onErrorHappened(requestCode, errorType, e);
     }
   }
 
@@ -384,11 +384,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
         break;
 
       case Menu.NONE:
-        Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
-        if (newFolder != null) {
-          if (folder == null || !folder.getFullName()
-              .equals(newFolder.getFullName())) {
-            this.folder = newFolder;
+        LocalFolder newLocalFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
+        if (newLocalFolder != null) {
+          if (localFolder == null || !localFolder.getFullName()
+              .equals(newLocalFolder.getFullName())) {
+            this.localFolder = newLocalFolder;
             updateEmailsListFragmentAfterFolderChange();
             invalidateOptionsMenu();
           }
@@ -451,22 +451,22 @@ public class EmailManagerActivity extends BaseEmailListActivity
               }
             }
 
-            for (Folder s : foldersManager.getCustomLabels()) {
+            for (LocalFolder s : foldersManager.getCustomLabels()) {
               mailLabels.getSubMenu().add(s.getFolderAlias());
             }
           }
 
-          if (folder == null) {
-            folder = foldersManager.getFolderInbox();
-            if (folder == null) {
-              folder = foldersManager.findInboxFolder();
+          if (localFolder == null) {
+            localFolder = foldersManager.getFolderInbox();
+            if (localFolder == null) {
+              localFolder = foldersManager.findInboxFolder();
             }
 
             updateEmailsListFragmentAfterFolderChange();
           } else {
-            Folder newestFolderInfo = foldersManager.getFolderByAlias(folder.getFolderAlias());
-            if (newestFolderInfo != null) {
-              folder = newestFolderInfo;
+            LocalFolder newestLocalFolderInfo = foldersManager.getFolderByAlias(localFolder.getFolderAlias());
+            if (newestLocalFolderInfo != null) {
+              localFolder = newestLocalFolderInfo;
             }
           }
         }
@@ -499,8 +499,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public Folder getCurrentFolder() {
-    return folder;
+  public LocalFolder getCurrentFolder() {
+    return localFolder;
   }
 
   @Override
@@ -535,14 +535,14 @@ public class EmailManagerActivity extends BaseEmailListActivity
     menuItemSearch.collapseActionView();
     DataBaseUtil.cleanFolderCache(this, account.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
     if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-      Folder allMail = foldersManager.getFolderAll();
+      LocalFolder allMail = foldersManager.getFolderAll();
       if (allMail != null) {
         startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager.getFolderAll()));
       } else {
-        startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+        startActivity(SearchMessagesActivity.newIntent(this, query, localFolder));
       }
     } else {
-      startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+      startActivity(SearchMessagesActivity.newIntent(this, query, localFolder));
     }
     UIUtil.hideSoftInput(this, getRootView());
     return false;
@@ -556,8 +556,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @Override
   public void refreshFoldersInfoFromCache() {
     foldersManager = FoldersManager.fromDatabase(this, account.getEmail());
-    if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
-      folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+    if (localFolder != null && !TextUtils.isEmpty(localFolder.getFolderAlias())) {
+      localFolder = foldersManager.getFolderByAlias(localFolder.getFolderAlias());
     }
   }
 
@@ -572,35 +572,35 @@ public class EmailManagerActivity extends BaseEmailListActivity
    * @return The sorted labels list.
    */
   private String[] getSortedServerFolders() {
-    List<Folder> folders = foldersManager.getServerFolders();
-    String[] serverFolders = new String[folders.size()];
+    List<LocalFolder> localFolders = foldersManager.getServerFolders();
+    String[] serverFolders = new String[localFolders.size()];
 
-    Folder inbox = foldersManager.getFolderInbox();
+    LocalFolder inbox = foldersManager.getFolderInbox();
     if (inbox != null) {
-      folders.remove(inbox);
+      localFolders.remove(inbox);
       serverFolders[0] = inbox.getFolderAlias();
     }
 
-    Folder trash = foldersManager.getFolderTrash();
+    LocalFolder trash = foldersManager.getFolderTrash();
     if (trash != null) {
-      folders.remove(trash);
-      serverFolders[folders.size() + 1] = trash.getFolderAlias();
+      localFolders.remove(trash);
+      serverFolders[localFolders.size() + 1] = trash.getFolderAlias();
     }
 
-    Folder spam = foldersManager.getFolderSpam();
+    LocalFolder spam = foldersManager.getFolderSpam();
     if (spam != null) {
-      folders.remove(spam);
-      serverFolders[folders.size() + 1] = spam.getFolderAlias();
+      localFolders.remove(spam);
+      serverFolders[localFolders.size() + 1] = spam.getFolderAlias();
     }
 
-    Folder outbox = foldersManager.getFolderOutbox();
+    LocalFolder outbox = foldersManager.getFolderOutbox();
     if (outbox != null) {
-      folders.remove(outbox);
-      serverFolders[folders.size() + 1] = outbox.getFolderAlias();
+      localFolders.remove(outbox);
+      serverFolders[localFolders.size() + 1] = outbox.getFolderAlias();
     }
 
-    for (int i = 0; i < folders.size(); i++) {
-      Folder s = folders.get(i);
+    for (int i = 0; i < localFolders.size(); i++) {
+      LocalFolder s = localFolders.get(i);
       if (inbox == null) {
         serverFolders[i] = s.getFolderAlias();
       } else {

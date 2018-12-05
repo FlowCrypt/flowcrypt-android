@@ -24,8 +24,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -52,7 +52,7 @@ import androidx.core.content.ContextCompat;
 
 public class MessageListAdapter extends CursorAdapter {
   private MessageDaoSource messageDaoSource;
-  private Folder folder;
+  private LocalFolder localFolder;
   private FoldersManager.FolderType folderType;
   private Pattern patternSenderName;
   private LongSparseArray<Boolean> selectionStates = new LongSparseArray<>();
@@ -112,14 +112,14 @@ public class MessageListAdapter extends CursorAdapter {
     notifyDataSetChanged();
   }
 
-  public Folder getFolder() {
-    return folder;
+  public LocalFolder getLocalFolder() {
+    return localFolder;
   }
 
-  public void setFolder(Folder folder) {
-    this.folder = folder;
-    if (folder != null) {
-      this.folderType = FoldersManager.getFolderTypeForImapFolder(folder);
+  public void setLocalFolder(LocalFolder localFolder) {
+    this.localFolder = localFolder;
+    if (localFolder != null) {
+      this.folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
     } else {
       folderType = null;
     }

@@ -638,7 +638,7 @@ public class EmailUtil {
   /**
    * Check is input messages are encrypted.
    *
-   * @param folder  The localFolder which contains messages which will be checked.
+   * @param folder  The folder which contains messages which will be checked.
    * @param uidList The array of messages {@link UID} values.
    * @return {@link SparseArray} as results of the checking.
    */

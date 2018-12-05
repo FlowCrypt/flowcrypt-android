@@ -15,7 +15,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -146,18 +146,18 @@ public abstract class BaseSyncActivity extends BaseActivity {
   }
 
   /**
-   * Load messages from some folder in some range.
+   * Load messages from some localFolder in some range.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param folder      {@link Folder} object.
+   * @param localFolder      {@link LocalFolder} object.
    * @param start       The position of the start.
    * @param end         The position of the end.
    */
-  public void loadMessages(int requestCode, Folder folder, int start, int end) {
+  public void loadMessages(int requestCode, LocalFolder localFolder, int start, int end) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, folder);
+        requestCode, localFolder);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end,
         action);
@@ -174,15 +174,15 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Start a job to load message to cache.
    *
    * @param requestCode                  The unique request code for identify the current action.
-   * @param folder                       {@link Folder} object.
-   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
+   * @param localFolder                       {@link LocalFolder} object.
+   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the localFolder.
    */
-  public void loadNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
+  public void loadNextMessages(int requestCode, LocalFolder localFolder, int countOfAlreadyLoadedMessages) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    onProgressReplyFromServiceReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
+    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, folder);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES,
         countOfAlreadyLoadedMessages, 0, action);
@@ -200,13 +200,13 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Start a job to load searched messages to the cache.
    *
    * @param requestCode                  The unique request code for identify the current action.
-   * @param folder                       {@link Folder} object which contains the search query.
-   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the folder.
+   * @param localFolder                       {@link LocalFolder} object which contains the search query.
+   * @param countOfAlreadyLoadedMessages The count of already loaded messages in the localFolder.
    */
-  public void searchNextMessages(int requestCode, Folder folder, int countOfAlreadyLoadedMessages) {
+  public void searchNextMessages(int requestCode, LocalFolder localFolder, int countOfAlreadyLoadedMessages) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, folder);
+    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES,
         countOfAlreadyLoadedMessages, 0, action);
@@ -247,13 +247,13 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Load the last messages which not exist in the database.
    *
    * @param requestCode   The unique request code for identify the current action.
-   * @param currentFolder {@link Folder} object.
+   * @param currentLocalFolder {@link LocalFolder} object.
    */
-  public void refreshMessages(int requestCode, Folder currentFolder) {
+  public void refreshMessages(int requestCode, LocalFolder currentLocalFolder) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, currentFolder);
+        requestCode, currentLocalFolder);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action);
     message.replyTo = syncServiceReplyMessenger;
@@ -269,14 +269,14 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Start a job to load message details.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param folder      {@link Folder} object.
+   * @param localFolder      {@link LocalFolder} object.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
    */
-  public void loadMessageDetails(int requestCode, Folder folder, int uid) {
+  public void loadMessageDetails(int requestCode, LocalFolder localFolder, int uid) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, folder);
+        requestCode, localFolder);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS,
         uid, 0, action);
@@ -294,18 +294,18 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * Move the message to an another folder.
    *
    * @param requestCode       The unique request code for identify the current action.
-   * @param sourcesFolder     The message {@link Folder} object.
-   * @param destinationFolder The new destionation {@link Folder} object.
+   * @param sourcesLocalFolder     The message {@link LocalFolder} object.
+   * @param destinationLocalFolder The new destionation {@link LocalFolder} object.
    * @param uid               The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
    *                          .Message ).
    */
-  public void moveMessage(int requestCode, Folder sourcesFolder,
-                          Folder destinationFolder, int uid) {
+  public void moveMessage(int requestCode, LocalFolder sourcesLocalFolder,
+                          LocalFolder destinationLocalFolder, int uid) {
     if (checkServiceBound(isBoundToSyncService)) return;
 
-    Folder[] folders = new Folder[]{sourcesFolder, destinationFolder};
+    LocalFolder[] localFolders = new LocalFolder[]{sourcesLocalFolder, destinationLocalFolder};
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        requestCode, folders);
+        requestCode, localFolders);
 
     Message message = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE,
         uid, 0, action);

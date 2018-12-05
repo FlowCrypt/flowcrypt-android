@@ -28,14 +28,14 @@ import java.util.Set;
 
 public class ActionManager implements ActionResultReceiver.ResultReceiverCallBack {
   private Context context;
-  private LongSparseArray<Action> runningActionsSparseArray;
+  private LongSparseArray<Action> runningActions;
   private Set<Long> completedActionsSet;
   private ActionQueueDaoSource actionQueueDaoSource;
 
   public ActionManager(Context context) {
     this.context = context.getApplicationContext();
     this.actionQueueDaoSource = new ActionQueueDaoSource();
-    this.runningActionsSparseArray = new LongSparseArray<>();
+    this.runningActions = new LongSparseArray<>();
     this.completedActionsSet = new HashSet<>();
   }
 
@@ -43,15 +43,15 @@ public class ActionManager implements ActionResultReceiver.ResultReceiverCallBac
   public void onSuccess(Action action) {
     completedActionsSet.add(action.getId());
     actionQueueDaoSource.deleteAction(context, action);
-    if (runningActionsSparseArray != null) {
-      runningActionsSparseArray.delete(action.getId());
+    if (runningActions != null) {
+      runningActions.delete(action.getId());
     }
   }
 
   @Override
   public void onError(Exception exception, Action action) {
-    if (runningActionsSparseArray != null) {
-      runningActionsSparseArray.delete(action.getId());
+    if (runningActions != null) {
+      runningActions.delete(action.getId());
     }
   }
 
@@ -64,7 +64,7 @@ public class ActionManager implements ActionResultReceiver.ResultReceiverCallBac
     List<Action> actions = actionQueueDaoSource.getActions(context, account);
     ArrayList<Action> candidates = new ArrayList<>();
     for (Action action : actions) {
-      if (!completedActionsSet.contains(action.getId()) && runningActionsSparseArray.indexOfValue(action) < 0) {
+      if (!completedActionsSet.contains(action.getId()) && runningActions.indexOfValue(action) < 0) {
         candidates.add(action);
       }
     }

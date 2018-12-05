@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.iap.Argument;
@@ -38,20 +39,20 @@ import javax.mail.Store;
 
 public class LoadMessageDetailsSyncTask extends BaseSyncTask {
   private long uid;
-  private com.flowcrypt.email.api.email.Folder localFolder;
+  private LocalFolder localFolder;
 
   /**
    * The base constructor.
    *
    * @param ownerKey    The name of the reply to {@link Messenger}.
    * @param requestCode The unique request code for the reply to {@link Messenger}.
-   * @param folder      The local folder implementation.
+   * @param localFolder      The local localFolder implementation.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message).
    */
-  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
+  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, LocalFolder localFolder,
                                     long uid) {
     super(ownerKey, requestCode);
-    this.localFolder = folder;
+    this.localFolder = localFolder;
     this.uid = uid;
   }
 

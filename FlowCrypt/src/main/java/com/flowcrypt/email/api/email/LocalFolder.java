@@ -20,17 +20,17 @@ import java.util.Objects;
  * E-mail: DenBond7@gmail.com
  */
 
-public class Folder implements Parcelable {
+public class LocalFolder implements Parcelable {
 
-  public static final Creator<Folder> CREATOR = new Creator<Folder>() {
+  public static final Creator<LocalFolder> CREATOR = new Creator<LocalFolder>() {
     @Override
-    public Folder createFromParcel(Parcel source) {
-      return new Folder(source);
+    public LocalFolder createFromParcel(Parcel source) {
+      return new LocalFolder(source);
     }
 
     @Override
-    public Folder[] newArray(int size) {
-      return new Folder[size];
+    public LocalFolder[] newArray(int size) {
+      return new LocalFolder[size];
     }
   };
   private String fullName;
@@ -41,13 +41,13 @@ public class Folder implements Parcelable {
   private int msgCount;
   private String searchQuery;
 
-  public Folder(String fullName, String folderAlias, int msgCount,
-                String[] attributes, boolean isCustomLabel) {
+  public LocalFolder(String fullName, String folderAlias, int msgCount,
+                     String[] attributes, boolean isCustomLabel) {
     this(fullName, folderAlias, msgCount, attributes, isCustomLabel, null);
   }
 
-  public Folder(String fullName, String folderAlias, int msgCount,
-                String[] attributes, boolean isCustomLabel, String searchQuery) {
+  public LocalFolder(String fullName, String folderAlias, int msgCount,
+                     String[] attributes, boolean isCustomLabel, String searchQuery) {
     this.fullName = fullName;
     this.folderAlias = folderAlias;
     this.msgCount = msgCount;
@@ -57,7 +57,7 @@ public class Folder implements Parcelable {
     this.searchQuery = searchQuery;
   }
 
-  protected Folder(Parcel in) {
+  protected LocalFolder(Parcel in) {
     this.fullName = in.readString();
     this.folderAlias = in.readString();
     this.msgCount = in.readInt();
@@ -69,7 +69,7 @@ public class Folder implements Parcelable {
 
   @Override
   public String toString() {
-    return "Folder{" +
+    return "LocalFolder{" +
         "fullName='" + fullName + '\'' +
         ", folderAlias='" + folderAlias + '\'' +
         ", userFriendlyName='" + userFriendlyName + '\'' +
@@ -100,14 +100,14 @@ public class Folder implements Parcelable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Folder folder = (Folder) o;
-    return isCustomLabel == folder.isCustomLabel &&
-        msgCount == folder.msgCount &&
-        Objects.equals(fullName, folder.fullName) &&
-        Objects.equals(folderAlias, folder.folderAlias) &&
-        Objects.equals(userFriendlyName, folder.userFriendlyName) &&
-        Arrays.equals(attributes, folder.attributes) &&
-        Objects.equals(searchQuery, folder.searchQuery);
+    LocalFolder localFolder = (LocalFolder) o;
+    return isCustomLabel == localFolder.isCustomLabel &&
+        msgCount == localFolder.msgCount &&
+        Objects.equals(fullName, localFolder.fullName) &&
+        Objects.equals(folderAlias, localFolder.folderAlias) &&
+        Objects.equals(userFriendlyName, localFolder.userFriendlyName) &&
+        Arrays.equals(attributes, localFolder.attributes) &&
+        Objects.equals(searchQuery, localFolder.searchQuery);
   }
 
   @Override

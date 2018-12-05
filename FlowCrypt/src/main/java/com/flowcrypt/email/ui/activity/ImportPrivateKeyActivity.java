@@ -100,7 +100,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         if (privateKeys == null) {
@@ -149,7 +149,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         hideImportButton();

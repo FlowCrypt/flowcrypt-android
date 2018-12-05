@@ -22,8 +22,8 @@ import android.text.TextUtils;
 import android.util.LongSparseArray;
 
 import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.MessageFlag;
@@ -535,10 +535,10 @@ public class MessageDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Generate a {@link Folder} object from the current cursor position.
+   * Generate a {@link LocalFolder} object from the current cursor position.
    *
-   * @param cursor The {@link Cursor} which contains information about {@link Folder}.
-   * @return A generated {@link Folder}.
+   * @param cursor The {@link Cursor} which contains information about {@link LocalFolder}.
+   * @return A generated {@link LocalFolder}.
    */
   public GeneralMessageDetails getMessageInfo(Cursor cursor) {
     GeneralMessageDetails details = new GeneralMessageDetails();
@@ -587,7 +587,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * Get all messages of some folder.
    *
    * @param context Interface to global information about an application environment.
-   * @param email   The email of the {@link Folder}.
+   * @param email   The email of the {@link LocalFolder}.
    * @param label   The label name.
    * @return A  list of {@link GeneralMessageDetails} objects.
    */
@@ -612,7 +612,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * Get all messages of the outbox folder.
    *
    * @param context  Interface to global information about an application environment.
-   * @param email    The email of the {@link Folder}.
+   * @param email    The email of the {@link LocalFolder}.
    * @param msgState The message state which will be used for filter results.
    * @return A  list of {@link GeneralMessageDetails} objects.
    */
@@ -639,7 +639,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * Get all messages of the outbox folder which are not sent.
    *
    * @param context Interface to global information about an application environment.
-   * @param email   The email of the {@link Folder}.
+   * @param email   The email of the {@link LocalFolder}.
    * @return A  list of {@link GeneralMessageDetails} objects.
    */
   public List<GeneralMessageDetails> getOutboxMessages(Context context, String email) {
@@ -697,7 +697,7 @@ public class MessageDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Get all {@link Folder} objects from the database by an email.
+   * Get all {@link LocalFolder} objects from the database by an email.
    *
    * @param context Interface to global information about an application environment.
    * @param email   The user email.
