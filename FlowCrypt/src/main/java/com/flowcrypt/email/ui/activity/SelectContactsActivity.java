@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -25,6 +26,7 @@ import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.loader.app.LoaderManager;
@@ -55,10 +57,10 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
       GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_MULTIPLY", SelectContactsActivity.class);
 
   private View progressBar;
-  private ListView listViewContacts;
+  private ListView listView;
   private View emptyView;
-  private ContactsListCursorAdapter contactsListCursorAdapter;
-  private String userSearchPattern;
+  private ContactsListCursorAdapter adapter;
+  private String searchPattern;
 
   public static Intent newIntent(Context context, String title, boolean isMultiply) {
     Intent intent = new Intent(context, SelectContactsActivity.class);
@@ -84,15 +86,15 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
     final boolean isMultiply = getIntent().getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false);
     final String title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
 
-    this.contactsListCursorAdapter = new ContactsListCursorAdapter(this, null, false, null, false);
+    this.adapter = new ContactsListCursorAdapter(this, null, false, null, false);
 
     this.progressBar = findViewById(R.id.progressBar);
     this.emptyView = findViewById(R.id.emptyView);
-    this.listViewContacts = findViewById(R.id.listViewContacts);
-    this.listViewContacts.setAdapter(contactsListCursorAdapter);
-    this.listViewContacts.setChoiceMode(isMultiply ? ListView.CHOICE_MODE_MULTIPLE : ListView.CHOICE_MODE_SINGLE);
+    this.listView = findViewById(R.id.listViewContacts);
+    this.listView.setAdapter(adapter);
+    this.listView.setChoiceMode(isMultiply ? ListView.CHOICE_MODE_MULTIPLE : ListView.CHOICE_MODE_SINGLE);
     if (!isMultiply) {
-      this.listViewContacts.setOnItemClickListener(this);
+      this.listView.setOnItemClickListener(this);
     }
 
     if (!TextUtils.isEmpty(title) && getSupportActionBar() != null) {
@@ -113,10 +115,10 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
   public boolean onPrepareOptionsMenu(Menu menu) {
     MenuItem searchItem = menu.findItem(R.id.menuSearch);
     SearchView searchView = (SearchView) searchItem.getActionView();
-    if (!TextUtils.isEmpty(userSearchPattern)) {
+    if (!TextUtils.isEmpty(searchPattern)) {
       searchItem.expandActionView();
     }
-    searchView.setQuery(userSearchPattern, true);
+    searchView.setQuery(searchPattern, true);
     searchView.setQueryHint(getString(R.string.search));
     searchView.setOnQueryTextListener(this);
     searchView.clearFocus();
@@ -124,47 +126,49 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
   }
 
   @Override
+  @NonNull
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
         String selection = ContactsDaoSource.COL_HAS_PGP + " = ?";
         String[] selectionArgs = new String[]{"1"};
 
-        if (!TextUtils.isEmpty(userSearchPattern)) {
+        if (!TextUtils.isEmpty(searchPattern)) {
           selection = ContactsDaoSource.COL_HAS_PGP + " = ? AND ( " + ContactsDaoSource.COL_EMAIL + " " +
               "LIKE ? OR " + ContactsDaoSource.COL_NAME + " " + " LIKE ? )";
-          selectionArgs = new String[]{"1", "%" + userSearchPattern + "%", "%" + userSearchPattern + "%"};
+          selectionArgs = new String[]{"1", "%" + searchPattern + "%", "%" + searchPattern + "%"};
         }
 
-        return new CursorLoader(this, new ContactsDaoSource().
-            getBaseContentUri(), null, selection, selectionArgs, null);
+        Uri uri = new ContactsDaoSource().getBaseContentUri();
+
+        return new CursorLoader(this, uri, null, selection, selectionArgs, null);
 
       default:
-        return null;
+        return new Loader<>(this);
     }
   }
 
   @Override
-  public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+  public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
     switch (loader.getId()) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, listViewContacts);
+        UIUtil.exchangeViewVisibility(this, false, progressBar, listView);
 
         if (data != null && data.getCount() > 0) {
           emptyView.setVisibility(View.GONE);
-          contactsListCursorAdapter.swapCursor(data);
+          adapter.swapCursor(data);
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
+          UIUtil.exchangeViewVisibility(this, true, emptyView, listView);
         }
         break;
     }
   }
 
   @Override
-  public void onLoaderReset(Loader<Cursor> loader) {
+  public void onLoaderReset(@NonNull Loader<Cursor> loader) {
     switch (loader.getId()) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
-        contactsListCursorAdapter.swapCursor(null);
+        adapter.swapCursor(null);
         break;
     }
   }
@@ -182,14 +186,14 @@ public class SelectContactsActivity extends BaseBackStackActivity implements Loa
 
   @Override
   public boolean onQueryTextSubmit(String query) {
-    this.userSearchPattern = query;
+    this.searchPattern = query;
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }
 
   @Override
   public boolean onQueryTextChange(String newText) {
-    this.userSearchPattern = newText;
+    this.searchPattern = newText;
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
     return true;
   }

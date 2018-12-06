@@ -27,6 +27,7 @@ import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -112,41 +113,40 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   }
 
   @Override
+  @NonNull
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_post_help_feedback:
         UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
-        String text = editTextUserMessage.getText().toString() + "\n\n" + "Android v"
-            + BuildConfig.VERSION_CODE;
+        String text = editTextUserMessage.getText().toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE;
 
         return new ApiServiceAsyncTaskLoader(getApplicationContext(),
             new PostHelpFeedbackRequest(new PostHelpFeedbackModel(account.getEmail(), text)));
       default:
-        return null;
+        return new Loader<>(this);
     }
   }
 
   @Override
-  public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
     switch (loader.getId()) {
       case R.id.loader_id_post_help_feedback:
         UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
         if (loaderResult != null) {
           if (loaderResult.getResult() != null) {
             BaseResponse baseResponse = (BaseResponse) loaderResult.getResult();
-            PostHelpFeedbackResponse postHelpFeedbackResponse =
-                (PostHelpFeedbackResponse) baseResponse.getResponseModel();
-            if (postHelpFeedbackResponse.isSent()) {
+            PostHelpFeedbackResponse response = (PostHelpFeedbackResponse) baseResponse.getResponseModel();
+            if (response.isSent()) {
               this.isMessageSent = true;
-              UIUtil.showSnackbar(getRootView(), postHelpFeedbackResponse.getText(),
-                  getString(R.string.back), new View.OnClickListener() {
+              UIUtil.showSnackbar(getRootView(), response.getText(), getString(R.string.back),
+                  new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                       finish();
                     }
                   });
-            } else if (postHelpFeedbackResponse.getApiError() != null) {
-              UIUtil.showInfoSnackbar(getRootView(), postHelpFeedbackResponse.getApiError().getMessage());
+            } else if (response.getApiError() != null) {
+              UIUtil.showInfoSnackbar(getRootView(), response.getApiError().getMessage());
             } else {
               UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
             }

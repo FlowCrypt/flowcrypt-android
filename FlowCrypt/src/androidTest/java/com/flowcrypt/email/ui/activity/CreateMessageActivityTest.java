@@ -301,7 +301,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER);
     intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ImportPublicKeyForPgpContactActivity.class)))
+        ImportPublicKeyActivity.class)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
     onView(withId(R.id.menuActionSend)).check(matches(isDisplayed())).perform(click());
     savePublicKeyInDatabase();

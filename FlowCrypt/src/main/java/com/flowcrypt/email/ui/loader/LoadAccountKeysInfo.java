@@ -39,13 +39,13 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResult> {
+public class LoadAccountKeysInfo extends AsyncTaskLoader<LoaderResult> {
   /**
    * An user account.
    */
   private AccountDao account;
 
-  public LoadAccountKeysInfoFromAttester(Context context, AccountDao account) {
+  public LoadAccountKeysInfo(Context context, AccountDao account) {
     super(context);
     this.account = account;
     onContentChanged();
@@ -96,16 +96,15 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
    * @return The list of available Gmail aliases.
    */
   private Collection<? extends String> getAvailableGmailAliases(AccountDao account) {
-    List<String> aliasEmails = new ArrayList<>();
-    aliasEmails.add(account.getEmail());
+    List<String> emails = new ArrayList<>();
+    emails.add(account.getEmail());
 
     try {
       Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
-      ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
-          .execute();
+      ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute();
       for (SendAs alias : aliases.getSendAs()) {
         if (alias.getVerificationStatus() != null) {
-          aliasEmails.add(alias.getSendAsEmail());
+          emails.add(alias.getSendAsEmail());
         }
       }
     } catch (IOException e) {
@@ -113,7 +112,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
       ExceptionUtil.handleError(e);
     }
 
-    return aliasEmails;
+    return emails;
   }
 
   /**
@@ -126,9 +125,7 @@ public class LoadAccountKeysInfoFromAttester extends AsyncTaskLoader<LoaderResul
    */
   private List<LookUpEmailResponse> getLookUpEmailsResponse(List<String> emails) throws IOException {
     ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-    Response<LookUpEmailsResponse> response = apiService.postLookUpEmails(new PostLookUpEmailsModel(emails))
-        .execute();
-
+    Response<LookUpEmailsResponse> response = apiService.postLookUpEmails(new PostLookUpEmailsModel(emails)).execute();
     LookUpEmailsResponse lookUpEmailsResponse = response.body();
 
     if (lookUpEmailsResponse != null) {

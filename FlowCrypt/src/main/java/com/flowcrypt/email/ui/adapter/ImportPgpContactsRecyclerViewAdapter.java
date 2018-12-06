@@ -24,6 +24,7 @@ import com.flowcrypt.email.util.UIUtil;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -36,38 +37,36 @@ import androidx.recyclerview.widget.RecyclerView;
  */
 public class ImportPgpContactsRecyclerViewAdapter extends
     RecyclerView.Adapter<ImportPgpContactsRecyclerViewAdapter.ViewHolder> {
-  private List<PublicKeyInfo> publicKeyInfoList;
+  private List<PublicKeyInfo> publicKeys;
 
-  public ImportPgpContactsRecyclerViewAdapter(List<PublicKeyInfo> publicKeyInfoList) {
-    this.publicKeyInfoList = publicKeyInfoList;
+  public ImportPgpContactsRecyclerViewAdapter(List<PublicKeyInfo> publicKeys) {
+    this.publicKeys = publicKeys;
   }
 
   @Override
-  public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  @NonNull
+  public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.import_pgp_contact_item,
         parent, false));
   }
 
   @Override
-  public void onBindViewHolder(final ViewHolder viewHolder, int position) {
+  public void onBindViewHolder(@NonNull final ViewHolder viewHolder, int position) {
     final Context context = viewHolder.itemView.getContext();
-    final PublicKeyInfo publicKeyInfo = publicKeyInfoList.get(position);
+    final PublicKeyInfo publicKeyInfo = publicKeys.get(position);
 
     viewHolder.buttonUpdateContact.setVisibility(View.GONE);
     viewHolder.buttonSaveContact.setVisibility(View.GONE);
 
     if (!TextUtils.isEmpty(publicKeyInfo.getKeyOwner())) {
-      viewHolder.textViewKeyOwnerTemplate.setText(
-          context.getString(R.string.template_message_part_public_key_owner,
-              publicKeyInfo.getKeyOwner()));
+      viewHolder.textViewKeyOwnerTemplate.setText(context.getString(R.string.template_message_part_public_key_owner,
+          publicKeyInfo.getKeyOwner()));
     }
 
     UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_key_words,
         publicKeyInfo.getKeyWords()), viewHolder.textViewKeyWordsTemplate);
-
     UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", publicKeyInfo.getFingerprint(), 4)),
-        viewHolder.textViewFingerprintTemplate);
+        GeneralUtil.doSectionsInText(" ", publicKeyInfo.getFingerprint(), 4)), viewHolder.textViewFingerprintTemplate);
 
     if (publicKeyInfo.isPgpContactExists()) {
       if (publicKeyInfo.isPgpContactCanBeUpdated()) {
@@ -96,19 +95,12 @@ public class ImportPgpContactsRecyclerViewAdapter extends
 
   @Override
   public int getItemCount() {
-    return publicKeyInfoList != null ? publicKeyInfoList.size() : 0;
+    return publicKeys != null ? publicKeys.size() : 0;
   }
 
   private void saveContact(int position, View v, Context context, PublicKeyInfo publicKeyInfo) {
-    PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(),
-        null,
-        publicKeyInfo.getPublicKey(),
-        true,
-        null,
-        false,
-        publicKeyInfo.getFingerprint(),
-        publicKeyInfo.getLongId(),
-        publicKeyInfo.getKeyWords(), 0);
+    PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(), null, publicKeyInfo.getPublicKey(), true,
+        null, false, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
 
     Uri uri = new ContactsDaoSource().addRow(context, pgpContact);
     if (uri != null) {
@@ -117,32 +109,22 @@ public class ImportPgpContactsRecyclerViewAdapter extends
       publicKeyInfo.setPgpContact(pgpContact);
       notifyItemChanged(position);
     } else {
-      Toast.makeText(context, R.string.error_occurred_while_saving_contact,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
     }
   }
 
   private void updateContact(int position, View v, Context context, PublicKeyInfo publicKeyInfo) {
-    PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(),
-        null,
-        publicKeyInfo.getPublicKey(),
-        true,
-        null,
-        false,
-        publicKeyInfo.getFingerprint(),
-        publicKeyInfo.getLongId(),
-        publicKeyInfo.getKeyWords(), 0);
+    PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(), null, publicKeyInfo.getPublicKey(), true,
+        null, false, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
 
     boolean isUpdated = new ContactsDaoSource().updatePgpContact(context, pgpContact) > 0;
     if (isUpdated) {
-      Toast.makeText(context, R.string.contact_successfully_updated,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
       v.setVisibility(View.GONE);
       publicKeyInfo.setPgpContact(pgpContact);
       notifyItemChanged(position);
     } else {
-      Toast.makeText(context, R.string.error_occurred_while_updating_contact,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(context, R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
     }
   }
 

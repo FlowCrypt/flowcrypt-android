@@ -130,8 +130,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   protected void handleSelectedFile(Uri uri) {
     if (uri != null) {
       UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-      startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri),
-          REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+      startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
     }
   }
 
@@ -147,8 +146,8 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
       case R.id.loader_id_search_public_key:
         this.isSearchPublicKeysOnAttesterNow = true;
         UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-        return new ApiServiceAsyncTaskLoader(getApplicationContext(),
-            new LookUpRequest(editTextEmailOrId.getText().toString()));
+        LookUpRequest lookUpRequest = new LookUpRequest(editTextEmailOrId.getText().toString());
+        return new ApiServiceAsyncTaskLoader(getApplicationContext(), lookUpRequest);
       default:
         return super.onCreateLoader(id, args);
     }
@@ -164,37 +163,33 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
           if (baseResponse.getResponseModel() != null) {
             LookUpResponse lookUpResponse = (LookUpResponse) baseResponse.getResponseModel();
             if (lookUpResponse.getApiError() != null) {
-              UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
-                  layoutContentView);
+              UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
               UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMessage());
             } else {
               ArrayList<LookUpPublicKeyInfo> lookUpPublicKeyInfoArrayList = lookUpResponse.getResults();
               if (lookUpPublicKeyInfoArrayList != null && !lookUpPublicKeyInfoArrayList.isEmpty()) {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder builder = new StringBuilder();
 
                 for (LookUpPublicKeyInfo lookUpPublicKeyInfo : lookUpPublicKeyInfoArrayList) {
                   if (lookUpPublicKeyInfo != null) {
-                    stringBuilder.append(lookUpPublicKeyInfo.getPubKey());
+                    builder.append(lookUpPublicKeyInfo.getPubKey());
                   }
                 }
 
-                if (stringBuilder.length() > 0) {
-                  startActivityForResult(PreviewImportPgpContactActivity.newIntent(this,
-                      stringBuilder.toString()), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+                if (builder.length() > 0) {
+                  startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, builder.toString()),
+                      REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
                 } else {
-                  UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
-                      layoutContentView);
+                  UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                   Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
                 }
               } else {
-                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
-                    layoutContentView);
+                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
                 UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
               }
             }
           } else {
-            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress,
-                layoutContentView);
+            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
             UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
           }
         } else {
@@ -231,8 +226,8 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     switch (loaderId) {
       case R.id.loader_id_search_public_key:
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        Toast.makeText(this, TextUtils.isEmpty(e.getMessage())
-            ? getString(R.string.unknown_error) : e.getMessage(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage(),
+            Toast.LENGTH_SHORT).show();
         break;
 
       default:

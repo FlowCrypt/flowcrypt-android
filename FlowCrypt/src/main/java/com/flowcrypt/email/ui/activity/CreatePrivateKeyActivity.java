@@ -22,6 +22,7 @@ import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -110,30 +111,30 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   }
 
   @Override
+  @NonNull
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_create_private_key:
         if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
           isBackEnable = false;
           UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-          return new CreatePrivateKeyAsyncTaskLoader(this, account,
-              editTextKeyPassword.getText().toString());
+          return new CreatePrivateKeyAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
         } else {
-          return null;
+          return new Loader<>(this);
         }
 
       default:
-        return null;
+        return new Loader<>(this);
     }
   }
 
   @Override
-  public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
     handleLoaderResult(loader, loaderResult);
   }
 
   @Override
-  public void onLoaderReset(Loader<LoaderResult> loader) {
+  public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
     switch (loader.getId()) {
       case R.id.loader_id_create_private_key:
         isBackEnable = true;

@@ -44,15 +44,14 @@ import androidx.loader.content.AsyncTaskLoader;
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
   private static final String KEY_SUCCESS = "success";
 
-  private List<KeyDetails> privateKeyDetailsList;
+  private List<KeyDetails> details;
   private String passphrase;
 
   private KeysDaoSource keysDaoSource;
 
-  public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<KeyDetails> privateKeyDetailsList,
-                                                  String passphrase) {
+  public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<KeyDetails> details, String passphrase) {
     super(context);
-    this.privateKeyDetailsList = privateKeyDetailsList;
+    this.details = details;
     this.passphrase = passphrase;
     this.keysDaoSource = new KeysDaoSource();
     onContentChanged();
@@ -64,7 +63,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
       Js js = new Js(getContext(), null);
-      for (KeyDetails keyDetails : privateKeyDetailsList) {
+      for (KeyDetails keyDetails : details) {
         String armoredPrivateKey = keyDetails.getValue();
         String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
@@ -74,21 +73,20 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
         if (pgpKey.isPrivate()) {
           if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
             if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
-              Uri uri = keysDaoSource.addRow(getContext(),
-                  KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
+              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase);
+              Uri uri = keysDaoSource.addRow(getContext(), keysDao);
 
-              PgpContact[] pgpContacts = pgpKey.getUserIds();
+              PgpContact[] contacts = pgpKey.getUserIds();
               List<Pair<String, String>> pairs = new ArrayList<>();
-              if (pgpContacts != null) {
+              if (contacts != null) {
                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-                for (PgpContact pgpContact : pgpContacts) {
+                for (PgpContact pgpContact : contacts) {
                   if (pgpContact != null) {
                     PgpKey publicKey = pgpKey.toPublic();
                     pgpContact.setPubkey(publicKey.armor());
-                    if (js.str_is_email_valid(pgpContact.getEmail()) &&
-                        contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail())
-                            == null) {
+                    PgpContact temp = contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail());
+                    if (js.str_is_email_valid(pgpContact.getEmail()) && temp == null) {
                       new ContactsDaoSource().addRow(getContext(), pgpContact);
                       //todo-DenBond7 Need to resolve a situation with different public keys.
                       //For example we can have a situation when we have to different public
@@ -108,20 +106,18 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
                   userIdEmailsKeysDaoSource.addRow(getContext(), pair.first, pair.second);
                 }
               }
-            } else if (privateKeyDetailsList.size() == 1) {
-              return new LoaderResult(null,
-                  new KeyAlreadyAddedException(keyDetails,
-                      getContext().getString(R.string.the_key_already_added)));
+            } else if (details.size() == 1) {
+              return new LoaderResult(null, new KeyAlreadyAddedException(keyDetails,
+                  getContext().getString(R.string.the_key_already_added)));
             } else {
               acceptedKeysList.add(keyDetails);
             }
-          } else if (privateKeyDetailsList.size() == 1) {
-            return new LoaderResult(null,
-                new IllegalArgumentException(getContext().getString(R.string.password_is_incorrect)));
+          } else if (details.size() == 1) {
+            return new LoaderResult(null, new IllegalArgumentException(getContext().getString(R.string
+                .password_is_incorrect)));
           }
-        } else if (privateKeyDetailsList.size() == 1) {
-          return new LoaderResult(null,
-              new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
+        } else if (details.size() == 1) {
+          return new LoaderResult(null, new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
         }
       }
     } catch (Exception e) {

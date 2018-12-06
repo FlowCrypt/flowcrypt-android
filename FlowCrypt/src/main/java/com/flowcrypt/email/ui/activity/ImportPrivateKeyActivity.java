@@ -48,7 +48,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   private List<String> privateKeys;
   private Js js;
 
-  private View progressBarLoadingBackups;
+  private View progressBar;
   private View layoutContent;
   private View layoutSyncStatus;
   private Button buttonImportBackup;
@@ -61,12 +61,12 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     this.js = JsForUiManager.getInstance(this).getJs();
 
     if (isSyncEnabled() && GeneralUtil.isInternetConnectionAvailable(this)) {
-      UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
+      UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
           (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
     } else {
       hideImportButton();
-      UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
+      UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
     }
   }
 
@@ -74,7 +74,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   protected void initViews() {
     super.initViews();
 
-    this.progressBarLoadingBackups = findViewById(R.id.progressBarLoadingBackups);
+    this.progressBar = findViewById(R.id.progressBarLoadingBackups);
     this.layoutContent = findViewById(R.id.layoutContent);
     this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus);
     this.buttonImportBackup = findViewById(R.id.buttonImportBackup);
@@ -109,8 +109,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             if (!keys.isEmpty()) {
               this.privateKeys = keys;
 
-              SecurityStorageConnector securityStorageConnector =
-                  (SecurityStorageConnector) js.getStorageConnector();
+              SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
 
               Iterator<String> iterator = privateKeys.iterator();
               Set<String> uniqueKeysLongIds = new HashSet<>();
@@ -119,7 +118,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
                 String privateKey = iterator.next();
                 PgpKey pgpKey = js.crypto_key_read(privateKey);
                 uniqueKeysLongIds.add(pgpKey.getLongid());
-                if (securityStorageConnector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
+                if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
                   iterator.remove();
                   uniqueKeysLongIds.remove(pgpKey.getLongid());
                 }
@@ -139,7 +138,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
           } else {
             hideImportButton();
           }
-          UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
+          UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
         }
         if (!countingIdlingResource.isIdleNow()) {
           countingIdlingResource.decrement();
@@ -153,16 +152,14 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         hideImportButton();
-        UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutSyncStatus);
-        UIUtil.showSnackbar(getRootView(),
-            getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(android.R.string.ok),
-            new View.OnClickListener() {
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
+        UIUtil.showSnackbar(getRootView(), getString(R.string.error_occurred_while_receiving_private_keys),
+            getString(android.R.string.ok), new View.OnClickListener() {
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(ImportPrivateKeyActivity.this,
-                    false, progressBarLoadingBackups, layoutContent);
+                    false, progressBar, layoutContent);
               }
             });
         if (!countingIdlingResource.isIdleNow()) {
@@ -183,12 +180,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             keyDetails.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
           }
 
-          startActivityForResult(CheckKeysActivity.newIntent(this,
-              keyDetails,
-              null,
-              getString(R.string.continue_),
-              getString(R.string.choose_another_key)),
-              REQUEST_CODE_CHECK_PRIVATE_KEYS);
+          startActivityForResult(CheckKeysActivity.newIntent(this, keyDetails, null, getString(R.string.continue_),
+              getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS);
         }
         break;
 
@@ -219,22 +212,21 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   public void onKeyValidated(KeyDetails.Type type) {
     switch (type) {
       case FILE:
-        startActivityForResult(CheckKeysActivity.newIntent(this, keyDetailsList,
-            getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-                keyDetailsList.size(), GeneralUtil.getFileNameFromUri(this,
-                    keyImportModel.getFileUri()), keyDetailsList.size()),
-            getString(R.string.continue_), null,
-            getString(R.string.choose_another_key), true),
-            REQUEST_CODE_CHECK_PRIVATE_KEYS);
+        String fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel.getFileUri());
+        String bottomTitle = getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
+            keyDetailsList.size(), fileName, keyDetailsList.size());
+        String posBtnTitle = getString(R.string.continue_);
+        Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, posBtnTitle, null,
+            getString(R.string.choose_another_key), true);
+        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
 
       case CLIPBOARD:
-        startActivityForResult(CheckKeysActivity.newIntent(this,
-            keyDetailsList,
-            getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
-                keyDetailsList.size(), keyDetailsList.size()),
-            getString(R.string.continue_), null,
-            getString(R.string.choose_another_key), true),
+        String title = getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
+            keyDetailsList.size(), keyDetailsList.size());
+        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, title,
+            getString(R.string.continue_), null, getString(R.string.choose_another_key), true);
+        startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
     }
@@ -252,8 +244,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   public void hideImportButton() {
     buttonImportBackup.setVisibility(View.GONE);
-    ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams)
-        buttonLoadFromFile.getLayoutParams();
+    ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) buttonLoadFromFile
+        .getLayoutParams();
     marginLayoutParams.topMargin = getResources().getDimensionPixelSize(R.dimen
         .margin_top_first_button);
     buttonLoadFromFile.requestLayout();

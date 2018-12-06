@@ -114,8 +114,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
           }
         }
       }
-      return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails,
-          isAllInfoReceived, pgpContacts), null);
+      return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails, isAllInfoReceived, pgpContacts), null);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -151,9 +150,12 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
 
     if (lookUpEmailResponse != null) {
       if (!TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
-        String client = lookUpEmailResponse.getPubKey() == null ? null : lookUpEmailResponse
-            .isHasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource
-            .CLIENT_PGP;
+        String client;
+        if (lookUpEmailResponse.getPubKey() == null) {
+          client = null;
+        } else {
+          client = lookUpEmailResponse.hasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource.CLIENT_PGP;
+        }
 
         return new PgpContact(js, email, null,
             lookUpEmailResponse.getPubKey(), client, lookUpEmailResponse.isAttested());
@@ -172,10 +174,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
    * @throws IOException
    */
   private LookUpEmailResponse getLookUpEmailResponse(String email) throws IOException {
-    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create
-        (ApiService.class);
-    Response<LookUpEmailResponse> response = apiService.postLookUpEmail(
-        new PostLookUpEmailModel(email)).execute();
+    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+    Response<LookUpEmailResponse> response = apiService.postLookUpEmail(new PostLookUpEmailModel(email)).execute();
     return response.body();
   }
 }

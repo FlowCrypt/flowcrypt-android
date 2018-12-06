@@ -123,7 +123,7 @@ public class EmailUtil {
    * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
    * @throws MessagingException
    */
-  public static boolean isNoSelectAttributePresented(IMAPFolder folder) throws MessagingException {
+  public static boolean containsNoSelectAttribute(IMAPFolder folder) throws MessagingException {
     return Arrays.asList(folder.getAttributes()).contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
   }
 
@@ -359,7 +359,7 @@ public class EmailUtil {
 
       for (MessageBlock block : blocks) {
         if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(block.getType())) {
-          if (!TextUtils.isEmpty(block.getContent()) && !EmailUtil.isKeyExisted(list, block.getContent())) {
+          if (!TextUtils.isEmpty(block.getContent()) && !EmailUtil.isKeyExist(list, block.getContent())) {
             list.add(new KeyDetails(block.getContent(), KeyDetails.Type.EMAIL));
           }
         }
@@ -402,7 +402,7 @@ public class EmailUtil {
    * @param key  The private key armored string.
    * @return true if the key not exists in the list, otherwise false.
    */
-  public static boolean isKeyExisted(ArrayList<KeyDetails> list, String key) {
+  public static boolean isKeyExist(ArrayList<KeyDetails> list, String key) {
     for (KeyDetails keyDetails : list) {
       if (key.equals(keyDetails.getValue())) {
         return true;

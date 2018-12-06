@@ -58,7 +58,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   private View splashView;
 
   private AccountDao account;
-  private boolean isStartCheckKeysActivityEnable;
+  private boolean isStartCheckKeysActivityEnabled;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -105,17 +105,17 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         break;
 
       case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
-        isStartCheckKeysActivityEnable = false;
+        isStartCheckKeysActivityEnabled = false;
 
         switch (resultCode) {
           case Activity.RESULT_OK:
           case CheckKeysActivity.RESULT_NEUTRAL:
-            runEmailManagerActivityWithCurrentGmailAccount();
+            runEmailManagerActivity();
             break;
 
           case Activity.RESULT_CANCELED:
           case CheckKeysActivity.RESULT_NEGATIVE:
-            this.currentGoogleSignInAccount = null;
+            this.sign = null;
             UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
             break;
         }
@@ -124,12 +124,12 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
       case REQUEST_CODE_CREATE_OR_IMPORT_KEY:
         switch (resultCode) {
           case Activity.RESULT_OK:
-            runEmailManagerActivityWithCurrentGmailAccount();
+            runEmailManagerActivity();
             break;
 
           case Activity.RESULT_CANCELED:
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-            this.currentGoogleSignInAccount = null;
+            this.sign = null;
             UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
             break;
         }
@@ -139,27 +139,24 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         switch (resultCode) {
           case Activity.RESULT_OK:
             try {
-              AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
+              AuthCredentials authCreds = data.getParcelableExtra(AddNewAccountManuallyActivity
                   .KEY_EXTRA_AUTH_CREDENTIALS);
-              if (authCredentials != null) {
+              if (authCreds != null) {
                 AccountDaoSource accountDaoSource = new AccountDaoSource();
-                accountDaoSource.addRow(this, authCredentials);
+                accountDaoSource.addRow(this, authCreds);
                 EmailSyncService.startEmailSyncService(this);
 
-                AccountDao account =
-                    accountDaoSource.getAccountInformation(this, authCredentials.getEmail());
+                AccountDao account = accountDaoSource.getAccountInformation(this, authCreds.getEmail());
 
                 if (account != null) {
                   EmailManagerActivity.runEmailManagerActivity(this);
                   finish();
                 } else {
-                  Toast.makeText(this, R.string.error_occurred_try_again_later,
-                      Toast.LENGTH_SHORT).show();
+                  Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
                 }
               } else {
                 ExceptionUtil.handleError(new NullPointerException("AuthCredentials is null!"));
-                Toast.makeText(this, R.string.error_occurred_try_again_later,
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
               }
             } catch (Exception e) {
               e.printStackTrace();
@@ -171,8 +168,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
             this.account = null;
             if (data != null) {
-              clearInfoAboutOldAccount((AccountDao) data.getParcelableExtra(CreateOrImportKeyActivity
-                  .EXTRA_KEY_ACCOUNT_DAO));
+              AccountDao accountDao = data.getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
+              clearInfoAboutOldAccount(accountDao);
             }
             break;
 
@@ -191,18 +188,15 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonPrivacy:
-        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
-            getString(R.string.privacy), "html/privacy.htm"));
+        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.privacy), "html/privacy.htm"));
         break;
 
       case R.id.buttonTerms:
-        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
-            getString(R.string.terms), "html/terms.htm"));
+        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.terms), "html/terms.htm"));
         break;
 
       case R.id.buttonSecurity:
-        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this,
-            getString(R.string.security), "html/security.htm"));
+        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.security), "html/security.htm"));
         break;
       default:
         super.onClick(v);
@@ -215,12 +209,12 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_load_private_key_backups_from_email:
-        isStartCheckKeysActivityEnable = true;
+        isStartCheckKeysActivityEnabled = true;
 
         AccountDao account = null;
         UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
-        if (currentGoogleSignInAccount != null) {
-          account = new AccountDao(currentGoogleSignInAccount.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
+        if (sign != null) {
+          account = new AccountDao(sign.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
         }
         return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
@@ -237,23 +231,20 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
         if (loaderResult.getResult() != null) {
           ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
           if (keyDetailsList.isEmpty()) {
-            if (currentGoogleSignInAccount != null) {
-              startActivityForResult(CreateOrImportKeyActivity.newIntent(this,
-                  new AccountDao(currentGoogleSignInAccount), true),
-                  REQUEST_CODE_CREATE_OR_IMPORT_KEY);
+            if (sign != null) {
+              Intent intent = CreateOrImportKeyActivity.newIntent(this, new AccountDao(sign), true);
+              startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY);
             }
-          } else if (isStartCheckKeysActivityEnable) {
-            startActivityForResult(CheckKeysActivity.newIntent(this,
-                keyDetailsList,
-                getResources().getQuantityString(
-                    R.plurals.found_backup_of_your_account_key,
-                    keyDetailsList.size(),
-                    keyDetailsList.size()),
-                getString(R.string.continue_),
-                SecurityUtils.isKeysBackupExist(this) ? getString(R.string
-                    .use_existing_keys) : null,
-                getString(R.string.use_another_account)),
-                REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
+          } else if (isStartCheckKeysActivityEnabled) {
+            String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+                keyDetailsList.size(), keyDetailsList.size());
+            String positiveBtnTitle = getString(R.string.continue_);
+            String neutralBtnTitle = SecurityUtils.isKeysBackupExist(this) ?
+                getString(R.string.use_existing_keys) : null;
+            String negativeBtnTitle = getString(R.string.use_another_account);
+            Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, positiveBtnTitle,
+                neutralBtnTitle, negativeBtnTitle);
+            startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
           }
         } else if (loaderResult.getException() != null) {
           UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
@@ -268,16 +259,15 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
   }
 
-  private void runEmailManagerActivityWithCurrentGmailAccount() {
+  private void runEmailManagerActivity() {
     EmailSyncService.startEmailSyncService(this);
 
-    AccountDao account = addGmailAccount(currentGoogleSignInAccount);
+    AccountDao account = addGmailAccount(sign);
     if (account != null) {
       EmailManagerActivity.runEmailManagerActivity(this);
       finish();
     } else {
-      Toast.makeText(this, R.string.error_occurred_try_again_later,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -288,14 +278,14 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
    */
   private void clearInfoAboutOldAccount(AccountDao account) {
     if (account != null) {
-      getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{account.getEmail()});
+      Uri uri = Uri.parse(FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.CLEAN_DATABASE);
+      getContentResolver().delete(uri, null, new String[]{account.getEmail()});
     }
   }
 
   private void handleSignInResult(GoogleSignInResult googleSignInResult) {
     if (googleSignInResult.isSuccess()) {
-      currentGoogleSignInAccount = googleSignInResult.getSignInAccount();
+      sign = googleSignInResult.getSignInAccount();
 
       startService(new Intent(this, CheckClipboardToFindKeyService.class));
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);

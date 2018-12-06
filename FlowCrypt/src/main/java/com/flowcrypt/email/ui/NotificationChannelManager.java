@@ -39,8 +39,8 @@ public class NotificationChannelManager {
           (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
       if (notificationManager != null) {
-        notificationManager.createNotificationChannel(generateAttachmentsNotificationChannel(context));
-        notificationManager.createNotificationChannel(generateMessagesNotificationChannel(context));
+        notificationManager.createNotificationChannel(genAttachmentsNotificationChannel(context));
+        notificationManager.createNotificationChannel(genMessagesNotificationChannel(context));
       }
     }
   }
@@ -52,7 +52,7 @@ public class NotificationChannelManager {
    * @return Generated {@link NotificationChannel}
    */
   @RequiresApi(api = Build.VERSION_CODES.O)
-  private static NotificationChannel generateMessagesNotificationChannel(Context context) {
+  private static NotificationChannel genMessagesNotificationChannel(Context context) {
     CharSequence name = context.getString(R.string.messages);
     String description = context.getString(R.string.messages_notification_channel);
     int importance = NotificationManager.IMPORTANCE_DEFAULT;
@@ -72,7 +72,7 @@ public class NotificationChannelManager {
    * @return Generated {@link NotificationChannel}
    */
   @RequiresApi(api = Build.VERSION_CODES.O)
-  private static NotificationChannel generateAttachmentsNotificationChannel(Context context) {
+  private static NotificationChannel genAttachmentsNotificationChannel(Context context) {
     CharSequence name = context.getString(R.string.attachments);
     String description = context.getString(R.string.download_attachments_notification_channel);
     int importance = NotificationManager.IMPORTANCE_DEFAULT;

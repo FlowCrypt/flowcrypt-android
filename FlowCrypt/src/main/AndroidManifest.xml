@@ -95,7 +95,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activity.ImportPublicKeyForPgpContactActivity"
+            android:name=".ui.activity.ImportPublicKeyActivity"
             android:screenOrientation="portrait" />
 
         <activity

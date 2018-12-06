@@ -95,7 +95,7 @@ public class LookUpEmailResponse extends BaseApiResponse {
     return attested;
   }
 
-  public boolean isHasCryptup() {
+  public boolean hasCryptup() {
     return hasCryptup;
   }
 

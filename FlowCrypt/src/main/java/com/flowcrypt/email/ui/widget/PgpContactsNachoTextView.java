@@ -44,13 +44,13 @@ import androidx.annotation.NonNull;
 
 public class PgpContactsNachoTextView extends NachoTextView {
   private GestureDetector gestureDetector;
-  private OnChipLongClickListener onChipLongClickListener;
-  private ChipLongClickOnGestureListener chipLongClickOnGestureListener;
+  private OnChipLongClickListener listener;
+  private ChipLongClickOnGestureListener gestureListener;
 
   public PgpContactsNachoTextView(Context context, AttributeSet attrs) {
     super(context, attrs);
-    this.chipLongClickOnGestureListener = new ChipLongClickOnGestureListener();
-    this.gestureDetector = new GestureDetector(getContext(), chipLongClickOnGestureListener);
+    this.gestureListener = new ChipLongClickOnGestureListener();
+    this.gestureDetector = new GestureDetector(getContext(), gestureListener);
     setCustomSelectionActionModeCallback(new CustomActionModeCallback());
   }
 
@@ -59,9 +59,7 @@ public class PgpContactsNachoTextView extends NachoTextView {
    */
   @Override
   public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
-    CharSequence text =
-        this.getFilter().convertResultToString(this.getAdapter().getItem(position));
+    CharSequence text = this.getFilter().convertResultToString(this.getAdapter().getItem(position));
 
     if (!getText().toString().contains(text)) {
       super.onItemClick(adapterView, view, position, id);
@@ -99,20 +97,17 @@ public class PgpContactsNachoTextView extends NachoTextView {
 
     switch (id) {
       case android.R.id.cut:
-        setClipboardData(ClipData.newPlainText(null,
-            removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
+        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
         getText().delete(getSelectionStart(), getSelectionEnd());
         return true;
 
       case android.R.id.copy:
-        setClipboardData(ClipData.newPlainText(null,
-            removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
+        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
         return true;
 
       case android.R.id.paste:
         StringBuilder stringBuilder = new StringBuilder();
-        ClipboardManager clipboardManager =
-            (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboardManager != null) {
           ClipData clip = clipboardManager.getPrimaryClip();
           if (clip != null) {
@@ -134,8 +129,8 @@ public class PgpContactsNachoTextView extends NachoTextView {
     }
   }
 
-  public void setOnChipLongClickListener(OnChipLongClickListener onChipLongClickListener) {
-    this.onChipLongClickListener = onChipLongClickListener;
+  public void setListener(OnChipLongClickListener listener) {
+    this.listener = listener;
   }
 
   private void setClipboardData(ClipData clip) {
@@ -183,8 +178,8 @@ public class PgpContactsNachoTextView extends NachoTextView {
       }
 
       SuggestionSpan[] spans = spannable.getSpans(0, text.length(), SuggestionSpan.class);
-      for (int i = 0; i < spans.length; i++) {
-        spannable.removeSpan(spans[i]);
+      for (SuggestionSpan span : spans) {
+        spannable.removeSpan(span);
       }
     }
     return text;
@@ -254,11 +249,11 @@ public class PgpContactsNachoTextView extends NachoTextView {
       super.onLongPress(event);
       performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
 
-      if (onChipLongClickListener != null) {
+      if (listener != null) {
         Chip chip = findLongClickedChip(event);
 
         if (chip != null) {
-          onChipLongClickListener.onChipLongClick(PgpContactsNachoTextView.this, chip, event);
+          listener.onChipLongClick(PgpContactsNachoTextView.this, chip, event);
         }
       }
     }

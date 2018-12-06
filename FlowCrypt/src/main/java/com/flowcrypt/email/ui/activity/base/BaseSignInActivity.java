@@ -43,14 +43,14 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   protected GoogleApiClient client;
   protected boolean isRunSignInWithGmailNeeded;
 
-  protected GoogleSignInAccount currentGoogleSignInAccount;
+  protected GoogleSignInAccount sign;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     if (savedInstanceState != null) {
-      this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+      this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
     }
 
     initGoogleApiClient();
@@ -60,7 +60,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
+    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, sign);
   }
 
   @Override

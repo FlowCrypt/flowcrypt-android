@@ -63,10 +63,10 @@ import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPublicKeyForPgpContactActivity;
+import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
 import com.flowcrypt.email.ui.activity.SelectContactsActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
-import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptedTypeListener;
+import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener;
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter;
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
 import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
@@ -127,7 +127,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
   private Js js;
   private OnMessageSendListener onMessageSendListener;
-  private OnChangeMessageEncryptedTypeListener onChangeMessageEncryptedTypeListener;
+  private OnChangeMessageEncryptionTypeListener listener;
   private List<PgpContact> pgpContactsTo;
   private List<PgpContact> pgpContactsCc;
   private List<PgpContact> pgpContactsBcc;
@@ -186,10 +186,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     } else throw new IllegalArgumentException(context.toString() + " must implement " +
         OnMessageSendListener.class.getSimpleName());
 
-    if (context instanceof OnChangeMessageEncryptedTypeListener) {
-      this.onChangeMessageEncryptedTypeListener = (OnChangeMessageEncryptedTypeListener) context;
+    if (context instanceof OnChangeMessageEncryptionTypeListener) {
+      this.listener = (OnChangeMessageEncryptionTypeListener) context;
     } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        OnChangeMessageEncryptedTypeListener.class.getSimpleName());
+        OnChangeMessageEncryptionTypeListener.class.getSimpleName());
   }
 
   @Override
@@ -203,11 +203,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1, new
         ArrayList<String>());
     fromAddrs.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    fromAddrs.setUseKeysInfo(onChangeMessageEncryptedTypeListener.getMessageEncryptionType()
+    fromAddrs.setUseKeysInfo(listener.getMsgEncryptionType()
         == MessageEncryptionType.ENCRYPTED);
     if (account != null) {
       fromAddrs.add(account.getEmail());
-      fromAddrs.updateKeyAvailable(account.getEmail(), !CollectionUtils.isEmpty(
+      fromAddrs.updateKeyAvailability(account.getEmail(), !CollectionUtils.isEmpty(
           new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
@@ -241,7 +241,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this);
     }
 
-    boolean isEncryptedMode = onChangeMessageEncryptedTypeListener.getMessageEncryptionType() ==
+    boolean isEncryptedMode = listener.getMsgEncryptionType() ==
         MessageEncryptionType.ENCRYPTED;
     if (msgInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext()) && isEncryptedMode) {
       updateRecipients();
@@ -272,7 +272,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
         switch (resultCode) {
           case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-            onChangeMessageEncryptedTypeListener.onMessageEncryptionTypeChange(MessageEncryptionType.STANDARD);
+            listener.onMessageEncryptionTypeChanged(MessageEncryptionType.STANDARD);
             break;
 
           case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
@@ -280,7 +280,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
               PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
               if (pgpContact != null) {
-                startActivityForResult(ImportPublicKeyForPgpContactActivity.newIntent(getContext(),
+                startActivityForResult(ImportPublicKeyActivity.newIntent(getContext(),
                     getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY);
               }
             }
@@ -507,13 +507,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         fromAddrs.addAll(aliases);
 
         for (String email : aliases) {
-          fromAddrs.updateKeyAvailable(email, !CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource()
+          fromAddrs.updateKeyAvailability(email, !CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource()
               .getLongIdsByEmail(getContext(), email)));
         }
 
         if (msgInfo != null) {
           prepareAliasForReplyIfNeed(aliases);
-        } else if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+        } else if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           showFirstMatchedAliasWithPrvKey(aliases);
         }
 
@@ -617,7 +617,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     switch (parent.getId()) {
       case R.id.spinnerFrom:
         editTextFrom.setText((CharSequence) parent.getAdapter().getItem(position));
-        if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+        if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           ArrayAdapter adapter = (ArrayAdapter) parent.getAdapter();
           int colorGray = UIUtil.getColor(getContext(), R.color.gray);
           editTextFrom.setTextColor(adapter.isEnabled(position) ? originalColor : colorGray);
@@ -833,7 +833,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private List<PgpContact> runUpdatePgpContactsAction(List<PgpContact> pgpContacts, View progressBar,
                                                       int loaderId, boolean hasFocus) {
-    if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+    if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
       progressBar.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
       if (hasFocus) {
         pgpContacts.clear();
@@ -858,7 +858,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @param aliases A list of Gmail aliases.
    */
   private void prepareAliasForReplyIfNeed(List<String> aliases) {
-    MessageEncryptionType messageEncryptionType = onChangeMessageEncryptedTypeListener.getMessageEncryptionType();
+    MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
     ArrayList<String> toAddresses;
     if (folderType == FoldersManager.FolderType.SENT) {
@@ -952,7 +952,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       messageInfo.setRawReplyMessage(msgInfo.getOriginalRawMessageWithoutAtts());
     }
 
-    if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+    if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
       pgpContactsTo = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsTo.getChipValues());
       pgpContactsCc = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsCc.getChipValues());
       pgpContactsBcc = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsBcc.getChipValues());
@@ -1033,7 +1033,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
     pgpContactsNachoTextView.setAdapter(preparePgpContactAdapter());
     pgpContactsNachoTextView.setOnFocusChangeListener(this);
-    pgpContactsNachoTextView.setOnChipLongClickListener(this);
+    pgpContactsNachoTextView.setListener(this);
   }
 
   /**
@@ -1062,7 +1062,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         || hasNotValidEmail(editTextRecipientsBcc);
 
     if (!hasNotValidEmail) {
-      if (onChangeMessageEncryptedTypeListener.getMessageEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+      if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
         if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) && pgpContactsTo.isEmpty()) {
           showUpdateContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_to);
           return false;
@@ -1217,7 +1217,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * screen.
    */
   private void updateViews() {
-    onMessageEncryptionTypeChange(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
+    onMessageEncryptionTypeChange(listener.getMsgEncryptionType());
 
     if (extraActionInfo != null) {
       updateViewsFromExtraActionInfo();
@@ -1545,7 +1545,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     msgInfo.setAttachments(attachmentInfoList);
     msgInfo.setForwardedAttachments(forwardedAttachmentInfoList);
-    msgInfo.setEncryptionType(onChangeMessageEncryptedTypeListener.getMessageEncryptionType());
+    msgInfo.setEncryptionType(listener.getMsgEncryptionType());
     msgInfo.setForwarded(messageType == MessageType.FORWARD);
 
     if (onMessageSendListener != null) {

@@ -32,11 +32,11 @@ import androidx.loader.content.AsyncTaskLoader;
  */
 public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
-  private final AuthCredentials authCredentials;
+  private final AuthCredentials authCreds;
 
-  public CheckEmailSettingsAsyncTaskLoader(Context context, AuthCredentials authCredentials) {
+  public CheckEmailSettingsAsyncTaskLoader(Context context, AuthCredentials authCreds) {
     super(context);
-    this.authCredentials = authCredentials;
+    this.authCreds = authCreds;
     onContentChanged();
   }
 
@@ -49,12 +49,11 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
   @Override
   public LoaderResult loadInBackground() {
-    Session session = Session.getInstance(
-        PropertiesHelper.generatePropertiesFromAuthCredentials(authCredentials));
-    session.setDebug(EmailUtil.isDebugEnabled(getContext()));
+    Session sess = Session.getInstance(PropertiesHelper.generatePropertiesFromAuthCredentials(authCreds));
+    sess.setDebug(EmailUtil.isDebugEnabled(getContext()));
 
     try {
-      testImapConnection(session);
+      testImapConnection(sess);
     } catch (Exception e) {
       e.printStackTrace();
       Exception exception = new Exception("IMAP: " + e.getMessage(), e);
@@ -62,7 +61,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     }
 
     try {
-      testSmtpConnection(session);
+      testSmtpConnection(sess);
     } catch (Exception e) {
       e.printStackTrace();
       Exception exception = new Exception("SMTP: " + e.getMessage(), e);
@@ -85,8 +84,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
    */
   private void testImapConnection(Session session) throws MessagingException {
     Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
-    store.connect(authCredentials.getImapServer(), authCredentials.getImapPort(), authCredentials.getUsername(),
-        authCredentials.getPassword());
+    store.connect(authCreds.getImapServer(), authCreds.getImapPort(), authCreds.getUsername(), authCreds.getPassword());
     Folder folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX);
     folder.open(Folder.READ_ONLY);
     folder.close(false);
@@ -104,15 +102,15 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     String username;
     String password;
 
-    if (authCredentials.isUseCustomSignInForSmtp()) {
-      username = authCredentials.getSmtpSigInUsername();
-      password = authCredentials.getSmtpSignInPassword();
+    if (authCreds.isUseCustomSignInForSmtp()) {
+      username = authCreds.getSmtpSigInUsername();
+      password = authCreds.getSmtpSignInPassword();
     } else {
-      username = authCredentials.getUsername();
-      password = authCredentials.getPassword();
+      username = authCreds.getUsername();
+      password = authCreds.getPassword();
     }
 
-    transport.connect(authCredentials.getSmtpServer(), authCredentials.getSmtpPort(), username, password);
+    transport.connect(authCreds.getSmtpServer(), authCreds.getSmtpPort(), username, password);
     transport.close();
   }
 }

@@ -16,15 +16,15 @@ import com.flowcrypt.email.model.MessageEncryptionType;
  * E-mail: DenBond7@gmail.com
  */
 
-public interface OnChangeMessageEncryptedTypeListener {
+public interface OnChangeMessageEncryptionTypeListener {
 
   /**
    * Handle a switch of the message encryption type.
    *
    * @param messageEncryptionType The new message encryption type.
    */
-  void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType);
+  void onMessageEncryptionTypeChanged(MessageEncryptionType messageEncryptionType);
 
-  MessageEncryptionType getMessageEncryptionType();
+  MessageEncryptionType getMsgEncryptionType();
 }
 

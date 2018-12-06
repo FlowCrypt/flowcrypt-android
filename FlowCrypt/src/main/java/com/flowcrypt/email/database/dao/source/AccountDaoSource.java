@@ -418,7 +418,7 @@ public class AccountDaoSource extends BaseDaoSource {
    * @param email   The account which will be set as active.
    * @return The count of updated rows.
    */
-  public int setIsShowOnlyEncryptedMessages(Context context, String email, boolean onlyEncryptedMsgs) {
+  public int setShowOnlyEncryptedMessages(Context context, String email, boolean onlyEncryptedMsgs) {
     if (email == null) {
       return -1;
     }

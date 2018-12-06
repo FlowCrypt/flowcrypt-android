@@ -65,11 +65,9 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
-      List<String> longIdListOfAccountPrivateKeys = new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-          (getContext(), account.getEmail());
+      List<String> longIds = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail());
 
-      PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys
-          (longIdListOfAccountPrivateKeys.toArray(new String[0]));
+      PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
 
       if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
         throw new NoPrivateKeysAvailableException(getContext(), account.getEmail());
@@ -87,8 +85,7 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
       for (ContentProviderResult contentProviderResult : contentProviderResults) {
         if (contentProviderResult.count < 1) {
-          throw new IllegalArgumentException("An error occurred when we tried update " +
-              contentProviderResult.uri);
+          throw new IllegalArgumentException("An error occurred when we tried update " + contentProviderResult.uri);
         }
       }
 

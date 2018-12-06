@@ -33,6 +33,8 @@ import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.List;
+
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,7 +63,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   private View layoutSyncStatus;
   private TextView textViewOptionsHint;
   private RadioGroup radioGroupBackupsVariants;
-  private Button buttonBackupAction;
+  private Button btnBackupAction;
 
   private Uri destinationUri;
   private AccountDao account;
@@ -105,10 +107,8 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
 
         if (e instanceof PrivateKeyStrengthException) {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
-          showSnackbar(getRootView(),
-              getString(R.string.pass_phrase_is_too_weak),
-              getString(R.string.change_pass_phrase),
-              new View.OnClickListener() {
+          showSnackbar(getRootView(), getString(R.string.pass_phrase_is_too_weak),
+              getString(R.string.change_pass_phrase), new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                   startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
@@ -117,9 +117,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
               });
         } else if (e instanceof DifferentPassPhrasesException) {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
-          showSnackbar(getRootView(),
-              getString(R.string.different_pass_phrases),
-              getString(R.string.fix),
+          showSnackbar(getRootView(), getString(R.string.different_pass_phrases), getString(R.string.fix),
               new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -132,18 +130,13 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
           showInfoSnackbar(getRootView(), e.getMessage(), Snackbar.LENGTH_LONG);
         } else {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
-          showSnackbar(getRootView(),
-              getString(R.string.backup_was_not_sent),
-              getString(R.string.retry),
+          showSnackbar(getRootView(), getString(R.string.backup_was_not_sent), getString(R.string.retry),
               new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                   layoutSyncStatus.setVisibility(View.GONE);
-                  UIUtil.exchangeViewVisibility(
-                      BackupKeysActivity.this, true,
-                      progressBar, layoutContent);
-                  sendMessageWithPrivateKeyBackup(R.id
-                      .syns_send_backup_with_private_key_to_key_owner);
+                  UIUtil.exchangeViewVisibility(BackupKeysActivity.this, true, progressBar, layoutContent);
+                  sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
                 }
               });
         }
@@ -179,8 +172,8 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonBackupAction:
-        if (CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource().getLongIdsByEmail
-            (getApplicationContext(), account.getEmail()))) {
+        List<String> longIds = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(this, account.getEmail());
+        if (CollectionUtils.isEmpty(longIds)) {
           showInfoSnackbar(getRootView(), getString(R.string.there_are_no_private_keys,
               account.getEmail()), Snackbar.LENGTH_LONG);
         } else {
@@ -217,14 +210,14 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
           case R.id.radioButtonEmail:
             if (textViewOptionsHint != null) {
               textViewOptionsHint.setText(R.string.backup_as_email_hint);
-              buttonBackupAction.setText(R.string.backup_as_email);
+              btnBackupAction.setText(R.string.backup_as_email);
             }
             break;
 
           case R.id.radioButtonDownload:
             if (textViewOptionsHint != null) {
               textViewOptionsHint.setText(R.string.backup_as_download_hint);
-              buttonBackupAction.setText(R.string.backup_as_a_file);
+              btnBackupAction.setText(R.string.backup_as_a_file);
             }
             break;
         }
@@ -242,8 +235,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             if (data != null && data.getData() != null) {
               try {
                 destinationUri = data.getData();
-                LoaderManager.getInstance(this).restartLoader(R.id.loader_id_save_private_key_as_file,
-                    null, this);
+                LoaderManager.getInstance(this).restartLoader(R.id.loader_id_save_private_key_as_file, null, this);
               } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
@@ -314,26 +306,22 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         isPrivateKeySavingNow = false;
         if (e instanceof PrivateKeyStrengthException) {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
-          showSnackbar(getRootView(),
-              getString(R.string.pass_phrase_is_too_weak),
-              getString(R.string.change_pass_phrase),
-              new View.OnClickListener() {
+          showSnackbar(getRootView(), getString(R.string.pass_phrase_is_too_weak),
+              getString(R.string.change_pass_phrase), new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                  startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                  startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this, account),
+                      REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else if (e instanceof DifferentPassPhrasesException) {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
-          showSnackbar(getRootView(),
-              getString(R.string.different_pass_phrases),
-              getString(R.string.fix),
+          showSnackbar(getRootView(), getString(R.string.different_pass_phrases), getString(R.string.fix),
               new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                  startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                      account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+                  startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this, account),
+                      REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
                 }
               });
         } else {
@@ -364,9 +352,9 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
       radioGroupBackupsVariants.setOnCheckedChangeListener(this);
     }
 
-    buttonBackupAction = findViewById(R.id.buttonBackupAction);
-    if (buttonBackupAction != null) {
-      buttonBackupAction.setOnClickListener(this);
+    btnBackupAction = findViewById(R.id.buttonBackupAction);
+    if (btnBackupAction != null) {
+      btnBackupAction.setOnClickListener(this);
     }
   }
 

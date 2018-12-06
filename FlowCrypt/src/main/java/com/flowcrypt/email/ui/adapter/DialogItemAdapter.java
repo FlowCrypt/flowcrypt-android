@@ -29,25 +29,25 @@ import java.util.List;
 
 public class DialogItemAdapter extends BaseAdapter {
   private LayoutInflater inflater;
-  private List<DialogItem> dialogItems;
+  private List<DialogItem> items;
 
-  public DialogItemAdapter(Context context, List<DialogItem> dialogItems) {
-    this.dialogItems = dialogItems;
+  public DialogItemAdapter(Context context, List<DialogItem> items) {
+    this.items = items;
     this.inflater = LayoutInflater.from(context);
 
-    if (this.dialogItems == null) {
-      this.dialogItems = new ArrayList<>();
+    if (this.items == null) {
+      this.items = new ArrayList<>();
     }
   }
 
   @Override
   public int getCount() {
-    return dialogItems.size();
+    return items.size();
   }
 
   @Override
   public DialogItem getItem(int position) {
-    return dialogItems.get(position);
+    return items.get(position);
   }
 
   @Override
@@ -69,10 +69,14 @@ public class DialogItemAdapter extends BaseAdapter {
       viewHolder = (ViewHolder) convertView.getTag();
     }
 
-    viewHolder.textViewItemTitle.setText(dialogItem.getTitle());
-    viewHolder.textViewItemTitle.setCompoundDrawablesWithIntrinsicBounds(dialogItem.getIconResourceId(), 0, 0, 0);
+    updateView(dialogItem, viewHolder);
 
     return convertView;
+  }
+
+  private void updateView(DialogItem dialogItem, ViewHolder viewHolder) {
+    viewHolder.textViewItemTitle.setText(dialogItem.getTitle());
+    viewHolder.textViewItemTitle.setCompoundDrawablesWithIntrinsicBounds(dialogItem.getIconResourceId(), 0, 0, 0);
   }
 
   private static class ViewHolder {

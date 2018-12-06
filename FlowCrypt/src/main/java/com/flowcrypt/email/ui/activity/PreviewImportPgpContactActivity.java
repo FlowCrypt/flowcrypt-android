@@ -73,14 +73,13 @@ public class PreviewImportPgpContactActivity extends BaseBackStackActivity {
     String publicKeysString = getIntent().getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING);
     Uri publicKeysFileUri = getIntent().getParcelableExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI);
 
-    FragmentManager supportFragmentManager = getSupportFragmentManager();
-    PreviewImportPgpContactFragment previewImportPgpContactFragment = (PreviewImportPgpContactFragment)
-        supportFragmentManager.findFragmentById(R.id.layoutContent);
+    FragmentManager fragmentManager = getSupportFragmentManager();
+    PreviewImportPgpContactFragment fragment = (PreviewImportPgpContactFragment)
+        fragmentManager.findFragmentById(R.id.layoutContent);
 
-    if (previewImportPgpContactFragment == null) {
-      previewImportPgpContactFragment =
-          PreviewImportPgpContactFragment.newInstance(publicKeysString, publicKeysFileUri);
-      supportFragmentManager.beginTransaction().add(R.id.layoutContent, previewImportPgpContactFragment).commit();
+    if (fragment == null) {
+      fragment = PreviewImportPgpContactFragment.newInstance(publicKeysString, publicKeysFileUri);
+      fragmentManager.beginTransaction().add(R.id.layoutContent, fragment).commit();
     }
   }
 

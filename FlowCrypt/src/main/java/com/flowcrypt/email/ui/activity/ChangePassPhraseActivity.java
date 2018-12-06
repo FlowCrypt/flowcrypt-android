@@ -119,8 +119,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
         isBackEnable = false;
         UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-        return new ChangePassPhraseAsyncTaskLoader(this, account,
-            editTextKeyPassword.getText().toString());
+        return new ChangePassPhraseAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
 
       case R.id.loader_id_load_private_key_backups_from_email:
         return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);

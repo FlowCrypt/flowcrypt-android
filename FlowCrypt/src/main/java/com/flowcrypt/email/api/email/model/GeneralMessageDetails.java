@@ -182,7 +182,7 @@ public class GeneralMessageDetails implements Parcelable {
     this.uid = uid;
   }
 
-  public long getReceivedDateInMillisecond() {
+  public long getReceivedDate() {
     return receivedDateInMillisecond;
   }
 
@@ -190,7 +190,7 @@ public class GeneralMessageDetails implements Parcelable {
     this.receivedDateInMillisecond = receivedDateInMillisecond;
   }
 
-  public long getSentDateInMillisecond() {
+  public long getSentDate() {
     return sentDateInMillisecond;
   }
 

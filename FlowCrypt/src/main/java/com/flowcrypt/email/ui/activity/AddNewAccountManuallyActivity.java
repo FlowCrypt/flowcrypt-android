@@ -88,10 +88,10 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   private View progressView;
   private View contentView;
   private CheckBox checkBoxRequireSignInForSmtp;
-  private AuthCredentials authCredentials;
+  private AuthCredentials authCreds;
 
-  private boolean isImapSpinnerInitAfterStart;
-  private boolean isSmtpSpinnerInitAfterStart;
+  private boolean isImapSpinnerRestored;
+  private boolean isSmtpSpinnerRestored;
 
   @Override
   public boolean isDisplayHomeAsUpEnabled() {
@@ -116,11 +116,11 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.authCredentials = getTempAuthCredentialsFromPreferences();
+    this.authCreds = getTempAuthCredentials();
 
-    if (authCredentials == null) {
-      isImapSpinnerInitAfterStart = true;
-      isSmtpSpinnerInitAfterStart = true;
+    if (authCreds == null) {
+      isImapSpinnerRestored = true;
+      isSmtpSpinnerRestored = true;
     }
 
     initViews(savedInstanceState);
@@ -129,7 +129,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   @Override
   public void onPause() {
     super.onPause();
-    saveTempCredentialsToPreferences();
+    saveTempCredentials();
   }
 
   @Override
@@ -184,20 +184,20 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
     switch (parent.getId()) {
       case R.id.spinnerImapSecurityType:
-        SecurityType securityTypeForImap = (SecurityType) parent.getAdapter().getItem(position);
-        if (isImapSpinnerInitAfterStart) {
-          editTextImapPort.setText(String.valueOf(securityTypeForImap.getDefImapPort()));
+        SecurityType imapSecurityType = (SecurityType) parent.getAdapter().getItem(position);
+        if (isImapSpinnerRestored) {
+          editTextImapPort.setText(String.valueOf(imapSecurityType.getDefImapPort()));
         } else {
-          isImapSpinnerInitAfterStart = true;
+          isImapSpinnerRestored = true;
         }
         break;
 
       case R.id.spinnerSmtpSecyrityType:
-        SecurityType securityTypeForSmtp = (SecurityType) parent.getAdapter().getItem(position);
-        if (isSmtpSpinnerInitAfterStart) {
-          editTextSmtpPort.setText(String.valueOf(securityTypeForSmtp.getDefaultSmtpPort()));
+        SecurityType smtpSecurityType = (SecurityType) parent.getAdapter().getItem(position);
+        if (isSmtpSpinnerRestored) {
+          editTextSmtpPort.setText(String.valueOf(smtpSecurityType.getDefaultSmtpPort()));
         } else {
-          isSmtpSpinnerInitAfterStart = true;
+          isSmtpSpinnerRestored = true;
         }
         break;
     }
@@ -212,14 +212,14 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonTryToConnect:
-        if (isAllInformationCorrect()) {
-          authCredentials = generateAuthCredentials();
+        if (isDataCorrect()) {
+          authCreds = generateAuthCredentials();
           UIUtil.hideSoftInput(this, getRootView());
-          if (isNotDuplicate()) {
+          if (checkDuplicate()) {
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this);
           } else {
             showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
-                authCredentials.getEmail()), Snackbar.LENGTH_LONG);
+                authCreds.getEmail()), Snackbar.LENGTH_LONG);
           }
         }
         break;
@@ -255,13 +255,13 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_check_email_settings:
         UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
 
-        authCredentials = generateAuthCredentials();
-        return new CheckEmailSettingsAsyncTaskLoader(this, authCredentials);
+        authCreds = generateAuthCredentials();
+        return new CheckEmailSettingsAsyncTaskLoader(this, authCreds);
 
       case R.id.loader_id_load_private_key_backups_from_email:
         UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
-        AccountDao account = new AccountDao(authCredentials.getEmail(), null
-            , authCredentials.getUsername(), null, null, null, authCredentials, false);
+        AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
+            authCreds, false);
         return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       default:
@@ -284,10 +284,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_check_email_settings:
-        boolean isSettingsValid = (boolean) result;
-        if (isSettingsValid) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email,
-              null, this);
+        boolean isCorrect = (boolean) result;
+        if (isCorrect) {
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         } else {
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
           showInfoSnackbar(getRootView(), getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG);
@@ -297,21 +296,18 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_load_private_key_backups_from_email:
         ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
         if (keyDetailsList.isEmpty()) {
-          AccountDao account = new AccountDao(authCredentials.getEmail(),
-              null, authCredentials.getUsername(), null, null, null, authCredentials, false);
+          AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
+              authCreds, false);
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_ADD_NEW_ACCOUNT);
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
         } else {
-          startActivityForResult(CheckKeysActivity.newIntent(this,
-              keyDetailsList,
-              getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
-                  keyDetailsList.size(),
-                  keyDetailsList.size()),
-              getString(R.string.continue_),
-              SecurityUtils.isKeysBackupExist(this) ? getString(R.string.use_existing_keys) : null,
-              getString(R.string.use_another_account)),
-              REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
+          String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+              keyDetailsList.size(), keyDetailsList.size());
+          String neutralBtnTitle = SecurityUtils.isKeysBackupExist(this) ? getString(R.string.use_existing_keys) : null;
+          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle,
+              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
+          startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
         }
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
@@ -331,10 +327,12 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         Throwable original = e != null ? e.getCause() : null;
         if (original != null) {
           if (original instanceof AuthenticationFailedException) {
-            if (editTextImapServer.getText().toString().equalsIgnoreCase(
-                GmailConstants.GMAIL_IMAP_SERVER) && !TextUtils.isEmpty(original.getMessage()) &&
-                original.getMessage().startsWith(
-                    GmailConstants.GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)) {
+            boolean isGmailImapServer = editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants
+                .GMAIL_IMAP_SERVER);
+            boolean isMsgEmpty = TextUtils.isEmpty(original.getMessage());
+            boolean isAlertExists = original.getMessage().startsWith(
+                GmailConstants.GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
+            if (isGmailImapServer && !isMsgEmpty && isAlertExists) {
               showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
                   getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                     @Override
@@ -348,8 +346,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
                   : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
             }
           } else if (original instanceof MailConnectException || original instanceof SocketTimeoutException) {
-            showSnackbar(getRootView(), getString(R.string.network_error_please_retry),
-                getString(R.string.retry), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+            showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
+                Snackbar.LENGTH_LONG, new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
                     LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
@@ -379,9 +377,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
    * Return the {@link Activity#RESULT_OK} to the initiator-activity.
    */
   private void returnOkResult() {
-    authCredentials = generateAuthCredentials();
+    authCreds = generateAuthCredentials();
     Intent intent = new Intent();
-    intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCredentials);
+    intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCreds);
     setResult(Activity.RESULT_OK, intent);
     finish();
   }
@@ -391,8 +389,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
    *
    * @return true if email not added yet, otherwise false.
    */
-  private boolean isNotDuplicate() {
-    return new AccountDaoSource().getAccountInformation(this, authCredentials.getEmail()) == null;
+  private boolean checkDuplicate() {
+    return new AccountDaoSource().getAccountInformation(this, authCreds.getEmail()) == null;
   }
 
   private void initViews(Bundle savedInstanceState) {
@@ -417,11 +415,11 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     spinnerImapSecyrityType = findViewById(R.id.spinnerImapSecurityType);
     spinnerSmtpSecyrityType = findViewById(R.id.spinnerSmtpSecyrityType);
 
-    ArrayAdapter<SecurityType> userAdapter = new ArrayAdapter<>(this,
-        android.R.layout.simple_spinner_dropdown_item, SecurityType.generateSecurityTypes(this));
+    ArrayAdapter<SecurityType> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item,
+        SecurityType.generateSecurityTypes(this));
 
-    spinnerImapSecyrityType.setAdapter(userAdapter);
-    spinnerSmtpSecyrityType.setAdapter(userAdapter);
+    spinnerImapSecyrityType.setAdapter(adapter);
+    spinnerSmtpSecyrityType.setAdapter(adapter);
 
     spinnerImapSecyrityType.setOnItemSelectedListener(this);
     spinnerSmtpSecyrityType.setOnItemSelectedListener(this);
@@ -439,29 +437,27 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
    * Update the current views if {@link AuthCredentials} not null.l
    */
   private void updateView() {
-    if (authCredentials != null) {
+    if (authCreds != null) {
 
-      editTextEmail.setText(authCredentials.getEmail());
-      editTextUserName.setText(authCredentials.getUsername());
-      editTextImapServer.setText(authCredentials.getImapServer());
-      editTextImapPort.setText(String.valueOf(authCredentials.getImapPort()));
-      editTextSmtpServer.setText(authCredentials.getSmtpServer());
-      editTextSmtpPort.setText(String.valueOf(authCredentials.getSmtpPort()));
-      checkBoxRequireSignInForSmtp.setChecked(authCredentials.isUseCustomSignInForSmtp());
-      editTextSmtpUsername.setText(authCredentials.getSmtpSigInUsername());
+      editTextEmail.setText(authCreds.getEmail());
+      editTextUserName.setText(authCreds.getUsername());
+      editTextImapServer.setText(authCreds.getImapServer());
+      editTextImapPort.setText(String.valueOf(authCreds.getImapPort()));
+      editTextSmtpServer.setText(authCreds.getSmtpServer());
+      editTextSmtpPort.setText(String.valueOf(authCreds.getSmtpPort()));
+      checkBoxRequireSignInForSmtp.setChecked(authCreds.isUseCustomSignInForSmtp());
+      editTextSmtpUsername.setText(authCreds.getSmtpSigInUsername());
 
       int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();
       for (int i = 0; i < imapOptionsCount; i++) {
-        if (authCredentials.getImapOpt() ==
-            ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOption()) {
+        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOption()) {
           spinnerImapSecyrityType.setSelection(i);
         }
       }
 
       int smtpOptionsCount = spinnerSmtpSecyrityType.getAdapter().getCount();
       for (int i = 0; i < smtpOptionsCount; i++) {
-        if (authCredentials.getSmtpOpt() ==
-            ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOption()) {
+        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOption()) {
           spinnerSmtpSecyrityType.setSelection(i);
         }
       }
@@ -471,19 +467,19 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   /**
    * Save the current {@link AuthCredentials} to the shared preferences.
    */
-  private void saveTempCredentialsToPreferences() {
-    authCredentials = generateAuthCredentials();
+  private void saveTempCredentials() {
+    authCreds = generateAuthCredentials();
     Gson gson = new Gson();
-    authCredentials.setPassword(null);
-    authCredentials.setSmtpSignInPassword(null);
+    authCreds.setPassword(null);
+    authCreds.setSmtpSignInPassword(null);
     SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
-        Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCredentials));
+        Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds));
   }
 
   /**
    * Retrieve a temp {@link AuthCredentials} from the shared preferences.
    */
-  private AuthCredentials getTempAuthCredentialsFromPreferences() {
+  private AuthCredentials getTempAuthCredentials() {
     String authCredentialsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences
         (this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "");
 
@@ -531,7 +527,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
    *
    * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
    */
-  private boolean isAllInformationCorrect() {
+  private boolean isDataCorrect() {
     if (TextUtils.isEmpty(editTextEmail.getText())) {
       showInfoSnackbar(editTextEmail, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)));
       editTextEmail.requestFocus();

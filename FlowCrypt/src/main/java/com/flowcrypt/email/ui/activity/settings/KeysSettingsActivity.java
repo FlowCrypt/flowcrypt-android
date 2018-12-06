@@ -33,8 +33,8 @@ public class KeysSettingsActivity extends BaseBackStackActivity {
     super.onCreate(savedInstanceState);
 
     if (savedInstanceState == null) {
-      getSupportFragmentManager().beginTransaction().replace(R.id.layoutContent,
-          KeysListFragment.newInstance()).commitNow();
+      KeysListFragment keysListFragment = KeysListFragment.newInstance();
+      getSupportFragmentManager().beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow();
     }
   }
 

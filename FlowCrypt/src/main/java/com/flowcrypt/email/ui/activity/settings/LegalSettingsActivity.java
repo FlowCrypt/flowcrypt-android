@@ -16,6 +16,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -59,8 +60,8 @@ public class LegalSettingsActivity extends BaseSettingsActivity {
   }
 
   private void initViews() {
-    viewPager = (ViewPager) findViewById(R.id.viewPager);
-    tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+    viewPager = findViewById(R.id.viewPager);
+    tabLayout = findViewById(R.id.tabLayout);
   }
 
   private void updateViews() {
@@ -76,8 +77,7 @@ public class LegalSettingsActivity extends BaseSettingsActivity {
    * html file from the assets directory.
    */
   public static class WebViewFragment extends BaseFragment {
-    public static final String KEY_ASSETS_PATH =
-        BuildConfig.APPLICATION_ID + "" + ".KEY_ASSETS_PATH";
+    static final String KEY_ASSETS_PATH = BuildConfig.APPLICATION_ID + "" + ".KEY_ASSETS_PATH";
     private String assetsPath;
     private WebView webView;
 
@@ -107,18 +107,18 @@ public class LegalSettingsActivity extends BaseSettingsActivity {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
       webView = new WebView(getContext());
-      webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams
-          .MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+      webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT));
 
       return webView;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
       super.onViewCreated(view, savedInstanceState);
 
       if (webView != null) {

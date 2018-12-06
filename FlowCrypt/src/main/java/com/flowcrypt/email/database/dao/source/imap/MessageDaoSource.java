@@ -455,7 +455,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param uid     The message UID.
    * @return The count of the updated row or -1 up.
    */
-  public int setSeenStatusForLocalMessage(Context context, String email, String label, long uid) {
+  public int setSeenStatus(Context context, String email, String label, long uid) {
     ContentResolver resolver = context.getContentResolver();
     if (email != null && label != null && resolver != null) {
       ContentValues values = new ContentValues();

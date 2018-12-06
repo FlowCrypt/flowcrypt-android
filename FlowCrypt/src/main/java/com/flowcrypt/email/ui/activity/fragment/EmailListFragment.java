@@ -652,7 +652,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     updateList(true, true);
   }
 
-  public void onDrawerStateChange(boolean isOpen) {
+  public void onDrawerStateChanged(boolean isOpen) {
     isSaveChoicesNeeded = isOpen;
     if (isOpen) {
       if (actionMode != null) {

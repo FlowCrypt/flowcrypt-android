@@ -50,7 +50,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
 
   private List<String> privateKeys;
 
-  private boolean isLoadPrivateKeysRequestSent;
+  private boolean isRequestSent;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -118,10 +118,8 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
         if (!countingIdlingResource.isIdleNow()) {
           countingIdlingResource.decrement();
         }
-        UIUtil.showSnackbar(getRootView(),
-            getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(R.string.retry),
-            new View.OnClickListener() {
+        UIUtil.showSnackbar(getRootView(), getString(R.string.error_occurred_while_receiving_private_keys),
+            getString(R.string.retry), new View.OnClickListener() {
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
@@ -137,8 +135,8 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
   @Override
   public void onSyncServiceConnected() {
     super.onSyncServiceConnected();
-    if (!isLoadPrivateKeysRequestSent) {
-      isLoadPrivateKeysRequestSent = true;
+    if (!isRequestSent) {
+      isRequestSent = true;
       loadPrivateKeys(R.id.syns_load_private_keys);
     }
   }

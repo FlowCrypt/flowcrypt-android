@@ -565,9 +565,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
       textViewSubject.setText(subject);
       if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel())) {
-        textViewDate.setText(dateFormat.format(details.getSentDateInMillisecond()));
+        textViewDate.setText(dateFormat.format(details.getSentDate()));
       } else {
-        textViewDate.setText(dateFormat.format(details.getReceivedDateInMillisecond()));
+        textViewDate.setText(dateFormat.format(details.getReceivedDate()));
       }
     }
 

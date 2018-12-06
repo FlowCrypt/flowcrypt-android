@@ -61,16 +61,14 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
       if (baseRequest != null && baseRequest.getApiName() != null) {
         switch (baseRequest.getApiName()) {
           case POST_LOOKUP_EMAIL_SINGLE:
-            BaseResponse<LookUpEmailResponse> lookUpEmailResponse =
-                new BaseResponse<>();
+            BaseResponse<LookUpEmailResponse> lookUpEmailResponse = new BaseResponse<>();
             lookUpEmailResponse.setApiName(baseRequest.getApiName());
 
-            LookUpEmailRequest lookUpEmailRequest = (LookUpEmailRequest) baseRequest;
+            LookUpEmailRequest requestModel = (LookUpEmailRequest) baseRequest;
 
             if (apiService != null) {
               try {
-                lookUpEmailResponse.setResponse(apiService.postLookUpEmail
-                    (lookUpEmailRequest.getRequestModel()).execute());
+                lookUpEmailResponse.setResponse(apiService.postLookUpEmail(requestModel.getRequestModel()).execute());
               } catch (Exception e) {
                 lookUpEmailResponse.setException(catchException(e));
               }
@@ -79,17 +77,15 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
             break;
 
           case POST_HELP_FEEDBACK:
-            BaseResponse<PostHelpFeedbackResponse> postHelpFeedbackResponse =
-                new BaseResponse<>();
+            BaseResponse<PostHelpFeedbackResponse> postHelpFeedbackResponse = new BaseResponse<>();
             postHelpFeedbackResponse.setApiName(baseRequest.getApiName());
 
             PostHelpFeedbackRequest postHelpFeedbackRequest = (PostHelpFeedbackRequest) baseRequest;
 
             if (apiService != null) {
               try {
-                postHelpFeedbackResponse.setResponse(apiService
-                    .postHelpFeedbackResponse(postHelpFeedbackRequest
-                        .getRequestModel()).execute());
+                postHelpFeedbackResponse.setResponse(apiService.postHelpFeedbackResponse(postHelpFeedbackRequest
+                    .getRequestModel()).execute());
               } catch (Exception e) {
                 postHelpFeedbackResponse.setException(catchException(e));
               }
@@ -118,8 +114,7 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
             if (apiService != null) {
               try {
-                lookUpResponse.setResponse(apiService.getLookUp(
-                    ((LookUpRequest) baseRequest).getQuery()).execute());
+                lookUpResponse.setResponse(apiService.getLookUp(((LookUpRequest) baseRequest).getQuery()).execute());
               } catch (Exception e) {
                 e.printStackTrace();
                 ExceptionUtil.handleError(e);
@@ -147,15 +142,15 @@ public class ApiServiceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
 
     ApiServiceAsyncTaskLoader that = (ApiServiceAsyncTaskLoader) o;
 
-    if (apiHelper != null ? !apiHelper.equals(that.apiHelper) : that
-        .apiHelper != null) {
+    if (apiHelper != null ? !apiHelper.equals(that.apiHelper) : that.apiHelper != null) {
       return false;
     }
+
     if (baseRequest != null ? !baseRequest.equals(that.baseRequest) : that.baseRequest != null) {
       return false;
     }
-    return !(apiService != null ? !apiService.equals(that.apiService) : that.apiService !=
-        null);
+
+    return !(apiService != null ? !apiService.equals(that.apiService) : that.apiService != null);
 
   }
 

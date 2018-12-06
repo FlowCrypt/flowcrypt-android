@@ -42,7 +42,6 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey(
       "EXTRA_KEY_FOLDER", SearchMessagesActivity.class);
 
-  private SearchView searchView;
   private AccountDao account;
   private String initQuery;
   private LocalFolder localFolder;
@@ -143,7 +142,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
 
     menuItemSearch.setOnActionExpandListener(this);
 
-    searchView = (SearchView) menuItemSearch.getActionView();
+    SearchView searchView = (SearchView) menuItemSearch.getActionView();
     searchView.setQuery(initQuery, true);
     searchView.setQueryHint(getString(R.string.search));
     searchView.setOnQueryTextListener(this);
@@ -161,8 +160,7 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   public boolean onQueryTextSubmit(String query) {
     this.initQuery = query;
 
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())
-        && !SearchSequence.isAscii(query)) {
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()) && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
       return true;
     }

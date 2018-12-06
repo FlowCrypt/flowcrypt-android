@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -53,12 +54,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public static final String EXTRA_KEY_GENERAL_MESSAGE_DETAILS = GeneralUtil.generateUniqueExtraKey
       ("EXTRA_KEY_GENERAL_MESSAGE_DETAILS", MessageDetailsActivity.class);
 
-  private GeneralMessageDetails generalMessageDetails;
+  private GeneralMessageDetails details;
   private LocalFolder localFolder;
-  private boolean isNeedToReceiveMessageBody;
-  private boolean isBackEnable = true;
+  private boolean isReceiveMsgBodyNeeded;
+  private boolean isBackEnabled = true;
   private boolean isRequestMessageDetailsStarted;
-  private boolean isNeedToRetrieveIncomingMsg = true;
+  private boolean isRetrieveIncomingMsgNeeded = true;
 
   public static Intent getIntent(Context context, LocalFolder localFolder, GeneralMessageDetails details) {
     Intent intent = new Intent(context, MessageDetailsActivity.class);
@@ -82,12 +83,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     super.onCreate(savedInstanceState);
     if (getIntent() != null) {
       this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
-      this.generalMessageDetails = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
+      this.details = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
     }
 
     updateViews();
 
-    if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+    if (TextUtils.isEmpty(details.getRawMessageWithoutAttachments())) {
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
@@ -96,11 +97,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
   @Override
   public void onBackPressed() {
-    if (isBackEnable) {
+    if (isBackEnabled) {
       super.onBackPressed();
     } else {
-      Toast.makeText(this, R.string.please_wait_while_action_will_be_completed,
-          Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.please_wait_while_action_will_be_completed, Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -110,20 +110,20 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     switch (id) {
       case R.id.loader_id_load_message_info_from_database:
       case R.id.loader_id_subscribe_to_message_changes:
-        return new CursorLoader(this, new MessageDaoSource().
-            getBaseContentUri(),
-            null,
-            MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
-                + MessageDaoSource.COL_UID + " = ? ",
-            new String[]{generalMessageDetails.getEmail(), localFolder.getFolderAlias(),
-                String.valueOf(generalMessageDetails.getUid())}, null);
+        Uri uri = new MessageDaoSource().getBaseContentUri();
+        String selection = MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
+            + MessageDaoSource.COL_UID + " = ? ";
+        String[] selectionArgs = new String[]{details.getEmail(), localFolder.getFolderAlias(),
+            String.valueOf(details.getUid())};
+        return new CursorLoader(this, uri, null, selection, selectionArgs, null);
 
       case R.id.loader_id_load_attachments:
-        return new CursorLoader(this, new AttachmentDaoSource().getBaseContentUri(),
-            null, AttachmentDaoSource.COL_EMAIL + " = ?" + " AND " + AttachmentDaoSource.COL_FOLDER
-            + " = ?" + " AND " + AttachmentDaoSource.COL_UID + " = ?",
-            new String[]{generalMessageDetails.getEmail(), localFolder.getFolderAlias(),
-                String.valueOf(generalMessageDetails.getUid())}, null);
+        Uri uriAtt = new AttachmentDaoSource().getBaseContentUri();
+        String selectionAtt = AttachmentDaoSource.COL_EMAIL + " = ?" + " AND " + AttachmentDaoSource.COL_FOLDER
+            + " = ?" + " AND " + AttachmentDaoSource.COL_UID + " = ?";
+        String[] selectionArgsAtt = new String[]{details.getEmail(), localFolder.getFolderAlias(),
+            String.valueOf(details.getUid())};
+        return new CursorLoader(this, uriAtt, null, selectionAtt, selectionArgsAtt, null);
 
       default:
         return new Loader<>(this);
@@ -137,32 +137,30 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     switch (loader.getId()) {
       case R.id.loader_id_load_message_info_from_database:
         if (cursor != null && cursor.moveToFirst()) {
-          this.generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-          updateMessageDetails(generalMessageDetails);
+          this.details = messageDaoSource.getMessageInfo(cursor);
+          updateMessageDetails(details);
 
-          if (TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
+          if (TextUtils.isEmpty(details.getRawMessageWithoutAttachments())) {
             if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
               this.isRequestMessageDetailsStarted = true;
-              loadMessageDetails(R.id.syns_request_code_load_message_details,
-                  localFolder, generalMessageDetails.getUid());
+              loadMessageDetails(R.id.syns_request_code_load_message_details, localFolder, details.getUid());
             } else {
-              isNeedToReceiveMessageBody = true;
+              isReceiveMsgBodyNeeded = true;
             }
-          } else if (isNeedToRetrieveIncomingMsg) {
-            isNeedToRetrieveIncomingMsg = false;
-            isNeedToReceiveMessageBody = false;
-            messageDaoSource.setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
-                localFolder.getFolderAlias(), generalMessageDetails.getUid());
+          } else if (isRetrieveIncomingMsgNeeded) {
+            isRetrieveIncomingMsgNeeded = false;
+            isReceiveMsgBodyNeeded = false;
+            messageDaoSource.setSeenStatus(this, details.getEmail(),
+                localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            decryptMessage(R.id.js_decrypt_message, generalMessageDetails
-                .getRawMessageWithoutAttachments());
+            decryptMessage(R.id.js_decrypt_message, details.getRawMessageWithoutAttachments());
           }
         }
         break;
 
       case R.id.loader_id_subscribe_to_message_changes:
         if (cursor != null && cursor.moveToFirst()) {
-          generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
+          details = messageDaoSource.getMessageInfo(cursor);
           updateViews();
         }
         break;
@@ -174,7 +172,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             attInfolist.add(AttachmentDaoSource.getAttachmentInfo(cursor));
           }
 
-          updateAttsInfo(attInfolist);
+          updateAttachments(attInfolist);
         }
         break;
     }
@@ -187,12 +185,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         break;
 
       case R.id.loader_id_subscribe_to_message_changes:
-        generalMessageDetails = null;
+        details = null;
         updateViews();
         break;
 
       case R.id.loader_id_load_attachments:
-        updateAttsInfo(new ArrayList<AttachmentInfo>());
+        updateAttachments(new ArrayList<AttachmentInfo>());
         break;
     }
   }
@@ -201,8 +199,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   @Override
   public void onSyncServiceConnected() {
     super.onSyncServiceConnected();
-    if (isNeedToReceiveMessageBody) {
-      loadMessageDetails(R.id.syns_request_code_load_message_details, localFolder, generalMessageDetails.getUid());
+    if (isReceiveMsgBodyNeeded) {
+      loadMessageDetails(R.id.syns_request_code_load_message_details, localFolder, details.getUid());
     }
   }
 
@@ -213,8 +211,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         isRequestMessageDetailsStarted = false;
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
-            new MessageDaoSource().setSeenStatusForLocalMessage(this, generalMessageDetails.getEmail(),
-                localFolder.getFolderAlias(), generalMessageDetails.getUid());
+            String folderAlias = localFolder.getFolderAlias();
+            new MessageDaoSource().setSeenStatus(this, details.getEmail(), folderAlias, details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_message_info_from_database, null, this);
             break;
@@ -228,31 +226,29 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       case R.id.syns_request_archive_message:
       case R.id.syns_request_delete_message:
       case R.id.syns_request_move_message_to_inbox:
-        isBackEnable = true;
+        isBackEnabled = true;
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
-            int toastMessageResourcesId = 0;
+            int toastMsgResId = 0;
 
             switch (requestCode) {
               case R.id.syns_request_archive_message:
-                toastMessageResourcesId = R.string.message_was_archived;
+                toastMsgResId = R.string.message_was_archived;
                 break;
 
               case R.id.syns_request_delete_message:
-                toastMessageResourcesId = R.string.message_was_deleted;
+                toastMsgResId = R.string.message_was_deleted;
                 break;
 
               case R.id.syns_request_move_message_to_inbox:
-                toastMessageResourcesId = R.string.message_was_moved_to_inbox;
+                toastMsgResId = R.string.message_was_moved_to_inbox;
                 break;
             }
 
-            Toast.makeText(this, toastMessageResourcesId, Toast.LENGTH_SHORT).show();
-
-            new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
-                localFolder.getFolderAlias(), generalMessageDetails.getUid());
-            new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-                localFolder.getFolderAlias(), generalMessageDetails.getUid());
+            Toast.makeText(this, toastMsgResId, Toast.LENGTH_SHORT).show();
+            String folderAlias = localFolder.getFolderAlias();
+            new MessageDaoSource().deleteMessage(this, details.getEmail(), folderAlias, details.getUid());
+            new AttachmentDaoSource().deleteAttachments(this, details.getEmail(), folderAlias, details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             finish();
             break;
@@ -265,12 +261,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
       case R.id.js_decrypt_message:
         if (obj instanceof IncomingMessageInfo) {
-          IncomingMessageInfo incomingMessageInfo = (IncomingMessageInfo) obj;
-          MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+          IncomingMessageInfo msgInfo = (IncomingMessageInfo) obj;
+          MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
               .findFragmentById(R.id.messageDetailsFragment);
 
-          if (messageDetailsFragment != null) {
-            messageDetailsFragment.showIncomingMessageInfo(incomingMessageInfo);
+          if (fragment != null) {
+            fragment.showIncomingMessageInfo(msgInfo);
             LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
           }
         }
@@ -281,8 +277,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   @Override
   public void onJsServiceConnected() {
     super.onJsServiceConnected();
-    if (!TextUtils.isEmpty(generalMessageDetails.getRawMessageWithoutAttachments())) {
-      decryptMessage(R.id.js_decrypt_message, generalMessageDetails.getRawMessageWithoutAttachments());
+    if (!TextUtils.isEmpty(details.getRawMessageWithoutAttachments())) {
+      decryptMessage(R.id.js_decrypt_message, details.getRawMessageWithoutAttachments());
     }
   }
 
@@ -291,44 +287,42 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     switch (requestCode) {
       case R.id.syns_request_code_load_message_details:
         isRequestMessageDetailsStarted = false;
-        notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
 
       case R.id.syns_request_archive_message:
       case R.id.syns_request_delete_message:
       case R.id.syns_request_move_message_to_inbox:
-        isBackEnable = true;
-        notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
+        isBackEnabled = true;
+        onErrorOccurred(requestCode, errorType, e);
         break;
 
       default:
-        notifyMessageDetailsFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
     }
   }
 
   @Override
   public void onArchiveMessageClicked() {
-    isBackEnable = false;
-    FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-    moveMessage(R.id.syns_request_archive_message, localFolder,
-        foldersManager.getFolderArchive(), generalMessageDetails.getUid());
+    isBackEnabled = false;
+    FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
+    moveMessage(R.id.syns_request_archive_message, localFolder, foldersManager.getFolderArchive(), details.getUid());
   }
 
   @Override
   public void onDeleteMessageClicked() {
-    isBackEnable = false;
-    if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
-      MessageDaoSource messageDaoSource = new MessageDaoSource();
-      GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessage(this, this
-          .generalMessageDetails.getEmail(), this.generalMessageDetails.getLabel(), this
-          .generalMessageDetails.getUid());
+    isBackEnabled = false;
+    if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel())) {
+      MessageDaoSource msgDaoSource = new MessageDaoSource();
+      GeneralMessageDetails details = msgDaoSource.getMessage(this, this.details.getEmail(),
+          this.details.getLabel(), this.details.getUid());
 
-      if (generalMessageDetails == null || generalMessageDetails.getMsgState() == MessageState.SENDING) {
-        Toast.makeText(this, generalMessageDetails == null ? R.string.can_not_delete_sent_message
+      if (details == null || details.getMsgState() == MessageState.SENDING) {
+        Toast.makeText(this, details == null ? R.string.can_not_delete_sent_message
             : R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show();
       } else {
-        int deletedRows = new MessageDaoSource().deleteOutgoingMessage(this, generalMessageDetails);
+        int deletedRows = new MessageDaoSource().deleteOutgoingMessage(this, details);
         if (deletedRows > 0) {
           Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
         } else {
@@ -339,39 +333,26 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
       finish();
     } else {
-      FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-      moveMessage(R.id.syns_request_delete_message, localFolder,
-          foldersManager.getFolderTrash(), generalMessageDetails.getUid());
+      FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
+      moveMessage(R.id.syns_request_delete_message, localFolder, foldersManager.getFolderTrash(), details.getUid());
     }
   }
 
   @Override
   public void onMoveMessageToInboxClicked() {
-    isBackEnable = false;
-    FoldersManager foldersManager = FoldersManager.fromDatabase(this, generalMessageDetails.getEmail());
-    moveMessage(R.id.syns_request_move_message_to_inbox, localFolder,
-        foldersManager.getFolderInbox(), generalMessageDetails.getUid());
+    isBackEnabled = false;
+    FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
+    LocalFolder desFolder = foldersManager.getFolderInbox();
+    moveMessage(R.id.syns_request_move_message_to_inbox, localFolder, desFolder, details.getUid());
   }
 
   private void messageNotAvailableInFolder() {
-    new MessageDaoSource().deleteMessage(this, generalMessageDetails.getEmail(),
-        localFolder.getFolderAlias(), generalMessageDetails.getUid());
-    new AttachmentDaoSource().deleteAttachments(this, generalMessageDetails.getEmail(),
-        localFolder.getFolderAlias(), generalMessageDetails.getUid());
+    String folderAlias = localFolder.getFolderAlias();
+    new MessageDaoSource().deleteMessage(this, details.getEmail(), folderAlias, details.getUid());
+    new AttachmentDaoSource().deleteAttachments(this, details.getEmail(), folderAlias, details.getUid());
     setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-    Toast.makeText(this, R.string.email_does_not_available_in_this_folder,
-        Toast.LENGTH_LONG).show();
+    Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show();
     finish();
-  }
-
-  private void notifyUserAboutError(int requestCode) {
-    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
-        getSupportFragmentManager()
-            .findFragmentById(R.id.messageDetailsFragment);
-
-    if (messageDetailsFragment != null) {
-      messageDetailsFragment.notifyUserAboutActionError(requestCode);
-    }
   }
 
   /**
@@ -381,30 +362,30 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
    * @param errorType   The {@link SyncErrorTypes}
    * @param e           The exception which happened.
    */
-  private void notifyMessageDetailsFragmentAboutError(int requestCode, int errorType, Exception e) {
-    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment)
+  private void onErrorOccurred(int requestCode, int errorType, Exception e) {
+    MessageDetailsFragment fragment = (MessageDetailsFragment)
         getSupportFragmentManager().findFragmentById(R.id.messageDetailsFragment);
 
-    if (messageDetailsFragment != null) {
-      messageDetailsFragment.onErrorOccurred(requestCode, errorType, e);
+    if (fragment != null) {
+      fragment.onErrorOccurred(requestCode, errorType, e);
     }
   }
 
   private void updateMessageDetails(GeneralMessageDetails generalMessageDetails) {
-    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+    MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
         .findFragmentById(R.id.messageDetailsFragment);
 
-    if (messageDetailsFragment != null) {
-      messageDetailsFragment.updateMessageDetails(generalMessageDetails);
+    if (fragment != null) {
+      fragment.updateMessageDetails(generalMessageDetails);
     }
   }
 
-  private void updateAttsInfo(ArrayList<AttachmentInfo> list) {
-    MessageDetailsFragment messageDetailsFragment = (MessageDetailsFragment) getSupportFragmentManager()
+  private void updateAttachments(ArrayList<AttachmentInfo> atts) {
+    MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
         .findFragmentById(R.id.messageDetailsFragment);
 
-    if (messageDetailsFragment != null) {
-      messageDetailsFragment.updateAttInfos(list);
+    if (fragment != null) {
+      fragment.updateAttInfos(atts);
     }
   }
 
@@ -413,12 +394,12 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       String actionBarTitle = null;
       String actionBarSubTitle = null;
 
-      if (generalMessageDetails != null) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(generalMessageDetails.getLabel())) {
+      if (details != null) {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel())) {
           actionBarTitle = getString(R.string.outgoing);
 
-          if (generalMessageDetails.getMsgState() != null) {
-            switch (generalMessageDetails.getMsgState()) {
+          if (details.getMsgState() != null) {
+            switch (details.getMsgState()) {
               case NEW:
               case NEW_FORWARDED:
                 actionBarSubTitle = getString(R.string.preparing);

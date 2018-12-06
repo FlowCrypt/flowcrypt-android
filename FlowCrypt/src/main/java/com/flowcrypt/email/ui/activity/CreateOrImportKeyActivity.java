@@ -36,8 +36,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
   private static final int REQUEST_CODE_IMPORT_ACTIVITY = 11;
   private static final int REQUEST_CODE_CREATE_KEY_ACTIVITY = 12;
   private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
-      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
-          CreateOrImportKeyActivity.class);
+      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON", CreateOrImportKeyActivity.class);
   private boolean isShowAnotherAccountButton = true;
   private AccountDao account;
 
@@ -84,8 +83,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonCreateNewKey:
-        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account),
-            REQUEST_CODE_CREATE_KEY_ACTIVITY);
+        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account), REQUEST_CODE_CREATE_KEY_ACTIVITY);
         break;
 
       case R.id.buttonImportMyKey:
@@ -94,9 +92,8 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
           keyImportModel = service.getKeyImportModel();
         }
 
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,
-            getString(R.string.import_private_key), keyImportModel, true,
-            ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false, getString(R.string.import_private_key),
+            keyImportModel, true, ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
         break;
 
       case R.id.buttonSelectAnotherAccount:
