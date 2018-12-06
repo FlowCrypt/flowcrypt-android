@@ -275,7 +275,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     contentValues.put(COL_FOLDER_NAME, localFolder.getFullName());
     contentValues.put(COL_FOLDER_ALIAS, localFolder.getFolderAlias());
     contentValues.put(COL_MESSAGE_COUNT, localFolder.getMessageCount());
-    contentValues.put(COL_IS_CUSTOM_LABEL, localFolder.isCustomLabel());
+    contentValues.put(COL_IS_CUSTOM_LABEL, localFolder.isCustom());
     contentValues.put(COL_FOLDER_ATTRIBUTES, prepareAttributesToSaving(localFolder.getAttributes()));
     return contentValues;
   }

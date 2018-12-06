@@ -52,7 +52,7 @@ public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackA
   public void onServiceConnected(ComponentName name, IBinder service) {
     CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
     this.service = binder.getService();
-    this.service.setMustBePrivateKey(isPrivateKeyChecking());
+    this.service.setPrivateKeyMode(isPrivateKeyChecking());
     isBound = true;
   }
 

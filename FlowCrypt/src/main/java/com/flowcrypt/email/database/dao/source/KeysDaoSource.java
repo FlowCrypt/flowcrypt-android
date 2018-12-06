@@ -88,7 +88,7 @@ public class KeysDaoSource extends BaseDaoSource {
    * @return <tt>{@link Boolean}</tt> true - if the key already exists in the database, false -
    * otherwise.
    */
-  public boolean isKeyExist(Context context, String longId) {
+  public boolean hasKey(Context context, String longId) {
     ContentResolver contentResolver = context.getContentResolver();
     Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_LONG_ID + " = ?", new String[]{longId}, null);
 

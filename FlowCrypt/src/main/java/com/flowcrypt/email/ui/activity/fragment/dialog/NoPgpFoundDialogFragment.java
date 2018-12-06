@@ -48,10 +48,10 @@ public class NoPgpFoundDialogFragment extends BaseDialogFragment implements Dial
   private List<DialogItem> dialogItems;
   private boolean isRemoveActionEnabled;
 
-  public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact, boolean isShowRemoveAction) {
+  public static NoPgpFoundDialogFragment newInstance(PgpContact pgpContact, boolean isRemoveActionEnabled) {
     Bundle args = new Bundle();
     args.putParcelable(EXTRA_KEY_PGP_CONTACT, pgpContact);
-    args.putBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED, isShowRemoveAction);
+    args.putBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED, isRemoveActionEnabled);
     NoPgpFoundDialogFragment noPgpFoundDialogFragment = new NoPgpFoundDialogFragment();
     noPgpFoundDialogFragment.setArguments(args);
     return noPgpFoundDialogFragment;

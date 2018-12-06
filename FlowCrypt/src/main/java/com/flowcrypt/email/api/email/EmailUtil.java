@@ -288,7 +288,7 @@ public class EmailUtil {
    * @param context Interface to global information about an application environment;
    * @return true if debug enable, false - otherwise.
    */
-  public static boolean isDebugEnabled(Context context) {
+  public static boolean hasEnabledDebug(Context context) {
     Context appContext = context.getApplicationContext();
     return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(PreferenceManager
         .getDefaultSharedPreferences
@@ -359,7 +359,7 @@ public class EmailUtil {
 
       for (MessageBlock block : blocks) {
         if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(block.getType())) {
-          if (!TextUtils.isEmpty(block.getContent()) && !EmailUtil.isKeyExist(list, block.getContent())) {
+          if (!TextUtils.isEmpty(block.getContent()) && !EmailUtil.containsKey(list, block.getContent())) {
             list.add(new KeyDetails(block.getContent(), KeyDetails.Type.EMAIL));
           }
         }
@@ -402,7 +402,7 @@ public class EmailUtil {
    * @param key  The private key armored string.
    * @return true if the key not exists in the list, otherwise false.
    */
-  public static boolean isKeyExist(ArrayList<KeyDetails> list, String key) {
+  public static boolean containsKey(ArrayList<KeyDetails> list, String key) {
     for (KeyDetails keyDetails : list) {
       if (key.equals(keyDetails.getValue())) {
         return true;
@@ -818,16 +818,16 @@ public class EmailUtil {
   /**
    * Get information about the encryption state for the given messages.
    *
-   * @param isEncryptedModeEnabled If true we show only encrypted messages
-   * @param folder                 The folder which contains input messages
-   * @param newMsgs                The input messages
+   * @param onlyEncrypted If true we show only encrypted messages
+   * @param folder        The folder which contains input messages
+   * @param newMsgs       The input messages
    * @return An array which contains information about the encryption state of the given messages.
    * @throws MessagingException
    */
-  public static LongSparseArray<Boolean> getMessagesEncryptionInfo(boolean isEncryptedModeEnabled, IMAPFolder folder,
+  public static LongSparseArray<Boolean> getMessagesEncryptionInfo(boolean onlyEncrypted, IMAPFolder folder,
                                                                    Message[] newMsgs) throws MessagingException {
     LongSparseArray<Boolean> array = new LongSparseArray<>();
-    if (isEncryptedModeEnabled) {
+    if (onlyEncrypted) {
       for (Message msg : newMsgs) {
         array.put(folder.getUID(msg), true);
       }

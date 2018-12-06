@@ -398,17 +398,17 @@ public class AccountDaoSource extends BaseDaoSource {
     String[] selectionArgs = new String[]{emailInLowerCase};
     Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
-    boolean isShowOnlyEncryptedMessages = false;
+    boolean isEncryptedModeEnabled = false;
 
     if (cursor != null && cursor.moveToFirst()) {
-      isShowOnlyEncryptedMessages = cursor.getInt(cursor.getColumnIndex(COL_IS_SHOW_ONLY_ENCRYPTED)) == 1;
+      isEncryptedModeEnabled = cursor.getInt(cursor.getColumnIndex(COL_IS_SHOW_ONLY_ENCRYPTED)) == 1;
     }
 
     if (cursor != null) {
       cursor.close();
     }
 
-    return isShowOnlyEncryptedMessages;
+    return isEncryptedModeEnabled;
   }
 
   /**
@@ -530,7 +530,7 @@ public class AccountDaoSource extends BaseDaoSource {
     contentValues.put(COL_SMTP_PORT, authCredentials.getSmtpPort());
     contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCredentials.getSmtpOpt() == SecurityType.Option.SSL_TLS);
     contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCredentials.getSmtpOpt() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.isUseCustomSignInForSmtp());
+    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.hasCustomSignInForSmtp());
     contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
     contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials.getSmtpSignInPassword()));
 

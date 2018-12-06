@@ -39,14 +39,14 @@ public abstract class BaseSyncActivity extends BaseActivity {
   /**
    * Flag indicating whether we have called bind on the {@link EmailSyncService}.
    */
-  protected boolean isBoundToSyncService;
+  protected boolean isSyncServiceBound;
 
   private ServiceConnection syncConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       Log.d(tag, "Activity connected to " + name.getClassName());
       syncMessenger = new Messenger(service);
-      isBoundToSyncService = true;
+      isSyncServiceBound = true;
 
       registerReplyMessenger(EmailSyncService.MESSAGE_ADD_REPLY_MESSENGER, syncMessenger, syncReplyMessenger);
       onSyncServiceConnected();
@@ -56,7 +56,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
     public void onServiceDisconnected(ComponentName name) {
       Log.d(tag, "Activity disconnected from " + name.getClassName());
       syncMessenger = null;
-      isBoundToSyncService = false;
+      isSyncServiceBound = false;
     }
   };
 
@@ -85,13 +85,13 @@ public abstract class BaseSyncActivity extends BaseActivity {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (isSyncEnabled() && isBoundToSyncService) {
+    if (isSyncEnabled() && isSyncServiceBound) {
       if (syncMessenger != null) {
         unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncMessenger, syncReplyMessenger);
       }
 
       unbindService(EmailSyncService.class, syncConn);
-      isBoundToSyncService = false;
+      isSyncServiceBound = false;
     }
   }
 
@@ -106,7 +106,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param requestCode The unique request code for identify the current action.
    */
   public void sendMessageWithPrivateKeyBackup(int requestCode) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
@@ -126,7 +126,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param requestCode The unique request code for identify the current action.
    */
   public void loadPrivateKeys(int requestCode) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
     try {
       BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
@@ -149,7 +149,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param end         The position of the end.
    */
   public void loadMessages(int requestCode, LocalFolder localFolder, int start, int end) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
@@ -171,7 +171,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   public void loadNextMessages(int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, null);
 
@@ -195,7 +195,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   public void searchNextMessages(int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
@@ -216,7 +216,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
    */
   public void updateLabels(int requestCode, boolean isInBackground) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
@@ -237,7 +237,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param currentLocalFolder {@link LocalFolder} object.
    */
   public void refreshMessages(int requestCode, LocalFolder currentLocalFolder) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, currentLocalFolder);
 
@@ -259,7 +259,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail.Message ).
    */
   public void loadMessageDetails(int requestCode, LocalFolder localFolder, int uid) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolder);
 
@@ -284,7 +284,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    */
   public void moveMessage(int requestCode, LocalFolder sourcesLocalFolder,
                           LocalFolder destinationLocalFolder, int uid) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     LocalFolder[] localFolders = new LocalFolder[]{sourcesLocalFolder, destinationLocalFolder};
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, localFolders);
@@ -305,7 +305,7 @@ public abstract class BaseSyncActivity extends BaseActivity {
    * @param requestCode The unique request code for identify the current action.
    */
   public void cancelAllSyncTasks(int requestCode) {
-    if (checkServiceBound(isBoundToSyncService)) return;
+    if (checkServiceBound(isSyncServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, null);
 
@@ -320,6 +320,6 @@ public abstract class BaseSyncActivity extends BaseActivity {
   }
 
   public boolean isSyncServiceConnected() {
-    return isBoundToSyncService;
+    return isSyncServiceBound;
   }
 }

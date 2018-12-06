@@ -68,8 +68,8 @@ public class ImportPgpContactsRecyclerViewAdapter extends
     UIUtil.setHtmlTextToTextView(context.getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", publicKeyInfo.getFingerprint(), 4)), viewHolder.textViewFingerprintTemplate);
 
-    if (publicKeyInfo.isPgpContactExists()) {
-      if (publicKeyInfo.isPgpContactCanBeUpdated()) {
+    if (publicKeyInfo.hasPgpContact()) {
+      if (publicKeyInfo.isUpdateEnabled()) {
         viewHolder.textViewAlreadyImported.setVisibility(View.GONE);
         viewHolder.buttonUpdateContact.setVisibility(View.VISIBLE);
         viewHolder.buttonUpdateContact.setOnClickListener(new View.OnClickListener() {

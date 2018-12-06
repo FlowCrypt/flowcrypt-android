@@ -32,14 +32,14 @@ import androidx.annotation.NonNull;
 
 public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan> {
   private int backgroundColorPgpExists;
-  private int backgroundColorPgpNoExists;
+  private int backgroundColorPgpNotExists;
   private int textColorPgpExists;
   private int textColorNoPgpNoExists;
 
   public CustomChipSpanChipCreator(Context context) {
     backgroundColorPgpExists = UIUtil.getColor(context, R.color.colorPrimary);
     textColorPgpExists = UIUtil.getColor(context, android.R.color.white);
-    backgroundColorPgpNoExists = UIUtil.getColor(context, R.color.aluminum);
+    backgroundColorPgpNotExists = UIUtil.getColor(context, R.color.aluminum);
     textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark);
   }
 
@@ -114,7 +114,7 @@ public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan
       span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists));
       span.setTextColor(textColorPgpExists);
     } else {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNoExists));
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists));
       span.setTextColor(textColorNoPgpNoExists);
     }
   }

@@ -73,7 +73,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     account = new AccountDaoSource().getActiveAccountInformation(this);
     if (account != null) {
-      if (SecurityUtils.isKeysBackupExist(this)) {
+      if (SecurityUtils.hasBackup(this)) {
         EmailSyncService.startEmailSyncService(this);
         EmailManagerActivity.runEmailManagerActivity(this);
         finish();
@@ -239,7 +239,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
                 keyDetailsList.size(), keyDetailsList.size());
             String positiveBtnTitle = getString(R.string.continue_);
-            String neutralBtnTitle = SecurityUtils.isKeysBackupExist(this) ?
+            String neutralBtnTitle = SecurityUtils.hasBackup(this) ?
                 getString(R.string.use_existing_keys) : null;
             String negativeBtnTitle = getString(R.string.use_another_account);
             Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, positiveBtnTitle,

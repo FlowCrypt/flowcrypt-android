@@ -65,7 +65,7 @@ public class SmtpProtocolUtil {
             String userName;
             String password;
 
-            if (authCredentials.isUseCustomSignInForSmtp()) {
+            if (authCredentials.hasCustomSignInForSmtp()) {
               userName = authCredentials.getSmtpSigInUsername();
               password = authCredentials.getSmtpSignInPassword();
             } else {

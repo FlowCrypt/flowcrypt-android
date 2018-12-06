@@ -31,7 +31,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.database.DataBaseUtil;
+import com.flowcrypt.email.database.DatabaseUtil;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -101,7 +101,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   private boolean isFetchMesgsNeeded;
   private boolean areNewMessagesLoadingNow;
   private boolean forceFirstLoadNeeded;
-  private boolean isShowOnlyEncryptedMessages;
+  private boolean isEncryptedModeEnabled;
   private boolean isSaveChoicesNeeded;
   private long timeOfLastRequestEnd;
   private int lastFirstVisiblePos;
@@ -164,7 +164,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
-    this.isShowOnlyEncryptedMessages = accountDaoSource.isEncryptedModeEnabled(getContext(), account.getEmail());
+    this.isEncryptedModeEnabled = accountDaoSource.isEncryptedModeEnabled(getContext(), account.getEmail());
   }
 
   @Override
@@ -307,9 +307,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       getSnackBar().dismiss();
     }
 
-    boolean isEmptyFullName = TextUtils.isEmpty(listener.getCurrentFolder().getFullName());
+    boolean isFullNameEmpty = TextUtils.isEmpty(listener.getCurrentFolder().getFullName());
     boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
-    if (listener.getCurrentFolder() == null || isEmptyFullName || isOutbox) {
+    if (listener.getCurrentFolder() == null || isFullNameEmpty || isOutbox) {
       swipeRefreshLayout.setRefreshing(false);
     } else {
       emptyView.setVisibility(View.GONE);
@@ -414,7 +414,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         emptyView.setVisibility(View.GONE);
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
-        DataBaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
+        DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
             listener.getCurrentFolder().getFolderAlias());
 
         switch (errorType) {
@@ -534,9 +534,9 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param isFolderChanged         if true we destroy a previous loader to reset position, if false we
    *                                try to load a new messages.
-   * @param isNeedToForceClearCache true if we need to forcefully clean the database cache.
+   * @param isForceClearCacheNeeded true if we need to forcefully clean the database cache.
    */
-  public void updateList(boolean isFolderChanged, boolean isNeedToForceClearCache) {
+  public void updateList(boolean isFolderChanged, boolean isForceClearCacheNeeded) {
     if (listener.getCurrentFolder() != null) {
       isFetchMesgsNeeded = !isFolderChanged;
 
@@ -557,8 +557,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         boolean isEmptyFolferAliases = TextUtils.isEmpty(listener.getCurrentFolder().getFolderAlias());
-        if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener.getCurrentFolder()) || isNeedToForceClearCache) {
-          DataBaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
+        if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener.getCurrentFolder()) || isForceClearCacheNeeded) {
+          DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
               listener.getCurrentFolder().getFolderAlias());
         }
       }
@@ -593,7 +593,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     if (isUpdateListNeeded || adapter.getCount() == 0) {
       updateList(false, false);
     } else if (adapter.getCount() == 0) {
-      emptyView.setText(isShowOnlyEncryptedMessages ? R.string.no_encrypted_messages : R.string.no_results);
+      emptyView.setText(isEncryptedModeEnabled ? R.string.no_encrypted_messages : R.string.no_results);
       UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
     }
 
@@ -629,7 +629,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    */
   public void reloadMessages() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
-    DataBaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
+    DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
         listener.getCurrentFolder().getFolderAlias());
     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
     loadNextMessages(0);
@@ -642,10 +642,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     }
   }
 
-  public void onFilterMessages(boolean isShowOnlyEncryptedMessages) {
-    this.isShowOnlyEncryptedMessages = isShowOnlyEncryptedMessages;
+  public void onFilterMessages(boolean isEncryptedModeEnabled) {
+    this.isEncryptedModeEnabled = isEncryptedModeEnabled;
 
-    if (isShowOnlyEncryptedMessages) {
+    if (isEncryptedModeEnabled) {
       lastFirstVisiblePos = listView.getFirstVisiblePosition();
     }
 
@@ -689,7 +689,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       emptyView.setVisibility(View.GONE);
       statusView.setVisibility(View.GONE);
 
-      if (!isShowOnlyEncryptedMessages && lastFirstVisiblePos != 0) {
+      if (!isEncryptedModeEnabled && lastFirstVisiblePos != 0) {
         listView.setSelection(lastFirstVisiblePos);
         lastFirstVisiblePos = 0;
       }
@@ -715,7 +715,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           showRetrySnackBar();
         }
       } else {
-        emptyView.setText(isShowOnlyEncryptedMessages ?
+        emptyView.setText(isEncryptedModeEnabled ?
             R.string.no_encrypted_messages : R.string.no_results);
         UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
       }
@@ -724,7 +724,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
   private Loader<Cursor> prepareCursorLoader() {
     String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
-        + (isShowOnlyEncryptedMessages ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+        + (isEncryptedModeEnabled ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
 
     boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder()
         .getFolderAlias());

@@ -42,7 +42,7 @@ public class IncomingMessageInfo extends MessageInfo {
   private ArrayList<String> cc;
   private ArrayList<AttachmentInfo> atts;
   private Date receiveDate;
-  private String originalRawMessageWithoutAtts;
+  private String origRawMsfWithoutAtts;
   private List<MessagePart> msgParts;
   private LocalFolder localFolder;
   private String htmlMsg;
@@ -60,7 +60,7 @@ public class IncomingMessageInfo extends MessageInfo {
     this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
     long tmpReceiveDate = in.readLong();
     this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
-    this.originalRawMessageWithoutAtts = in.readString();
+    this.origRawMsfWithoutAtts = in.readString();
     this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
     this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
     this.htmlMsg = in.readString();
@@ -74,7 +74,7 @@ public class IncomingMessageInfo extends MessageInfo {
         ", to=" + to +
         ", cc=" + cc +
         ", receiveDate=" + receiveDate +
-        ", originalRawMessageWithoutAtts='" + originalRawMessageWithoutAtts + '\'' +
+        ", origRawMsfWithoutAtts='" + origRawMsfWithoutAtts + '\'' +
         ", msgParts=" + msgParts +
         ", localFolder=" + localFolder +
         ", htmlMsg='" + htmlMsg + '\'' +
@@ -96,7 +96,7 @@ public class IncomingMessageInfo extends MessageInfo {
     dest.writeStringList(this.cc);
     dest.writeTypedList(this.atts);
     dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
-    dest.writeString(this.originalRawMessageWithoutAtts);
+    dest.writeString(this.origRawMsfWithoutAtts);
     dest.writeTypedList(this.msgParts);
     dest.writeParcelable(this.localFolder, flags);
     dest.writeString(this.htmlMsg);
@@ -126,11 +126,11 @@ public class IncomingMessageInfo extends MessageInfo {
   }
 
   public String getOriginalRawMessageWithoutAtts() {
-    return originalRawMessageWithoutAtts;
+    return origRawMsfWithoutAtts;
   }
 
-  public void setOriginalRawMessageWithoutAtts(String originalRawMessageWithoutAtts) {
-    this.originalRawMessageWithoutAtts = originalRawMessageWithoutAtts;
+  public void setOriginalRawMessageWithoutAtts(String origRawMsfWithoutAtts) {
+    this.origRawMsfWithoutAtts = origRawMsfWithoutAtts;
   }
 
   public List<MessagePart> getMessageParts() {

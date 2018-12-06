@@ -217,8 +217,8 @@ public class AttachmentInfo implements Parcelable {
     return isProtected;
   }
 
-  public void setProtected(boolean isCanBeDeleted) {
-    this.isProtected = isCanBeDeleted;
+  public void setProtected(boolean isProtected) {
+    this.isProtected = isProtected;
   }
 
   @Nullable

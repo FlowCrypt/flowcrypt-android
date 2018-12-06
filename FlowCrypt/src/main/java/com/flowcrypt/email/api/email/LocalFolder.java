@@ -37,23 +37,23 @@ public class LocalFolder implements Parcelable {
   private String folderAlias;
   private String userFriendlyName;
   private String[] attributes;
-  private boolean isCustomLabel;
+  private boolean isCustom;
   private int msgCount;
   private String searchQuery;
 
   public LocalFolder(String fullName, String folderAlias, int msgCount,
-                     String[] attributes, boolean isCustomLabel) {
-    this(fullName, folderAlias, msgCount, attributes, isCustomLabel, null);
+                     String[] attributes, boolean isCustom) {
+    this(fullName, folderAlias, msgCount, attributes, isCustom, null);
   }
 
   public LocalFolder(String fullName, String folderAlias, int msgCount,
-                     String[] attributes, boolean isCustomLabel, String searchQuery) {
+                     String[] attributes, boolean isCustom, String searchQuery) {
     this.fullName = fullName;
     this.folderAlias = folderAlias;
     this.msgCount = msgCount;
     this.userFriendlyName = folderAlias;
     this.attributes = attributes;
-    this.isCustomLabel = isCustomLabel;
+    this.isCustom = isCustom;
     this.searchQuery = searchQuery;
   }
 
@@ -63,7 +63,7 @@ public class LocalFolder implements Parcelable {
     this.msgCount = in.readInt();
     this.userFriendlyName = in.readString();
     this.attributes = in.createStringArray();
-    this.isCustomLabel = in.readByte() != 0;
+    this.isCustom = in.readByte() != 0;
     this.searchQuery = in.readString();
   }
 
@@ -74,7 +74,7 @@ public class LocalFolder implements Parcelable {
         ", folderAlias='" + folderAlias + '\'' +
         ", userFriendlyName='" + userFriendlyName + '\'' +
         ", attributes=" + Arrays.toString(attributes) +
-        ", isCustomLabel=" + isCustomLabel +
+        ", isCustom=" + isCustom +
         ", msgCount=" + msgCount +
         ", searchQuery=" + searchQuery +
         '}';
@@ -92,7 +92,7 @@ public class LocalFolder implements Parcelable {
     dest.writeInt(this.msgCount);
     dest.writeString(this.userFriendlyName);
     dest.writeStringArray(this.attributes);
-    dest.writeByte(this.isCustomLabel ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isCustom ? (byte) 1 : (byte) 0);
     dest.writeString(this.searchQuery);
   }
 
@@ -101,7 +101,7 @@ public class LocalFolder implements Parcelable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     LocalFolder localFolder = (LocalFolder) o;
-    return isCustomLabel == localFolder.isCustomLabel &&
+    return isCustom == localFolder.isCustom &&
         msgCount == localFolder.msgCount &&
         Objects.equals(fullName, localFolder.fullName) &&
         Objects.equals(folderAlias, localFolder.folderAlias) &&
@@ -112,7 +112,7 @@ public class LocalFolder implements Parcelable {
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(fullName, folderAlias, userFriendlyName, isCustomLabel, msgCount,
+    int result = Objects.hash(fullName, folderAlias, userFriendlyName, isCustom, msgCount,
         searchQuery);
     result = 31 * result + Arrays.hashCode(attributes);
     return result;
@@ -130,8 +130,8 @@ public class LocalFolder implements Parcelable {
     return fullName;
   }
 
-  public boolean isCustomLabel() {
-    return isCustomLabel;
+  public boolean isCustom() {
+    return isCustom;
   }
 
   public String[] getAttributes() {

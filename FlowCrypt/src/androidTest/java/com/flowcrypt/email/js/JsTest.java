@@ -64,23 +64,23 @@ public class JsTest {
   private static PgpKey pgpKeyPublicDen;
   private static File encryptedImage1Mb;
   private static File image1Mb;
-  private static File parentDirectory;
+  private static File parentDir;
 
   @AfterClass
   public static void cleanCacheDirectory() throws Exception {
-    if (parentDirectory != null && parentDirectory.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDirectory);
+    if (parentDir != null && parentDir.exists()) {
+      FileAndDirectoryUtils.cleanDirectory(parentDir);
     }
   }
 
   @BeforeClass
   public static void initCacheDirectory() throws Exception {
-    parentDirectory = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
+    parentDir = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
         TESTS_DIRECTORY);
-    if (parentDirectory.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDirectory);
-    } else if (!parentDirectory.mkdirs()) {
-      Log.d(TAG, "Create cache directory " + parentDirectory.getName() + " filed!");
+    if (parentDir.exists()) {
+      FileAndDirectoryUtils.cleanDirectory(parentDir);
+    } else if (!parentDir.mkdirs()) {
+      Log.d(TAG, "Create cache directory " + parentDir.getName() + " filed!");
     }
 
     storageConnectorInterface = prepareStoreConnectorInterface();
@@ -268,7 +268,7 @@ public class JsTest {
 
   @NonNull
   private static File createTempFile() throws IOException {
-    return File.createTempFile(TAG, null, parentDirectory);
+    return File.createTempFile(TAG, null, parentDir);
   }
 
   private static File decryptFile(File image1Mb) throws IOException {

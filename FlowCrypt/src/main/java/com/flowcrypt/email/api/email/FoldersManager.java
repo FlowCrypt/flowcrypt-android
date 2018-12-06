@@ -76,7 +76,7 @@ public class FoldersManager {
   public static LocalFolder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
       MessagingException {
     return new LocalFolder(imapFolder.getFullName(), folderAlias, 0, imapFolder.getAttributes(),
-        isCustomLabels(imapFolder));
+        isCustom(imapFolder));
   }
 
   /**
@@ -87,7 +87,7 @@ public class FoldersManager {
    * @return true if this label is a custom, false otherwise.
    * @throws MessagingException
    */
-  public static boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
+  public static boolean isCustom(IMAPFolder folder) throws MessagingException {
     String[] attr = folder.getAttributes();
     FolderType[] folderTypes = FolderType.values();
 
@@ -244,7 +244,7 @@ public class FoldersManager {
     List<LocalFolder> customLocalFolders = new LinkedList<>();
 
     for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().isCustomLabel()) {
+      if (entry.getValue() != null && entry.getValue().isCustom()) {
         customLocalFolders.add(entry.getValue());
       }
     }
@@ -261,7 +261,7 @@ public class FoldersManager {
     List<LocalFolder> serverLocalFolders = new LinkedList<>();
 
     for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && !entry.getValue().isCustomLabel()) {
+      if (entry.getValue() != null && !entry.getValue().isCustom()) {
         serverLocalFolders.add(entry.getValue());
       }
     }

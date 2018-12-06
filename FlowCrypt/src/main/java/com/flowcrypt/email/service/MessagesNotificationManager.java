@@ -155,7 +155,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
 
     if (details.size() > 1) {
-      boolean isAllowedNotificationsExist = false;
+      boolean hasAllowedNotifications = false;
 
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
       for (GeneralMessageDetails generalMessageDetails : details) {
@@ -163,13 +163,12 @@ public class MessagesNotificationManager extends CustomNotificationManager {
           continue;
         }
 
-        isAllowedNotificationsExist = true;
-        inboxStyle.addLine(formatInboxStyleLine(context,
-            EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()),
-            generalMessageDetails.getSubject()));
+        hasAllowedNotifications = true;
+        inboxStyle.addLine(formatInboxStyleLine(context, EmailUtil.getFirstAddressString(generalMessageDetails
+            .getFrom()), generalMessageDetails.getSubject()));
       }
 
-      if (!isAllowedNotificationsExist) {
+      if (!hasAllowedNotifications) {
         return;
       }
 
@@ -209,7 +208,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
   private void notifyWithGroupSupport(Context context, AccountDao account,
                                       LocalFolder localFolder, List<GeneralMessageDetails> detailsList) {
 
-    boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+    boolean isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
         .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
@@ -220,7 +219,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
 
     for (GeneralMessageDetails generalMessageDetails : detailsList) {
-      if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+      if (isEncryptedModeEnabled && !generalMessageDetails.isEncrypted()) {
         continue;
       }
 
@@ -253,20 +252,20 @@ public class MessagesNotificationManager extends CustomNotificationManager {
   private void prepareAndShowMessageGroup(Context context, AccountDao account, LocalFolder localFolder,
                                           NotificationManager notificationManager,
                                           List<GeneralMessageDetails> generalMessageDetailsList) {
-    boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+    boolean isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
         .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-    if (isEncryptedMessagesOnly) {
-      boolean isEncryptedMessageFound = false;
+    if (isEncryptedModeEnabled) {
+      boolean isEncryptedMsgFound = false;
       for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
         if (generalMessageDetails.isEncrypted()) {
-          isEncryptedMessageFound = true;
+          isEncryptedMsgFound = true;
           break;
         }
       }
 
-      if (!isEncryptedMessageFound) {
+      if (!isEncryptedMsgFound) {
         return;
       }
     }

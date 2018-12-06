@@ -237,9 +237,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
         for (AttachmentInfo att : msgInfo.getAttachments()) {
           try {
-            Uri uriOfOriginalFile = att.getUri();
-
-            InputStream inputStream = getContentResolver().openInputStream(uriOfOriginalFile);
+            Uri origFileUri = att.getUri();
+            InputStream inputStream = getContentResolver().openInputStream(origFileUri);
             if (inputStream != null) {
               File encryptedTempFile = new File(attsCacheDir, att.getName() + Constants.PGP_FILE_EXT);
               byte[] originalBytes = IOUtils.toByteArray(inputStream);
@@ -250,8 +249,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
               att.setName(encryptedTempFile.getName());
               cachedAtts.add(att);
 
-              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uriOfOriginalFile.getAuthority())) {
-                getContentResolver().delete(uriOfOriginalFile, null, null);
+              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
+                getContentResolver().delete(origFileUri, null, null);
               }
             }
           } catch (IOException e) {
@@ -261,17 +260,16 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       } else {
         for (AttachmentInfo att : msgInfo.getAttachments()) {
           try {
-            Uri uriOfOriginalFile = att.getUri();
-
-            InputStream inputStream = getContentResolver().openInputStream(uriOfOriginalFile);
+            Uri origFileUri = att.getUri();
+            InputStream inputStream = getContentResolver().openInputStream(origFileUri);
             if (inputStream != null) {
               File cachedAtt = new File(attsCacheDir, att.getName());
               FileUtils.copyInputStreamToFile(inputStream, cachedAtt);
               att.setUri(FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt));
               cachedAtts.add(att);
 
-              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uriOfOriginalFile.getAuthority())) {
-                getContentResolver().delete(uriOfOriginalFile, null, null);
+              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
+                getContentResolver().delete(origFileUri, null, null);
               }
             }
           } catch (IOException e) {

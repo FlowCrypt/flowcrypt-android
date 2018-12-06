@@ -118,7 +118,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
               if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
                 String content = messageBlock.getContent();
                 boolean isContentEmpty = TextUtils.isEmpty(content);
-                if (!isContentEmpty && !EmailUtil.isKeyExist(keyDetailsList, content)) {
+                if (!isContentEmpty && !EmailUtil.containsKey(keyDetailsList, content)) {
                   keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
                 }
               }

@@ -166,7 +166,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private boolean isUpdateToCompleted = true;
   private boolean isUpdateCcCompleted = true;
   private boolean isUpdateBccCompleted = true;
-  private boolean isIncomingMessageInfoUsed;
+  private boolean isIncomingMsgInfoUsed;
   private boolean isMsgSentToQueue;
   private int originalColor;
 
@@ -200,8 +200,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     initDraftCacheDirectory();
 
     account = new AccountDaoSource().getActiveAccountInformation(getContext());
-    fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1, new
-        ArrayList<String>());
+    fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1,
+        new ArrayList<String>());
     fromAddrs.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     fromAddrs.setUseKeysInfo(listener.getMsgEncryptionType()
         == MessageEncryptionType.ENCRYPTED);
@@ -225,8 +225,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     super.onViewCreated(view, savedInstanceState);
     initViews(view);
 
-    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMessageInfoUsed) {
-      this.isIncomingMessageInfoUsed = true;
+    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
+      this.isIncomingMsgInfoUsed = true;
       updateViews();
     }
 
@@ -347,7 +347,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           case Activity.RESULT_OK:
             if (data != null && data.getData() != null) {
               AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(getContext(), data.getData());
-              if (isAttachmentCanBeAdded(attachmentInfo)) {
+              if (hasAbilityToAddAttachment(attachmentInfo)) {
                 atts.add(attachmentInfo);
                 showAttachments();
               } else {
@@ -522,7 +522,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             imageButtonAliases.setVisibility(View.INVISIBLE);
           }
         } else {
-          if (serviceInfo == null || serviceInfo.isFromFieldEditEnabled()) {
+          if (serviceInfo == null || serviceInfo.isFromFieldEditable()) {
             imageButtonAliases.setVisibility(View.VISIBLE);
           } else {
             imageButtonAliases.setVisibility(View.INVISIBLE);
@@ -731,8 +731,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           this.folderType = FoldersManager.getFolderTypeForImapFolder(msgInfo.getLocalFolder());
         }
 
-        if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {
-          atts.addAll(this.serviceInfo.getAtts());
+        if (this.serviceInfo != null && this.serviceInfo.getAttachments() != null) {
+          atts.addAll(this.serviceInfo.getAttachments());
         }
       }
     }
@@ -753,7 +753,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
 
     for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachments()) {
-      if (isAttachmentCanBeAdded(attachmentInfo)) {
+      if (hasAbilityToAddAttachment(attachmentInfo)) {
         File draftAttachment = new File(draftCacheDir, attachmentInfo.getName());
 
         try {
@@ -1257,15 +1257,15 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsFromServiceInfo() {
-    editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditEnabled());
-    editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditEnabled());
+    editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditable());
+    editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditable());
     //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
 
-    editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditEnabled());
-    editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditEnabled());
+    editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditable());
+    editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditable());
 
-    editTextEmailMsg.setFocusable(serviceInfo.isMessageEditEnabled());
-    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMessageEditEnabled());
+    editTextEmailMsg.setFocusable(serviceInfo.isMessageEditable());
+    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMessageEditable());
 
     if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
       editTextEmailMsg.setText(serviceInfo.getSystemMessage());
@@ -1343,7 +1343,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (msgInfo.getAttachments() != null
             && !msgInfo.getAttachments().isEmpty()) {
           for (AttachmentInfo att : msgInfo.getAttachments()) {
-            if (isAttachmentCanBeAdded(att)) {
+            if (hasAbilityToAddAttachment(att)) {
               atts.add(att);
             } else {
               showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
@@ -1504,7 +1504,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @param newAttachmentInfo The new attachment which will be maybe added.
    * @return true if the attachment can be added, otherwise false.
    */
-  private boolean isAttachmentCanBeAdded(AttachmentInfo newAttachmentInfo) {
+  private boolean hasAbilityToAddAttachment(AttachmentInfo newAttachmentInfo) {
     int totalSizeOfAttachments = 0;
 
     for (AttachmentInfo attachmentInfo : atts) {
@@ -1520,12 +1520,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Show a dialog where we can select different actions.
    *
-   * @param pgpContact         The {@link PgpContact} which will be used when we select the
-   *                           remove action.
-   * @param isShowRemoveAction true if we want to show the remove action, false otherwise.
+   * @param pgpContact            The {@link PgpContact} which will be used when we select the
+   *                              remove action.
+   * @param isRemoveActionEnabled true if we want to show the remove action, false otherwise.
    */
-  private void showNoPgpFoundDialog(PgpContact pgpContact, boolean isShowRemoveAction) {
-    NoPgpFoundDialogFragment dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isShowRemoveAction);
+  private void showNoPgpFoundDialog(PgpContact pgpContact, boolean isRemoveActionEnabled) {
+    NoPgpFoundDialogFragment dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled);
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
     dialogFragment.show(getFragmentManager(), NoPgpFoundDialogFragment.class.getSimpleName());
   }

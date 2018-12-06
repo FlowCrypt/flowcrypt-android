@@ -304,7 +304,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         } else {
           String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList.size(), keyDetailsList.size());
-          String neutralBtnTitle = SecurityUtils.isKeysBackupExist(this) ? getString(R.string.use_existing_keys) : null;
+          String neutralBtnTitle = SecurityUtils.hasBackup(this) ? getString(R.string.use_existing_keys) : null;
           Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle,
               getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
@@ -330,9 +330,9 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             boolean isGmailImapServer = editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants
                 .GMAIL_IMAP_SERVER);
             boolean isMsgEmpty = TextUtils.isEmpty(original.getMessage());
-            boolean isAlertExists = original.getMessage().startsWith(
-                GmailConstants.GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
-            if (isGmailImapServer && !isMsgEmpty && isAlertExists) {
+            boolean hasAlert = original.getMessage().startsWith(GmailConstants
+                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
+            if (isGmailImapServer && !isMsgEmpty && hasAlert) {
               showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
                   getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
                     @Override
@@ -445,7 +445,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       editTextImapPort.setText(String.valueOf(authCreds.getImapPort()));
       editTextSmtpServer.setText(authCreds.getSmtpServer());
       editTextSmtpPort.setText(String.valueOf(authCreds.getSmtpPort()));
-      checkBoxRequireSignInForSmtp.setChecked(authCreds.isUseCustomSignInForSmtp());
+      checkBoxRequireSignInForSmtp.setChecked(authCreds.hasCustomSignInForSmtp());
       editTextSmtpUsername.setText(authCreds.getSmtpSigInUsername());
 
       int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();

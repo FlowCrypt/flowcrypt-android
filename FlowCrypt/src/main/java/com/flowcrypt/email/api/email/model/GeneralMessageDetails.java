@@ -278,8 +278,8 @@ public class GeneralMessageDetails implements Parcelable {
     return attsDir;
   }
 
-  public void setAttachmentsDir(String attachmentsDirectory) {
-    this.attsDir = attachmentsDirectory;
+  public void setAttachmentsDir(String attsDir) {
+    this.attsDir = attsDir;
   }
 
   public String getErrorMsg() {

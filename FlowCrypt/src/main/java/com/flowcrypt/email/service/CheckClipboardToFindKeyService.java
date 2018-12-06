@@ -52,7 +52,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
   private IBinder localBinder;
   private ClipboardManager clipboardManager;
   private Messenger replyMessenger;
-  private boolean isMustBePrivateKey;
+  private boolean isPrivateKeyMode;
 
   public CheckClipboardToFindKeyService() {
     this.localBinder = new LocalBinder();
@@ -106,12 +106,12 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
     return keyImportModel;
   }
 
-  public boolean isMustBePrivateKey() {
-    return isMustBePrivateKey;
+  public boolean isPrivateKeyMode() {
+    return isPrivateKeyMode;
   }
 
-  public void setMustBePrivateKey(boolean mustBePrivateKey) {
-    isMustBePrivateKey = mustBePrivateKey;
+  public void setPrivateKeyMode(boolean isPrivateKeyMode) {
+    this.isPrivateKeyMode = isPrivateKeyMode;
   }
 
   private void checkClipboard() {
@@ -156,7 +156,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
             String key = (String) message.obj;
 
             checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
-                weakReference.get().isMustBePrivateKey, KeyDetails.Type.CLIPBOARD);
+                weakReference.get().isPrivateKeyMode, KeyDetails.Type.CLIPBOARD);
             Log.d(TAG, "Found a valid private key in clipboard");
           }
           break;
@@ -201,7 +201,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
               PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
               if (weakReference.get() != null &&
-                  js.is_valid_key(pgpKey, weakReference.get().isMustBePrivateKey)) {
+                  js.is_valid_key(pgpKey, weakReference.get().isPrivateKeyMode)) {
                 try {
                   Messenger messenger = msg.replyTo;
                   messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));

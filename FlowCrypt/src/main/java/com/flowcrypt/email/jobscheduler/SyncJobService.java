@@ -144,7 +144,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
   @Override
   public void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
-                                       Message msg, String rawMsgWithOutAtts, String ownerKey, int requestCode) {
+                                       Message msg, String rawMsgWithoutAtts, String ownerKey, int requestCode) {
 
   }
 

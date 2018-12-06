@@ -58,7 +58,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   private LocalFolder localFolder;
   private boolean isReceiveMsgBodyNeeded;
   private boolean isBackEnabled = true;
-  private boolean isRequestMessageDetailsStarted;
+  private boolean isRequestMsgDetailsStarted;
   private boolean isRetrieveIncomingMsgNeeded = true;
 
   public static Intent getIntent(Context context, LocalFolder localFolder, GeneralMessageDetails details) {
@@ -141,8 +141,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
           updateMessageDetails(details);
 
           if (TextUtils.isEmpty(details.getRawMessageWithoutAttachments())) {
-            if (isBoundToSyncService && !isRequestMessageDetailsStarted) {
-              this.isRequestMessageDetailsStarted = true;
+            if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
+              this.isRequestMsgDetailsStarted = true;
               loadMessageDetails(R.id.syns_request_code_load_message_details, localFolder, details.getUid());
             } else {
               isReceiveMsgBodyNeeded = true;
@@ -208,7 +208,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_load_message_details:
-        isRequestMessageDetailsStarted = false;
+        isRequestMsgDetailsStarted = false;
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_ACTION_OK:
             String folderAlias = localFolder.getFolderAlias();
@@ -286,7 +286,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_message_details:
-        isRequestMessageDetailsStarted = false;
+        isRequestMsgDetailsStarted = false;
         onErrorOccurred(requestCode, errorType, e);
         break;
 

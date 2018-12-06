@@ -136,11 +136,11 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     menuActionSwitchType.setTitle(titleRes);
 
     if (serviceInfo != null) {
-      if (!serviceInfo.isMessageTypeSwitchEnabled()) {
+      if (!serviceInfo.isMessageTypeSwitchable()) {
         menu.removeItem(R.id.menuActionSwitchType);
       }
 
-      if (!serviceInfo.isAddNewAttachmentEnabled()) {
+      if (!serviceInfo.hasAbilityToAddNewAtt()) {
         menu.removeItem(R.id.menuActionAttachFile);
       }
     }

@@ -80,19 +80,19 @@ public class SecurityUtils {
    *
    * @return <tt>Boolean</tt> true if exists one or more private keys, false otherwise;
    */
-  public static boolean isKeysBackupExist(Context context) {
+  public static boolean hasBackup(Context context) {
     Cursor cursor = context.getContentResolver().query(new KeysDaoSource().getBaseContentUri(), null, null, null, null);
 
-    boolean isBackupKeysExist = false;
+    boolean hasBackup = false;
     if (cursor != null && cursor.moveToFirst()) {
-      isBackupKeysExist = cursor.getCount() > 0;
+      hasBackup = cursor.getCount() > 0;
     }
 
     if (cursor != null) {
       cursor.close();
     }
 
-    return isBackupKeysExist;
+    return hasBackup;
   }
 
   /**

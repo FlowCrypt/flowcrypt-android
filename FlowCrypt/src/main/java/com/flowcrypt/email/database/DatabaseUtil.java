@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
  * Time: 14:46
  * E-mail: DenBond7@gmail.com
  */
-public class DataBaseUtil {
+public class DatabaseUtil {
   /**
    * Clean the cache information about some folder.
    *

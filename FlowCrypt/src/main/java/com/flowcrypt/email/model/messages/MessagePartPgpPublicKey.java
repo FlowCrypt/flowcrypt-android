@@ -104,11 +104,11 @@ public class MessagePartPgpPublicKey extends MessagePart {
     this.pgpContact = pgpContact;
   }
 
-  public boolean isPgpContactExists() {
+  public boolean hasPgpContact() {
     return pgpContact != null;
   }
 
-  public boolean isPgpContactCanBeUpdated() {
+  public boolean isPgpContactUpdateEnabled() {
     return pgpContact != null && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
   }
 

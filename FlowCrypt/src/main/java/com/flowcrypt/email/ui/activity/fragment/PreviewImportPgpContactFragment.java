@@ -355,8 +355,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
             true, null, false, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(),
             publicKeyInfo.getKeyWords(), 0);
 
-        if (publicKeyInfo.isPgpContactExists()) {
-          if (publicKeyInfo.isPgpContactCanBeUpdated()) {
+        if (publicKeyInfo.hasPgpContact()) {
+          if (publicKeyInfo.isUpdateEnabled()) {
             updateCandidates.add(pgpContact);
           }
         } else {

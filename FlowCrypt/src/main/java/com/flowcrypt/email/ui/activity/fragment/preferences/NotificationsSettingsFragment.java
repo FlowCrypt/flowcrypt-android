@@ -46,10 +46,9 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
 
-    boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isEncryptedModeEnabled(getContext(),
-        account.getEmail());
+    boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(getContext(), account.getEmail());
 
-    if (isShowOnlyEncryptedMessages) {
+    if (isEncryptedModeEnabled) {
       levels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
           NOTIFICATION_LEVEL_NEVER
       };
@@ -63,7 +62,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
       entries = getResources().getStringArray(R.array.notification_level_entries);
     }
 
-    initPreferences(isShowOnlyEncryptedMessages);
+    initPreferences(isEncryptedModeEnabled);
   }
 
   @Override
@@ -97,7 +96,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     }
   }
 
-  protected void initPreferences(boolean isShowOnlyEncryptedMessages) {
+  protected void initPreferences(boolean isEncryptedModeEnabled) {
     Preference preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       preferenceSettingsSecurity.setOnPreferenceClickListener(this);
@@ -113,7 +112,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     String currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
         getContext()), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
 
-    if (isShowOnlyEncryptedMessages && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
+    if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
       filter.setValue(NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
       currentValue = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY;
     }

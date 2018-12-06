@@ -41,7 +41,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
       GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity.class);
 
   private String createdPrivateKeyLongId;
-  private boolean isBackEnable = true;
+  private boolean isBackEnabled = true;
 
   public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, CreatePrivateKeyActivity.class);
@@ -79,7 +79,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
   @Override
   public void onBackPressed() {
-    if (isBackEnable) {
+    if (isBackEnabled) {
       if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
         super.onBackPressed();
       } else {
@@ -116,7 +116,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
     switch (id) {
       case R.id.loader_id_create_private_key:
         if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
-          isBackEnable = false;
+          isBackEnabled = false;
           UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
           return new CreatePrivateKeyAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
         } else {
@@ -137,7 +137,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
     switch (loader.getId()) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         break;
     }
   }
@@ -147,7 +147,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         createdPrivateKeyLongId = (String) result;
         layoutSecondPasswordCheck.setVisibility(View.GONE);
         layoutSuccess.setVisibility(View.VISIBLE);
@@ -166,7 +166,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         editTextKeyPasswordSecond.setText(null);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
         showInfoSnackbar(getRootView(), e.getMessage());

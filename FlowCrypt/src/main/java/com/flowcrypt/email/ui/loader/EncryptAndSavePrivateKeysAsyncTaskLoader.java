@@ -72,7 +72,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
 
         if (pgpKey.isPrivate()) {
           if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
-            if (!keysDaoSource.isKeyExist(getContext(), pgpKey.getLongid())) {
+            if (!keysDaoSource.hasKey(getContext(), pgpKey.getLongid())) {
               KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase);
               Uri uri = keysDaoSource.addRow(getContext(), keysDao);
 

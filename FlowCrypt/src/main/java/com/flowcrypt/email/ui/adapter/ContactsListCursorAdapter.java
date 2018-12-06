@@ -37,10 +37,10 @@ public class ContactsListCursorAdapter extends CursorAdapter {
   }
 
   public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                   OnDeleteContactListener listener, boolean isDeleteEnable) {
+                                   OnDeleteContactListener listener, boolean isDeleteEnabled) {
     super(context, c, autoRequery);
     this.listener = listener;
-    this.isDeleteEnable = isDeleteEnable;
+    this.isDeleteEnable = isDeleteEnabled;
   }
 
   @Override

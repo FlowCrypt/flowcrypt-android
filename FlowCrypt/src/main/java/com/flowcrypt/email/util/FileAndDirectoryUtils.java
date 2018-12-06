@@ -24,12 +24,12 @@ public class FileAndDirectoryUtils {
   /**
    * Cleans an input directory.
    *
-   * @param directory The directory which will be cleaned.
+   * @param dir The directory which will be cleaned.
    * @throws IOException An error can occur while cleaning the directory.
    */
-  public static void deleteDirectory(final File directory) throws IOException {
-    cleanDirectory(directory);
-    deleteFile(directory);
+  public static void deleteDirectory(final File dir) throws IOException {
+    cleanDirectory(dir);
+    deleteFile(dir);
   }
 
   /**

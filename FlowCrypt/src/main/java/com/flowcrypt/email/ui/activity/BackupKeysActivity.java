@@ -194,7 +194,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             case R.id.radioButtonDownload:
               dismissSnackBar();
               destinationUri = null;
-              runActivityToChooseDestinationForExportedKey();
+              chooseDestinationForExportedKey();
               break;
           }
         }
@@ -361,7 +361,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   /**
    * Start a new Activity with return results to choose a destination for an exported key.
    */
-  private void runActivityToChooseDestinationForExportedKey() {
+  private void chooseDestinationForExportedKey() {
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);

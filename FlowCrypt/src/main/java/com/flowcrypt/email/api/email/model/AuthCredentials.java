@@ -38,7 +38,7 @@ public class AuthCredentials implements Parcelable {
   private String smtpServer;
   private int smtpPort;
   private SecurityType.Option smtpOpt;
-  private boolean useCustomSignInForSmtp;
+  private boolean hasCustomSignInForSmtp;
   private String smtpSigInUsername;
   private String smtpSignInPassword;
 
@@ -47,7 +47,7 @@ public class AuthCredentials implements Parcelable {
 
   public AuthCredentials(String email, String username, String password, String imapServer, int imapPort,
                          SecurityType.Option imapOpt, String smtpServer, int smtpPort,
-                         SecurityType.Option smtpSecurityType, boolean useCustomSignInForSmtp,
+                         SecurityType.Option smtpSecurityType, boolean hasCustomSignInForSmtp,
                          String smtpSigInUsername, String smtpSignInPassword) {
     this.email = email;
     this.username = username;
@@ -58,7 +58,7 @@ public class AuthCredentials implements Parcelable {
     this.smtpServer = smtpServer;
     this.smtpPort = smtpPort;
     this.smtpOpt = smtpSecurityType;
-    this.useCustomSignInForSmtp = useCustomSignInForSmtp;
+    this.hasCustomSignInForSmtp = hasCustomSignInForSmtp;
     this.smtpSigInUsername = smtpSigInUsername;
     this.smtpSignInPassword = smtpSignInPassword;
   }
@@ -77,7 +77,7 @@ public class AuthCredentials implements Parcelable {
     int tmpSmtpSecurityTypeOption = in.readInt();
     this.smtpOpt = tmpSmtpSecurityTypeOption == -1 ? null : SecurityType.Option.values()
         [tmpSmtpSecurityTypeOption];
-    this.useCustomSignInForSmtp = in.readByte() != 0;
+    this.hasCustomSignInForSmtp = in.readByte() != 0;
     this.smtpSigInUsername = in.readString();
     this.smtpSignInPassword = in.readString();
   }
@@ -98,7 +98,7 @@ public class AuthCredentials implements Parcelable {
     dest.writeString(this.smtpServer);
     dest.writeInt(this.smtpPort);
     dest.writeInt(this.smtpOpt == null ? -1 : this.smtpOpt.ordinal());
-    dest.writeByte(this.useCustomSignInForSmtp ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.hasCustomSignInForSmtp ? (byte) 1 : (byte) 0);
     dest.writeString(this.smtpSigInUsername);
     dest.writeString(this.smtpSignInPassword);
   }
@@ -143,8 +143,8 @@ public class AuthCredentials implements Parcelable {
     return smtpPort;
   }
 
-  public boolean isUseCustomSignInForSmtp() {
-    return useCustomSignInForSmtp;
+  public boolean hasCustomSignInForSmtp() {
+    return hasCustomSignInForSmtp;
   }
 
   public String getSmtpSigInUsername() {
@@ -169,7 +169,7 @@ public class AuthCredentials implements Parcelable {
     private String smtpServer;
     private int smtpPort;
     private SecurityType.Option smtpSecurityTypeOption;
-    private boolean isUseCustomSignInForSmtp;
+    private boolean hasCustomSignInForSmtp;
     private String smtpSigInUsername;
     private String smtpSignInPassword;
 
@@ -218,8 +218,8 @@ public class AuthCredentials implements Parcelable {
       return this;
     }
 
-    public Builder setIsUseCustomSignInForSmtp(boolean isUseCustomSignInForSmtp) {
-      this.isUseCustomSignInForSmtp = isUseCustomSignInForSmtp;
+    public Builder setIsUseCustomSignInForSmtp(boolean hasCustomSignInForSmtp) {
+      this.hasCustomSignInForSmtp = hasCustomSignInForSmtp;
       return this;
     }
 
@@ -235,7 +235,7 @@ public class AuthCredentials implements Parcelable {
 
     public AuthCredentials build() {
       return new AuthCredentials(email, username, password, imapServer, imapPort, imapSecurityTypeOption,
-          smtpServer, smtpPort, smtpSecurityTypeOption, isUseCustomSignInForSmtp, smtpSigInUsername,
+          smtpServer, smtpPort, smtpSecurityTypeOption, hasCustomSignInForSmtp, smtpSigInUsername,
           smtpSignInPassword);
     }
   }

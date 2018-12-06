@@ -200,7 +200,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
         } else {
           String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList.size(), keyDetailsList.size());
-          String neutralBtnTitle = SecurityUtils.isKeysBackupExist(this) ? getString(R.string.use_existing_keys) : null;
+          String neutralBtnTitle = SecurityUtils.hasBackup(this) ? getString(R.string.use_existing_keys) : null;
           Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle,
               getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);

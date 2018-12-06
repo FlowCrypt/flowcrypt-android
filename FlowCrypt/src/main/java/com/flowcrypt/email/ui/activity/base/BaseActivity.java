@@ -53,7 +53,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   /**
    * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
    */
-  protected boolean isBoundToJsService;
+  protected boolean isJsServiceBound;
   private Snackbar snackbar;
   private Toolbar toolbar;
   private AppBarLayout appBarLayout;
@@ -62,7 +62,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     public void onServiceConnected(ComponentName name, IBinder service) {
       Log.d(tag, "Activity connected to " + name.getClassName());
       jsMessenger = new Messenger(service);
-      isBoundToJsService = true;
+      isJsServiceBound = true;
 
       registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
       onJsServiceConnected();
@@ -72,7 +72,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     public void onServiceDisconnected(ComponentName name) {
       Log.d(tag, "Activity disconnected from " + name.getClassName());
       jsMessenger = null;
-      isBoundToJsService = false;
+      isJsServiceBound = false;
     }
   };
 
@@ -151,13 +151,13 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     super.onDestroy();
     Log.d(tag, "onDestroy");
 
-    if (isBoundToJsService) {
+    if (isJsServiceBound) {
       if (jsMessenger != null) {
         unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
       }
 
       unbindService(JsBackgroundService.class, jsServiceConn);
-      isBoundToJsService = false;
+      isJsServiceBound = false;
     }
   }
 
@@ -280,7 +280,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param rawMimeMsg  The raw MIME message.
    */
   public void decryptMessage(int requestCode, String rawMimeMsg) {
-    if (checkServiceBound(isBoundToJsService)) return;
+    if (checkServiceBound(isJsServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMsg);
 
@@ -299,7 +299,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * Start a job to decrypt a raw MIME message.
    */
   public void restartJsService() {
-    if (checkServiceBound(isBoundToJsService)) return;
+    if (checkServiceBound(isJsServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
         R.id.js_refresh_storage_connector, null);

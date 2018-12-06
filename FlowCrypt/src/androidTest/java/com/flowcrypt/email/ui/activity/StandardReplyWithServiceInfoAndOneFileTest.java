@@ -92,14 +92,14 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
         attachmentInfoList.add(attachmentInfo);
 
         serviceInfo = new ServiceInfo.Builder()
-            .setIsFromFieldEditEnable(false)
-            .setIsToFieldEditEnable(false)
-            .setIsSubjectEditEnable(false)
-            .setIsMessageTypeCanBeSwitched(false)
-            .setIsAddNewAttachmentsEnable(false)
+            .setIsFromFieldEditable(false)
+            .setIsToFieldEditable(false)
+            .setIsSubjectEditable(false)
+            .setIsMessageTypeSwitchable(false)
+            .setHasAbilityToAddNewAttachment(false)
             .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachmentInfoList(attachmentInfoList)
+            .setAttachments(attachmentInfoList)
             .build();
 
         return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
@@ -121,7 +121,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   @Test
   public void testFrom() {
     onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
-        isDisplayed(), serviceInfo.isFromFieldEditEnabled() ? isFocusable() : not(isFocusable()))));
+        isDisplayed(), serviceInfo.isFromFieldEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
@@ -136,14 +136,14 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
 
     onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
         isDisplayed(), withText(textWithSeparator.toString()),
-        serviceInfo.isToFieldEditEnabled() ? isFocusable() : not(isFocusable()))));
+        serviceInfo.isToFieldEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
   public void testSubject() {
     onView(withId(R.id.editTextEmailSubject)).check(matches(allOf(
         isDisplayed(),
-        serviceInfo.isSubjectEditEnabled() ? isFocusable() : not(isFocusable()))));
+        serviceInfo.isSubjectEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
@@ -152,23 +152,23 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
         allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMessage())
                 ? withText(isEmptyString())
                 : withText(serviceInfo.getSystemMessage()),
-            serviceInfo.isMessageEditEnabled() ? isFocusable() : not(isFocusable()))));
+            serviceInfo.isMessageEditable() ? isFocusable() : not(isFocusable()))));
 
-    if (serviceInfo.isMessageEditEnabled()) {
+    if (serviceInfo.isMessageEditable()) {
       onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
     }
   }
 
   @Test
   public void testAvailabilityAddingAttachments() {
-    if (!serviceInfo.isAddNewAttachmentEnabled()) {
+    if (!serviceInfo.hasAbilityToAddNewAtt()) {
       onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
     }
   }
 
   @Test
   public void testDisabledSwitchingBetweenEncryptionTypes() {
-    if (!serviceInfo.isMessageTypeSwitchEnabled()) {
+    if (!serviceInfo.isMessageTypeSwitchable()) {
       onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
       onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
     }

@@ -86,7 +86,7 @@ public class AttesterKeyAdapter extends BaseAdapter {
     if (TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange));
-    } else if (isMatchedPublicKey(lookUpEmailResponse)) {
+    } else if (isPublicKeyMatched(lookUpEmailResponse)) {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary));
     } else {
@@ -102,7 +102,7 @@ public class AttesterKeyAdapter extends BaseAdapter {
    *                            the Attester API.
    * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
    */
-  private boolean isMatchedPublicKey(LookUpEmailResponse lookUpEmailResponse) {
+  private boolean isPublicKeyMatched(LookUpEmailResponse lookUpEmailResponse) {
 
     for (String longId : keysLongIds) {
       if (longId.equals(lookUpEmailResponse.getLongId())) {

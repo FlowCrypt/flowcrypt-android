@@ -51,7 +51,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   private static final int REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100;
   private EditText editTextEmailOrId;
 
-  private boolean isSearchPublicKeysOnAttesterNow;
+  private boolean isSearchingActiveNow;
 
   public static Intent newIntent(Context context) {
     return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
@@ -77,8 +77,8 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
 
   @Override
   public void onBackPressed() {
-    if (isSearchPublicKeysOnAttesterNow) {
-      this.isSearchPublicKeysOnAttesterNow = false;
+    if (isSearchingActiveNow) {
+      this.isSearchingActiveNow = false;
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key);
       UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
     } else {
@@ -144,7 +144,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_search_public_key:
-        this.isSearchPublicKeysOnAttesterNow = true;
+        this.isSearchingActiveNow = true;
         UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
         LookUpRequest lookUpRequest = new LookUpRequest(editTextEmailOrId.getText().toString());
         return new ApiServiceAsyncTaskLoader(getApplicationContext(), lookUpRequest);
@@ -157,7 +157,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_search_public_key:
-        this.isSearchPublicKeysOnAttesterNow = false;
+        this.isSearchingActiveNow = false;
         BaseResponse baseResponse = (BaseResponse) result;
         if (baseResponse != null) {
           if (baseResponse.getResponseModel() != null) {

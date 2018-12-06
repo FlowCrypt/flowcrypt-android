@@ -32,7 +32,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.database.DataBaseUtil;
+import com.flowcrypt.email.database.DatabaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -526,7 +526,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     }
 
     menuItemSearch.collapseActionView();
-    DataBaseUtil.cleanFolderCache(this, account.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
+    DatabaseUtil.cleanFolderCache(this, account.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
     if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
       LocalFolder allMail = foldersManager.getFolderAll();
       if (allMail != null) {

@@ -330,7 +330,7 @@ public class AttachmentDownloadManagerService extends Service {
                   .build();
               messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_ADDED_TO_QUEUE, result));
             } else {
-              notifyTaskAlreadyExists(attInfo);
+              taskAlreadyExists(attInfo);
             }
           } catch (Exception e) {
             e.printStackTrace();
@@ -398,7 +398,7 @@ public class AttachmentDownloadManagerService extends Service {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
             .setAttachmentInfo(attInfo)
             .setException(e)
-            .setLast(isItLastWorkingTask())
+            .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED, result));
       } catch (RemoteException remoteException) {
@@ -428,7 +428,7 @@ public class AttachmentDownloadManagerService extends Service {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
             .setAttachmentInfo(attInfo)
             .setUri(uri)
-            .setLast(isItLastWorkingTask())
+            .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_DOWNLOAD, result));
       } catch (RemoteException remoteException) {
@@ -443,7 +443,7 @@ public class AttachmentDownloadManagerService extends Service {
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
             .setAttachmentInfo(attInfo)
-            .setLast(isItLastWorkingTask())
+            .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_DOWNLOAD_CANCELED, result));
       } catch (RemoteException remoteException) {
@@ -451,11 +451,11 @@ public class AttachmentDownloadManagerService extends Service {
       }
     }
 
-    private void notifyTaskAlreadyExists(AttachmentInfo attInfo) {
+    private void taskAlreadyExists(AttachmentInfo attInfo) {
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
             .setAttachmentInfo(attInfo)
-            .setLast(isItLastWorkingTask())
+            .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_TASK_ALREADY_EXISTS, result));
       } catch (RemoteException e) {
@@ -463,7 +463,7 @@ public class AttachmentDownloadManagerService extends Service {
       }
     }
 
-    private boolean isItLastWorkingTask() {
+    private boolean isLast() {
       return CollectionUtils.isEmpty(futureMap.values());
     }
   }

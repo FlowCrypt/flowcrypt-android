@@ -84,7 +84,7 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
     onView(withId(R.id.editTextSmtpPort)).perform(clearText(), typeText(String.valueOf(authCredentials
         .getSmtpPort())), closeSoftKeyboard());
 
-    if (authCredentials.isUseCustomSignInForSmtp()) {
+    if (authCredentials.hasCustomSignInForSmtp()) {
       onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(click());
       onView(withId(R.id.editTextSmtpUsername)).perform(clearText(),
           typeText(authCredentials.getSmtpSigInUsername()), closeSoftKeyboard());

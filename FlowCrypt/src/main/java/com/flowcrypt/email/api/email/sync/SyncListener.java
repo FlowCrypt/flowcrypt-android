@@ -106,13 +106,13 @@ public interface SyncListener {
    * @param remoteFolder      The folder where the new messages exist;
    * @param uid               The UID of the message;
    * @param msg               The received message;
-   * @param rawMsgWithOutAtts The raw message without attachments;
+   * @param rawMsgWithoutAtts The raw message without attachments;
    * @param ownerKey          The name of the reply to {@link android.os.Messenger};
    * @param requestCode       The unique request code for the reply to
    *                          {@link android.os.Messenger}.
    */
   void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder,
-                                IMAPFolder remoteFolder, long uid, Message msg, String rawMsgWithOutAtts,
+                                IMAPFolder remoteFolder, long uid, Message msg, String rawMsgWithoutAtts,
                                 String ownerKey, int requestCode);
 
   /**

@@ -62,14 +62,13 @@ public class OpenStoreHelper {
    *
    * @param context            Interface to global information about an application environment.
    * @param session            The sess which will be used for connection.
-   * @param account         The object which contains information about an email account.
+   * @param account            The object which contains information about an email account.
    * @param isResetTokenNeeded True if need reset token.
    * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
    * gimaps.
    */
 
-  public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao
-      account,
+  public static GmailSSLStore openAndConnectToGimapsStore(Context context, Session session, AccountDao account,
                                                           boolean isResetTokenNeeded)
       throws MessagingException, IOException, GoogleAuthException {
     GmailSSLStore gmailSSLStore;
@@ -107,14 +106,14 @@ public class OpenStoreHelper {
    */
   public static Session getGmailSession(Context context) {
     Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGmail());
-    session.setDebug(EmailUtil.isDebugEnabled(context));
+    session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
 
   /**
    * Generate a sess which will be use for download attachments.
    *
-   * @param context    Interface to global information about an application environment;
+   * @param context Interface to global information about an application environment;
    * @param account An input {@link AccountDao};
    * @return <tt>Session</tt> A new sess based on for download attachments.
    */
@@ -127,7 +126,7 @@ public class OpenStoreHelper {
         default:
           Session session = Session.getInstance(
               PropertiesHelper.generatePropertiesForDownloadAttachments(account.getAuthCredentials()));
-          session.setDebug(EmailUtil.isDebugEnabled(context));
+          session.setDebug(EmailUtil.hasEnabledDebug(context));
           return session;
       }
     } else throw new NullPointerException("AccountDao must not be a null!");
@@ -141,14 +140,14 @@ public class OpenStoreHelper {
    */
   public static Session getAttachmentGmailSession(Context context) {
     Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
-    session.setDebug(EmailUtil.isDebugEnabled(context));
+    session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
 
   /**
    * Prepare {@link Session} object for the input {@link AccountDao}.
    *
-   * @param context    Interface to global information about an application environment;
+   * @param context Interface to global information about an application environment;
    * @param account An input {@link AccountDao};
    * @return A generated {@link Session}
    */
@@ -161,7 +160,7 @@ public class OpenStoreHelper {
         default:
           Session session = Session.getInstance(
               PropertiesHelper.generatePropertiesFromAuthCredentials(account.getAuthCredentials()));
-          session.setDebug(EmailUtil.isDebugEnabled(context));
+          session.setDebug(EmailUtil.hasEnabledDebug(context));
           return session;
       }
     } else throw new NullPointerException("AccountDao must not be a null!");

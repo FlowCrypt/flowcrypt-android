@@ -50,7 +50,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
   @Override
   public LoaderResult loadInBackground() {
     Session sess = Session.getInstance(PropertiesHelper.generatePropertiesFromAuthCredentials(authCreds));
-    sess.setDebug(EmailUtil.isDebugEnabled(getContext()));
+    sess.setDebug(EmailUtil.hasEnabledDebug(getContext()));
 
     try {
       testImapConnection(sess);
@@ -102,7 +102,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     String username;
     String password;
 
-    if (authCreds.isUseCustomSignInForSmtp()) {
+    if (authCreds.hasCustomSignInForSmtp()) {
       username = authCreds.getSmtpSigInUsername();
       password = authCreds.getSmtpSignInPassword();
     } else {

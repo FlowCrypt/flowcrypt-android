@@ -442,13 +442,13 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
     startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY,
         MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
-            .setIsFromFieldEditEnable(false)
-            .setIsToFieldEditEnable(false)
-            .setIsSubjectEditEnable(false)
-            .setIsMessageTypeCanBeSwitched(false)
-            .setIsAddNewAttachmentsEnable(false)
+            .setIsFromFieldEditable(false)
+            .setIsToFieldEditable(false)
+            .setIsSubjectEditable(false)
+            .setIsMessageTypeSwitchable(false)
+            .setHasAbilityToAddNewAttachment(false)
             .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachmentInfoList(atts)
+            .setAttachments(atts)
             .build()));
   }
 
@@ -506,9 +506,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @param menuId The action menu id.
    */
   private void runMessageAction(final int menuId) {
-    boolean isOubox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
-    if (GeneralUtil.isInternetConnectionAvailable(getContext()) || isOubox) {
-      if (!isOubox) {
+    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
+    if (GeneralUtil.isInternetConnectionAvailable(getContext()) || isOutbox) {
+      if (!isOutbox) {
         isAdditionalActionEnabled = false;
         getActivity().invalidateOptionsMenu();
         statusView.setVisibility(View.GONE);
@@ -654,7 +654,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         }
       });
     } else if (msgInfo.getMessageParts() != null && !msgInfo.getMessageParts().isEmpty()) {
-      boolean isFirstMessagePartIsText = true;
+      boolean isFirstMessagePartText = true;
       for (MessagePart messagePart : msgInfo.getMessageParts()) {
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
         if (messagePart != null) {
@@ -666,7 +666,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
             case TEXT:
               layoutMsgParts.addView(generateTextPart(messagePart, layoutInflater));
-              if (isFirstMessagePartIsText) {
+              if (isFirstMessagePartText) {
                 viewFooterOfHeader.setVisibility(View.VISIBLE);
               }
               break;
@@ -681,7 +681,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               break;
           }
         }
-        isFirstMessagePartIsText = false;
+        isFirstMessagePartText = false;
       }
       updateReplyButtons();
     } else {
@@ -772,8 +772,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
     textViewPgpPublicKey.setText(messagePartPgpPublicKey.getValue());
 
-    if (messagePartPgpPublicKey.isPgpContactExists()) {
-      if (messagePartPgpPublicKey.isPgpContactCanBeUpdated()) {
+    if (messagePartPgpPublicKey.hasPgpContact()) {
+      if (messagePartPgpPublicKey.isPgpContactUpdateEnabled()) {
         initUpdateContactButton(messagePartPgpPublicKey, pubKeyView);
       }
     } else {
@@ -865,7 +865,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
             TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
             textViewFormatError.setText(part.getErrorMessage());
-            formatErrorLayout.addView(generateShowOriginalMessageLayout
+            formatErrorLayout.addView(genShowOriginalMessageLayout
                 (part.getValue(), layoutInflater, formatErrorLayout));
             return formatErrorLayout;
 
@@ -877,7 +877,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 R.layout.message_part_pgp_message_error, layoutMsgParts, false);
             TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
             textViewErrorMessage.setText(part.getErrorMessage());
-            viewGroup.addView(generateShowOriginalMessageLayout(part.getValue(), layoutInflater, viewGroup));
+            viewGroup.addView(genShowOriginalMessageLayout(part.getValue(), layoutInflater, viewGroup));
 
             return viewGroup;
         }
@@ -922,7 +922,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    viewGroup.addView(generateShowOriginalMessageLayout(part.getValue(), inflater, viewGroup));
+    viewGroup.addView(genShowOriginalMessageLayout(part.getValue(), inflater, viewGroup));
     return viewGroup;
   }
 
@@ -936,8 +936,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @return A generated layout.
    */
   @NonNull
-  private ViewGroup generateShowOriginalMessageLayout(String msg, LayoutInflater layoutInflater,
-                                                      final ViewGroup rootView) {
+  private ViewGroup genShowOriginalMessageLayout(String msg, LayoutInflater layoutInflater,
+                                                 final ViewGroup rootView) {
     ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false);
     final TextView textViewOriginalPgpMessage = viewGroup.findViewById(R.id.textViewOriginalPgpMessage);
     textViewOriginalPgpMessage.setText(msg);

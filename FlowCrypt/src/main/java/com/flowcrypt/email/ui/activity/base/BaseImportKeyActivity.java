@@ -92,7 +92,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     public void onServiceConnected(ComponentName name, IBinder service) {
       CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
       checkClipboardToFindKeyService = binder.getService();
-      checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyMode());
+      checkClipboardToFindKeyService.setPrivateKeyMode(isPrivateKeyMode());
       isClipboardServiceBound = true;
     }
 
@@ -110,22 +110,23 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     return newIntent(context, title, false, cls);
   }
 
-  public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
-    return newIntent(context, title, null, isThrowErrorIfDuplicateFound, cls);
+  public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFoundEnabled,
+                                 Class<?> cls) {
+    return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
   public static Intent newIntent(Context context, String title, KeyImportModel model,
-                                 boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
-    return newIntent(context, true, title, model, isThrowErrorIfDuplicateFound, cls);
+                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
+    return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
   public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyImportModel model,
-                                 boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
+                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
     Intent intent = new Intent(context, cls);
     intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
     intent.putExtra(KEY_EXTRA_TITLE, title);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model);
-    intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
+    intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled);
     return intent;
   }
 
