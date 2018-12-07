@@ -74,11 +74,11 @@ public final class LoggingInFileInterceptor implements Interceptor {
 
     Connection connection = chain.connection();
     Protocol protocol = connection != null ? connection.protocol() : Protocol.HTTP_1_1;
-    String requestStartMessage = "--> " + request.method() + ' ' + request.url() + ' ' + protocol;
+    String requestStartMsg = "--> " + request.method() + ' ' + request.url() + ' ' + protocol;
     if (!logHeaders && hasRequestBody) {
-      requestStartMessage += " (" + requestBody.contentLength() + "-byte body)";
+      requestStartMsg += " (" + requestBody.contentLength() + "-byte body)";
     }
-    logger.log(requestStartMessage);
+    logger.log(requestStartMsg);
 
     if (logHeaders) {
       if (hasRequestBody) {

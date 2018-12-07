@@ -40,7 +40,7 @@ public class NotificationChannelManager {
 
       if (notificationManager != null) {
         notificationManager.createNotificationChannel(genAttachmentsNotificationChannel(context));
-        notificationManager.createNotificationChannel(genMessagesNotificationChannel(context));
+        notificationManager.createNotificationChannel(genMsgsNotificationChannel(context));
       }
     }
   }
@@ -52,7 +52,7 @@ public class NotificationChannelManager {
    * @return Generated {@link NotificationChannel}
    */
   @RequiresApi(api = Build.VERSION_CODES.O)
-  private static NotificationChannel genMessagesNotificationChannel(Context context) {
+  private static NotificationChannel genMsgsNotificationChannel(Context context) {
     CharSequence name = context.getString(R.string.messages);
     String description = context.getString(R.string.messages_notification_channel);
     int importance = NotificationManager.IMPORTANCE_DEFAULT;

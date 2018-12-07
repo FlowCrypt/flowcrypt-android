@@ -116,10 +116,10 @@ public class JsTest {
 
   @Test
   public void testDecryptText() throws Exception {
-    MimeMessage mimeMessage = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
+    MimeMessage mimeMsg = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
             .getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
-    String decryptedText = js.crypto_message_decrypt(mimeMessage.getText()).getString();
+    String decryptedText = js.crypto_message_decrypt(mimeMsg.getText()).getString();
     Assert.assertEquals("This is a very security encrypted text.", decryptedText);
   }
 

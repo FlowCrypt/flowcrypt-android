@@ -114,7 +114,7 @@ public class CreateMessageActivityTest extends BaseTest {
         MessageEncryptionType.ENCRYPTED);
   }
 
-  public MessageEncryptionType getDefaultMessageEncryptionType() {
+  public MessageEncryptionType getDefaultMsgEncryptionType() {
     return MessageEncryptionType.ENCRYPTED;
   }
 
@@ -147,7 +147,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testEmptyEmailMessage() {
+  public void testEmptyEmailMsg() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
@@ -162,10 +162,10 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testUsingStandardMessageEncryptionType() {
+  public void testUsingStandardMsgEncryptionType() {
     activityTestRule.launchActivity(getIntent());
 
-    if (getDefaultMessageEncryptionType() != MessageEncryptionType.STANDARD) {
+    if (getDefaultMsgEncryptionType() != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_standard_email)).check(matches(isDisplayed())).perform(click());
     }
@@ -174,10 +174,10 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testUsingSecureMessageEncryptionType() {
+  public void testUsingSecureMsgEncryptionType() {
     activityTestRule.launchActivity(getIntent());
 
-    if (getDefaultMessageEncryptionType() != MessageEncryptionType.ENCRYPTED) {
+    if (getDefaultMsgEncryptionType() != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_secure_email)).check(matches(isDisplayed())).perform(click());
     }
@@ -188,7 +188,7 @@ public class CreateMessageActivityTest extends BaseTest {
   public void testSwitchBetweenEncryptionTypes() {
     activityTestRule.launchActivity(getIntent());
 
-    MessageEncryptionType messageEncryptionType = getDefaultMessageEncryptionType();
+    MessageEncryptionType messageEncryptionType = getDefaultMsgEncryptionType();
 
     if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
       checkIsDisplayedEncryptedAttributes();
@@ -216,7 +216,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testIsScreenOfComposeNewMessage() {
+  public void testIsScreenOfComposeNewMsg() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withText(R.string.compose)).check(matches(isDisplayed()));
@@ -250,7 +250,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testShowMessageAboutUpdateRecipientInformation() {
+  public void testShowMsgAboutUpdateRecipientInformation() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed())).perform(typeText(EMAIL_SUBJECT),

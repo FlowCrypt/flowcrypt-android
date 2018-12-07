@@ -54,14 +54,14 @@ public class SyncFolderSyncTask extends BaseSyncTask {
       MessageDaoSource messageDaoSource = new MessageDaoSource();
 
       long nextUID = folder.getUIDNext();
-      int newestCachedUID = messageDaoSource.getLastUIDOfMessageInLabel(context, account.getEmail(), folderName);
-      int countOfLoadedMessages = messageDaoSource.getCountOfMessagesForLabel(context, account.getEmail(), folderName);
+      int newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.getEmail(), folderName);
+      int loadedMsgsCount = messageDaoSource.getLabelMsgsCount(context, account.getEmail(), folderName);
 
       Message[] newMsgs = new Message[0];
 
       if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
         if (isEncryptedModeEnabled) {
-          Message[] foundMsgs = folder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
+          Message[] foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account));
 
           FetchProfile fetchProfile = new FetchProfile();
           fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -76,26 +76,26 @@ public class SyncFolderSyncTask extends BaseSyncTask {
             }
           }
 
-          newMsgs = EmailUtil.fetchMessagesInfo(folder, newMsgsList.toArray(new Message[0]));
+          newMsgs = EmailUtil.fetchMsgs(folder, newMsgsList.toArray(new Message[0]));
         } else {
           Message[] tempMsgs = folder.getMessagesByUID(newestCachedUID + 1, nextUID - 1);
-          newMsgs = EmailUtil.fetchMessagesInfo(folder, tempMsgs);
+          newMsgs = EmailUtil.fetchMsgs(folder, tempMsgs);
         }
       }
 
       Message[] updatedMsgs;
       if (isEncryptedModeEnabled) {
-        int oldestCachedUID = messageDaoSource.getOldestUIDOfMessageInLabel(context, account.getEmail(), folderName);
-        updatedMsgs = EmailUtil.getUpdatedMessagesByUID(folder, oldestCachedUID, newestCachedUID);
+        int oldestCachedUID = messageDaoSource.getOldestUIDOfMsgInLabel(context, account.getEmail(), folderName);
+        updatedMsgs = EmailUtil.getUpdatedMsgsByUID(folder, oldestCachedUID, newestCachedUID);
       } else {
-        updatedMsgs = EmailUtil.getUpdatedMessages(folder, countOfLoadedMessages, newMsgs.length);
+        updatedMsgs = EmailUtil.getUpdatedMsgs(folder, loadedMsgsCount, newMsgs.length);
       }
 
-      listener.onRefreshMessagesReceived(account, localFolder, folder, newMsgs, updatedMsgs, ownerKey, requestCode);
+      listener.onRefreshMsgsReceived(account, localFolder, folder, newMsgs, updatedMsgs, ownerKey, requestCode);
 
       if (newMsgs.length > 0) {
-        LongSparseArray<Boolean> array = EmailUtil.getMessagesEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs);
-        listener.onNewMessagesReceived(account, localFolder, folder, newMsgs, array, ownerKey, requestCode);
+        LongSparseArray<Boolean> array = EmailUtil.getMsgsEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs);
+        listener.onNewMsgsReceived(account, localFolder, folder, newMsgs, array, ownerKey, requestCode);
       }
 
       folder.close(false);

@@ -89,9 +89,9 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       if (result == JobScheduler.RESULT_SUCCESS) {
         Log.d(TAG, "A job has scheduled successfully");
       } else {
-        String errorMessage = "Error. Can't schedule a job";
-        Log.e(TAG, errorMessage);
-        ExceptionUtil.handleError(new IllegalStateException(errorMessage));
+        String errorMsg = "Error. Can't schedule a job";
+        Log.e(TAG, errorMsg);
+        ExceptionUtil.handleError(new IllegalStateException(errorMsg));
       }
     }
   }
@@ -168,7 +168,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           MessageDaoSource msgDaoSource = new MessageDaoSource();
 
           if (account != null) {
-            List<GeneralMessageDetails> newMsgs = msgDaoSource.getOutboxMessages(context, account.getEmail(),
+            List<GeneralMessageDetails> newMsgs = msgDaoSource.getOutboxMsgs(context, account.getEmail(),
                 MessageState.NEW_FORWARDED);
 
             if (!CollectionUtils.isEmpty(newMsgs)) {
@@ -215,7 +215,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       List<GeneralMessageDetails> detailsList;
       AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
-      while (!CollectionUtils.isEmpty(detailsList = daoSource.getOutboxMessages(context, account.getEmail(),
+      while (!CollectionUtils.isEmpty(detailsList = daoSource.getOutboxMsgs(context, account.getEmail(),
           MessageState.NEW_FORWARDED))) {
         GeneralMessageDetails details = detailsList.get(0);
         String detEmail = details.getEmail();
@@ -233,7 +233,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
               JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
           if (CollectionUtils.isEmpty(atts)) {
-            daoSource.updateMessageState(context, detEmail, detLabel, details.getUid(), MessageState.QUEUED);
+            daoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), MessageState.QUEUED);
             continue;
           }
 
@@ -307,7 +307,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             }
           }
 
-          int updateResult = daoSource.updateMessageState(context, detEmail, detLabel, details.getUid(), msgState);
+          int updateResult = daoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), msgState);
           if (updateResult > 0) {
             MessagesSenderJobService.schedule(context);
           }

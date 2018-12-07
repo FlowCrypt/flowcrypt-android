@@ -50,10 +50,10 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     if (listener != null && account != null) {
       Transport transport = prepareTransportForSmtp(listener.getContext(), session, account);
       Js js = new Js(listener.getContext(), new SecurityStorageConnector(listener.getContext()));
-      Message message = EmailUtil.generateMessageWithAllPrivateKeys(listener.getContext(), account, session, js);
+      Message message = EmailUtil.genMsgWithAllPrivateKeys(listener.getContext(), account, session, js);
       transport.sendMessage(message, message.getAllRecipients());
 
-      listener.onMessageWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
+      listener.onMsgWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
     }
   }
 }

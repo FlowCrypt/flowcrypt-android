@@ -65,15 +65,15 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
         null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
 
-    TextView textViewMessage = view.findViewById(R.id.textViewMessage);
+    TextView textViewMsg = view.findViewById(R.id.textViewMessage);
     listViewKeys = view.findViewById(R.id.listViewKeys);
     View buttonOk = view.findViewById(R.id.buttonOk);
     buttonOk.setOnClickListener(this);
 
     if (atts.size() > 1) {
-      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-      textViewMessage.append("\n\n");
-      textViewMessage.append(getString(R.string.select_key));
+      textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
+      textViewMsg.append("\n\n");
+      textViewMsg.append(getString(R.string.select_key));
 
       String[] strings = new String[atts.size()];
       for (int i = 0; i < atts.size(); i++) {
@@ -87,7 +87,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
       listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
       listViewKeys.setAdapter(adapter);
     } else {
-      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+      textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
       listViewKeys.setVisibility(View.GONE);
     }
 

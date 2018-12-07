@@ -115,12 +115,12 @@ public class OutgoingMessageInfo extends MessageInfo {
     this.fromPgpContact = fromPgpContact;
   }
 
-  public String getRawReplyMessage() {
+  public String getRawReplyMsg() {
     return rawReplyMsg;
   }
 
-  public void setRawReplyMessage(String rawReplyMessage) {
-    this.rawReplyMsg = rawReplyMessage;
+  public void setRawReplyMsg(String rawReplyMsg) {
+    this.rawReplyMsg = rawReplyMsg;
   }
 
   public ArrayList<AttachmentInfo> getAttachments() {

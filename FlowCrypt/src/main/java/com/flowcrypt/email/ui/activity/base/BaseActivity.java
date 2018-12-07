@@ -279,7 +279,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param requestCode The unique request code for identify the current action.
    * @param rawMimeMsg  The raw MIME message.
    */
-  public void decryptMessage(int requestCode, String rawMimeMsg) {
+  public void decryptMsg(int requestCode, String rawMimeMsg) {
     if (checkServiceBound(isJsServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMsg);

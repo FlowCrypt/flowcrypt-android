@@ -100,7 +100,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMessages());
+        .getCountingIdlingResourceForMsgs());
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
         .getCountingIdlingResourceForLabel());
   }
@@ -120,12 +120,12 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   }
 
   @Test
-  public void testRunMessageDetailsActivity() {
-    testRunMessageDetailsActivity(0);
+  public void testRunMsgDetailsActivity() {
+    testRunMsgDetailsActivity(0);
   }
 
   @Test
-  public void testForceLoadMessages() {
+  public void testForceLoadMsgs() {
     onData(anything())
         .inAdapterView(withId(R.id.listViewMessages))
         .atPosition(0)

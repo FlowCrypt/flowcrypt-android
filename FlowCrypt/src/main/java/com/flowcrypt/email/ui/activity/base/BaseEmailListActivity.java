@@ -31,7 +31,7 @@ import androidx.test.espresso.idling.CountingIdlingResource;
  */
 public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     EmailListFragment.OnManageEmailsListener {
-  protected CountingIdlingResource countingIdlingResourceForMessages;
+  protected CountingIdlingResource countingIdlingResourceForMsgs;
   protected boolean hasMoreMsgs = true;
 
   public abstract void refreshFoldersFromCache();
@@ -40,7 +40,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     String name = GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class);
-    countingIdlingResourceForMessages = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
+    countingIdlingResourceForMsgs = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
   }
 
   @Override
@@ -51,17 +51,17 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
         switch (resultCode) {
           case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
             hasMoreMsgs = true;
-            onNextMessagesLoaded(true);
+            onNextMsgsLoaded(true);
             break;
 
           default:
             hasMoreMsgs = false;
-            onNextMessagesLoaded(false);
+            onNextMsgsLoaded(false);
             break;
         }
 
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        if (!countingIdlingResourceForMsgs.isIdleNow()) {
+          countingIdlingResourceForMsgs.decrement();
         }
         break;
     }
@@ -71,8 +71,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        if (!countingIdlingResourceForMsgs.isIdleNow()) {
+          countingIdlingResourceForMsgs.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;
@@ -142,7 +142,7 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   }
 
   @Override
-  public boolean hasMoreMessages() {
+  public boolean hasMoreMsgs() {
     return hasMoreMsgs;
   }
 
@@ -153,8 +153,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
 
   @Override
   @VisibleForTesting
-  public CountingIdlingResource getCountingIdlingResourceForMessages() {
-    return countingIdlingResourceForMessages;
+  public CountingIdlingResource getCountingIdlingResourceForMsgs() {
+    return countingIdlingResourceForMsgs;
   }
 
   /**
@@ -225,12 +225,12 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
    *
    * @param needToRefreshList true if we must reload the emails list.
    */
-  protected void onNextMessagesLoaded(boolean needToRefreshList) {
+  protected void onNextMsgsLoaded(boolean needToRefreshList) {
     EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
     if (emailListFragment != null) {
-      emailListFragment.onNextMessagesLoaded(needToRefreshList);
+      emailListFragment.onNextMsgsLoaded(needToRefreshList);
       emailListFragment.setActionProgress(100, null);
     }
   }

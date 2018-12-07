@@ -85,7 +85,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
       .around(activityTestRule);
 
   @Test
-  public void testShowMessageEmptyWarning() {
+  public void testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
     checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext()

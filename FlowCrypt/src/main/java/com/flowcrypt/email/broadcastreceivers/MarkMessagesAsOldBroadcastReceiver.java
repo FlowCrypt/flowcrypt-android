@@ -48,7 +48,7 @@ public class MarkMessagesAsOldBroadcastReceiver extends BroadcastReceiver {
     ArrayList<String> uidList = intent.getStringArrayListExtra(EXTRA_KEY_UID_LIST);
 
     if (!CollectionUtils.isEmpty(uidList)) {
-      new MessageDaoSource().setOldStatusForLocalMessages(context, email, label, uidList);
+      new MessageDaoSource().setOldStatusForLocalMsgs(context, email, label, uidList);
     }
   }
 }

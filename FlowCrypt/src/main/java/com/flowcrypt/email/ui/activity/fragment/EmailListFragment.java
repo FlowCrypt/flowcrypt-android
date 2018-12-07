@@ -99,7 +99,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   private GeneralMessageDetails activeMsgDetails;
 
   private boolean isFetchMesgsNeeded;
-  private boolean areNewMessagesLoadingNow;
+  private boolean areNewMsgsLoadingNow;
   private boolean forceFirstLoadNeeded;
   private boolean isEncryptedModeEnabled;
   private boolean isSaveChoicesNeeded;
@@ -231,8 +231,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
               MessageDaoSource msgDaoSource = new MessageDaoSource();
               int countOfDelMsgs = 0;
-              for (GeneralMessageDetails generalMessageDetails : detailsList) {
-                if (msgDaoSource.deleteOutgoingMessage(getContext(), generalMessageDetails) > 0) {
+              for (GeneralMessageDetails generalMsgDetails : detailsList) {
+                if (msgDaoSource.deleteOutgoingMsg(getContext(), generalMsgDetails) > 0) {
                   countOfDelMsgs++;
                 }
               }
@@ -252,7 +252,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (activeMsgDetails != null) {
-              new MessageDaoSource().updateMessageState(getContext(),
+              new MessageDaoSource().updateMsgState(getContext(),
                   activeMsgDetails.getEmail(), activeMsgDetails.getLabel(),
                   activeMsgDetails.getUid(), MessageState.QUEUED);
               MessagesSenderJobService.schedule(getContext());
@@ -272,7 +272,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     activeMsgDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
     if (activeMsgDetails != null) {
       boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
-      boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMessageWithoutAttachments());
+      boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMsgWithoutAttachments());
       if (isOutbox || isRawMsgAvailable || GeneralUtil.isInternetConnectionAvailable(getContext())) {
         if (activeMsgDetails.getMsgState() != null) {
           switch (activeMsgDetails.getMsgState()) {
@@ -282,7 +282,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             case ERROR_DURING_CREATION:
             case ERROR_SENDING_FAILED:
             case ERROR_PRIVATE_KEY_NOT_FOUND:
-              handleOutgoingMessageWhichHasSomeError(activeMsgDetails);
+              handleOutgoingMsgWhichHasSomeError(activeMsgDetails);
               break;
 
             default:
@@ -318,7 +318,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         if (listener.getCurrentFolder() != null) {
           if (adapter.getCount() > 0) {
             swipeRefreshLayout.setRefreshing(true);
-            refreshMessages();
+            refreshMsgs();
           } else {
             swipeRefreshLayout.setRefreshing(false);
 
@@ -326,7 +326,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
               UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
             }
 
-            loadNextMessages(-1);
+            loadNextMsgs(-1);
           }
         } else {
           swipeRefreshLayout.setRefreshing(false);
@@ -377,13 +377,13 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   @Override
   public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalCount) {
     if (listener.getCurrentFolder() != null && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalCount == 1)) {
-      boolean hasMoreMsgs = listener.hasMoreMessages();
-      if (!areNewMessagesLoadingNow
+      boolean hasMoreMsgs = listener.hasMoreMsgs();
+      if (!areNewMsgsLoadingNow
           && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
           && hasMoreMsgs
           && firstVisibleItem + visibleItemCount >= totalCount - LOADING_SHIFT_IN_ITEMS
           && !JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName())) {
-        loadNextMessages(adapter.getCount());
+        loadNextMsgs(adapter.getCount());
       }
     }
   }
@@ -392,7 +392,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
-        areNewMessagesLoadingNow = false;
+        areNewMsgsLoadingNow = false;
         if (e instanceof UserRecoverableAuthException) {
           super.onErrorOccurred(requestCode, errorType,
               new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
@@ -424,7 +424,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
                   @Override
                   public void onClick(View v) {
                     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                    loadNextMessages(-1);
+                    loadNextMsgs(-1);
                   }
                 });
             break;
@@ -432,7 +432,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         break;
 
       case R.id.syns_request_code_force_load_new_messages:
-        areNewMessagesLoadingNow = false;
+        areNewMsgsLoadingNow = false;
         swipeRefreshLayout.setRefreshing(false);
         switch (errorType) {
           case SyncErrorTypes.ACTION_FAILED_SHOW_TOAST:
@@ -454,21 +454,21 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
         if (listener.getCurrentFolder() == null) {
-          String errorMessage = getString(R.string.failed_load_labels_from_email_server);
+          String errorMsg = getString(R.string.failed_load_labels_from_email_server);
 
           if (e instanceof AuthenticationFailedException) {
             if (getString(R.string.gmail_imap_disabled_error).equalsIgnoreCase(e.getMessage())) {
-              errorMessage = getString(R.string.it_seems_imap_access_is_disabled);
+              errorMsg = getString(R.string.it_seems_imap_access_is_disabled);
             }
           }
 
-          super.onErrorOccurred(requestCode, errorType, new Exception(errorMessage));
+          super.onErrorOccurred(requestCode, errorType, new Exception(errorMsg));
           setSupportActionBarTitle(null);
         }
         break;
 
       case R.id.sync_request_code_search_messages:
-        areNewMessagesLoadingNow = false;
+        areNewMsgsLoadingNow = false;
         super.onErrorOccurred(requestCode, errorType, e);
         break;
     }
@@ -574,7 +574,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param isRefreshListNeeded true if we must refresh the emails list.
    */
-  public void onForceLoadNewMessagesCompleted(boolean isRefreshListNeeded) {
+  public void onForceLoadNewMsgsCompleted(boolean isRefreshListNeeded) {
     swipeRefreshLayout.setRefreshing(false);
     if (isRefreshListNeeded || adapter.getCount() == 0) {
       updateList(false, false);
@@ -586,7 +586,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param isUpdateListNeeded true if we must reload the emails list.
    */
-  public void onNextMessagesLoaded(boolean isUpdateListNeeded) {
+  public void onNextMsgsLoaded(boolean isUpdateListNeeded) {
     footerProgressView.setVisibility(View.GONE);
     progressView.setVisibility(View.GONE);
 
@@ -597,7 +597,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
     }
 
-    areNewMessagesLoadingNow = false;
+    areNewMsgsLoadingNow = false;
     timeOfLastRequestEnd = System.currentTimeMillis();
   }
 
@@ -627,22 +627,22 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   /**
    * Reload the folder messages.
    */
-  public void reloadMessages() {
+  public void reloadMsgs() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
     DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
         listener.getCurrentFolder().getFolderAlias());
     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-    loadNextMessages(0);
+    loadNextMsgs(0);
   }
 
   public void onSyncServiceConnected() {
     if (forceFirstLoadNeeded) {
-      loadNextMessages(0);
+      loadNextMsgs(0);
       forceFirstLoadNeeded = false;
     }
   }
 
-  public void onFilterMessages(boolean isEncryptedModeEnabled) {
+  public void onFilterMsgs(boolean isEncryptedModeEnabled) {
     this.isEncryptedModeEnabled = isEncryptedModeEnabled;
 
     if (isEncryptedModeEnabled) {
@@ -705,7 +705,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         isFetchMesgsNeeded = true;
         if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
           if (isSyncServiceConnected()) {
-            loadNextMessages(0);
+            loadNextMsgs(0);
           } else {
             forceFirstLoadNeeded = true;
           }
@@ -738,7 +738,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         MessageDaoSource.COL_RECEIVED_DATE + " DESC");
   }
 
-  private void handleOutgoingMessageWhichHasSomeError(final GeneralMessageDetails details) {
+  private void handleOutgoingMsgWhichHasSomeError(final GeneralMessageDetails details) {
     String message = null;
 
     switch (details.getMsgState()) {
@@ -777,7 +777,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     infoDialogFragment.setOnInfoDialogButtonClickListener(new InfoDialogFragment.OnInfoDialogButtonClickListener() {
       @Override
       public void onInfoDialogButtonClick() {
-        int deletedRows = new MessageDaoSource().deleteOutgoingMessage(getContext(), details);
+        int deletedRows = new MessageDaoSource().deleteOutgoingMsg(getContext(), details);
         if (deletedRows > 0) {
           Toast.makeText(getContext(), R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
         } else {
@@ -805,7 +805,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           public void onClick(View v) {
             if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
               UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-              loadNextMessages(-1);
+              loadNextMsgs(-1);
             } else {
               showRetrySnackBar();
             }
@@ -816,10 +816,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   /**
    * Try to load a new messages from an IMAP server.
    */
-  private void refreshMessages() {
-    areNewMessagesLoadingNow = false;
-    listener.getCountingIdlingResourceForMessages().increment();
-    baseSyncActivity.refreshMessages(R.id.syns_request_code_force_load_new_messages, listener.getCurrentFolder());
+  private void refreshMsgs() {
+    areNewMsgsLoadingNow = false;
+    listener.getCountingIdlingResourceForMsgs().increment();
+    baseSyncActivity.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener.getCurrentFolder());
   }
 
   /**
@@ -827,16 +827,16 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param totalItemsCount The count of already loaded messages.
    */
-  private void loadNextMessages(final int totalItemsCount) {
+  private void loadNextMsgs(final int totalItemsCount) {
     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
       footerProgressView.setVisibility(View.VISIBLE);
-      areNewMessagesLoadingNow = true;
-      listener.getCountingIdlingResourceForMessages().increment();
+      areNewMsgsLoadingNow = true;
+      listener.getCountingIdlingResourceForMsgs().increment();
       LocalFolder localFolder = listener.getCurrentFolder();
       if (TextUtils.isEmpty(localFolder.getSearchQuery())) {
-        baseSyncActivity.loadNextMessages(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount);
+        baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount);
       } else {
-        baseSyncActivity.searchNextMessages(R.id.sync_request_code_search_messages, localFolder, totalItemsCount);
+        baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount);
       }
     } else {
       footerProgressView.setVisibility(View.GONE);
@@ -844,7 +844,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           Snackbar.LENGTH_LONG, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              loadNextMessages(totalItemsCount);
+              loadNextMsgs(totalItemsCount);
             }
           });
     }
@@ -872,7 +872,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   }
 
   public interface OnManageEmailsListener {
-    boolean hasMoreMessages();
+    boolean hasMoreMsgs();
 
     AccountDao getCurrentAccountDao();
 
@@ -880,6 +880,6 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     void onRetryGoogleAuth();
 
-    CountingIdlingResource getCountingIdlingResourceForMessages();
+    CountingIdlingResource getCountingIdlingResourceForMsgs();
   }
 }

@@ -162,7 +162,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             getBaseActivity().restartJsService();
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
-            getBaseActivity().decryptMessage(R.id.js_decrypt_message, details.getRawMessageWithoutAttachments());
+            getBaseActivity().decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAttachments());
             break;
         }
         break;
@@ -178,7 +178,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 for (AttachmentInfo att : atts) {
                   att.setProtected(true);
                 }
-                sendTemplateMessageWithPublicKey(atts.get(0));
+                sendTemplateMsgWithPublicKey(atts.get(0));
               }
             }
 
@@ -206,16 +206,16 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   public void onPrepareOptionsMenu(Menu menu) {
     super.onPrepareOptionsMenu(menu);
 
-    MenuItem menuItemArchiveMessage = menu.findItem(R.id.menuActionArchiveMessage);
-    MenuItem menuItemDeleteMessage = menu.findItem(R.id.menuActionDeleteMessage);
+    MenuItem menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage);
+    MenuItem menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage);
     MenuItem menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox);
 
-    if (menuItemArchiveMessage != null) {
-      menuItemArchiveMessage.setVisible(isArchiveActionEnabled && isAdditionalActionEnabled);
+    if (menuItemArchiveMsg != null) {
+      menuItemArchiveMsg.setVisible(isArchiveActionEnabled && isAdditionalActionEnabled);
     }
 
-    if (menuItemDeleteMessage != null) {
-      menuItemDeleteMessage.setVisible(isDeleteActionEnabled && isAdditionalActionEnabled);
+    if (menuItemDeleteMsg != null) {
+      menuItemDeleteMsg.setVisible(isDeleteActionEnabled && isAdditionalActionEnabled);
     }
 
     if (menuActionMoveToInbox != null) {
@@ -229,7 +229,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case R.id.menuActionArchiveMessage:
       case R.id.menuActionDeleteMessage:
       case R.id.menuActionMoveToInbox:
-        runMessageAction(item.getItemId());
+        runMsgAction(item.getItemId());
         return true;
 
       default:
@@ -286,7 +286,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                   @Override
                   public void onClick(View v) {
                     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                    ((BaseSyncActivity) getBaseActivity()).loadMessageDetails(
+                    ((BaseSyncActivity) getBaseActivity()).loadMsgDetails(
                         R.id.syns_request_code_load_message_details, localFolder,
                         details.getUid());
                   }
@@ -305,15 +305,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               public void onClick(View v) {
                 switch (requestCode) {
                   case R.id.syns_request_archive_message:
-                    runMessageAction(R.id.menuActionArchiveMessage);
+                    runMsgAction(R.id.menuActionArchiveMessage);
                     break;
 
                   case R.id.syns_request_delete_message:
-                    runMessageAction(R.id.menuActionDeleteMessage);
+                    runMsgAction(R.id.menuActionDeleteMessage);
                     break;
 
                   case R.id.syns_request_move_message_to_inbox:
-                    runMessageAction(R.id.menuActionMoveToInbox);
+                    runMsgAction(R.id.menuActionMoveToInbox);
                     break;
                 }
               }
@@ -344,7 +344,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param msgInfo An incoming message info which have received from {@link JsBackgroundService}
    */
-  public void showIncomingMessageInfo(IncomingMessageInfo msgInfo) {
+  public void showIncomingMsgInfo(IncomingMessageInfo msgInfo) {
     this.msgInfo = msgInfo;
     imageBtnReplyAll.setVisibility(View.VISIBLE);
     isAdditionalActionEnabled = true;
@@ -353,7 +353,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     }
     msgInfo.setLocalFolder(localFolder);
     msgInfo.setUid(details.getUid());
-    updateMessageBody();
+    updateMsgBody();
     UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMsgContainer);
   }
 
@@ -362,7 +362,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param details This object contains general message details.
    */
-  public void updateMessageDetails(GeneralMessageDetails details) {
+  public void updateMsgDetails(GeneralMessageDetails details) {
     this.details = details;
   }
 
@@ -388,9 +388,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     showAttachmentsIfTheyExist();
   }
 
-  protected void updateMessageBody() {
+  protected void updateMsgBody() {
     if (msgInfo != null) {
-      updateMessageView();
+      updateMsgView();
       showAttachmentsIfTheyExist();
     }
   }
@@ -432,7 +432,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param att An {@link AttachmentInfo} object which contains information about a sender public key.
    */
-  private void sendTemplateMessageWithPublicKey(AttachmentInfo att) {
+  private void sendTemplateMsgWithPublicKey(AttachmentInfo att) {
     List<AttachmentInfo> atts = null;
     if (att != null) {
       atts = new ArrayList<>();
@@ -445,9 +445,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             .setIsFromFieldEditable(false)
             .setIsToFieldEditable(false)
             .setIsSubjectEditable(false)
-            .setIsMessageTypeSwitchable(false)
+            .setIsMsgTypeSwitchable(false)
             .setHasAbilityToAddNewAttachment(false)
-            .setSystemMessage(getString(R.string.message_was_encrypted_for_wrong_key))
+            .setSystemMsg(getString(R.string.message_was_encrypted_for_wrong_key))
             .setAttachments(atts)
             .build()));
   }
@@ -505,7 +505,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param menuId The action menu id.
    */
-  private void runMessageAction(final int menuId) {
+  private void runMsgAction(final int menuId) {
     boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
     if (GeneralUtil.isInternetConnectionAvailable(getContext()) || isOutbox) {
       if (!isOutbox) {
@@ -517,15 +517,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
       switch (menuId) {
         case R.id.menuActionArchiveMessage:
-          onActionListener.onArchiveMessageClicked();
+          onActionListener.onArchiveMsgClicked();
           break;
 
         case R.id.menuActionDeleteMessage:
-          onActionListener.onDeleteMessageClicked();
+          onActionListener.onDeleteMsgClicked();
           break;
 
         case R.id.menuActionMoveToInbox:
-          onActionListener.onMoveMessageToInboxClicked();
+          onActionListener.onMoveMsgToInboxClicked();
           break;
       }
     } else {
@@ -533,7 +533,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           Snackbar.LENGTH_LONG, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              runMessageAction(menuId);
+              runMsgAction(menuId);
             }
           });
     }
@@ -571,7 +571,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     }
 
-    updateMessageBody();
+    updateMsgBody();
   }
 
   private void showAttachmentsIfTheyExist() {
@@ -632,7 +632,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     }
   }
 
-  private void updateMessageView() {
+  private void updateMsgView() {
     layoutMsgParts.removeAllViews();
     if (!TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
       EmailWebView emailWebView = new EmailWebView(getContext());
@@ -653,20 +653,20 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           updateReplyButtons();
         }
       });
-    } else if (msgInfo.getMessageParts() != null && !msgInfo.getMessageParts().isEmpty()) {
-      boolean isFirstMessagePartText = true;
-      for (MessagePart messagePart : msgInfo.getMessageParts()) {
+    } else if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
+      boolean isFirstMsgPartText = true;
+      for (MessagePart messagePart : msgInfo.getMsgParts()) {
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
         if (messagePart != null) {
-          switch (messagePart.getMessagePartType()) {
+          switch (messagePart.getMsgPartType()) {
             case PGP_MESSAGE:
               msgEncryptType = MessageEncryptionType.ENCRYPTED;
-              layoutMsgParts.addView(generatePgpMessagePart((MessagePartPgpMessage) messagePart, layoutInflater));
+              layoutMsgParts.addView(generatePgpMsgPart((MessagePartPgpMessage) messagePart, layoutInflater));
               break;
 
             case TEXT:
               layoutMsgParts.addView(generateTextPart(messagePart, layoutInflater));
-              if (isFirstMessagePartText) {
+              if (isFirstMsgPartText) {
                 viewFooterOfHeader.setVisibility(View.VISIBLE);
               }
               break;
@@ -676,12 +676,12 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               break;
 
             default:
-              layoutMsgParts.addView(generateMessagePart(messagePart, layoutInflater, R.layout.message_part_other,
+              layoutMsgParts.addView(generateMsgPart(messagePart, layoutInflater, R.layout.message_part_other,
                   layoutMsgParts));
               break;
           }
         }
-        isFirstMessagePartText = false;
+        isFirstMsgPartText = false;
       }
       updateReplyButtons();
     } else {
@@ -842,30 +842,30 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   @NonNull
-  private TextView generateMessagePart(MessagePart part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
-    TextView textViewMessagePartOther = (TextView) inflater.inflate(res, viewGroup, false);
-    textViewMessagePartOther.setText(part.getValue());
-    return textViewMessagePartOther;
+  private TextView generateMsgPart(MessagePart part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
+    TextView textViewMsgPartOther = (TextView) inflater.inflate(res, viewGroup, false);
+    textViewMsgPartOther.setText(part.getValue());
+    return textViewMsgPartOther;
   }
 
   @NonNull
   private TextView generateTextPart(MessagePart messagePart, LayoutInflater layoutInflater) {
-    return generateMessagePart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
+    return generateMsgPart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
   }
 
   @NonNull
-  private View generatePgpMessagePart(MessagePartPgpMessage part, LayoutInflater layoutInflater) {
+  private View generatePgpMsgPart(MessagePartPgpMessage part, LayoutInflater layoutInflater) {
     if (part != null) {
-      if (TextUtils.isEmpty(part.getErrorMessage())) {
-        return generateMessagePart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
+      if (TextUtils.isEmpty(part.getErrorMsg())) {
+        return generateMsgPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
       } else {
-        switch (part.getPgpMessageDecryptError()) {
+        switch (part.getPgpMsgDecryptError()) {
           case FORMAT_ERROR:
             final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
             TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
-            textViewFormatError.setText(part.getErrorMessage());
-            formatErrorLayout.addView(genShowOriginalMessageLayout
+            textViewFormatError.setText(part.getErrorMsg());
+            formatErrorLayout.addView(genShowOriginalMsgLayout
                 (part.getValue(), layoutInflater, formatErrorLayout));
             return formatErrorLayout;
 
@@ -875,9 +875,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           default:
             ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_pgp_message_error, layoutMsgParts, false);
-            TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
-            textViewErrorMessage.setText(part.getErrorMessage());
-            viewGroup.addView(genShowOriginalMessageLayout(part.getValue(), layoutInflater, viewGroup));
+            TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
+            textViewErrorMsg.setText(part.getErrorMsg());
+            viewGroup.addView(genShowOriginalMsgLayout(part.getValue(), layoutInflater, viewGroup));
 
             return viewGroup;
         }
@@ -896,8 +896,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   private View generateMissingPrivateKeyLayout(MessagePartPgpMessage part, LayoutInflater inflater) {
     ViewGroup viewGroup = (ViewGroup) inflater.inflate(
         R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false);
-    TextView textViewErrorMessage = viewGroup.findViewById(R.id.textViewErrorMessage);
-    textViewErrorMessage.setText(part.getErrorMessage());
+    TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
+    textViewErrorMsg.setText(part.getErrorMsg());
 
     Button buttonImportPrivateKey = viewGroup.findViewById(R.id.buttonImportPrivateKey);
     buttonImportPrivateKey.setOnClickListener(new View.OnClickListener() {
@@ -917,12 +917,12 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         if (publicKey == null) {
           showSendersPublicKeyDialog();
         } else {
-          sendTemplateMessageWithPublicKey(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
+          sendTemplateMsgWithPublicKey(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
         }
       }
     });
 
-    viewGroup.addView(genShowOriginalMessageLayout(part.getValue(), inflater, viewGroup));
+    viewGroup.addView(genShowOriginalMsgLayout(part.getValue(), inflater, viewGroup));
     return viewGroup;
   }
 
@@ -936,19 +936,19 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @return A generated layout.
    */
   @NonNull
-  private ViewGroup genShowOriginalMessageLayout(String msg, LayoutInflater layoutInflater,
-                                                 final ViewGroup rootView) {
+  private ViewGroup genShowOriginalMsgLayout(String msg, LayoutInflater layoutInflater,
+                                             final ViewGroup rootView) {
     ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false);
-    final TextView textViewOriginalPgpMessage = viewGroup.findViewById(R.id.textViewOriginalPgpMessage);
-    textViewOriginalPgpMessage.setText(msg);
+    final TextView textViewOriginalPgpMsg = viewGroup.findViewById(R.id.textViewOriginalPgpMessage);
+    textViewOriginalPgpMsg.setText(msg);
 
-    Switch switchShowOriginalMessage = viewGroup.findViewById(R.id.switchShowOriginalMessage);
+    Switch switchShowOriginalMsg = viewGroup.findViewById(R.id.switchShowOriginalMessage);
 
-    switchShowOriginalMessage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+    switchShowOriginalMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         TransitionManager.beginDelayedTransition(rootView);
-        textViewOriginalPgpMessage.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        textViewOriginalPgpMsg.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
       }
     });
@@ -956,10 +956,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   public interface OnActionListener {
-    void onArchiveMessageClicked();
+    void onArchiveMsgClicked();
 
-    void onDeleteMessageClicked();
+    void onDeleteMsgClicked();
 
-    void onMoveMessageToInboxClicked();
+    void onMoveMsgToInboxClicked();
   }
 }

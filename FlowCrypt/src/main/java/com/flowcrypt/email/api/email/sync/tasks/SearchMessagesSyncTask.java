@@ -41,7 +41,7 @@ import androidx.annotation.NonNull;
 
 public class SearchMessagesSyncTask extends BaseSyncTask {
   private LocalFolder localFolder;
-  private int countOfAlreadyLoadedMessages;
+  private int countOfAlreadyLoadedMsgs;
 
   /**
    * The base constructor.
@@ -50,10 +50,10 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
    * @param requestCode The unique request code for the reply to {@link Messenger}.
    */
   public SearchMessagesSyncTask(String ownerKey, int requestCode, LocalFolder localFolder,
-                                int countOfAlreadyLoadedMessages) {
+                                int countOfAlreadyLoadedMsgs) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
-    this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
+    this.countOfAlreadyLoadedMsgs = countOfAlreadyLoadedMsgs;
   }
 
   @Override
@@ -64,18 +64,18 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
       IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       imapFolder.open(Folder.READ_ONLY);
 
-      if (countOfAlreadyLoadedMessages < 0) {
-        countOfAlreadyLoadedMessages = 0;
+      if (countOfAlreadyLoadedMsgs < 0) {
+        countOfAlreadyLoadedMsgs = 0;
       }
 
       Message[] foundMsgs = imapFolder.search(generateSearchTerm(listener.getContext(), account));
 
       int messagesCount = foundMsgs.length;
-      int end = messagesCount - countOfAlreadyLoadedMessages;
+      int end = messagesCount - countOfAlreadyLoadedMsgs;
       int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
 
       if (end < 1) {
-        listener.onSearchMessagesReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onSearchMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         if (start < 1) {
           start = 1;
@@ -92,7 +92,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
 
         imapFolder.fetch(bufferedMsgs, fetchProfile);
 
-        listener.onSearchMessagesReceived(account, localFolder, imapFolder, bufferedMsgs, ownerKey, requestCode);
+        listener.onSearchMsgsReceived(account, localFolder, imapFolder, bufferedMsgs, ownerKey, requestCode);
       }
 
       imapFolder.close(false);
@@ -111,7 +111,7 @@ public class SearchMessagesSyncTask extends BaseSyncTask {
     boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
     if (isEncryptedModeEnabled) {
-      SearchTerm searchTerm = EmailUtil.genEncryptedMessagesSearchTerm(account);
+      SearchTerm searchTerm = EmailUtil.genEncryptedMsgsSearchTerm(account);
 
       if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
         StringTerm stringTerm = (StringTerm) searchTerm;

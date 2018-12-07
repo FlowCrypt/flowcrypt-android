@@ -82,7 +82,7 @@ public class MessageListAdapter extends CursorAdapter {
     viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
     viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
-    updateItem(context, msgDaoSource.getMessageInfo(cursor), viewHolder);
+    updateItem(context, msgDaoSource.getMsgInfo(cursor), viewHolder);
 
     long itemId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
 
@@ -98,7 +98,7 @@ public class MessageListAdapter extends CursorAdapter {
     Cursor cursor = (Cursor) super.getItem(position);
 
     if (cursor != null) {
-      return msgDaoSource.getMessageInfo(cursor);
+      return msgDaoSource.getMsgInfo(cursor);
     } else return null;
   }
 

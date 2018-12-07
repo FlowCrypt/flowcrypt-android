@@ -32,9 +32,9 @@ public interface JsListener {
    *
    * @param ownerKey            The name of the reply to {@link android.os.Messenger}.
    * @param requestCode         The unique request code for the reply to {@link android.os.Messenger}.
-   * @param incomingMessageInfo A decrypted message.
+   * @param incomingMsgInfo A decrypted message.
    */
-  void onMessageDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMessageInfo);
+  void onMsgDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMsgInfo);
 
   /**
    * Handle an error.

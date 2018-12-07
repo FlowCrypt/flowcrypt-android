@@ -48,7 +48,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
 
     if (listener != null) {
       if (this.end < 1 || this.end > msgsCount || this.start < 1) {
-        listener.onMessagesReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         Message[] messages;
 
@@ -66,7 +66,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
 
         imapFolder.fetch(messages, fetchProfile);
 
-        listener.onMessagesReceived(account, localFolder, imapFolder, messages, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, messages, ownerKey, requestCode);
       }
     }
 

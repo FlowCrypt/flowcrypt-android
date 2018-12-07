@@ -45,18 +45,18 @@ import androidx.annotation.NonNull;
  */
 
 public class DecryptRawMimeMessageJsTask extends BaseJsTask {
-  private String rawMimeMessage;
+  private String rawMimeMsg;
 
-  public DecryptRawMimeMessageJsTask(String ownerKey, int requestCode, String rawMimeMessage) {
+  public DecryptRawMimeMessageJsTask(String ownerKey, int requestCode, String rawMimeMsg) {
     super(ownerKey, requestCode);
-    this.rawMimeMessage = rawMimeMessage;
+    this.rawMimeMsg = rawMimeMsg;
   }
 
   @Override
   public void runAction(Js js, JsListener jsListener) {
     IncomingMessageInfo incomingMsgInfo = new IncomingMessageInfo();
-    if (!TextUtils.isEmpty(rawMimeMessage)) {
-      ProcessedMime processedMime = js.mime_process(rawMimeMessage);
+    if (!TextUtils.isEmpty(rawMimeMsg)) {
+      ProcessedMime processedMime = js.mime_process(rawMimeMsg);
       ArrayList<String> addressesFrom = new ArrayList<>();
       ArrayList<String> addressesTo = new ArrayList<>();
       ArrayList<String> addressesCc = new ArrayList<>();
@@ -77,24 +77,24 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
       incomingMsgInfo.setTo(addressesTo);
       incomingMsgInfo.setCc(addressesCc);
       incomingMsgInfo.setSubject(processedMime.getStringHeader("subject"));
-      incomingMsgInfo.setOriginalRawMessageWithoutAtts(rawMimeMessage);
-      incomingMsgInfo.setMessageParts(getMessageParts(jsListener.getContext(), js, processedMime));
+      incomingMsgInfo.setOriginalRawMsgWithoutAtts(rawMimeMsg);
+      incomingMsgInfo.setMsgParts(getMsgParts(jsListener.getContext(), js, processedMime));
 
       long timestamp = processedMime.getTimeHeader("date");
       if (timestamp != -1) {
         incomingMsgInfo.setReceiveDate(new Date(timestamp));
       }
 
-      MimeMessage mimeMessage = js.mime_decode(rawMimeMessage);
+      MimeMessage mimeMsg = js.mime_decode(rawMimeMsg);
 
-      if (mimeMessage != null) {
+      if (mimeMsg != null) {
         if (!hasPGPBlocks(incomingMsgInfo)) {
-          incomingMsgInfo.setHtmlMsg(mimeMessage.getHtml());
+          incomingMsgInfo.setHtmlMsg(mimeMsg.getHtml());
         }
-        incomingMsgInfo.setHasPlainText(!TextUtils.isEmpty(mimeMessage.getText()));
+        incomingMsgInfo.setHasPlainText(!TextUtils.isEmpty(mimeMsg.getText()));
       }
 
-      jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMsgInfo);
+      jsListener.onMsgDecrypted(ownerKey, requestCode, incomingMsgInfo);
     } else {
       Exception npe = new NullPointerException("The raw MIME message is null or empty!");
       jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR, npe, ownerKey, requestCode);
@@ -111,12 +111,12 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
    */
   private boolean hasPGPBlocks(IncomingMessageInfo incomingMsgInfo) {
     if (incomingMsgInfo != null) {
-      List<MessagePart> messageParts = incomingMsgInfo.getMessageParts();
+      List<MessagePart> messageParts = incomingMsgInfo.getMsgParts();
 
       if (messageParts != null) {
         for (MessagePart messagePart : messageParts) {
-          if (messagePart.getMessagePartType() != null) {
-            switch (messagePart.getMessagePartType()) {
+          if (messagePart.getMsgPartType() != null) {
+            switch (messagePart.getMsgPartType()) {
               case PGP_MESSAGE:
               case PGP_PUBLIC_KEY:
               case PGP_PASSWORD_MESSAGE:
@@ -140,7 +140,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
    *                      encrypted message.
    * @return The list of {@link MessagePart}.
    */
-  private List<MessagePart> getMessageParts(Context context, Js js, ProcessedMime processedMime) {
+  private List<MessagePart> getMsgParts(Context context, Js js, ProcessedMime processedMime) {
     MessageBlock[] blocks = processedMime.getBlocks();
 
     LinkedList<MessagePart> msgParts = new LinkedList<>();
@@ -153,7 +153,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             break;
 
           case MessageBlock.TYPE_PGP_MESSAGE:
-            msgParts.add(genPgpMessagePart(context, js, messageBlock));
+            msgParts.add(genPgpMsgPart(context, js, messageBlock));
             break;
 
           case MessageBlock.TYPE_PGP_PUBLIC_KEY:
@@ -202,7 +202,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
    * @return Generated {@link MessagePartPgpMessage}.
    */
   @NonNull
-  private MessagePartPgpMessage genPgpMessagePart(Context context, Js js, MessageBlock msgBlock) {
+  private MessagePartPgpMessage genPgpMsgPart(Context context, Js js, MessageBlock msgBlock) {
     String encryptedContent = msgBlock.getContent();
     String value = encryptedContent;
     String errorMsg = null;

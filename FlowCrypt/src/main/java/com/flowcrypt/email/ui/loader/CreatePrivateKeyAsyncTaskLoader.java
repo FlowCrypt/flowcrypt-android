@@ -120,7 +120,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         daoSource.addAction(getContext(), new RegisterUserPublicKeyAction(email, pgpKey.toPublic().armor()));
       }
 
-      if (!requestingTestMessageWithNewPublicKey(pgpKey)) {
+      if (!requestingTestMsgWithNewPublicKey(pgpKey)) {
         daoSource.addAction(getContext(), new SendWelcomeTestEmailAction(email, pgpKey.toPublic().armor()));
       }
 
@@ -149,7 +149,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
       Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, account);
-      Message msg = EmailUtil.genMessageWithPrivateKeys(getContext(), account, session,
+      Message msg = EmailUtil.genMsgWithPrivateKeys(getContext(), account, session,
           EmailUtil.genBodyPartWithPrivateKey(account, pgpKey.armor()));
       transport.sendMessage(msg, msg.getAllRecipients());
     } catch (Exception e) {
@@ -219,7 +219,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    * @param pgpKey A created PGP key.
    * @return true if no errors.
    */
-  private boolean requestingTestMessageWithNewPublicKey(PgpKey pgpKey) {
+  private boolean requestingTestMsgWithNewPublicKey(PgpKey pgpKey) {
     try {
       ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
       TestWelcomeModel model = new TestWelcomeModel(account.getEmail(), pgpKey.toPublic().armor());

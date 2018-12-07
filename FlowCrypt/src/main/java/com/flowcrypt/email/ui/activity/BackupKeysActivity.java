@@ -136,7 +136,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 public void onClick(View v) {
                   layoutSyncStatus.setVisibility(View.GONE);
                   UIUtil.exchangeViewVisibility(BackupKeysActivity.this, true, progressBar, layoutContent);
-                  sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
+                  sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
                 }
               });
         }
@@ -184,7 +184,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
                 countingIdlingResource.increment();
                 isPrivateKeySendingNow = true;
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-                sendMessageWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
+                sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
               } else {
                 UIUtil.showInfoSnackbar(getRootView(), getString(R.string
                     .internet_connection_is_not_available));

@@ -48,10 +48,10 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   private View progressBar;
   private View layoutInput;
   private View layoutContent;
-  private EditText editTextUserMessage;
+  private EditText editTextUserMsg;
 
   private AccountDao account;
-  private boolean isMessageSent;
+  private boolean isMsgSent;
 
   @Override
   public View getRootView() {
@@ -67,7 +67,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (savedInstanceState != null) {
-      this.isMessageSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT);
+      this.isMsgSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT);
     }
 
     initViews();
@@ -78,7 +78,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   @Override
   public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
     super.onSaveInstanceState(outState, outPersistentState);
-    outState.putBoolean(KEY_IS_MESSAGE_SENT, isMessageSent);
+    outState.putBoolean(KEY_IS_MESSAGE_SENT, isMsgSent);
   }
 
   @Override
@@ -91,10 +91,10 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menuActionSend:
-        if (!isMessageSent) {
+        if (!isMsgSent) {
           if (isInformationValid()) {
             if (GeneralUtil.isInternetConnectionAvailable(this)) {
-              UIUtil.hideSoftInput(this, editTextUserMessage);
+              UIUtil.hideSoftInput(this, editTextUserMsg);
               LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this);
             } else {
               UIUtil.showInfoSnackbar(getRootView(), getString(R.string
@@ -118,7 +118,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
     switch (id) {
       case R.id.loader_id_post_help_feedback:
         UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
-        String text = editTextUserMessage.getText().toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE;
+        String text = editTextUserMsg.getText().toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE;
 
         return new ApiServiceAsyncTaskLoader(getApplicationContext(),
             new PostHelpFeedbackRequest(new PostHelpFeedbackModel(account.getEmail(), text)));
@@ -137,7 +137,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
             BaseResponse baseResponse = (BaseResponse) loaderResult.getResult();
             PostHelpFeedbackResponse response = (PostHelpFeedbackResponse) baseResponse.getResponseModel();
             if (response.isSent()) {
-              this.isMessageSent = true;
+              this.isMsgSent = true;
               UIUtil.showSnackbar(getRootView(), response.getText(), getString(R.string.back),
                   new View.OnClickListener() {
                     @Override
@@ -146,7 +146,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
                     }
                   });
             } else if (response.getApiError() != null) {
-              UIUtil.showInfoSnackbar(getRootView(), response.getApiError().getMessage());
+              UIUtil.showInfoSnackbar(getRootView(), response.getApiError().getMsg());
             } else {
               UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
             }
@@ -169,15 +169,15 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   }
 
   private void initViews() {
-    editTextUserMessage = findViewById(R.id.editTextUserMessage);
+    editTextUserMsg = findViewById(R.id.editTextUserMessage);
     progressBar = findViewById(R.id.progressBar);
     layoutInput = findViewById(R.id.layoutInput);
     layoutContent = findViewById(R.id.layoutContent);
   }
 
   private boolean isInformationValid() {
-    if (TextUtils.isEmpty(editTextUserMessage.getText().toString())) {
-      UIUtil.showInfoSnackbar(editTextUserMessage, getString(R.string.your_message_must_be_non_empty));
+    if (TextUtils.isEmpty(editTextUserMsg.getText().toString())) {
+      UIUtil.showInfoSnackbar(editTextUserMsg, getString(R.string.your_message_must_be_non_empty));
       return false;
     } else {
       return true;

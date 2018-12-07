@@ -189,8 +189,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
           }
 
           cancelAllSyncTasks(0);
-          new AccountDaoSource().setShowOnlyEncryptedMessages(EmailManagerActivity.this, account.getEmail(), isChecked);
-          onShowOnlyEncryptedMessages(isChecked);
+          new AccountDaoSource().setShowOnlyEncryptedMsgs(EmailManagerActivity.this, account.getEmail(), isChecked);
+          onShowOnlyEncryptedMsgs(isChecked);
 
           Toast.makeText(EmailManagerActivity.this, isChecked ? R.string.showing_only_encrypted_messages
               : R.string.showing_all_messages, Toast.LENGTH_SHORT).show();
@@ -244,7 +244,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                   .findFragmentById(R.id.emailListFragment);
 
               if (fragment != null) {
-                fragment.reloadMessages();
+                fragment.reloadMsgs();
               }
             } else {
               if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
@@ -282,9 +282,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
         break;
 
       case R.id.syns_request_code_force_load_new_messages:
-        onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+        if (!countingIdlingResourceForMsgs.isIdleNow()) {
+          countingIdlingResourceForMsgs.decrement();
         }
         break;
 
@@ -307,8 +307,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        if (!countingIdlingResourceForMsgs.isIdleNow()) {
+          countingIdlingResourceForMsgs.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;
@@ -434,12 +434,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
               if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
                 MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
 
-                if (foldersManager.getFolderByAlias(label).getMessageCount() > 0) {
+                if (foldersManager.getFolderByAlias(label).getMsgCount() > 0) {
                   View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
                       navigationView, false);
-                  TextView textViewMessagesCount = view.findViewById(R.id.textViewMessageCount);
+                  TextView textViewMsgsCount = view.findViewById(R.id.textViewMessageCount);
                   LocalFolder folder = foldersManager.getFolderByAlias(label);
-                  textViewMessagesCount.setText(String.valueOf(folder.getMessageCount()));
+                  textViewMsgsCount.setText(String.valueOf(folder.getMsgCount()));
                   menuItem.setActionView(view);
                 } else {
                   menuItem.setActionView(null);
@@ -643,12 +643,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
    *
    * @param refreshListNeeded true if we must reload the emails list.
    */
-  private void onForceLoadNewMessagesCompleted(boolean refreshListNeeded) {
+  private void onForceLoadNewMsgsCompleted(boolean refreshListNeeded) {
     EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
     if (fragment != null) {
-      fragment.onForceLoadNewMessagesCompleted(refreshListNeeded);
+      fragment.onForceLoadNewMsgsCompleted(refreshListNeeded);
     }
   }
 
@@ -658,7 +658,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
    * @param onlyEncrypted true if we want ot show only encrypted messages, false if we want to show
    *                      all messages.
    */
-  private void onShowOnlyEncryptedMessages(boolean onlyEncrypted) {
+  private void onShowOnlyEncryptedMsgs(boolean onlyEncrypted) {
     EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
@@ -674,7 +674,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     }
 
     if (fragment != null) {
-      fragment.onFilterMessages(onlyEncrypted);
+      fragment.onFilterMsgs(onlyEncrypted);
     }
   }
 

@@ -125,19 +125,19 @@ public class IncomingMessageInfo extends MessageInfo {
     this.receiveDate = receiveDate;
   }
 
-  public String getOriginalRawMessageWithoutAtts() {
+  public String getOriginalRawMsgWithoutAtts() {
     return origRawMsfWithoutAtts;
   }
 
-  public void setOriginalRawMessageWithoutAtts(String origRawMsfWithoutAtts) {
+  public void setOriginalRawMsgWithoutAtts(String origRawMsfWithoutAtts) {
     this.origRawMsfWithoutAtts = origRawMsfWithoutAtts;
   }
 
-  public List<MessagePart> getMessageParts() {
+  public List<MessagePart> getMsgParts() {
     return msgParts;
   }
 
-  public void setMessageParts(List<MessagePart> messageParts) {
+  public void setMsgParts(List<MessagePart> messageParts) {
     this.msgParts = messageParts;
   }
 

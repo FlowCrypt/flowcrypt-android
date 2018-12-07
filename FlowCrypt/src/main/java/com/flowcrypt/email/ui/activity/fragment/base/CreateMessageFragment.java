@@ -126,7 +126,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
   private Js js;
-  private OnMessageSendListener onMessageSendListener;
+  private OnMessageSendListener onMsgSendListener;
   private OnChangeMessageEncryptionTypeListener listener;
   private List<PgpContact> pgpContactsTo;
   private List<PgpContact> pgpContactsCc;
@@ -182,7 +182,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onAttach(Context context) {
     super.onAttach(context);
     if (context instanceof OnMessageSendListener) {
-      this.onMessageSendListener = (OnMessageSendListener) context;
+      this.onMsgSendListener = (OnMessageSendListener) context;
     } else throw new IllegalArgumentException(context.toString() + " must implement " +
         OnMessageSendListener.class.getSimpleName());
 
@@ -272,7 +272,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
         switch (resultCode) {
           case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-            listener.onMessageEncryptionTypeChanged(MessageEncryptionType.STANDARD);
+            listener.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD);
             break;
 
           case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
@@ -384,7 +384,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
           UIUtil.hideSoftInput(getContext(), getView());
           if (isDataCorrect()) {
-            sendMessage();
+            sendMsg();
             this.isMsgSentToQueue = true;
           }
         } else {
@@ -407,7 +407,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     switch (requestCode) {
       case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          sendMessage();
+          sendMsg();
         } else {
           Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
               Toast.LENGTH_LONG).show();
@@ -660,7 +660,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event) {
   }
 
-  public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
+  public void onMsgEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
     String emailMassageHint = null;
     if (messageEncryptionType != null) {
       switch (messageEncryptionType) {
@@ -936,12 +936,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
    * contains information about an outgoing message.
    */
-  private OutgoingMessageInfo getOutgoingMessageInfo() {
+  private OutgoingMessageInfo getOutgoingMsgInfo() {
     OutgoingMessageInfo messageInfo = new OutgoingMessageInfo();
     /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
       //todo-denbond7 Need to think how forward HTML
     }*/
-    messageInfo.setMessage(editTextEmailMsg.getText().toString());
+    messageInfo.setMsg(editTextEmailMsg.getText().toString());
     messageInfo.setSubject(editTextEmailSubject.getText().toString());
 
     List<PgpContact> pgpContactsTo = new ArrayList<>();
@@ -949,7 +949,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
     if (msgInfo != null) {
-      messageInfo.setRawReplyMessage(msgInfo.getOriginalRawMessageWithoutAtts());
+      messageInfo.setRawReplyMsg(msgInfo.getOriginalRawMsgWithoutAtts());
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -1217,13 +1217,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * screen.
    */
   private void updateViews() {
-    onMessageEncryptionTypeChange(listener.getMsgEncryptionType());
+    onMsgEncryptionTypeChange(listener.getMsgEncryptionType());
 
     if (extraActionInfo != null) {
       updateViewsFromExtraActionInfo();
     } else {
       if (msgInfo != null) {
-        updateViewsFromIncomingMessageInfo();
+        updateViewsFromIncomingMsgInfo();
         editTextRecipientsTo.chipifyAllUnterminatedTokens();
         editTextRecipientsCc.chipifyAllUnterminatedTokens();
         editTextEmailSubject.setText(prepareReplySubject(msgInfo.getSubject()));
@@ -1264,15 +1264,15 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditable());
     editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditable());
 
-    editTextEmailMsg.setFocusable(serviceInfo.isMessageEditable());
-    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMessageEditable());
+    editTextEmailMsg.setFocusable(serviceInfo.isMsgEditable());
+    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMsgEditable());
 
-    if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
-      editTextEmailMsg.setText(serviceInfo.getSystemMessage());
+    if (!TextUtils.isEmpty(serviceInfo.getSystemMsg())) {
+      editTextEmailMsg.setText(serviceInfo.getSystemMsg());
     }
   }
 
-  private void updateViewsFromIncomingMessageInfo() {
+  private void updateViewsFromIncomingMsgInfo() {
     switch (messageType) {
       case REPLY:
         if (folderType != null) {
@@ -1354,7 +1354,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
-            EmailUtil.genForwardedMessageDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
+            EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
             prepareRecipientsLineForForwarding(msgInfo.getTo())));
 
         if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
@@ -1363,11 +1363,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           editTextEmailMsg.append("\n\n");
         }
 
-        if (msgInfo.getMessageParts() != null
-            && !msgInfo.getMessageParts().isEmpty()) {
-          for (MessagePart msgPart : msgInfo.getMessageParts()) {
+        if (msgInfo.getMsgParts() != null
+            && !msgInfo.getMsgParts().isEmpty()) {
+          for (MessagePart msgPart : msgInfo.getMsgParts()) {
             if (msgPart != null) {
-              switch (msgPart.getMessagePartType()) {
+              switch (msgPart.getMsgPartType()) {
                 case PGP_MESSAGE:
                 case TEXT:
                   editTextEmailMsg.append("\n\n");
@@ -1533,11 +1533,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Send a message.
    */
-  private void sendMessage() {
+  private void sendMsg() {
     dismissCurrentSnackBar();
 
     isContactsUpdateEnabled = false;
-    OutgoingMessageInfo msgInfo = getOutgoingMessageInfo();
+    OutgoingMessageInfo msgInfo = getOutgoingMsgInfo();
 
     ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();
     ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.atts);
@@ -1548,8 +1548,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     msgInfo.setEncryptionType(listener.getMsgEncryptionType());
     msgInfo.setForwarded(messageType == MessageType.FORWARD);
 
-    if (onMessageSendListener != null) {
-      onMessageSendListener.sendMessage(msgInfo);
+    if (onMsgSendListener != null) {
+      onMsgSendListener.sendMsg(msgInfo);
     }
   }
 
@@ -1622,6 +1622,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * This interface will be used when we send a message.
    */
   public interface OnMessageSendListener {
-    void sendMessage(OutgoingMessageInfo outgoingMessageInfo);
+    void sendMsg(OutgoingMessageInfo outgoingMsgInfo);
   }
 }

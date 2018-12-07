@@ -68,17 +68,16 @@ import static org.hamcrest.Matchers.not;
 public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   private static final String STRING = "Some short string";
   private ServiceInfo serviceInfo;
-  private IncomingMessageInfo incomingMessageInfo;
+  private IncomingMessageInfo incomingMsgInfo;
 
   private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
     @Override
     protected Intent getActivityIntent() {
       try {
-        incomingMessageInfo =
-            MessageUtil.getIncomingMessageInfoWithOutBody(
-                new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
-                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-                    "messages/mime_message.txt"));
+        incomingMsgInfo = MessageUtil.getIncomingMsgInfoWithOutBody(
+            new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
+            TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+                "messages/mime_message.txt"));
 
         AttachmentInfo attachmentInfo = new AttachmentInfo();
         attachmentInfo.setName("test.txt");
@@ -95,15 +94,15 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             .setIsFromFieldEditable(false)
             .setIsToFieldEditable(false)
             .setIsSubjectEditable(false)
-            .setIsMessageTypeSwitchable(false)
+            .setIsMsgTypeSwitchable(false)
             .setHasAbilityToAddNewAttachment(false)
-            .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
+            .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
             .setAttachments(attachmentInfoList)
             .build();
 
         return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-            incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
+            incomingMsgInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
       } catch (IOException e) {
         e.printStackTrace();
         throw new IllegalStateException(e);
@@ -130,7 +129,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
     String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
     CharSequence textWithSeparator = autoCorrectSeparator
         + chipSeparator
-        + incomingMessageInfo.getFrom().get(0)
+        + incomingMsgInfo.getFrom().get(0)
         + chipSeparator
         + autoCorrectSeparator;
 
@@ -147,14 +146,14 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   }
 
   @Test
-  public void testEmailMessage() {
+  public void testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage)).check(matches(
-        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMessage())
+        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMsg())
                 ? withText(isEmptyString())
-                : withText(serviceInfo.getSystemMessage()),
-            serviceInfo.isMessageEditable() ? isFocusable() : not(isFocusable()))));
+                : withText(serviceInfo.getSystemMsg()),
+            serviceInfo.isMsgEditable() ? isFocusable() : not(isFocusable()))));
 
-    if (serviceInfo.isMessageEditable()) {
+    if (serviceInfo.isMsgEditable()) {
       onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
     }
   }
@@ -168,7 +167,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
 
   @Test
   public void testDisabledSwitchingBetweenEncryptionTypes() {
-    if (!serviceInfo.isMessageTypeSwitchable()) {
+    if (!serviceInfo.isMsgTypeSwitchable()) {
       onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
       onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
     }

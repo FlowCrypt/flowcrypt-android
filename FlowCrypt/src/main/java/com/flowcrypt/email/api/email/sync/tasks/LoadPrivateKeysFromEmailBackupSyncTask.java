@@ -106,7 +106,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
 
           Message[] foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.getEmail()));
           for (Message message : foundMsgs) {
-            String backup = EmailUtil.getKeyFromMimeMessage(message);
+            String backup = EmailUtil.getKeyFromMimeMsg(message);
 
             if (TextUtils.isEmpty(backup)) {
               continue;

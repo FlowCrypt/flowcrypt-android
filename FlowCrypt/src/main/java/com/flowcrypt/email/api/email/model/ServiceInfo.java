@@ -40,12 +40,12 @@ public class ServiceInfo implements Parcelable {
   private String systemMsg;
   private List<AttachmentInfo> atts;
 
-  public ServiceInfo(boolean isToFieldEditable, boolean isFromFieldEditable, boolean isMessageEditEnable,
+  public ServiceInfo(boolean isToFieldEditable, boolean isFromFieldEditable, boolean isMsgEditEnable,
                      boolean isSubjectEditEnable, boolean isMsgTypeSwitchable, boolean isAddNewAttachmentsEnable,
                      String systemMsg, List<AttachmentInfo> atts) {
     this.isToFieldEditable = isToFieldEditable;
     this.isFromFieldEditable = isFromFieldEditable;
-    this.isMsgEditable = isMessageEditEnable;
+    this.isMsgEditable = isMsgEditEnable;
     this.isSubjEditable = isSubjectEditEnable;
     this.isMsgTypeSwitchable = isMsgTypeSwitchable;
     this.hasAbilityToAddNewAtt = isAddNewAttachmentsEnable;
@@ -89,15 +89,15 @@ public class ServiceInfo implements Parcelable {
     return isFromFieldEditable;
   }
 
-  public boolean isMessageEditable() {
+  public boolean isMsgEditable() {
     return isMsgEditable;
   }
 
-  public boolean isMessageTypeSwitchable() {
+  public boolean isMsgTypeSwitchable() {
     return isMsgTypeSwitchable;
   }
 
-  public String getSystemMessage() {
+  public String getSystemMsg() {
     return systemMsg;
   }
 
@@ -120,7 +120,7 @@ public class ServiceInfo implements Parcelable {
     private boolean isSubjEditable = true;
     private boolean isMsgTypeSwitchable = true;
     private boolean hasAbilityToAddNewAtt = true;
-    private String systemMessage;
+    private String systemMsg;
     private List<AttachmentInfo> atts;
 
     public Builder setIsToFieldEditable(boolean isToFieldEditable) {
@@ -133,7 +133,7 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public Builder setIsMessageEditable(boolean isMsgEditable) {
+    public Builder setIsMsgEditable(boolean isMsgEditable) {
       this.isMsgEditable = isMsgEditable;
       return this;
     }
@@ -143,7 +143,7 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public Builder setIsMessageTypeSwitchable(boolean isMsgTypeSwitchable) {
+    public Builder setIsMsgTypeSwitchable(boolean isMsgTypeSwitchable) {
       this.isMsgTypeSwitchable = isMsgTypeSwitchable;
       return this;
     }
@@ -153,8 +153,8 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public Builder setSystemMessage(String systemMessage) {
-      this.systemMessage = systemMessage;
+    public Builder setSystemMsg(String systemMsg) {
+      this.systemMsg = systemMsg;
       return this;
     }
 
@@ -165,7 +165,7 @@ public class ServiceInfo implements Parcelable {
 
     public ServiceInfo build() {
       return new ServiceInfo(isToFieldEditable, isFromFieldEditable, isMsgEditable, isSubjEditable,
-          isMsgTypeSwitchable, hasAbilityToAddNewAtt, systemMessage, atts);
+          isMsgTypeSwitchable, hasAbilityToAddNewAtt, systemMsg, atts);
     }
   }
 }

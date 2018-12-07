@@ -134,9 +134,9 @@ public class JsBackgroundService extends BaseService implements JsListener {
   }
 
   @Override
-  public void onMessageDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMessageInfo) {
+  public void onMsgDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMsgInfo) {
     try {
-      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, incomingMessageInfo);
+      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, incomingMsgInfo);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -222,25 +222,25 @@ public class JsBackgroundService extends BaseService implements JsListener {
     }
 
     @Override
-    public void handleMessage(Message message) {
+    public void handleMessage(Message msg) {
       if (jsInBackgroundManagerWeakReference.get() != null) {
         JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakReference.get();
         BaseService.Action action = null;
         String ownerKey = null;
         int requestCode = -1;
 
-        if (message.obj instanceof BaseService.Action) {
-          action = (BaseService.Action) message.obj;
+        if (msg.obj instanceof BaseService.Action) {
+          action = (BaseService.Action) msg.obj;
           ownerKey = action.getOwnerKey();
           requestCode = action.getRequestCode();
         }
 
-        switch (message.what) {
+        switch (msg.what) {
           case MESSAGE_ADD_REPLY_MESSENGER:
             Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
 
             if (replyToMessengersForAdd != null && action != null) {
-              replyToMessengersForAdd.put(ownerKey, message.replyTo);
+              replyToMessengersForAdd.put(ownerKey, msg.replyTo);
             }
             break;
 
@@ -254,9 +254,9 @@ public class JsBackgroundService extends BaseService implements JsListener {
 
           case MESSAGE_DECRYPT_MESSAGE:
             if (jsInBackgroundManager != null && action != null) {
-              String rawMessage = (String) action.getObject();
+              String rawMsg = (String) action.getObject();
 
-              jsInBackgroundManager.decryptMessage(ownerKey, requestCode, rawMessage);
+              jsInBackgroundManager.decryptMsg(ownerKey, requestCode, rawMsg);
             }
             break;
 
@@ -267,7 +267,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             break;
 
           default:
-            super.handleMessage(message);
+            super.handleMessage(msg);
         }
       }
     }

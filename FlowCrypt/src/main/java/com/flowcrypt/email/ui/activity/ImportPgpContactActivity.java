@@ -164,7 +164,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
             LookUpResponse lookUpResponse = (LookUpResponse) baseResponse.getResponseModel();
             if (lookUpResponse.getApiError() != null) {
               UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-              UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMessage());
+              UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMsg());
             } else {
               ArrayList<LookUpPublicKeyInfo> lookUpPublicKeyInfoArrayList = lookUpResponse.getResults();
               if (lookUpPublicKeyInfoArrayList != null && !lookUpPublicKeyInfoArrayList.isEmpty()) {

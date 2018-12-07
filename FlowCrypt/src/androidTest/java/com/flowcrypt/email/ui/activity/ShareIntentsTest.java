@@ -234,7 +234,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
 
-  private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMessage,
+  private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMsg,
                                           int attachmentsCount) {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
@@ -247,8 +247,8 @@ public class ShareIntentsTest extends BaseTest {
       intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject);
     }
 
-    if (extraMessage != null) {
-      intent.putExtra(Intent.EXTRA_TEXT, extraMessage);
+    if (extraMsg != null) {
+      intent.putExtra(Intent.EXTRA_TEXT, extraMsg);
     }
 
     if (attachmentsCount > 0) {

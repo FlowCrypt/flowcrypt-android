@@ -30,10 +30,10 @@ if (propertiesFile.exists()) {
 }
 
 
-static def inputPassword(String dialogTitle, String dialogMessage) {
+static def inputPassword(String dialogTitle, String dialogMsg) {
     def console = System.console();
     if (console != null) {
-        return new String(console.readPassword(dialogMessage)).trim()
+        return new String(console.readPassword(dialogMsg)).trim()
     }
 
     while (true) {
@@ -49,7 +49,7 @@ static def inputPassword(String dialogTitle, String dialogMessage) {
                     show: true
             ) {
                 vbox { //Put everything below each other
-                    label(text: dialogMessage)
+                    label(text: dialogMsg)
                     input = passwordField()
                     button(defaultButton: true, text: 'OK', actionPerformed: {
                         enteredPassword = new String(input.password).trim()

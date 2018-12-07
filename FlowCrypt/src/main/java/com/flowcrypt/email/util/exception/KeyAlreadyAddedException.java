@@ -19,8 +19,8 @@ import com.flowcrypt.email.model.KeyDetails;
 public class KeyAlreadyAddedException extends Exception {
   private KeyDetails keyDetails;
 
-  public KeyAlreadyAddedException(KeyDetails keyDetails, String errorMessage) {
-    super(errorMessage);
+  public KeyAlreadyAddedException(KeyDetails keyDetails, String errorMsg) {
+    super(errorMsg);
     this.keyDetails = keyDetails;
   }
 

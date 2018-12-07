@@ -84,13 +84,13 @@ public class AddMessageToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        saveMessageToDatabase();
+        saveMsgToDatabase();
         base.evaluate();
       }
     };
   }
 
-  private void saveMessageToDatabase() throws MessagingException {
+  private void saveMsgToDatabase() throws MessagingException {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
     messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         account.getEmail(),

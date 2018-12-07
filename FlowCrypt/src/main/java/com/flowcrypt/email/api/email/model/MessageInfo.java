@@ -69,11 +69,11 @@ public class MessageInfo implements Parcelable {
     this.subject = subject;
   }
 
-  public String getMessage() {
+  public String getMsg() {
     return msg;
   }
 
-  public void setMessage(String message) {
+  public void setMsg(String message) {
     this.msg = message;
   }
 }

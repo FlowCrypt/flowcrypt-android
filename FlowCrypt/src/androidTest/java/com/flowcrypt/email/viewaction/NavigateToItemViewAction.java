@@ -70,7 +70,7 @@ public class NavigateToItemViewAction implements ViewAction {
       throw new PerformException.Builder()
           .withActionDescription(this.getDescription())
           .withViewDescription(HumanReadables.describe(view))
-          .withCause(new RuntimeException(getErrorMessage(navigationMenu, view)))
+          .withCause(new RuntimeException(getErrorMsg(navigationMenu, view)))
           .build();
     }
     navigationMenu.performItemAction(matchedMenuItem, 0);
@@ -89,32 +89,32 @@ public class NavigateToItemViewAction implements ViewAction {
         isDisplayingAtLeast(90));
   }
 
-  private String getErrorMessage(Menu menu, View view) {
+  private String getErrorMsg(Menu menu, View view) {
     String newLine = System.getProperty("line.separator");
-    StringBuilder errorMessage =
+    StringBuilder errorMsg =
         new StringBuilder("Menu item was not found, " + "available menu items:")
             .append(newLine);
     for (int position = 0; position < menu.size(); position++) {
-      errorMessage.append("[MenuItem] position=").append(position);
+      errorMsg.append("[MenuItem] position=").append(position);
       MenuItem menuItem = menu.getItem(position);
       if (menuItem != null) {
         CharSequence itemTitle = menuItem.getTitle();
         if (itemTitle != null) {
-          errorMessage.append(", title=").append(itemTitle);
+          errorMsg.append(", title=").append(itemTitle);
         }
         if (view.getResources() != null) {
           int itemId = menuItem.getItemId();
           try {
-            errorMessage.append(", id=");
+            errorMsg.append(", id=");
             String menuItemResourceName = view.getResources().getResourceName(itemId);
-            errorMessage.append(menuItemResourceName);
+            errorMsg.append(menuItemResourceName);
           } catch (Resources.NotFoundException nfe) {
-            errorMessage.append("not found");
+            errorMsg.append("not found");
           }
         }
-        errorMessage.append(newLine);
+        errorMsg.append(newLine);
       }
     }
-    return errorMessage.toString();
+    return errorMsg.toString();
   }
 }

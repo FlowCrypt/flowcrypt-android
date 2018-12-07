@@ -75,17 +75,17 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
       destFolder.open(Folder.READ_WRITE);
       srcFolder.moveMessages(msgs, destFolder);
       if (isSingleMoving) {
-        listener.onMessageMoved(account, srcFolder, destFolder, msgs[0], ownerKey, requestCode);
+        listener.onMsgMoved(account, srcFolder, destFolder, msgs[0], ownerKey, requestCode);
       } else {
-        listener.onMessagesMoved(account, srcFolder, destFolder, msgs, ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, msgs, ownerKey, requestCode);
       }
 
       destFolder.close(false);
     } else {
       if (isSingleMoving) {
-        listener.onMessagesMoved(account, srcFolder, destFolder, null, ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, null, ownerKey, requestCode);
       } else {
-        listener.onMessagesMoved(account, srcFolder, destFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, new Message[]{}, ownerKey, requestCode);
       }
     }
 

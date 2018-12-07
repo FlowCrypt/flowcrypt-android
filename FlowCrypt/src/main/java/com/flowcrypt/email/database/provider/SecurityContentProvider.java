@@ -212,7 +212,7 @@ public class SecurityContentProvider extends ContentProvider {
 
                 //if message not inserted, try to update message with some UID
                 if (id <= 0) {
-                  id = updateMessageInfo(sqLiteDatabase, contentValues);
+                  id = updateMsgInfo(sqLiteDatabase, contentValues);
                 } else {
                   insertedRowsCount++;
                 }
@@ -466,7 +466,7 @@ public class SecurityContentProvider extends ContentProvider {
    * @param contentValues  The new information about some message.
    * @return the number of rows affected
    */
-  private long updateMessageInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
+  private long updateMsgInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
     long id;
     String email = contentValues.getAsString(MessageDaoSource.COL_EMAIL);
     String folder = contentValues.getAsString(MessageDaoSource.COL_FOLDER);

@@ -76,9 +76,9 @@ public class SyncJobService extends JobService implements SyncListener {
       if (result == JobScheduler.RESULT_SUCCESS) {
         Log.d(TAG, "A job scheduled successfully");
       } else {
-        String errorMessage = "Error. Can't schedule a job";
-        Log.e(TAG, errorMessage);
-        ExceptionUtil.handleError(new IllegalStateException(errorMessage));
+        String errorMsg = "Error. Can't schedule a job";
+        Log.e(TAG, errorMsg);
+        ExceptionUtil.handleError(new IllegalStateException(errorMsg));
       }
     }
   }
@@ -116,7 +116,7 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageWithBackupToKeyOwnerSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
+  public void onMsgWithBackupToKeyOwnerSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
 
   }
 
@@ -126,67 +126,67 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
+  public void onMsgSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
 
   }
 
   @Override
-  public void onMessagesMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                              Message[] msgs, String ownerKey, int requestCode) {
+  public void onMsgsMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
+                          Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessageMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                             Message msg, String ownerKey, int requestCode) {
+  public void onMsgMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
+                         Message msg, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
-                                       Message msg, String rawMsgWithoutAtts, String ownerKey, int requestCode) {
+  public void onMsgDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
+                                   Message msg, String rawMsgWithoutAtts, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onMessagesReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                                 Message[] msgs, String ownerKey, int requestCode) {
+  public void onMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
+                             Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onSearchMessagesReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                                       Message[] msgs, String ownerKey, int requestCode) {
+  public void onSearchMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
+                                   Message[] msgs, String ownerKey, int requestCode) {
 
   }
 
   @Override
-  public void onRefreshMessagesReceived(AccountDao account, LocalFolder localFolder,
-                                        IMAPFolder remoteFolder, Message[] newMsgs,
-                                        Message[] updateMsgs, String ownerKey, int requestCode) {
+  public void onRefreshMsgsReceived(AccountDao account, LocalFolder localFolder,
+                                    IMAPFolder remoteFolder, Message[] newMsgs,
+                                    Message[] updateMsgs, String ownerKey, int requestCode) {
     try {
       MessageDaoSource msgDaoSource = new MessageDaoSource();
 
-      Map<Long, String> mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMessageFlags
+      Map<Long, String> mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags
           (getApplicationContext(), account.getEmail(), localFolder.getFolderAlias());
 
       Collection<Long> uidSet = new HashSet<>(mapOfUIDsAndMsgsFlags.keySet());
       Collection<Long> deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs);
 
       String folderAlias = localFolder.getFolderAlias();
-      List<GeneralMessageDetails> generalMessageDetailsBeforeUpdate = msgDaoSource.getNewMessages
+      List<GeneralMessageDetails> generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs
           (getApplicationContext(), account.getEmail(), folderAlias);
 
-      msgDaoSource.deleteMessagesByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
+      msgDaoSource.deleteMsgsByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
           deleteCandidatesUIDs);
 
-      msgDaoSource.updateMessagesByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
+      msgDaoSource.updateMsgsByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
           remoteFolder, EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs));
 
-      List<GeneralMessageDetails> detailsAfterUpdate = msgDaoSource.getNewMessages(getApplicationContext(),
+      List<GeneralMessageDetails> detailsAfterUpdate = msgDaoSource.getNewMsgs(getApplicationContext(),
           account.getEmail(), folderAlias);
 
-      List<GeneralMessageDetails> detailsDeleteCandidates = new LinkedList<>(generalMessageDetailsBeforeUpdate);
+      List<GeneralMessageDetails> detailsDeleteCandidates = new LinkedList<>(generalMsgDetailsBeforeUpdate);
       detailsDeleteCandidates.removeAll(detailsAfterUpdate);
 
       boolean isInbox = FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX;
@@ -197,7 +197,7 @@ public class SyncJobService extends JobService implements SyncListener {
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {
-            List<Integer> unseenMsgs = msgDaoSource.getUIDOfUnseenMessages(this, account.getEmail(), folderAlias);
+            List<Integer> unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.getEmail(), folderAlias);
             messagesNotificationManager.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true);
           }
         }
@@ -224,8 +224,8 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onMessageChanged(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message msg,
-                               String ownerKey, int requestCode) {
+  public void onMsgChanged(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message msg,
+                           String ownerKey, int requestCode) {
 
   }
 
@@ -236,16 +236,16 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onNewMessagesReceived(final AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                                    Message[] newMsgs, LongSparseArray<Boolean> msgsEncryptionStates,
-                                    String ownerKey, int requestCode) {
+  public void onNewMsgsReceived(final AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
+                                Message[] newMsgs, LongSparseArray<Boolean> msgsEncryptionStates,
+                                String ownerKey, int requestCode) {
     try {
       Context context = getApplicationContext();
       boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
 
       MessageDaoSource msgDaoSource = new MessageDaoSource();
 
-      Map<Long, String> mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMessageFlags
+      Map<Long, String> mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags
           (context, account.getEmail(), localFolder.getFolderAlias());
 
       Collection<Long> uids = new HashSet<>(mapOfUIDAndMsgFlags.keySet());
@@ -262,9 +262,9 @@ public class SyncJobService extends JobService implements SyncListener {
           return;
         }
 
-        List<GeneralMessageDetails> newMsgsList = msgDaoSource.getNewMessages(getApplicationContext(),
+        List<GeneralMessageDetails> newMsgsList = msgDaoSource.getNewMsgs(getApplicationContext(),
             account.getEmail(), folderAlias);
-        List<Integer> unseenUIDs = msgDaoSource.getUIDOfUnseenMessages(this, account.getEmail(), folderAlias);
+        List<Integer> unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.getEmail(), folderAlias);
 
         messagesNotificationManager.notify(this, account, localFolder, newMsgsList, unseenUIDs, false);
       }

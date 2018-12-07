@@ -212,7 +212,7 @@ public class EmailSyncManager {
    * @param start       The position of the start.
    * @param end         The position of the end.
    */
-  public void loadMessages(String ownerKey, int requestCode, LocalFolder localFolder, int start, int end) {
+  public void loadMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int start, int end) {
     try {
       activeQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, localFolder, start, end));
     } catch (InterruptedException e) {
@@ -228,7 +228,7 @@ public class EmailSyncManager {
    * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
    * @param localFolder      A local implementation of the remote localFolder.
    */
-  public void loadNewMessages(String ownerKey, int requestCode, LocalFolder localFolder) {
+  public void loadNewMsgs(String ownerKey, int requestCode, LocalFolder localFolder) {
     try {
       removeOldTasks(CheckNewMessagesSyncTask.class, passiveQueue);
       passiveQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder));
@@ -247,7 +247,7 @@ public class EmailSyncManager {
    * @param localFolder      The local implementation of the remote localFolder.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
    */
-  public void loadMessageDetails(String ownerKey, int requestCode, LocalFolder localFolder, int uid) {
+  public void loadMsgDetails(String ownerKey, int requestCode, LocalFolder localFolder, int uid) {
     try {
       removeOldTasks(LoadMessageDetailsSyncTask.class, activeQueue);
       activeQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid));
@@ -267,7 +267,7 @@ public class EmailSyncManager {
    * @param localFolder                     A local implementation of the remote localFolder.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the localFolder.
    */
-  public void loadNextMessages(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
+  public void loadNextMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
     try {
       notifyActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
       removeOldTasks(LoadMessagesToCacheSyncTask.class, activeQueue);
@@ -303,7 +303,7 @@ public class EmailSyncManager {
    * @param localFolder            A local implementation of the remote localFolder.
    * @param isActiveQueueUsed true if the current call will be ran in the active queue, otherwise false.
    */
-  public void refreshMessages(String ownerKey, int requestCode, LocalFolder localFolder, boolean isActiveQueueUsed) {
+  public void refreshMsgs(String ownerKey, int requestCode, LocalFolder localFolder, boolean isActiveQueueUsed) {
     try {
       BlockingQueue<SyncTask> syncTaskBlockingQueue = isActiveQueueUsed ? activeQueue : passiveQueue;
 
@@ -324,7 +324,7 @@ public class EmailSyncManager {
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
    *                    .Message ).
    */
-  public void moveMessage(String ownerKey, int requestCode, LocalFolder srcFolder, LocalFolder destFolder, int uid) {
+  public void moveMsg(String ownerKey, int requestCode, LocalFolder srcFolder, LocalFolder destFolder, int uid) {
     try {
       activeQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode, srcFolder, destFolder, new long[]{uid}));
     } catch (InterruptedException e) {
@@ -352,7 +352,7 @@ public class EmailSyncManager {
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for identify the current action.
    */
-  public void sendMessageWithBackup(String ownerKey, int requestCode) {
+  public void sendMsgWithBackup(String ownerKey, int requestCode) {
     try {
       activeQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode));
     } catch (InterruptedException e) {
@@ -367,7 +367,7 @@ public class EmailSyncManager {
    * @param requestCode The unique request code for identify the current action.
    * @param localFolder The local implementation of the remote folder
    */
-  public void identifyEncryptedMessages(String ownerKey, int requestCode, LocalFolder localFolder) {
+  public void identifyEncryptedMsgs(String ownerKey, int requestCode, LocalFolder localFolder) {
     try {
       removeOldTasks(CheckIsLoadedMessagesEncryptedSyncTask.class, passiveQueue);
       passiveQueue.put(new CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode, localFolder));
@@ -400,7 +400,7 @@ public class EmailSyncManager {
    * @param localFolder                     A localFolder where we do a search.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the database.
    */
-  public void searchMessages(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
+  public void searchMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
     try {
       removeOldTasks(SearchMessagesSyncTask.class, activeQueue);
       activeQueue.put(new SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount));
@@ -707,7 +707,7 @@ public class EmailSyncManager {
     @Override
     public void messagesAdded(MessageCountEvent e) {
       Log.d(tag, "messagesAdded: " + e.getMessages().length);
-      loadNewMessages(null, 0, localFolder);
+      loadNewMsgs(null, 0, localFolder);
     }
 
     @Override
@@ -722,14 +722,14 @@ public class EmailSyncManager {
       Message msg = e.getMessage();
       if (msg != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
         try {
-          msgDaoSource.updateFlagsForLocalMessage(listener.getContext(),
+          msgDaoSource.updateFlagsForLocalMsg(listener.getContext(),
               account.getEmail(),
               localFolder.getFolderAlias(),
               remoteFolder.getUID(msg),
               msg.getFlags());
 
           if (listener != null) {
-            listener.onMessageChanged(account, localFolder, remoteFolder, msg, null, 0);
+            listener.onMsgChanged(account, localFolder, remoteFolder, msg, null, 0);
           }
         } catch (MessagingException msgException) {
           msgException.printStackTrace();
@@ -793,7 +793,7 @@ public class EmailSyncManager {
     }
 
     private void syncFolderState() {
-      refreshMessages("", 0, localFolder, false);
+      refreshMsgs("", 0, localFolder, false);
     }
   }
 }

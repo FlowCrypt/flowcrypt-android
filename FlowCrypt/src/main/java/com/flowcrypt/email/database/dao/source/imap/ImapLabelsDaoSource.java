@@ -190,7 +190,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
    * @return The count of updated rows. Will be 1 if information about {@link LocalFolder} was
    * updated or -1 otherwise.
    */
-  public int updateLabelMessagesCount(Context context, String email, String folderName, int newMsgCount) {
+  public int updateLabelMsgsCount(Context context, String email, String folderName, int newMsgCount) {
     if (context != null && !TextUtils.isEmpty(folderName)) {
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
@@ -274,7 +274,7 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     contentValues.put(COL_EMAIL, accountName);
     contentValues.put(COL_FOLDER_NAME, localFolder.getFullName());
     contentValues.put(COL_FOLDER_ALIAS, localFolder.getFolderAlias());
-    contentValues.put(COL_MESSAGE_COUNT, localFolder.getMessageCount());
+    contentValues.put(COL_MESSAGE_COUNT, localFolder.getMsgCount());
     contentValues.put(COL_IS_CUSTOM_LABEL, localFolder.isCustom());
     contentValues.put(COL_FOLDER_ATTRIBUTES, prepareAttributesToSaving(localFolder.getAttributes()));
     return contentValues;

@@ -82,12 +82,12 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
    * Enqueue a new task for {@link PrepareOutgoingMessagesJobIntentService}.
    *
    * @param context             Interface to global information about an application environment.
-   * @param outgoingMessageInfo {@link OutgoingMessageInfo} which contains information about an outgoing message.
+   * @param outgoingMsgInfo {@link OutgoingMessageInfo} which contains information about an outgoing message.
    */
-  public static void enqueueWork(Context context, OutgoingMessageInfo outgoingMessageInfo) {
-    if (outgoingMessageInfo != null) {
+  public static void enqueueWork(Context context, OutgoingMessageInfo outgoingMsgInfo) {
+    if (outgoingMsgInfo != null) {
       Intent intent = new Intent(context, PrepareOutgoingMessagesJobIntentService.class);
-      intent.putExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO, outgoingMessageInfo);
+      intent.putExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO, outgoingMsgInfo);
 
       enqueueWork(context, PrepareOutgoingMessagesJobIntentService.class,
           JobIdManager.JOB_TYPE_PREPARE_OUT_GOING_MESSAGE, intent);
@@ -124,14 +124,14 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       String email = account.getEmail();
       String label = JavaEmailConstants.FOLDER_OUTBOX;
 
-      if (msgDaoSource.getMessage(this, email, label, uid) != null) {
+      if (msgDaoSource.getMsg(this, email, label, uid) != null) {
         //todo-DenBond7 need to think about resolving a situation, when a message was created but the
         // attachments were not added.
         return;
       }
 
       Log.d(TAG, "Received a new job: " + outgoingMsgInfo);
-      Uri newMessageUri = null;
+      Uri newMsgUri = null;
 
       try {
         setupIfNeeded();
@@ -144,17 +144,17 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           pubKeys = SecurityUtils.getRecipientsPubKeys(this, js, pgpContacts, account, senderEmail);
         }
 
-        String rawMsg = EmailUtil.genRawMessageWithoutAttachments(outgoingMsgInfo, js, pubKeys);
-        MimeMessage mimeMessage = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
+        String rawMsg = EmailUtil.genRawMsgWithoutAttachments(outgoingMsgInfo, js, pubKeys);
+        MimeMessage mimeMsg = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
 
         File msgAttsCacheDir = new File(attsCacheDir, UUID.randomUUID().toString());
 
-        ContentValues contentValues = prepareContentValues(outgoingMsgInfo, uid, mimeMessage, rawMsg, msgAttsCacheDir);
-        newMessageUri = msgDaoSource.addRow(this, contentValues);
+        ContentValues contentValues = prepareContentValues(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir);
+        newMsgUri = msgDaoSource.addRow(this, contentValues);
 
-        if (newMessageUri != null) {
-          int msgsCount = msgDaoSource.getOutboxMessages(this, email).size();
-          new ImapLabelsDaoSource().updateLabelMessagesCount(this, email, label, msgsCount);
+        if (newMsgUri != null) {
+          int msgsCount = msgDaoSource.getOutboxMsgs(this, email).size();
+          new ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount);
 
           boolean hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.getAttachments())
               || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments());
@@ -163,7 +163,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
             if (!msgAttsCacheDir.exists()) {
               if (!msgAttsCacheDir.mkdir()) {
                 Log.e(TAG, "Create cache directory " + attsCacheDir.getName() + " filed!");
-                msgDaoSource.updateMessageState(this, email, label, uid, MessageState.ERROR_CACHE_PROBLEM);
+                msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_CACHE_PROBLEM);
                 return;
               }
             }
@@ -172,7 +172,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           }
 
           if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments())) {
-            msgDaoSource.updateMessageState(this, email, label, uid, MessageState.QUEUED);
+            msgDaoSource.updateMsgState(this, email, label, uid, MessageState.QUEUED);
             MessagesSenderJobService.schedule(getApplicationContext());
           } else {
             ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
@@ -182,9 +182,9 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
 
-        if (newMessageUri == null) {
+        if (newMsgUri == null) {
           ContentValues contentValues = MessageDaoSource.prepareContentValues(email, label, uid, outgoingMsgInfo);
-          newMessageUri = msgDaoSource.addRow(this, contentValues);
+          newMsgUri = msgDaoSource.addRow(this, contentValues);
         }
 
         if (e instanceof NoKeyAvailableException) {
@@ -195,15 +195,15 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.getValue());
           contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg);
 
-          msgDaoSource.updateMessage(this, email, label, uid, contentValues);
+          msgDaoSource.updateMsg(this, email, label, uid, contentValues);
         } else {
-          msgDaoSource.updateMessageState(this, email, label, uid, MessageState.ERROR_DURING_CREATION);
+          msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_DURING_CREATION);
         }
       }
 
-      if (newMessageUri != null) {
-        int newMsgsCount = msgDaoSource.getOutboxMessages(this, email).size();
-        new ImapLabelsDaoSource().updateLabelMessagesCount(this, email, label, newMsgsCount);
+      if (newMsgUri != null) {
+        int newMsgsCount = msgDaoSource.getOutboxMsgs(this, email).size();
+        new ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, newMsgsCount);
       }
     }
   }
