@@ -238,8 +238,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
       case REQUEST_CODE_SIGN_IN:
         switch (resultCode) {
           case RESULT_OK:
-            GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if (googleSignInResult.isSuccess()) {
+            GoogleSignInResult signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (signInResult.isSuccess()) {
               EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
                   .findFragmentById(R.id.emailListFragment);
 
@@ -247,8 +247,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
                 fragment.reloadMessages();
               }
             } else {
-              if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-                UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus().getStatusMessage());
+              if (!TextUtils.isEmpty(signInResult.getStatus().getStatusMessage())) {
+                UIUtil.showInfoSnackbar(getRootView(), signInResult.getStatus().getStatusMessage());
               }
             }
             break;

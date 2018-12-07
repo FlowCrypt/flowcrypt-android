@@ -83,9 +83,9 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_SIGN_IN:
-        GoogleSignInResult sign = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-        if (sign.isSuccess()) {
-          this.sign = sign.getSignInAccount();
+        GoogleSignInResult signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+        if (signInResult.isSuccess()) {
+          this.sign = signInResult.getSignInAccount();
           if (this.sign != null) {
             if (new AccountDaoSource().getAccountInformation(this, this.sign.getEmail()) == null) {
               LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null,

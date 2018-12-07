@@ -100,8 +100,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_SIGN_IN:
-        GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-        handleSignInResult(googleSignInResult);
+        GoogleSignInResult signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+        handleSignInResult(signInResult);
         break;
 
       case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL:
@@ -283,15 +283,15 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     }
   }
 
-  private void handleSignInResult(GoogleSignInResult googleSignInResult) {
-    if (googleSignInResult.isSuccess()) {
-      sign = googleSignInResult.getSignInAccount();
+  private void handleSignInResult(GoogleSignInResult signInResult) {
+    if (signInResult.isSuccess()) {
+      sign = signInResult.getSignInAccount();
 
       startService(new Intent(this, CheckClipboardToFindKeyService.class));
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
     } else {
-      if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-        UIUtil.showInfoSnackbar(signInView, googleSignInResult.getStatus().getStatusMessage());
+      if (!TextUtils.isEmpty(signInResult.getStatus().getStatusMessage())) {
+        UIUtil.showInfoSnackbar(signInView, signInResult.getStatus().getStatusMessage());
       }
       UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
     }
