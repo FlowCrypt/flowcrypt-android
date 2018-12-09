@@ -8,18 +8,7 @@ import groovy.swing.SwingBuilder
 
 import java.text.SimpleDateFormat
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.github.gfx.ribbonizer:ribbonizer-plugin:2.1.0'
-    }
-}
-
 apply plugin: 'com.android.application'
-apply plugin: 'com.github.gfx.ribbonizer'
 
 SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
 
