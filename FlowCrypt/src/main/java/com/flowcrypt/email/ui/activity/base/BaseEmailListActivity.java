@@ -198,10 +198,12 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
       updateActionProgressState(100, null);
     }
 
-    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName());
-    if (getCurrentFolder() != null && isOutbox) {
-      ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
-      MessagesSenderJobService.schedule(getApplicationContext());
+    if (getCurrentFolder() != null) {
+      boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName());
+      if (getCurrentFolder() != null && isOutbox) {
+        ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
+        MessagesSenderJobService.schedule(getApplicationContext());
+      }
     }
   }
 
