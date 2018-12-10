@@ -59,8 +59,8 @@ public class PropertiesHelper {
    *
    * @return <tt>Properties</tt> New properties with setup imap connection;
    */
-  public static Properties generatePropertiesForDownloadAtts(AuthCredentials authCredentials) {
-    Properties properties = generatePropertiesFromAuthCredentials(authCredentials);
+  public static Properties genDownloadAttsProps(AuthCredentials authCreds) {
+    Properties properties = genProps(authCreds);
     properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE, 1024 * 256);
     return properties;
   }
@@ -68,22 +68,22 @@ public class PropertiesHelper {
   /**
    * Generate properties.
    *
-   * @param authCredentials The object which contains information about settings for a connection.
+   * @param authCreds The object which contains information about settings for a connection.
    * @return <tt>Properties</tt> New properties.
    */
-  public static Properties generatePropertiesFromAuthCredentials(AuthCredentials authCredentials) {
+  public static Properties genProps(AuthCredentials authCreds) {
     Properties properties = new Properties();
-    if (authCredentials != null) {
+    if (authCreds != null) {
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE,
-          authCredentials.getImapOpt() == SecurityType.Option.SSL_TLS);
+          authCreds.getImapOpt() == SecurityType.Option.SSL_TLS);
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE,
-          authCredentials.getImapOpt() == SecurityType.Option.STARTLS);
+          authCreds.getImapOpt() == SecurityType.Option.STARTLS);
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH,
-          authCredentials.hasCustomSignInForSmtp());
+          authCreds.hasCustomSignInForSmtp());
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE,
-          authCredentials.getSmtpOpt() == SecurityType.Option.SSL_TLS);
+          authCreds.getSmtpOpt() == SecurityType.Option.SSL_TLS);
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE,
-          authCredentials.getSmtpOpt() == SecurityType.Option.STARTLS);
+          authCreds.getSmtpOpt() == SecurityType.Option.STARTLS);
     }
 
     return properties;

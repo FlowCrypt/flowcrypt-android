@@ -57,7 +57,7 @@ public class GeneralUtil {
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
   @SuppressWarnings("deprecation")
-  public static boolean isInternetConnectionAvailable(Context context) {
+  public static boolean isInternetConnAvailable(Context context) {
     ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {

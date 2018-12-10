@@ -128,7 +128,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
    * This is an implementation of {@link AsyncTask} which downloads the forwarded attachments.
    */
   private static class DownloadForwardedAttachmentsAsyncTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-    private final WeakReference<ForwardedAttachmentsDownloaderJobService> weakReference;
+    private final WeakReference<ForwardedAttachmentsDownloaderJobService> weakRef;
 
     private Session sess;
     private Store store;
@@ -138,15 +138,15 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     private Js js;
 
     DownloadForwardedAttachmentsAsyncTask(ForwardedAttachmentsDownloaderJobService jobService) {
-      this.weakReference = new WeakReference<>(jobService);
+      this.weakRef = new WeakReference<>(jobService);
     }
 
     @Override
     protected JobParameters doInBackground(JobParameters... params) {
       Log.d(TAG, "doInBackground");
       try {
-        if (weakReference.get() != null) {
-          Context context = weakReference.get().getApplicationContext();
+        if (weakRef.get() != null) {
+          Context context = weakRef.get().getApplicationContext();
 
           attCacheDir = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
@@ -199,8 +199,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     protected void onPostExecute(JobParameters jobParameters) {
       Log.d(TAG, "onPostExecute");
       try {
-        if (weakReference.get() != null) {
-          weakReference.get().jobFinished(jobParameters, isFailed);
+        if (weakRef.get() != null) {
+          weakRef.get().jobFinished(jobParameters, isFailed);
         }
       } catch (NullPointerException e) {
         e.printStackTrace();
@@ -254,7 +254,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+          if (!GeneralUtil.isInternetConnAvailable(context)) {
             publishProgress(true);
             break;
           }
@@ -272,7 +272,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
 
       for (AttachmentInfo att : atts) {
         if (att.isForwarded() && att.getUri() == null) {
-          FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
+          FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
 
           if (folder == null) {
             String folderName = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(),
@@ -305,7 +305,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                 FileUtils.moveFile(tempFile, attFile);
                 att.setUri(FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile));
               } else {
-                FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
+                FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
                 //It means the user has already deleted the current message. We don't need
                 // to download other attachments.
                 break;

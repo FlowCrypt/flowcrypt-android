@@ -102,11 +102,11 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
         switch (resultCode) {
           case RESULT_OK:
             try {
-              AuthCredentials authCredentials = data.getParcelableExtra(AddNewAccountManuallyActivity
+              AuthCredentials authCreds = data.getParcelableExtra(AddNewAccountManuallyActivity
                   .KEY_EXTRA_AUTH_CREDENTIALS);
               AccountDaoSource accountDaoSource = new AccountDaoSource();
-              accountDaoSource.addRow(this, authCredentials);
-              accountDaoSource.setActiveAccount(this, authCredentials.getEmail());
+              accountDaoSource.addRow(this, authCreds);
+              accountDaoSource.setActiveAccount(this, authCreds.getEmail());
 
               Intent intent = new Intent();
               intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this));

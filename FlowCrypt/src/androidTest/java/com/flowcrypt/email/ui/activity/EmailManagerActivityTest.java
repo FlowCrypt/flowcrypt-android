@@ -188,7 +188,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     try {
       AccountDaoSource accountDaoSource = new AccountDaoSource();
-      accountDaoSource.addRow(targetContext, account.getAuthCredentials());
+      accountDaoSource.addRow(targetContext, account.getAuthCreds());
       accountDaoSource.setActiveAccount(targetContext, account.getEmail());
     } catch (Exception e) {
       e.printStackTrace();

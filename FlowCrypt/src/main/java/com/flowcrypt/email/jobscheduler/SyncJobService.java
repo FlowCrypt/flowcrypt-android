@@ -279,14 +279,14 @@ public class SyncJobService extends JobService implements SyncListener {
    * again.
    */
   private static class CheckNewMessagesJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-    private final WeakReference<SyncJobService> weakReference;
+    private final WeakReference<SyncJobService> weakRef;
 
     private Session sess;
     private Store store;
     private boolean isFailed;
 
     CheckNewMessagesJobTask(SyncJobService syncJobService) {
-      this.weakReference = new WeakReference<>(syncJobService);
+      this.weakRef = new WeakReference<>(syncJobService);
     }
 
     @Override
@@ -294,8 +294,8 @@ public class SyncJobService extends JobService implements SyncListener {
       Log.d(TAG, "doInBackground");
 
       try {
-        if (weakReference.get() != null) {
-          Context context = weakReference.get().getApplicationContext();
+        if (weakRef.get() != null) {
+          Context context = weakRef.get().getApplicationContext();
           AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
 
           if (account != null) {
@@ -306,7 +306,7 @@ public class SyncJobService extends JobService implements SyncListener {
               sess = OpenStoreHelper.getAccountSess(context, account);
               store = OpenStoreHelper.openStore(context, account, sess);
 
-              new SyncFolderSyncTask("", 0, localFolder).runIMAPAction(account, sess, store, weakReference.get());
+              new SyncFolderSyncTask("", 0, localFolder).runIMAPAction(account, sess, store, weakRef.get());
 
               if (store != null) {
                 store.close();
@@ -327,8 +327,8 @@ public class SyncJobService extends JobService implements SyncListener {
     protected void onPostExecute(JobParameters jobParameters) {
       Log.d(TAG, "onPostExecute");
       try {
-        if (weakReference.get() != null) {
-          weakReference.get().jobFinished(jobParameters, isFailed);
+        if (weakRef.get() != null) {
+          weakRef.get().jobFinished(jobParameters, isFailed);
         }
       } catch (NullPointerException e) {
         e.printStackTrace();

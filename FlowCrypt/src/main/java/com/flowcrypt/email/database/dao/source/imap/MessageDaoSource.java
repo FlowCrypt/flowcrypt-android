@@ -1067,7 +1067,7 @@ public class MessageDaoSource extends BaseDaoSource {
             try {
               String parentDirName = details.getAttsDir();
               File dir = new File(new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR), parentDirName);
-              FileAndDirectoryUtils.deleteDirectory(dir);
+              FileAndDirectoryUtils.deleteDir(dir);
             } catch (IOException e) {
               e.printStackTrace();
             }

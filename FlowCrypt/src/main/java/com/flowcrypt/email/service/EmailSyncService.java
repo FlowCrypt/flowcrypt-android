@@ -588,7 +588,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
       if (connectivityManager != null) {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+        if (GeneralUtil.isInternetConnAvailable(this)) {
           Log.d(TAG, "networkInfo = " + networkInfo);
           if (emailSyncManager != null) {
             emailSyncManager.beginSync(false);
@@ -781,18 +781,18 @@ public class EmailSyncService extends BaseService implements SyncListener {
    * service and other Android components.
    */
   private static class IncomingHandler extends Handler {
-    private final WeakReference<EmailSyncManager> gmailSynsManagerWeakReference;
-    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
+    private final WeakReference<EmailSyncManager> gmailSynsManagerWeakRef;
+    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakRef;
 
-    IncomingHandler(EmailSyncManager emailSyncManager, Map<String, Messenger> replyToMessengersWeakReference) {
-      this.gmailSynsManagerWeakReference = new WeakReference<>(emailSyncManager);
-      this.replyToMessengersWeakReference = new WeakReference<>(replyToMessengersWeakReference);
+    IncomingHandler(EmailSyncManager emailSyncManager, Map<String, Messenger> replyToMessengersWeakRef) {
+      this.gmailSynsManagerWeakRef = new WeakReference<>(emailSyncManager);
+      this.replyToMessengersWeakRef = new WeakReference<>(replyToMessengersWeakRef);
     }
 
     @Override
     public void handleMessage(Message msg) {
-      if (gmailSynsManagerWeakReference.get() != null) {
-        EmailSyncManager emailSyncManager = gmailSynsManagerWeakReference.get();
+      if (gmailSynsManagerWeakRef.get() != null) {
+        EmailSyncManager emailSyncManager = gmailSynsManagerWeakRef.get();
         Action action = null;
         String ownerKey = null;
         int requestCode = -1;
@@ -805,7 +805,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
         switch (msg.what) {
           case MESSAGE_ADD_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForAdd != null && action != null) {
               replyToMessengersForAdd.put(ownerKey, msg.replyTo);
@@ -813,7 +813,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
             break;
 
           case MESSAGE_REMOVE_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForRemove != null && action != null) {
               replyToMessengersForRemove.remove(ownerKey);

@@ -247,7 +247,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     if (activeMsgDetails != null) {
       boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
       boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMsgWithoutAtts());
-      if (isOutbox || isRawMsgAvailable || GeneralUtil.isInternetConnectionAvailable(getContext())) {
+      if (isOutbox || isRawMsgAvailable || GeneralUtil.isInternetConnAvailable(getContext())) {
         if (activeMsgDetails.getMsgState() != null) {
           switch (activeMsgDetails.getMsgState()) {
             case ERROR_ORIGINAL_MESSAGE_MISSING:
@@ -288,7 +288,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     } else {
       emptyView.setVisibility(View.GONE);
 
-      if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+      if (GeneralUtil.isInternetConnAvailable(getContext())) {
         if (listener.getCurrentFolder() != null) {
           if (adapter.getCount() > 0) {
             swipeRefreshLayout.setRefreshing(true);
@@ -719,7 +719,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
       if (!isFetchMesgsNeeded) {
         isFetchMesgsNeeded = true;
-        if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+        if (GeneralUtil.isInternetConnAvailable(getContext())) {
           if (isSyncServiceConnected()) {
             loadNextMsgs(0);
           } else {
@@ -819,7 +819,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         Snackbar.LENGTH_LONG, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            if (GeneralUtil.isInternetConnAvailable(getContext())) {
               UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
               loadNextMsgs(-1);
             } else {
@@ -844,7 +844,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    * @param totalItemsCount The count of already loaded messages.
    */
   private void loadNextMsgs(final int totalItemsCount) {
-    if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+    if (GeneralUtil.isInternetConnAvailable(getContext())) {
       footerProgressView.setVisibility(View.VISIBLE);
       areNewMsgsLoadingNow = true;
       listener.getMsgsCountingIdlingResource().increment();

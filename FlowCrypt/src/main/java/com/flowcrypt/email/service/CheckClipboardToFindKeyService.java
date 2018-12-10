@@ -140,23 +140,23 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
    */
   private static class ReplyHandler extends Handler {
     static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService> weakReference;
+    private final WeakReference<CheckClipboardToFindKeyService> weakRef;
 
     ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-      this.weakReference = new WeakReference<>(checkClipboardToFindKeyService);
+      this.weakRef = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
     public void handleMessage(Message message) {
       switch (message.what) {
         case MESSAGE_WHAT:
-          if (weakReference.get() != null) {
-            CheckClipboardToFindKeyService checkClipboardToFindKeyService = weakReference.get();
+          if (weakRef.get() != null) {
+            CheckClipboardToFindKeyService checkClipboardToFindKeyService = weakRef.get();
 
             String key = (String) message.obj;
 
             checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
-                weakReference.get().isPrivateKeyMode, KeyDetails.Type.CLIPBOARD);
+                weakRef.get().isPrivateKeyMode, KeyDetails.Type.CLIPBOARD);
             Log.d(TAG, "Found a valid private key in clipboard");
           }
           break;
@@ -170,12 +170,12 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
    */
   private static final class ServiceWorkerHandler extends Handler {
     static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService> weakReference;
+    private final WeakReference<CheckClipboardToFindKeyService> weakRef;
     private Js js;
 
     ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
       super(looper);
-      this.weakReference = new WeakReference<>(checkClipboardToFindKeyService);
+      this.weakRef = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
@@ -184,8 +184,8 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         case MESSAGE_WHAT:
           if (js == null) {
             try {
-              if (weakReference.get() != null) {
-                js = new Js(weakReference.get(), null);
+              if (weakRef.get() != null) {
+                js = new Js(weakRef.get(), null);
               }
             } catch (IOException e) {
               e.printStackTrace();
@@ -207,7 +207,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
         String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
         PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
-        if (weakReference.get() != null && js.is_valid_key(pgpKey, weakReference.get().isPrivateKeyMode)) {
+        if (weakRef.get() != null && js.is_valid_key(pgpKey, weakRef.get().isPrivateKeyMode)) {
           try {
             Messenger messenger = msg.replyTo;
             messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));

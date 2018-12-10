@@ -142,22 +142,22 @@ public class MessagesSenderJobService extends JobService {
    * This is an implementation of {@link AsyncTask} which sends the outgoing messages.
    */
   private static class SendMessagesAsyncTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-    private final WeakReference<MessagesSenderJobService> weakReference;
+    private final WeakReference<MessagesSenderJobService> weakRef;
 
     private Session sess;
     private Store store;
     private boolean isFailed;
 
     SendMessagesAsyncTask(MessagesSenderJobService jobService) {
-      this.weakReference = new WeakReference<>(jobService);
+      this.weakRef = new WeakReference<>(jobService);
     }
 
     @Override
     protected JobParameters doInBackground(JobParameters... params) {
       Log.d(TAG, "doInBackground");
       try {
-        if (weakReference.get() != null) {
-          Context context = weakReference.get().getApplicationContext();
+        if (weakRef.get() != null) {
+          Context context = weakRef.get().getApplicationContext();
           AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
           MessageDaoSource msgDaoSource = new MessageDaoSource();
           ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
@@ -205,8 +205,8 @@ public class MessagesSenderJobService extends JobService {
     protected void onPostExecute(JobParameters jobParameters) {
       Log.d(TAG, "onPostExecute");
       try {
-        if (weakReference.get() != null) {
-          weakReference.get().jobFinished(jobParameters, isFailed);
+        if (weakRef.get() != null) {
+          weakRef.get().jobFinished(jobParameters, isFailed);
         }
       } catch (NullPointerException e) {
         e.printStackTrace();
@@ -277,7 +277,7 @@ public class MessagesSenderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+          if (!GeneralUtil.isInternetConnAvailable(context)) {
             if (msgDetails.getMsgState() != MessageState.SENT) {
               msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.QUEUED);
             }
@@ -340,7 +340,7 @@ public class MessagesSenderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+          if (!GeneralUtil.isInternetConnAvailable(context)) {
             msgDaoSource.updateMsgState(context, details.getEmail(), details.getLabel(), details.getUid(),
                 MessageState.SENT_WITHOUT_LOCAL_COPY);
             publishProgress(true);
@@ -367,7 +367,7 @@ public class MessagesSenderJobService extends JobService {
       attDaoSource.deleteAtts(context, account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
       if (!TextUtils.isEmpty(details.getAttsDir())) {
-        FileAndDirectoryUtils.deleteDirectory(new File(attsCacheDir, details.getAttsDir()));
+        FileAndDirectoryUtils.deleteDir(new File(attsCacheDir, details.getAttsDir()));
       }
     }
 

@@ -140,7 +140,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         break;
 
       case R.id.btnSaveToFile:
-        chooseDestination();
+        chooseDest();
         break;
 
       case R.id.btnShowPrKey:
@@ -215,7 +215,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     }
   }
 
-  private void chooseDestination() {
+  private void chooseDest() {
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);

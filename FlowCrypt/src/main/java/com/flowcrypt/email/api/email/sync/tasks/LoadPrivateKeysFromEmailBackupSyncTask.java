@@ -101,7 +101,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
-        if (!EmailUtil.containsNoSelectAttribute((IMAPFolder) folder)) {
+        if (!EmailUtil.containsNoSelectAttr((IMAPFolder) folder)) {
           folder.open(Folder.READ_ONLY);
 
           Message[] foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.getEmail()));

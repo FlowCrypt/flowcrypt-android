@@ -126,7 +126,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
-        boolean containsNoSelectAttr = EmailUtil.containsNoSelectAttribute((IMAPFolder) folder);
+        boolean containsNoSelectAttr = EmailUtil.containsNoSelectAttr((IMAPFolder) folder);
         if (!isLoadInBackgroundCanceled() && !isLoaderReset && !containsNoSelectAttr) {
           folder.open(Folder.READ_ONLY);
 

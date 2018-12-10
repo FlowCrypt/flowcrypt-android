@@ -480,10 +480,10 @@ public class EmailSyncManager {
       tag = getClass().getSimpleName();
     }
 
-    void resetConnectionIfNeeded(SyncTask task) throws MessagingException, ManualHandledException {
+    void resetConnIfNeeded(SyncTask task) throws MessagingException, ManualHandledException {
       if (store != null && account != null) {
-        if (account.getAuthCredentials() != null) {
-          if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCredentials().getUsername())) {
+        if (account.getAuthCreds() != null) {
+          if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCreds().getUsername())) {
             Log.d(tag, "Connection was reset!");
 
             if (task != null) {
@@ -504,7 +504,7 @@ public class EmailSyncManager {
       }
     }
 
-    void closeConnection() {
+    void closeConn() {
       try {
         if (store != null) {
           store.close();
@@ -516,7 +516,7 @@ public class EmailSyncManager {
       }
     }
 
-    void openConnectionToStore() throws IOException, GoogleAuthException, MessagingException {
+    void openConnToStore() throws IOException, GoogleAuthException, MessagingException {
       patchingSecurityProvider(listener.getContext());
       sess = OpenStoreHelper.getAccountSess(listener.getContext(), account);
       store = OpenStoreHelper.openStore(listener.getContext(), account, sess);
@@ -542,12 +542,12 @@ public class EmailSyncManager {
       try {
         notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_task);
 
-        resetConnectionIfNeeded(task);
+        resetConnIfNeeded(task);
 
         if (!isConnected()) {
           Log.d(tag, "Not connected. Start a reconnection ...");
           notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_connecting_to_email_server);
-          openConnectionToStore();
+          openConnToStore();
           Log.d(tag, "Reconnection done");
         }
 
@@ -621,7 +621,7 @@ public class EmailSyncManager {
           SyncTask syncTask = passiveQueue.poll(TIMEOUT_WAIT_NEXT_TASK, TimeUnit.SECONDS);
 
           if (syncTask == null) {
-            closeConnection();
+            closeConn();
             Log.d(tag, "Disconnected. Wait new tasks.");
             syncTask = passiveQueue.take();
           }
@@ -639,7 +639,7 @@ public class EmailSyncManager {
         }
       }
 
-      closeConnection();
+      closeConn();
       Log.d(tag, " stopped!");
     }
   }
@@ -667,7 +667,7 @@ public class EmailSyncManager {
         }
       }
 
-      closeConnection();
+      closeConn();
       Log.d(tag, " stopped!");
     }
   }
@@ -699,7 +699,7 @@ public class EmailSyncManager {
       }
 
       idle();
-      closeConnection();
+      closeConn();
 
       Log.d(tag, " stopped!");
     }
@@ -739,9 +739,9 @@ public class EmailSyncManager {
 
     void idle() {
       try {
-        resetConnectionIfNeeded(null);
+        resetConnIfNeeded(null);
 
-        while (!GeneralUtil.isInternetConnectionAvailable(listener.getContext())) {
+        while (!GeneralUtil.isInternetConnAvailable(listener.getContext())) {
           try {
             //wait while a connection will be established
             TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30));
@@ -752,7 +752,7 @@ public class EmailSyncManager {
 
         if (!isConnected()) {
           Log.d(tag, "Not connected. Start a reconnection ...");
-          openConnectionToStore();
+          openConnToStore();
           Log.d(tag, "Reconnection done");
         }
 

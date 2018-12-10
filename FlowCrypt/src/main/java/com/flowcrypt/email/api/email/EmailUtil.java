@@ -123,7 +123,7 @@ public class EmailUtil {
    * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
    * @throws MessagingException
    */
-  public static boolean containsNoSelectAttribute(IMAPFolder folder) throws MessagingException {
+  public static boolean containsNoSelectAttr(IMAPFolder folder) throws MessagingException {
     return Arrays.asList(folder.getAttributes()).contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
   }
 

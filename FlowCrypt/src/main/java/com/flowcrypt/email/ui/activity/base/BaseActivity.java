@@ -402,16 +402,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * components.
    */
   protected static class ReplyHandler extends Handler {
-    private final WeakReference<BaseService.OnServiceCallback> weakReference;
+    private final WeakReference<BaseService.OnServiceCallback> weakRef;
 
     ReplyHandler(BaseService.OnServiceCallback onServiceCallback) {
-      this.weakReference = new WeakReference<>(onServiceCallback);
+      this.weakRef = new WeakReference<>(onServiceCallback);
     }
 
     @Override
     public void handleMessage(Message message) {
-      if (weakReference.get() != null) {
-        BaseService.OnServiceCallback onServiceCallback = weakReference.get();
+      if (weakRef.get() != null) {
+        BaseService.OnServiceCallback onServiceCallback = weakRef.get();
         switch (message.what) {
           case BaseService.REPLY_OK:
             onServiceCallback.onReplyReceived(message.arg1, message.arg2, message.obj);

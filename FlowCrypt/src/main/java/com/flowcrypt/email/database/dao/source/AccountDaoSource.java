@@ -114,10 +114,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return {@link AccountDao}.
    */
   public static AccountDao getCurrentAccountDao(Context context, Cursor cursor) {
-    AuthCredentials authCredentials = null;
+    AuthCredentials authCreds = null;
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
-      authCredentials = getCurrentAuthCredentialsFromCursor(keyStoreCryptoManager, cursor);
+      authCreds = getCurrentAuthCredsFromCursor(keyStoreCryptoManager, cursor);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -129,7 +129,7 @@ public class AccountDaoSource extends BaseDaoSource {
         cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_GIVEN_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FAMILY_NAME)),
-        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)), authCredentials,
+        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)), authCreds,
         cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1);
   }
 
@@ -146,8 +146,8 @@ public class AccountDaoSource extends BaseDaoSource {
    * @throws InvalidKeyException
    * @throws IOException
    */
-  public static AuthCredentials getCurrentAuthCredentialsFromCursor(KeyStoreCryptoManager manager,
-                                                                    Cursor cursor) throws NoSuchPaddingException,
+  public static AuthCredentials getCurrentAuthCredsFromCursor(KeyStoreCryptoManager manager,
+                                                              Cursor cursor) throws NoSuchPaddingException,
       NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
 
     SecurityType.Option imapOpt = SecurityType.Option.NONE;
@@ -179,10 +179,10 @@ public class AccountDaoSource extends BaseDaoSource {
         .setPassword(manager.decryptWithRSA(originalPassword))
         .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
         .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
-        .setImapSecurityTypeOption(imapOpt)
+        .setImapSecurityTypeOpt(imapOpt)
         .setSmtpServer(cursor.getString(cursor.getColumnIndex(COL_SMTP_SERVER)))
         .setSmtpPort(cursor.getInt(cursor.getColumnIndex(COL_SMTP_PORT)))
-        .setSmtpSecurityTypeOption(smtpOpt)
+        .setSmtpSecurityTypeOpt(smtpOpt)
         .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
         .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
         .setSmtpSignInPassword(manager.decryptWithRSA(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
@@ -215,14 +215,14 @@ public class AccountDaoSource extends BaseDaoSource {
    * Save information about an account using the {@link AuthCredentials};
    *
    * @param context         Interface to global information about an application environment;
-   * @param authCredentials The sign-in settings of IMAP and SMTP servers.
+   * @param authCreds The sign-in settings of IMAP and SMTP servers.
    * @return The created {@link Uri} or null;
    * @throws Exception An exception maybe occurred when encrypt the user password.
    */
-  public Uri addRow(Context context, AuthCredentials authCredentials) throws Exception {
+  public Uri addRow(Context context, AuthCredentials authCreds) throws Exception {
     ContentResolver contentResolver = context.getContentResolver();
-    if (authCredentials != null && contentResolver != null) {
-      ContentValues contentValues = genContentValues(context, authCredentials);
+    if (authCreds != null && contentResolver != null) {
+      ContentValues contentValues = genContentValues(context, authCreds);
       if (contentValues == null) return null;
 
       return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -507,12 +507,12 @@ public class AccountDaoSource extends BaseDaoSource {
    * Generate a {@link ContentValues} using {@link AuthCredentials}.
    *
    * @param context         Interface to global information about an application environment;
-   * @param authCredentials The {@link AuthCredentials} object;
+   * @param authCreds The {@link AuthCredentials} object;
    * @return The generated {@link ContentValues}.
    */
-  private ContentValues genContentValues(Context context, AuthCredentials authCredentials) throws Exception {
+  private ContentValues genContentValues(Context context, AuthCredentials authCreds) throws Exception {
     ContentValues contentValues = new ContentValues();
-    String email = authCredentials.getEmail();
+    String email = authCreds.getEmail();
     if (!TextUtils.isEmpty(email)) {
       contentValues.put(COL_EMAIL, email.toLowerCase());
     } else return null;
@@ -520,19 +520,19 @@ public class AccountDaoSource extends BaseDaoSource {
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
 
     contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1, email.length()));
-    contentValues.put(COL_USERNAME, authCredentials.getUsername());
-    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials.getPassword()));
-    contentValues.put(COL_IMAP_SERVER, authCredentials.getImapServer());
-    contentValues.put(COL_IMAP_PORT, authCredentials.getImapPort());
-    contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCredentials.getImapOpt() == SecurityType.Option.SSL_TLS);
-    contentValues.put(COL_IMAP_IS_USE_STARTTLS, authCredentials.getImapOpt() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_SERVER, authCredentials.getSmtpServer());
-    contentValues.put(COL_SMTP_PORT, authCredentials.getSmtpPort());
-    contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCredentials.getSmtpOpt() == SecurityType.Option.SSL_TLS);
-    contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCredentials.getSmtpOpt() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.hasCustomSignInForSmtp());
-    contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
-    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials.getSmtpSignInPassword()));
+    contentValues.put(COL_USERNAME, authCreds.getUsername());
+    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getPassword()));
+    contentValues.put(COL_IMAP_SERVER, authCreds.getImapServer());
+    contentValues.put(COL_IMAP_PORT, authCreds.getImapPort());
+    contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCreds.getImapOpt() == SecurityType.Option.SSL_TLS);
+    contentValues.put(COL_IMAP_IS_USE_STARTTLS, authCreds.getImapOpt() == SecurityType.Option.STARTLS);
+    contentValues.put(COL_SMTP_SERVER, authCreds.getSmtpServer());
+    contentValues.put(COL_SMTP_PORT, authCreds.getSmtpPort());
+    contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCreds.getSmtpOpt() == SecurityType.Option.SSL_TLS);
+    contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.getSmtpOpt() == SecurityType.Option.STARTLS);
+    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp());
+    contentValues.put(COL_SMTP_USERNAME, authCreds.getSmtpSigInUsername());
+    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getSmtpSignInPassword()));
 
     contentValues.put(COL_IS_ACTIVE, true);
 

@@ -60,7 +60,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     super.onCreate(savedInstanceState);
     this.js = UiJsManager.getInstance(this).getJs();
 
-    if (isSyncEnabled() && GeneralUtil.isInternetConnectionAvailable(this)) {
+    if (isSyncEnabled() && GeneralUtil.isInternetConnAvailable(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
           (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());

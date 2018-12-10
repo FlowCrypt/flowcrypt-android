@@ -50,10 +50,9 @@ public class ClearAppSettingsRule implements TestRule {
    */
   private void clearApp() throws Throwable {
     SharedPreferencesHelper.clear(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
+    FileAndDirectoryUtils.cleanDir(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
     InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver().delete(Uri.parse
-        (FlowcryptContract
-        .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+        (FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {

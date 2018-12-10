@@ -212,19 +212,18 @@ public class JsBackgroundService extends BaseService implements JsListener {
    * service and other Android components.
    */
   private static class IncomingHandler extends Handler {
-    private final WeakReference<JsInBackgroundManager> jsInBackgroundManagerWeakReference;
-    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
+    private final WeakReference<JsInBackgroundManager> jsInBackgroundManagerWeakRef;
+    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakRef;
 
-    IncomingHandler(JsInBackgroundManager jsInBackgroundManager, Map<String, Messenger>
-        replyToMessengersWeakReference) {
-      this.jsInBackgroundManagerWeakReference = new WeakReference<>(jsInBackgroundManager);
-      this.replyToMessengersWeakReference = new WeakReference<>(replyToMessengersWeakReference);
+    IncomingHandler(JsInBackgroundManager manager, Map<String, Messenger> replyToMessengersWeakRef) {
+      this.jsInBackgroundManagerWeakRef = new WeakReference<>(manager);
+      this.replyToMessengersWeakRef = new WeakReference<>(replyToMessengersWeakRef);
     }
 
     @Override
     public void handleMessage(Message msg) {
-      if (jsInBackgroundManagerWeakReference.get() != null) {
-        JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakReference.get();
+      if (jsInBackgroundManagerWeakRef.get() != null) {
+        JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakRef.get();
         BaseService.Action action = null;
         String ownerKey = null;
         int requestCode = -1;
@@ -237,7 +236,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
 
         switch (msg.what) {
           case MESSAGE_ADD_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForAdd != null && action != null) {
               replyToMessengersForAdd.put(ownerKey, msg.replyTo);
@@ -245,7 +244,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             break;
 
           case MESSAGE_REMOVE_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForRemove != null && action != null) {
               replyToMessengersForRemove.remove(ownerKey);

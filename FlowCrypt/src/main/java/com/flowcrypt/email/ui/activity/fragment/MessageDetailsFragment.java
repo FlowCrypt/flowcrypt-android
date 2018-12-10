@@ -248,7 +248,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             msgEncryptType));
         break;
 
-      case R.id.layoutForwardButton:
+      case R.id.layoutFwdButton:
         if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
           Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
               Toast.LENGTH_LONG).show();
@@ -519,7 +519,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    */
   private void runMsgAction(final int menuId) {
     boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
-    if (GeneralUtil.isInternetConnectionAvailable(getContext()) || isOutbox) {
+    if (GeneralUtil.isInternetConnAvailable(getContext()) || isOutbox) {
       if (!isOutbox) {
         isAdditionalActionEnabled = false;
         getActivity().invalidateOptionsMenu();
@@ -717,33 +717,33 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     if (layoutReplyBtns != null) {
       ImageView imageViewReply = layoutReplyBtns.findViewById(R.id.imageViewReply);
       ImageView imageViewReplyAll = layoutReplyBtns.findViewById(R.id.imageViewReplyAll);
-      ImageView imageViewForward = layoutReplyBtns.findViewById(R.id.imageViewForward);
+      ImageView imageViewFwd = layoutReplyBtns.findViewById(R.id.imageViewFwd);
 
       TextView textViewReply = layoutReplyBtns.findViewById(R.id.textViewReply);
       TextView textViewReplyAll = layoutReplyBtns.findViewById(R.id.textViewReplyAll);
-      TextView textViewForward = layoutReplyBtns.findViewById(R.id.textViewForward);
+      TextView textViewFwd = layoutReplyBtns.findViewById(R.id.textViewFwd);
 
       if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
         imageViewReply.setImageResource(R.mipmap.ic_reply_green);
         imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green);
-        imageViewForward.setImageResource(R.mipmap.ic_forward_green);
+        imageViewFwd.setImageResource(R.mipmap.ic_forward_green);
 
         textViewReply.setText(R.string.reply_encrypted);
         textViewReplyAll.setText(R.string.reply_all_encrypted);
-        textViewForward.setText(R.string.forward_encrypted);
+        textViewFwd.setText(R.string.forward_encrypted);
       } else {
         imageViewReply.setImageResource(R.mipmap.ic_reply_red);
         imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red);
-        imageViewForward.setImageResource(R.mipmap.ic_forward_red);
+        imageViewFwd.setImageResource(R.mipmap.ic_forward_red);
 
         textViewReply.setText(R.string.reply);
         textViewReplyAll.setText(R.string.reply_all);
-        textViewForward.setText(R.string.forward);
+        textViewFwd.setText(R.string.forward);
       }
 
       layoutReplyBtns.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
       layoutReplyBtns.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
-      layoutReplyBtns.findViewById(R.id.layoutForwardButton).setOnClickListener(this);
+      layoutReplyBtns.findViewById(R.id.layoutFwdButton).setOnClickListener(this);
 
       layoutReplyBtns.setVisibility(View.VISIBLE);
     }
@@ -885,7 +885,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
             TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
             textViewFormatError.setText(part.getErrorMsg());
-            formatErrorLayout.addView(genShowOriginalMsgLayout
+            formatErrorLayout.addView(genShowOrigMsgLayout
                 (part.getValue(), layoutInflater, formatErrorLayout));
             return formatErrorLayout;
 
@@ -897,7 +897,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
                 R.layout.message_part_pgp_message_error, layoutMsgParts, false);
             TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
             textViewErrorMsg.setText(part.getErrorMsg());
-            viewGroup.addView(genShowOriginalMsgLayout(part.getValue(), layoutInflater, viewGroup));
+            viewGroup.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, viewGroup));
 
             return viewGroup;
         }
@@ -942,7 +942,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    viewGroup.addView(genShowOriginalMsgLayout(part.getValue(), inflater, viewGroup));
+    viewGroup.addView(genShowOrigMsgLayout(part.getValue(), inflater, viewGroup));
     return viewGroup;
   }
 
@@ -956,19 +956,19 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @return A generated layout.
    */
   @NonNull
-  private ViewGroup genShowOriginalMsgLayout(String msg, LayoutInflater layoutInflater,
-                                             final ViewGroup rootView) {
+  private ViewGroup genShowOrigMsgLayout(String msg, LayoutInflater layoutInflater,
+                                         final ViewGroup rootView) {
     ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false);
-    final TextView textViewOriginalPgpMsg = viewGroup.findViewById(R.id.textViewOriginalPgpMessage);
-    textViewOriginalPgpMsg.setText(msg);
+    final TextView textViewOrigPgpMsg = viewGroup.findViewById(R.id.textViewOrigPgpMsg);
+    textViewOrigPgpMsg.setText(msg);
 
-    Switch switchShowOriginalMsg = viewGroup.findViewById(R.id.switchShowOriginalMessage);
+    Switch switchShowOrigMsg = viewGroup.findViewById(R.id.switchShowOrigMsg);
 
-    switchShowOriginalMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+    switchShowOrigMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         TransitionManager.beginDelayedTransition(rootView);
-        textViewOriginalPgpMsg.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        textViewOrigPgpMsg.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
       }
     });

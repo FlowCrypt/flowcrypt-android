@@ -53,13 +53,13 @@ public class BaseTest {
    *
    * @param option An input {@link SecurityType.Option}.
    */
-  public static <T> Matcher<T> matchOption(final SecurityType.Option option) {
+  public static <T> Matcher<T> matchOpt(final SecurityType.Option option) {
     return new BaseMatcher<T>() {
       @Override
       public boolean matches(Object item) {
         if (item instanceof SecurityType) {
           SecurityType securityType = (SecurityType) item;
-          return securityType.getOption() == option;
+          return securityType.getOpt() == option;
         } else {
           return false;
         }

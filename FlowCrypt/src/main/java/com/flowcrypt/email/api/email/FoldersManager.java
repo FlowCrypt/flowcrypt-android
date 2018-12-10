@@ -195,7 +195,7 @@ public class FoldersManager {
    */
   public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
     if (imapFolder != null
-        && !EmailUtil.containsNoSelectAttribute(imapFolder)
+        && !EmailUtil.containsNoSelectAttr(imapFolder)
         && !TextUtils.isEmpty(imapFolder.getFullName())
         && !folders.containsKey(imapFolder.getFullName())) {
       this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));

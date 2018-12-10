@@ -197,7 +197,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     super.onCreate(savedInstanceState);
     setHasOptionsMenu(true);
 
-    initDraftCacheDirectory();
+    initDraftCacheDir();
 
     account = new AccountDaoSource().getActiveAccountInformation(getContext());
     fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1,
@@ -243,7 +243,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     boolean isEncryptedMode = listener.getMsgEncryptionType() ==
         MessageEncryptionType.ENCRYPTED;
-    if (msgInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext()) && isEncryptedMode) {
+    if (msgInfo != null && GeneralUtil.isInternetConnAvailable(getContext()) && isEncryptedMode) {
       updateRecipients();
     }
   }
@@ -738,7 +738,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private void initDraftCacheDirectory() {
+  private void initDraftCacheDir() {
     draftCacheDir = new File(getContext().getCacheDir(), Constants.DRAFT_CACHE_DIR);
 
     if (!draftCacheDir.exists()) {
@@ -947,7 +947,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
     if (msgInfo != null) {
-      messageInfo.setRawReplyMsg(msgInfo.getOriginalRawMsgWithoutAtts());
+      messageInfo.setRawReplyMsg(msgInfo.getOrigRawMsgWithoutAtts());
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -1117,7 +1117,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         getString(R.string.update), Snackbar.LENGTH_LONG, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            if (GeneralUtil.isInternetConnAvailable(getContext())) {
               LoaderManager.getInstance(CreateMessageFragment.this).restartLoader(loaderId, null,
                   CreateMessageFragment.this);
             } else {

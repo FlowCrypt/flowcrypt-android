@@ -93,7 +93,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
       case R.id.menuActionSend:
         if (!isMsgSent) {
           if (isInformationValid()) {
-            if (GeneralUtil.isInternetConnectionAvailable(this)) {
+            if (GeneralUtil.isInternetConnAvailable(this)) {
               UIUtil.hideSoftInput(this, editTextUserMsg);
               LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this);
             } else {

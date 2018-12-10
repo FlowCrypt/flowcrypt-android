@@ -77,7 +77,7 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
       incomingMsgInfo.setTo(addressesTo);
       incomingMsgInfo.setCc(addressesCc);
       incomingMsgInfo.setSubject(processedMime.getStringHeader("subject"));
-      incomingMsgInfo.setOriginalRawMsgWithoutAtts(rawMimeMsg);
+      incomingMsgInfo.setOrigRawMsgWithoutAtts(rawMimeMsg);
       incomingMsgInfo.setMsgParts(getMsgParts(jsListener.getContext(), js, processedMime));
 
       long timestamp = processedMime.getTimeHeader("date");

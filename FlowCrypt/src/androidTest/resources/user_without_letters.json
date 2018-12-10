@@ -8,12 +8,12 @@
   "authCredentials": {
     "email": "user_without_letters@denbond7.com",
     "imapPort": 143,
-    "imapSecurityTypeOption": "NONE",
+    "imapSecurityTypeOpt": "NONE",
     "imapServer": "imap.denbond7.com",
     "isUseCustomSignInForSmtp": false,
     "password": "qwerty1234",
     "smtpPort": 25,
-    "smtpSecurityTypeOption": "NONE",
+    "smtpSecurityTypeOpt": "NONE",
     "smtpServer": "smtp.denbond7.com",
     "username": "user_without_letters@denbond7.com"
   }

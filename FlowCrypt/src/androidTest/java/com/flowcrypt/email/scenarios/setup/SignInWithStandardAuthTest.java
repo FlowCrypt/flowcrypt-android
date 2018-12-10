@@ -51,45 +51,45 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new ActivityTestRule<>(SplashActivity.class));
 
-  protected AuthCredentials authCredentials;
+  protected AuthCredentials authCreds;
 
-  abstract AuthCredentials getAuthCredentials();
+  abstract AuthCredentials getAuthCreds();
 
   @Before
   public void setUp() throws Exception {
-    this.authCredentials = getAuthCredentials();
+    this.authCreds = getAuthCreds();
   }
 
   protected void fillAllFields() {
-    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCredentials.getEmail()),
+    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCreds.getEmail()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCredentials.getUsername()),
+    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCreds.getUsername()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCredentials.getPassword()),
+    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCreds.getPassword()),
         closeSoftKeyboard());
 
-    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCredentials.getImapServer()),
+    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCreds.getImapServer()),
         closeSoftKeyboard());
     onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getImapOpt()))).perform(click());
-    onView(withId(R.id.editTextImapPort)).perform(clearText(), typeText(String.valueOf(authCredentials
+        matchOpt(authCreds.getImapOpt()))).perform(click());
+    onView(withId(R.id.editTextImapPort)).perform(clearText(), typeText(String.valueOf(authCreds
         .getImapPort())), closeSoftKeyboard());
 
-    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCredentials.getSmtpServer()),
+    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCreds.getSmtpServer()),
         closeSoftKeyboard());
     onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getSmtpOpt()))).perform(click());
-    onView(withId(R.id.editTextSmtpPort)).perform(clearText(), typeText(String.valueOf(authCredentials
+        matchOpt(authCreds.getSmtpOpt()))).perform(click());
+    onView(withId(R.id.editTextSmtpPort)).perform(clearText(), typeText(String.valueOf(authCreds
         .getSmtpPort())), closeSoftKeyboard());
 
-    if (authCredentials.hasCustomSignInForSmtp()) {
+    if (authCreds.hasCustomSignInForSmtp()) {
       onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(click());
       onView(withId(R.id.editTextSmtpUsername)).perform(clearText(),
-          typeText(authCredentials.getSmtpSigInUsername()), closeSoftKeyboard());
+          typeText(authCreds.getSmtpSigInUsername()), closeSoftKeyboard());
       onView(withId(R.id.editTextSmtpPassword)).perform(clearText(),
-          typeText(authCredentials.getSmtpSignInPassword()), closeSoftKeyboard());
+          typeText(authCreds.getSmtpSignInPassword()), closeSoftKeyboard());
     }
   }
 }

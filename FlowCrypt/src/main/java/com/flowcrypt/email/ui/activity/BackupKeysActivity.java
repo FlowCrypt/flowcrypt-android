@@ -135,7 +135,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
           switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
             case R.id.radioButtonEmail:
               dismissSnackBar();
-              if (GeneralUtil.isInternetConnectionAvailable(this)) {
+              if (GeneralUtil.isInternetConnAvailable(this)) {
                 countingIdlingResource.increment();
                 isPrivateKeySendingNow = true;
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
@@ -148,7 +148,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
             case R.id.radioButtonDownload:
               dismissSnackBar();
               destinationUri = null;
-              chooseDestinationForExportedKey();
+              chooseDestForExportedKey();
               break;
           }
         }
@@ -358,7 +358,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   /**
    * Start a new Activity with return results to choose a destination for an exported key.
    */
-  private void chooseDestinationForExportedKey() {
+  private void chooseDestForExportedKey() {
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);

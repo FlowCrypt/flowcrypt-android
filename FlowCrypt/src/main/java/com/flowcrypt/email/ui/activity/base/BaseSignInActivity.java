@@ -87,7 +87,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
         break;
 
       case R.id.buttonOtherEmailProvider:
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+        if (GeneralUtil.isInternetConnAvailable(this)) {
           startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class), REQUEST_CODE_ADD_OTHER_ACCOUNT);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
@@ -110,8 +110,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   }
 
   @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+  public void onConnectionFailed(@NonNull ConnectionResult connResult) {
+    showInfoSnackbar(getRootView(), connResult.getErrorMessage());
   }
 
   @Override

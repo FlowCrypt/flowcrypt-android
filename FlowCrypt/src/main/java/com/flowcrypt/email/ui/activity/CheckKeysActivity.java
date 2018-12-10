@@ -103,14 +103,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
   public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String subTitle,
                                  String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle,
-                                 boolean isExtraImportOption) {
+                                 boolean isExtraImportOpt) {
     Intent intent = new Intent(context, CheckKeysActivity.class);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
     intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
     intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle);
     intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle);
     intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle);
-    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOption);
+    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt);
     return intent;
   }
 

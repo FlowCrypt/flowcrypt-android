@@ -44,11 +44,11 @@ public class GoogleApiClientHelper {
 
   public static GoogleApiClient generateGoogleApiClient(Context context, FragmentActivity fragmentActivity,
                                                         GoogleApiClient.OnConnectionFailedListener listener,
-                                                        GoogleApiClient.ConnectionCallbacks connectionCallbacks,
+                                                        GoogleApiClient.ConnectionCallbacks connCallbacks,
                                                         GoogleSignInOptions googleSignInOptions) {
     return new GoogleApiClient.Builder(context)
         .enableAutoManage(fragmentActivity, listener)
-        .addConnectionCallbacks(connectionCallbacks)
+        .addConnectionCallbacks(connCallbacks)
         .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
         .build();
   }
@@ -78,7 +78,7 @@ public class GoogleApiClientHelper {
    */
   public static void signInWithGmailUsingOAuth2(BaseActivity baseActivity, GoogleApiClient googleApiClient,
                                                 View rootView, int requestCode) {
-    if (GeneralUtil.isInternetConnectionAvailable(baseActivity)) {
+    if (GeneralUtil.isInternetConnAvailable(baseActivity)) {
       if (googleApiClient != null && googleApiClient.isConnected()) {
         googleApiClient.clearDefaultAccountAndReconnect();
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);

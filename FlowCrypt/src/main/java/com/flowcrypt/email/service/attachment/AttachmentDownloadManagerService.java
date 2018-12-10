@@ -219,16 +219,16 @@ public class AttachmentDownloadManagerService extends Service {
     static final int MESSAGE_DOWNLOAD_CANCELED = 9;
     static final int MESSAGE_STOP_SERVICE = 10;
 
-    private final WeakReference<AttachmentDownloadManagerService> weakReference;
+    private final WeakReference<AttachmentDownloadManagerService> weakRef;
 
     ReplyHandler(AttachmentDownloadManagerService attDownloadManagerService) {
-      this.weakReference = new WeakReference<>(attDownloadManagerService);
+      this.weakRef = new WeakReference<>(attDownloadManagerService);
     }
 
     @Override
     public void handleMessage(Message message) {
-      if (weakReference.get() != null) {
-        AttachmentDownloadManagerService attDownloadManagerService = weakReference.get();
+      if (weakRef.get() != null) {
+        AttachmentDownloadManagerService attDownloadManagerService = weakRef.get();
         AttachmentNotificationManager notificationManager = attDownloadManagerService.attsNotificationManager;
 
         DownloadAttachmentTaskResult taskResult = (DownloadAttachmentTaskResult) message.obj;
@@ -510,7 +510,7 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
 
-        Session session = OpenStoreHelper.getAttsSession(context, account);
+        Session session = OpenStoreHelper.getAttsSess(context, account);
         Store store = OpenStoreHelper.openStore(context, account, session);
 
         LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());

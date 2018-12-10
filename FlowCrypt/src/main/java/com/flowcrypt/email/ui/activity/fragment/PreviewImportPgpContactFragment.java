@@ -214,15 +214,15 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       String armoredKeys = publicKeysString;
 
       try {
-        if (publicKeysFileUri != null && weakReference.get() != null) {
-          armoredKeys = GeneralUtil.readFileFromUriToString(weakReference.get().getContext(), publicKeysFileUri);
+        if (publicKeysFileUri != null && weakRef.get() != null) {
+          armoredKeys = GeneralUtil.readFileFromUriToString(weakRef.get().getContext(), publicKeysFileUri);
         }
       } catch (IOException e) {
         e.printStackTrace();
         return new LoaderResult(null, e);
       }
 
-      if (!TextUtils.isEmpty(armoredKeys) && weakReference.get() != null) {
+      if (!TextUtils.isEmpty(armoredKeys) && weakRef.get() != null) {
         return parseKeys(armoredKeys);
       } else {
         return new LoaderResult(null, new NullPointerException("An input string is null!"));
@@ -232,8 +232,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     @Override
     protected void onPostExecute(LoaderResult loaderResult) {
       super.onPostExecute(loaderResult);
-      if (weakReference.get() != null) {
-        weakReference.get().handleLoaderResult(R.id.loader_id_parse_public_keys, loaderResult);
+      if (weakRef.get() != null) {
+        weakRef.get().handleLoaderResult(R.id.loader_id_parse_public_keys, loaderResult);
       }
     }
 
@@ -244,24 +244,24 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
     @Override
     public void updateProgress(Integer integer) {
-      if (weakReference.get() != null) {
-        weakReference.get().progressBar.setProgress(integer);
+      if (weakRef.get() != null) {
+        weakRef.get().progressBar.setProgress(integer);
       }
     }
 
     private LoaderResult parseKeys(String armoredKeys) {
       try {
-        Js js = new Js(weakReference.get().getContext(), null);
+        Js js = new Js(weakRef.get().getContext(), null);
         String normalizedArmoredKey = js.crypto_key_normalize(armoredKeys);
         PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
 
         if (js.is_valid_key(pgpKey, false)) {
           return new LoaderResult(parsePublicKeysInfo(js, armoredKeys), null);
         } else {
-          if (weakReference.get() != null) {
+          if (weakRef.get() != null) {
             return new LoaderResult(null, new IllegalArgumentException(
-                weakReference.get().getContext().getString(R.string.clipboard_has_wrong_structure,
-                    weakReference.get().getContext().getString(R.string.public_))));
+                weakRef.get().getContext().getString(R.string.clipboard_has_wrong_structure,
+                    weakRef.get().getContext().getString(R.string.public_))));
           } else {
             return new LoaderResult(null,
                 new IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."));
@@ -332,8 +332,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
         emails.add(keyOwner);
 
-        if (weakReference.get() != null) {
-          PgpContact contact = new ContactsDaoSource().getPgpContact(weakReference.get().getContext(), keyOwner);
+        if (weakRef.get() != null) {
+          PgpContact contact = new ContactsDaoSource().getPgpContact(weakRef.get().getContext(), keyOwner);
           return new PublicKeyInfo(keyWords, fingerprint, keyOwner, longId, contact, content);
         }
       }
@@ -380,8 +380,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
           int start = i;
           int end = newCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : newCandidates.size();
 
-          if (weakReference.get() != null) {
-            source.addRowsUsingApplyBatch(weakReference.get().getContext(), newCandidates.subList(start, end));
+          if (weakRef.get() != null) {
+            source.addRowsUsingApplyBatch(weakRef.get().getContext(), newCandidates.subList(start, end));
           }
           i = end;
 
@@ -398,8 +398,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
           int start = i;
           int end = updateCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : updateCandidates.size() - 1;
 
-          if (weakReference.get() != null) {
-            source.updatePgpContacts(weakReference.get().getContext(), updateCandidates.subList(start, end + 1));
+          if (weakRef.get() != null) {
+            source.updatePgpContacts(weakRef.get().getContext(), updateCandidates.subList(start, end + 1));
           }
           i = end + 1;
 
@@ -423,8 +423,8 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     @Override
     protected void onPostExecute(Boolean b) {
       super.onPostExecute(b);
-      if (b != null && weakReference.get() != null) {
-        weakReference.get().handleImportAllResult(b);
+      if (b != null && weakRef.get() != null) {
+        weakRef.get().handleImportAllResult(b);
       }
     }
 
@@ -435,17 +435,17 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
     @Override
     public void updateProgress(Integer integer) {
-      if (weakReference.get() != null) {
-        weakReference.get().progressBar.setProgress(integer);
+      if (weakRef.get() != null) {
+        weakRef.get().progressBar.setProgress(integer);
       }
     }
   }
 
   private abstract static class BaseAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
-    final WeakReference<PreviewImportPgpContactFragment> weakReference;
+    final WeakReference<PreviewImportPgpContactFragment> weakRef;
 
     BaseAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment) {
-      this.weakReference = new WeakReference<>(previewImportPgpContactFragment);
+      this.weakRef = new WeakReference<>(previewImportPgpContactFragment);
     }
 
     public abstract int getProgressTitleResourcesId();
@@ -455,11 +455,11 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     @Override
     protected void onPreExecute() {
       super.onPreExecute();
-      if (weakReference.get() != null) {
-        weakReference.get().progressBar.setIndeterminate(true);
-        weakReference.get().textViewProgressTitle.setText(getProgressTitleResourcesId());
-        UIUtil.exchangeViewVisibility(weakReference.get().getContext(), true,
-            weakReference.get().layoutProgress, weakReference.get().layoutContentView);
+      if (weakRef.get() != null) {
+        weakRef.get().progressBar.setIndeterminate(true);
+        weakRef.get().textViewProgressTitle.setText(getProgressTitleResourcesId());
+        UIUtil.exchangeViewVisibility(weakRef.get().getContext(), true,
+            weakRef.get().layoutProgress, weakRef.get().layoutContentView);
       }
     }
 
@@ -467,9 +467,9 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
     @Override
     protected final void onProgressUpdate(Progress... values) {
       super.onProgressUpdate(values);
-      if (weakReference.get() != null) {
-        if (weakReference.get().progressBar.isIndeterminate()) {
-          weakReference.get().progressBar.setIndeterminate(false);
+      if (weakRef.get() != null) {
+        if (weakRef.get().progressBar.isIndeterminate()) {
+          weakRef.get().progressBar.setIndeterminate(false);
         }
         updateProgress(values[0]);
       }

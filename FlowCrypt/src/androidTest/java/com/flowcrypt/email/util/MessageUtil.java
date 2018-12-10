@@ -46,7 +46,7 @@ public class MessageUtil {
     incomingMsgInfo.setTo(addressesTo);
     incomingMsgInfo.setCc(addressesCc);
     incomingMsgInfo.setSubject(processedMime.getStringHeader("subject"));
-    incomingMsgInfo.setOriginalRawMsgWithoutAtts(rawMsg);
+    incomingMsgInfo.setOrigRawMsgWithoutAtts(rawMsg);
     incomingMsgInfo.setLocalFolder(new LocalFolder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false));
 
     long timestamp = processedMime.getTimeHeader("date");
