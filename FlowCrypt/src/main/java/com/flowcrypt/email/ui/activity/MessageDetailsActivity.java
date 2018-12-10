@@ -88,7 +88,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
     updateViews();
 
-    if (TextUtils.isEmpty(details.getRawMsgWithoutAttachments())) {
+    if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
     }
 
@@ -140,7 +140,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
           this.details = messageDaoSource.getMsgInfo(cursor);
           updateMsgDetails(details);
 
-          if (TextUtils.isEmpty(details.getRawMsgWithoutAttachments())) {
+          if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
             if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
               this.isRequestMsgDetailsStarted = true;
               loadMsgDetails(R.id.syns_request_code_load_message_details, localFolder, details.getUid());
@@ -153,7 +153,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             messageDaoSource.setSeenStatus(this, details.getEmail(),
                 localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAttachments());
+            decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
           }
         }
         break;
@@ -169,10 +169,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         if (cursor != null) {
           ArrayList<AttachmentInfo> attInfolist = new ArrayList<>();
           while (cursor.moveToNext()) {
-            attInfolist.add(AttachmentDaoSource.getAttachmentInfo(cursor));
+            attInfolist.add(AttachmentDaoSource.getAttInfo(cursor));
           }
 
-          updateAttachments(attInfolist);
+          updateAtts(attInfolist);
         }
         break;
     }
@@ -190,7 +190,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         break;
 
       case R.id.loader_id_load_attachments:
-        updateAttachments(new ArrayList<AttachmentInfo>());
+        updateAtts(new ArrayList<AttachmentInfo>());
         break;
     }
   }
@@ -248,7 +248,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             Toast.makeText(this, toastMsgResId, Toast.LENGTH_SHORT).show();
             String folderAlias = localFolder.getFolderAlias();
             new MessageDaoSource().deleteMsg(this, details.getEmail(), folderAlias, details.getUid());
-            new AttachmentDaoSource().deleteAttachments(this, details.getEmail(), folderAlias, details.getUid());
+            new AttachmentDaoSource().deleteAtts(this, details.getEmail(), folderAlias, details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
             finish();
             break;
@@ -277,8 +277,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   @Override
   public void onJsServiceConnected() {
     super.onJsServiceConnected();
-    if (!TextUtils.isEmpty(details.getRawMsgWithoutAttachments())) {
-      decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAttachments());
+    if (!TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
+      decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
     }
   }
 
@@ -349,7 +349,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   private void messageNotAvailableInFolder() {
     String folderAlias = localFolder.getFolderAlias();
     new MessageDaoSource().deleteMsg(this, details.getEmail(), folderAlias, details.getUid());
-    new AttachmentDaoSource().deleteAttachments(this, details.getEmail(), folderAlias, details.getUid());
+    new AttachmentDaoSource().deleteAtts(this, details.getEmail(), folderAlias, details.getUid());
     setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
     Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show();
     finish();
@@ -380,7 +380,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
   }
 
-  private void updateAttachments(ArrayList<AttachmentInfo> atts) {
+  private void updateAtts(ArrayList<AttachmentInfo> atts) {
     MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
         .findFragmentById(R.id.messageDetailsFragment);
 

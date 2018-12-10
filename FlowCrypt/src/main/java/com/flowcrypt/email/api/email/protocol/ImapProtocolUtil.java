@@ -67,7 +67,7 @@ public class ImapProtocolUtil {
    * @throws MessagingException
    * @throws IOException
    */
-  public static BodyPart getAttachmentPartById(IMAPFolder folder, int msgNumber, Part part, String attId)
+  public static BodyPart getAttPartById(IMAPFolder folder, int msgNumber, Part part, String attId)
       throws MessagingException, IOException {
     if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
       Multipart multiPart = (Multipart) part.getContent();
@@ -76,7 +76,7 @@ public class ImapProtocolUtil {
       for (int partCount = 0; partCount < numberOfParts; partCount++) {
         BodyPart bodyPart = multiPart.getBodyPart(partCount);
         if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          BodyPart innerPart = getAttachmentPartById(folder, msgNumber, bodyPart, attId);
+          BodyPart innerPart = getAttPartById(folder, msgNumber, bodyPart, attId);
           if (innerPart != null) {
             return innerPart;
           }

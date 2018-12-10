@@ -31,7 +31,7 @@ public class DownloadAttachmentTaskRequest {
     return context;
   }
 
-  public AttachmentInfo getAttachmentInfo() {
+  public AttachmentInfo getAttInfo() {
     return att;
   }
 }

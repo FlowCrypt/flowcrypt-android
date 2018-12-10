@@ -144,7 +144,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           pubKeys = SecurityUtils.getRecipientsPubKeys(this, js, pgpContacts, account, senderEmail);
         }
 
-        String rawMsg = EmailUtil.genRawMsgWithoutAttachments(outgoingMsgInfo, js, pubKeys);
+        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, js, pubKeys);
         MimeMessage mimeMsg = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
 
         File msgAttsCacheDir = new File(attsCacheDir, UUID.randomUUID().toString());
@@ -156,8 +156,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           int msgsCount = msgDaoSource.getOutboxMsgs(this, email).size();
           new ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount);
 
-          boolean hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.getAttachments())
-              || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments());
+          boolean hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.getAtts())
+              || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAtts());
 
           if (hasAtts) {
             if (!msgAttsCacheDir.exists()) {
@@ -168,10 +168,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
               }
             }
 
-            addAttachmentsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir);
+            addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir);
           }
 
-          if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAttachments())) {
+          if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAtts())) {
             msgDaoSource.updateMsgState(this, email, label, uid, MessageState.QUEUED);
             MessagesSenderJobService.schedule(getApplicationContext());
           } else {
@@ -214,8 +214,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       throws MessagingException {
     ContentValues contentValues = MessageDaoSource.prepareContentValues(account.getEmail(),
         JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false);
-    boolean hasAtts = !CollectionUtils.isEmpty(msgInfo.getAttachments())
-        || !CollectionUtils.isEmpty(msgInfo.getForwardedAttachments());
+    boolean hasAtts = !CollectionUtils.isEmpty(msgInfo.getAtts())
+        || !CollectionUtils.isEmpty(msgInfo.getForwardedAtts());
     boolean isEncrypted = msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED;
     int msgStateValue = msgInfo.isForwarded() ? MessageState.NEW_FORWARDED.getValue() : MessageState.NEW.getValue();
 
@@ -229,13 +229,13 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     return contentValues;
   }
 
-  private void addAttachmentsToCache(OutgoingMessageInfo msgInfo, long uid, String[] pubKeys, File attsCacheDir) {
+  private void addAttsToCache(OutgoingMessageInfo msgInfo, long uid, String[] pubKeys, File attsCacheDir) {
     AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
     List<AttachmentInfo> cachedAtts = new ArrayList<>();
 
-    if (!CollectionUtils.isEmpty(msgInfo.getAttachments())) {
+    if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
       if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        for (AttachmentInfo att : msgInfo.getAttachments()) {
+        for (AttachmentInfo att : msgInfo.getAtts()) {
           try {
             Uri origFileUri = att.getUri();
             InputStream inputStream = getContentResolver().openInputStream(origFileUri);
@@ -258,7 +258,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           }
         }
       } else {
-        for (AttachmentInfo att : msgInfo.getAttachments()) {
+        for (AttachmentInfo att : msgInfo.getAtts()) {
           try {
             Uri origFileUri = att.getUri();
             InputStream inputStream = getContentResolver().openInputStream(origFileUri);
@@ -280,8 +280,8 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
       }
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo.getForwardedAttachments())) {
-      for (AttachmentInfo att : msgInfo.getForwardedAttachments()) {
+    if (!CollectionUtils.isEmpty(msgInfo.getForwardedAtts())) {
+      for (AttachmentInfo att : msgInfo.getForwardedAtts()) {
         if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           AttachmentInfo encryptedAtt = new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, att);
           encryptedAtt.setName(encryptedAtt.getName() + Constants.PGP_FILE_EXT);

@@ -56,7 +56,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.atts = new ArrayList<>();
-    prepareAttachments();
+    prepareAtts();
   }
 
   @NonNull
@@ -119,7 +119,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     }
   }
 
-  public void prepareAttachments() {
+  public void prepareAtts() {
     Js js = UiJsManager.getInstance(getContext()).getJs();
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
@@ -129,7 +129,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
         if (publicKey != null) {
           PgpContact primaryUserId = pgpKey.getPrimaryUserId();
           if (primaryUserId != null) {
-            atts.add(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
+            atts.add(EmailUtil.genAttInfoFromPubKey(publicKey));
           }
         }
       }

@@ -246,7 +246,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     activeMsgDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
     if (activeMsgDetails != null) {
       boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
-      boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMsgWithoutAttachments());
+      boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMsgWithoutAtts());
       if (isOutbox || isRawMsgAvailable || GeneralUtil.isInternetConnectionAvailable(getContext())) {
         if (activeMsgDetails.getMsgState() != null) {
           switch (activeMsgDetails.getMsgState()) {

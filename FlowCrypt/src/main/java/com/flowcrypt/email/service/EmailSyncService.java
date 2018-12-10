@@ -304,7 +304,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       if (TextUtils.isEmpty(rawMsgWithoutAtts)) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND);
       } else {
-        updateAttachmentTable(account, localFolder, remoteFolder, msg);
+        updateAttTable(account, localFolder, remoteFolder, msg);
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK);
       }
     } catch (RemoteException | MessagingException | IOException e) {
@@ -606,8 +606,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
    * @throws MessagingException This exception meybe happen when we try to call {@code
    *                            {@link IMAPFolder#getUID(javax.mail.Message)}}
    */
-  private void updateAttachmentTable(AccountDao account, LocalFolder localFolder,
-                                     IMAPFolder imapFolder, javax.mail.Message msg)
+  private void updateAttTable(AccountDao account, LocalFolder localFolder,
+                              IMAPFolder imapFolder, javax.mail.Message msg)
       throws MessagingException, IOException {
     String email = account.getEmail();
     String folderAlias = localFolder.getFolderAlias();
@@ -615,7 +615,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
     ArrayList<ContentValues> contentValuesList = new ArrayList<>();
 
-    ArrayList<AttachmentInfo> attachmentInfoList = getAttachmentsInfoFromPart(imapFolder, msg.getMessageNumber(), msg);
+    ArrayList<AttachmentInfo> attachmentInfoList = getAttsInfoFromPart(imapFolder, msg.getMessageNumber(), msg);
 
     if (!attachmentInfoList.isEmpty()) {
       for (AttachmentInfo att : attachmentInfoList) {
@@ -638,7 +638,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
    * @throws IOException
    */
   @NonNull
-  private ArrayList<AttachmentInfo> getAttachmentsInfoFromPart(IMAPFolder imapFolder, int msgNumber, Part part)
+  private ArrayList<AttachmentInfo> getAttsInfoFromPart(IMAPFolder imapFolder, int msgNumber, Part part)
       throws MessagingException, IOException {
     ArrayList<AttachmentInfo> atts = new ArrayList<>();
 
@@ -649,7 +649,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       for (int partCount = 0; partCount < numberOfParts; partCount++) {
         BodyPart bodyPart = multiPart.getBodyPart(partCount);
         if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          ArrayList<AttachmentInfo> partAtts = getAttachmentsInfoFromPart(imapFolder, msgNumber, bodyPart);
+          ArrayList<AttachmentInfo> partAtts = getAttsInfoFromPart(imapFolder, msgNumber, bodyPart);
           if (!CollectionUtils.isEmpty(partAtts)) {
             atts.addAll(partAtts);
           }

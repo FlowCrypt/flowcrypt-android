@@ -41,14 +41,14 @@ public class ServiceInfo implements Parcelable {
   private List<AttachmentInfo> atts;
 
   public ServiceInfo(boolean isToFieldEditable, boolean isFromFieldEditable, boolean isMsgEditEnable,
-                     boolean isSubjectEditEnable, boolean isMsgTypeSwitchable, boolean isAddNewAttachmentsEnable,
+                     boolean isSubjectEditEnable, boolean isMsgTypeSwitchable, boolean isAddNewAttsEnable,
                      String systemMsg, List<AttachmentInfo> atts) {
     this.isToFieldEditable = isToFieldEditable;
     this.isFromFieldEditable = isFromFieldEditable;
     this.isMsgEditable = isMsgEditEnable;
     this.isSubjEditable = isSubjectEditEnable;
     this.isMsgTypeSwitchable = isMsgTypeSwitchable;
-    this.hasAbilityToAddNewAtt = isAddNewAttachmentsEnable;
+    this.hasAbilityToAddNewAtt = isAddNewAttsEnable;
     this.systemMsg = systemMsg;
     this.atts = atts;
   }
@@ -101,7 +101,7 @@ public class ServiceInfo implements Parcelable {
     return systemMsg;
   }
 
-  public List<AttachmentInfo> getAttachments() {
+  public List<AttachmentInfo> getAtts() {
     return atts;
   }
 
@@ -148,7 +148,7 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public Builder setHasAbilityToAddNewAttachment(boolean hasAbilityToAddNewAtt) {
+    public Builder setHasAbilityToAddNewAtt(boolean hasAbilityToAddNewAtt) {
       this.hasAbilityToAddNewAtt = hasAbilityToAddNewAtt;
       return this;
     }
@@ -158,8 +158,8 @@ public class ServiceInfo implements Parcelable {
       return this;
     }
 
-    public Builder setAttachments(List<AttachmentInfo> attachments) {
-      this.atts = attachments;
+    public Builder setAtts(List<AttachmentInfo> atts) {
+      this.atts = atts;
       return this;
     }
 

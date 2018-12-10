@@ -36,7 +36,7 @@ public class DownloadAttachmentTaskResult {
     this.isLast = isLast;
   }
 
-  public AttachmentInfo getAttachmentInfo() {
+  public AttachmentInfo getAttInfo() {
     return att;
   }
 
@@ -68,7 +68,7 @@ public class DownloadAttachmentTaskResult {
     private long timeLeft;
     private boolean isLast;
 
-    public Builder setAttachmentInfo(AttachmentInfo attInfo) {
+    public Builder setAttInfo(AttachmentInfo attInfo) {
       this.attInfo = attInfo;
       return this;
     }

@@ -89,7 +89,7 @@ public class CreateMessageActivityTest extends BaseTest {
   private static final String EMAIL_SUBJECT = "Test subject";
   private static final String EMAIL_MESSAGE = "Test message";
 
-  private static File[] attachments;
+  private static File[] atts;
 
   private ActivityTestRule activityTestRule = new ActivityTestRule<>(CreateMessageActivity.class, false, false);
 
@@ -101,12 +101,12 @@ public class CreateMessageActivityTest extends BaseTest {
 
   @BeforeClass
   public static void setUp() {
-    createFilesForAttachments();
+    createFilesForAtts();
   }
 
   @AfterClass
   public static void cleanResources() {
-    TestGeneralUtil.deleteFiles(Arrays.asList(attachments));
+    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
   public Intent getIntent() {
@@ -267,27 +267,27 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testAddingAttachments() {
+  public void testAddingAtts() {
     Intents.init();
     activityTestRule.launchActivity(getIntent());
 
-    for (File attachment : attachments) {
-      addAttachment(attachment);
+    for (File att : atts) {
+      addAtt(att);
     }
     Intents.release();
   }
 
   @Test
-  public void testDeletingAttachments() {
+  public void testDeletingAtts() {
     Intents.init();
     activityTestRule.launchActivity(getIntent());
 
-    for (File attachment : attachments) {
-      addAttachment(attachment);
+    for (File att : atts) {
+      addAtt(att);
     }
 
-    for (File attachment : attachments) {
-      deleteAttachment(attachment);
+    for (File att : atts) {
+      deleteAtt(att);
     }
 
     onView(withId(R.id.textViewAttchmentName)).check(doesNotExist());
@@ -353,10 +353,10 @@ public class CreateMessageActivityTest extends BaseTest {
     Intents.release();
   }
 
-  private static void createFilesForAttachments() {
-    attachments = new File[ATTACHMENTS_COUNT];
-    for (int i = 0; i < attachments.length; i++) {
-      attachments[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
+  private static void createFilesForAtts() {
+    atts = new File[ATTACHMENTS_COUNT];
+    for (int i = 0; i < atts.length; i++) {
+      atts[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
     }
   }
 
@@ -380,17 +380,17 @@ public class CreateMessageActivityTest extends BaseTest {
         false, null, null, null, 0);
   }
 
-  private void deleteAttachment(File attachment) {
-    onView(allOf(withId(R.id.imageButtonClearAttachment),
-        hasSibling(withChild(withText(attachment.getName())))))
+  private void deleteAtt(File att) {
+    onView(allOf(withId(R.id.imageButtonClearAtt),
+        hasSibling(withChild(withText(att.getName())))))
         .check(matches(isDisplayed()))
         .perform(click());
-    onView(withText(attachment.getName())).check(doesNotExist());
+    onView(withText(att.getName())).check(doesNotExist());
   }
 
-  private void addAttachment(File attachment) {
+  private void addAtt(File att) {
     Intent resultData = new Intent();
-    resultData.setData(Uri.fromFile(attachment));
+    resultData.setData(Uri.fromFile(att));
     intending(allOf(hasAction(Intent.ACTION_CHOOSER),
         hasExtra(is(Intent.EXTRA_INTENT),
             allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT),
@@ -399,7 +399,7 @@ public class CreateMessageActivityTest extends BaseTest {
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.menuActionAttachFile)).check(matches(isDisplayed())).perform(click());
-    onView(withText(attachment.getName())).check(matches(isDisplayed()));
+    onView(withText(att.getName())).check(matches(isDisplayed()));
   }
 
   private void checkIsDisplayedStandardAttributes() {

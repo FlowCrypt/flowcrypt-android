@@ -79,7 +79,7 @@ public class MessageListAdapter extends CursorAdapter {
     viewHolder.textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
     viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
     viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject);
-    viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
+    viewHolder.imageViewAtts = view.findViewById(R.id.imageViewAtts);
     viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
     updateItem(context, msgDaoSource.getMsgInfo(cursor), viewHolder);
@@ -175,7 +175,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
       }
 
-      viewHolder.imageViewAttachments.setVisibility(details.hasAttachments() ? View.VISIBLE : View.GONE);
+      viewHolder.imageViewAtts.setVisibility(details.hasAtts() ? View.VISIBLE : View.GONE);
       viewHolder.viewIsEncrypted.setVisibility(details.isEncrypted() ? View.VISIBLE : View.GONE);
     } else {
       clearItem(viewHolder);
@@ -236,7 +236,7 @@ public class MessageListAdapter extends CursorAdapter {
     viewHolder.textViewSenderAddress.setText(null);
     viewHolder.textViewSubject.setText(null);
     viewHolder.textViewDate.setText(null);
-    viewHolder.imageViewAttachments.setVisibility(View.GONE);
+    viewHolder.imageViewAtts.setVisibility(View.GONE);
     viewHolder.viewIsEncrypted.setVisibility(View.GONE);
 
     changeViewsTypeface(viewHolder, Typeface.NORMAL);
@@ -343,7 +343,7 @@ public class MessageListAdapter extends CursorAdapter {
     TextView textViewSenderAddress;
     TextView textViewDate;
     TextView textViewSubject;
-    ImageView imageViewAttachments;
+    ImageView imageViewAtts;
     View viewIsEncrypted;
   }
 }

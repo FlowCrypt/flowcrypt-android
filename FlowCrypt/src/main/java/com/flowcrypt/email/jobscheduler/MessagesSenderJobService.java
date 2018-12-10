@@ -252,7 +252,7 @@ public class MessagesSenderJobService extends JobService {
           Thread.sleep(2000);
 
           AttachmentDaoSource attsDaoSource = new AttachmentDaoSource();
-          List<AttachmentInfo> attInfoList = attsDaoSource.getAttachmentInfoList(context, email,
+          List<AttachmentInfo> attInfoList = attsDaoSource.getAttInfoList(context, email,
               JavaEmailConstants.FOLDER_OUTBOX, msgUid);
 
           boolean isMsgSent = sendMsg(context, account, msgDaoSource, msgDetails, attInfoList);
@@ -267,7 +267,7 @@ public class MessagesSenderJobService extends JobService {
             msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, msgUid);
 
             if (!CollectionUtils.isEmpty(attInfoList)) {
-              deleteMsgAttachments(context, account, attsCacheDir, msgDetails, attsDaoSource);
+              deleteMsgAtts(context, account, attsCacheDir, msgDetails, attsDaoSource);
             }
 
             int msgsCount = msgDaoSource.getOutboxMsgs(context, msgEmail).size();
@@ -321,7 +321,7 @@ public class MessagesSenderJobService extends JobService {
         GeneralMessageDetails details = list.get(0);
         try {
           AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
-          List<AttachmentInfo> atts = attDaoSource.getAttachmentInfoList(context, email,
+          List<AttachmentInfo> atts = attDaoSource.getAttInfoList(context, email,
               JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
           MimeMessage mimeMsg = createMimeMsg(context, sess, details, atts);
@@ -334,7 +334,7 @@ public class MessagesSenderJobService extends JobService {
           msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
           if (!CollectionUtils.isEmpty(atts)) {
-            deleteMsgAttachments(context, account, attsCacheDir, details, attDaoSource);
+            deleteMsgAtts(context, account, attsCacheDir, details, attDaoSource);
           }
         } catch (Exception e) {
           e.printStackTrace();
@@ -361,13 +361,13 @@ public class MessagesSenderJobService extends JobService {
       }
     }
 
-    private void deleteMsgAttachments(Context context, AccountDao account, File attsCacheDir,
-                                      GeneralMessageDetails details, AttachmentDaoSource attDaoSource)
+    private void deleteMsgAtts(Context context, AccountDao account, File attsCacheDir,
+                               GeneralMessageDetails details, AttachmentDaoSource attDaoSource)
         throws IOException {
-      attDaoSource.deleteAttachments(context, account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
+      attDaoSource.deleteAtts(context, account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
-      if (!TextUtils.isEmpty(details.getAttachmentsDir())) {
-        FileAndDirectoryUtils.deleteDirectory(new File(attsCacheDir, details.getAttachmentsDir()));
+      if (!TextUtils.isEmpty(details.getAttsDir())) {
+        FileAndDirectoryUtils.deleteDirectory(new File(attsCacheDir, details.getAttsDir()));
       }
     }
 
@@ -452,14 +452,14 @@ public class MessagesSenderJobService extends JobService {
     private MimeMessage createMimeMsg(Context context, Session sess, GeneralMessageDetails details,
                                       List<AttachmentInfo> atts)
         throws IOException, MessagingException {
-      InputStream stream = IOUtils.toInputStream(details.getRawMsgWithoutAttachments(), StandardCharsets.UTF_8);
+      InputStream stream = IOUtils.toInputStream(details.getRawMsgWithoutAtts(), StandardCharsets.UTF_8);
       MimeMessage mimeMsg = new MimeMessage(sess, stream);
 
       if (mimeMsg.getContent() instanceof MimeMultipart && !CollectionUtils.isEmpty(atts)) {
         MimeMultipart mimeMultipart = (MimeMultipart) mimeMsg.getContent();
 
         for (AttachmentInfo att : atts) {
-          BodyPart attBodyPart = genBodyPartWithAttachment(context, att);
+          BodyPart attBodyPart = genBodyPartWithAtt(context, att);
           mimeMultipart.addBodyPart(attBodyPart);
         }
 
@@ -480,7 +480,7 @@ public class MessagesSenderJobService extends JobService {
      * @throws MessagingException
      */
     @NonNull
-    private BodyPart genBodyPartWithAttachment(Context context, AttachmentInfo att) throws MessagingException {
+    private BodyPart genBodyPartWithAtt(Context context, AttachmentInfo att) throws MessagingException {
       MimeBodyPart attBodyPart = new MimeBodyPart();
       attBodyPart.setDataHandler(new DataHandler(new AttachmentInfoDataSource(context, att)));
       attBodyPart.setFileName(att.getName());

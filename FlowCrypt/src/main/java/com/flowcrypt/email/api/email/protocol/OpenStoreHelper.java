@@ -117,15 +117,15 @@ public class OpenStoreHelper {
    * @param account An input {@link AccountDao};
    * @return <tt>Session</tt> A new sess based on for download attachments.
    */
-  public static Session getAttachmentSession(Context context, AccountDao account) {
+  public static Session getAttsSession(Context context, AccountDao account) {
     if (account != null) {
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          return getAttachmentGmailSession(context);
+          return getAttGmailSession(context);
 
         default:
           Session session = Session.getInstance(
-              PropertiesHelper.generatePropertiesForDownloadAttachments(account.getAuthCredentials()));
+              PropertiesHelper.generatePropertiesForDownloadAtts(account.getAuthCredentials()));
           session.setDebug(EmailUtil.hasEnabledDebug(context));
           return session;
       }
@@ -138,8 +138,8 @@ public class OpenStoreHelper {
    * @param context Interface to global information about an application environment;
    * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
    */
-  public static Session getAttachmentGmailSession(Context context) {
-    Session session = Session.getInstance(PropertiesHelper.genGmailAttachmentsProperties());
+  public static Session getAttGmailSession(Context context) {
+    Session session = Session.getInstance(PropertiesHelper.genGmailAttsProperties());
     session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }

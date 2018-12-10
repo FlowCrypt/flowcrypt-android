@@ -242,19 +242,19 @@ public class GeneralMessageDetails implements Parcelable {
     return flags != null && Arrays.asList(flags).contains(MessageFlag.SEEN);
   }
 
-  public String getRawMsgWithoutAttachments() {
+  public String getRawMsgWithoutAtts() {
     return rawMsgWithoutAtts;
   }
 
-  public void setRawMsgWithoutAttachments(String rawMsgWithoutAttachments) {
-    this.rawMsgWithoutAtts = rawMsgWithoutAttachments;
+  public void setRawMsgWithoutAtts(String rawMsgWithoutAtts) {
+    this.rawMsgWithoutAtts = rawMsgWithoutAtts;
   }
 
-  public boolean hasAttachments() {
+  public boolean hasAtts() {
     return hasAtts;
   }
 
-  public void setHasAttachments(boolean hasAtts) {
+  public void setHasAtts(boolean hasAtts) {
     this.hasAtts = hasAtts;
   }
 
@@ -274,11 +274,11 @@ public class GeneralMessageDetails implements Parcelable {
     this.msgState = msgState;
   }
 
-  public String getAttachmentsDir() {
+  public String getAttsDir() {
     return attsDir;
   }
 
-  public void setAttachmentsDir(String attsDir) {
+  public void setAttsDir(String attsDir) {
     this.attsDir = attsDir;
   }
 

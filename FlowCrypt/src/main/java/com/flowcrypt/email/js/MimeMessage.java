@@ -52,13 +52,13 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
     return results;
   }
 
-  public Attachment[] getAttachments() {
+  public Attachment[] getAtts() {
     V8Array jsAtts = this.v8object.getArray("attachments");
-    Attachment[] attachments = new Attachment[jsAtts.length()];
+    Attachment[] atts = new Attachment[jsAtts.length()];
     for (Integer i = 0; i < jsAtts.length(); i++) {
-      attachments[i] = new Attachment(jsAtts.getObject(i));
+      atts[i] = new Attachment(jsAtts.getObject(i));
     }
-    return attachments;
+    return atts;
   }
 
 }

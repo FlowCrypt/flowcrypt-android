@@ -64,7 +64,7 @@ import androidx.core.content.FileProvider;
 
 /**
  * This service will be use to download email attachments. To start load an attachment just run service via the intent
- * {@link AttachmentDownloadManagerService#newAttachmentDownloadIntent(Context, AttachmentInfo)}
+ * {@link AttachmentDownloadManagerService#newIntent(Context, AttachmentInfo)}
  * <p>
  * This service can do:
  * <p>
@@ -103,7 +103,7 @@ public class AttachmentDownloadManagerService extends Service {
     this.replyMessenger = new Messenger(new AttachmentDownloadManagerService.ReplyHandler(this));
   }
 
-  public static Intent newAttachmentDownloadIntent(Context context, AttachmentInfo attInfo) {
+  public static Intent newIntent(Context context, AttachmentInfo attInfo) {
     Intent intent = new Intent(context, AttachmentDownloadManagerService.class);
     intent.setAction(ACTION_START_DOWNLOAD_ATTACHMENT);
     intent.putExtra(EXTRA_KEY_ATTACHMENT_INFO, attInfo);
@@ -130,7 +130,7 @@ public class AttachmentDownloadManagerService extends Service {
       AttachmentInfo attInfo = intent.getParcelableExtra(EXTRA_KEY_ATTACHMENT_INFO);
       switch (intent.getAction()) {
         case ACTION_CANCEL_DOWNLOAD_ATTACHMENT:
-          cancelDownloadAttachment(attInfo);
+          cancelDownloadAtt(attInfo);
           break;
 
         case ACTION_RETRY_DOWNLOAD_ATTACHMENT:
@@ -173,7 +173,7 @@ public class AttachmentDownloadManagerService extends Service {
     workerHandler.sendMessage(msg);
   }
 
-  private void cancelDownloadAttachment(AttachmentInfo attInfo) {
+  private void cancelDownloadAtt(AttachmentInfo attInfo) {
     attsNotificationManager.loadingCanceledByUser(attInfo);
     Message msg = workerHandler.obtainMessage();
     msg.what = AttachmentDownloadManagerService.ServiceWorkerHandler.MESSAGE_CANCEL_DOWNLOAD;
@@ -195,7 +195,7 @@ public class AttachmentDownloadManagerService extends Service {
   }
 
   private interface OnDownloadAttachmentListener {
-    void onAttachmentDownloaded(AttachmentInfo attInfo, Uri uri);
+    void onAttDownloaded(AttachmentInfo attInfo, Uri uri);
 
     void onCanceled(AttachmentInfo attInfo);
 
@@ -232,7 +232,7 @@ public class AttachmentDownloadManagerService extends Service {
         AttachmentNotificationManager notificationManager = attDownloadManagerService.attsNotificationManager;
 
         DownloadAttachmentTaskResult taskResult = (DownloadAttachmentTaskResult) message.obj;
-        AttachmentInfo attInfo = taskResult.getAttachmentInfo();
+        AttachmentInfo attInfo = taskResult.getAttInfo();
         Uri uri = taskResult.getUri();
 
         switch (message.what) {
@@ -314,7 +314,7 @@ public class AttachmentDownloadManagerService extends Service {
         case MESSAGE_START_DOWNLOAD:
           DownloadAttachmentTaskRequest taskRequest = (DownloadAttachmentTaskRequest) msg.obj;
 
-          AttachmentInfo attInfo = taskRequest.getAttachmentInfo();
+          AttachmentInfo attInfo = taskRequest.getAttInfo();
           Context context = taskRequest.getContext();
 
           try {
@@ -324,7 +324,7 @@ public class AttachmentDownloadManagerService extends Service {
               attDownloadRunnable.setListener(this);
               futureMap.put(attInfo.getUniqueStringId(), executorService.submit(attDownloadRunnable));
               DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-                  .setAttachmentInfo(attInfo)
+                  .setAttInfo(attInfo)
                   .setException(null)
                   .setUri(null)
                   .build();
@@ -337,7 +337,7 @@ public class AttachmentDownloadManagerService extends Service {
             ExceptionUtil.handleError(e);
             try {
               DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-                  .setAttachmentInfo(attInfo)
+                  .setAttInfo(attInfo)
                   .setException(e)
                   .build();
               messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_EXCEPTION_HAPPENED, result));
@@ -396,7 +396,7 @@ public class AttachmentDownloadManagerService extends Service {
       futureMap.remove(attInfo.getUniqueStringId());
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-            .setAttachmentInfo(attInfo)
+            .setAttInfo(attInfo)
             .setException(e)
             .setLast(isLast())
             .build();
@@ -410,7 +410,7 @@ public class AttachmentDownloadManagerService extends Service {
     public void onProgress(AttachmentInfo attInfo, int progressInPercentage, long timeLeft) {
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-            .setAttachmentInfo(attInfo)
+            .setAttInfo(attInfo)
             .setProgress(progressInPercentage)
             .setTimeLeft(timeLeft)
             .build();
@@ -421,12 +421,12 @@ public class AttachmentDownloadManagerService extends Service {
     }
 
     @Override
-    public void onAttachmentDownloaded(AttachmentInfo attInfo, Uri uri) {
+    public void onAttDownloaded(AttachmentInfo attInfo, Uri uri) {
       attsInfoMap.remove(attInfo.getId());
       futureMap.remove(attInfo.getUniqueStringId());
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-            .setAttachmentInfo(attInfo)
+            .setAttInfo(attInfo)
             .setUri(uri)
             .setLast(isLast())
             .build();
@@ -442,7 +442,7 @@ public class AttachmentDownloadManagerService extends Service {
       futureMap.remove(attInfo.getUniqueStringId());
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-            .setAttachmentInfo(attInfo)
+            .setAttInfo(attInfo)
             .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_DOWNLOAD_CANCELED, result));
@@ -454,7 +454,7 @@ public class AttachmentDownloadManagerService extends Service {
     private void taskAlreadyExists(AttachmentInfo attInfo) {
       try {
         DownloadAttachmentTaskResult result = new DownloadAttachmentTaskResult.Builder()
-            .setAttachmentInfo(attInfo)
+            .setAttInfo(attInfo)
             .setLast(isLast())
             .build();
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_TASK_ALREADY_EXISTS, result));
@@ -502,7 +502,7 @@ public class AttachmentDownloadManagerService extends Service {
             if (!Thread.currentThread().isInterrupted()) {
               if (listener != null) {
                 Uri uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile);
-                listener.onAttachmentDownloaded(att, uri);
+                listener.onAttDownloaded(att, uri);
               }
             }
 
@@ -510,7 +510,7 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
 
-        Session session = OpenStoreHelper.getAttachmentSession(context, account);
+        Session session = OpenStoreHelper.getAttsSession(context, account);
         Store store = OpenStoreHelper.openStore(context, account, session);
 
         LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());
@@ -523,7 +523,7 @@ public class AttachmentDownloadManagerService extends Service {
         remoteFolder.open(Folder.READ_ONLY);
 
         javax.mail.Message msg = remoteFolder.getMessageByUID(att.getUid());
-        Part att = ImapProtocolUtil.getAttachmentPartById(remoteFolder, msg.getMessageNumber(), msg, this.att.getId());
+        Part att = ImapProtocolUtil.getAttPartById(remoteFolder, msg.getMessageNumber(), msg, this.att.getId());
 
         if (att != null) {
           InputStream inputStream = att.getInputStream();
@@ -534,11 +534,11 @@ public class AttachmentDownloadManagerService extends Service {
 
           if (listener != null) {
             if (Thread.currentThread().isInterrupted()) {
-              removeNotCompletedAttachment(attFile);
+              removeNotCompletedAtt(attFile);
               listener.onCanceled(this.att);
             } else {
               Uri uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile);
-              listener.onAttachmentDownloaded(this.att, uri);
+              listener.onAttDownloaded(this.att, uri);
             }
           }
         } else throw new IOException("The attachment does not exist on an IMAP server.");
@@ -548,7 +548,7 @@ public class AttachmentDownloadManagerService extends Service {
       } catch (Exception e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
-        removeNotCompletedAttachment(attFile);
+        removeNotCompletedAtt(attFile);
         if (listener != null) {
           listener.onError(att, e);
         }
@@ -588,7 +588,7 @@ public class AttachmentDownloadManagerService extends Service {
         updateProgress(100, 0);
       } finally {
         if (Thread.currentThread().isInterrupted()) {
-          removeNotCompletedAttachment(attFile);
+          removeNotCompletedAtt(attFile);
           if (listener != null) {
             listener.onCanceled(this.att);
           }
@@ -666,7 +666,7 @@ public class AttachmentDownloadManagerService extends Service {
      *
      * @param attachmentFile The file which will be removed.
      */
-    private void removeNotCompletedAttachment(File attachmentFile) {
+    private void removeNotCompletedAtt(File attachmentFile) {
       if (attachmentFile != null && attachmentFile.exists()) {
         if (!attachmentFile.delete()) {
           Log.d(TAG, "Cannot delete a file: " + attachmentFile);

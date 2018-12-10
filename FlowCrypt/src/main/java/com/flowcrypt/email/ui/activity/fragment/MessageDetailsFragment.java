@@ -162,7 +162,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             getBaseActivity().restartJsService();
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
-            getBaseActivity().decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAttachments());
+            getBaseActivity().decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
             break;
         }
         break;
@@ -259,7 +259,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             }
           }
 
-          msgInfo.setAttachments(atts);
+          msgInfo.setAtts(atts);
         }
         startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.FORWARD, msgEncryptType));
         break;
@@ -298,7 +298,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     switch (requestCode) {
       case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          Intent intent = AttachmentDownloadManagerService.newAttachmentDownloadIntent(getContext(), lastClickedAtt);
+          Intent intent = AttachmentDownloadManagerService.newIntent(getContext(), lastClickedAtt);
           getContext().startService(intent);
         } else {
           Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show();
@@ -356,13 +356,13 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   public void updateAttInfos(ArrayList<AttachmentInfo> attInfoList) {
     this.atts = attInfoList;
-    showAttachmentsIfTheyExist();
+    showAttsIfTheyExist();
   }
 
   protected void updateMsgBody() {
     if (msgInfo != null) {
       updateMsgView();
-      showAttachmentsIfTheyExist();
+      showAttsIfTheyExist();
     }
   }
 
@@ -458,9 +458,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             .setIsToFieldEditable(false)
             .setIsSubjectEditable(false)
             .setIsMsgTypeSwitchable(false)
-            .setHasAbilityToAddNewAttachment(false)
+            .setHasAbilityToAddNewAtt(false)
             .setSystemMsg(getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachments(atts)
+            .setAtts(atts)
             .build()));
   }
 
@@ -586,26 +586,26 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     updateMsgBody();
   }
 
-  private void showAttachmentsIfTheyExist() {
-    if (details != null && details.hasAttachments()) {
+  private void showAttsIfTheyExist() {
+    if (details != null && details.hasAtts()) {
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
       if (!CollectionUtils.isEmpty(atts)) {
         for (final AttachmentInfo att : atts) {
           View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false);
 
-          TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
-          textViewAttachmentName.setText(att.getName());
+          TextView textViewAttName = rootView.findViewById(R.id.textViewAttchmentName);
+          textViewAttName.setText(att.getName());
 
-          TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
-          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
+          TextView textViewAttSize = rootView.findViewById(R.id.textViewAttSize);
+          textViewAttSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
 
-          final View button = rootView.findViewById(R.id.imageButtonDownloadAttachment);
+          final View button = rootView.findViewById(R.id.imageButtonDownloadAtt);
           button.setOnClickListener(getDownloadAttClickListener(att));
 
           if (att.getUri() != null) {
-            View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
-            layoutAttachment.setOnClickListener(getOpenFileClickListener(att, button));
+            View layoutAtt = rootView.findViewById(R.id.layoutAtt);
+            layoutAtt.setOnClickListener(getOpenFileClickListener(att, button));
           }
 
           layoutMsgParts.addView(rootView);
@@ -645,7 +645,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
               REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
         } else {
-          getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+          getContext().startService(AttachmentDownloadManagerService.newIntent
               (getContext(), lastClickedAtt));
         }
       }
@@ -937,7 +937,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
         if (publicKey == null) {
           showSendersPublicKeyDialog();
         } else {
-          sendTemplateMsgWithPublicKey(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
+          sendTemplateMsgWithPublicKey(EmailUtil.genAttInfoFromPubKey(publicKey));
         }
       }
     });

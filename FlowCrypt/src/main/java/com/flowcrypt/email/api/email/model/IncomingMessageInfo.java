@@ -189,11 +189,11 @@ public class IncomingMessageInfo extends MessageInfo {
     this.uid = uid;
   }
 
-  public ArrayList<AttachmentInfo> getAttachments() {
+  public ArrayList<AttachmentInfo> getAtts() {
     return atts;
   }
 
-  public void setAttachments(ArrayList<AttachmentInfo> attachments) {
-    this.atts = attachments;
+  public void setAtts(ArrayList<AttachmentInfo> atts) {
+    this.atts = atts;
   }
 }

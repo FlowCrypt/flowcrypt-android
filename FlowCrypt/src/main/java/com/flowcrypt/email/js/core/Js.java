@@ -104,7 +104,7 @@ public class Js { // Create one object per thread and use them separately. Not t
   }
 
   public String mime_encode(String body, PgpContact[] to, PgpContact[] cc, PgpContact[] bcc,
-                            PgpContact from, String subject, Attachment[] attachments, MimeMessage reply_to) {
+                            PgpContact from, String subject, Attachment[] atts, MimeMessage reply_to) {
     V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
     headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
 
@@ -117,9 +117,9 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
 
     V8Array files = new V8Array(v8);
-    if (attachments != null && attachments.length > 0) {
-      for (Attachment attachment : attachments) {
-        files.push(attachment.getV8Object());
+    if (atts != null && atts.length > 0) {
+      for (Attachment att : atts) {
+        files.push(att.getV8Object());
       }
     }
     this.call(Void.class, p("mime", "encode"), new V8Array(v8).push(body).push(headers).push(files).push(cb_catch));

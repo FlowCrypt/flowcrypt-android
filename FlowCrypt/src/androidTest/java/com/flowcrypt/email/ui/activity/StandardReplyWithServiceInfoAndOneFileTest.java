@@ -95,10 +95,10 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             .setIsToFieldEditable(false)
             .setIsSubjectEditable(false)
             .setIsMsgTypeSwitchable(false)
-            .setHasAbilityToAddNewAttachment(false)
+            .setHasAbilityToAddNewAtt(false)
             .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachments(attachmentInfoList)
+            .setAtts(attachmentInfoList)
             .build();
 
         return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
@@ -159,7 +159,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   }
 
   @Test
-  public void testAvailabilityAddingAttachments() {
+  public void testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt()) {
       onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
     }

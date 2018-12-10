@@ -48,7 +48,7 @@ public class PropertiesHelper {
    *
    * @return <tt>Properties</tt> New properties with setup gimaps connection;
    */
-  public static Properties genGmailAttachmentsProperties() {
+  public static Properties genGmailAttsProperties() {
     Properties properties = generateGmailProperties();
     properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE, 1024 * 256);
     return properties;
@@ -59,7 +59,7 @@ public class PropertiesHelper {
    *
    * @return <tt>Properties</tt> New properties with setup imap connection;
    */
-  public static Properties generatePropertiesForDownloadAttachments(AuthCredentials authCredentials) {
+  public static Properties generatePropertiesForDownloadAtts(AuthCredentials authCredentials) {
     Properties properties = generatePropertiesFromAuthCredentials(authCredentials);
     properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE, 1024 * 256);
     return properties;

@@ -153,7 +153,7 @@ public class MessageDaoSource extends BaseDaoSource {
     contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)));
     contentValues.put(COL_SUBJECT, msg.getSubject());
     contentValues.put(COL_FLAGS, msg.getFlags().toString().toUpperCase());
-    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAttachment(msg));
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtt(msg));
     if (!msg.getFlags().contains(Flags.Flag.SEEN)) {
       contentValues.put(COL_IS_NEW, isNew);
     }
@@ -178,8 +178,8 @@ public class MessageDaoSource extends BaseDaoSource {
     contentValues.put(COL_SENT_DATE, System.currentTimeMillis());
     contentValues.put(COL_SUBJECT, info.getSubject());
     contentValues.put(COL_FLAGS, MessageFlag.SEEN);
-    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAttachments()) ||
-        !CollectionUtils.isEmpty(info.getForwardedAttachments()));
+    contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAtts()) ||
+        !CollectionUtils.isEmpty(info.getForwardedAtts()));
     return contentValues;
   }
 
@@ -545,9 +545,9 @@ public class MessageDaoSource extends BaseDaoSource {
     details.setSentDateInMillisecond(cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)));
     details.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
     details.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS))));
-    details.setRawMsgWithoutAttachments(
+    details.setRawMsgWithoutAtts(
         cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
-    details.setHasAttachments(cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
+    details.setHasAtts(cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
     details.setEncrypted(cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1);
     details.setMsgState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
     details.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
@@ -573,7 +573,7 @@ public class MessageDaoSource extends BaseDaoSource {
       e.printStackTrace();
     }
 
-    details.setAttachmentsDir(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)));
+    details.setAttsDir(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)));
 
     return details;
   }
@@ -1053,19 +1053,19 @@ public class MessageDaoSource extends BaseDaoSource {
           JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMsgs(context,
               details.getEmail()).size());
 
-      if (details.hasAttachments()) {
+      if (details.hasAtts()) {
         AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
-        List<AttachmentInfo> attachmentInfoList = attDaoSource.getAttachmentInfoList(context, details
+        List<AttachmentInfo> attachmentInfoList = attDaoSource.getAttInfoList(context, details
             .getEmail(), JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
         if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-          attDaoSource.deleteAttachments(context, details.getEmail(),
+          attDaoSource.deleteAtts(context, details.getEmail(),
               details.getLabel(), details.getUid());
 
-          if (!TextUtils.isEmpty(details.getAttachmentsDir())) {
+          if (!TextUtils.isEmpty(details.getAttsDir())) {
             try {
-              String parentDirName = details.getAttachmentsDir();
+              String parentDirName = details.getAttsDir();
               File dir = new File(new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR), parentDirName);
               FileAndDirectoryUtils.deleteDirectory(dir);
             } catch (IOException e) {
@@ -1116,7 +1116,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param part The parent part.
    * @return <tt>boolean</tt> true if {@link Part} has attachment, false otherwise or if an error has occurred.
    */
-  private static boolean hasAttachment(Part part) {
+  private static boolean hasAtt(Part part) {
     try {
       if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         Multipart multiPart = (Multipart) part.getContent();
@@ -1124,8 +1124,8 @@ public class MessageDaoSource extends BaseDaoSource {
         for (int partCount = 0; partCount < partsNumber; partCount++) {
           BodyPart bodyPart = multiPart.getBodyPart(partCount);
           if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            boolean hasAttachment = hasAttachment(bodyPart);
-            if (hasAttachment) {
+            boolean hasAtt = hasAtt(bodyPart);
+            if (hasAtt) {
               return true;
             }
           } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {

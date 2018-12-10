@@ -176,7 +176,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             if (!CollectionUtils.isEmpty(newMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account);
               store = OpenStoreHelper.openStore(context, account, sess);
-              downloadForwardedAttachments(context, js, account, msgDaoSource);
+              downloadForwardedAtts(context, js, account, msgDaoSource);
             }
 
             if (store != null && store.isConnected()) {
@@ -213,7 +213,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       isFailed = values[0];
     }
 
-    private void downloadForwardedAttachments(Context context, Js js, AccountDao account, MessageDaoSource daoSource) {
+    private void downloadForwardedAtts(Context context, Js js, AccountDao account, MessageDaoSource daoSource) {
       AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
       while (true) {
@@ -227,7 +227,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
         GeneralMessageDetails details = detailsList.get(0);
         String detEmail = details.getEmail();
         String detLabel = details.getLabel();
-        File msgAttsDir = new File(attCacheDir, details.getAttachmentsDir());
+        File msgAttsDir = new File(attCacheDir, details.getAttsDir());
         try {
           String[] pubKeys = null;
           if (details.isEncrypted()) {
@@ -236,7 +236,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             pubKeys = SecurityUtils.getRecipientsPubKeys(context, js, pgpContacts, account, senderEmail);
           }
 
-          List<AttachmentInfo> atts = attDaoSource.getAttachmentInfoList(context, account.getEmail(),
+          List<AttachmentInfo> atts = attDaoSource.getAttInfoList(context, account.getEmail(),
               JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
           if (CollectionUtils.isEmpty(atts)) {
@@ -291,7 +291,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           }
 
           int msgNumber = fwdMsg.getMessageNumber();
-          Part part = ImapProtocolUtil.getAttachmentPartById(folder, msgNumber, fwdMsg, att.getId());
+          Part part = ImapProtocolUtil.getAttPartById(folder, msgNumber, fwdMsg, att.getId());
 
           File tempFile = new File(fwdAttsCacheDir, UUID.randomUUID().toString());
           File attFile = new File(msgAttsDir, att.getName());

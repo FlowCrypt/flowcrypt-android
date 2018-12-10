@@ -30,7 +30,7 @@ public class DatabaseUtil {
   public static void cleanFolderCache(Context context, String email, String folderAlias) {
     if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folderAlias)) {
       new MessageDaoSource().deleteCachedMsgs(context, email, folderAlias);
-      new AttachmentDaoSource().deleteCachedAttachmentInfo(context, email, folderAlias);
+      new AttachmentDaoSource().deleteCachedAttInfo(context, email, folderAlias);
     }
   }
 }

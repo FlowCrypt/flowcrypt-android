@@ -148,7 +148,7 @@ public class EmailUtil {
    * @param uri The file {@link Uri}
    * @return Generated {@link AttachmentInfo}.
    */
-  public static AttachmentInfo getAttachmentInfoFromUri(Context context, Uri uri) {
+  public static AttachmentInfo getAttInfoFromUri(Context context, Uri uri) {
     if (context != null && uri != null) {
       AttachmentInfo attInfo = new AttachmentInfo();
       attInfo.setUri(uri);
@@ -178,7 +178,7 @@ public class EmailUtil {
    * @return A generated {@link AttachmentInfo}.
    */
   @Nullable
-  public static AttachmentInfo genAttachmentInfoFromPubKey(PgpKey pubKey) {
+  public static AttachmentInfo genAttInfoFromPubKey(PgpKey pubKey) {
     if (pubKey != null) {
       String fileName = "0x" + pubKey.getLongid().toUpperCase() + ".asc";
       String pubKeyValue = pubKey.armor();
@@ -726,7 +726,7 @@ public class EmailUtil {
    * @param pubKeys The public keys which will be used to generate an encrypted part.
    * @return The generated raw MIME message.
    */
-  public static String genRawMsgWithoutAttachments(OutgoingMessageInfo info, Js js, String[] pubKeys) {
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) {
     String msgText = null;
 
     switch (info.getEncryptionType()) {

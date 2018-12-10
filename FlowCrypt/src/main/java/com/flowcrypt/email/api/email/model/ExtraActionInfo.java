@@ -125,7 +125,7 @@ public class ExtraActionInfo implements Parcelable {
         if (Intent.ACTION_SEND.equals(intent.getAction())) {
           Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
           if (stream != null) {
-            AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, stream);
+            AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream);
             attsList.add(attachmentInfo);
           }
         } else {
@@ -134,14 +134,14 @@ public class ExtraActionInfo implements Parcelable {
             for (Parcelable parcelable : uriList) {
               Uri uri = (Uri) parcelable;
               if (uri != null) {
-                AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, uri);
+                AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri);
                 attsList.add(attachmentInfo);
               }
             }
           }
         }
 
-        info.setAttachments(attsList);
+        info.setAtts(attsList);
         break;
     }
 
@@ -163,11 +163,11 @@ public class ExtraActionInfo implements Parcelable {
     dest.writeString(this.body);
   }
 
-  public List<AttachmentInfo> getAttachments() {
+  public List<AttachmentInfo> getAtts() {
     return attsList;
   }
 
-  public void setAttachments(List<AttachmentInfo> attsList) {
+  public void setAtts(List<AttachmentInfo> attsList) {
     this.attsList = attsList;
   }
 
@@ -221,7 +221,7 @@ public class ExtraActionInfo implements Parcelable {
     private String body;
     private Parcel in;
 
-    public Builder setAttachmentInfoList(List<AttachmentInfo> attachmentInfoList) {
+    public Builder setAttInfoList(List<AttachmentInfo> attachmentInfoList) {
       this.attachmentInfoList = attachmentInfoList;
       return this;
     }

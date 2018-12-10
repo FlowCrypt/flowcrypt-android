@@ -230,7 +230,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       updateViews();
     }
 
-    showAttachments();
+    showAtts();
   }
 
   @Override
@@ -346,10 +346,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null && data.getData() != null) {
-              AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(getContext(), data.getData());
-              if (hasAbilityToAddAttachment(attachmentInfo)) {
+              AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(getContext(), data.getData());
+              if (hasAbilityToAddAtt(attachmentInfo)) {
                 atts.add(attachmentInfo);
-                showAttachments();
+                showAtts();
               } else {
                 showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
                     FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
@@ -416,8 +416,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          addAttachments();
-          showAttachments();
+          addAtts();
+          showAtts();
         } else {
           Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
               Toast.LENGTH_LONG).show();
@@ -711,17 +711,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
 
-        if (hasExternalStorageUris(extraActionInfo.getAttachments())) {
+        if (hasExternalStorageUris(extraActionInfo.getAtts())) {
           boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
               Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
           if (isPermissionGranted) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO);
           } else {
-            addAttachments();
+            addAtts();
           }
         } else {
-          addAttachments();
+          addAtts();
         }
       } else {
         this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
@@ -731,8 +731,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           this.folderType = FoldersManager.getFolderType(msgInfo.getLocalFolder());
         }
 
-        if (this.serviceInfo != null && this.serviceInfo.getAttachments() != null) {
-          atts.addAll(this.serviceInfo.getAttachments());
+        if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {
+          atts.addAll(this.serviceInfo.getAtts());
         }
       }
     }
@@ -748,28 +748,28 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private void addAttachments() {
+  private void addAtts() {
     String sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
 
-    for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachments()) {
-      if (hasAbilityToAddAttachment(attachmentInfo)) {
-        File draftAttachment = new File(draftCacheDir, attachmentInfo.getName());
+    for (AttachmentInfo attachmentInfo : extraActionInfo.getAtts()) {
+      if (hasAbilityToAddAtt(attachmentInfo)) {
+        File draftAtt = new File(draftCacheDir, attachmentInfo.getName());
 
         try {
           InputStream inputStream = getContext().getContentResolver().openInputStream(attachmentInfo.getUri());
 
           if (inputStream != null) {
-            FileUtils.copyInputStreamToFile(inputStream, draftAttachment);
-            Uri uri = FileProvider.getUriForFile(getContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAttachment);
+            FileUtils.copyInputStreamToFile(inputStream, draftAtt);
+            Uri uri = FileProvider.getUriForFile(getContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt);
             attachmentInfo.setUri(uri);
             atts.add(attachmentInfo);
           }
         } catch (IOException e) {
           e.printStackTrace();
 
-          if (!draftAttachment.delete()) {
-            Log.e(TAG, "Delete " + draftAttachment.getName() + " filed!");
+          if (!draftAtt.delete()) {
+            Log.e(TAG, "Delete " + draftAtt.getName() + " filed!");
           }
         }
       } else {
@@ -1169,7 +1169,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private void initViews(View view) {
     layoutContent = view.findViewById(R.id.scrollView);
-    layoutAtts = view.findViewById(R.id.layoutAttachments);
+    layoutAtts = view.findViewById(R.id.layoutAtts);
     layoutCc = view.findViewById(R.id.layoutCc);
     layoutBcc = view.findViewById(R.id.layoutBcc);
     progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
@@ -1287,10 +1287,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsIfFwdMode() {
-    if (msgInfo.getAttachments() != null
-        && !msgInfo.getAttachments().isEmpty()) {
-      for (AttachmentInfo att : msgInfo.getAttachments()) {
-        if (hasAbilityToAddAttachment(att)) {
+    if (msgInfo.getAtts() != null
+        && !msgInfo.getAtts().isEmpty()) {
+      for (AttachmentInfo att : msgInfo.getAtts()) {
+        if (hasAbilityToAddAtt(att)) {
           atts.add(att);
         } else {
           showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
@@ -1509,19 +1509,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Check is attachment can be added to the current message.
    *
-   * @param newAttachmentInfo The new attachment which will be maybe added.
+   * @param newAttInfo The new attachment which will be maybe added.
    * @return true if the attachment can be added, otherwise false.
    */
-  private boolean hasAbilityToAddAttachment(AttachmentInfo newAttachmentInfo) {
-    int totalSizeOfAttachments = 0;
+  private boolean hasAbilityToAddAtt(AttachmentInfo newAttInfo) {
+    int totalSizeOfAtts = 0;
 
     for (AttachmentInfo attachmentInfo : atts) {
-      totalSizeOfAttachments += attachmentInfo.getEncodedSize();
+      totalSizeOfAtts += attachmentInfo.getEncodedSize();
     }
 
-    totalSizeOfAttachments += newAttachmentInfo.getEncodedSize();
+    totalSizeOfAtts += newAttInfo.getEncodedSize();
 
-    return totalSizeOfAttachments < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
   }
 
 
@@ -1547,12 +1547,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     isContactsUpdateEnabled = false;
     OutgoingMessageInfo msgInfo = getOutgoingMsgInfo();
 
-    ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();
+    ArrayList<AttachmentInfo> forwardedAttInfoList = getForwardedAtts();
     ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.atts);
-    attachmentInfoList.removeAll(forwardedAttachmentInfoList);
+    attachmentInfoList.removeAll(forwardedAttInfoList);
 
-    msgInfo.setAttachments(attachmentInfoList);
-    msgInfo.setForwardedAttachments(forwardedAttachmentInfoList);
+    msgInfo.setAtts(attachmentInfoList);
+    msgInfo.setForwardedAtts(forwardedAttInfoList);
     msgInfo.setEncryptionType(listener.getMsgEncryptionType());
     msgInfo.setForwarded(messageType == MessageType.FORWARD);
 
@@ -1566,7 +1566,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @return The generated list.
    */
-  private ArrayList<AttachmentInfo> getForwardedAttachments() {
+  private ArrayList<AttachmentInfo> getForwardedAtts() {
     ArrayList<AttachmentInfo> atts = new ArrayList<>();
 
     for (AttachmentInfo att : this.atts) {
@@ -1581,31 +1581,31 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Show attachments which were added.
    */
-  private void showAttachments() {
+  private void showAtts() {
     if (!atts.isEmpty()) {
       layoutAtts.removeAllViews();
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
       for (final AttachmentInfo att : atts) {
         final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAtts, false);
 
-        TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
-        textViewAttachmentName.setText(att.getName());
+        TextView textViewAttName = rootView.findViewById(R.id.textViewAttchmentName);
+        textViewAttName.setText(att.getName());
 
-        TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
+        TextView textViewAttSize = rootView.findViewById(R.id.textViewAttSize);
         if (att.getEncodedSize() > 0) {
-          textViewAttachmentSize.setVisibility(View.VISIBLE);
-          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
+          textViewAttSize.setVisibility(View.VISIBLE);
+          textViewAttSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
         } else {
-          textViewAttachmentSize.setVisibility(View.GONE);
+          textViewAttSize.setVisibility(View.GONE);
         }
 
-        View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
-        imageButtonDownloadAttachment.setVisibility(View.GONE);
+        View imageButtonDownloadAtt = rootView.findViewById(R.id.imageButtonDownloadAtt);
+        imageButtonDownloadAtt.setVisibility(View.GONE);
 
         if (!att.isProtected()) {
-          View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
-          imageButtonClearAttachment.setVisibility(View.VISIBLE);
-          imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {
+          View imageButtonClearAtt = rootView.findViewById(R.id.imageButtonClearAtt);
+          imageButtonClearAtt.setVisibility(View.VISIBLE);
+          imageButtonClearAtt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
               atts.remove(att);
