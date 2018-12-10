@@ -147,8 +147,8 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    */
   private boolean saveCreatedPrivateKeyAsBackupToInbox(PgpKey pgpKey) {
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
-      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), session, account);
+      Session session = OpenStoreHelper.getAccountSess(getContext(), account);
+      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(getContext(), session, account);
       Message msg = EmailUtil.genMsgWithPrivateKeys(getContext(), account, session,
           EmailUtil.genBodyPartWithPrivateKey(account, pgpKey.armor()));
       transport.sendMessage(msg, msg.getAllRecipients());

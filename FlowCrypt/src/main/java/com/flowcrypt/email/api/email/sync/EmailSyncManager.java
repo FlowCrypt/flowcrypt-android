@@ -518,8 +518,8 @@ public class EmailSyncManager {
 
     void openConnectionToStore() throws IOException, GoogleAuthException, MessagingException {
       patchingSecurityProvider(listener.getContext());
-      sess = OpenStoreHelper.getSessionForAccountDao(listener.getContext(), account);
-      store = OpenStoreHelper.openAndConnectToStore(listener.getContext(), account, sess);
+      sess = OpenStoreHelper.getAccountSess(listener.getContext(), account);
+      store = OpenStoreHelper.openStore(listener.getContext(), account, sess);
     }
 
     /**
@@ -722,7 +722,7 @@ public class EmailSyncManager {
       Message msg = e.getMessage();
       if (msg != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
         try {
-          msgDaoSource.updateFlagsForLocalMsg(listener.getContext(),
+          msgDaoSource.updateLocalMsgFlags(listener.getContext(),
               account.getEmail(),
               localFolder.getFolderAlias(),
               remoteFolder.getUID(msg),

@@ -51,10 +51,10 @@ public class AddMessageToDatabaseRule implements TestRule {
     this.localFolder = localFolder;
 
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
+      Session session = OpenStoreHelper.getAccountSess(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(),
           account);
-      Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getInstrumentation()
+      Store store = OpenStoreHelper.openStore(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(), account,
           session);
 

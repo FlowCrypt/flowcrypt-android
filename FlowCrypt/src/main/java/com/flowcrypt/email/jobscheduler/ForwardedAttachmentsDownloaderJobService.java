@@ -174,8 +174,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
                 MessageState.NEW_FORWARDED);
 
             if (!CollectionUtils.isEmpty(newMsgs)) {
-              sess = OpenStoreHelper.getSessionForAccountDao(context, account);
-              store = OpenStoreHelper.openAndConnectToStore(context, account, sess);
+              sess = OpenStoreHelper.getAccountSess(context, account);
+              store = OpenStoreHelper.openStore(context, account, sess);
               downloadForwardedAttachments(context, js, account, msgDaoSource);
             }
 

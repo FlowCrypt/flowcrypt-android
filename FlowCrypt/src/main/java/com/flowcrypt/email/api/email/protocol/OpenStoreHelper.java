@@ -105,7 +105,7 @@ public class OpenStoreHelper {
    * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
    */
   public static Session getGmailSession(Context context) {
-    Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGmail());
+    Session session = Session.getInstance(PropertiesHelper.generateGmailProperties());
     session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
@@ -139,7 +139,7 @@ public class OpenStoreHelper {
    * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
    */
   public static Session getAttachmentGmailSession(Context context) {
-    Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
+    Session session = Session.getInstance(PropertiesHelper.genGmailAttachmentsProperties());
     session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
@@ -151,7 +151,7 @@ public class OpenStoreHelper {
    * @param account An input {@link AccountDao};
    * @return A generated {@link Session}
    */
-  public static Session getSessionForAccountDao(Context context, AccountDao account) {
+  public static Session getAccountSess(Context context, AccountDao account) {
     if (account != null) {
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -166,7 +166,7 @@ public class OpenStoreHelper {
     } else throw new NullPointerException("AccountDao must not be a null!");
   }
 
-  public static Store openAndConnectToStore(Context context, AccountDao account, Session session) throws
+  public static Store openStore(Context context, AccountDao account, Session session) throws
       MessagingException, IOException, GoogleAuthException {
     if (account != null) {
       switch (account.getAccountType()) {

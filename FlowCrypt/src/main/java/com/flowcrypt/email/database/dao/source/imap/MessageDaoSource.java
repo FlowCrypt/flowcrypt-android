@@ -469,7 +469,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param label   The folder label.
    * @return The count of the updated row or -1 up.
    */
-  public int setOldStatusForLocalMsgs(Context context, String email, String label) {
+  public int setOldStatus(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
       ContentValues contentValues = new ContentValues();
@@ -488,7 +488,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param uidList The list of the UIDs.
    * @return The count of the updated row or -1 up.
    */
-  public int setOldStatusForLocalMsgs(Context context, String email, String label, List<String> uidList) {
+  public int setOldStatus(Context context, String email, String label, List<String> uidList) {
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null && email != null && label != null && uidList != null && !uidList.isEmpty()) {
       ContentValues contentValues = new ContentValues();
@@ -516,7 +516,7 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param flags   The message flags.
    * @return The count of the updated row or -1 up.
    */
-  public int updateFlagsForLocalMsg(Context context, String email, String label, long uid, @NonNull Flags flags) {
+  public int updateLocalMsgFlags(Context context, String email, String label, long uid, @NonNull Flags flags) {
     ContentResolver resolver = context.getContentResolver();
     if (email != null && label != null && resolver != null) {
       ContentValues values = new ContentValues();

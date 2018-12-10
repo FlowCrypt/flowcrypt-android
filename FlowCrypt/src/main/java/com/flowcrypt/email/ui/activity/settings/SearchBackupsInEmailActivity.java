@@ -63,7 +63,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show();
       finish();
     }
-    countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+    countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
         (SearchBackupsInEmailActivity.class), GeneralUtil.isDebugBuild());
     countingIdlingResource.increment();
   }

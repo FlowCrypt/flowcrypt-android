@@ -16,9 +16,9 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 
 import java.util.Date;
@@ -41,7 +41,7 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
   public PrivateKeysListCursorAdapter(Context context, Cursor cursor) {
     super(context, cursor, false);
     this.dateFormat = DateFormat.getMediumDateFormat(context);
-    this.js = JsForUiManager.getInstance(context).getJs();
+    this.js = UiJsManager.getInstance(context).getJs();
   }
 
   @Override

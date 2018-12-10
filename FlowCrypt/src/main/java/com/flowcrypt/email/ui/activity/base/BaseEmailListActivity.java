@@ -31,7 +31,7 @@ import androidx.test.espresso.idling.CountingIdlingResource;
  */
 public abstract class BaseEmailListActivity extends BaseSyncActivity implements
     EmailListFragment.OnManageEmailsListener {
-  protected CountingIdlingResource countingIdlingResourceForMsgs;
+  protected CountingIdlingResource msgsCountingIdlingResource;
   protected boolean hasMoreMsgs = true;
 
   public abstract void refreshFoldersFromCache();
@@ -39,8 +39,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    String name = GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class);
-    countingIdlingResourceForMsgs = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
+    String name = GeneralUtil.genIdlingResourcesName(EmailManagerActivity.class);
+    msgsCountingIdlingResource = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
   }
 
   @Override
@@ -60,8 +60,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
             break;
         }
 
-        if (!countingIdlingResourceForMsgs.isIdleNow()) {
-          countingIdlingResourceForMsgs.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         break;
     }
@@ -71,8 +71,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_load_next_messages:
-        if (!countingIdlingResourceForMsgs.isIdleNow()) {
-          countingIdlingResourceForMsgs.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;
@@ -153,8 +153,8 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
 
   @Override
   @VisibleForTesting
-  public CountingIdlingResource getCountingIdlingResourceForMsgs() {
-    return countingIdlingResourceForMsgs;
+  public CountingIdlingResource getMsgsCountingIdlingResource() {
+    return msgsCountingIdlingResource;
   }
 
   /**

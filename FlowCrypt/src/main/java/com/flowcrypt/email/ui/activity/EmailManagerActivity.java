@@ -137,7 +137,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
+          GeneralUtil.genIdlingResourcesName(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -277,8 +277,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.syns_request_code_force_load_new_messages:
         onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-        if (!countingIdlingResourceForMsgs.isIdleNow()) {
-          countingIdlingResourceForMsgs.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         break;
 
@@ -301,8 +301,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
-        if (!countingIdlingResourceForMsgs.isIdleNow()) {
-          countingIdlingResourceForMsgs.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;

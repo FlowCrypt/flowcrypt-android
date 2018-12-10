@@ -255,7 +255,7 @@ public class GeneralUtil {
    * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
    * @return A generated name.
    */
-  public static String generateNameForIdlingResources(Class<?> aClass) {
+  public static String genIdlingResourcesName(Class<?> aClass) {
     return aClass.getClass() + "-" + UUID.randomUUID();
   }
 

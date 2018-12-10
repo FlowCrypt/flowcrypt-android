@@ -42,10 +42,10 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
@@ -414,7 +414,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @return A matched {@link PgpKey} or null.
    */
   private PgpKey getMatchedPublicPgpKey() {
-    Js js = JsForUiManager.getInstance(getContext()).getJs();
+    Js js = UiJsManager.getInstance(getContext()).getJs();
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
     PgpKey matchedPgpKey = null;
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
@@ -470,7 +470,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @param localFolder The localFolder where current message exists.
    */
   private void updateActionsVisibility(LocalFolder localFolder) {
-    folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+    folderType = FoldersManager.getFolderType(localFolder);
 
     if (folderType != null) {
       switch (folderType) {

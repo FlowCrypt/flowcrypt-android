@@ -100,7 +100,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMsgs());
+        .getMsgsCountingIdlingResource());
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
         .getCountingIdlingResourceForLabel());
   }

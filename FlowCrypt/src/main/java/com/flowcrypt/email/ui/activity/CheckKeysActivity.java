@@ -16,9 +16,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -265,7 +265,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         progressBar.setVisibility(View.GONE);
         ArrayList<KeyDetails> savedKeyDetailsList = (ArrayList<KeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+          UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
           restartJsService();
 
           Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
@@ -353,7 +353,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    */
   private void removeAlreadyImportedKeys() {
     Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
-    StorageConnectorInterface connector = JsForUiManager.getInstance(this).getJs().getStorageConnector();
+    StorageConnectorInterface connector = UiJsManager.getInstance(this).getJs().getStorageConnector();
 
     for (String longId : longIds) {
       if (connector.getPgpPrivateKey(longId) != null) {
@@ -395,7 +395,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @return A generated map.
    */
   private Map<KeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<KeyDetails> privateKeyDetailsList) {
-    Js js = JsForUiManager.getInstance(this).getJs();
+    Js js = UiJsManager.getInstance(this).getJs();
     Map<KeyDetails, String> keyDetailsStringMap = new HashMap<>();
 
     for (KeyDetails keyDetails : privateKeyDetailsList) {

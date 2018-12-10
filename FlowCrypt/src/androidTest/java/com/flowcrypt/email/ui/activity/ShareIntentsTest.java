@@ -88,27 +88,27 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testEmptyUri() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(), null));
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(), null));
     checkViewsOnScreen(0, null, null, 0);
   }
 
   @Test
   public void testToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
   public void testToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
   public void testToToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -116,7 +116,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testToParamToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -124,7 +124,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testMultiToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -132,7 +132,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testMultiToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT +
             "&body=" + ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -219,7 +219,7 @@ public class ShareIntentsTest extends BaseTest {
     return new Random().nextBoolean() ? Intent.ACTION_SENDTO : Intent.ACTION_VIEW;
   }
 
-  private Intent generateIntentForUri(String action, String stringUri) {
+  private Intent genIntentForUri(String action, String stringUri) {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 

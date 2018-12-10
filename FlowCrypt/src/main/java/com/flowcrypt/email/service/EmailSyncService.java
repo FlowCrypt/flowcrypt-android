@@ -356,7 +356,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       String folderAlias = localFolder.getFolderAlias();
 
       MessageDaoSource msgDaoSource = new MessageDaoSource();
-      FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+      FoldersManager.FolderType folderType = FoldersManager.getFolderType(localFolder);
       boolean isNew = !GeneralUtil.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX;
       msgDaoSource.addRows(this, email, folderAlias, remoteFolder, newMsgs, msgsEncryptionStates, isNew, false);
 
@@ -426,7 +426,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
       msgsDaoSource.deleteMsgsByUID(this, email, folderAlias, deleteCandidatesUIDs);
 
-      FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+      FoldersManager.FolderType folderType = FoldersManager.getFolderType(localFolder);
       if (!GeneralUtil.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           for (long uid : deleteCandidatesUIDs) {
@@ -544,7 +544,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                            javax.mail.Message msg, String ownerKey, int requestCode) {
     String email = account.getEmail();
     String folderAlias = localFolder.getFolderAlias();
-    FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+    FoldersManager.FolderType folderType = FoldersManager.getFolderType(localFolder);
 
     if (!GeneralUtil.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX) {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -569,7 +569,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                                                     IMAPFolder remoteFolder, String ownerKey, int requestCode) {
     String email = account.getEmail();
     String folderAlias = localFolder.getFolderAlias();
-    FoldersManager.FolderType folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+    FoldersManager.FolderType folderType = FoldersManager.getFolderType(localFolder);
 
     if (folderType == FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
       MessageDaoSource msgDaoSource = new MessageDaoSource();

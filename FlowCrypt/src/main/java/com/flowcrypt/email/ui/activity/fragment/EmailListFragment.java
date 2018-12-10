@@ -834,7 +834,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    */
   private void refreshMsgs() {
     areNewMsgsLoadingNow = false;
-    listener.getCountingIdlingResourceForMsgs().increment();
+    listener.getMsgsCountingIdlingResource().increment();
     baseSyncActivity.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener.getCurrentFolder());
   }
 
@@ -847,7 +847,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
       footerProgressView.setVisibility(View.VISIBLE);
       areNewMsgsLoadingNow = true;
-      listener.getCountingIdlingResourceForMsgs().increment();
+      listener.getMsgsCountingIdlingResource().increment();
       LocalFolder localFolder = listener.getCurrentFolder();
       if (TextUtils.isEmpty(localFolder.getSearchQuery())) {
         baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount);
@@ -896,6 +896,6 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
     void onRetryGoogleAuth();
 
-    CountingIdlingResource getCountingIdlingResourceForMsgs();
+    CountingIdlingResource getMsgsCountingIdlingResource();
   }
 }

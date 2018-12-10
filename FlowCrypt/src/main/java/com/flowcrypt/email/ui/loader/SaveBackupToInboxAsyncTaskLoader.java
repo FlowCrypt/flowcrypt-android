@@ -57,8 +57,8 @@ public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResu
     isActionStarted = true;
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-      Session sess = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
-      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(getContext(), sess, account);
+      Session sess = OpenStoreHelper.getAccountSess(getContext(), account);
+      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(getContext(), sess, account);
       Message msg = EmailUtil.genMsgWithAllPrivateKeys(getContext(), account, sess, js);
       transport.sendMessage(msg, msg.getAllRecipients());
       return new LoaderResult(true, null);

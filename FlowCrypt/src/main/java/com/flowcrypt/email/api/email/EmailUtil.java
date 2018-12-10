@@ -215,7 +215,7 @@ public class EmailUtil {
     MimeBodyPart part = new MimeBodyPart();
     DataSource dataSource = new ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
     part.setDataHandler(new DataHandler(dataSource));
-    part.setFileName(SecurityUtils.genNameForPrivateKey(account.getEmail()));
+    part.setFileName(SecurityUtils.genPrivateKeyName(account.getEmail()));
     return part;
   }
 

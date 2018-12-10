@@ -74,7 +74,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
     @Override
     protected Intent getActivityIntent() {
       try {
-        incomingMsgInfo = MessageUtil.getIncomingMsgInfoWithOutBody(
+        incomingMsgInfo = MessageUtil.getIncomingMsgInfoWithoutBody(
             new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
             TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
                 "messages/mime_message.txt"));

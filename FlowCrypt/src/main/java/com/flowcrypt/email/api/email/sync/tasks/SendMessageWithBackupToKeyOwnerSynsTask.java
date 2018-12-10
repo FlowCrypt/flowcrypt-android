@@ -48,7 +48,7 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
     super.runSMTPAction(account, session, store, listener);
 
     if (listener != null && account != null) {
-      Transport transport = prepareTransportForSmtp(listener.getContext(), session, account);
+      Transport transport = prepareSmtpTransport(listener.getContext(), session, account);
       Js js = new Js(listener.getContext(), new SecurityStorageConnector(listener.getContext()));
       Message message = EmailUtil.genMsgWithAllPrivateKeys(listener.getContext(), account, session, js);
       transport.sendMessage(message, message.getAllRecipients());

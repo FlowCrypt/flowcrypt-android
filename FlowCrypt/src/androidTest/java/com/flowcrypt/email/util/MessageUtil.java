@@ -23,7 +23,7 @@ import java.util.Date;
  * E-mail: DenBond7@gmail.com
  */
 public class MessageUtil {
-  public static IncomingMessageInfo getIncomingMsgInfoWithOutBody(Js js, String rawMsg) {
+  public static IncomingMessageInfo getIncomingMsgInfoWithoutBody(Js js, String rawMsg) {
     ProcessedMime processedMime = js.mime_process(rawMsg);
     ArrayList<String> addressesFrom = new ArrayList<>();
     ArrayList<String> addressesTo = new ArrayList<>();

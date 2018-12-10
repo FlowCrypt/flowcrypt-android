@@ -249,7 +249,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
           selectFile();
         } else {
           if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            showExplanationForReadSdCard();
+            showReadSdCardExplanation();
           } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
@@ -414,7 +414,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
    * Show an explanation to the user for read the sdcard.
    * After the user sees the explanation, we try again to request the permission.
    */
-  private void showExplanationForReadSdCard() {
+  private void showReadSdCardExplanation() {
     UIUtil.showSnackbar(getRootView(), getString(R.string.read_sdcard_permission_explanation_text),
         getString(R.string.do_request), new View.OnClickListener() {
           @Override

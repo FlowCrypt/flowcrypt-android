@@ -13,8 +13,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -58,11 +58,11 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.js = JsForUiManager.getInstance(this).getJs();
+    this.js = UiJsManager.getInstance(this).getJs();
 
     if (isSyncEnabled() && GeneralUtil.isInternetConnectionAvailable(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-      countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+      countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
           (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
     } else {
       hideImportButton();

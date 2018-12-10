@@ -45,7 +45,7 @@ public class SmtpProtocolUtil {
    * @throws GoogleAuthException
    */
   @NonNull
-  public static Transport prepareTransportForSmtp(Context context, Session session, AccountDao account) throws
+  public static Transport prepareSmtpTransport(Context context, Session session, AccountDao account) throws
       MessagingException, IOException, GoogleAuthException {
     Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
 

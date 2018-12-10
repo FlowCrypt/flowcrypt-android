@@ -97,7 +97,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
     ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(context, account, session);
+      store = OpenStoreHelper.openStore(context, account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {

@@ -189,7 +189,7 @@ public class SyncJobService extends JobService implements SyncListener {
       List<GeneralMessageDetails> detailsDeleteCandidates = new LinkedList<>(generalMsgDetailsBeforeUpdate);
       detailsDeleteCandidates.removeAll(detailsAfterUpdate);
 
-      boolean isInbox = FoldersManager.getFolderTypeForImapFolder(localFolder) == FoldersManager.FolderType.INBOX;
+      boolean isInbox = FoldersManager.getFolderType(localFolder) == FoldersManager.FolderType.INBOX;
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           for (GeneralMessageDetails details : detailsDeleteCandidates) {
@@ -303,8 +303,8 @@ public class SyncJobService extends JobService implements SyncListener {
             LocalFolder localFolder = foldersManager.findInboxFolder();
 
             if (localFolder != null) {
-              sess = OpenStoreHelper.getSessionForAccountDao(context, account);
-              store = OpenStoreHelper.openAndConnectToStore(context, account, sess);
+              sess = OpenStoreHelper.getAccountSess(context, account);
+              store = OpenStoreHelper.openStore(context, account, sess);
 
               new SyncFolderSyncTask("", 0, localFolder).runIMAPAction(account, sess, store, weakReference.get());
 

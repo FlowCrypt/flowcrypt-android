@@ -8,7 +8,7 @@ package com.flowcrypt.email.rules;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -57,7 +57,7 @@ public class ClearAppSettingsRule implements TestRule {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
+        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
             .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());

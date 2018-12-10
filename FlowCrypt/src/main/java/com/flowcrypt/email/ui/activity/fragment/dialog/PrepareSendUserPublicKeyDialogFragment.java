@@ -20,10 +20,10 @@ import android.widget.TextView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -120,7 +120,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
   }
 
   public void prepareAttachments() {
-    Js js = JsForUiManager.getInstance(getContext()).getJs();
+    Js js = UiJsManager.getInstance(getContext()).getJs();
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
       PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());

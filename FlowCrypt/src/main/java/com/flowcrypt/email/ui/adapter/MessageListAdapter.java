@@ -119,7 +119,7 @@ public class MessageListAdapter extends CursorAdapter {
   public void setLocalFolder(LocalFolder localFolder) {
     this.localFolder = localFolder;
     if (localFolder != null) {
-      this.folderType = FoldersManager.getFolderTypeForImapFolder(localFolder);
+      this.folderType = FoldersManager.getFolderType(localFolder);
     } else {
       folderType = null;
     }

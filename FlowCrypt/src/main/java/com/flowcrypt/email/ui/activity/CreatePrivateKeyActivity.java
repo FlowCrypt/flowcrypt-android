@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity;
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader;
@@ -152,7 +152,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
         layoutSecondPasswordCheck.setVisibility(View.GONE);
         layoutSuccess.setVisibility(View.VISIBLE);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
-        JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
         restartJsService();
         break;
 

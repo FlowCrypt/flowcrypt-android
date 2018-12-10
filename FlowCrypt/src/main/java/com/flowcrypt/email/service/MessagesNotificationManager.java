@@ -123,7 +123,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     LocalFolder localFolder = foldersManager.findInboxFolder();
 
     if (localFolder != null) {
-      new MessageDaoSource().setOldStatusForLocalMsgs(context,
+      new MessageDaoSource().setOldStatus(context,
           account.getEmail(), localFolder.getFolderAlias());
     }
   }

@@ -76,7 +76,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), account);
+      Session session = OpenStoreHelper.getAccountSess(getContext(), account);
 
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
@@ -122,7 +122,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     ArrayList<KeyDetails> details = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(getContext(), account, session);
+      store = OpenStoreHelper.openStore(getContext(), account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {

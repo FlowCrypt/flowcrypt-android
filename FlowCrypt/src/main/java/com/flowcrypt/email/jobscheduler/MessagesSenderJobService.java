@@ -174,8 +174,8 @@ public class MessagesSenderJobService extends JobService {
                 (context, account.getEmail(), MessageState.SENT_WITHOUT_LOCAL_COPY);
 
             if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-              sess = OpenStoreHelper.getSessionForAccountDao(context, account);
-              store = OpenStoreHelper.openAndConnectToStore(context, account, sess);
+              sess = OpenStoreHelper.getAccountSess(context, account);
+              store = OpenStoreHelper.openStore(context, account, sess);
             }
 
             if (!CollectionUtils.isEmpty(queuedMsgs)) {
@@ -381,7 +381,7 @@ public class MessagesSenderJobService extends JobService {
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
           if (account.getEmail().equalsIgnoreCase(details.getFrom()[0].getAddress())) {
-            Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, sess, account);
+            Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, sess, account);
             transport.sendMessage(mimeMsg, mimeMsg.getAllRecipients());
           } else {
             Gmail gmail = GmailApiHelper.generateGmailApiService(context, account);
@@ -419,14 +419,14 @@ public class MessagesSenderJobService extends JobService {
           break;
 
         case AccountDao.ACCOUNT_TYPE_OUTLOOK:
-          Transport outlookTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, sess, account);
+          Transport outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(context, sess, account);
           outlookTransport.sendMessage(mimeMsg, mimeMsg.getAllRecipients());
 
           msgDaoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), MessageState.SENT);
           break;
 
         default:
-          Transport defaultTransport = SmtpProtocolUtil.prepareTransportForSmtp(context, sess, account);
+          Transport defaultTransport = SmtpProtocolUtil.prepareSmtpTransport(context, sess, account);
           defaultTransport.sendMessage(mimeMsg, mimeMsg.getAllRecipients());
 
           msgDaoSource.updateMsgState(context, detEmail, detLabel, details.getUid(),

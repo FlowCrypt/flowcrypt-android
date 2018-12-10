@@ -11,8 +11,8 @@ import android.os.Environment;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -74,7 +74,7 @@ public class TestGeneralUtil {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
+        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
             .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());

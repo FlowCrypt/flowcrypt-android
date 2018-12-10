@@ -30,7 +30,7 @@ public class PropertiesHelper {
    *
    * @return <tt>Properties</tt> New properties with setup gimaps connection;
    */
-  public static Properties generatePropertiesForGmail() {
+  public static Properties generateGmailProperties() {
     Properties properties = new Properties();
     properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE, BOOLEAN_VALUE_TRUE);
     properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS, JavaEmailConstants
@@ -48,8 +48,8 @@ public class PropertiesHelper {
    *
    * @return <tt>Properties</tt> New properties with setup gimaps connection;
    */
-  public static Properties generatePropertiesForDownloadGmailAttachments() {
-    Properties properties = generatePropertiesForGmail();
+  public static Properties genGmailAttachmentsProperties() {
+    Properties properties = generateGmailProperties();
     properties.put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE, 1024 * 256);
     return properties;
   }

@@ -82,7 +82,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((SearchMessagesActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMsgs());
+        .getMsgsCountingIdlingResource());
   }
 
   @After

@@ -17,10 +17,10 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
@@ -72,7 +72,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     }
 
     if (!TextUtils.isEmpty(longId)) {
-      js = JsForUiManager.getInstance(getContext()).getJs();
+      js = UiJsManager.getInstance(getContext()).getJs();
 
       PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
       if (keyInfo != null) {

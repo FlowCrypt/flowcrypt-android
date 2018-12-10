@@ -100,7 +100,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     Log.d(TAG, "onCreate");
     msgDaoSource = new MessageDaoSource();
     account = new AccountDaoSource().getActiveAccountInformation(getApplicationContext());
-    sess = OpenStoreHelper.getSessionForAccountDao(getApplicationContext(), account);
+    sess = OpenStoreHelper.getAccountSess(getApplicationContext(), account);
   }
 
   @Override

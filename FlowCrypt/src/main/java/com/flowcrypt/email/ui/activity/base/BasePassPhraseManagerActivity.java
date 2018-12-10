@@ -25,8 +25,8 @@ import android.widget.TextView;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PasswordStrength;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
@@ -105,7 +105,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
     initViews();
 
-    this.js = JsForUiManager.getInstance(this).getJs();
+    this.js = UiJsManager.getInstance(this).getJs();
     this.zxcvbn = new Zxcvbn();
   }
 

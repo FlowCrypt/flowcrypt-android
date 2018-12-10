@@ -511,7 +511,7 @@ public class AttachmentDownloadManagerService extends Service {
         }
 
         Session session = OpenStoreHelper.getAttachmentSession(context, account);
-        Store store = OpenStoreHelper.openAndConnectToStore(context, account, session);
+        Store store = OpenStoreHelper.openStore(context, account, session);
 
         LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());
 

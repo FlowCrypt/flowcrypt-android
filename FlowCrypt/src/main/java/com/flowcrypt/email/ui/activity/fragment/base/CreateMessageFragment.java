@@ -54,8 +54,8 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
@@ -211,7 +211,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
-    js = JsForUiManager.getInstance(getContext()).getJs();
+    js = UiJsManager.getInstance(getContext()).getJs();
     initExtras(getActivity().getIntent());
   }
 
@@ -728,7 +728,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         this.msgInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
 
         if (msgInfo != null && msgInfo.getLocalFolder() != null) {
-          this.folderType = FoldersManager.getFolderTypeForImapFolder(msgInfo.getLocalFolder());
+          this.folderType = FoldersManager.getFolderType(msgInfo.getLocalFolder());
         }
 
         if (this.serviceInfo != null && this.serviceInfo.getAttachments() != null) {

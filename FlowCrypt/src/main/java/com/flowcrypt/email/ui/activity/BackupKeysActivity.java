@@ -76,7 +76,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     super.onCreate(savedInstanceState);
     initViews();
     account = new AccountDaoSource().getActiveAccountInformation(this);
-    countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+    countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
         (BackupKeysActivity.class), GeneralUtil.isDebugBuild());
     countingIdlingResource.increment();
   }
@@ -362,7 +362,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);
-    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genNameForPrivateKey(account.getEmail()));
+    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(account.getEmail()));
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY);
   }
 }
