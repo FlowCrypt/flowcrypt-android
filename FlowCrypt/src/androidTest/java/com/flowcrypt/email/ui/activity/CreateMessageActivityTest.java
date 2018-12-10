@@ -20,6 +20,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -97,6 +98,7 @@ public class CreateMessageActivityTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
+      .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
 
   @BeforeClass

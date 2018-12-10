@@ -1,12 +1,12 @@
 {
   "email": "test@denbond7.com",
   "imapPort": 143,
-  "imapSecurityTypeOpt": "NONE",
+  "imapOpt": "NONE",
   "imapServer": "imap.denbond7.com",
-  "isUseCustomSignInForSmtp": false,
+  "hasCustomSignInForSmtp": false,
   "password": "qwerty1234",
   "smtpPort": 25,
-  "smtpSecurityTypeOpt": "NONE",
+  "smtpOpt": "NONE",
   "smtpServer": "smtp.denbond7.com",
   "username": "test@denbond7.com"
 }

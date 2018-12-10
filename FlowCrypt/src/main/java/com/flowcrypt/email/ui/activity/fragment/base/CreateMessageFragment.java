@@ -252,10 +252,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onDestroy() {
     super.onDestroy();
     if (!isMsgSentToQueue) {
-      for (AttachmentInfo attachmentInfo : atts) {
-        boolean isOwnUri = Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri().getAuthority());
-        if (attachmentInfo.getUri() != null && isOwnUri) {
-          getContext().getContentResolver().delete(attachmentInfo.getUri(), null, null);
+      for (AttachmentInfo attInfo : atts) {
+        if (attInfo.getUri() != null) {
+          if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attInfo.getUri().getAuthority())) {
+            getContext().getContentResolver().delete(attInfo.getUri(), null, null);
+          }
         }
       }
     }
