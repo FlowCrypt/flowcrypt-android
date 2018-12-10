@@ -75,7 +75,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   protected Zxcvbn zxcvbn;
   protected PasswordStrength passwordStrength;
   protected AccountDao account;
-  protected boolean isBackEnable = true;
+  protected boolean isBackEnabled = true;
 
   public abstract void onConfirmPassPhraseSuccess();
 

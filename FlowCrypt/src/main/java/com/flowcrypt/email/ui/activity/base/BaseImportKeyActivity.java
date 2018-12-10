@@ -120,10 +120,10 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
-  public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyImportModel model,
+  public static Intent newIntent(Context context, boolean isSyncEnabled, String title, KeyImportModel model,
                                  boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
     Intent intent = new Intent(context, cls);
-    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
+    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled);
     intent.putExtra(KEY_EXTRA_TITLE, title);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model);
     intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled);

@@ -41,7 +41,6 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
       GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity.class);
 
   private String createdPrivateKeyLongId;
-  private boolean isBackEnabled = true;
 
   public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, CreatePrivateKeyActivity.class);

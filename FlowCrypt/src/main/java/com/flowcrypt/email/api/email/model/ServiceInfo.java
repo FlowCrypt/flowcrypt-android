@@ -40,15 +40,15 @@ public class ServiceInfo implements Parcelable {
   private String systemMsg;
   private List<AttachmentInfo> atts;
 
-  public ServiceInfo(boolean isToFieldEditable, boolean isFromFieldEditable, boolean isMsgEditEnable,
-                     boolean isSubjectEditEnable, boolean isMsgTypeSwitchable, boolean isAddNewAttsEnable,
+  public ServiceInfo(boolean isToFieldEditable, boolean isFromFieldEditable, boolean isMsgEditable,
+                     boolean isSubjEditable, boolean isMsgTypeSwitchable, boolean hasAbilityToAddNewAtt,
                      String systemMsg, List<AttachmentInfo> atts) {
     this.isToFieldEditable = isToFieldEditable;
     this.isFromFieldEditable = isFromFieldEditable;
-    this.isMsgEditable = isMsgEditEnable;
-    this.isSubjEditable = isSubjectEditEnable;
+    this.isMsgEditable = isMsgEditable;
+    this.isSubjEditable = isSubjEditable;
     this.isMsgTypeSwitchable = isMsgTypeSwitchable;
-    this.hasAbilityToAddNewAtt = isAddNewAttsEnable;
+    this.hasAbilityToAddNewAtt = hasAbilityToAddNewAtt;
     this.systemMsg = systemMsg;
     this.atts = atts;
   }

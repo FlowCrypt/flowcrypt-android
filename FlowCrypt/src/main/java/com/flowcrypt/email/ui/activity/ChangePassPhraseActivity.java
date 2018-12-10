@@ -63,7 +63,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @Override
   public void onBackPressed() {
-    if (isBackEnable) {
+    if (isBackEnabled) {
       super.onBackPressed();
     } else {
       Toast.makeText(this, R.string.please_wait_while_pass_phrase_will_be_changed, Toast.LENGTH_SHORT).show();
@@ -117,7 +117,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_change_pass_phrase:
-        isBackEnable = false;
+        isBackEnabled = false;
         UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
         return new ChangePassPhraseAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
 
@@ -143,7 +143,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
       case R.id.loader_id_load_private_key_backups_from_email:
       case R.id.loader_id_save_backup_to_inbox:
-        isBackEnable = true;
+        isBackEnabled = true;
         break;
     }
   }
@@ -168,7 +168,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         break;
 
       case R.id.loader_id_save_backup_to_inbox:
-        isBackEnable = true;
+        isBackEnabled = true;
         Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
         setResult(Activity.RESULT_OK);
         finish();
@@ -184,7 +184,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
-        isBackEnable = true;
+        isBackEnabled = true;
         editTextKeyPasswordSecond.setText(null);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
         showInfoSnackbar(getRootView(), e.getMessage());
@@ -201,7 +201,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   }
 
   protected void runBackupKeysActivity() {
-    isBackEnable = true;
+    isBackEnabled = true;
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show();
     startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
   }

@@ -29,7 +29,7 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 
 public class ContactsListCursorAdapter extends CursorAdapter {
   private OnDeleteContactListener listener;
-  private boolean isDeleteEnable;
+  private boolean isDeleteEnabled;
 
   public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
                                    OnDeleteContactListener listener) {
@@ -40,7 +40,7 @@ public class ContactsListCursorAdapter extends CursorAdapter {
                                    OnDeleteContactListener listener, boolean isDeleteEnabled) {
     super(context, c, autoRequery);
     this.listener = listener;
-    this.isDeleteEnable = isDeleteEnabled;
+    this.isDeleteEnabled = isDeleteEnabled;
   }
 
   @Override
@@ -76,7 +76,7 @@ public class ContactsListCursorAdapter extends CursorAdapter {
       textViewOnlyEmail.setText(null);
     }
 
-    if (isDeleteEnable) {
+    if (isDeleteEnabled) {
       imageButtonDeleteContact.setVisibility(View.VISIBLE);
       imageButtonDeleteContact.setOnClickListener(new View.OnClickListener() {
         @Override
