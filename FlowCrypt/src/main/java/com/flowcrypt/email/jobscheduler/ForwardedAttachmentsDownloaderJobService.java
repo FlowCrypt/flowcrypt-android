@@ -43,6 +43,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -50,6 +51,7 @@ import java.util.UUID;
 
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -212,11 +214,16 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     }
 
     private void downloadForwardedAttachments(Context context, Js js, AccountDao account, MessageDaoSource daoSource) {
-      List<GeneralMessageDetails> detailsList;
       AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
-      while (!CollectionUtils.isEmpty(detailsList = daoSource.getOutboxMsgs(context, account.getEmail(),
-          MessageState.NEW_FORWARDED))) {
+      while (true) {
+        List<GeneralMessageDetails> detailsList = daoSource.getOutboxMsgs(context, account.getEmail(),
+            MessageState.NEW_FORWARDED);
+
+        if (CollectionUtils.isEmpty(detailsList)) {
+          break;
+        }
+
         GeneralMessageDetails details = detailsList.get(0);
         String detEmail = details.getEmail();
         String detLabel = details.getLabel();
@@ -237,75 +244,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             continue;
           }
 
-          IMAPFolder folder = null;
-          Message fwdMsg = null;
-
-          MessageState msgState = MessageState.QUEUED;
-
-          for (AttachmentInfo att : atts) {
-            if (att.isForwarded() && att.getUri() == null) {
-              FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
-
-              if (folder == null) {
-                String folderName = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(),
-                    att.getFwdFolder()).getFullName();
-                folder = (IMAPFolder) store.getFolder(folderName);
-                folder.open(Folder.READ_ONLY);
-              }
-
-              if (fwdMsg == null) {
-                fwdMsg = folder.getMessageByUID(att.getFwdUid());
-              }
-
-              if (fwdMsg == null) {
-                msgState = MessageState.ERROR_ORIGINAL_MESSAGE_MISSING;
-                break;
-              }
-
-              int msgNumber = fwdMsg.getMessageNumber();
-              Part part = ImapProtocolUtil.getAttachmentPartById(folder, msgNumber, fwdMsg, att.getId());
-
-              File tempFile = new File(fwdAttsCacheDir, UUID.randomUUID().toString());
-              File attFile = new File(msgAttsDir, att.getName());
-
-              if (part != null) {
-                InputStream inputStream = part.getInputStream();
-                if (inputStream != null) {
-                  if (details.isEncrypted()) {
-                    byte[] originalBytes = IOUtils.toByteArray(inputStream);
-                    String fileName = FilenameUtils.removeExtension(att.getName());
-                    byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, originalBytes, fileName);
-                    FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
-                  } else {
-                    FileUtils.copyInputStreamToFile(inputStream, tempFile);
-                  }
-
-                  if (msgAttsDir.exists()) {
-                    FileUtils.moveFile(tempFile, attFile);
-                    att.setUri(FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile));
-                  } else {
-                    FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
-                    //It means the user has already deleted the current message. We don't need
-                    // to download other attachments.
-                    break;
-                  }
-                } else {
-                  msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
-                  break;
-                }
-              } else {
-                msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
-                break;
-              }
-            }
-
-            if (att.getUri() != null) {
-              ContentValues contentValues = new ContentValues();
-              contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.getUri().toString());
-
-              attDaoSource.update(context, att.getEmail(), att.getFolder(), att.getUid(), att.getId(), contentValues);
-            }
-          }
+          MessageState msgState = getNewMsgState(context, attDaoSource, details, msgAttsDir, pubKeys, atts);
 
           int updateResult = daoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), msgState);
           if (updateResult > 0) {
@@ -320,6 +259,86 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             break;
           }
         }
+      }
+    }
+
+    private MessageState getNewMsgState(Context context, AttachmentDaoSource attDaoSource,
+                                        GeneralMessageDetails details, File msgAttsDir, String[] pubKeys,
+                                        List<AttachmentInfo> atts) throws IOException, MessagingException {
+      IMAPFolder folder = null;
+      Message fwdMsg = null;
+
+      MessageState msgState = MessageState.QUEUED;
+
+      for (AttachmentInfo att : atts) {
+        if (att.isForwarded() && att.getUri() == null) {
+          FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
+
+          if (folder == null) {
+            String folderName = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(),
+                att.getFwdFolder()).getFullName();
+            folder = (IMAPFolder) store.getFolder(folderName);
+            folder.open(Folder.READ_ONLY);
+          }
+
+          if (fwdMsg == null) {
+            fwdMsg = folder.getMessageByUID(att.getFwdUid());
+          }
+
+          if (fwdMsg == null) {
+            msgState = MessageState.ERROR_ORIGINAL_MESSAGE_MISSING;
+            break;
+          }
+
+          int msgNumber = fwdMsg.getMessageNumber();
+          Part part = ImapProtocolUtil.getAttachmentPartById(folder, msgNumber, fwdMsg, att.getId());
+
+          File tempFile = new File(fwdAttsCacheDir, UUID.randomUUID().toString());
+          File attFile = new File(msgAttsDir, att.getName());
+
+          if (part != null) {
+            InputStream inputStream = part.getInputStream();
+            if (inputStream != null) {
+              downloadFile(details, pubKeys, att, tempFile, inputStream);
+
+              if (msgAttsDir.exists()) {
+                FileUtils.moveFile(tempFile, attFile);
+                att.setUri(FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile));
+              } else {
+                FileAndDirectoryUtils.cleanDirectory(fwdAttsCacheDir);
+                //It means the user has already deleted the current message. We don't need
+                // to download other attachments.
+                break;
+              }
+            } else {
+              msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
+              break;
+            }
+          } else {
+            msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
+            break;
+          }
+        }
+
+        if (att.getUri() != null) {
+          ContentValues contentValues = new ContentValues();
+          contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.getUri().toString());
+
+          attDaoSource.update(context, att.getEmail(), att.getFolder(), att.getUid(), att.getId(), contentValues);
+        }
+      }
+      return msgState;
+    }
+
+    private void downloadFile(GeneralMessageDetails details, String[] pubKeys, AttachmentInfo att,
+                              File tempFile, InputStream inputStream) throws IOException {
+      if (details.isEncrypted()) {
+        byte[] originalBytes = IOUtils.toByteArray(inputStream);
+        String fileName = FilenameUtils.removeExtension(att.getName());
+        byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, originalBytes, fileName);
+        FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
+      } else {
+        FileUtils.copyInputStreamToFile(inputStream, tempFile);
       }
     }
   }

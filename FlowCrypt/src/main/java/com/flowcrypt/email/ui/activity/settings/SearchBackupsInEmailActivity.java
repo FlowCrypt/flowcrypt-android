@@ -123,8 +123,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true,
-                    progressBar, layoutContent);
+                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true, progressBar, layoutContent);
                 loadPrivateKeys(R.id.syns_load_private_keys);
               }
             });

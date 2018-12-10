@@ -333,27 +333,13 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             boolean hasAlert = original.getMessage().startsWith(GmailConstants
                 .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
             if (isGmailImapServer && !isMsgEmpty && hasAlert) {
-              showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
-                  getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
-                      finish();
-                    }
-                  });
+              showLessSecurityWarning();
             } else {
               showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
                   : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
             }
           } else if (original instanceof MailConnectException || original instanceof SocketTimeoutException) {
-            showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
-                Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
-                        .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
-                  }
-                });
+            showNetworkErrorHint();
           }
         } else {
           showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
@@ -371,6 +357,28 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         super.onError(loaderId, e);
         break;
     }
+  }
+
+  private void showNetworkErrorHint() {
+    showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
+                .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
+          }
+        });
+  }
+
+  private void showLessSecurityWarning() {
+    showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
+        getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
+            finish();
+          }
+        });
   }
 
   /**

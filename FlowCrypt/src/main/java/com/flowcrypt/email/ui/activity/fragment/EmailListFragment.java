@@ -217,33 +217,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       case REQUEST_CODE_DELETE_MESSAGES:
         switch (resultCode) {
           case Activity.RESULT_OK:
-            SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
-
-            if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
-              List<GeneralMessageDetails> detailsList = new ArrayList<>();
-              for (int i = 0; i < checkedItemPositions.size(); i++) {
-                int key = checkedItemPositions.keyAt(i);
-                GeneralMessageDetails details = adapter.getItem(key);
-                if (details != null) {
-                  detailsList.add(details);
-                }
-              }
-
-              MessageDaoSource msgDaoSource = new MessageDaoSource();
-              int countOfDelMsgs = 0;
-              for (GeneralMessageDetails generalMsgDetails : detailsList) {
-                if (msgDaoSource.deleteOutgoingMsg(getContext(), generalMsgDetails) > 0) {
-                  countOfDelMsgs++;
-                }
-              }
-
-              if (countOfDelMsgs > 0) {
-                Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
-                    countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show();
-              }
-
-              actionMode.finish();
-            }
+            deleteSelectedMsgs();
             break;
         }
         break;
@@ -336,16 +310,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
           }
 
-          showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
-              Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                  setSupportActionBarTitle(getString(R.string.loading));
-                  UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                  ((BaseSyncActivity) getActivity()).updateLabels(R.id
-                      .syns_request_code_update_label_active, false);
-                }
-              });
+          showFiledLoadLabelsHint();
         }
       } else {
         swipeRefreshLayout.setRefreshing(false);
@@ -419,14 +384,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         switch (errorType) {
           case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-                Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                    loadNextMsgs(-1);
-                  }
-                });
+            showConnLostHint();
             break;
         }
         break;
@@ -440,13 +398,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
             break;
 
           case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-                Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    onRefresh();
-                  }
-                });
+            showConnProblemHint();
             break;
         }
         break;
@@ -666,6 +618,70 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           listView.setItemChecked(key, value);
         }
       }
+    }
+  }
+
+  private void showConnProblemHint() {
+    showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            onRefresh();
+          }
+        });
+  }
+
+  private void showConnLostHint() {
+    showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+            loadNextMsgs(-1);
+          }
+        });
+  }
+
+  private void showFiledLoadLabelsHint() {
+    showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            setSupportActionBarTitle(getString(R.string.loading));
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+            ((BaseSyncActivity) getActivity()).updateLabels(R.id
+                .syns_request_code_update_label_active, false);
+          }
+        });
+  }
+
+  private void deleteSelectedMsgs() {
+    SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
+
+    if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
+      List<GeneralMessageDetails> detailsList = new ArrayList<>();
+      for (int i = 0; i < checkedItemPositions.size(); i++) {
+        int key = checkedItemPositions.keyAt(i);
+        GeneralMessageDetails details = adapter.getItem(key);
+        if (details != null) {
+          detailsList.add(details);
+        }
+      }
+
+      MessageDaoSource msgDaoSource = new MessageDaoSource();
+      int countOfDelMsgs = 0;
+      for (GeneralMessageDetails generalMsgDetails : detailsList) {
+        if (msgDaoSource.deleteOutgoingMsg(getContext(), generalMsgDetails) > 0) {
+          countOfDelMsgs++;
+        }
+      }
+
+      if (countOfDelMsgs > 0) {
+        Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
+            countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show();
+      }
+
+      actionMode.finish();
     }
   }
 

@@ -861,18 +861,15 @@ public class EmailSyncService extends BaseService implements SyncListener {
               String emailDomain = emailSyncManager.getAccountDao().getAccountType();
 
               if (localFolders == null || localFolders.length != 2) {
-                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. Folders " +
-                    "are null.");
+                throw new IllegalArgumentException(emailDomain + "|Can't move the message. Folders are null.");
               }
 
               if (localFolders[0] == null) {
-                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
-                    "source folder is null.");
+                throw new IllegalArgumentException(emailDomain + "|Can't move the message. The source folder is null.");
               }
 
               if (localFolders[1] == null) {
-                throw new IllegalArgumentException(emailDomain + "| Cannot move the message. The " +
-                    "destination folder is null.");
+                throw new IllegalArgumentException(emailDomain + "|Cannot move the message. The dest folder is null.");
               }
 
               emailSyncManager.moveMsg(ownerKey, requestCode, localFolders[0], localFolders[1], msg.arg1);

@@ -228,14 +228,12 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param context     Interface to global information about an application environment.
    * @param email       The email that the message linked.
    * @param label       The folder label.
-   * @param folder      The {@link IMAPFolder} object which contains information about a
-   *                    remote folder.
+   * @param folder      The {@link IMAPFolder} object which contains information about a remote folder.
    * @param msgs        The messages array.
    * @param isNew       true if need to mark messages as new.
    * @param isEncrypted true if the given messages are encrypted.
    * @return the number of newly created rows.
-   * @throws MessagingException This exception may be occured when we call <code>mapFolder
-   *                            .getUID(message)</code>
+   * @throws MessagingException This exception may be occured when we call <code>mapFolder.getUID(message)</code>
    */
   public int addRows(Context context, String email, String label, IMAPFolder folder, Message[] msgs,
                      boolean isNew, boolean isEncrypted) throws MessagingException {
@@ -248,14 +246,12 @@ public class MessageDaoSource extends BaseDaoSource {
    * @param context              Interface to global information about an application environment.
    * @param email                The email that the message linked.
    * @param label                The folder label.
-   * @param folder               The {@link IMAPFolder} object which contains information about a
-   *                             remote folder.
+   * @param folder               The {@link IMAPFolder} object which contains information about a remote folder.
    * @param msgs                 The messages array.
    * @param msgsEncryptionStates An array which contains info about a message encryption state
    * @param areAllMsgsEncrypted  true if the given messages are encrypted.
    * @return the number of newly created rows.
-   * @throws MessagingException This exception may be occured when we call <code>mapFolder
-   *                            .getUID(message)</code>
+   * @throws MessagingException This exception may be occured when we call <code>mapFolder.getUID(message)</code>
    */
   public int addRows(Context context, String email, String label, IMAPFolder folder, Message[] msgs,
                      LongSparseArray<Boolean> msgsEncryptionStates, boolean isNew, boolean areAllMsgsEncrypted)
@@ -274,8 +270,7 @@ public class MessageDaoSource extends BaseDaoSource {
 
       for (Message msg : msgs) {
         try {
-          ContentValues contentValues = prepareContentValues(email, label, msg,
-              folder.getUID(msg), isNew);
+          ContentValues contentValues = prepareContentValues(email, label, msg, folder.getUID(msg), isNew);
 
           if (isNotificationDisabled) {
             contentValues.put(COL_IS_NEW, false);
@@ -1070,8 +1065,9 @@ public class MessageDaoSource extends BaseDaoSource {
 
           if (!TextUtils.isEmpty(details.getAttachmentsDir())) {
             try {
-              FileAndDirectoryUtils.deleteDirectory(new File(new File(context.getCacheDir(),
-                  Constants.ATTACHMENTS_CACHE_DIR), details.getAttachmentsDir()));
+              String parentDirName = details.getAttachmentsDir();
+              File dir = new File(new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR), parentDirName);
+              FileAndDirectoryUtils.deleteDirectory(dir);
             } catch (IOException e) {
               e.printStackTrace();
             }

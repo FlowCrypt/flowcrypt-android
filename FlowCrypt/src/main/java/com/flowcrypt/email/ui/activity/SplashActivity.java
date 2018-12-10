@@ -142,18 +142,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
               AuthCredentials authCreds = data.getParcelableExtra(AddNewAccountManuallyActivity
                   .KEY_EXTRA_AUTH_CREDENTIALS);
               if (authCreds != null) {
-                AccountDaoSource accountDaoSource = new AccountDaoSource();
-                accountDaoSource.addRow(this, authCreds);
-                EmailSyncService.startEmailSyncService(this);
-
-                AccountDao account = accountDaoSource.getAccountInformation(this, authCreds.getEmail());
-
-                if (account != null) {
-                  EmailManagerActivity.runEmailManagerActivity(this);
-                  finish();
-                } else {
-                  Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
-                }
+                addNewAccount(authCreds);
               } else {
                 ExceptionUtil.handleError(new NullPointerException("AuthCredentials is null!"));
                 Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
@@ -257,6 +246,21 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   @Override
   public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
+  }
+
+  private void addNewAccount(AuthCredentials authCreds) throws Exception {
+    AccountDaoSource accountDaoSource = new AccountDaoSource();
+    accountDaoSource.addRow(this, authCreds);
+    EmailSyncService.startEmailSyncService(this);
+
+    AccountDao account = accountDaoSource.getAccountInformation(this, authCreds.getEmail());
+
+    if (account != null) {
+      EmailManagerActivity.runEmailManagerActivity(this);
+      finish();
+    } else {
+      Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show();
+    }
   }
 
   private void runEmailManagerActivity() {

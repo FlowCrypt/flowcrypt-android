@@ -512,7 +512,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         if (msgInfo != null) {
-          prepareAliasForReplyIfNeed(aliases);
+          prepareAliasForReplyIfNeeded(aliases);
         } else if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           showFirstMatchedAliasWithPrvKey(aliases);
         }
@@ -857,7 +857,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @param aliases A list of Gmail aliases.
    */
-  private void prepareAliasForReplyIfNeed(List<String> aliases) {
+  private void prepareAliasForReplyIfNeeded(List<String> aliases) {
     MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
     ArrayList<String> toAddresses;
@@ -873,10 +873,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (firstFoundedAlias == null) {
           for (String alias : aliases) {
             if (alias.equalsIgnoreCase(toAddress)) {
-              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
-                if (fromAddrs.hasPrvKey(alias)) {
-                  firstFoundedAlias = alias;
-                }
+              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED && fromAddrs.hasPrvKey(alias)) {
+                firstFoundedAlias = alias;
               } else {
                 firstFoundedAlias = alias;
               }
@@ -1275,116 +1273,126 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void updateViewsFromIncomingMsgInfo() {
     switch (messageType) {
       case REPLY:
-        if (folderType != null) {
-          switch (folderType) {
-            case SENT:
-            case OUTBOX:
-              editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
-              break;
-
-            default:
-              editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-              break;
-          }
-        } else {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-        }
-
-        if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
-          editTextEmailMsg.requestFocus();
-        }
+        updateViewsIfReplyMode();
         break;
 
       case REPLY_ALL:
-        if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
-
-          if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
-            layoutCc.setVisibility(View.VISIBLE);
-            editTextRecipientsCc.append(prepareRecipients(msgInfo.getCc()));
-          }
-        } else {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-
-          Set<String> ccSet = new HashSet<>();
-
-          if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
-            ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
-            toRecipients.remove(account.getEmail());
-
-            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-              List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
-              for (AccountAliasesDao accountAliasesDao : accountAliases) {
-                toRecipients.remove(accountAliasesDao.getSendAsEmail());
-              }
-            }
-
-            ccSet.addAll(toRecipients);
-          }
-
-          if (msgInfo.getCc() != null) {
-            ArrayList<String> ccRecipients = msgInfo.getCc();
-            ccRecipients.remove(account.getEmail());
-            ccSet.addAll(ccRecipients);
-          }
-
-          if (!ccSet.isEmpty()) {
-            layoutCc.setVisibility(View.VISIBLE);
-            editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
-          }
-        }
-
-        if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
-          editTextEmailMsg.requestFocus();
-        }
+        updateViewsIfReplyAllMode();
         break;
 
       case FORWARD:
-        if (msgInfo.getAttachments() != null
-            && !msgInfo.getAttachments().isEmpty()) {
-          for (AttachmentInfo att : msgInfo.getAttachments()) {
-            if (hasAbilityToAddAttachment(att)) {
-              atts.add(att);
-            } else {
-              showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
-                  FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
-                  Snackbar.LENGTH_LONG);
-            }
-          }
-        }
-
-        editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
-            EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
-            prepareRecipientsLineForForwarding(msgInfo.getTo())));
-
-        if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
-          editTextEmailMsg.append("Cc: ");
-          editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
-          editTextEmailMsg.append("\n\n");
-        }
-
-        if (msgInfo.getMsgParts() != null
-            && !msgInfo.getMsgParts().isEmpty()) {
-          for (MessagePart msgPart : msgInfo.getMsgParts()) {
-            if (msgPart != null) {
-              switch (msgPart.getMsgPartType()) {
-                case PGP_MESSAGE:
-                case TEXT:
-                  editTextEmailMsg.append("\n\n");
-                  editTextEmailMsg.append(msgPart.getValue());
-                  break;
-
-                case PGP_PUBLIC_KEY:
-                  //TODO-denbond7 add implementation of the public key view
-                  break;
-              }
-            }
-          }
-        } else if (!msgInfo.hasPlainText() && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
-          Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
-        }
-
+        updateViewsIfFwdMode();
         break;
+    }
+  }
+
+  private void updateViewsIfFwdMode() {
+    if (msgInfo.getAttachments() != null
+        && !msgInfo.getAttachments().isEmpty()) {
+      for (AttachmentInfo att : msgInfo.getAttachments()) {
+        if (hasAbilityToAddAttachment(att)) {
+          atts.add(att);
+        } else {
+          showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
+              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
+              Snackbar.LENGTH_LONG);
+        }
+      }
+    }
+
+    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
+        EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
+        prepareRecipientsLineForForwarding(msgInfo.getTo())));
+
+    if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+      editTextEmailMsg.append("Cc: ");
+      editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
+      editTextEmailMsg.append("\n\n");
+    }
+
+    if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
+      for (MessagePart msgPart : msgInfo.getMsgParts()) {
+        if (msgPart != null) {
+          switch (msgPart.getMsgPartType()) {
+            case PGP_MESSAGE:
+            case TEXT:
+              editTextEmailMsg.append("\n\n");
+              editTextEmailMsg.append(msgPart.getValue());
+              break;
+
+            case PGP_PUBLIC_KEY:
+              //TODO-denbond7 add implementation of the public key view
+              break;
+          }
+        }
+      }
+    } else if (!msgInfo.hasPlainText() && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
+      Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
+    }
+  }
+
+  private void updateViewsIfReplyAllMode() {
+    if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+
+      if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+        layoutCc.setVisibility(View.VISIBLE);
+        editTextRecipientsCc.append(prepareRecipients(msgInfo.getCc()));
+      }
+    } else {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+
+      Set<String> ccSet = new HashSet<>();
+
+      if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
+        ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
+        toRecipients.remove(account.getEmail());
+
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
+          List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
+          for (AccountAliasesDao accountAliasesDao : accountAliases) {
+            toRecipients.remove(accountAliasesDao.getSendAsEmail());
+          }
+        }
+
+        ccSet.addAll(toRecipients);
+      }
+
+      if (msgInfo.getCc() != null) {
+        ArrayList<String> ccRecipients = msgInfo.getCc();
+        ccRecipients.remove(account.getEmail());
+        ccSet.addAll(ccRecipients);
+      }
+
+      if (!ccSet.isEmpty()) {
+        layoutCc.setVisibility(View.VISIBLE);
+        editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
+      }
+    }
+
+    if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+      editTextEmailMsg.requestFocus();
+    }
+  }
+
+  private void updateViewsIfReplyMode() {
+    if (folderType != null) {
+      switch (folderType) {
+        case SENT:
+        case OUTBOX:
+          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+          break;
+
+        default:
+          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+          break;
+      }
+    } else {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+    }
+
+    if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+      editTextEmailMsg.requestFocus();
     }
   }
 

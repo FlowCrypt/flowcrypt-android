@@ -241,9 +241,9 @@ public class AttachmentDownloadManagerService extends Service {
             break;
 
           case MESSAGE_TASK_ALREADY_EXISTS:
-            Toast.makeText(attDownloadManagerService,
-                attDownloadManagerService.getString(R.string.template_attachment_already_loading,
-                    attInfo.getName()), Toast.LENGTH_SHORT).show();
+            String msg = attDownloadManagerService.getString(R.string.template_attachment_already_loading,
+                attInfo.getName());
+            Toast.makeText(attDownloadManagerService, msg, Toast.LENGTH_SHORT).show();
             break;
 
           case MESSAGE_ATTACHMENT_DOWNLOAD:
@@ -527,45 +527,7 @@ public class AttachmentDownloadManagerService extends Service {
 
         if (att != null) {
           InputStream inputStream = att.getInputStream();
-
-          try (OutputStream outputStream = FileUtils.openOutputStream(attFile)) {
-            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-            double count = 0;
-            double size = this.att.getEncodedSize();
-            int numberOfReadBytes;
-            int lastPercentage = 0;
-            int currentPercentage = 0;
-            long startTime;
-            long elapsedTime;
-            long lastUpdateTime = startTime = System.currentTimeMillis();
-            updateProgress(currentPercentage, 0);
-            while (IOUtils.EOF != (numberOfReadBytes = inputStream.read(buffer))) {
-              if (!Thread.currentThread().isInterrupted()) {
-                outputStream.write(buffer, 0, numberOfReadBytes);
-                count += numberOfReadBytes;
-                currentPercentage = (int) ((count / size) * 100f);
-                if (currentPercentage - lastPercentage >= 1
-                    && System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL) {
-                  lastPercentage = currentPercentage;
-                  lastUpdateTime = System.currentTimeMillis();
-                  elapsedTime = lastUpdateTime - startTime;
-                  long predictLoadingTime = (long) (elapsedTime * size / count);
-                  updateProgress(currentPercentage, predictLoadingTime - elapsedTime);
-                }
-              } else {
-                break;
-              }
-            }
-
-            updateProgress(100, 0);
-          } finally {
-            if (Thread.currentThread().isInterrupted()) {
-              removeNotCompletedAttachment(attFile);
-              if (listener != null) {
-                listener.onCanceled(this.att);
-              }
-            }
-          }
+          downloadFile(attFile, inputStream);
 
           attFile = decryptFileIfNeeded(context, attFile);
           this.att.setName(attFile.getName());
@@ -593,6 +555,47 @@ public class AttachmentDownloadManagerService extends Service {
       }
     }
 
+    private void downloadFile(File attFile, InputStream inputStream) throws IOException {
+      try (OutputStream outputStream = FileUtils.openOutputStream(attFile)) {
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        double count = 0;
+        double size = this.att.getEncodedSize();
+        int numberOfReadBytes;
+        int lastPercentage = 0;
+        int currentPercentage = 0;
+        long startTime;
+        long elapsedTime;
+        long lastUpdateTime = startTime = System.currentTimeMillis();
+        updateProgress(currentPercentage, 0);
+        while (IOUtils.EOF != (numberOfReadBytes = inputStream.read(buffer))) {
+          if (!Thread.currentThread().isInterrupted()) {
+            outputStream.write(buffer, 0, numberOfReadBytes);
+            count += numberOfReadBytes;
+            currentPercentage = (int) ((count / size) * 100f);
+            boolean isUpdateNeeded = System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL;
+            if (currentPercentage - lastPercentage >= 1 && isUpdateNeeded) {
+              lastPercentage = currentPercentage;
+              lastUpdateTime = System.currentTimeMillis();
+              elapsedTime = lastUpdateTime - startTime;
+              long predictLoadingTime = (long) (elapsedTime * size / count);
+              updateProgress(currentPercentage, predictLoadingTime - elapsedTime);
+            }
+          } else {
+            break;
+          }
+        }
+
+        updateProgress(100, 0);
+      } finally {
+        if (Thread.currentThread().isInterrupted()) {
+          removeNotCompletedAttachment(attFile);
+          if (listener != null) {
+            listener.onCanceled(this.att);
+          }
+        }
+      }
+    }
+
     void setListener(OnDownloadAttachmentListener listener) {
       this.listener = listener;
     }
@@ -606,10 +609,9 @@ public class AttachmentDownloadManagerService extends Service {
     private void checkFileSize() {
       if ("pgp".equalsIgnoreCase(FilenameUtils.getExtension(att.getName()))) {
         if (att.getEncodedSize() > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
-          throw new IllegalArgumentException(context.getString(R.string
-                  .template_warning_max_attachments_size_for_decryption,
-              FileUtils.byteCountToDisplaySize(Constants
-                  .MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED)));
+          String errorMsg = context.getString(R.string.template_warning_max_attachments_size_for_decryption,
+              FileUtils.byteCountToDisplaySize(Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED));
+          throw new IllegalArgumentException(errorMsg);
         }
       }
     }

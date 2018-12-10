@@ -106,24 +106,8 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
             sendResult(Activity.RESULT_OK, atts);
             dismiss();
           } else {
-            if (atts.size() != 0) {
-              ArrayList<AttachmentInfo> selectedAtts = new ArrayList<>();
-              SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
-              if (checkedItemPositions != null) {
-                for (int i = 0; i < checkedItemPositions.size(); i++) {
-                  int key = checkedItemPositions.keyAt(i);
-                  if (checkedItemPositions.get(key)) {
-                    selectedAtts.add(atts.get(key));
-                  }
-                }
-              }
-
-              if (selectedAtts.isEmpty()) {
-                showToast(getString(R.string.please_select_key));
-              } else {
-                sendResult(Activity.RESULT_OK, selectedAtts);
-                dismiss();
-              }
+            if (!atts.isEmpty()) {
+              sendResult();
             } else {
               dismiss();
             }
@@ -149,6 +133,26 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
           }
         }
       }
+    }
+  }
+
+  private void sendResult() {
+    ArrayList<AttachmentInfo> selectedAtts = new ArrayList<>();
+    SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
+    if (checkedItemPositions != null) {
+      for (int i = 0; i < checkedItemPositions.size(); i++) {
+        int key = checkedItemPositions.keyAt(i);
+        if (checkedItemPositions.get(key)) {
+          selectedAtts.add(atts.get(key));
+        }
+      }
+    }
+
+    if (selectedAtts.isEmpty()) {
+      showToast(getString(R.string.please_select_key));
+    } else {
+      sendResult(Activity.RESULT_OK, selectedAtts);
+      dismiss();
     }
   }
 

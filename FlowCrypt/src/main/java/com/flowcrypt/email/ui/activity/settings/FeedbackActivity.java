@@ -97,8 +97,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
               UIUtil.hideSoftInput(this, editTextUserMsg);
               LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this);
             } else {
-              UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-                  .internet_connection_is_not_available));
+              UIUtil.showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
             }
           }
         } else {
@@ -138,13 +137,7 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
             PostHelpFeedbackResponse response = (PostHelpFeedbackResponse) baseResponse.getResponseModel();
             if (response.isSent()) {
               this.isMsgSent = true;
-              UIUtil.showSnackbar(getRootView(), response.getText(), getString(R.string.back),
-                  new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      finish();
-                    }
-                  });
+              showBackAction(response);
             } else if (response.getApiError() != null) {
               UIUtil.showInfoSnackbar(getRootView(), response.getApiError().getMsg());
             } else {
@@ -166,6 +159,16 @@ public class FeedbackActivity extends BaseBackStackSyncActivity implements Loade
   @Override
   public void onLoaderReset(Loader<LoaderResult> loader) {
 
+  }
+
+  private void showBackAction(PostHelpFeedbackResponse response) {
+    UIUtil.showSnackbar(getRootView(), response.getText(), getString(R.string.back),
+        new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            finish();
+          }
+        });
   }
 
   private void initViews() {

@@ -65,10 +65,8 @@ public class FileAndDirectoryUtils {
             if (childFile != null && childFile.exists()) {
               if (childFile.isDirectory()) {
                 deleteFile(childFile);
-              } else {
-                if (!childFile.delete()) {
-                  throw new IOException("An error occurred while delete " + childFile);
-                }
+              } else if (!childFile.delete()) {
+                throw new IOException("An error occurred while delete " + childFile);
               }
             }
           }

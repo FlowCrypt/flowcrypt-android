@@ -194,28 +194,31 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
           }
 
           if (js != null) {
-            String clipboardText = (String) msg.obj;
-
-            try {
-              String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
-              PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-
-              if (weakReference.get() != null &&
-                  js.is_valid_key(pgpKey, weakReference.get().isPrivateKeyMode)) {
-                try {
-                  Messenger messenger = msg.replyTo;
-                  messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
-                } catch (RemoteException e) {
-                  e.printStackTrace();
-                  ExceptionUtil.handleError(e);
-                }
-              }
-            } catch (Exception e) {
-              e.printStackTrace();
-              ExceptionUtil.handleError(e);
-            }
+            sendReply(msg);
           }
           break;
+      }
+    }
+
+    private void sendReply(Message msg) {
+      String clipboardText = (String) msg.obj;
+
+      try {
+        String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
+        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+
+        if (weakReference.get() != null && js.is_valid_key(pgpKey, weakReference.get().isPrivateKeyMode)) {
+          try {
+            Messenger messenger = msg.replyTo;
+            messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
+          } catch (RemoteException e) {
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
       }
     }
   }

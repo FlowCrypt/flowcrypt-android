@@ -109,20 +109,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             if (!keys.isEmpty()) {
               this.privateKeys = keys;
 
-              SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
-
-              Iterator<String> iterator = privateKeys.iterator();
-              Set<String> uniqueKeysLongIds = new HashSet<>();
-
-              while (iterator.hasNext()) {
-                String privateKey = iterator.next();
-                PgpKey pgpKey = js.crypto_key_read(privateKey);
-                uniqueKeysLongIds.add(pgpKey.getLongid());
-                if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
-                  iterator.remove();
-                  uniqueKeysLongIds.remove(pgpKey.getLongid());
-                }
-              }
+              Set<String> uniqueKeysLongIds = filterKeys();
 
               if (this.privateKeys.isEmpty()) {
                 hideImportButton();
@@ -249,5 +236,23 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     marginLayoutParams.topMargin = getResources().getDimensionPixelSize(R.dimen
         .margin_top_first_button);
     buttonLoadFromFile.requestLayout();
+  }
+
+  private Set<String> filterKeys() {
+    SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
+
+    Iterator<String> iterator = privateKeys.iterator();
+    Set<String> uniqueKeysLongIds = new HashSet<>();
+
+    while (iterator.hasNext()) {
+      String privateKey = iterator.next();
+      PgpKey pgpKey = js.crypto_key_read(privateKey);
+      uniqueKeysLongIds.add(pgpKey.getLongid());
+      if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
+        iterator.remove();
+        uniqueKeysLongIds.remove(pgpKey.getLongid());
+      }
+    }
+    return uniqueKeysLongIds;
   }
 }

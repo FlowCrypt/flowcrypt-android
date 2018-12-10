@@ -254,13 +254,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
             break;
 
           case RESULT_CANCELED:
-            showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-                Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    onRetryGoogleAuth();
-                  }
-                });
+            showGmailSignIn();
             break;
         }
         break;
@@ -432,18 +426,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
             for (String label : getSortedServerFolders()) {
               mailLabels.getSubMenu().add(label);
               if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
-                MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
-
-                if (foldersManager.getFolderByAlias(label).getMsgCount() > 0) {
-                  View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
-                      navigationView, false);
-                  TextView textViewMsgsCount = view.findViewById(R.id.textViewMessageCount);
-                  LocalFolder folder = foldersManager.getFolderByAlias(label);
-                  textViewMsgsCount.setText(String.valueOf(folder.getMsgCount()));
-                  menuItem.setActionView(view);
-                } else {
-                  menuItem.setActionView(null);
-                }
+                addOutboxLabel(mailLabels, label);
               }
             }
 
@@ -467,6 +450,21 @@ public class EmailManagerActivity extends BaseEmailListActivity
           }
         }
         break;
+    }
+  }
+
+  private void addOutboxLabel(MenuItem mailLabels, String label) {
+    MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
+
+    if (foldersManager.getFolderByAlias(label).getMsgCount() > 0) {
+      View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
+          navigationView, false);
+      TextView textViewMsgsCount = view.findViewById(R.id.textViewMessageCount);
+      LocalFolder folder = foldersManager.getFolderByAlias(label);
+      textViewMsgsCount.setText(String.valueOf(folder.getMsgCount()));
+      menuItem.setActionView(view);
+    } else {
+      menuItem.setActionView(null);
     }
   }
 
@@ -557,6 +555,16 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @VisibleForTesting
   public CountingIdlingResource getCountingIdlingResourceForLabel() {
     return countingIdlingResourceForLabel;
+  }
+
+  private void showGmailSignIn() {
+    showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+        Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            onRetryGoogleAuth();
+          }
+        });
   }
 
   /**

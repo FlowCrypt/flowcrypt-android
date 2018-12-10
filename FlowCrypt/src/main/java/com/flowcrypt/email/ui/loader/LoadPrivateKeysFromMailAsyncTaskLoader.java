@@ -140,15 +140,7 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
             }
 
             MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
-
-            for (MessageBlock messageBlock : messageBlocks) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-                boolean isExist = EmailUtil.containsKey(details, messageBlock.getContent());
-                if (!TextUtils.isEmpty(messageBlock.getContent()) && !isExist) {
-                  details.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
-                }
-              }
-            }
+            details.addAll(getKeyDetailsList(messageBlocks));
           }
 
           folder.close(false);
@@ -163,6 +155,20 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
       }
       throw e;
     }
+    return details;
+  }
+
+  private ArrayList<KeyDetails> getKeyDetailsList(MessageBlock[] messageBlocks) {
+    ArrayList<KeyDetails> details = new ArrayList<>();
+    for (MessageBlock messageBlock : messageBlocks) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+        boolean isExist = EmailUtil.containsKey(details, messageBlock.getContent());
+        if (!TextUtils.isEmpty(messageBlock.getContent()) && !isExist) {
+          details.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
+        }
+      }
+    }
+
     return details;
   }
 }

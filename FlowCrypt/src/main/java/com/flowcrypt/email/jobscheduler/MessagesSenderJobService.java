@@ -292,11 +292,9 @@ public class MessagesSenderJobService extends JobService {
               newMsgState = MessageState.QUEUED;
             }
 
-            if (e instanceof MessagingException) {
-              if (e.getCause() != null) {
-                if (e.getCause() instanceof SSLException || e.getCause() instanceof SocketException) {
-                  newMsgState = MessageState.QUEUED;
-                }
+            if (e instanceof MessagingException && e.getCause() != null) {
+              if (e.getCause() instanceof SSLException || e.getCause() instanceof SocketException) {
+                newMsgState = MessageState.QUEUED;
               }
             }
 

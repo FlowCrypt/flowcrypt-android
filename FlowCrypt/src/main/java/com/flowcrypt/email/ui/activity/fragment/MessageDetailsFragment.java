@@ -175,9 +175,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               atts = data.getParcelableArrayListExtra(PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
               if (!CollectionUtils.isEmpty(atts)) {
-                for (AttachmentInfo att : atts) {
-                  att.setProtected(true);
-                }
+                makeAttsProtected(atts);
                 sendTemplateMsgWithPublicKey(atts.get(0));
               }
             }
@@ -281,16 +279,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case R.id.syns_request_code_load_message_details:
         switch (errorType) {
           case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
-                getString(R.string.retry), new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-                    ((BaseSyncActivity) getBaseActivity()).loadMsgDetails(
-                        R.id.syns_request_code_load_message_details, localFolder,
-                        details.getUid());
-                  }
-                });
+            showConnLostHint();
             return;
         }
         break;
@@ -299,25 +288,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case R.id.syns_request_delete_message:
       case R.id.syns_request_move_message_to_inbox:
         UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMsgContainer);
-        showSnackbar(getView(), e.getMessage(), getString(R.string.retry), Snackbar.LENGTH_LONG,
-            new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
-                switch (requestCode) {
-                  case R.id.syns_request_archive_message:
-                    runMsgAction(R.id.menuActionArchiveMessage);
-                    break;
-
-                  case R.id.syns_request_delete_message:
-                    runMsgAction(R.id.menuActionDeleteMessage);
-                    break;
-
-                  case R.id.syns_request_move_message_to_inbox:
-                    runMsgAction(R.id.menuActionMoveToInbox);
-                    break;
-                }
-              }
-            });
+        showRetryActionHint(requestCode, e);
         break;
     }
   }
@@ -392,6 +363,47 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     if (msgInfo != null) {
       updateMsgView();
       showAttachmentsIfTheyExist();
+    }
+  }
+
+  private void showRetryActionHint(final int requestCode, Exception e) {
+    showSnackbar(getView(), e.getMessage(), getString(R.string.retry), Snackbar.LENGTH_LONG,
+        new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            switch (requestCode) {
+              case R.id.syns_request_archive_message:
+                runMsgAction(R.id.menuActionArchiveMessage);
+                break;
+
+              case R.id.syns_request_delete_message:
+                runMsgAction(R.id.menuActionDeleteMessage);
+                break;
+
+              case R.id.syns_request_move_message_to_inbox:
+                runMsgAction(R.id.menuActionMoveToInbox);
+                break;
+            }
+          }
+        });
+  }
+
+  private void showConnLostHint() {
+    showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
+        getString(R.string.retry), new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+            ((BaseSyncActivity) getBaseActivity()).loadMsgDetails(
+                R.id.syns_request_code_load_message_details, localFolder,
+                details.getUid());
+          }
+        });
+  }
+
+  private void makeAttsProtected(List<AttachmentInfo> atts) {
+    for (AttachmentInfo att : atts) {
+      att.setProtected(true);
     }
   }
 
@@ -589,47 +601,55 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
 
           final View button = rootView.findViewById(R.id.imageButtonDownloadAttachment);
-          button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              lastClickedAtt = att;
-              lastClickedAtt.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
-              boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
-                  Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
-              if (isPermissionGranted) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
-              } else {
-                getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
-                    (getContext(), lastClickedAtt));
-              }
-            }
-          });
+          button.setOnClickListener(getDownloadAttClickListener(att));
 
           if (att.getUri() != null) {
             View layoutAttachment = rootView.findViewById(R.id.layoutAttachment);
-            layoutAttachment.setOnClickListener(new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
-                if (att.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
-                  button.performClick();
-                } else {
-                  Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, att.getUri());
-                  intentOpenFile.setAction(Intent.ACTION_VIEW);
-                  intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                  intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                  if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
-                    startActivity(intentOpenFile);
-                  }
-                }
-              }
-            });
+            layoutAttachment.setOnClickListener(getOpenFileClickListener(att, button));
           }
 
           layoutMsgParts.addView(rootView);
         }
       }
     }
+  }
+
+  private View.OnClickListener getOpenFileClickListener(final AttachmentInfo att, final View button) {
+    return new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (att.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
+          button.performClick();
+        } else {
+          Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, att.getUri());
+          intentOpenFile.setAction(Intent.ACTION_VIEW);
+          intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+          intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+          if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
+            startActivity(intentOpenFile);
+          }
+        }
+      }
+    };
+  }
+
+  private View.OnClickListener getDownloadAttClickListener(final AttachmentInfo att) {
+    return new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        lastClickedAtt = att;
+        lastClickedAtt.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
+        boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
+        if (isPermissionGranted) {
+          requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+              REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
+        } else {
+          getContext().startService(AttachmentDownloadManagerService.newAttachmentDownloadIntent
+              (getContext(), lastClickedAtt));
+        }
+      }
+    };
   }
 
   private void updateMsgView() {
@@ -655,28 +675,28 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       });
     } else if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
       boolean isFirstMsgPartText = true;
-      for (MessagePart messagePart : msgInfo.getMsgParts()) {
+      for (MessagePart msgPart : msgInfo.getMsgParts()) {
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-        if (messagePart != null) {
-          switch (messagePart.getMsgPartType()) {
+        if (msgPart != null) {
+          switch (msgPart.getMsgPartType()) {
             case PGP_MESSAGE:
               msgEncryptType = MessageEncryptionType.ENCRYPTED;
-              layoutMsgParts.addView(generatePgpMsgPart((MessagePartPgpMessage) messagePart, layoutInflater));
+              layoutMsgParts.addView(generatePgpMsgPart((MessagePartPgpMessage) msgPart, layoutInflater));
               break;
 
             case TEXT:
-              layoutMsgParts.addView(generateTextPart(messagePart, layoutInflater));
+              layoutMsgParts.addView(generateTextPart(msgPart, layoutInflater));
               if (isFirstMsgPartText) {
                 viewFooterOfHeader.setVisibility(View.VISIBLE);
               }
               break;
 
             case PGP_PUBLIC_KEY:
-              layoutMsgParts.addView(generatePublicKeyPart((MessagePartPgpPublicKey) messagePart, layoutInflater));
+              layoutMsgParts.addView(generatePublicKeyPart((MessagePartPgpPublicKey) msgPart, layoutInflater));
               break;
 
             default:
-              layoutMsgParts.addView(generateMsgPart(messagePart, layoutInflater, R.layout.message_part_other,
+              layoutMsgParts.addView(generateMsgPart(msgPart, layoutInflater, R.layout.message_part_other,
                   layoutMsgParts));
               break;
           }

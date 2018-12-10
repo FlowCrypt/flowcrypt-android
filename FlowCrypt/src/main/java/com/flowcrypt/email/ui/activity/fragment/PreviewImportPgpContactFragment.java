@@ -223,30 +223,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       }
 
       if (!TextUtils.isEmpty(armoredKeys) && weakReference.get() != null) {
-        try {
-          Js js = new Js(weakReference.get().getContext(), null);
-          String normalizedArmoredKey = js.crypto_key_normalize(armoredKeys);
-          PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-
-          if (js.is_valid_key(pgpKey, false)) {
-            return new LoaderResult(parsePublicKeysInfo(js, armoredKeys), null);
-          } else {
-            if (weakReference.get() != null) {
-              return new LoaderResult(null, new IllegalArgumentException(
-                  weakReference.get().getContext().getString(R.string.clipboard_has_wrong_structure,
-                      weakReference.get().getContext().getString(R.string.public_))));
-            } else {
-              return new LoaderResult(null,
-                  new IllegalArgumentException("The content of your clipboard does not look like a " +
-                      "valid PGP public Key."));
-            }
-          }
-
-        } catch (Exception e) {
-          e.printStackTrace();
-          ExceptionUtil.handleError(e);
-          return new LoaderResult(null, e);
-        }
+        return parseKeys(armoredKeys);
       } else {
         return new LoaderResult(null, new NullPointerException("An input string is null!"));
       }
@@ -272,6 +249,32 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       }
     }
 
+    private LoaderResult parseKeys(String armoredKeys) {
+      try {
+        Js js = new Js(weakReference.get().getContext(), null);
+        String normalizedArmoredKey = js.crypto_key_normalize(armoredKeys);
+        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+
+        if (js.is_valid_key(pgpKey, false)) {
+          return new LoaderResult(parsePublicKeysInfo(js, armoredKeys), null);
+        } else {
+          if (weakReference.get() != null) {
+            return new LoaderResult(null, new IllegalArgumentException(
+                weakReference.get().getContext().getString(R.string.clipboard_has_wrong_structure,
+                    weakReference.get().getContext().getString(R.string.public_))));
+          } else {
+            return new LoaderResult(null,
+                new IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."));
+          }
+        }
+
+      } catch (Exception e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+        return new LoaderResult(null, e);
+      }
+    }
+
     private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String armoredKeys) {
       List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
 
@@ -291,31 +294,10 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
         if (messageBlock != null && messageBlock.getType() != null) {
           switch (messageBlock.getType()) {
             case MessageBlock.TYPE_PGP_PUBLIC_KEY:
-              String content = messageBlock.getContent();
-              String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(content));
-              String longId = js.crypto_key_longid(fingerprint);
-              String keyWords = js.mnemonic(longId);
-              PgpKey pgpKey = js.crypto_key_read(content);
-              String keyOwner = pgpKey.getPrimaryUserId().getEmail();
+              PublicKeyInfo publicKeyInfo = getPublicKeyInfo(js, emails, messageBlock);
 
-              if (keyOwner != null) {
-                keyOwner = keyOwner.toLowerCase();
-
-                if (emails.contains(keyOwner)) {
-                  continue;
-                }
-
-                emails.add(keyOwner);
-
-                if (weakReference.get() != null) {
-                  PgpContact contact = new ContactsDaoSource().getPgpContact(weakReference.get().getContext(),
-                      keyOwner);
-
-                  PublicKeyInfo messagePartPgpPublicKey = new PublicKeyInfo(keyWords, fingerprint,
-                      keyOwner, longId, contact, content);
-
-                  publicKeyInfoList.add(messagePartPgpPublicKey);
-                }
+              if (publicKeyInfo != null) {
+                publicKeyInfoList.add(publicKeyInfo);
               }
               break;
           }
@@ -331,6 +313,31 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       publishProgress(100);
 
       return publicKeyInfoList;
+    }
+
+    private PublicKeyInfo getPublicKeyInfo(Js js, Set<String> emails, MessageBlock messageBlock) {
+      String content = messageBlock.getContent();
+      String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(content));
+      String longId = js.crypto_key_longid(fingerprint);
+      String keyWords = js.mnemonic(longId);
+      PgpKey pgpKey = js.crypto_key_read(content);
+      String keyOwner = pgpKey.getPrimaryUserId().getEmail();
+
+      if (keyOwner != null) {
+        keyOwner = keyOwner.toLowerCase();
+
+        if (emails.contains(keyOwner)) {
+          return null;
+        }
+
+        emails.add(keyOwner);
+
+        if (weakReference.get() != null) {
+          PgpContact contact = new ContactsDaoSource().getPgpContact(weakReference.get().getContext(), keyOwner);
+          return new PublicKeyInfo(keyWords, fingerprint, keyOwner, longId, contact, content);
+        }
+      }
+      return null;
     }
   }
 

@@ -217,13 +217,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
           selectFile();
         } else {
-          UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
-              getString(R.string.change), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                  GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
-                }
-              });
+          showAccessDeniedWarning();
         }
         break;
     }
@@ -404,6 +398,16 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     if (findViewById(R.id.buttonLoadFromClipboard) != null) {
       findViewById(R.id.buttonLoadFromClipboard).setOnClickListener(this);
     }
+  }
+
+  private void showAccessDeniedWarning() {
+    UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
+        getString(R.string.change), new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
+          }
+        });
   }
 
   /**

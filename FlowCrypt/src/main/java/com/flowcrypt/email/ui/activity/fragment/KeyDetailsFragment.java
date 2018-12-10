@@ -113,22 +113,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null && data.getData() != null) {
-              try {
-                GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
-                String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
-
-                if (!TextUtils.isEmpty(fileName)) {
-                  fileName = FilenameUtils.removeExtension(fileName) + ".asc";
-                }
-
-                DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
-                Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
-              } catch (Exception e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-                String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
-                UIUtil.showInfoSnackbar(getView(), error);
-              }
+              saveKey(data);
             }
             break;
         }
@@ -162,6 +147,25 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         Toast.makeText(getContext(), getString(R.string.see_backups_to_save_your_private_keys),
             Toast.LENGTH_SHORT).show();
         break;
+    }
+  }
+
+  private void saveKey(Intent data) {
+    try {
+      GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
+      String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
+
+      if (!TextUtils.isEmpty(fileName)) {
+        fileName = FilenameUtils.removeExtension(fileName) + ".asc";
+      }
+
+      DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
+      Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
+      UIUtil.showInfoSnackbar(getView(), error);
     }
   }
 

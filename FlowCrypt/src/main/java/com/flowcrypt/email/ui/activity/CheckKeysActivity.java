@@ -156,8 +156,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(keyDetailsList);
               int remainingKeyCount = getUniqueKeysLongIdsCount(map);
 
-              this.subTitle = getResources().getQuantityString(
-                  R.plurals.not_recovered_all_keys, remainingKeyCount,
+              this.subTitle = getResources().getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
                   uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount);
             }
           } else {

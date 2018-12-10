@@ -113,16 +113,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
             }
 
             MessageBlock[] msgBlocks = js.crypto_armor_detect_blocks(backup);
-
-            for (MessageBlock messageBlock : msgBlocks) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-                String content = messageBlock.getContent();
-                boolean isContentEmpty = TextUtils.isEmpty(content);
-                if (!isContentEmpty && !EmailUtil.containsKey(keyDetailsList, content)) {
-                  keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
-                }
-              }
-            }
+            keyDetailsList = getDetails(msgBlocks);
           }
 
           folder.close(false);
@@ -137,6 +128,21 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
       }
       throw e;
     }
+    return keyDetailsList;
+  }
+
+  private ArrayList<KeyDetails> getDetails(MessageBlock[] msgBlocks) {
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+    for (MessageBlock messageBlock : msgBlocks) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+        String content = messageBlock.getContent();
+        boolean isContentEmpty = TextUtils.isEmpty(content);
+        if (!isContentEmpty && !EmailUtil.containsKey(keyDetailsList, content)) {
+          keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
+        }
+      }
+    }
+
     return keyDetailsList;
   }
 }
