@@ -254,7 +254,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnAvailable(context)) {
+          if (!GeneralUtil.isConnected(context)) {
             publishProgress(true);
             break;
           }

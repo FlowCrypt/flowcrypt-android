@@ -135,7 +135,7 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
           switch (radioGroupBackupsVariants.getCheckedRadioButtonId()) {
             case R.id.radioButtonEmail:
               dismissSnackBar();
-              if (GeneralUtil.isInternetConnAvailable(this)) {
+              if (GeneralUtil.isConnected(this)) {
                 countingIdlingResource.increment();
                 isPrivateKeySendingNow = true;
                 UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);

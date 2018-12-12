@@ -741,7 +741,7 @@ public class EmailSyncManager {
       try {
         resetConnIfNeeded(null);
 
-        while (!GeneralUtil.isInternetConnAvailable(listener.getContext())) {
+        while (!GeneralUtil.isConnected(listener.getContext())) {
           try {
             //wait while a connection will be established
             TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30));

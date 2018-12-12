@@ -57,7 +57,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
     super.onCreate(savedInstanceState);
     initViews();
 
-    if (GeneralUtil.isInternetConnAvailable(this)) {
+    if (GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
     } else {
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show();

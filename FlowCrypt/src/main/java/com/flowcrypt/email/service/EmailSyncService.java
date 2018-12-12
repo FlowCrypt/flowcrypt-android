@@ -588,7 +588,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
       if (connectivityManager != null) {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (GeneralUtil.isInternetConnAvailable(this)) {
+        if (GeneralUtil.isConnected(this)) {
           Log.d(TAG, "networkInfo = " + networkInfo);
           if (emailSyncManager != null) {
             emailSyncManager.beginSync(false);

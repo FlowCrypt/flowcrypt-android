@@ -54,7 +54,7 @@ public class GeneralUtil {
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
-  public static boolean isInternetConnAvailable(Context context) {
+  public static boolean isConnected(Context context) {
     final ConnectivityManager connectivityManager = (ConnectivityManager) context.
         getSystemService(Context.CONNECTIVITY_SERVICE);
 

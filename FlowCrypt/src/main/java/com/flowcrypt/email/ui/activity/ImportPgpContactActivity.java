@@ -184,7 +184,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
       case EditorInfo.IME_ACTION_SEARCH:
         UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
 
-        if (GeneralUtil.isInternetConnAvailable(this)) {
+        if (GeneralUtil.isConnected(this)) {
           LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
               ImportPgpContactActivity.this);
         } else {

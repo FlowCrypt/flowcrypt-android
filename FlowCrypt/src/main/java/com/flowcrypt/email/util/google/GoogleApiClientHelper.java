@@ -78,7 +78,7 @@ public class GoogleApiClientHelper {
    */
   public static void signInWithGmailUsingOAuth2(BaseActivity baseActivity, GoogleApiClient googleApiClient,
                                                 View rootView, int requestCode) {
-    if (GeneralUtil.isInternetConnAvailable(baseActivity)) {
+    if (GeneralUtil.isConnected(baseActivity)) {
       if (googleApiClient != null && googleApiClient.isConnected()) {
         googleApiClient.clearDefaultAccountAndReconnect();
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);

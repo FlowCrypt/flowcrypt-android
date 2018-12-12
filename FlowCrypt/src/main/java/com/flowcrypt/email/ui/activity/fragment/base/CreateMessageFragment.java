@@ -243,7 +243,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     boolean isEncryptedMode = listener.getMsgEncryptionType() ==
         MessageEncryptionType.ENCRYPTED;
-    if (msgInfo != null && GeneralUtil.isInternetConnAvailable(getContext()) && isEncryptedMode) {
+    if (msgInfo != null && GeneralUtil.isConnected(getContext()) && isEncryptedMode) {
       updateRecipients();
     }
   }
@@ -1118,7 +1118,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         getString(R.string.update), Snackbar.LENGTH_LONG, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            if (GeneralUtil.isInternetConnAvailable(getContext())) {
+            if (GeneralUtil.isConnected(getContext())) {
               LoaderManager.getInstance(CreateMessageFragment.this).restartLoader(loaderId, null,
                   CreateMessageFragment.this);
             } else {

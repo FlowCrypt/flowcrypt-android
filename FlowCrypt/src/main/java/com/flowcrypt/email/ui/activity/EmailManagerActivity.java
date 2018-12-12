@@ -184,7 +184,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-          if (GeneralUtil.isInternetConnAvailable(EmailManagerActivity.this.getApplicationContext())) {
+          if (GeneralUtil.isConnected(EmailManagerActivity.this.getApplicationContext())) {
             buttonView.setEnabled(false);
           }
 
@@ -875,7 +875,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     public void onDrawerOpened(View drawerView) {
       super.onDrawerOpened(drawerView);
 
-      if (GeneralUtil.isInternetConnAvailable(EmailManagerActivity.this)) {
+      if (GeneralUtil.isConnected(EmailManagerActivity.this)) {
         countingIdlingResourceForLabel.increment();
         updateLabels(R.id.syns_request_code_update_label_passive, true);
       }

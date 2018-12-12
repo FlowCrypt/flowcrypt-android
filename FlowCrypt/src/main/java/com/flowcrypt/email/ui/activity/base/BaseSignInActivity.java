@@ -87,7 +87,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
         break;
 
       case R.id.buttonOtherEmailProvider:
-        if (GeneralUtil.isInternetConnAvailable(this)) {
+        if (GeneralUtil.isConnected(this)) {
           startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class), REQUEST_CODE_ADD_OTHER_ACCOUNT);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));

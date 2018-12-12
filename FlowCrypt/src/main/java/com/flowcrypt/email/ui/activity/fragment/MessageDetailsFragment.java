@@ -519,7 +519,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    */
   private void runMsgAction(final int menuId) {
     boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
-    if (GeneralUtil.isInternetConnAvailable(getContext()) || isOutbox) {
+    if (GeneralUtil.isConnected(getContext()) || isOutbox) {
       if (!isOutbox) {
         isAdditionalActionEnabled = false;
         getActivity().invalidateOptionsMenu();

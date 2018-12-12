@@ -277,7 +277,7 @@ public class MessagesSenderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnAvailable(context)) {
+          if (!GeneralUtil.isConnected(context)) {
             if (msgDetails.getMsgState() != MessageState.SENT) {
               msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.QUEUED);
             }
@@ -340,7 +340,7 @@ public class MessagesSenderJobService extends JobService {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnAvailable(context)) {
+          if (!GeneralUtil.isConnected(context)) {
             msgDaoSource.updateMsgState(context, details.getEmail(), details.getLabel(), details.getUid(),
                 MessageState.SENT_WITHOUT_LOCAL_COPY);
             publishProgress(true);
