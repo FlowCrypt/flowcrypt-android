@@ -15,9 +15,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -56,20 +54,14 @@ public class GeneralUtil {
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
-  @SuppressWarnings("deprecation")
   public static boolean isInternetConnAvailable(Context context) {
     ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-      return networkInfo != null && networkInfo.isConnectedOrConnecting();
-    } else {
-      Network network = connManager.getActiveNetwork();
-      if (network != null) {
-        NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
-        return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-      }
+    Network network = connManager.getActiveNetwork();
+    if (network != null) {
+      NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
+      return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+          || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
     }
 
     return false;

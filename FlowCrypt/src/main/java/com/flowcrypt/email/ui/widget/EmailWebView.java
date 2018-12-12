@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.widget;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -20,7 +19,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 
-import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.content.ContextCompat;
 
@@ -99,7 +97,6 @@ public class EmailWebView extends WebView {
       this.context = context;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       if (url.startsWith(SCHEME_MAILTO)) {
@@ -111,16 +108,15 @@ public class EmailWebView extends WebView {
       }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
       if (request.getUrl().getScheme().equalsIgnoreCase("mailto")) {
         handleEmailLinks(request.getUrl());
-        return true;
       } else {
         showUrlUsingChromeCustomTabs(request.getUrl());
-        return true;
       }
+
+      return true;
     }
 
     /**

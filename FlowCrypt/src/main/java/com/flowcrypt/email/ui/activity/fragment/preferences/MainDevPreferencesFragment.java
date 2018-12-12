@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -86,18 +85,14 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     switch (key) {
       case Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE:
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-          if (sharedPreferences.getBoolean(key, false)) {
-            boolean isPermissionGranted = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission
-                .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-            if (isPermissionGranted) {
-              showApplicationDetailsSettingsActivity();
-            } else {
-              requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                  REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS);
-            }
-          } else {
+        if (sharedPreferences.getBoolean(key, false)) {
+          boolean isPermissionGranted = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission
+              .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+          if (isPermissionGranted) {
             showApplicationDetailsSettingsActivity();
+          } else {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS);
           }
         } else {
           showApplicationDetailsSettingsActivity();

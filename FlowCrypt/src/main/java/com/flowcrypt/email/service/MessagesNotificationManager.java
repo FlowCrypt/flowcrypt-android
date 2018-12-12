@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.service;
 
-import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -40,7 +39,6 @@ import com.google.android.gms.common.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
@@ -64,12 +62,12 @@ public class MessagesNotificationManager extends CustomNotificationManager {
   /**
    * Show a {@link Notification} of an incoming message.
    *
-   * @param context                   Interface to global information about an application environment.
-   * @param account                   An {@link AccountDao} object which contains information about an email account.
-   * @param localFolder               A local implementation of a remote folder.
+   * @param context               Interface to global information about an application environment.
+   * @param account               An {@link AccountDao} object which contains information about an email account.
+   * @param localFolder           A local implementation of a remote folder.
    * @param generalMsgDetailsList A list of models which consists information about some messages.
    * @param uidListOfUnseenMsgs   A list of UID of unseen messages.
-   * @param isSilent                  true if we don't need sound and vibration for Android 7.0 and below.
+   * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
   public void notify(Context context, AccountDao account, LocalFolder localFolder, List<GeneralMessageDetails>
       generalMsgDetailsList, List<Integer> uidListOfUnseenMsgs, boolean isSilent) {
@@ -90,8 +88,7 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       notifyWithGroupSupport(context, account, localFolder, generalMsgDetailsList);
     } else {
-      notifyWithSingleNotification(context, account, localFolder, generalMsgDetailsList,
-          uidListOfUnseenMsgs, isSilent);
+      notifyWithSingleNotification(context, account, localFolder, generalMsgDetailsList, uidListOfUnseenMsgs, isSilent);
     }
   }
 
@@ -204,7 +201,6 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     notificationManagerCompat.notify(NOTIFICATIONS_GROUP_MESSAGES, builder.build());
   }
 
-  @TargetApi(Build.VERSION_CODES.M)
   private void notifyWithGroupSupport(Context context, AccountDao account,
                                       LocalFolder localFolder, List<GeneralMessageDetails> detailsList) {
 
@@ -248,7 +244,6 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
   }
 
-  @RequiresApi(api = Build.VERSION_CODES.M)
   private void prepareAndShowMsgGroup(Context context, AccountDao account, LocalFolder localFolder,
                                       NotificationManager notificationManager,
                                       List<GeneralMessageDetails> generalMsgDetailsList) {

@@ -26,7 +26,6 @@ import com.flowcrypt.email.ui.notifications.CustomNotificationManager;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 /**
@@ -258,7 +257,6 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param attInfo           {@link AttachmentInfo} object which contains a detail information about an attachment.
    * @param isProgressEnabled true if need to use the progress icon as default, otherwise false.
    */
-  @RequiresApi(api = Build.VERSION_CODES.M)
   private void prepareAndShowNotificationsGroup(Context context, AttachmentInfo attInfo, boolean isProgressEnabled) {
     int groupResourceId = isProgressEnabled ? android.R.drawable.stat_sys_download
         : android.R.drawable.stat_sys_download_done;
