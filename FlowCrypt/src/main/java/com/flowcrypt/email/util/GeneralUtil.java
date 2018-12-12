@@ -55,16 +55,30 @@ public class GeneralUtil {
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
   public static boolean isInternetConnAvailable(Context context) {
-    ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    final ConnectivityManager connectivityManager = (ConnectivityManager) context.
+        getSystemService(Context.CONNECTIVITY_SERVICE);
 
-    Network network = connManager.getActiveNetwork();
-    if (network != null) {
-      NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
-      return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-          || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+    if (connectivityManager == null) {
+      return false;
     }
 
-    return false;
+    Network network = connectivityManager.getActiveNetwork();
+
+    if (network == null) {
+      return false;
+    }
+
+    NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+
+    if (capabilities == null) {
+      return false;
+    } else {
+      //Indicates that this network should be able to reach the internet.
+      boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+      //Indicates that Internet connectivity on this network was successfully detected.
+      boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+      return hasInternet && isValidated;
+    }
   }
 
   /**
