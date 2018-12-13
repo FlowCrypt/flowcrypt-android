@@ -120,10 +120,10 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
-  public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyImportModel model,
+  public static Intent newIntent(Context context, boolean isSyncEnabled, String title, KeyImportModel model,
                                  boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
     Intent intent = new Intent(context, cls);
-    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
+    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled);
     intent.putExtra(KEY_EXTRA_TITLE, title);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model);
     intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled);
@@ -217,13 +217,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
           selectFile();
         } else {
-          UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
-              getString(R.string.change), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                  GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
-                }
-              });
+          showAccessDeniedWarning();
         }
         break;
     }
@@ -255,7 +249,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
           selectFile();
         } else {
           if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            showExplanationForReadSdCard();
+            showReadSdCardExplanation();
           } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
@@ -406,11 +400,21 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
   }
 
+  private void showAccessDeniedWarning() {
+    UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
+        getString(R.string.change), new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
+          }
+        });
+  }
+
   /**
    * Show an explanation to the user for read the sdcard.
    * After the user sees the explanation, we try again to request the permission.
    */
-  private void showExplanationForReadSdCard() {
+  private void showReadSdCardExplanation() {
     UIUtil.showSnackbar(getRootView(), getString(R.string.read_sdcard_permission_explanation_text),
         getString(R.string.do_request), new View.OnClickListener() {
           @Override

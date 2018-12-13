@@ -22,7 +22,7 @@ import org.junit.Ignore;
 public class SignInWithOutlookWithBackupStandardAuthTest extends SignInWithBackupStandardAuthTest {
 
   @Override
-  AuthCredentials getAuthCredentials() {
-    return AuthCredentialsManager.getOutLookWithBackupAuthCredentials();
+  AuthCredentials getAuthCreds() {
+    return AuthCredentialsManager.getOutLookWithBackupAuthCreds();
   }
 }

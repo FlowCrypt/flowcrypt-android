@@ -162,32 +162,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
         if (baseResponse != null) {
           if (baseResponse.getResponseModel() != null) {
             LookUpResponse lookUpResponse = (LookUpResponse) baseResponse.getResponseModel();
-            if (lookUpResponse.getApiError() != null) {
-              UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-              UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMessage());
-            } else {
-              ArrayList<LookUpPublicKeyInfo> lookUpPublicKeyInfoArrayList = lookUpResponse.getResults();
-              if (lookUpPublicKeyInfoArrayList != null && !lookUpPublicKeyInfoArrayList.isEmpty()) {
-                StringBuilder builder = new StringBuilder();
-
-                for (LookUpPublicKeyInfo lookUpPublicKeyInfo : lookUpPublicKeyInfoArrayList) {
-                  if (lookUpPublicKeyInfo != null) {
-                    builder.append(lookUpPublicKeyInfo.getPubKey());
-                  }
-                }
-
-                if (builder.length() > 0) {
-                  startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, builder.toString()),
-                      REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
-                } else {
-                  UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                  Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
-                }
-              } else {
-                UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-                UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
-              }
-            }
+            handleLookupResponse(lookUpResponse);
           } else {
             UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
             UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
@@ -209,7 +184,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
       case EditorInfo.IME_ACTION_SEARCH:
         UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
 
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
+        if (GeneralUtil.isConnected(this)) {
           LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
               ImportPgpContactActivity.this);
         } else {
@@ -240,5 +215,34 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
     super.initViews();
     this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail);
     this.editTextEmailOrId.setOnEditorActionListener(this);
+  }
+
+  private void handleLookupResponse(LookUpResponse lookUpResponse) {
+    if (lookUpResponse.getApiError() != null) {
+      UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+      UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMsg());
+    } else {
+      ArrayList<LookUpPublicKeyInfo> lookUpPublicKeyInfoArrayList = lookUpResponse.getResults();
+      if (lookUpPublicKeyInfoArrayList != null && !lookUpPublicKeyInfoArrayList.isEmpty()) {
+        StringBuilder builder = new StringBuilder();
+
+        for (LookUpPublicKeyInfo lookUpPublicKeyInfo : lookUpPublicKeyInfoArrayList) {
+          if (lookUpPublicKeyInfo != null) {
+            builder.append(lookUpPublicKeyInfo.getPubKey());
+          }
+        }
+
+        if (builder.length() > 0) {
+          startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, builder.toString()),
+              REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+        } else {
+          UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+          Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
+        }
+      } else {
+        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+        UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
+      }
+    }
   }
 }

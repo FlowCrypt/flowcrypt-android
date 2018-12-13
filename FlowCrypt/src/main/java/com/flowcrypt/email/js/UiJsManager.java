@@ -24,12 +24,12 @@ import java.io.IOException;
  * E-mail: DenBond7@gmail.com
  */
 
-public final class JsForUiManager {
-  private static JsForUiManager ourInstance;
+public final class UiJsManager {
+  private static UiJsManager ourInstance;
 
   private Js js;
 
-  private JsForUiManager(Context context) {
+  private UiJsManager(Context context) {
     try {
       this.js = new Js(context, new SecurityStorageConnector(context));
     } catch (IOException e) {
@@ -39,7 +39,7 @@ public final class JsForUiManager {
   }
 
   /**
-   * Call this method to init {@link JsForUiManager}. Call this method on {@link Application#onCreate()}
+   * Call this method to init {@link UiJsManager}. Call this method on {@link Application#onCreate()}
    *
    * @param context Interface to global information about an application environment.
    */
@@ -47,11 +47,11 @@ public final class JsForUiManager {
     getInstance(context.getApplicationContext());
   }
 
-  public static JsForUiManager getInstance(Context context) {
+  public static UiJsManager getInstance(Context context) {
     checkUIThread();
 
     if (ourInstance == null) {
-      ourInstance = new JsForUiManager(context);
+      ourInstance = new UiJsManager(context);
     }
     return ourInstance;
   }

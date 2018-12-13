@@ -49,11 +49,11 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
 
   @Override
   public LoaderResult loadInBackground() {
-    Session sess = Session.getInstance(PropertiesHelper.generatePropertiesFromAuthCredentials(authCreds));
+    Session sess = Session.getInstance(PropertiesHelper.genProps(authCreds));
     sess.setDebug(EmailUtil.hasEnabledDebug(getContext()));
 
     try {
-      testImapConnection(sess);
+      testImapConn(sess);
     } catch (Exception e) {
       e.printStackTrace();
       Exception exception = new Exception("IMAP: " + e.getMessage(), e);
@@ -61,7 +61,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     }
 
     try {
-      testSmtpConnection(sess);
+      testSmtpConn(sess);
     } catch (Exception e) {
       e.printStackTrace();
       Exception exception = new Exception("SMTP: " + e.getMessage(), e);
@@ -82,7 +82,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
    * @param session The {@link Session} which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  private void testImapConnection(Session session) throws MessagingException {
+  private void testImapConn(Session session) throws MessagingException {
     Store store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP);
     store.connect(authCreds.getImapServer(), authCreds.getImapPort(), authCreds.getUsername(), authCreds.getPassword());
     Folder folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX);
@@ -97,7 +97,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
    * @param session The {@link Session} which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  private void testSmtpConnection(Session session) throws MessagingException {
+  private void testSmtpConn(Session session) throws MessagingException {
     Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
     String username;
     String password;

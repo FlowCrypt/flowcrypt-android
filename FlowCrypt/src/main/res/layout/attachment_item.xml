@@ -16,7 +16,7 @@
     android:maxWidth="@dimen/layout_width_attachment_item">
 
     <LinearLayout
-        android:id="@+id/layoutAttachment"
+        android:id="@+id/layoutAtt"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
@@ -27,7 +27,7 @@
         android:paddingRight="@dimen/default_margin_content">
 
         <ImageView
-            android:id="@+id/imageViewAttachmentIcon"
+            android:id="@+id/imageViewAttIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -53,7 +53,7 @@
                 tools:text="Some very very very very very large file name.txt" />
 
             <TextView
-                android:id="@+id/textViewAttachmentSize"
+                android:id="@+id/textViewAttSize"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/default_text_size_very_small"
@@ -62,7 +62,7 @@
 
 
         <ImageButton
-            android:id="@+id/imageButtonDownloadAttachment"
+            android:id="@+id/imageButtonDownloadAtt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -71,7 +71,7 @@
             app:srcCompat="@mipmap/ic_file_download" />
 
         <ImageButton
-            android:id="@+id/imageButtonClearAttachment"
+            android:id="@+id/imageButtonClearAtt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"

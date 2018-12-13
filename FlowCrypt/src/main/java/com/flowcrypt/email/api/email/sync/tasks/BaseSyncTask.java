@@ -88,8 +88,8 @@ abstract class BaseSyncTask implements SyncTask {
   }
 
   @NonNull
-  protected Transport prepareTransportForSmtp(Context context, Session session, AccountDao account) throws
+  protected Transport prepareSmtpTransport(Context context, Session session, AccountDao account) throws
       MessagingException, IOException, GoogleAuthException {
-    return SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
+    return SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
   }
 }

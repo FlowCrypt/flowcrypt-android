@@ -150,7 +150,7 @@ public class LocalFolder implements Parcelable {
     this.userFriendlyName = userFriendlyName;
   }
 
-  public int getMessageCount() {
+  public int getMsgCount() {
     return msgCount;
   }
 

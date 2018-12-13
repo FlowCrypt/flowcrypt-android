@@ -16,9 +16,9 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 
 import java.util.Date;
@@ -41,7 +41,7 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
   public PrivateKeysListCursorAdapter(Context context, Cursor cursor) {
     super(context, cursor, false);
     this.dateFormat = DateFormat.getMediumDateFormat(context);
-    this.js = JsForUiManager.getInstance(context).getJs();
+    this.js = UiJsManager.getInstance(context).getJs();
   }
 
   @Override
@@ -57,15 +57,27 @@ public class PrivateKeysListCursorAdapter extends CursorAdapter {
 
     String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
     PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
-    PgpKey pgpKey = js.crypto_key_read(keyInfo.getPrivate());
 
-    textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
-    textViewKeywords.setText(js.mnemonic(longId));
+    if (keyInfo == null) {
+      js.getStorageConnector().refresh(view.getContext());
+      keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
+    }
 
-    long timestamp = pgpKey.getCreated();
+    if (keyInfo == null) {
+      textViewKeyOwner.setText(null);
+      textViewKeywords.setText(null);
+      textViewCreationDate.setText(null);
+    } else {
+      PgpKey pgpKey = js.crypto_key_read(keyInfo.getPrivate());
 
-    if (timestamp != -1) {
-      textViewCreationDate.setText(dateFormat.format(new Date(timestamp)));
+      textViewKeyOwner.setText(pgpKey.getPrimaryUserId().getEmail());
+      textViewKeywords.setText(js.mnemonic(longId));
+
+      long timestamp = pgpKey.getCreated();
+
+      if (timestamp != -1) {
+        textViewCreationDate.setText(dateFormat.format(new Date(timestamp)));
+      }
     }
   }
 }

@@ -116,7 +116,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.authCreds = getTempAuthCredentials();
+    this.authCreds = getTempAuthCreds();
 
     if (authCreds == null) {
       isImapSpinnerRestored = true;
@@ -129,7 +129,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   @Override
   public void onPause() {
     super.onPause();
-    saveTempCredentials();
+    saveTempCreds();
   }
 
   @Override
@@ -213,7 +213,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     switch (v.getId()) {
       case R.id.buttonTryToConnect:
         if (isDataCorrect()) {
-          authCreds = generateAuthCredentials();
+          authCreds = generateAuthCreds();
           UIUtil.hideSoftInput(this, getRootView());
           if (checkDuplicate()) {
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this);
@@ -255,7 +255,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
       case R.id.loader_id_check_email_settings:
         UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
 
-        authCreds = generateAuthCredentials();
+        authCreds = generateAuthCreds();
         return new CheckEmailSettingsAsyncTaskLoader(this, authCreds);
 
       case R.id.loader_id_load_private_key_backups_from_email:
@@ -333,27 +333,13 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
             boolean hasAlert = original.getMessage().startsWith(GmailConstants
                 .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
             if (isGmailImapServer && !isMsgEmpty && hasAlert) {
-              showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
-                  getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
-                      finish();
-                    }
-                  });
+              showLessSecurityWarning();
             } else {
               showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
                   : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
             }
           } else if (original instanceof MailConnectException || original instanceof SocketTimeoutException) {
-            showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
-                Snackbar.LENGTH_LONG, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
-                        .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
-                  }
-                });
+            showNetworkErrorHint();
           }
         } else {
           showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
@@ -373,11 +359,33 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
     }
   }
 
+  private void showNetworkErrorHint() {
+    showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
+                .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
+          }
+        });
+  }
+
+  private void showLessSecurityWarning() {
+    showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
+        getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
+            finish();
+          }
+        });
+  }
+
   /**
    * Return the {@link Activity#RESULT_OK} to the initiator-activity.
    */
   private void returnOkResult() {
-    authCreds = generateAuthCredentials();
+    authCreds = generateAuthCreds();
     Intent intent = new Intent();
     intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCreds);
     setResult(Activity.RESULT_OK, intent);
@@ -450,14 +458,14 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
 
       int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();
       for (int i = 0; i < imapOptionsCount; i++) {
-        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOption()) {
+        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOpt()) {
           spinnerImapSecyrityType.setSelection(i);
         }
       }
 
       int smtpOptionsCount = spinnerSmtpSecyrityType.getAdapter().getCount();
       for (int i = 0; i < smtpOptionsCount; i++) {
-        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOption()) {
+        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOpt()) {
           spinnerSmtpSecyrityType.setSelection(i);
         }
       }
@@ -467,8 +475,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   /**
    * Save the current {@link AuthCredentials} to the shared preferences.
    */
-  private void saveTempCredentials() {
-    authCreds = generateAuthCredentials();
+  private void saveTempCreds() {
+    authCreds = generateAuthCreds();
     Gson gson = new Gson();
     authCreds.setPassword(null);
     authCreds.setSmtpSignInPassword(null);
@@ -479,13 +487,13 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   /**
    * Retrieve a temp {@link AuthCredentials} from the shared preferences.
    */
-  private AuthCredentials getTempAuthCredentials() {
-    String authCredentialsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences
+  private AuthCredentials getTempAuthCreds() {
+    String authCredsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences
         (this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "");
 
-    if (!TextUtils.isEmpty(authCredentialsJson)) {
+    if (!TextUtils.isEmpty(authCredsJson)) {
       try {
-        return new Gson().fromJson(authCredentialsJson, AuthCredentials.class);
+        return new Gson().fromJson(authCredsJson, AuthCredentials.class);
       } catch (JsonSyntaxException e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
@@ -500,7 +508,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
    *
    * @return {@link AuthCredentials}.
    */
-  private AuthCredentials generateAuthCredentials() {
+  private AuthCredentials generateAuthCreds() {
     int imapPort = TextUtils.isEmpty(editTextImapPort.getText()) ? JavaEmailConstants.DEFAULT_IMAP_PORT
         : Integer.parseInt(editTextImapPort.getText().toString());
 
@@ -512,10 +520,10 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         .setPassword(editTextPassword.getText().toString())
         .setImapServer(editTextImapServer.getText().toString())
         .setImapPort(imapPort)
-        .setImapSecurityTypeOption(((SecurityType) spinnerImapSecyrityType.getSelectedItem()).getOption())
+        .setImapSecurityTypeOpt(((SecurityType) spinnerImapSecyrityType.getSelectedItem()).getOpt())
         .setSmtpServer(editTextSmtpServer.getText().toString())
         .setSmtpPort(smtpPort)
-        .setSmtpSecurityTypeOption(((SecurityType) spinnerSmtpSecyrityType.getSelectedItem()).getOption())
+        .setSmtpSecurityTypeOpt(((SecurityType) spinnerSmtpSecyrityType.getSelectedItem()).getOpt())
         .setIsUseCustomSignInForSmtp(checkBoxRequireSignInForSmtp.isChecked())
         .setSmtpSigInUsername(editTextSmtpUsername.getText().toString())
         .setSmtpSignInPassword(editTextSmtpPassword.getText().toString())

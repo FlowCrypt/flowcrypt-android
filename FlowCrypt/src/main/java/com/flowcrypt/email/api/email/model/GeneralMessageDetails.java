@@ -47,7 +47,7 @@ public class GeneralMessageDetails implements Parcelable {
   private InternetAddress[] cc;
   private String subject;
   private String[] flags;
-  private String rawMessageWithoutAtts;
+  private String rawMsgWithoutAtts;
   private boolean hasAtts;
   private boolean isEncrypted;
   private MessageState msgState;
@@ -68,11 +68,11 @@ public class GeneralMessageDetails implements Parcelable {
     this.cc = (InternetAddress[]) in.readSerializable();
     this.subject = in.readString();
     this.flags = in.createStringArray();
-    this.rawMessageWithoutAtts = in.readString();
+    this.rawMsgWithoutAtts = in.readString();
     this.hasAtts = in.readByte() != 0;
     this.isEncrypted = in.readByte() != 0;
-    int tmpMessageState = in.readInt();
-    this.msgState = tmpMessageState == -1 ? null : MessageState.values()[tmpMessageState];
+    int tmpMsgState = in.readInt();
+    this.msgState = tmpMsgState == -1 ? null : MessageState.values()[tmpMsgState];
     this.attsDir = in.readString();
     this.errorMsg = in.readString();
   }
@@ -90,7 +90,7 @@ public class GeneralMessageDetails implements Parcelable {
         ", cc=" + Arrays.toString(cc) +
         ", subject='" + subject + '\'' +
         ", flags=" + Arrays.toString(flags) +
-        ", rawMessageWithoutAtts='" + rawMessageWithoutAtts + '\'' +
+        ", rawMessageWithoutAtts='" + rawMsgWithoutAtts + '\'' +
         ", hasAtts=" + hasAtts +
         ", isEncrypted=" + isEncrypted +
         ", msgState=" + msgState +
@@ -115,7 +115,7 @@ public class GeneralMessageDetails implements Parcelable {
         Arrays.equals(cc, that.cc) &&
         Objects.equals(subject, that.subject) &&
         Arrays.equals(flags, that.flags) &&
-        Objects.equals(rawMessageWithoutAtts, that.rawMessageWithoutAtts) &&
+        Objects.equals(rawMsgWithoutAtts, that.rawMsgWithoutAtts) &&
         msgState == that.msgState &&
         Objects.equals(attsDir, that.attsDir) &&
         Objects.equals(errorMsg, that.errorMsg);
@@ -124,7 +124,7 @@ public class GeneralMessageDetails implements Parcelable {
   @Override
   public int hashCode() {
     int result = Objects.hash(email, label, uid, receivedDateInMillisecond, sentDateInMillisecond, subject,
-        rawMessageWithoutAtts, hasAtts, isEncrypted, msgState, attsDir,
+        rawMsgWithoutAtts, hasAtts, isEncrypted, msgState, attsDir,
         errorMsg);
     result = 31 * result + Arrays.hashCode(from);
     result = 31 * result + Arrays.hashCode(to);
@@ -150,7 +150,7 @@ public class GeneralMessageDetails implements Parcelable {
     dest.writeSerializable(this.cc);
     dest.writeString(this.subject);
     dest.writeStringArray(this.flags);
-    dest.writeString(this.rawMessageWithoutAtts);
+    dest.writeString(this.rawMsgWithoutAtts);
     dest.writeByte(this.hasAtts ? (byte) 1 : (byte) 0);
     dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
     dest.writeInt(this.msgState == null ? -1 : this.msgState.ordinal());
@@ -242,19 +242,19 @@ public class GeneralMessageDetails implements Parcelable {
     return flags != null && Arrays.asList(flags).contains(MessageFlag.SEEN);
   }
 
-  public String getRawMessageWithoutAttachments() {
-    return rawMessageWithoutAtts;
+  public String getRawMsgWithoutAtts() {
+    return rawMsgWithoutAtts;
   }
 
-  public void setRawMessageWithoutAttachments(String rawMessageWithoutAttachments) {
-    this.rawMessageWithoutAtts = rawMessageWithoutAttachments;
+  public void setRawMsgWithoutAtts(String rawMsgWithoutAtts) {
+    this.rawMsgWithoutAtts = rawMsgWithoutAtts;
   }
 
-  public boolean hasAttachments() {
+  public boolean hasAtts() {
     return hasAtts;
   }
 
-  public void setHasAttachments(boolean hasAtts) {
+  public void setHasAtts(boolean hasAtts) {
     this.hasAtts = hasAtts;
   }
 
@@ -274,11 +274,11 @@ public class GeneralMessageDetails implements Parcelable {
     this.msgState = msgState;
   }
 
-  public String getAttachmentsDir() {
+  public String getAttsDir() {
     return attsDir;
   }
 
-  public void setAttachmentsDir(String attsDir) {
+  public void setAttsDir(String attsDir) {
     this.attsDir = attsDir;
   }
 

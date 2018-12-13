@@ -45,8 +45,7 @@ public class AddAccountToDatabaseRule implements TestRule {
 
   private void saveAccountToDatabase() throws Exception {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), account
-        .getAuthCredentials());
+    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getAuthCreds());
     accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().getTargetContext(), account
         .getEmail());
   }

@@ -115,19 +115,19 @@ public class OutgoingMessageInfo extends MessageInfo {
     this.fromPgpContact = fromPgpContact;
   }
 
-  public String getRawReplyMessage() {
+  public String getRawReplyMsg() {
     return rawReplyMsg;
   }
 
-  public void setRawReplyMessage(String rawReplyMessage) {
-    this.rawReplyMsg = rawReplyMessage;
+  public void setRawReplyMsg(String rawReplyMsg) {
+    this.rawReplyMsg = rawReplyMsg;
   }
 
-  public ArrayList<AttachmentInfo> getAttachments() {
+  public ArrayList<AttachmentInfo> getAtts() {
     return atts;
   }
 
-  public void setAttachments(ArrayList<AttachmentInfo> atts) {
+  public void setAtts(ArrayList<AttachmentInfo> atts) {
     this.atts = atts;
   }
 
@@ -147,11 +147,11 @@ public class OutgoingMessageInfo extends MessageInfo {
     isForwarded = forwarded;
   }
 
-  public ArrayList<AttachmentInfo> getForwardedAttachments() {
+  public ArrayList<AttachmentInfo> getForwardedAtts() {
     return fwdAtts;
   }
 
-  public void setForwardedAttachments(ArrayList<AttachmentInfo> fwdAtts) {
+  public void setForwardedAtts(ArrayList<AttachmentInfo> fwdAtts) {
     this.fwdAtts = fwdAtts;
   }
 

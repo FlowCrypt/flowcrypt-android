@@ -63,10 +63,10 @@ public class BackupPrivateKeyToInboxAction extends Action {
     SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
     PgpKeyInfo pgpKeyInfo = securityStorageConnector.getPgpPrivateKey(privateKeyLongId);
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
-      Session session = OpenStoreHelper.getSessionForAccountDao(context, account);
-      Transport transport = SmtpProtocolUtil.prepareTransportForSmtp(context, session, account);
+      Session session = OpenStoreHelper.getAccountSess(context, account);
+      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
       MimeBodyPart mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate());
-      Message message = EmailUtil.genMessageWithPrivateKeys(context, account, session, mimeBodyPart);
+      Message message = EmailUtil.genMsgWithPrivateKeys(context, account, session, mimeBodyPart);
       transport.sendMessage(message, message.getAllRecipients());
     }
   }

@@ -100,7 +100,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMessages());
+        .getMsgsCountingIdlingResource());
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
         .getCountingIdlingResourceForLabel());
   }
@@ -120,12 +120,12 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   }
 
   @Test
-  public void testRunMessageDetailsActivity() {
-    testRunMessageDetailsActivity(0);
+  public void testRunMsgDetailsActivity() {
+    testRunMsgDetailsActivity(0);
   }
 
   @Test
-  public void testForceLoadMessages() {
+  public void testForceLoadMsgs() {
     onData(anything())
         .inAdapterView(withId(R.id.listViewMessages))
         .atPosition(0)
@@ -188,7 +188,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
 
     try {
       AccountDaoSource accountDaoSource = new AccountDaoSource();
-      accountDaoSource.addRow(targetContext, account.getAuthCredentials());
+      accountDaoSource.addRow(targetContext, account.getAuthCreds());
       accountDaoSource.setActiveAccount(targetContext, account.getEmail());
     } catch (Exception e) {
       e.printStackTrace();

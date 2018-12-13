@@ -57,13 +57,13 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
     super.onCreate(savedInstanceState);
     initViews();
 
-    if (GeneralUtil.isInternetConnectionAvailable(this)) {
+    if (GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
     } else {
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show();
       finish();
     }
-    countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+    countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
         (SearchBackupsInEmailActivity.class), GeneralUtil.isDebugBuild());
     countingIdlingResource.increment();
   }
@@ -123,8 +123,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true,
-                    progressBar, layoutContent);
+                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true, progressBar, layoutContent);
                 loadPrivateKeys(R.id.syns_load_private_keys);
               }
             });

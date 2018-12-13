@@ -20,7 +20,7 @@ import com.flowcrypt.email.util.AuthCredentialsManager;
 public class SignInWithLocalWithOneBackupStandardAuthTest extends SignInWithBackupStandardAuthTest {
 
   @Override
-  AuthCredentials getAuthCredentials() {
-    return AuthCredentialsManager.getLocalWithOneBackupAuthCredentials();
+  AuthCredentials getAuthCreds() {
+    return AuthCredentialsManager.getLocalWithOneBackupAuthCreds();
   }
 }

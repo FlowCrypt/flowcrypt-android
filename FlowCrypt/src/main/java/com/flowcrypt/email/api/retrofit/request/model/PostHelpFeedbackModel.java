@@ -81,11 +81,11 @@ public class PostHelpFeedbackModel extends BaseRequestModel {
     this.email = email;
   }
 
-  public String getMessage() {
+  public String getMsg() {
     return msg;
   }
 
-  public void setMessage(String message) {
+  public void setMsg(String message) {
     this.msg = message;
   }
 }

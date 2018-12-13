@@ -56,7 +56,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
 
   @Override
   public LoaderResult loadInBackground() {
-    ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
     try {
       if (keyImportModel != null) {
         String armoredKey = null;
@@ -81,29 +81,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
           MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(armoredKey);
 
           for (MessageBlock messageBlock : messageBlocks) {
-            if (keyImportModel.isPrivateKey()) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
-                String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-                PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                boolean isExist = EmailUtil.containsKey(privateKeyDetailsList, normalizedKey);
-                if (js.is_valid_key(normalizedKey, true) && !isExist) {
-                  KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
-                  keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-                  privateKeyDetailsList.add(keyDetails);
-                }
-              }
-            } else {
-              if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
-                String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-                PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                boolean isExist = EmailUtil.containsKey(privateKeyDetailsList, normalizedKey);
-                if (js.is_valid_key(normalizedKey, false) && !isExist) {
-                  KeyDetails keyDetails = new KeyDetails(null, normalizedKey, keyImportModel.getType(), false);
-                  keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-                  privateKeyDetailsList.add(keyDetails);
-                }
-              }
-            }
+            keyDetailsList.addAll(parseKeys(js, messageBlock));
           }
         }
       }
@@ -113,12 +91,42 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
       return new LoaderResult(null, e);
     }
 
-    return new LoaderResult(privateKeyDetailsList, null);
+    return new LoaderResult(keyDetailsList, null);
   }
 
   @Override
   public void onStopLoading() {
     cancelLoad();
+  }
+
+  private ArrayList<KeyDetails> parseKeys(Js js, MessageBlock messageBlock) {
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+
+    if (keyImportModel.isPrivateKey()) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
+        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
+        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
+        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
+        if (js.is_valid_key(normalizedKey, true) && !isExist) {
+          KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
+          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
+          keyDetailsList.add(keyDetails);
+        }
+      }
+    } else {
+      if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
+        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
+        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
+        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
+        if (js.is_valid_key(normalizedKey, false) && !isExist) {
+          KeyDetails keyDetails = new KeyDetails(null, normalizedKey, keyImportModel.getType(), false);
+          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
+          keyDetailsList.add(keyDetails);
+        }
+      }
+    }
+
+    return keyDetailsList;
   }
 
   /**

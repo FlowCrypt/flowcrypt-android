@@ -67,18 +67,18 @@ public class JsTest {
   private static File parentDir;
 
   @AfterClass
-  public static void cleanCacheDirectory() throws Exception {
+  public static void cleanCacheDir() throws Exception {
     if (parentDir != null && parentDir.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDir);
+      FileAndDirectoryUtils.cleanDir(parentDir);
     }
   }
 
   @BeforeClass
-  public static void initCacheDirectory() throws Exception {
+  public static void initCacheDir() throws Exception {
     parentDir = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
         TESTS_DIRECTORY);
     if (parentDir.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDir);
+      FileAndDirectoryUtils.cleanDir(parentDir);
     } else if (!parentDir.mkdirs()) {
       Log.d(TAG, "Create cache directory " + parentDir.getName() + " filed!");
     }
@@ -116,10 +116,10 @@ public class JsTest {
 
   @Test
   public void testDecryptText() throws Exception {
-    MimeMessage mimeMessage = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
+    MimeMessage mimeMsg = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
             .getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
-    String decryptedText = js.crypto_message_decrypt(mimeMessage.getText()).getString();
+    String decryptedText = js.crypto_message_decrypt(mimeMsg.getText()).getString();
     Assert.assertEquals("This is a very security encrypted text.", decryptedText);
   }
 

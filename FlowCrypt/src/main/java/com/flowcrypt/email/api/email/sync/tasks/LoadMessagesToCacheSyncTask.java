@@ -36,13 +36,13 @@ import javax.mail.UIDFolder;
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
   private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
   private LocalFolder localFolder;
-  private int countOfAlreadyLoadedMessages;
+  private int countOfAlreadyLoadedMsgs;
 
   public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode,
                                      LocalFolder localFolder, int countOfAlreadyLoadedMsgs) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
-    this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMsgs;
+    this.countOfAlreadyLoadedMsgs = countOfAlreadyLoadedMsgs;
   }
 
   @Override
@@ -52,8 +52,8 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
       listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store);
       imapFolder.open(Folder.READ_ONLY);
 
-      if (countOfAlreadyLoadedMessages < 0) {
-        countOfAlreadyLoadedMessages = 0;
+      if (countOfAlreadyLoadedMsgs < 0) {
+        countOfAlreadyLoadedMsgs = 0;
       }
 
       Context context = listener.getContext();
@@ -62,20 +62,20 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
       int msgsCount;
 
       if (isEncryptedModeEnabled) {
-        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMessagesSearchTerm(account));
+        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account));
         msgsCount = foundMsgs.length;
       } else {
         msgsCount = imapFolder.getMessageCount();
       }
 
-      int end = msgsCount - countOfAlreadyLoadedMessages;
+      int end = msgsCount - countOfAlreadyLoadedMsgs;
       int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
       String folderName = imapFolder.getFullName();
-      new ImapLabelsDaoSource().updateLabelMessagesCount(context, account.getEmail(), folderName, msgsCount);
+      new ImapLabelsDaoSource().updateLabelMsgsCount(context, account.getEmail(), folderName, msgsCount);
 
       listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
       if (end < 1) {
-        listener.onMessagesReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         if (start < 1) {
           start = 1;
@@ -96,7 +96,7 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
         fetchProfile.add(UIDFolder.FetchProfileItem.UID);
         imapFolder.fetch(msgs, fetchProfile);
 
-        listener.onMessagesReceived(account, localFolder, imapFolder, msgs, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, msgs, ownerKey, requestCode);
       }
       imapFolder.close(false);
     }

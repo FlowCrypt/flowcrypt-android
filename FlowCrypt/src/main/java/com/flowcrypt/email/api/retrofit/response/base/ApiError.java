@@ -78,7 +78,7 @@ public class ApiError implements Parcelable {
     return code;
   }
 
-  public String getMessage() {
+  public String getMsg() {
     return msg;
   }
 

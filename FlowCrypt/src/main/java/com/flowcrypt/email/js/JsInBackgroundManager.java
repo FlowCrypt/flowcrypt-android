@@ -103,11 +103,11 @@ public class JsInBackgroundManager {
    *
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for identify the current action.
-   * @param rawMessage  The incoming raw message.
+   * @param rawMsg  The incoming raw message.
    */
-  public void decryptMessage(String ownerKey, int requestCode, String rawMessage) {
+  public void decryptMsg(String ownerKey, int requestCode, String rawMsg) {
     try {
-      queue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMessage));
+      queue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMsg));
     } catch (InterruptedException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);

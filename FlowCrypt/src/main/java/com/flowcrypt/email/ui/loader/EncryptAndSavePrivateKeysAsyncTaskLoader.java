@@ -80,22 +80,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
               List<Pair<String, String>> pairs = new ArrayList<>();
               if (contacts != null) {
                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-
-                for (PgpContact pgpContact : contacts) {
-                  if (pgpContact != null) {
-                    PgpKey publicKey = pgpKey.toPublic();
-                    pgpContact.setPubkey(publicKey.armor());
-                    PgpContact temp = contactsDaoSource.getPgpContact(getContext(), pgpContact.getEmail());
-                    if (js.str_is_email_valid(pgpContact.getEmail()) && temp == null) {
-                      new ContactsDaoSource().addRow(getContext(), pgpContact);
-                      //todo-DenBond7 Need to resolve a situation with different public keys.
-                      //For example we can have a situation when we have to different public
-                      // keys with the same email
-                    }
-
-                    pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
-                  }
-                }
+                pairs = genPairs(js, pgpKey, contacts, contactsDaoSource);
               }
 
               if (uri != null) {
@@ -127,6 +112,27 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     }
 
     return new LoaderResult(acceptedKeysList, null);
+  }
+
+  private List<Pair<String, String>> genPairs(Js js, PgpKey pgpKey, PgpContact[] contacts,
+                                              ContactsDaoSource daoSource) {
+    List<Pair<String, String>> pairs = new ArrayList<>();
+    for (PgpContact pgpContact : contacts) {
+      if (pgpContact != null) {
+        PgpKey publicKey = pgpKey.toPublic();
+        pgpContact.setPubkey(publicKey.armor());
+        PgpContact temp = daoSource.getPgpContact(getContext(), pgpContact.getEmail());
+        if (js.str_is_email_valid(pgpContact.getEmail()) && temp == null) {
+          new ContactsDaoSource().addRow(getContext(), pgpContact);
+          //todo-DenBond7 Need to resolve a situation with different public keys.
+          //For example we can have a situation when we have to different public
+          // keys with the same email
+        }
+
+        pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
+      }
+    }
+    return pairs;
   }
 
   @Override

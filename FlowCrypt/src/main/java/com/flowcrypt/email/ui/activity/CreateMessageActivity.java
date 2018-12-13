@@ -105,7 +105,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     initNonEncryptedHintView();
 
     if (getIntent() != null) {
-      onMessageEncryptionTypeChanged(msgEncryptionType);
+      onMsgEncryptionTypeChanged(msgEncryptionType);
       prepareActionBarTitle();
     }
   }
@@ -136,7 +136,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     menuActionSwitchType.setTitle(titleRes);
 
     if (serviceInfo != null) {
-      if (!serviceInfo.isMessageTypeSwitchable()) {
+      if (!serviceInfo.isMsgTypeSwitchable()) {
         menu.removeItem(R.id.menuActionSwitchType);
       }
 
@@ -158,11 +158,11 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
       case R.id.menuActionSwitchType:
         switch (msgEncryptionType) {
           case ENCRYPTED:
-            onMessageEncryptionTypeChanged(MessageEncryptionType.STANDARD);
+            onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD);
             break;
 
           case STANDARD:
-            onMessageEncryptionTypeChanged(MessageEncryptionType.ENCRYPTED);
+            onMsgEncryptionTypeChanged(MessageEncryptionType.ENCRYPTED);
             break;
         }
         return true;
@@ -173,15 +173,15 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
   }
 
   @Override
-  public void sendMessage(OutgoingMessageInfo outgoingMessageInfo) {
-    PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMessageInfo);
-    Toast.makeText(this, GeneralUtil.isInternetConnectionAvailable(this) ? R.string.sending :
+  public void sendMsg(OutgoingMessageInfo outgoingMsgInfo) {
+    PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMsgInfo);
+    Toast.makeText(this, GeneralUtil.isConnected(this) ? R.string.sending :
         R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
     finish();
   }
 
   @Override
-  public void onMessageEncryptionTypeChanged(MessageEncryptionType messageEncryptionType) {
+  public void onMsgEncryptionTypeChanged(MessageEncryptionType messageEncryptionType) {
     this.msgEncryptionType = messageEncryptionType;
     switch (messageEncryptionType) {
       case ENCRYPTED:
@@ -196,7 +196,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     }
 
     invalidateOptionsMenu();
-    notifyFragmentAboutChangeMessageEncryptionType(messageEncryptionType);
+    notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType);
   }
 
   @Override
@@ -237,13 +237,13 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     }
   }
 
-  private void notifyFragmentAboutChangeMessageEncryptionType(MessageEncryptionType
+  private void notifyFragmentAboutChangeMsgEncryptionType(MessageEncryptionType
                                                                   messageEncryptionType) {
     CreateMessageFragment fragment = (CreateMessageFragment) getSupportFragmentManager().findFragmentById(R.id
         .composeFragment);
 
     if (fragment != null) {
-      fragment.onMessageEncryptionTypeChange(messageEncryptionType);
+      fragment.onMsgEncryptionTypeChange(messageEncryptionType);
     }
   }
 

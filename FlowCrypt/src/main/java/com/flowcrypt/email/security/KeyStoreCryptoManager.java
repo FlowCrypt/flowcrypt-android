@@ -7,9 +7,7 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.preference.PreferenceManager;
-import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.text.TextUtils;
@@ -18,7 +16,6 @@ import android.util.Base64;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -32,7 +29,6 @@ import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
-import java.util.Calendar;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -43,9 +39,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.x500.X500Principal;
-
-import androidx.annotation.RequiresApi;
 
 /**
  * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a
@@ -307,29 +300,24 @@ public class KeyStoreCryptoManager {
    */
   private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, ManualHandledException {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      try {
-        generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
-      } catch (NullPointerException e) {
-        //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
-        e.printStackTrace();
-        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
-      }
-    } else {
-      generateKeyIfAndroidVersionLessThenMarshmallow();
+    try {
+      genKeyPair();
+    } catch (NullPointerException e) {
+      //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
+      e.printStackTrace();
+      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
     }
   }
 
   /**
-   * Generate a KeyPair for Android version equal or higher then {@link Build.VERSION_CODES#M}.
+   * Generate {@link KeyPair} using AndroidKeyStore.
    *
    * @return <tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
    * @throws NoSuchAlgorithmException
    * @throws NoSuchProviderException
    * @throws InvalidAlgorithmParameterException
    */
-  @RequiresApi(api = Build.VERSION_CODES.M)
-  private KeyPair generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow() throws NoSuchAlgorithmException,
+  private KeyPair genKeyPair() throws NoSuchAlgorithmException,
       NoSuchProviderException, InvalidAlgorithmParameterException, ManualHandledException {
 
     KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -348,38 +336,6 @@ public class KeyStoreCryptoManager {
       e.printStackTrace();
       throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
     }
-  }
-
-  /**
-   * Generate a KeyPair for Android version less then {@link Build.VERSION_CODES#M}.
-   *
-   * @return tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchProviderException
-   * @throws InvalidAlgorithmParameterException
-   */
-  @SuppressWarnings("deprecation")
-  private KeyPair generateKeyIfAndroidVersionLessThenMarshmallow() throws
-      NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-
-    Calendar startDate = Calendar.getInstance();
-    Calendar endDate = Calendar.getInstance();
-    endDate.add(Calendar.YEAR, 25);
-
-    KeyPairGeneratorSpec keyPairGeneratorSpec =
-        new KeyPairGeneratorSpec.Builder(context)
-            .setAlias(ANDROID_KEY_STORE_RSA_ALIAS)
-            .setSubject(new X500Principal("CN=FlowCrypt, OU=flowcrypt.com, O=Android Authority, C=US"))
-            .setStartDate(startDate.getTime())
-            .setEndDate(endDate.getTime())
-            .setSerialNumber(BigInteger.valueOf(startDate.getTimeInMillis()))
-            .build();
-
-    KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA,
-        PROVIDER_ANDROID_KEY_STORE);
-    keyPairGenerator.initialize(keyPairGeneratorSpec);
-
-    return keyPairGenerator.generateKeyPair();
   }
 
   /**

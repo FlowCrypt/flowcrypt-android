@@ -55,11 +55,17 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
 
   @Override
   public boolean isEnabled(int position) {
+    if (position < 0 || position >= getCount()) {
+      return super.isEnabled(position);
+    }
+
     if (useKeysInfo && getItem(position) instanceof String) {
       String email = (String) getItem(position);
       Boolean result = keysAvailability.get(email);
-      return result != null ? result : true;
-    } else return super.isEnabled(position);
+      return result == null ? super.isEnabled(position) : result;
+    } else {
+      return super.isEnabled(position);
+    }
   }
 
   @Override

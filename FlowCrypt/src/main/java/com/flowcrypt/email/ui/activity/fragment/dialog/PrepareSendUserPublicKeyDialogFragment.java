@@ -20,10 +20,10 @@ import android.widget.TextView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -56,7 +56,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.atts = new ArrayList<>();
-    prepareAttachments();
+    prepareAtts();
   }
 
   @NonNull
@@ -65,15 +65,15 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
         null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
 
-    TextView textViewMessage = view.findViewById(R.id.textViewMessage);
+    TextView textViewMsg = view.findViewById(R.id.textViewMessage);
     listViewKeys = view.findViewById(R.id.listViewKeys);
     View buttonOk = view.findViewById(R.id.buttonOk);
     buttonOk.setOnClickListener(this);
 
     if (atts.size() > 1) {
-      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
-      textViewMessage.append("\n\n");
-      textViewMessage.append(getString(R.string.select_key));
+      textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
+      textViewMsg.append("\n\n");
+      textViewMsg.append(getString(R.string.select_key));
 
       String[] strings = new String[atts.size()];
       for (int i = 0; i < atts.size(); i++) {
@@ -87,7 +87,7 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
       listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
       listViewKeys.setAdapter(adapter);
     } else {
-      textViewMessage.setText(R.string.tell_sender_to_update_their_settings);
+      textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
       listViewKeys.setVisibility(View.GONE);
     }
 
@@ -106,24 +106,8 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
             sendResult(Activity.RESULT_OK, atts);
             dismiss();
           } else {
-            if (atts.size() != 0) {
-              ArrayList<AttachmentInfo> selectedAtts = new ArrayList<>();
-              SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
-              if (checkedItemPositions != null) {
-                for (int i = 0; i < checkedItemPositions.size(); i++) {
-                  int key = checkedItemPositions.keyAt(i);
-                  if (checkedItemPositions.get(key)) {
-                    selectedAtts.add(atts.get(key));
-                  }
-                }
-              }
-
-              if (selectedAtts.isEmpty()) {
-                showToast(getString(R.string.please_select_key));
-              } else {
-                sendResult(Activity.RESULT_OK, selectedAtts);
-                dismiss();
-              }
+            if (!atts.isEmpty()) {
+              sendResult();
             } else {
               dismiss();
             }
@@ -135,8 +119,8 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
     }
   }
 
-  public void prepareAttachments() {
-    Js js = JsForUiManager.getInstance(getContext()).getJs();
+  public void prepareAtts() {
+    Js js = UiJsManager.getInstance(getContext()).getJs();
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
       PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
@@ -145,10 +129,30 @@ public class PrepareSendUserPublicKeyDialogFragment extends BaseDialogFragment i
         if (publicKey != null) {
           PgpContact primaryUserId = pgpKey.getPrimaryUserId();
           if (primaryUserId != null) {
-            atts.add(EmailUtil.genAttachmentInfoFromPubKey(publicKey));
+            atts.add(EmailUtil.genAttInfoFromPubKey(publicKey));
           }
         }
       }
+    }
+  }
+
+  private void sendResult() {
+    ArrayList<AttachmentInfo> selectedAtts = new ArrayList<>();
+    SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
+    if (checkedItemPositions != null) {
+      for (int i = 0; i < checkedItemPositions.size(); i++) {
+        int key = checkedItemPositions.keyAt(i);
+        if (checkedItemPositions.get(key)) {
+          selectedAtts.add(atts.get(key));
+        }
+      }
+    }
+
+    if (selectedAtts.isEmpty()) {
+      showToast(getString(R.string.please_select_key));
+    } else {
+      sendResult(Activity.RESULT_OK, selectedAtts);
+      dismiss();
     }
   }
 

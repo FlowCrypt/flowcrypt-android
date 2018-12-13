@@ -54,37 +54,37 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
   public InfoDialogFragment() {
   }
 
-  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage) {
-    return newInstance(dialogTitle, dialogMessage, null, false, false, false);
+  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMsg) {
+    return newInstance(dialogTitle, dialogMsg, null, false, false, false);
   }
 
-  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
+  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMsg,
                                                boolean isCancelable) {
-    return newInstance(dialogTitle, dialogMessage, null, false, isCancelable, false);
+    return newInstance(dialogTitle, dialogMsg, null, false, isCancelable, false);
   }
 
-  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
+  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMsg,
                                                String buttonTitle, boolean isCancelable) {
-    return newInstance(dialogTitle, dialogMessage, buttonTitle, false, isCancelable, false);
+    return newInstance(dialogTitle, dialogMsg, buttonTitle, false, isCancelable, false);
   }
 
-  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
+  public static InfoDialogFragment newInstance(String dialogTitle, String dialogMsg,
                                                String buttonTitle, boolean isPopBackStack,
                                                boolean isCancelable, boolean hasHtml) {
     InfoDialogFragment infoDialogFragment = new InfoDialogFragment();
 
-    Bundle args = prepareArgs(dialogTitle, dialogMessage, buttonTitle, isPopBackStack, isCancelable, hasHtml);
+    Bundle args = prepareArgs(dialogTitle, dialogMsg, buttonTitle, isPopBackStack, isCancelable, hasHtml);
     infoDialogFragment.setArguments(args);
 
     return infoDialogFragment;
   }
 
   @NonNull
-  public static Bundle prepareArgs(String dialogTitle, String dialogMessage, String buttonTitle,
+  public static Bundle prepareArgs(String dialogTitle, String dialogMsg, String buttonTitle,
                                    boolean isPopBackStack, boolean isCancelable, boolean hasHtml) {
     Bundle args = new Bundle();
     args.putString(KEY_INFO_DIALOG_TITLE, dialogTitle);
-    args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMessage);
+    args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMsg);
     args.putString(KEY_INFO_BUTTON_TITLE, buttonTitle);
     args.putBoolean(KEY_INFO_IS_POP_BACK_STACK, isPopBackStack);
     args.putBoolean(KEY_INFO_IS_CANCELABLE, isCancelable);

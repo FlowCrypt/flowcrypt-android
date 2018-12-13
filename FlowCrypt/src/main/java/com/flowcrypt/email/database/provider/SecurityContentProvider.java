@@ -133,63 +133,60 @@ public class SecurityContentProvider extends ContentProvider {
     if (hotelDBHelper != null) {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
       int match = URI_MATCHER.match(uri);
+      long id;
+      switch (match) {
+        case MATCHED_CODE_KEYS_TABLE:
+          id = sqLiteDatabase.insert(new KeysDaoSource().getTableName(), null, values);
+          result = Uri.parse(new KeysDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-      if (sqLiteDatabase != null) {
-        long id;
-        switch (match) {
-          case MATCHED_CODE_KEYS_TABLE:
-            id = sqLiteDatabase.insert(new KeysDaoSource().getTableName(), null, values);
-            result = Uri.parse(new KeysDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_CONTACTS_TABLE:
+          id = sqLiteDatabase.insert(new ContactsDaoSource().getTableName(), null, values);
+          result = Uri.parse(new ContactsDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_CONTACTS_TABLE:
-            id = sqLiteDatabase.insert(new ContactsDaoSource().getTableName(), null, values);
-            result = Uri.parse(new ContactsDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_IMAP_LABELS_TABLE:
+          id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null, values);
+          result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_IMAP_LABELS_TABLE:
-            id = sqLiteDatabase.insert(new ImapLabelsDaoSource().getTableName(), null, values);
-            result = Uri.parse(new ImapLabelsDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+          id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null, values);
+          result = Uri.parse(new MessageDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-            id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null, values);
-            result = Uri.parse(new MessageDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_ACCOUNTS_TABLE:
+          id = sqLiteDatabase.insert(new AccountDaoSource().getTableName(), null, values);
+          result = Uri.parse(new AccountDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_ACCOUNTS_TABLE:
-            id = sqLiteDatabase.insert(new AccountDaoSource().getTableName(), null, values);
-            result = Uri.parse(new AccountDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_ATTACHMENT_TABLE:
+          id = sqLiteDatabase.insert(new AttachmentDaoSource().getTableName(),
+              null, values);
+          result = Uri.parse(new AttachmentDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_ATTACHMENT_TABLE:
-            id = sqLiteDatabase.insert(new AttachmentDaoSource().getTableName(),
-                null, values);
-            result = Uri.parse(new AttachmentDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
+          id = sqLiteDatabase.insert(new AccountAliasesDaoSource().getTableName(), null, values);
+          result = Uri.parse(new AccountAliasesDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_ACCOUNT_ALIASES_TABLE:
-            id = sqLiteDatabase.insert(new AccountAliasesDaoSource().getTableName(), null, values);
-            result = Uri.parse(new AccountAliasesDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_ACTION_QUEUE_TABLE:
+          id = sqLiteDatabase.insert(new ActionQueueDaoSource().getTableName(), null, values);
+          result = Uri.parse(new ActionQueueDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_ACTION_QUEUE_TABLE:
-            id = sqLiteDatabase.insert(new ActionQueueDaoSource().getTableName(), null, values);
-            result = Uri.parse(new ActionQueueDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE:
+          id = sqLiteDatabase.insert(new UserIdEmailsKeysDaoSource().getTableName(), null, values);
+          result = Uri.parse(new UserIdEmailsKeysDaoSource().getBaseContentUri() + "/" + id);
+          break;
 
-          case MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE:
-            id = sqLiteDatabase.insert(new UserIdEmailsKeysDaoSource().getTableName(), null, values);
-            result = Uri.parse(new UserIdEmailsKeysDaoSource().getBaseContentUri() + "/" + id);
-            break;
+        default:
+          throw new UnsupportedOperationException("Unknown uri: " + uri);
+      }
 
-          default:
-            throw new UnsupportedOperationException("Unknown uri: " + uri);
-        }
-
-        if (getContext() != null && result != null) {
-          getContext().getContentResolver().notifyChange(uri, null, false);
-        }
+      if (getContext() != null && result != null) {
+        getContext().getContentResolver().notifyChange(uri, null, false);
       }
     }
 
@@ -202,49 +199,47 @@ public class SecurityContentProvider extends ContentProvider {
 
     if (hotelDBHelper != null) {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
-      if (sqLiteDatabase != null) {
-        sqLiteDatabase.beginTransaction();
-        try {
-          switch (URI_MATCHER.match(uri)) {
-            case MATCHED_CODE_IMAP_MESSAGES_TABLE:
-              for (ContentValues contentValues : values) {
-                long id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null, contentValues);
+      sqLiteDatabase.beginTransaction();
+      try {
+        switch (URI_MATCHER.match(uri)) {
+          case MATCHED_CODE_IMAP_MESSAGES_TABLE:
+            for (ContentValues contentValues : values) {
+              long id = sqLiteDatabase.insert(new MessageDaoSource().getTableName(), null, contentValues);
 
-                //if message not inserted, try to update message with some UID
-                if (id <= 0) {
-                  id = updateMessageInfo(sqLiteDatabase, contentValues);
-                } else {
-                  insertedRowsCount++;
-                }
-
-                if (id <= 0) {
-                  throw new SQLException("Failed to insert row into " + uri);
-                }
+              //if message not inserted, try to update message with some UID
+              if (id <= 0) {
+                id = updateMsgInfo(sqLiteDatabase, contentValues);
+              } else {
+                insertedRowsCount++;
               }
-              break;
 
-            default:
-              for (ContentValues contentValues : values) {
-                long id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues);
-                if (id <= 0) {
-                  throw new SQLException("Failed to insert row into " + uri);
-                } else {
-                  insertedRowsCount++;
-                }
+              if (id <= 0) {
+                throw new SQLException("Failed to insert row into " + uri);
               }
-          }
+            }
+            break;
 
-          sqLiteDatabase.setTransactionSuccessful();
-
-          if (getContext() != null && insertedRowsCount != 0) {
-            getContext().getContentResolver().notifyChange(uri, null, false);
-          }
-        } catch (Exception e) {
-          e.printStackTrace();
-          ExceptionUtil.handleError(e);
-        } finally {
-          sqLiteDatabase.endTransaction();
+          default:
+            for (ContentValues contentValues : values) {
+              long id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues);
+              if (id <= 0) {
+                throw new SQLException("Failed to insert row into " + uri);
+              } else {
+                insertedRowsCount++;
+              }
+            }
         }
+
+        sqLiteDatabase.setTransactionSuccessful();
+
+        if (getContext() != null && insertedRowsCount != 0) {
+          getContext().getContentResolver().notifyChange(uri, null, false);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+      } finally {
+        sqLiteDatabase.endTransaction();
       }
     }
 
@@ -256,12 +251,10 @@ public class SecurityContentProvider extends ContentProvider {
     int rowsCount = -1;
     if (hotelDBHelper != null) {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
-      if (sqLiteDatabase != null) {
-        rowsCount = sqLiteDatabase.update(getMatchedTableName(uri), values, selection, selectionArgs);
+      rowsCount = sqLiteDatabase.update(getMatchedTableName(uri), values, selection, selectionArgs);
 
-        if (getContext() != null && rowsCount != 0) {
-          getContext().getContentResolver().notifyChange(uri, null, false);
-        }
+      if (getContext() != null && rowsCount != 0) {
+        getContext().getContentResolver().notifyChange(uri, null, false);
       }
     }
 
@@ -275,42 +268,40 @@ public class SecurityContentProvider extends ContentProvider {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
       int match = URI_MATCHER.match(uri);
 
-      if (sqLiteDatabase != null) {
-        switch (match) {
-          case MATCHED_CODE_KEY_CLEAN_DATABASE:
-            rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(),
-                AccountDaoSource.COL_EMAIL + " = ?", selectionArgs);
-            rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
-                ImapLabelsDaoSource.COL_EMAIL + " = ?", selectionArgs);
-            rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(),
-                MessageDaoSource.COL_EMAIL + " = ?", selectionArgs);
-            rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
-                AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs);
-            break;
+      switch (match) {
+        case MATCHED_CODE_KEY_CLEAN_DATABASE:
+          rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(),
+              AccountDaoSource.COL_EMAIL + " = ?", selectionArgs);
+          rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(),
+              ImapLabelsDaoSource.COL_EMAIL + " = ?", selectionArgs);
+          rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(),
+              MessageDaoSource.COL_EMAIL + " = ?", selectionArgs);
+          rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(),
+              AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs);
+          break;
 
-          case MATCHED_CODE_KEY_ERASE_DATABASE:
-            rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new AccountAliasesDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new KeysDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new UserIdEmailsKeysDaoSource().getTableName(), null, null);
-            rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
-            break;
+        case MATCHED_CODE_KEY_ERASE_DATABASE:
+          rowsCount = sqLiteDatabase.delete(new AccountDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new AccountAliasesDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new ImapLabelsDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new MessageDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new AttachmentDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new KeysDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new UserIdEmailsKeysDaoSource().getTableName(), null, null);
+          rowsCount += sqLiteDatabase.delete(new ContactsDaoSource().getTableName(), null, null);
+          break;
 
-          case MATCHED_CODE_ACTION_QUEUE_ROW:
-            rowsCount = sqLiteDatabase.delete(new ActionQueueDaoSource().getTableName(),
-                BaseColumns._ID + " = ?", new String[]{uri.getLastPathSegment()});
-            break;
+        case MATCHED_CODE_ACTION_QUEUE_ROW:
+          rowsCount = sqLiteDatabase.delete(new ActionQueueDaoSource().getTableName(),
+              BaseColumns._ID + " = ?", new String[]{uri.getLastPathSegment()});
+          break;
 
-          default:
-            rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs);
-        }
+        default:
+          rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs);
+      }
 
-        if (getContext() != null && rowsCount != 0) {
-          getContext().getContentResolver().notifyChange(uri, null, false);
-        }
+      if (getContext() != null && rowsCount != 0) {
+        getContext().getContentResolver().notifyChange(uri, null, false);
       }
     }
 
@@ -338,17 +329,15 @@ public class SecurityContentProvider extends ContentProvider {
     ContentProviderResult[] contentProviderResults = new ContentProviderResult[0];
     if (hotelDBHelper != null) {
       SQLiteDatabase sqLiteDatabase = hotelDBHelper.getWritableDatabase();
-      if (sqLiteDatabase != null) {
-        sqLiteDatabase.beginTransaction();
-        try {
-          contentProviderResults = super.applyBatch(operations);
-          sqLiteDatabase.setTransactionSuccessful();
-        } catch (Exception e) {
-          e.printStackTrace();
-          ExceptionUtil.handleError(e);
-        } finally {
-          sqLiteDatabase.endTransaction();
-        }
+      sqLiteDatabase.beginTransaction();
+      try {
+        contentProviderResults = super.applyBatch(operations);
+        sqLiteDatabase.setTransactionSuccessful();
+      } catch (Exception e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
+      } finally {
+        sqLiteDatabase.endTransaction();
       }
     } else {
       contentProviderResults = super.applyBatch(operations);
@@ -466,7 +455,7 @@ public class SecurityContentProvider extends ContentProvider {
    * @param contentValues  The new information about some message.
    * @return the number of rows affected
    */
-  private long updateMessageInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
+  private long updateMsgInfo(SQLiteDatabase sqLiteDatabase, ContentValues contentValues) {
     long id;
     String email = contentValues.getAsString(MessageDaoSource.COL_EMAIL);
     String folder = contentValues.getAsString(MessageDaoSource.COL_FOLDER);

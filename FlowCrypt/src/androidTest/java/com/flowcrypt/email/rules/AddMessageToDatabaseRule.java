@@ -51,10 +51,10 @@ public class AddMessageToDatabaseRule implements TestRule {
     this.localFolder = localFolder;
 
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
+      Session session = OpenStoreHelper.getAccountSess(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(),
           account);
-      Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getInstrumentation()
+      Store store = OpenStoreHelper.openStore(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(), account,
           session);
 
@@ -84,13 +84,13 @@ public class AddMessageToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        saveMessageToDatabase();
+        saveMsgToDatabase();
         base.evaluate();
       }
     };
   }
 
-  private void saveMessageToDatabase() throws MessagingException {
+  private void saveMsgToDatabase() throws MessagingException {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
     messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         account.getEmail(),

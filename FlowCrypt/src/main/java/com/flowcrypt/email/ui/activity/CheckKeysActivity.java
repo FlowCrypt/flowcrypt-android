@@ -16,9 +16,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -103,14 +103,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
   public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String subTitle,
                                  String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle,
-                                 boolean isExtraImportOption) {
+                                 boolean isExtraImportOpt) {
     Intent intent = new Intent(context, CheckKeysActivity.class);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
     intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
     intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle);
     intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle);
     intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle);
-    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOption);
+    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt);
     return intent;
   }
 
@@ -156,8 +156,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(keyDetailsList);
               int remainingKeyCount = getUniqueKeysLongIdsCount(map);
 
-              this.subTitle = getResources().getQuantityString(
-                  R.plurals.not_recovered_all_keys, remainingKeyCount,
+              this.subTitle = getResources().getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
                   uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount);
             }
           } else {
@@ -266,7 +265,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         progressBar.setVisibility(View.GONE);
         ArrayList<KeyDetails> savedKeyDetailsList = (ArrayList<KeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+          UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
           restartJsService();
 
           Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
@@ -354,7 +353,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    */
   private void removeAlreadyImportedKeys() {
     Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
-    StorageConnectorInterface connector = JsForUiManager.getInstance(this).getJs().getStorageConnector();
+    StorageConnectorInterface connector = UiJsManager.getInstance(this).getJs().getStorageConnector();
 
     for (String longId : longIds) {
       if (connector.getPgpPrivateKey(longId) != null) {
@@ -396,7 +395,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @return A generated map.
    */
   private Map<KeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<KeyDetails> privateKeyDetailsList) {
-    Js js = JsForUiManager.getInstance(this).getJs();
+    Js js = UiJsManager.getInstance(this).getJs();
     Map<KeyDetails, String> keyDetailsStringMap = new HashMap<>();
 
     for (KeyDetails keyDetails : privateKeyDetailsList) {

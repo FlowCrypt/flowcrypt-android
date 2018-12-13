@@ -175,12 +175,7 @@ public class UIUtil {
    * @param colorResourcesId The resources id of the needed color.
    * @return The int value of the color.
    */
-  @SuppressWarnings("deprecation")
   public static int getColor(Context context, int colorResourcesId) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      return context.getResources().getColor(colorResourcesId, context.getTheme());
-    } else {
-      return context.getResources().getColor(colorResourcesId);
-    }
+    return context.getResources().getColor(colorResourcesId, context.getTheme());
   }
 }

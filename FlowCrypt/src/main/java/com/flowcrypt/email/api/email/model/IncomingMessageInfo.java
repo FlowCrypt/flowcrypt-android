@@ -125,19 +125,19 @@ public class IncomingMessageInfo extends MessageInfo {
     this.receiveDate = receiveDate;
   }
 
-  public String getOriginalRawMessageWithoutAtts() {
+  public String getOrigRawMsgWithoutAtts() {
     return origRawMsfWithoutAtts;
   }
 
-  public void setOriginalRawMessageWithoutAtts(String origRawMsfWithoutAtts) {
+  public void setOrigRawMsgWithoutAtts(String origRawMsfWithoutAtts) {
     this.origRawMsfWithoutAtts = origRawMsfWithoutAtts;
   }
 
-  public List<MessagePart> getMessageParts() {
+  public List<MessagePart> getMsgParts() {
     return msgParts;
   }
 
-  public void setMessageParts(List<MessagePart> messageParts) {
+  public void setMsgParts(List<MessagePart> messageParts) {
     this.msgParts = messageParts;
   }
 
@@ -189,11 +189,11 @@ public class IncomingMessageInfo extends MessageInfo {
     this.uid = uid;
   }
 
-  public ArrayList<AttachmentInfo> getAttachments() {
+  public ArrayList<AttachmentInfo> getAtts() {
     return atts;
   }
 
-  public void setAttachments(ArrayList<AttachmentInfo> attachments) {
-    this.atts = attachments;
+  public void setAtts(ArrayList<AttachmentInfo> atts) {
+    this.atts = atts;
   }
 }

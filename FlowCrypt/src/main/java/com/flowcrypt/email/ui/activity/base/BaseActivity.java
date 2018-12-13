@@ -279,7 +279,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param requestCode The unique request code for identify the current action.
    * @param rawMimeMsg  The raw MIME message.
    */
-  public void decryptMessage(int requestCode, String rawMimeMsg) {
+  public void decryptMsg(int requestCode, String rawMimeMsg) {
     if (checkServiceBound(isJsServiceBound)) return;
 
     BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMsg);
@@ -402,16 +402,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * components.
    */
   protected static class ReplyHandler extends Handler {
-    private final WeakReference<BaseService.OnServiceCallback> weakReference;
+    private final WeakReference<BaseService.OnServiceCallback> weakRef;
 
     ReplyHandler(BaseService.OnServiceCallback onServiceCallback) {
-      this.weakReference = new WeakReference<>(onServiceCallback);
+      this.weakRef = new WeakReference<>(onServiceCallback);
     }
 
     @Override
     public void handleMessage(Message message) {
-      if (weakReference.get() != null) {
-        BaseService.OnServiceCallback onServiceCallback = weakReference.get();
+      if (weakRef.get() != null) {
+        BaseService.OnServiceCallback onServiceCallback = weakRef.get();
         switch (message.what) {
           case BaseService.REPLY_OK:
             onServiceCallback.onReplyReceived(message.arg1, message.arg2, message.obj);

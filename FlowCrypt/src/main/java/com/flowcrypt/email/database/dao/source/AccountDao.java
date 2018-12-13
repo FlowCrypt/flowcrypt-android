@@ -45,14 +45,14 @@ public class AccountDao implements Parcelable {
   private String familyName;
   private String photoUrl;
   private boolean areContactsLoaded;
-  private AuthCredentials authCredentials;
+  private AuthCredentials authCreds;
 
   public AccountDao(String email, String accountType) {
     this(email, accountType, null, null, null, null, null, false);
   }
 
   public AccountDao(String email, String accountType, String displayName, String givenName,
-                    String familyName, String photoUrl, AuthCredentials authCredentials, boolean areContactsLoaded) {
+                    String familyName, String photoUrl, AuthCredentials authCreds, boolean areContactsLoaded) {
     this.email = email;
     if (TextUtils.isEmpty(accountType)) {
       if (!TextUtils.isEmpty(email)) {
@@ -65,7 +65,7 @@ public class AccountDao implements Parcelable {
     this.givenName = givenName;
     this.familyName = familyName;
     this.photoUrl = photoUrl;
-    this.authCredentials = authCredentials;
+    this.authCreds = authCreds;
     this.areContactsLoaded = areContactsLoaded;
   }
 
@@ -93,7 +93,7 @@ public class AccountDao implements Parcelable {
     this.familyName = in.readString();
     this.photoUrl = in.readString();
     this.areContactsLoaded = in.readByte() != 0;
-    this.authCredentials = in.readParcelable(AuthCredentials.class.getClassLoader());
+    this.authCreds = in.readParcelable(AuthCredentials.class.getClassLoader());
   }
 
   @Override
@@ -110,7 +110,7 @@ public class AccountDao implements Parcelable {
     dest.writeString(this.familyName);
     dest.writeString(this.photoUrl);
     dest.writeByte(this.areContactsLoaded ? (byte) 1 : (byte) 0);
-    dest.writeParcelable(this.authCredentials, flags);
+    dest.writeParcelable(this.authCreds, flags);
   }
 
   @Nullable
@@ -142,8 +142,8 @@ public class AccountDao implements Parcelable {
     return photoUrl;
   }
 
-  public AuthCredentials getAuthCredentials() {
-    return authCredentials;
+  public AuthCredentials getAuthCreds() {
+    return authCreds;
   }
 
   public boolean areContactsLoaded() {

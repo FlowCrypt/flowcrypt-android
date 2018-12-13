@@ -51,8 +51,7 @@ public class OpenStoreHelper {
 
   public static GmailSSLStore openAndConnectToGimapsStore(Context context, String token, String accountName) throws
       MessagingException {
-    GmailSSLStore gmailSSLStore = (GmailSSLStore) getGmailSession(context).getStore(JavaEmailConstants
-        .PROTOCOL_GIMAPS);
+    GmailSSLStore gmailSSLStore = (GmailSSLStore) getGmailSess(context).getStore(JavaEmailConstants.PROTOCOL_GIMAPS);
     gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token);
     return gmailSSLStore;
   }
@@ -104,8 +103,8 @@ public class OpenStoreHelper {
    * @param context Interface to global information about an application environment;
    * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
    */
-  public static Session getGmailSession(Context context) {
-    Session session = Session.getInstance(PropertiesHelper.generatePropertiesForGmail());
+  public static Session getGmailSess(Context context) {
+    Session session = Session.getInstance(PropertiesHelper.generateGmailProperties());
     session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
@@ -117,15 +116,14 @@ public class OpenStoreHelper {
    * @param account An input {@link AccountDao};
    * @return <tt>Session</tt> A new sess based on for download attachments.
    */
-  public static Session getAttachmentSession(Context context, AccountDao account) {
+  public static Session getAttsSess(Context context, AccountDao account) {
     if (account != null) {
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          return getAttachmentGmailSession(context);
+          return getAttGmailSess(context);
 
         default:
-          Session session = Session.getInstance(
-              PropertiesHelper.generatePropertiesForDownloadAttachments(account.getAuthCredentials()));
+          Session session = Session.getInstance(PropertiesHelper.genDownloadAttsProps(account.getAuthCreds()));
           session.setDebug(EmailUtil.hasEnabledDebug(context));
           return session;
       }
@@ -138,8 +136,8 @@ public class OpenStoreHelper {
    * @param context Interface to global information about an application environment;
    * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
    */
-  public static Session getAttachmentGmailSession(Context context) {
-    Session session = Session.getInstance(PropertiesHelper.generatePropertiesForDownloadGmailAttachments());
+  public static Session getAttGmailSess(Context context) {
+    Session session = Session.getInstance(PropertiesHelper.genGmailAttsProperties());
     session.setDebug(EmailUtil.hasEnabledDebug(context));
     return session;
   }
@@ -151,22 +149,21 @@ public class OpenStoreHelper {
    * @param account An input {@link AccountDao};
    * @return A generated {@link Session}
    */
-  public static Session getSessionForAccountDao(Context context, AccountDao account) {
+  public static Session getAccountSess(Context context, AccountDao account) {
     if (account != null) {
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          return getGmailSession(context);
+          return getGmailSess(context);
 
         default:
-          Session session = Session.getInstance(
-              PropertiesHelper.generatePropertiesFromAuthCredentials(account.getAuthCredentials()));
+          Session session = Session.getInstance(PropertiesHelper.genProps(account.getAuthCreds()));
           session.setDebug(EmailUtil.hasEnabledDebug(context));
           return session;
       }
     } else throw new NullPointerException("AccountDao must not be a null!");
   }
 
-  public static Store openAndConnectToStore(Context context, AccountDao account, Session session) throws
+  public static Store openStore(Context context, AccountDao account, Session session) throws
       MessagingException, IOException, GoogleAuthException {
     if (account != null) {
       switch (account.getAccountType()) {
@@ -174,13 +171,12 @@ public class OpenStoreHelper {
           return openAndConnectToGimapsStore(context, session, account, false);
 
         default:
-          AuthCredentials authCredentials = account.getAuthCredentials();
-          Store store = authCredentials.getImapOpt() == SecurityType.Option.NONE
+          AuthCredentials authCreds = account.getAuthCreds();
+          Store store = authCreds.getImapOpt() == SecurityType.Option.NONE
               ? session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
               : session.getStore(JavaEmailConstants.PROTOCOL_IMAPS);
 
-          store.connect(authCredentials.getImapServer(), authCredentials.getUsername(),
-              authCredentials.getPassword());
+          store.connect(authCreds.getImapServer(), authCreds.getUsername(), authCreds.getPassword());
           return store;
       }
     } else throw new NullPointerException("AccountDao must not be a null!");

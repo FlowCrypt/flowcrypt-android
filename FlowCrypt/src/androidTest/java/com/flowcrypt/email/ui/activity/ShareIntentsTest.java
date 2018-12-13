@@ -61,7 +61,7 @@ public class ShareIntentsTest extends BaseTest {
   private static final String ENCODED_SUBJECT = "some%20subject";
   private static final String ENCODED_BODY = "some%20body";
 
-  private static File[] attachments;
+  private static File[] atts;
   private static String[] recipients;
 
   private ActivityTestRule activityTestRule =
@@ -75,7 +75,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @BeforeClass
   public static void setUp() {
-    createFilesForAttachments();
+    createFilesForAtts();
     recipients = new String[]{
         TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
         TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER};
@@ -83,32 +83,32 @@ public class ShareIntentsTest extends BaseTest {
 
   @AfterClass
   public static void cleanResources() {
-    TestGeneralUtil.deleteFiles(Arrays.asList(attachments));
+    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
   @Test
   public void testEmptyUri() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(), null));
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(), null));
     checkViewsOnScreen(0, null, null, 0);
   }
 
   @Test
   public void testToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
   public void testToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
   }
 
   @Test
   public void testToToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -116,7 +116,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testToParamToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -124,7 +124,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testMultiToSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:" + recipients[0] + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" +
             ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -132,7 +132,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @Test
   public void testMultiToParamSubjectBody() {
-    activityTestRule.launchActivity(generateIntentForUri(getRandomActionForRFC6068(),
+    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
         "mailto:?to=" + recipients[0] + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT +
             "&body=" + ENCODED_BODY));
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
@@ -197,21 +197,21 @@ public class ShareIntentsTest extends BaseTest {
   @Test
   public void testSendMultipleMultiAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null,
-        null, attachments.length));
-    checkViewsOnScreen(0, null, null, attachments.length);
+        null, atts.length));
+    checkViewsOnScreen(0, null, null, atts.length);
   }
 
   @Test
   public void testSendMultipleExtSubjectExtBodyMultiAtt() {
     activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, attachments.length));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, attachments.length);
+        Intent.EXTRA_TEXT, atts.length));
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.length);
   }
 
-  private static void createFilesForAttachments() {
-    attachments = new File[ATTACHMENTS_COUNT];
-    for (int i = 0; i < attachments.length; i++) {
-      attachments[i] = TestGeneralUtil.createFile(i + ".txt", UUID.randomUUID().toString());
+  private static void createFilesForAtts() {
+    atts = new File[ATTACHMENTS_COUNT];
+    for (int i = 0; i < atts.length; i++) {
+      atts[i] = TestGeneralUtil.createFile(i + ".txt", UUID.randomUUID().toString());
     }
   }
 
@@ -219,7 +219,7 @@ public class ShareIntentsTest extends BaseTest {
     return new Random().nextBoolean() ? Intent.ACTION_SENDTO : Intent.ACTION_VIEW;
   }
 
-  private Intent generateIntentForUri(String action, String stringUri) {
+  private Intent genIntentForUri(String action, String stringUri) {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
 
@@ -234,7 +234,7 @@ public class ShareIntentsTest extends BaseTest {
   }
 
 
-  private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMessage,
+  private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMsg,
                                           int attachmentsCount) {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, CreateMessageActivity.class);
@@ -247,19 +247,19 @@ public class ShareIntentsTest extends BaseTest {
       intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject);
     }
 
-    if (extraMessage != null) {
-      intent.putExtra(Intent.EXTRA_TEXT, extraMessage);
+    if (extraMsg != null) {
+      intent.putExtra(Intent.EXTRA_TEXT, extraMsg);
     }
 
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(attachments[1]));
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(atts[1]));
       } else {
-        ArrayList<Uri> urisFromAttachments = new ArrayList<>();
-        for (File attachment : attachments) {
-          urisFromAttachments.add(Uri.fromFile(attachment));
+        ArrayList<Uri> urisFromAtts = new ArrayList<>();
+        for (File att : atts) {
+          urisFromAtts.add(Uri.fromFile(att));
         }
-        intent.putExtra(Intent.EXTRA_STREAM, urisFromAttachments);
+        intent.putExtra(Intent.EXTRA_STREAM, urisFromAtts);
       }
     }
     return intent;
@@ -273,16 +273,16 @@ public class ShareIntentsTest extends BaseTest {
     checkRecipients(recipientsCount);
     checkSubject(subject);
     checkBody(body);
-    checkAttachments(attachmentsCount);
+    checkAtts(attachmentsCount);
   }
 
-  private void checkAttachments(int attachmentsCount) {
+  private void checkAtts(int attachmentsCount) {
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
-        onView(withText(attachments[1].getName())).check(matches(isDisplayed()));
+        onView(withText(atts[1].getName())).check(matches(isDisplayed()));
       } else {
-        for (File attachment : attachments) {
-          onView(withText(attachment.getName())).check(matches(isDisplayed()));
+        for (File att : atts) {
+          onView(withText(att.getName())).check(matches(isDisplayed()));
         }
       }
     }

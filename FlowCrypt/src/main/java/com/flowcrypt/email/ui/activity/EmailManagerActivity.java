@@ -137,7 +137,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
+          GeneralUtil.genIdlingResourcesName(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -184,13 +184,13 @@ public class EmailManagerActivity extends BaseEmailListActivity
       switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-          if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this.getApplicationContext())) {
+          if (GeneralUtil.isConnected(EmailManagerActivity.this.getApplicationContext())) {
             buttonView.setEnabled(false);
           }
 
           cancelAllSyncTasks(0);
-          new AccountDaoSource().setShowOnlyEncryptedMessages(EmailManagerActivity.this, account.getEmail(), isChecked);
-          onShowOnlyEncryptedMessages(isChecked);
+          new AccountDaoSource().setShowOnlyEncryptedMsgs(EmailManagerActivity.this, account.getEmail(), isChecked);
+          onShowOnlyEncryptedMsgs(isChecked);
 
           Toast.makeText(EmailManagerActivity.this, isChecked ? R.string.showing_only_encrypted_messages
               : R.string.showing_all_messages, Toast.LENGTH_SHORT).show();
@@ -244,7 +244,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
                   .findFragmentById(R.id.emailListFragment);
 
               if (fragment != null) {
-                fragment.reloadMessages();
+                fragment.reloadMsgs();
               }
             } else {
               if (!TextUtils.isEmpty(signInResult.getStatus().getStatusMessage())) {
@@ -254,13 +254,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
             break;
 
           case RESULT_CANCELED:
-            showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-                Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    onRetryGoogleAuth();
-                  }
-                });
+            showGmailSignIn();
             break;
         }
         break;
@@ -282,9 +276,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
         break;
 
       case R.id.syns_request_code_force_load_new_messages:
-        onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         break;
 
@@ -307,8 +301,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;
@@ -432,18 +426,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
             for (String label : getSortedServerFolders()) {
               mailLabels.getSubMenu().add(label);
               if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
-                MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
-
-                if (foldersManager.getFolderByAlias(label).getMessageCount() > 0) {
-                  View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
-                      navigationView, false);
-                  TextView textViewMessagesCount = view.findViewById(R.id.textViewMessageCount);
-                  LocalFolder folder = foldersManager.getFolderByAlias(label);
-                  textViewMessagesCount.setText(String.valueOf(folder.getMessageCount()));
-                  menuItem.setActionView(view);
-                } else {
-                  menuItem.setActionView(null);
-                }
+                addOutboxLabel(mailLabels, label);
               }
             }
 
@@ -467,6 +450,21 @@ public class EmailManagerActivity extends BaseEmailListActivity
           }
         }
         break;
+    }
+  }
+
+  private void addOutboxLabel(MenuItem mailLabels, String label) {
+    MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
+
+    if (foldersManager.getFolderByAlias(label).getMsgCount() > 0) {
+      View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
+          navigationView, false);
+      TextView textViewMsgsCount = view.findViewById(R.id.textViewMessageCount);
+      LocalFolder folder = foldersManager.getFolderByAlias(label);
+      textViewMsgsCount.setText(String.valueOf(folder.getMsgCount()));
+      menuItem.setActionView(view);
+    } else {
+      menuItem.setActionView(null);
     }
   }
 
@@ -514,8 +512,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+  public void onConnectionFailed(@NonNull ConnectionResult connResult) {
+    UIUtil.showInfoSnackbar(getRootView(), connResult.getErrorMessage());
   }
 
   @Override
@@ -557,6 +555,16 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @VisibleForTesting
   public CountingIdlingResource getCountingIdlingResourceForLabel() {
     return countingIdlingResourceForLabel;
+  }
+
+  private void showGmailSignIn() {
+    showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+        Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            onRetryGoogleAuth();
+          }
+        });
   }
 
   /**
@@ -643,12 +651,12 @@ public class EmailManagerActivity extends BaseEmailListActivity
    *
    * @param refreshListNeeded true if we must reload the emails list.
    */
-  private void onForceLoadNewMessagesCompleted(boolean refreshListNeeded) {
+  private void onForceLoadNewMsgsCompleted(boolean refreshListNeeded) {
     EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
     if (fragment != null) {
-      fragment.onForceLoadNewMessagesCompleted(refreshListNeeded);
+      fragment.onForceLoadNewMsgsCompleted(refreshListNeeded);
     }
   }
 
@@ -658,7 +666,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
    * @param onlyEncrypted true if we want ot show only encrypted messages, false if we want to show
    *                      all messages.
    */
-  private void onShowOnlyEncryptedMessages(boolean onlyEncrypted) {
+  private void onShowOnlyEncryptedMsgs(boolean onlyEncrypted) {
     EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
@@ -674,7 +682,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     }
 
     if (fragment != null) {
-      fragment.onFilterMessages(onlyEncrypted);
+      fragment.onFilterMsgs(onlyEncrypted);
     }
   }
 
@@ -867,7 +875,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     public void onDrawerOpened(View drawerView) {
       super.onDrawerOpened(drawerView);
 
-      if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
+      if (GeneralUtil.isConnected(EmailManagerActivity.this)) {
         countingIdlingResourceForLabel.increment();
         updateLabels(R.id.syns_request_code_update_label_passive, true);
       }

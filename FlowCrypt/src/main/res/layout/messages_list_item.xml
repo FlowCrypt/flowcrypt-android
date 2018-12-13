@@ -20,14 +20,14 @@
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="@+id/textViewDate"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintEnd_toStartOf="@+id/imageViewAttachments"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAtts"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         app:layout_goneMarginRight="@dimen/gone_margin_right_attachment_icon"
         tools:text="human@flowcrypt.com" />
 
     <ImageView
-        android:id="@+id/imageViewAttachments"
+        android:id="@+id/imageViewAtts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_small"
@@ -49,7 +49,7 @@
         android:textColor="@color/gray"
         android:textSize="@dimen/default_text_size_medium"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintEnd_toStartOf="@+id/imageViewAttachments"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAtts"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
         tools:text="What up man" />

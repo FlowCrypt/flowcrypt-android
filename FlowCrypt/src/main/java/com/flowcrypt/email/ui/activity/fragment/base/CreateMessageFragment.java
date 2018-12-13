@@ -54,8 +54,8 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
@@ -126,7 +126,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
   private Js js;
-  private OnMessageSendListener onMessageSendListener;
+  private OnMessageSendListener onMsgSendListener;
   private OnChangeMessageEncryptionTypeListener listener;
   private List<PgpContact> pgpContactsTo;
   private List<PgpContact> pgpContactsCc;
@@ -182,7 +182,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onAttach(Context context) {
     super.onAttach(context);
     if (context instanceof OnMessageSendListener) {
-      this.onMessageSendListener = (OnMessageSendListener) context;
+      this.onMsgSendListener = (OnMessageSendListener) context;
     } else throw new IllegalArgumentException(context.toString() + " must implement " +
         OnMessageSendListener.class.getSimpleName());
 
@@ -197,7 +197,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     super.onCreate(savedInstanceState);
     setHasOptionsMenu(true);
 
-    initDraftCacheDirectory();
+    initDraftCacheDir();
 
     account = new AccountDaoSource().getActiveAccountInformation(getContext());
     fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1,
@@ -211,7 +211,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
-    js = JsForUiManager.getInstance(getContext()).getJs();
+    js = UiJsManager.getInstance(getContext()).getJs();
     initExtras(getActivity().getIntent());
   }
 
@@ -230,7 +230,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       updateViews();
     }
 
-    showAttachments();
+    showAtts();
   }
 
   @Override
@@ -243,7 +243,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     boolean isEncryptedMode = listener.getMsgEncryptionType() ==
         MessageEncryptionType.ENCRYPTED;
-    if (msgInfo != null && GeneralUtil.isInternetConnectionAvailable(getContext()) && isEncryptedMode) {
+    if (msgInfo != null && GeneralUtil.isConnected(getContext()) && isEncryptedMode) {
       updateRecipients();
     }
   }
@@ -252,10 +252,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onDestroy() {
     super.onDestroy();
     if (!isMsgSentToQueue) {
-      for (AttachmentInfo attachmentInfo : atts) {
-        boolean isOwnUri = Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attachmentInfo.getUri().getAuthority());
-        if (attachmentInfo.getUri() != null && isOwnUri) {
-          getContext().getContentResolver().delete(attachmentInfo.getUri(), null, null);
+      for (AttachmentInfo attInfo : atts) {
+        if (attInfo.getUri() != null) {
+          if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attInfo.getUri().getAuthority())) {
+            getContext().getContentResolver().delete(attInfo.getUri(), null, null);
+          }
         }
       }
     }
@@ -272,7 +273,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
         switch (resultCode) {
           case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-            listener.onMessageEncryptionTypeChanged(MessageEncryptionType.STANDARD);
+            listener.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD);
             break;
 
           case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
@@ -346,10 +347,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null && data.getData() != null) {
-              AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(getContext(), data.getData());
-              if (hasAbilityToAddAttachment(attachmentInfo)) {
+              AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(getContext(), data.getData());
+              if (hasAbilityToAddAtt(attachmentInfo)) {
                 atts.add(attachmentInfo);
-                showAttachments();
+                showAtts();
               } else {
                 showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
                     FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
@@ -384,7 +385,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
           UIUtil.hideSoftInput(getContext(), getView());
           if (isDataCorrect()) {
-            sendMessage();
+            sendMsg();
             this.isMsgSentToQueue = true;
           }
         } else {
@@ -407,7 +408,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     switch (requestCode) {
       case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          sendMessage();
+          sendMsg();
         } else {
           Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
               Toast.LENGTH_LONG).show();
@@ -416,8 +417,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO:
         if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          addAttachments();
-          showAttachments();
+          addAtts();
+          showAtts();
         } else {
           Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
               Toast.LENGTH_LONG).show();
@@ -512,7 +513,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
 
         if (msgInfo != null) {
-          prepareAliasForReplyIfNeed(aliases);
+          prepareAliasForReplyIfNeeded(aliases);
         } else if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           showFirstMatchedAliasWithPrvKey(aliases);
         }
@@ -660,7 +661,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   public void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event) {
   }
 
-  public void onMessageEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
+  public void onMsgEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
     String emailMassageHint = null;
     if (messageEncryptionType != null) {
       switch (messageEncryptionType) {
@@ -711,34 +712,34 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
 
-        if (hasExternalStorageUris(extraActionInfo.getAttachments())) {
+        if (hasExternalStorageUris(extraActionInfo.getAtts())) {
           boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
               Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
           if (isPermissionGranted) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO);
           } else {
-            addAttachments();
+            addAtts();
           }
         } else {
-          addAttachments();
+          addAtts();
         }
       } else {
         this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
         this.msgInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
 
         if (msgInfo != null && msgInfo.getLocalFolder() != null) {
-          this.folderType = FoldersManager.getFolderTypeForImapFolder(msgInfo.getLocalFolder());
+          this.folderType = FoldersManager.getFolderType(msgInfo.getLocalFolder());
         }
 
-        if (this.serviceInfo != null && this.serviceInfo.getAttachments() != null) {
-          atts.addAll(this.serviceInfo.getAttachments());
+        if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {
+          atts.addAll(this.serviceInfo.getAtts());
         }
       }
     }
   }
 
-  private void initDraftCacheDirectory() {
+  private void initDraftCacheDir() {
     draftCacheDir = new File(getContext().getCacheDir(), Constants.DRAFT_CACHE_DIR);
 
     if (!draftCacheDir.exists()) {
@@ -748,28 +749,28 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private void addAttachments() {
+  private void addAtts() {
     String sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
 
-    for (AttachmentInfo attachmentInfo : extraActionInfo.getAttachments()) {
-      if (hasAbilityToAddAttachment(attachmentInfo)) {
-        File draftAttachment = new File(draftCacheDir, attachmentInfo.getName());
+    for (AttachmentInfo attachmentInfo : extraActionInfo.getAtts()) {
+      if (hasAbilityToAddAtt(attachmentInfo)) {
+        File draftAtt = new File(draftCacheDir, attachmentInfo.getName());
 
         try {
           InputStream inputStream = getContext().getContentResolver().openInputStream(attachmentInfo.getUri());
 
           if (inputStream != null) {
-            FileUtils.copyInputStreamToFile(inputStream, draftAttachment);
-            Uri uri = FileProvider.getUriForFile(getContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAttachment);
+            FileUtils.copyInputStreamToFile(inputStream, draftAtt);
+            Uri uri = FileProvider.getUriForFile(getContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt);
             attachmentInfo.setUri(uri);
             atts.add(attachmentInfo);
           }
         } catch (IOException e) {
           e.printStackTrace();
 
-          if (!draftAttachment.delete()) {
-            Log.e(TAG, "Delete " + draftAttachment.getName() + " filed!");
+          if (!draftAtt.delete()) {
+            Log.e(TAG, "Delete " + draftAtt.getName() + " filed!");
           }
         }
       } else {
@@ -857,7 +858,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @param aliases A list of Gmail aliases.
    */
-  private void prepareAliasForReplyIfNeed(List<String> aliases) {
+  private void prepareAliasForReplyIfNeeded(List<String> aliases) {
     MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
     ArrayList<String> toAddresses;
@@ -873,10 +874,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         if (firstFoundedAlias == null) {
           for (String alias : aliases) {
             if (alias.equalsIgnoreCase(toAddress)) {
-              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
-                if (fromAddrs.hasPrvKey(alias)) {
-                  firstFoundedAlias = alias;
-                }
+              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED && fromAddrs.hasPrvKey(alias)) {
+                firstFoundedAlias = alias;
               } else {
                 firstFoundedAlias = alias;
               }
@@ -936,12 +935,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
    * contains information about an outgoing message.
    */
-  private OutgoingMessageInfo getOutgoingMessageInfo() {
+  private OutgoingMessageInfo getOutgoingMsgInfo() {
     OutgoingMessageInfo messageInfo = new OutgoingMessageInfo();
     /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
       //todo-denbond7 Need to think how forward HTML
     }*/
-    messageInfo.setMessage(editTextEmailMsg.getText().toString());
+    messageInfo.setMsg(editTextEmailMsg.getText().toString());
     messageInfo.setSubject(editTextEmailSubject.getText().toString());
 
     List<PgpContact> pgpContactsTo = new ArrayList<>();
@@ -949,7 +948,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
     if (msgInfo != null) {
-      messageInfo.setRawReplyMessage(msgInfo.getOriginalRawMessageWithoutAtts());
+      messageInfo.setRawReplyMsg(msgInfo.getOrigRawMsgWithoutAtts());
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -1119,7 +1118,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         getString(R.string.update), Snackbar.LENGTH_LONG, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-            if (GeneralUtil.isInternetConnectionAvailable(getContext())) {
+            if (GeneralUtil.isConnected(getContext())) {
               LoaderManager.getInstance(CreateMessageFragment.this).restartLoader(loaderId, null,
                   CreateMessageFragment.this);
             } else {
@@ -1171,7 +1170,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private void initViews(View view) {
     layoutContent = view.findViewById(R.id.scrollView);
-    layoutAtts = view.findViewById(R.id.layoutAttachments);
+    layoutAtts = view.findViewById(R.id.layoutAtts);
     layoutCc = view.findViewById(R.id.layoutCc);
     layoutBcc = view.findViewById(R.id.layoutBcc);
     progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
@@ -1217,13 +1216,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * screen.
    */
   private void updateViews() {
-    onMessageEncryptionTypeChange(listener.getMsgEncryptionType());
+    onMsgEncryptionTypeChange(listener.getMsgEncryptionType());
 
     if (extraActionInfo != null) {
       updateViewsFromExtraActionInfo();
     } else {
       if (msgInfo != null) {
-        updateViewsFromIncomingMessageInfo();
+        updateViewsFromIncomingMsgInfo();
         editTextRecipientsTo.chipifyAllUnterminatedTokens();
         editTextRecipientsCc.chipifyAllUnterminatedTokens();
         editTextEmailSubject.setText(prepareReplySubject(msgInfo.getSubject()));
@@ -1264,127 +1263,137 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditable());
     editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditable());
 
-    editTextEmailMsg.setFocusable(serviceInfo.isMessageEditable());
-    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMessageEditable());
+    editTextEmailMsg.setFocusable(serviceInfo.isMsgEditable());
+    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMsgEditable());
 
-    if (!TextUtils.isEmpty(serviceInfo.getSystemMessage())) {
-      editTextEmailMsg.setText(serviceInfo.getSystemMessage());
+    if (!TextUtils.isEmpty(serviceInfo.getSystemMsg())) {
+      editTextEmailMsg.setText(serviceInfo.getSystemMsg());
     }
   }
 
-  private void updateViewsFromIncomingMessageInfo() {
+  private void updateViewsFromIncomingMsgInfo() {
     switch (messageType) {
       case REPLY:
-        if (folderType != null) {
-          switch (folderType) {
-            case SENT:
-            case OUTBOX:
-              editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
-              break;
-
-            default:
-              editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-              break;
-          }
-        } else {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-        }
-
-        if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
-          editTextEmailMsg.requestFocus();
-        }
+        updateViewsIfReplyMode();
         break;
 
       case REPLY_ALL:
-        if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
-
-          if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
-            layoutCc.setVisibility(View.VISIBLE);
-            editTextRecipientsCc.append(prepareRecipients(msgInfo.getCc()));
-          }
-        } else {
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-
-          Set<String> ccSet = new HashSet<>();
-
-          if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
-            ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
-            toRecipients.remove(account.getEmail());
-
-            if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-              List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
-              for (AccountAliasesDao accountAliasesDao : accountAliases) {
-                toRecipients.remove(accountAliasesDao.getSendAsEmail());
-              }
-            }
-
-            ccSet.addAll(toRecipients);
-          }
-
-          if (msgInfo.getCc() != null) {
-            ArrayList<String> ccRecipients = msgInfo.getCc();
-            ccRecipients.remove(account.getEmail());
-            ccSet.addAll(ccRecipients);
-          }
-
-          if (!ccSet.isEmpty()) {
-            layoutCc.setVisibility(View.VISIBLE);
-            editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
-          }
-        }
-
-        if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
-          editTextEmailMsg.requestFocus();
-        }
+        updateViewsIfReplyAllMode();
         break;
 
       case FORWARD:
-        if (msgInfo.getAttachments() != null
-            && !msgInfo.getAttachments().isEmpty()) {
-          for (AttachmentInfo att : msgInfo.getAttachments()) {
-            if (hasAbilityToAddAttachment(att)) {
-              atts.add(att);
-            } else {
-              showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
-                  FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
-                  Snackbar.LENGTH_LONG);
-            }
-          }
-        }
-
-        editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
-            EmailUtil.genForwardedMessageDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
-            prepareRecipientsLineForForwarding(msgInfo.getTo())));
-
-        if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
-          editTextEmailMsg.append("Cc: ");
-          editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
-          editTextEmailMsg.append("\n\n");
-        }
-
-        if (msgInfo.getMessageParts() != null
-            && !msgInfo.getMessageParts().isEmpty()) {
-          for (MessagePart msgPart : msgInfo.getMessageParts()) {
-            if (msgPart != null) {
-              switch (msgPart.getMessagePartType()) {
-                case PGP_MESSAGE:
-                case TEXT:
-                  editTextEmailMsg.append("\n\n");
-                  editTextEmailMsg.append(msgPart.getValue());
-                  break;
-
-                case PGP_PUBLIC_KEY:
-                  //TODO-denbond7 add implementation of the public key view
-                  break;
-              }
-            }
-          }
-        } else if (!msgInfo.hasPlainText() && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
-          Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
-        }
-
+        updateViewsIfFwdMode();
         break;
+    }
+  }
+
+  private void updateViewsIfFwdMode() {
+    if (msgInfo.getAtts() != null
+        && !msgInfo.getAtts().isEmpty()) {
+      for (AttachmentInfo att : msgInfo.getAtts()) {
+        if (hasAbilityToAddAtt(att)) {
+          atts.add(att);
+        } else {
+          showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
+              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
+              Snackbar.LENGTH_LONG);
+        }
+      }
+    }
+
+    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
+        EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
+        prepareRecipientsLineForForwarding(msgInfo.getTo())));
+
+    if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+      editTextEmailMsg.append("Cc: ");
+      editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
+      editTextEmailMsg.append("\n\n");
+    }
+
+    if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
+      for (MessagePart msgPart : msgInfo.getMsgParts()) {
+        if (msgPart != null) {
+          switch (msgPart.getMsgPartType()) {
+            case PGP_MESSAGE:
+            case TEXT:
+              editTextEmailMsg.append("\n\n");
+              editTextEmailMsg.append(msgPart.getValue());
+              break;
+
+            case PGP_PUBLIC_KEY:
+              //TODO-denbond7 add implementation of the public key view
+              break;
+          }
+        }
+      }
+    } else if (!msgInfo.hasPlainText() && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
+      Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
+    }
+  }
+
+  private void updateViewsIfReplyAllMode() {
+    if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+
+      if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+        layoutCc.setVisibility(View.VISIBLE);
+        editTextRecipientsCc.append(prepareRecipients(msgInfo.getCc()));
+      }
+    } else {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+
+      Set<String> ccSet = new HashSet<>();
+
+      if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
+        ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
+        toRecipients.remove(account.getEmail());
+
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
+          List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
+          for (AccountAliasesDao accountAliasesDao : accountAliases) {
+            toRecipients.remove(accountAliasesDao.getSendAsEmail());
+          }
+        }
+
+        ccSet.addAll(toRecipients);
+      }
+
+      if (msgInfo.getCc() != null) {
+        ArrayList<String> ccRecipients = msgInfo.getCc();
+        ccRecipients.remove(account.getEmail());
+        ccSet.addAll(ccRecipients);
+      }
+
+      if (!ccSet.isEmpty()) {
+        layoutCc.setVisibility(View.VISIBLE);
+        editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
+      }
+    }
+
+    if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+      editTextEmailMsg.requestFocus();
+    }
+  }
+
+  private void updateViewsIfReplyMode() {
+    if (folderType != null) {
+      switch (folderType) {
+        case SENT:
+        case OUTBOX:
+          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+          break;
+
+        default:
+          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+          break;
+      }
+    } else {
+      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+    }
+
+    if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+      editTextEmailMsg.requestFocus();
     }
   }
 
@@ -1501,19 +1510,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Check is attachment can be added to the current message.
    *
-   * @param newAttachmentInfo The new attachment which will be maybe added.
+   * @param newAttInfo The new attachment which will be maybe added.
    * @return true if the attachment can be added, otherwise false.
    */
-  private boolean hasAbilityToAddAttachment(AttachmentInfo newAttachmentInfo) {
-    int totalSizeOfAttachments = 0;
+  private boolean hasAbilityToAddAtt(AttachmentInfo newAttInfo) {
+    int totalSizeOfAtts = 0;
 
     for (AttachmentInfo attachmentInfo : atts) {
-      totalSizeOfAttachments += attachmentInfo.getEncodedSize();
+      totalSizeOfAtts += attachmentInfo.getEncodedSize();
     }
 
-    totalSizeOfAttachments += newAttachmentInfo.getEncodedSize();
+    totalSizeOfAtts += newAttInfo.getEncodedSize();
 
-    return totalSizeOfAttachments < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
   }
 
 
@@ -1533,23 +1542,23 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Send a message.
    */
-  private void sendMessage() {
+  private void sendMsg() {
     dismissCurrentSnackBar();
 
     isContactsUpdateEnabled = false;
-    OutgoingMessageInfo msgInfo = getOutgoingMessageInfo();
+    OutgoingMessageInfo msgInfo = getOutgoingMsgInfo();
 
-    ArrayList<AttachmentInfo> forwardedAttachmentInfoList = getForwardedAttachments();
+    ArrayList<AttachmentInfo> forwardedAttInfoList = getForwardedAtts();
     ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.atts);
-    attachmentInfoList.removeAll(forwardedAttachmentInfoList);
+    attachmentInfoList.removeAll(forwardedAttInfoList);
 
-    msgInfo.setAttachments(attachmentInfoList);
-    msgInfo.setForwardedAttachments(forwardedAttachmentInfoList);
+    msgInfo.setAtts(attachmentInfoList);
+    msgInfo.setForwardedAtts(forwardedAttInfoList);
     msgInfo.setEncryptionType(listener.getMsgEncryptionType());
     msgInfo.setForwarded(messageType == MessageType.FORWARD);
 
-    if (onMessageSendListener != null) {
-      onMessageSendListener.sendMessage(msgInfo);
+    if (onMsgSendListener != null) {
+      onMsgSendListener.sendMsg(msgInfo);
     }
   }
 
@@ -1558,7 +1567,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @return The generated list.
    */
-  private ArrayList<AttachmentInfo> getForwardedAttachments() {
+  private ArrayList<AttachmentInfo> getForwardedAtts() {
     ArrayList<AttachmentInfo> atts = new ArrayList<>();
 
     for (AttachmentInfo att : this.atts) {
@@ -1573,31 +1582,31 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   /**
    * Show attachments which were added.
    */
-  private void showAttachments() {
+  private void showAtts() {
     if (!atts.isEmpty()) {
       layoutAtts.removeAllViews();
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
       for (final AttachmentInfo att : atts) {
         final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAtts, false);
 
-        TextView textViewAttachmentName = rootView.findViewById(R.id.textViewAttchmentName);
-        textViewAttachmentName.setText(att.getName());
+        TextView textViewAttName = rootView.findViewById(R.id.textViewAttchmentName);
+        textViewAttName.setText(att.getName());
 
-        TextView textViewAttachmentSize = rootView.findViewById(R.id.textViewAttachmentSize);
+        TextView textViewAttSize = rootView.findViewById(R.id.textViewAttSize);
         if (att.getEncodedSize() > 0) {
-          textViewAttachmentSize.setVisibility(View.VISIBLE);
-          textViewAttachmentSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
+          textViewAttSize.setVisibility(View.VISIBLE);
+          textViewAttSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
         } else {
-          textViewAttachmentSize.setVisibility(View.GONE);
+          textViewAttSize.setVisibility(View.GONE);
         }
 
-        View imageButtonDownloadAttachment = rootView.findViewById(R.id.imageButtonDownloadAttachment);
-        imageButtonDownloadAttachment.setVisibility(View.GONE);
+        View imageButtonDownloadAtt = rootView.findViewById(R.id.imageButtonDownloadAtt);
+        imageButtonDownloadAtt.setVisibility(View.GONE);
 
         if (!att.isProtected()) {
-          View imageButtonClearAttachment = rootView.findViewById(R.id.imageButtonClearAttachment);
-          imageButtonClearAttachment.setVisibility(View.VISIBLE);
-          imageButtonClearAttachment.setOnClickListener(new View.OnClickListener() {
+          View imageButtonClearAtt = rootView.findViewById(R.id.imageButtonClearAtt);
+          imageButtonClearAtt.setVisibility(View.VISIBLE);
+          imageButtonClearAtt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
               atts.remove(att);
@@ -1622,6 +1631,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * This interface will be used when we send a message.
    */
   public interface OnMessageSendListener {
-    void sendMessage(OutgoingMessageInfo outgoingMessageInfo);
+    void sendMsg(OutgoingMessageInfo outgoingMsgInfo);
   }
 }

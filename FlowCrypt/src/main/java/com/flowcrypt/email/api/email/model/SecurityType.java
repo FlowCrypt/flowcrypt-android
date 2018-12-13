@@ -54,8 +54,8 @@ public class SecurityType implements Parcelable {
     this.name = in.readString();
     this.defImapPort = in.readInt();
     this.defSmtpPort = in.readInt();
-    int tmpOption = in.readInt();
-    this.option = tmpOption == -1 ? null : Option.values()[tmpOption];
+    int tmpOpt = in.readInt();
+    this.option = tmpOpt == -1 ? null : Option.values()[tmpOpt];
   }
 
   /**
@@ -105,7 +105,7 @@ public class SecurityType implements Parcelable {
     return defSmtpPort;
   }
 
-  public Option getOption() {
+  public Option getOpt() {
     return option;
   }
 

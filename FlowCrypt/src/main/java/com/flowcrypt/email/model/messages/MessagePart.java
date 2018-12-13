@@ -36,8 +36,8 @@ public class MessagePart implements Parcelable {
   public static final Creator<MessagePart> CREATOR = new Creator<MessagePart>() {
     @Override
     public MessagePart createFromParcel(Parcel source) {
-      int tmpMessageBlockType = source.readInt();
-      MessagePartType partType = tmpMessageBlockType == -1 ? null : MessagePartType.values()[tmpMessageBlockType];
+      int tmpMsgBlockType = source.readInt();
+      MessagePartType partType = tmpMsgBlockType == -1 ? null : MessagePartType.values()[tmpMsgBlockType];
 
       if (partType != null) {
         return genMsgPartFromType(source, partType);
@@ -83,7 +83,7 @@ public class MessagePart implements Parcelable {
         '}';
   }
 
-  public MessagePartType getMessagePartType() {
+  public MessagePartType getMsgPartType() {
     return msgPartType;
   }
 

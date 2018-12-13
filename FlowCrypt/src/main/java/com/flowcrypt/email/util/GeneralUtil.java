@@ -15,9 +15,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -56,23 +54,31 @@ public class GeneralUtil {
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
-  @SuppressWarnings("deprecation")
-  public static boolean isInternetConnectionAvailable(Context context) {
-    ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+  public static boolean isConnected(Context context) {
+    final ConnectivityManager connectivityManager = (ConnectivityManager) context.
+        getSystemService(Context.CONNECTIVITY_SERVICE);
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-      return networkInfo != null && networkInfo.isConnectedOrConnecting();
-    } else {
-      Network network = connManager.getActiveNetwork();
-      if (network != null) {
-        NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
-        return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-      }
+    if (connectivityManager == null) {
+      return false;
     }
 
-    return false;
+    Network network = connectivityManager.getActiveNetwork();
+
+    if (network == null) {
+      return false;
+    }
+
+    NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+
+    if (capabilities == null) {
+      return false;
+    } else {
+      //Indicates that this network should be able to reach the internet.
+      boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+      //Indicates that Internet connectivity on this network was successfully detected.
+      boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+      return hasInternet && isValidated;
+    }
   }
 
   /**
@@ -255,7 +261,7 @@ public class GeneralUtil {
    * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
    * @return A generated name.
    */
-  public static String generateNameForIdlingResources(Class<?> aClass) {
+  public static String genIdlingResourcesName(Class<?> aClass) {
     return aClass.getClass() + "-" + UUID.randomUUID();
   }
 

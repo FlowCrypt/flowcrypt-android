@@ -123,7 +123,7 @@ public class EmailUtil {
    * {@link JavaEmailConstants#FOLDER_ATTRIBUTE_NO_SELECT}, false otherwise.
    * @throws MessagingException
    */
-  public static boolean containsNoSelectAttribute(IMAPFolder folder) throws MessagingException {
+  public static boolean containsNoSelectAttr(IMAPFolder folder) throws MessagingException {
     return Arrays.asList(folder.getAttributes()).contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT);
   }
 
@@ -148,7 +148,7 @@ public class EmailUtil {
    * @param uri The file {@link Uri}
    * @return Generated {@link AttachmentInfo}.
    */
-  public static AttachmentInfo getAttachmentInfoFromUri(Context context, Uri uri) {
+  public static AttachmentInfo getAttInfoFromUri(Context context, Uri uri) {
     if (context != null && uri != null) {
       AttachmentInfo attInfo = new AttachmentInfo();
       attInfo.setUri(uri);
@@ -178,7 +178,7 @@ public class EmailUtil {
    * @return A generated {@link AttachmentInfo}.
    */
   @Nullable
-  public static AttachmentInfo genAttachmentInfoFromPubKey(PgpKey pubKey) {
+  public static AttachmentInfo genAttInfoFromPubKey(PgpKey pubKey) {
     if (pubKey != null) {
       String fileName = "0x" + pubKey.getLongid().toUpperCase() + ".asc";
       String pubKeyValue = pubKey.armor();
@@ -215,7 +215,7 @@ public class EmailUtil {
     MimeBodyPart part = new MimeBodyPart();
     DataSource dataSource = new ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN);
     part.setDataHandler(new DataHandler(dataSource));
-    part.setFileName(SecurityUtils.genNameForPrivateKey(account.getEmail()));
+    part.setFileName(SecurityUtils.genPrivateKeyName(account.getEmail()));
     return part;
   }
 
@@ -230,8 +230,8 @@ public class EmailUtil {
    * @throws Exception will occur when generate this message.
    */
   @NonNull
-  public static Message generateMessageWithAllPrivateKeys(Context context, AccountDao account,
-                                                          Session session, Js js) throws Exception {
+  public static Message genMsgWithAllPrivateKeys(Context context, AccountDao account,
+                                                 Session session, Js js) throws Exception {
     String keys = SecurityUtils.genPrivateKeysBackup(context, js, account, true);
 
     Multipart multipart = new MimeMultipart();
@@ -241,7 +241,7 @@ public class EmailUtil {
     attsPart.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(attsPart);
 
-    Message msg = generateMessageWithBackupTemplate(context, account, session);
+    Message msg = genMsgWithBackupTemplate(context, account, session);
     msg.setContent(multipart);
     return msg;
   }
@@ -256,14 +256,14 @@ public class EmailUtil {
    * @throws Exception will occur when generate this message.
    */
   @NonNull
-  public static Message genMessageWithPrivateKeys(Context context, AccountDao account, Session session,
-                                                  MimeBodyPart mimeBodyPartPrivateKey) throws Exception {
+  public static Message genMsgWithPrivateKeys(Context context, AccountDao account, Session session,
+                                              MimeBodyPart mimeBodyPartPrivateKey) throws Exception {
     Multipart multipart = new MimeMultipart();
     multipart.addBodyPart(getBodyPartWithBackupText(context));
     mimeBodyPartPrivateKey.setContentID(EmailUtil.generateContentId());
     multipart.addBodyPart(mimeBodyPartPrivateKey);
 
-    Message msg = generateMessageWithBackupTemplate(context, account, session);
+    Message msg = genMsgWithBackupTemplate(context, account, session);
     msg.setContent(multipart);
     return msg;
   }
@@ -349,7 +349,7 @@ public class EmailUtil {
 
       InputStream stream = new ByteArrayInputStream(Base64.decode(message.getRaw(), Base64.URL_SAFE));
       MimeMessage msg = new MimeMessage(session, stream);
-      String backup = getKeyFromMimeMessage(msg);
+      String backup = getKeyFromMimeMsg(msg);
 
       if (TextUtils.isEmpty(backup)) {
         continue;
@@ -377,7 +377,7 @@ public class EmailUtil {
    * @throws MessagingException
    * @throws IOException
    */
-  public static String getKeyFromMimeMessage(Message msg) throws MessagingException, IOException {
+  public static String getKeyFromMimeMsg(Message msg) throws MessagingException, IOException {
     if (msg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
       Multipart multipart = (Multipart) msg.getContent();
       int partsCount = multipart.getCount();
@@ -442,7 +442,7 @@ public class EmailUtil {
    * @return A generated formatted date string.
    */
   @NonNull
-  public static String genForwardedMessageDate(Date date) {
+  public static String genForwardedMsgDate(Date date) {
     if (date == null) {
       return "";
     }
@@ -563,7 +563,7 @@ public class EmailUtil {
    * @return A list of messages which already exist in the local database.
    * @throws MessagingException for other failures.
    */
-  public static Message[] getUpdatedMessages(IMAPFolder folder, int loadedMsgsCount, int newMsgsCount)
+  public static Message[] getUpdatedMsgs(IMAPFolder folder, int loadedMsgsCount, int newMsgsCount)
       throws MessagingException {
     int end = folder.getMessageCount() - newMsgsCount;
     int start = end - loadedMsgsCount + 1;
@@ -596,7 +596,7 @@ public class EmailUtil {
    * @return A list of messages which already exist in the local database.
    * @throws MessagingException for other failures.
    */
-  public static Message[] getUpdatedMessagesByUID(IMAPFolder folder, long first, long end)
+  public static Message[] getUpdatedMsgsByUID(IMAPFolder folder, long first, long end)
       throws MessagingException {
     if (end <= first) {
       return new Message[]{};
@@ -621,7 +621,7 @@ public class EmailUtil {
    * @return New messages from a server which not exist in a local database.
    * @throws MessagingException for other failures.
    */
-  public static Message[] fetchMessagesInfo(IMAPFolder folder, Message[] msgs) throws MessagingException {
+  public static Message[] fetchMsgs(IMAPFolder folder, Message[] msgs) throws MessagingException {
     if (msgs.length > 0) {
       FetchProfile fetchProfile = new FetchProfile();
       fetchProfile.add(FetchProfile.Item.ENVELOPE);
@@ -644,7 +644,7 @@ public class EmailUtil {
    */
   @SuppressWarnings("unchecked")
   @NonNull
-  public static LongSparseArray<Boolean> getMessagesEncryptionState(IMAPFolder folder, List<Long> uidList)
+  public static LongSparseArray<Boolean> getMsgsEncryptionStates(IMAPFolder folder, List<Long> uidList)
       throws MessagingException {
     if (CollectionUtils.isEmpty(uidList)) {
       return new LongSparseArray<>();
@@ -686,8 +686,8 @@ public class EmailUtil {
             if (uid != null && uid.uid != 0) {
               BODY body = fetchResponse.getItem(BODY.class);
               if (body != null && body.getByteArrayInputStream() != null) {
-                String rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
-                booleanLongSparseArray.put(uid.uid, rawMessage.contains("-----BEGIN PGP MESSAGE-----"));
+                String rawMsg = ASCIIUtility.toString(body.getByteArrayInputStream());
+                booleanLongSparseArray.put(uid.uid, rawMsg.contains("-----BEGIN PGP MESSAGE-----"));
               }
             }
           }
@@ -708,7 +708,7 @@ public class EmailUtil {
    * @return A generated {@link SearchTerm}.
    */
   @NonNull
-  public static SearchTerm genEncryptedMessagesSearchTerm(AccountDao account) {
+  public static SearchTerm genEncryptedMsgsSearchTerm(AccountDao account) {
     if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
       return new GmailRawSearchTerm(
           "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg");
@@ -726,16 +726,16 @@ public class EmailUtil {
    * @param pubKeys The public keys which will be used to generate an encrypted part.
    * @return The generated raw MIME message.
    */
-  public static String genRawMessageWithoutAttachments(OutgoingMessageInfo info, Js js, String[] pubKeys) {
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) {
     String msgText = null;
 
     switch (info.getEncryptionType()) {
       case ENCRYPTED:
-        msgText = js.crypto_message_encrypt(pubKeys, info.getMessage());
+        msgText = js.crypto_message_encrypt(pubKeys, info.getMsg());
         break;
 
       case STANDARD:
-        msgText = info.getMessage();
+        msgText = info.getMsg();
         break;
     }
 
@@ -746,7 +746,7 @@ public class EmailUtil {
         info.getFromPgpContact(),
         info.getSubject(),
         null,
-        js.mime_decode(info.getRawReplyMessage()));
+        js.mime_decode(info.getRawReplyMsg()));
   }
 
   /**
@@ -824,8 +824,8 @@ public class EmailUtil {
    * @return An array which contains information about the encryption state of the given messages.
    * @throws MessagingException
    */
-  public static LongSparseArray<Boolean> getMessagesEncryptionInfo(boolean onlyEncrypted, IMAPFolder folder,
-                                                                   Message[] newMsgs) throws MessagingException {
+  public static LongSparseArray<Boolean> getMsgsEncryptionInfo(boolean onlyEncrypted, IMAPFolder folder,
+                                                               Message[] newMsgs) throws MessagingException {
     LongSparseArray<Boolean> array = new LongSparseArray<>();
     if (onlyEncrypted) {
       for (Message msg : newMsgs) {
@@ -838,7 +838,7 @@ public class EmailUtil {
         uidList.add(folder.getUID(msg));
       }
 
-      array = EmailUtil.getMessagesEncryptionState(folder, uidList);
+      array = EmailUtil.getMsgsEncryptionStates(folder, uidList);
     }
     return array;
   }
@@ -852,7 +852,7 @@ public class EmailUtil {
   }
 
   @NonNull
-  private static Message generateMessageWithBackupTemplate(Context context, AccountDao account, Session session)
+  private static Message genMsgWithBackupTemplate(Context context, AccountDao account, Session session)
       throws MessagingException {
     Message msg = new MimeMessage(session);
 

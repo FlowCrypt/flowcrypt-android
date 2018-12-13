@@ -6,7 +6,9 @@
 package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.content.ContentValues;
+import android.content.OperationApplicationException;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -75,47 +77,7 @@ public class LoadContactsSyncTask extends BaseSyncTask {
           fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase());
           imapFolder.fetch(msgs, fetchProfile);
 
-          ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
-          for (Message msg : msgs) {
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.TO)));
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.CC)));
-            emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.BCC)));
-          }
-
-          ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-          List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener.getContext());
-
-          Set<String> contactsInDatabase = new HashSet<>();
-          Set<String> contactsWhichWillBeUpdated = new HashSet<>();
-          Set<String> contactsWhichWillBeCreated = new HashSet<>();
-          Map<String, String> emailNamePairsMap = new HashMap<>();
-
-          ArrayList<EmailAndNamePair> newCandidates = new ArrayList<>();
-          ArrayList<EmailAndNamePair> updateCandidates = new ArrayList<>();
-
-          for (PgpContact pgpContact : availablePgpContacts) {
-            contactsInDatabase.add(pgpContact.getEmail().toLowerCase());
-            emailNamePairsMap.put(pgpContact.getEmail().toLowerCase(), pgpContact.getName());
-          }
-
-          for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
-            if (contactsInDatabase.contains(emailAndNamePair.getEmail())) {
-              if (TextUtils.isEmpty(emailNamePairsMap.get(emailAndNamePair.getEmail()))) {
-                if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.getEmail())) {
-                  contactsWhichWillBeUpdated.add(emailAndNamePair.getEmail());
-                  updateCandidates.add(emailAndNamePair);
-                }
-              }
-            } else {
-              if (!contactsWhichWillBeCreated.contains(emailAndNamePair.getEmail())) {
-                contactsWhichWillBeCreated.add(emailAndNamePair.getEmail());
-                newCandidates.add(emailAndNamePair);
-              }
-            }
-          }
-
-          contactsDaoSource.updatePgpContacts(listener.getContext(), updateCandidates);
-          contactsDaoSource.addRows(listener.getContext(), newCandidates);
+          updateContacts(listener, msgs);
 
           ContentValues contentValues = new ContentValues();
           contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
@@ -126,6 +88,51 @@ public class LoadContactsSyncTask extends BaseSyncTask {
         imapFolder.close(false);
       }
     }
+  }
+
+  private void updateContacts(SyncListener listener, Message[] msgs)
+      throws RemoteException, OperationApplicationException {
+    ArrayList<EmailAndNamePair> emailAndNamePairs = new ArrayList<>();
+    for (Message msg : msgs) {
+      emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.TO)));
+      emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.CC)));
+      emailAndNamePairs.addAll(Arrays.asList(parseRecipients(msg, Message.RecipientType.BCC)));
+    }
+
+    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+    List<PgpContact> availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener.getContext());
+
+    Set<String> contactsInDatabase = new HashSet<>();
+    Set<String> contactsWhichWillBeUpdated = new HashSet<>();
+    Set<String> contactsWhichWillBeCreated = new HashSet<>();
+    Map<String, String> emailNamePairsMap = new HashMap<>();
+
+    ArrayList<EmailAndNamePair> newCandidates = new ArrayList<>();
+    ArrayList<EmailAndNamePair> updateCandidates = new ArrayList<>();
+
+    for (PgpContact pgpContact : availablePgpContacts) {
+      contactsInDatabase.add(pgpContact.getEmail().toLowerCase());
+      emailNamePairsMap.put(pgpContact.getEmail().toLowerCase(), pgpContact.getName());
+    }
+
+    for (EmailAndNamePair emailAndNamePair : emailAndNamePairs) {
+      if (contactsInDatabase.contains(emailAndNamePair.getEmail())) {
+        if (TextUtils.isEmpty(emailNamePairsMap.get(emailAndNamePair.getEmail()))) {
+          if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.getEmail())) {
+            contactsWhichWillBeUpdated.add(emailAndNamePair.getEmail());
+            updateCandidates.add(emailAndNamePair);
+          }
+        }
+      } else {
+        if (!contactsWhichWillBeCreated.contains(emailAndNamePair.getEmail())) {
+          contactsWhichWillBeCreated.add(emailAndNamePair.getEmail());
+          newCandidates.add(emailAndNamePair);
+        }
+      }
+    }
+
+    contactsDaoSource.updatePgpContacts(listener.getContext(), updateCandidates);
+    contactsDaoSource.addRows(listener.getContext(), newCandidates);
   }
 
   /**

@@ -50,7 +50,7 @@
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintEnd_toStartOf="@+id/layoutForwardButton"
+        app:layout_constraintEnd_toStartOf="@+id/layoutFwdButton"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/layoutReplyButton"
         app:layout_constraintTop_toTopOf="parent">
@@ -81,7 +81,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutForwardButton"
+        android:id="@+id/layoutFwdButton"
         android:layout_width="0dp"
         android:layout_height="@dimen/layout_height_action_button"
         android:background="?android:attr/selectableItemBackground"
@@ -92,19 +92,19 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/imageViewForward"
+            android:id="@+id/imageViewFwd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/reply"
-            app:layout_constraintBottom_toTopOf="@+id/textViewForward"
-            app:layout_constraintEnd_toEndOf="@+id/textViewForward"
-            app:layout_constraintStart_toStartOf="@+id/textViewForward"
+            app:layout_constraintBottom_toTopOf="@+id/textViewFwd"
+            app:layout_constraintEnd_toEndOf="@+id/textViewFwd"
+            app:layout_constraintStart_toStartOf="@+id/textViewFwd"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             app:srcCompat="@mipmap/ic_forward_green" />
 
         <TextView
-            android:id="@+id/textViewForward"
+            android:id="@+id/textViewFwd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -112,6 +112,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewForward" />
+            app:layout_constraintTop_toBottomOf="@+id/imageViewFwd" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

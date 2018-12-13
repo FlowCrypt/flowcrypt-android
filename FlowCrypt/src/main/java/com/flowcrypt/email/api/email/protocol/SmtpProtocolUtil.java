@@ -45,7 +45,7 @@ public class SmtpProtocolUtil {
    * @throws GoogleAuthException
    */
   @NonNull
-  public static Transport prepareTransportForSmtp(Context context, Session session, AccountDao account) throws
+  public static Transport prepareSmtpTransport(Context context, Session session, AccountDao account) throws
       MessagingException, IOException, GoogleAuthException {
     Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
 
@@ -60,20 +60,20 @@ public class SmtpProtocolUtil {
           break;
 
         default:
-          AuthCredentials authCredentials = account.getAuthCredentials();
-          if (authCredentials != null) {
+          AuthCredentials authCreds = account.getAuthCreds();
+          if (authCreds != null) {
             String userName;
             String password;
 
-            if (authCredentials.hasCustomSignInForSmtp()) {
-              userName = authCredentials.getSmtpSigInUsername();
-              password = authCredentials.getSmtpSignInPassword();
+            if (authCreds.hasCustomSignInForSmtp()) {
+              userName = authCreds.getSmtpSigInUsername();
+              password = authCreds.getSmtpSignInPassword();
             } else {
-              userName = authCredentials.getUsername();
-              password = authCredentials.getPassword();
+              userName = authCreds.getUsername();
+              password = authCreds.getPassword();
             }
 
-            transport.connect(authCredentials.getSmtpServer(), authCredentials.getSmtpPort(), userName, password);
+            transport.connect(authCreds.getSmtpServer(), authCreds.getSmtpPort(), userName, password);
           } else throw new NullPointerException("The AuthCredentials can't be a null!");
           break;
       }

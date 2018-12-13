@@ -101,7 +101,7 @@ public class SecurityUtils {
    * @param email The user email.
    * @return A generated name for a new file.
    */
-  public static String genNameForPrivateKey(String email) {
+  public static String genPrivateKeyName(String email) {
     String sanitizedEmail = email.replaceAll("[^a-z0-9]", "");
     return "flowcrypt-backup-" + sanitizedEmail + ".key";
   }

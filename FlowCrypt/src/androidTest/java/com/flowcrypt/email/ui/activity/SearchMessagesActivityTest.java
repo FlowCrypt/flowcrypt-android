@@ -82,7 +82,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((SearchMessagesActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMessages());
+        .getMsgsCountingIdlingResource());
   }
 
   @After
@@ -106,9 +106,9 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   }
 
   @Test
-  public void testOpenSomeMessage() {
+  public void testOpenSomeMsg() {
     testShowNotEmptyList();
-    testRunMessageDetailsActivity(0);
+    testRunMsgDetailsActivity(0);
   }
 
   @Test

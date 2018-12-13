@@ -108,7 +108,7 @@ public class FoldersManager {
    * @param localFolder Some {@link javax.mail.Folder}.
    * @return {@link FolderType}.
    */
-  public static FolderType getFolderTypeForImapFolder(LocalFolder localFolder) {
+  public static FolderType getFolderType(LocalFolder localFolder) {
     FolderType[] folderTypes = FolderType.values();
 
     if (localFolder != null) {
@@ -195,7 +195,7 @@ public class FoldersManager {
    */
   public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
     if (imapFolder != null
-        && !EmailUtil.containsNoSelectAttribute(imapFolder)
+        && !EmailUtil.containsNoSelectAttr(imapFolder)
         && !TextUtils.isEmpty(imapFolder.getFullName())
         && !folders.containsKey(imapFolder.getFullName())) {
       this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
@@ -284,7 +284,7 @@ public class FoldersManager {
   }
 
   private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
-    FolderType folderType = getFolderTypeForImapFolder(generateFolder(imapFolder, null));
+    FolderType folderType = getFolderType(generateFolder(imapFolder, null));
     if (folderType == null) {
       return imapFolder.getFullName();
     } else {
@@ -293,7 +293,7 @@ public class FoldersManager {
   }
 
   private String prepareFolderKey(LocalFolder localFolder) {
-    FolderType folderType = getFolderTypeForImapFolder(localFolder);
+    FolderType folderType = getFolderType(localFolder);
     if (folderType == null) {
       return localFolder.getFullName();
     } else {

@@ -20,6 +20,6 @@ import java.io.IOException;
 
 public class ApiException extends IOException {
   public ApiException(ApiError apiError) {
-    super("API error: code = " + apiError.getCode() + ", message = " + apiError.getMessage());
+    super("API error: code = " + apiError.getCode() + ", message = " + apiError.getMsg());
   }
 }

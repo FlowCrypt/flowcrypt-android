@@ -95,7 +95,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    *               {@link AttachmentInfo} object.
    * @return A generated {@link AttachmentInfo}.
    */
-  public static AttachmentInfo getAttachmentInfo(Cursor cursor) {
+  public static AttachmentInfo getAttInfo(Cursor cursor) {
     AttachmentInfo attInfo = new AttachmentInfo();
     attInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
     attInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
@@ -209,7 +209,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param uid   The message UID.
    * @return A  list of {@link AttachmentInfo} objects.
    */
-  public ArrayList<AttachmentInfo> getAttachmentInfoList(Context context, String email, String label, long uid) {
+  public ArrayList<AttachmentInfo> getAttInfoList(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
     String selection = COL_EMAIL + " = ?" + " AND " + COL_FOLDER + " = ?" + " AND " + COL_UID + " = ?";
     String[] selectionArgs = new String[]{email, label, String.valueOf(uid)};
@@ -219,7 +219,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        attInfoList.add(getAttachmentInfo(cursor));
+        attInfoList.add(getAttInfo(cursor));
       }
       cursor.close();
     }
@@ -235,7 +235,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param label   The folder label.
    * @return The number of deleted rows.
    */
-  public int deleteCachedAttachmentInfo(Context context, String email, String label) {
+  public int deleteCachedAttInfo(Context context, String email, String label) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
       String where = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?";
@@ -252,7 +252,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param uid     The message UID.
    * @return The number of rows deleted.
    */
-  public int deleteAttachments(Context context, String email, String label, long uid) {
+  public int deleteAtts(Context context, String email, String label, long uid) {
     ContentResolver contentResolver = context.getContentResolver();
     if (email != null && label != null && contentResolver != null) {
       String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";

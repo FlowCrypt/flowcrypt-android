@@ -61,7 +61,7 @@ public class InitialConfirmModel extends BaseRequestModel {
     dest.writeString(this.signedMsg);
   }
 
-  public void setSignedMessage(String signedMessage) {
-    this.signedMsg = signedMessage;
+  public void setSignedMsg(String signedMsg) {
+    this.signedMsg = signedMsg;
   }
 }

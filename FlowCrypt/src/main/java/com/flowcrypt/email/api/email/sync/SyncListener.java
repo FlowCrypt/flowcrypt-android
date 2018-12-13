@@ -45,7 +45,7 @@ public interface SyncListener {
    *                    {@link android.os.Messenger}.
    * @param isSent      true if the message was sent, false otherwise.
    */
-  void onMessageWithBackupToKeyOwnerSent(AccountDao account, String ownerKey, int requestCode, boolean isSent);
+  void onMsgWithBackupToKeyOwnerSent(AccountDao account, String ownerKey, int requestCode, boolean isSent);
 
   /**
    * This method called when the private keys found.
@@ -67,7 +67,7 @@ public interface SyncListener {
    *                    {@link android.os.Messenger}.
    * @param isSent      true if the message was sent, false otherwise.
    */
-  void onMessageSent(AccountDao account, String ownerKey, int requestCode, boolean isSent);
+  void onMsgSent(AccountDao account, String ownerKey, int requestCode, boolean isSent);
 
   /**
    * This method called when a new messages received from the some folder.
@@ -80,8 +80,8 @@ public interface SyncListener {
    * @param requestCode The unique request code for the reply to
    *                    {@link android.os.Messenger}.
    */
-  void onMessagesMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder, Message[] msgs,
-                       String ownerKey, int requestCode);
+  void onMsgsMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder, Message[] msgs,
+                   String ownerKey, int requestCode);
 
   /**
    * This method called when a new messages received from the some folder.
@@ -94,8 +94,8 @@ public interface SyncListener {
    * @param requestCode The unique request code for the reply to
    *                    {@link android.os.Messenger}.
    */
-  void onMessageMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                      Message msg, String ownerKey, int requestCode);
+  void onMsgMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
+                  Message msg, String ownerKey, int requestCode);
 
   /**
    * This method called when a new messages received from the some folder.
@@ -111,9 +111,8 @@ public interface SyncListener {
    * @param requestCode       The unique request code for the reply to
    *                          {@link android.os.Messenger}.
    */
-  void onMessageDetailsReceived(AccountDao account, LocalFolder localFolder,
-                                IMAPFolder remoteFolder, long uid, Message msg, String rawMsgWithoutAtts,
-                                String ownerKey, int requestCode);
+  void onMsgDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
+                            Message msg, String rawMsgWithoutAtts, String ownerKey, int requestCode);
 
   /**
    * This method called when a new messages received from the some folder.
@@ -127,8 +126,8 @@ public interface SyncListener {
    * @param requestCode  The unique request code for the reply to
    *                     {@link android.os.Messenger}.
    */
-  void onMessagesReceived(AccountDao account, LocalFolder localFolder,
-                          IMAPFolder remoteFolder, Message[] msgs, String ownerKey, int requestCode);
+  void onMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message[] msgs,
+                      String ownerKey, int requestCode);
 
   /**
    * This method called when received information about new messages in some folder.
@@ -141,9 +140,8 @@ public interface SyncListener {
    * @param ownerKey             The name of the reply to {@link android.os.Messenger}.
    * @param requestCode          The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onNewMessagesReceived(AccountDao account, LocalFolder localFolder,
-                             IMAPFolder remoteFolder, Message[] newMsgs,
-                             LongSparseArray<Boolean> msgsEncryptionStates, String ownerKey, int requestCode);
+  void onNewMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message[] newMsgs,
+                         LongSparseArray<Boolean> msgsEncryptionStates, String ownerKey, int requestCode);
 
   /**
    * This method called when a new messages received from the some folder.
@@ -157,8 +155,8 @@ public interface SyncListener {
    * @param requestCode  The unique request code for the reply to
    *                     {@link android.os.Messenger}.
    */
-  void onSearchMessagesReceived(AccountDao account, LocalFolder localFolder,
-                                IMAPFolder remoteFolder, Message[] msgs, String ownerKey, int requestCode);
+  void onSearchMsgsReceived(AccountDao account, LocalFolder localFolder,
+                            IMAPFolder remoteFolder, Message[] msgs, String ownerKey, int requestCode);
 
   /**
    * This method called when received information about messages which already exist in the local database.
@@ -171,9 +169,9 @@ public interface SyncListener {
    * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
    * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onRefreshMessagesReceived(AccountDao account, LocalFolder localFolder,
-                                 IMAPFolder remoteFolder, Message[] newMsgs, Message[] updateMsgs,
-                                 String ownerKey, int requestCode);
+  void onRefreshMsgsReceived(AccountDao account, LocalFolder localFolder,
+                             IMAPFolder remoteFolder, Message[] newMsgs, Message[] updateMsgs,
+                             String ownerKey, int requestCode);
 
   /**
    * This method called when new folders list received.
@@ -216,8 +214,8 @@ public interface SyncListener {
    * @param ownerKey     The name of the reply to {@link android.os.Messenger}.
    * @param requestCode  The unique request code for the reply to {@link android.os.Messenger}.
    */
-  void onMessageChanged(AccountDao account, LocalFolder localFolder,
-                        IMAPFolder remoteFolder, Message msg, String ownerKey, int requestCode);
+  void onMsgChanged(AccountDao account, LocalFolder localFolder,
+                    IMAPFolder remoteFolder, Message msg, String ownerKey, int requestCode);
 
   /**
    * This method called when {@link CheckIsLoadedMessagesEncryptedSyncTask} was completed.

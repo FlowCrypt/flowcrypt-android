@@ -13,8 +13,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -58,11 +58,11 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.js = JsForUiManager.getInstance(this).getJs();
+    this.js = UiJsManager.getInstance(this).getJs();
 
-    if (isSyncEnabled() && GeneralUtil.isInternetConnectionAvailable(this)) {
+    if (isSyncEnabled() && GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-      countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
+      countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
           (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
     } else {
       hideImportButton();
@@ -109,20 +109,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             if (!keys.isEmpty()) {
               this.privateKeys = keys;
 
-              SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
-
-              Iterator<String> iterator = privateKeys.iterator();
-              Set<String> uniqueKeysLongIds = new HashSet<>();
-
-              while (iterator.hasNext()) {
-                String privateKey = iterator.next();
-                PgpKey pgpKey = js.crypto_key_read(privateKey);
-                uniqueKeysLongIds.add(pgpKey.getLongid());
-                if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
-                  iterator.remove();
-                  uniqueKeysLongIds.remove(pgpKey.getLongid());
-                }
-              }
+              Set<String> uniqueKeysLongIds = filterKeys();
 
               if (this.privateKeys.isEmpty()) {
                 hideImportButton();
@@ -249,5 +236,23 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     marginLayoutParams.topMargin = getResources().getDimensionPixelSize(R.dimen
         .margin_top_first_button);
     buttonLoadFromFile.requestLayout();
+  }
+
+  private Set<String> filterKeys() {
+    SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
+
+    Iterator<String> iterator = privateKeys.iterator();
+    Set<String> uniqueKeysLongIds = new HashSet<>();
+
+    while (iterator.hasNext()) {
+      String privateKey = iterator.next();
+      PgpKey pgpKey = js.crypto_key_read(privateKey);
+      uniqueKeysLongIds.add(pgpKey.getLongid());
+      if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
+        iterator.remove();
+        uniqueKeysLongIds.remove(pgpKey.getLongid());
+      }
+    }
+    return uniqueKeysLongIds;
   }
 }

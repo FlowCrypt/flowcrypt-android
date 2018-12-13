@@ -20,6 +20,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -89,7 +90,7 @@ public class CreateMessageActivityTest extends BaseTest {
   private static final String EMAIL_SUBJECT = "Test subject";
   private static final String EMAIL_MESSAGE = "Test message";
 
-  private static File[] attachments;
+  private static File[] atts;
 
   private ActivityTestRule activityTestRule = new ActivityTestRule<>(CreateMessageActivity.class, false, false);
 
@@ -97,16 +98,17 @@ public class CreateMessageActivityTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
+      .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
 
   @BeforeClass
   public static void setUp() {
-    createFilesForAttachments();
+    createFilesForAtts();
   }
 
   @AfterClass
   public static void cleanResources() {
-    TestGeneralUtil.deleteFiles(Arrays.asList(attachments));
+    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
   public Intent getIntent() {
@@ -114,7 +116,7 @@ public class CreateMessageActivityTest extends BaseTest {
         MessageEncryptionType.ENCRYPTED);
   }
 
-  public MessageEncryptionType getDefaultMessageEncryptionType() {
+  public MessageEncryptionType getDefaultMsgEncryptionType() {
     return MessageEncryptionType.ENCRYPTED;
   }
 
@@ -147,7 +149,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testEmptyEmailMessage() {
+  public void testEmptyEmailMsg() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed())).perform(typeText
@@ -162,10 +164,10 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testUsingStandardMessageEncryptionType() {
+  public void testUsingStandardMsgEncryptionType() {
     activityTestRule.launchActivity(getIntent());
 
-    if (getDefaultMessageEncryptionType() != MessageEncryptionType.STANDARD) {
+    if (getDefaultMsgEncryptionType() != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_standard_email)).check(matches(isDisplayed())).perform(click());
     }
@@ -174,10 +176,10 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testUsingSecureMessageEncryptionType() {
+  public void testUsingSecureMsgEncryptionType() {
     activityTestRule.launchActivity(getIntent());
 
-    if (getDefaultMessageEncryptionType() != MessageEncryptionType.ENCRYPTED) {
+    if (getDefaultMsgEncryptionType() != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getTargetContext());
       onView(withText(R.string.switch_to_secure_email)).check(matches(isDisplayed())).perform(click());
     }
@@ -188,7 +190,7 @@ public class CreateMessageActivityTest extends BaseTest {
   public void testSwitchBetweenEncryptionTypes() {
     activityTestRule.launchActivity(getIntent());
 
-    MessageEncryptionType messageEncryptionType = getDefaultMessageEncryptionType();
+    MessageEncryptionType messageEncryptionType = getDefaultMsgEncryptionType();
 
     if (messageEncryptionType == MessageEncryptionType.ENCRYPTED) {
       checkIsDisplayedEncryptedAttributes();
@@ -216,7 +218,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testIsScreenOfComposeNewMessage() {
+  public void testIsScreenOfComposeNewMsg() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withText(R.string.compose)).check(matches(isDisplayed()));
@@ -250,7 +252,7 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testShowMessageAboutUpdateRecipientInformation() {
+  public void testShowMsgAboutUpdateRecipientInformation() {
     activityTestRule.launchActivity(getIntent());
 
     onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed())).perform(typeText(EMAIL_SUBJECT),
@@ -267,27 +269,27 @@ public class CreateMessageActivityTest extends BaseTest {
   }
 
   @Test
-  public void testAddingAttachments() {
+  public void testAddingAtts() {
     Intents.init();
     activityTestRule.launchActivity(getIntent());
 
-    for (File attachment : attachments) {
-      addAttachment(attachment);
+    for (File att : atts) {
+      addAtt(att);
     }
     Intents.release();
   }
 
   @Test
-  public void testDeletingAttachments() {
+  public void testDeletingAtts() {
     Intents.init();
     activityTestRule.launchActivity(getIntent());
 
-    for (File attachment : attachments) {
-      addAttachment(attachment);
+    for (File att : atts) {
+      addAtt(att);
     }
 
-    for (File attachment : attachments) {
-      deleteAttachment(attachment);
+    for (File att : atts) {
+      deleteAtt(att);
     }
 
     onView(withId(R.id.textViewAttchmentName)).check(doesNotExist());
@@ -353,10 +355,10 @@ public class CreateMessageActivityTest extends BaseTest {
     Intents.release();
   }
 
-  private static void createFilesForAttachments() {
-    attachments = new File[ATTACHMENTS_COUNT];
-    for (int i = 0; i < attachments.length; i++) {
-      attachments[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
+  private static void createFilesForAtts() {
+    atts = new File[ATTACHMENTS_COUNT];
+    for (int i = 0; i < atts.length; i++) {
+      atts[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
     }
   }
 
@@ -380,17 +382,17 @@ public class CreateMessageActivityTest extends BaseTest {
         false, null, null, null, 0);
   }
 
-  private void deleteAttachment(File attachment) {
-    onView(allOf(withId(R.id.imageButtonClearAttachment),
-        hasSibling(withChild(withText(attachment.getName())))))
+  private void deleteAtt(File att) {
+    onView(allOf(withId(R.id.imageButtonClearAtt),
+        hasSibling(withChild(withText(att.getName())))))
         .check(matches(isDisplayed()))
         .perform(click());
-    onView(withText(attachment.getName())).check(doesNotExist());
+    onView(withText(att.getName())).check(doesNotExist());
   }
 
-  private void addAttachment(File attachment) {
+  private void addAtt(File att) {
     Intent resultData = new Intent();
-    resultData.setData(Uri.fromFile(attachment));
+    resultData.setData(Uri.fromFile(att));
     intending(allOf(hasAction(Intent.ACTION_CHOOSER),
         hasExtra(is(Intent.EXTRA_INTENT),
             allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT),
@@ -399,7 +401,7 @@ public class CreateMessageActivityTest extends BaseTest {
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.menuActionAttachFile)).check(matches(isDisplayed())).perform(click());
-    onView(withText(attachment.getName())).check(matches(isDisplayed()));
+    onView(withText(att.getName())).check(matches(isDisplayed()));
   }
 
   private void checkIsDisplayedStandardAttributes() {

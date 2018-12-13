@@ -11,7 +11,7 @@ import android.content.Context;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -73,7 +73,7 @@ public class FlowCryptApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
-    JsForUiManager.init(this);
+    UiJsManager.init(this);
     NotificationChannelManager.registerNotificationChannels(this);
 
     intiLeakCanary();
