@@ -417,4 +417,5 @@ icelanders prefer real sauna</font>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
     <string name="no_key_available">No key available for your email account</string>
+    <string name="not_saved_file_already_exists">Not saved because the file already exists</string>
 </resources>

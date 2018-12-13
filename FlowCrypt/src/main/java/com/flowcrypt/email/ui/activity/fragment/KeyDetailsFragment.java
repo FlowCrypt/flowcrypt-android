@@ -27,9 +27,11 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -163,9 +165,28 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
       Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
     } catch (Exception e) {
       e.printStackTrace();
-      ExceptionUtil.handleError(e);
       String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
-      UIUtil.showInfoSnackbar(getView(), error);
+
+      if (e instanceof IllegalStateException) {
+        if (e.getMessage() != null && e.getMessage().startsWith("Already exists")) {
+          error = getString(R.string.not_saved_file_already_exists);
+          showInfoSnackbar(getView(), error, Snackbar.LENGTH_LONG);
+
+          try {
+            DocumentsContract.deleteDocument(getContext().getContentResolver(), data.getData());
+          } catch (FileNotFoundException fileNotFound) {
+            fileNotFound.printStackTrace();
+          }
+
+          return;
+        } else {
+          ExceptionUtil.handleError(e);
+        }
+      } else {
+        ExceptionUtil.handleError(e);
+      }
+
+      showInfoSnackbar(getView(), error);
     }
   }
 
