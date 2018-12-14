@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import javax.crypto.BadPaddingException;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.FolderClosedException;
 import javax.mail.MessagingException;
@@ -99,6 +100,19 @@ public class ExceptionUtil {
 
     if (e instanceof GoogleAuthException) {
       if ("InternalError".equalsIgnoreCase(e.getMessage())) {
+        return false;
+      }
+    }
+
+    if (e instanceof RuntimeException) {
+      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equalsIgnoreCase(e.getMessage())) {
+        return false;
+      }
+    }
+
+    if (e instanceof BadPaddingException) {
+      String errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+      if (errorMsg.equalsIgnoreCase(e.getMessage())) {
         return false;
       }
     }
