@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.security.keystore.KeyGenParameterSpec;
@@ -14,9 +15,11 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -230,20 +233,34 @@ public class KeyStoreCryptoManager {
    * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
    *                      base64.
    * @return <tt>String</tt> Return a decrypted data.
-   * @throws InvalidKeyException
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
+   * @throws GeneralSecurityException
    */
-  public String decryptWithRSA(String encryptedData) throws InvalidKeyException, NoSuchPaddingException,
-      NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
+  public String decryptWithRSA(String encryptedData) throws GeneralSecurityException {
     if (!TextUtils.isEmpty(encryptedData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
       cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
       byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-      byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+      byte[] decryptedBytes;
+      try {
+        decryptedBytes = cipher.doFinal(encryptedBytes);
+      } catch (BadPaddingException | RuntimeException e) {
+        e.printStackTrace();
+
+        String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
+        if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
+          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+          throw new RuntimeException("Storage was corrupted", e);
+        }
+
+        String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+        if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
+          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+          throw new GeneralSecurityException("Storage was corrupted", e);
+        }
+
+        throw e;
+      }
 
       return new String(decryptedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;

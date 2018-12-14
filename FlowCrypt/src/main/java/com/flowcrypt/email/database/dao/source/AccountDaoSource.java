@@ -22,15 +22,9 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import androidx.annotation.Nullable;
 
@@ -139,16 +133,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @param manager The manager which does encryption/decryption work.
    * @param cursor  The cursor from which to get the data.
    * @return Generated {@link AuthCredentials} object.
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws IllegalBlockSizeException
-   * @throws BadPaddingException
-   * @throws InvalidKeyException
-   * @throws IOException
+   * @throws GeneralSecurityException
    */
   public static AuthCredentials getCurrentAuthCredsFromCursor(KeyStoreCryptoManager manager,
-                                                              Cursor cursor) throws NoSuchPaddingException,
-      NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
+                                                              Cursor cursor) throws GeneralSecurityException {
 
     SecurityType.Option imapOpt = SecurityType.Option.NONE;
 
