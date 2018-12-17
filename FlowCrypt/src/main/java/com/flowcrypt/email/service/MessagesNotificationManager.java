@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.service;
 
-import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -17,13 +16,14 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.service.notification.StatusBarNotification;
+import android.text.Spannable;
 
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -39,7 +39,6 @@ import com.google.android.gms.common.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
@@ -63,17 +62,17 @@ public class MessagesNotificationManager extends CustomNotificationManager {
   /**
    * Show a {@link Notification} of an incoming message.
    *
-   * @param context                   Interface to global information about an application environment.
-   * @param accountDao                An {@link AccountDao} object which contains information about an email account.
-   * @param localFolder               A local implementation of a remote folder.
-   * @param generalMessageDetailsList A list of models which consists information about some messages.
-   * @param uidListOfUnseenMessages   A list of UID of unseen messages.
-   * @param isSilent                  true if we don't need sound and vibration for Android 7.0 and below.
+   * @param context               Interface to global information about an application environment.
+   * @param account               An {@link AccountDao} object which contains information about an email account.
+   * @param localFolder           A local implementation of a remote folder.
+   * @param generalMsgDetailsList A list of models which consists information about some messages.
+   * @param uidListOfUnseenMsgs   A list of UID of unseen messages.
+   * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
-  public void notify(Context context, AccountDao accountDao, Folder localFolder, List<GeneralMessageDetails>
-      generalMessageDetailsList, List<Integer> uidListOfUnseenMessages, boolean isSilent) {
+  public void notify(Context context, AccountDao account, LocalFolder localFolder, List<GeneralMessageDetails>
+      generalMsgDetailsList, List<Integer> uidListOfUnseenMsgs, boolean isSilent) {
 
-    if (accountDao == null || generalMessageDetailsList == null || generalMessageDetailsList.isEmpty()) {
+    if (account == null || generalMsgDetailsList == null || generalMsgDetailsList.isEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
       return;
     }
@@ -87,10 +86,9 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      notifyWithGroupSupport(context, accountDao, localFolder, generalMessageDetailsList);
+      notifyWithGroupSupport(context, account, localFolder, generalMsgDetailsList);
     } else {
-      notifyWithSingleNotification(context, accountDao, localFolder, generalMessageDetailsList,
-          uidListOfUnseenMessages, isSilent);
+      notifyWithSingleNotification(context, account, localFolder, generalMsgDetailsList, uidListOfUnseenMsgs, isSilent);
     }
   }
 
@@ -115,22 +113,22 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     }
   }
 
-  public void cancelAll(Context context, AccountDao accountDao) {
+  public void cancelAll(Context context, AccountDao account) {
     notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES);
 
-    FoldersManager foldersManager = FoldersManager.fromDatabase(context, accountDao.getEmail());
-    Folder folder = foldersManager.findInboxFolder();
+    FoldersManager foldersManager = FoldersManager.fromDatabase(context, account.getEmail());
+    LocalFolder localFolder = foldersManager.findInboxFolder();
 
-    if (folder != null) {
-      new MessageDaoSource().setOldStatusForLocalMessages(context,
-          accountDao.getEmail(), folder.getFolderAlias());
+    if (localFolder != null) {
+      new MessageDaoSource().setOldStatus(context,
+          account.getEmail(), localFolder.getFolderAlias());
     }
   }
 
-  private void notifyWithSingleNotification(Context context, AccountDao accountDao,
-                                            Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList,
-                                            List<Integer> uidOfUnseenMessages, boolean isSilent) {
-    boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+  private void notifyWithSingleNotification(Context context, AccountDao account,
+                                            LocalFolder folder, List<GeneralMessageDetails> details,
+                                            List<Integer> uidOfUnseenMsgs, boolean isSilent) {
+    boolean onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
         .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
@@ -143,85 +141,81 @@ public class MessagesNotificationManager extends CustomNotificationManager {
             .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
             .setAutoCancel(true)
             .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-            .setSubText(accountDao.getEmail());
+            .setSubText(account.getEmail());
 
     if (!isSilent) {
       builder.setDefaults(Notification.DEFAULT_ALL);
     }
 
-    if (uidOfUnseenMessages.size() > 1) {
-      builder.setNumber(uidOfUnseenMessages.size());
+    if (uidOfUnseenMsgs.size() > 1) {
+      builder.setNumber(uidOfUnseenMsgs.size());
     }
 
-    if (generalMessageDetailsList.size() > 1) {
-      boolean isAllowedNotificationsExist = false;
+    if (details.size() > 1) {
+      boolean hasAllowedNotifications = false;
 
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-      for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-        if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+      for (GeneralMessageDetails generalMsgDetails : details) {
+        if (onlyEncrypted && !generalMsgDetails.isEncrypted()) {
           continue;
         }
 
-        isAllowedNotificationsExist = true;
-        inboxStyle.addLine(formatInboxStyleLine(context,
-            EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()),
-            generalMessageDetails.getSubject()));
+        hasAllowedNotifications = true;
+        inboxStyle.addLine(formatInboxStyleLine(context, EmailUtil.getFirstAddressString(generalMsgDetails
+            .getFrom()), generalMsgDetails.getSubject()));
       }
 
-      if (!isAllowedNotificationsExist) {
+      if (!hasAllowedNotifications) {
         return;
       }
 
       builder.setStyle(inboxStyle)
           .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
-          .setContentIntent(getInboxPendingIntent(context, accountDao))
-          .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
-              localFolder, generalMessageDetailsList))
+          .setContentIntent(getInboxPendingIntent(context, account))
+          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account,
+              folder, details))
           .setContentTitle(context.getString(R.string.incoming_message,
-              generalMessageDetailsList.size()));
+              details.size()));
     } else {
-      GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
+      GeneralMessageDetails msgDetails = details.get(0);
 
-      if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+      if (onlyEncrypted && !msgDetails.isEncrypted()) {
         return;
       }
 
-      builder.setContentText(formatText(generalMessageDetails.getSubject(),
-          ContextCompat.getColor(context, android.R.color.black)))
-          .setContentIntent(getMessageDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
-              localFolder, generalMessageDetails))
-          .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
-          .setStyle(new NotificationCompat.BigTextStyle().bigText(
-              formatText(generalMessageDetails.getSubject(),
-                  ContextCompat.getColor(context, android.R.color.black))))
-          .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, accountDao,
-              localFolder, generalMessageDetailsList))
-          .setColor(ContextCompat.getColor(context, generalMessageDetails.isEncrypted()
-              ? R.color.colorPrimary : R.color.red))
+      NotificationCompat.Style style = new NotificationCompat.BigTextStyle().bigText(formatText(msgDetails.getSubject(),
+          ContextCompat.getColor(context, android.R.color.black)));
+
+      Spannable contentText = formatText(msgDetails.getSubject(),
+          ContextCompat.getColor(context, android.R.color.black));
+
+      builder.setContentText(contentText)
+          .setContentIntent(getMsgDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, folder, msgDetails))
+          .setContentTitle(EmailUtil.getFirstAddressString(msgDetails.getFrom()))
+          .setStyle(style)
+          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, details))
+          .setColor(ContextCompat.getColor(context, msgDetails.isEncrypted() ? R.color.colorPrimary : R.color.red))
           .setSmallIcon(R.drawable.ic_email_encrypted);
     }
 
     notificationManagerCompat.notify(NOTIFICATIONS_GROUP_MESSAGES, builder.build());
   }
 
-  @TargetApi(Build.VERSION_CODES.M)
-  private void notifyWithGroupSupport(Context context, AccountDao accountDao,
-                                      Folder localFolder, List<GeneralMessageDetails> generalMessageDetailsList) {
+  private void notifyWithGroupSupport(Context context, AccountDao account,
+                                      LocalFolder localFolder, List<GeneralMessageDetails> detailsList) {
 
-    boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+    boolean isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
         .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-    NotificationManager notificationManager =
-        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-    if (notificationManager != null) {
-      prepareAndShowMessageGroup(context, accountDao, localFolder, notificationManager,
-          generalMessageDetailsList);
+    if (manager != null) {
+      prepareAndShowMsgGroup(context, account, localFolder, manager, detailsList);
     }
 
-    for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-      if (isEncryptedMessagesOnly && !generalMessageDetails.isEncrypted()) {
+    for (GeneralMessageDetails generalMsgDetails : detailsList) {
+      if (isEncryptedModeEnabled && !generalMsgDetails.isEncrypted()) {
         continue;
       }
 
@@ -231,50 +225,49 @@ public class MessagesNotificationManager extends CustomNotificationManager {
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
           .setCategory(NotificationCompat.CATEGORY_EMAIL)
           .setSmallIcon(R.drawable.ic_email_encrypted)
-          .setLargeIcon(generateLargeIcon(context, generalMessageDetails))
-          .setColor(ContextCompat.getColor(context, generalMessageDetails.isEncrypted()
+          .setLargeIcon(generateLargeIcon(context, generalMsgDetails))
+          .setColor(ContextCompat.getColor(context, generalMsgDetails.isEncrypted()
               ? R.color.colorPrimary : R.color.red))
-          .setDeleteIntent(generateDeletePendingIntent(context,
-              generalMessageDetails.getUid(), accountDao, localFolder, generalMessageDetails))
+          .setDeleteIntent(genDeletePendingIntent(context,
+              generalMsgDetails.getUid(), account, localFolder, generalMsgDetails))
           .setAutoCancel(true)
-          .setContentTitle(EmailUtil.getFirstAddressString(generalMessageDetails.getFrom()))
-          .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMessageDetails.getSubject()))
+          .setContentTitle(EmailUtil.getFirstAddressString(generalMsgDetails.getFrom()))
+          .setStyle(new NotificationCompat.BigTextStyle().bigText(generalMsgDetails.getSubject()))
           .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-          .setContentText(generalMessageDetails.getSubject())
-          .setContentIntent(getMessageDetailsPendingIntent(context, generalMessageDetails.getUid(),
-              localFolder, generalMessageDetails))
+          .setContentText(generalMsgDetails.getSubject())
+          .setContentIntent(getMsgDetailsPendingIntent(context, generalMsgDetails.getUid(),
+              localFolder, generalMsgDetails))
           .setDefaults(Notification.DEFAULT_ALL)
-          .setSubText(accountDao.getEmail());
+          .setSubText(account.getEmail());
 
-      notificationManagerCompat.notify(generalMessageDetails.getUid(), builder.build());
+      notificationManagerCompat.notify(generalMsgDetails.getUid(), builder.build());
     }
   }
 
-  @RequiresApi(api = Build.VERSION_CODES.M)
-  private void prepareAndShowMessageGroup(Context context, AccountDao accountDao, Folder localFolder,
-                                          NotificationManager notificationManager,
-                                          List<GeneralMessageDetails> generalMessageDetailsList) {
-    boolean isEncryptedMessagesOnly = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+  private void prepareAndShowMsgGroup(Context context, AccountDao account, LocalFolder localFolder,
+                                      NotificationManager notificationManager,
+                                      List<GeneralMessageDetails> generalMsgDetailsList) {
+    boolean isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
         .equals(SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, ""));
 
-    if (isEncryptedMessagesOnly) {
-      boolean isEncryptedMessageFound = false;
-      for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-        if (generalMessageDetails.isEncrypted()) {
-          isEncryptedMessageFound = true;
+    if (isEncryptedModeEnabled) {
+      boolean isEncryptedMsgFound = false;
+      for (GeneralMessageDetails generalMsgDetails : generalMsgDetailsList) {
+        if (generalMsgDetails.isEncrypted()) {
+          isEncryptedMsgFound = true;
           break;
         }
       }
 
-      if (!isEncryptedMessageFound) {
+      if (!isEncryptedMsgFound) {
         return;
       }
     }
 
     int groupResourceId = R.drawable.ic_email_encrypted;
 
-    if (generalMessageDetailsList.size() > 1) {
+    if (generalMsgDetailsList.size() > 1) {
       groupResourceId = R.drawable.ic_email_multiply_encrypted;
     } else {
       for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
@@ -288,46 +281,46 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     NotificationCompat.Builder groupBuilder =
         new NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
             .setSmallIcon(groupResourceId)
-            .setContentInfo(accountDao.getEmail())
+            .setContentInfo(account.getEmail())
             .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
-            .setSubText(accountDao.getEmail())
+            .setSubText(account.getEmail())
             .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-            .setContentIntent(getInboxPendingIntent(context, accountDao))
-            .setDeleteIntent(generateDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
-                accountDao, localFolder, generalMessageDetailsList))
+            .setContentIntent(getInboxPendingIntent(context, account))
+            .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
+                account, localFolder, generalMsgDetailsList))
             .setDefaults(Notification.DEFAULT_ALL)
             .setAutoCancel(true)
             .setGroupSummary(true);
     notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build());
   }
 
-  private PendingIntent getInboxPendingIntent(Context context, AccountDao accountDao) {
+  private PendingIntent getInboxPendingIntent(Context context, AccountDao account) {
     Intent inboxIntent = new Intent(context, EmailManagerActivity.class);
     inboxIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
     return PendingIntent.getActivity(context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT);
   }
 
-  private PendingIntent generateDeletePendingIntent(Context context, int requestCode,
-                                                    AccountDao accountDao, Folder localFolder,
-                                                    GeneralMessageDetails generalMessageDetails) {
-    List<GeneralMessageDetails> generalMessageDetailsList = new ArrayList<>();
-    generalMessageDetailsList.add(generalMessageDetails);
-    return generateDeletePendingIntent(context, requestCode, accountDao, localFolder, generalMessageDetailsList);
+  private PendingIntent genDeletePendingIntent(Context context, int requestCode,
+                                               AccountDao account, LocalFolder localFolder,
+                                               GeneralMessageDetails generalMsgDetails) {
+    List<GeneralMessageDetails> generalMsgDetailsList = new ArrayList<>();
+    generalMsgDetailsList.add(generalMsgDetails);
+    return genDeletePendingIntent(context, requestCode, account, localFolder, generalMsgDetailsList);
   }
 
-  private PendingIntent generateDeletePendingIntent(Context context, int requestCode,
-                                                    AccountDao accountDao, Folder localFolder,
-                                                    List<GeneralMessageDetails> generalMessageDetailsList) {
+  private PendingIntent genDeletePendingIntent(Context context, int requestCode,
+                                               AccountDao account, LocalFolder localFolder,
+                                               List<GeneralMessageDetails> generalMsgDetailsList) {
     Intent intent = new Intent(context, MarkMessagesAsOldBroadcastReceiver.class);
     intent.setAction(MarkMessagesAsOldBroadcastReceiver.ACTION_MARK_MESSAGES_AS_OLD);
-    intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, accountDao.getEmail());
+    intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, account.getEmail());
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.getFolderAlias());
 
-    if (!CollectionUtils.isEmpty(generalMessageDetailsList)) {
+    if (!CollectionUtils.isEmpty(generalMsgDetailsList)) {
       ArrayList<String> uidList = new ArrayList<>();
-      for (GeneralMessageDetails generalMessageDetails : generalMessageDetailsList) {
-        uidList.add(String.valueOf(generalMessageDetails.getUid()));
+      for (GeneralMessageDetails generalMsgDetails : generalMsgDetailsList) {
+        uidList.add(String.valueOf(generalMsgDetails.getUid()));
       }
       intent.putStringArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST, uidList);
     }
@@ -335,13 +328,13 @@ public class MessagesNotificationManager extends CustomNotificationManager {
     return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
   }
 
-  private Bitmap generateLargeIcon(Context context, GeneralMessageDetails generalMessageDetails) {
+  private Bitmap generateLargeIcon(Context context, GeneralMessageDetails generalMsgDetails) {
     return BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
   }
 
-  private PendingIntent getMessageDetailsPendingIntent(Context context, int requestCode, Folder folder,
-                                                       GeneralMessageDetails generalMessageDetails) {
-    Intent intent = MessageDetailsActivity.getIntent(context, folder, generalMessageDetails);
+  private PendingIntent getMsgDetailsPendingIntent(Context context, int requestCode, LocalFolder localFolder,
+                                                   GeneralMessageDetails generalMsgDetails) {
+    Intent intent = MessageDetailsActivity.getIntent(context, localFolder, generalMsgDetails);
 
     TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
     stackBuilder.addParentStack(MessageDetailsActivity.class);

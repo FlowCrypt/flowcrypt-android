@@ -32,21 +32,24 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Time: 13:06
  * E-mail: DenBond7@gmail.com
  */
-public class ApiHelper {
+public final class ApiHelper {
+  private static final int TIMEOUT = 10;
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
 
   private ApiHelper(Context context) {
     OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS);
+        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT, TimeUnit.SECONDS);
 
     okHttpClientBuilder.addInterceptor(new ApiVersionInterceptor());
 
-    if (GeneralUtil.isDebug()) {
-      if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false)) {
+    if (GeneralUtil.isDebugBuild()) {
+      boolean isWriteLogsEnabled = SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
+          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false);
+
+      if (isWriteLogsEnabled) {
         LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();
         loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.BODY);
         okHttpClientBuilder.addInterceptor(loggingInFileInterceptor);

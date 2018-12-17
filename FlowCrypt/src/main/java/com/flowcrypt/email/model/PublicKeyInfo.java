@@ -101,11 +101,11 @@ public class PublicKeyInfo implements Parcelable {
     return publicKey;
   }
 
-  public boolean isPgpContactExists() {
+  public boolean hasPgpContact() {
     return pgpContact != null;
   }
 
-  public boolean isPgpContactCanBeUpdated() {
+  public boolean isUpdateEnabled() {
     return pgpContact != null && (pgpContact.getLongid() == null || !pgpContact.getLongid().equals(longId));
   }
 }

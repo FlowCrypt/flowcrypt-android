@@ -7,6 +7,8 @@ package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 public class MimeMessage extends MeaningfulV8ObjectContainer {
 
@@ -18,7 +20,7 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
   }
 
   public String getText() {
-    return this.getAttributeAsString("text");
+    return getAttributeAsString("text");
   }
 
   public String getHtml() {
@@ -33,16 +35,16 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
     return this.v8object.getObject("headers");
   }
 
-  public String getStringHeader(String header_name) {
-    return this.getAttributeAsString(getHeaders(), header_name);
+  public String getStringHeader(String headerName) {
+    return this.getAttributeAsString(getHeaders(), headerName);
   }
 
   public long getTimeHeader(String name) {
     return js.time_to_utc_timestamp(getStringHeader(name));
   }
 
-  public MimeAddress[] getAddressHeader(String header_name) {
-    V8Array addresses = this.getAttributeAsArray(getHeaders(), header_name);
+  public MimeAddress[] getAddressHeader(String headerName) {
+    V8Array addresses = this.getAttributeAsArray(getHeaders(), headerName);
     MimeAddress[] results = new MimeAddress[addresses.length()];
     for (Integer i = 0; i < addresses.length(); i++) {
       results[i] = new MimeAddress(addresses.getObject(i));
@@ -50,13 +52,13 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
     return results;
   }
 
-  public Attachment[] getAttachments() {
-    V8Array js_attachments = this.v8object.getArray("attachments");
-    Attachment[] attachments = new Attachment[js_attachments.length()];
-    for (Integer i = 0; i < js_attachments.length(); i++) {
-      attachments[i] = new Attachment(js_attachments.getObject(i));
+  public Attachment[] getAtts() {
+    V8Array jsAtts = this.v8object.getArray("attachments");
+    Attachment[] atts = new Attachment[jsAtts.length()];
+    for (Integer i = 0; i < jsAtts.length(); i++) {
+      atts[i] = new Attachment(jsAtts.getObject(i));
     }
-    return attachments;
+    return atts;
   }
 
 }

@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity;
@@ -43,9 +43,9 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   public static final int REQUEST_CODE_BACKUP_WITH_OPTION = 100;
 
-  public static Intent newIntent(Context context, AccountDao accountDao) {
+  public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, ChangePassPhraseActivity.class);
-    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
+    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account);
     return intent;
   }
 
@@ -63,7 +63,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @Override
   public void onBackPressed() {
-    if (isBackEnable) {
+    if (isBackEnabled) {
       super.onBackPressed();
     } else {
       Toast.makeText(this, R.string.please_wait_while_pass_phrase_will_be_changed, Toast.LENGTH_SHORT).show();
@@ -109,7 +109,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
     textViewSuccessTitle.setText(R.string.done);
     textViewSuccessSubTitle.setText(R.string.pass_phrase_changed);
-    buttonSuccess.setText(R.string.back);
+    btnSuccess.setText(R.string.back);
   }
 
   @NonNull
@@ -117,16 +117,15 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_change_pass_phrase:
-        isBackEnable = false;
+        isBackEnabled = false;
         UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-        return new ChangePassPhraseAsyncTaskLoader(this, accountDao,
-            editTextKeyPassword.getText().toString());
+        return new ChangePassPhraseAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
 
       case R.id.loader_id_load_private_key_backups_from_email:
-        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, accountDao);
+        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       case R.id.loader_id_save_backup_to_inbox:
-        return new SaveBackupToInboxAsyncTaskLoader(this, accountDao);
+        return new SaveBackupToInboxAsyncTaskLoader(this, account);
 
       default:
         return new Loader<>(this);
@@ -144,17 +143,17 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
       case R.id.loader_id_change_pass_phrase:
       case R.id.loader_id_load_private_key_backups_from_email:
       case R.id.loader_id_save_backup_to_inbox:
-        isBackEnable = true;
+        isBackEnabled = true;
         break;
     }
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
-        JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
         restartJsService();
         LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         break;
@@ -169,23 +168,23 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         break;
 
       case R.id.loader_id_save_backup_to_inbox:
-        isBackEnable = true;
+        isBackEnabled = true;
         Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show();
         setResult(Activity.RESULT_OK);
         finish();
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
         break;
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
-        isBackEnable = true;
+        isBackEnabled = true;
         editTextKeyPasswordSecond.setText(null);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
         showInfoSnackbar(getRootView(), e.getMessage());
@@ -197,12 +196,12 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
     }
   }
 
   protected void runBackupKeysActivity() {
-    isBackEnable = true;
+    isBackEnabled = true;
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show();
     startActivityForResult(new Intent(this, BackupKeysActivity.class), REQUEST_CODE_BACKUP_WITH_OPTION);
   }

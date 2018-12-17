@@ -45,8 +45,7 @@ public abstract class BaseRequest<T> {
     if (apiName != that.apiName) {
       return false;
     }
-    return requestModel != null ? requestModel.equals(that.requestModel) : that.requestModel
-        == null;
+    return requestModel != null ? requestModel.equals(that.requestModel) : that.requestModel == null;
 
   }
 

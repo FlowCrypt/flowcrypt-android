@@ -15,9 +15,9 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsInBackgroundManager;
 import com.flowcrypt.email.js.JsListener;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.lang.ref.WeakReference;
@@ -134,9 +134,9 @@ public class JsBackgroundService extends BaseService implements JsListener {
   }
 
   @Override
-  public void onMessageDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMessageInfo) {
+  public void onMsgDecrypted(String ownerKey, int requestCode, IncomingMessageInfo incomingMsgInfo) {
     try {
-      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, incomingMessageInfo);
+      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, incomingMsgInfo);
     } catch (RemoteException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -212,48 +212,50 @@ public class JsBackgroundService extends BaseService implements JsListener {
    * service and other Android components.
    */
   private static class IncomingHandler extends Handler {
-    private final WeakReference<JsInBackgroundManager> jsInBackgroundManagerWeakReference;
-    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakReference;
+    private final WeakReference<JsInBackgroundManager> jsInBackgroundManagerWeakRef;
+    private final WeakReference<Map<String, Messenger>> replyToMessengersWeakRef;
 
-    IncomingHandler(JsInBackgroundManager jsInBackgroundManager, Map<String, Messenger>
-        replyToMessengersWeakReference) {
-      this.jsInBackgroundManagerWeakReference = new WeakReference<>(jsInBackgroundManager);
-      this.replyToMessengersWeakReference = new WeakReference<>(replyToMessengersWeakReference);
+    IncomingHandler(JsInBackgroundManager manager, Map<String, Messenger> replyToMessengersWeakRef) {
+      this.jsInBackgroundManagerWeakRef = new WeakReference<>(manager);
+      this.replyToMessengersWeakRef = new WeakReference<>(replyToMessengersWeakRef);
     }
 
     @Override
-    public void handleMessage(Message message) {
-      if (jsInBackgroundManagerWeakReference.get() != null) {
-        JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakReference.get();
+    public void handleMessage(Message msg) {
+      if (jsInBackgroundManagerWeakRef.get() != null) {
+        JsInBackgroundManager jsInBackgroundManager = jsInBackgroundManagerWeakRef.get();
         BaseService.Action action = null;
+        String ownerKey = null;
+        int requestCode = -1;
 
-        if (message.obj instanceof BaseService.Action) {
-          action = (BaseService.Action) message.obj;
+        if (msg.obj instanceof BaseService.Action) {
+          action = (BaseService.Action) msg.obj;
+          ownerKey = action.getOwnerKey();
+          requestCode = action.getRequestCode();
         }
 
-        switch (message.what) {
+        switch (msg.what) {
           case MESSAGE_ADD_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForAdd = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForAdd != null && action != null) {
-              replyToMessengersForAdd.put(action.getOwnerKey(), message.replyTo);
+              replyToMessengersForAdd.put(ownerKey, msg.replyTo);
             }
             break;
 
           case MESSAGE_REMOVE_REPLY_MESSENGER:
-            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakReference.get();
+            Map<String, Messenger> replyToMessengersForRemove = replyToMessengersWeakRef.get();
 
             if (replyToMessengersForRemove != null && action != null) {
-              replyToMessengersForRemove.remove(action.getOwnerKey());
+              replyToMessengersForRemove.remove(ownerKey);
             }
             break;
 
           case MESSAGE_DECRYPT_MESSAGE:
             if (jsInBackgroundManager != null && action != null) {
-              String rawMessage = (String) action.getObject();
+              String rawMsg = (String) action.getObject();
 
-              jsInBackgroundManager.decryptMessage(action.getOwnerKey(), action.getRequestCode(),
-                  rawMessage);
+              jsInBackgroundManager.decryptMsg(ownerKey, requestCode, rawMsg);
             }
             break;
 
@@ -264,7 +266,7 @@ public class JsBackgroundService extends BaseService implements JsListener {
             break;
 
           default:
-            super.handleMessage(message);
+            super.handleMessage(msg);
         }
       }
     }

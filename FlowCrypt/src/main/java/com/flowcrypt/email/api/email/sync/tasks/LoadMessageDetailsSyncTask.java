@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.iap.Argument;
@@ -38,41 +39,38 @@ import javax.mail.Store;
 
 public class LoadMessageDetailsSyncTask extends BaseSyncTask {
   private long uid;
-  private com.flowcrypt.email.api.email.Folder localFolder;
+  private LocalFolder localFolder;
 
   /**
    * The base constructor.
    *
    * @param ownerKey    The name of the reply to {@link Messenger}.
    * @param requestCode The unique request code for the reply to {@link Messenger}.
-   * @param folder      The local folder implementation.
+   * @param localFolder      The local localFolder implementation.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message).
    */
-  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder folder,
+  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, LocalFolder localFolder,
                                     long uid) {
     super(ownerKey, requestCode);
-    this.localFolder = folder;
+    this.localFolder = localFolder;
     this.uid = uid;
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-      Exception {
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
     imapFolder.open(Folder.READ_WRITE);
 
-    if (syncListener != null) {
-      String rawMessage = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-        public Object doCommand(IMAPProtocol imapProtocol)
-            throws ProtocolException {
-          String rawMessage = null;
+    if (listener != null) {
+      String rawMsg = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+        public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
+          String rawMsg = null;
 
           Argument args = new Argument();
           Argument list = new Argument();
           list.writeString("RFC822.SIZE");
           list.writeString("BODY[]<0.204800>");
           args.writeArgument(list);
-
 
           Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
           Response serverStatusResponse = responses[responses.length - 1];
@@ -86,7 +84,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
               FetchResponse fetchResponse = (FetchResponse) response;
               BODY body = fetchResponse.getItem(BODY.class);
               if (body != null && body.getByteArrayInputStream() != null) {
-                rawMessage = ASCIIUtility.toString(body.getByteArrayInputStream());
+                rawMsg = ASCIIUtility.toString(body.getByteArrayInputStream());
               }
             }
           }
@@ -94,7 +92,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
           imapProtocol.notifyResponseHandlers(responses);
           imapProtocol.handleResult(serverStatusResponse);
 
-          return rawMessage;
+          return rawMsg;
         }
       });
 
@@ -103,8 +101,7 @@ public class LoadMessageDetailsSyncTask extends BaseSyncTask {
         message.setFlag(Flags.Flag.SEEN, true);
       }
 
-      syncListener.onMessageDetailsReceived(accountDao, localFolder, imapFolder, uid, message, rawMessage,
-          ownerKey, requestCode);
+      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode);
     }
 
     imapFolder.close(false);

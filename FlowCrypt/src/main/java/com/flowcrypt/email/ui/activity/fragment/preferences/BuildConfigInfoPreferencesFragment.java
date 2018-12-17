@@ -27,7 +27,7 @@ import androidx.preference.PreferenceDialogFragmentCompat;
  */
 public class BuildConfigInfoPreferencesFragment extends PreferenceDialogFragmentCompat {
 
-  private String message;
+  private String msg;
 
   public static BuildConfigInfoPreferencesFragment newInstance(String key) {
     BuildConfigInfoPreferencesFragment fragment = new BuildConfigInfoPreferencesFragment();
@@ -55,13 +55,13 @@ public class BuildConfigInfoPreferencesFragment extends PreferenceDialogFragment
       }
     }
 
-    message = formatter.toString();
+    msg = formatter.toString();
   }
 
   @Override
   protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
     super.onPrepareDialogBuilder(builder);
-    builder.setMessage(message);
+    builder.setMessage(msg);
     builder.setNegativeButton(null, null);
   }
 

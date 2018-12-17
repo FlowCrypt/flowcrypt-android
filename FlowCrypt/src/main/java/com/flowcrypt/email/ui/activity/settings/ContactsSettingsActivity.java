@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.settings;
 
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
@@ -17,6 +18,7 @@ import com.flowcrypt.email.ui.activity.ImportPgpContactActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
@@ -34,13 +36,12 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ContactsSettingsActivity extends BaseSettingsActivity implements LoaderManager
-    .LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactButtonClickListener,
-    View.OnClickListener {
+public class ContactsSettingsActivity extends BaseSettingsActivity implements
+    LoaderManager.LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactListener, View.OnClickListener {
   private View progressBar;
-  private ListView listViewContacts;
+  private ListView listView;
   private View emptyView;
-  private ContactsListCursorAdapter contactsListCursorAdapter;
+  private ContactsListCursorAdapter adapter;
 
   @Override
   public int getContentViewResourceId() {
@@ -56,66 +57,65 @@ public class ContactsSettingsActivity extends BaseSettingsActivity implements Lo
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.progressBar = findViewById(R.id.progressBar);
-    this.listViewContacts = findViewById(R.id.listViewContacts);
+    this.listView = findViewById(R.id.listViewContacts);
     this.emptyView = findViewById(R.id.emptyView);
-    this.contactsListCursorAdapter = new
-        ContactsListCursorAdapter(this, null, false, this);
-    listViewContacts.setAdapter(contactsListCursorAdapter);
+    this.adapter = new ContactsListCursorAdapter(this, null, false, this);
+    listView.setAdapter(adapter);
 
     if (findViewById(R.id.floatActionButtonImportPublicKey) != null) {
       findViewById(R.id.floatActionButtonImportPublicKey).setOnClickListener(this);
     }
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
-        null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
   }
 
   @Override
+  @NonNull
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
 
-        return new CursorLoader(this, new ContactsDaoSource().
-            getBaseContentUri(), null, ContactsDaoSource.COL_HAS_PGP +
-            " = ?", new String[]{"1"}, null);
+        Uri uri = new ContactsDaoSource().getBaseContentUri();
+        String selection = ContactsDaoSource.COL_HAS_PGP + " = ?";
+        String[] selectionArgs = new String[]{"1"};
+
+        return new CursorLoader(this, uri, null, selection, selectionArgs, null);
 
       default:
-        return null;
+        return new Loader<>(this);
     }
   }
 
   @Override
-  public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+  public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
     switch (loader.getId()) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, listViewContacts);
+        UIUtil.exchangeViewVisibility(this, false, progressBar, listView);
 
         if (data != null && data.getCount() > 0) {
-          contactsListCursorAdapter.swapCursor(data);
-          UIUtil.exchangeViewVisibility(this, false, emptyView, listViewContacts);
+          adapter.swapCursor(data);
+          UIUtil.exchangeViewVisibility(this, false, emptyView, listView);
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView, listViewContacts);
+          UIUtil.exchangeViewVisibility(this, true, emptyView, listView);
         }
         break;
     }
   }
 
   @Override
-  public void onLoaderReset(Loader<Cursor> loader) {
+  public void onLoaderReset(@NonNull Loader<Cursor> loader) {
     switch (loader.getId()) {
       case R.id.loader_id_load_contacts_with_has_pgp_true:
-        contactsListCursorAdapter.swapCursor(null);
+        adapter.swapCursor(null);
         break;
     }
   }
 
   @Override
-  public void onDeleteContactButtonClick(String email) {
+  public void onClick(String email) {
     new ContactsDaoSource().deletePgpContact(this, email);
-    Toast.makeText(this, getString(R.string.the_contact_was_deleted, email), Toast
-        .LENGTH_SHORT).show();
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true,
-        null, this);
+    Toast.makeText(this, getString(R.string.the_contact_was_deleted, email), Toast.LENGTH_SHORT).show();
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this);
   }
 
   @Override

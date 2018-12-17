@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.util;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.ProcessedMime;
+import com.flowcrypt.email.js.core.Js;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,9 +23,8 @@ import java.util.Date;
  * E-mail: DenBond7@gmail.com
  */
 public class MessageUtil {
-  public static IncomingMessageInfo getIncomingMessageInfoWithOutBody(Js js, String rawMessage) {
-    IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
-    ProcessedMime processedMime = js.mime_process(rawMessage);
+  public static IncomingMessageInfo getIncomingMsgInfoWithoutBody(Js js, String rawMsg) {
+    ProcessedMime processedMime = js.mime_process(rawMsg);
     ArrayList<String> addressesFrom = new ArrayList<>();
     ArrayList<String> addressesTo = new ArrayList<>();
     ArrayList<String> addressesCc = new ArrayList<>();
@@ -42,18 +41,19 @@ public class MessageUtil {
       addressesCc.add(mimeAddress.getAddress());
     }
 
-    incomingMessageInfo.setFrom(addressesFrom);
-    incomingMessageInfo.setTo(addressesTo);
-    incomingMessageInfo.setCc(addressesCc);
-    incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
-    incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMessage);
-    incomingMessageInfo.setFolder(new Folder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false));
+    IncomingMessageInfo incomingMsgInfo = new IncomingMessageInfo();
+    incomingMsgInfo.setFrom(addressesFrom);
+    incomingMsgInfo.setTo(addressesTo);
+    incomingMsgInfo.setCc(addressesCc);
+    incomingMsgInfo.setSubject(processedMime.getStringHeader("subject"));
+    incomingMsgInfo.setOrigRawMsgWithoutAtts(rawMsg);
+    incomingMsgInfo.setLocalFolder(new LocalFolder("INBOX", "INBOX", 0, new String[]{"\\HasNoChildren"}, false));
 
     long timestamp = processedMime.getTimeHeader("date");
     if (timestamp != -1) {
-      incomingMessageInfo.setReceiveDate(new Date(timestamp));
+      incomingMsgInfo.setReceiveDate(new Date(timestamp));
     }
 
-    return incomingMessageInfo;
+    return incomingMsgInfo;
   }
 }

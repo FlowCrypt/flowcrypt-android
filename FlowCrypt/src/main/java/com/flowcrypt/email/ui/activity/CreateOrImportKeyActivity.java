@@ -35,16 +35,15 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
   private static final int REQUEST_CODE_IMPORT_ACTIVITY = 11;
   private static final int REQUEST_CODE_CREATE_KEY_ACTIVITY = 12;
-  private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
-      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
-          CreateOrImportKeyActivity.class);
-  private boolean isShowAnotherAccountButton = true;
-  private AccountDao accountDao;
+  private static final String KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED =
+      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED", CreateOrImportKeyActivity.class);
+  private boolean isShowAnotherAccountBtnEnabled = true;
+  private AccountDao account;
 
-  public static Intent newIntent(Context context, AccountDao accountDao, boolean isShowAnotherAccount) {
+  public static Intent newIntent(Context context, AccountDao account, boolean isShowAnotherAccountBtnEnabled) {
     Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
-    intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, accountDao);
-    intent.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, isShowAnotherAccount);
+    intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
+    intent.putExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, isShowAnotherAccountBtnEnabled);
     return intent;
   }
 
@@ -52,9 +51,9 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (getIntent() != null) {
-      this.isShowAnotherAccountButton = getIntent().getBooleanExtra
-          (CreateOrImportKeyActivity.KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-      this.accountDao = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
+      this.isShowAnotherAccountBtnEnabled = getIntent().getBooleanExtra
+          (CreateOrImportKeyActivity.KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true);
+      this.account = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
     }
 
     initViews();
@@ -84,24 +83,22 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonCreateNewKey:
-        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, accountDao),
-            REQUEST_CODE_CREATE_KEY_ACTIVITY);
+        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account), REQUEST_CODE_CREATE_KEY_ACTIVITY);
         break;
 
       case R.id.buttonImportMyKey:
         KeyImportModel keyImportModel = null;
-        if (isServiceBound) {
-          keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
+        if (isBound) {
+          keyImportModel = service.getKeyImportModel();
         }
 
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false,
-            getString(R.string.import_private_key), keyImportModel, true,
-            ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
+        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false, getString(R.string.import_private_key),
+            keyImportModel, true, ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
         break;
 
       case R.id.buttonSelectAnotherAccount:
         Intent intent = new Intent();
-        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, accountDao);
+        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
         setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent);
         finish();
         break;
@@ -141,7 +138,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
     }
 
     if (findViewById(R.id.buttonSelectAnotherAccount) != null) {
-      if (isShowAnotherAccountButton) {
+      if (isShowAnotherAccountBtnEnabled) {
         findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.VISIBLE);
         findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
       } else {
@@ -151,7 +148,7 @@ public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivi
 
     if (findViewById(R.id.buttonSkipSetup) != null) {
       View buttonSkipSetup = findViewById(R.id.buttonSkipSetup);
-      if (SecurityUtils.isBackupKeysExist(this)) {
+      if (SecurityUtils.hasBackup(this)) {
         buttonSkipSetup.setVisibility(View.VISIBLE);
         buttonSkipSetup.setOnClickListener(this);
       } else {

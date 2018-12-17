@@ -30,7 +30,7 @@ import java.util.List;
 public class SecurityStorageConnector implements StorageConnectorInterface {
 
   private LinkedList<PgpKeyInfo> pgpKeyInfoList;
-  private LinkedList<String> passphraseList;
+  private LinkedList<String> passphrases;
 
   public SecurityStorageConnector(Context context) {
     init(context);
@@ -80,7 +80,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
     for (int i = 0; i < pgpKeyInfoList.size(); i++) {
       PgpKeyInfo pgpKeyInfo = pgpKeyInfoList.get(i);
       if (longid.equals(pgpKeyInfo.getLongid())) {
-        return passphraseList.get(i);
+        return passphrases.get(i);
       }
     }
 
@@ -94,12 +94,12 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
 
   private void init(Context context) {
     this.pgpKeyInfoList = new LinkedList<>();
-    this.passphraseList = new LinkedList<>();
+    this.passphrases = new LinkedList<>();
     try {
       List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(context);
       for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
         pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
-        passphraseList.add(privateKeyInfo.getPassphrase());
+        passphrases.add(privateKeyInfo.getPassphrase());
       }
     } catch (Exception e) {
       e.printStackTrace();

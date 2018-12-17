@@ -55,7 +55,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.execSQL(KeysDaoSource.CREATE_INDEX_LONG_ID_IN_KEYS);
 
     sqLiteDatabase.execSQL(ContactsDaoSource.CONTACTS_TABLE_SQL_CREATE);
-    sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_INDEX_EMAIL_IN_CONTACT);
+    sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_UNIQUE_INDEX_EMAIL_IN_CONTACT);
     sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_INDEX_NAME_IN_CONTACT);
     sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_INDEX_HAS_PGP_IN_CONTACT);
     sqLiteDatabase.execSQL(ContactsDaoSource.CREATE_INDEX_LONG_ID_IN_CONTACT);
@@ -79,7 +79,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE);
 
     sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
-    sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+    sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID_USER_ID_EMAIL);
   }
 
   @Override
@@ -196,16 +196,13 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
       sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
 
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-          " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS
-          + " INTEGER DEFAULT 0;");
+          " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0;");
 
       sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-          " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE
-          + " INTEGER DEFAULT 1;");
+          " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE + " INTEGER DEFAULT 1;");
 
       sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-          " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE
-          + " INTEGER DEFAULT 0;");
+          " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE + " INTEGER DEFAULT 0;");
       sqLiteDatabase.setTransactionSuccessful();
     } finally {
       sqLiteDatabase.endTransaction();
@@ -301,8 +298,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.beginTransaction();
     try {
       sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-          " ADD COLUMN " + AccountDaoSource.COL_IS_CONTACTS_LOADED
-          + " INTEGER DEFAULT 0;");
+          " ADD COLUMN " + AccountDaoSource.COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0;");
       sqLiteDatabase.setTransactionSuccessful();
     } finally {
       sqLiteDatabase.endTransaction();
@@ -313,8 +309,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.beginTransaction();
     try {
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-          " ADD COLUMN " + MessageDaoSource.COL_IS_ENCRYPTED
-          + " INTEGER DEFAULT -1;");
+          " ADD COLUMN " + MessageDaoSource.COL_IS_ENCRYPTED + " INTEGER DEFAULT -1;");
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
           " ADD COLUMN " + MessageDaoSource.COL_CC_ADDRESSES + " TEXT DEFAULT NULL;");
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
@@ -324,7 +319,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
           " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;");
 
       sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE);
-      sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID__USER_ID_EMAIL);
+      sqLiteDatabase.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID_USER_ID_EMAIL);
       new ActionQueueDaoSource().addAction(sqLiteDatabase, new FillUserIdEmailsKeysTableAction());
 
       sqLiteDatabase.setTransactionSuccessful();

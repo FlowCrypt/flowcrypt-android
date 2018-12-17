@@ -36,46 +36,44 @@ public class SmtpProtocolUtil {
   /**
    * Prepare a {@link Transport} for SMTP protocol.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param session    The {@link Session} object.
-   * @param accountDao The account information which will be used of connection.
+   * @param context Interface to global information about an application environment.
+   * @param session The {@link Session} object.
+   * @param account The account information which will be used of connection.
    * @return Generated {@link Transport}
    * @throws MessagingException
    * @throws IOException
    * @throws GoogleAuthException
    */
   @NonNull
-  public static Transport prepareTransportForSmtp(Context context, Session session, AccountDao accountDao) throws
+  public static Transport prepareSmtpTransport(Context context, Session session, AccountDao account) throws
       MessagingException, IOException, GoogleAuthException {
     Transport transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP);
 
-    if (accountDao != null) {
-      switch (accountDao.getAccountType()) {
+    if (account != null) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          if (accountDao.getAccount() != null) {
-            transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT,
-                accountDao.getEmail(),
-                EmailUtil.getTokenForGmailAccount(context, accountDao.getAccount()));
-          } else throw new NullPointerException("The Account can't be a null when we try to receiving a " +
-              "token!");
+          if (account.getAccount() != null) {
+            String userName = account.getEmail();
+            String password = EmailUtil.getGmailAccountToken(context, account.getAccount());
+            transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password);
+          } else throw new NullPointerException("The Account can't be a null when we try to receiving a token!");
           break;
 
         default:
-          AuthCredentials authCredentials = accountDao.getAuthCredentials();
-          if (authCredentials != null) {
+          AuthCredentials authCreds = account.getAuthCreds();
+          if (authCreds != null) {
             String userName;
             String password;
 
-            if (authCredentials.isUseCustomSignInForSmtp()) {
-              userName = authCredentials.getSmtpSigInUsername();
-              password = authCredentials.getSmtpSignInPassword();
+            if (authCreds.hasCustomSignInForSmtp()) {
+              userName = authCreds.getSmtpSigInUsername();
+              password = authCreds.getSmtpSignInPassword();
             } else {
-              userName = authCredentials.getUsername();
-              password = authCredentials.getPassword();
+              userName = authCreds.getUsername();
+              password = authCreds.getPassword();
             }
 
-            transport.connect(authCredentials.getSmtpServer(), authCredentials.getSmtpPort(),
-                userName, password);
+            transport.connect(authCreds.getSmtpServer(), authCreds.getSmtpPort(), userName, password);
           } else throw new NullPointerException("The AuthCredentials can't be a null!");
           break;
       }

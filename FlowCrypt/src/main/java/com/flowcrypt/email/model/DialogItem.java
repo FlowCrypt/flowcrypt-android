@@ -31,21 +31,21 @@ public class DialogItem implements Parcelable {
         }
       };
 
-  private int iconResourceId;
+  private int iconResId;
   private String title;
   private int id;
 
   public DialogItem() {
   }
 
-  public DialogItem(int iconResourceId, String title, int id) {
-    this.iconResourceId = iconResourceId;
+  public DialogItem(int iconResId, String title, int id) {
+    this.iconResId = iconResId;
     this.title = title;
     this.id = id;
   }
 
   protected DialogItem(Parcel in) {
-    this.iconResourceId = in.readInt();
+    this.iconResId = in.readInt();
     this.title = in.readString();
     this.id = in.readInt();
   }
@@ -57,13 +57,13 @@ public class DialogItem implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(this.iconResourceId);
+    dest.writeInt(this.iconResId);
     dest.writeString(this.title);
     dest.writeInt(this.id);
   }
 
   public int getIconResourceId() {
-    return iconResourceId;
+    return iconResId;
   }
 
   public String getTitle() {

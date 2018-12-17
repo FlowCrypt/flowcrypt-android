@@ -22,15 +22,9 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import androidx.annotation.Nullable;
 
@@ -102,7 +96,7 @@ public class AccountDaoSource extends BaseDaoSource {
       COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0, " +
       COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0 " + ");";
 
-  public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = "CREATE UNIQUE INDEX IF NOT EXISTS "
+  public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = UNIQUE_INDEX_PREFIX
       + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
       " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ")";
 
@@ -114,10 +108,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return {@link AccountDao}.
    */
   public static AccountDao getCurrentAccountDao(Context context, Cursor cursor) {
-    AuthCredentials authCredentials = null;
+    AuthCredentials authCreds = null;
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
-      authCredentials = getCurrentAuthCredentialsFromCursor(keyStoreCryptoManager, cursor);
+      authCreds = getCurrentAuthCredsFromCursor(keyStoreCryptoManager, cursor);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -129,65 +123,57 @@ public class AccountDaoSource extends BaseDaoSource {
         cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_GIVEN_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FAMILY_NAME)),
-        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)),
-        authCredentials,
+        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)), authCreds,
         cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1);
   }
 
   /**
    * Get the current {@link AuthCredentials} object from the current {@link Cursor} position.
    *
-   * @param keyStoreCryptoManager The manager which does encryption/decryption work.
-   * @param cursor                The cursor from which to get the data.
+   * @param manager The manager which does encryption/decryption work.
+   * @param cursor  The cursor from which to get the data.
    * @return Generated {@link AuthCredentials} object.
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws IllegalBlockSizeException
-   * @throws BadPaddingException
-   * @throws InvalidKeyException
-   * @throws IOException
+   * @throws GeneralSecurityException
    */
-  public static AuthCredentials getCurrentAuthCredentialsFromCursor(KeyStoreCryptoManager keyStoreCryptoManager,
-                                                                    Cursor cursor) throws NoSuchPaddingException,
-      NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
+  public static AuthCredentials getCurrentAuthCredsFromCursor(KeyStoreCryptoManager manager,
+                                                              Cursor cursor) throws GeneralSecurityException {
 
-    SecurityType.Option imapSecurityTypeOption = SecurityType.Option.NONE;
+    SecurityType.Option imapOpt = SecurityType.Option.NONE;
 
     if (cursor.getInt(cursor.getColumnIndex(COL_IMAP_IS_USE_SSL_TLS)) == 1) {
-      imapSecurityTypeOption = SecurityType.Option.SSL_TLS;
+      imapOpt = SecurityType.Option.SSL_TLS;
     } else if (cursor.getInt(cursor.getColumnIndex(COL_IMAP_IS_USE_STARTTLS)) == 1) {
-      imapSecurityTypeOption = SecurityType.Option.STARTLS;
+      imapOpt = SecurityType.Option.STARTLS;
     }
 
-    SecurityType.Option smtpSecurityTypeOption = SecurityType.Option.NONE;
+    SecurityType.Option smtpOpt = SecurityType.Option.NONE;
 
     if (cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_SSL_TLS)) == 1) {
-      smtpSecurityTypeOption = SecurityType.Option.SSL_TLS;
+      smtpOpt = SecurityType.Option.SSL_TLS;
     } else if (cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_STARTTLS)) == 1) {
-      smtpSecurityTypeOption = SecurityType.Option.STARTLS;
+      smtpOpt = SecurityType.Option.STARTLS;
     }
 
     String originalPassword = cursor.getString(cursor.getColumnIndex(COL_PASSWORD));
 
     //fixed a bug when try to decrypting the template password.
     // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-    if (originalPassword.equalsIgnoreCase("password")) {
+    if ("password".equalsIgnoreCase(originalPassword)) {
       originalPassword = "";
     }
 
     return new AuthCredentials.Builder().setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)))
         .setUsername(cursor.getString(cursor.getColumnIndex(COL_USERNAME)))
-        .setPassword(keyStoreCryptoManager.decryptWithRSA(originalPassword))
+        .setPassword(manager.decryptWithRSA(originalPassword))
         .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
         .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
-        .setImapSecurityTypeOption(imapSecurityTypeOption)
+        .setImapSecurityTypeOpt(imapOpt)
         .setSmtpServer(cursor.getString(cursor.getColumnIndex(COL_SMTP_SERVER)))
         .setSmtpPort(cursor.getInt(cursor.getColumnIndex(COL_SMTP_PORT)))
-        .setSmtpSecurityTypeOption(smtpSecurityTypeOption)
+        .setSmtpSecurityTypeOpt(smtpOpt)
         .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
         .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
-        .setSmtpSignInPassword(keyStoreCryptoManager.decryptWithRSA(
-            cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
+        .setSmtpSignInPassword(manager.decryptWithRSA(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
         .build();
   }
 
@@ -206,7 +192,7 @@ public class AccountDaoSource extends BaseDaoSource {
   public Uri addRow(Context context, GoogleSignInAccount googleSignInAccount) {
     ContentResolver contentResolver = context.getContentResolver();
     if (googleSignInAccount != null && contentResolver != null) {
-      ContentValues contentValues = generateContentValues(googleSignInAccount);
+      ContentValues contentValues = genContentValues(googleSignInAccount);
       if (contentValues == null) return null;
 
       return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -217,14 +203,14 @@ public class AccountDaoSource extends BaseDaoSource {
    * Save information about an account using the {@link AuthCredentials};
    *
    * @param context         Interface to global information about an application environment;
-   * @param authCredentials The sign-in settings of IMAP and SMTP servers.
+   * @param authCreds The sign-in settings of IMAP and SMTP servers.
    * @return The created {@link Uri} or null;
    * @throws Exception An exception maybe occurred when encrypt the user password.
    */
-  public Uri addRow(Context context, AuthCredentials authCredentials) throws Exception {
+  public Uri addRow(Context context, AuthCredentials authCreds) throws Exception {
     ContentResolver contentResolver = context.getContentResolver();
-    if (authCredentials != null && contentResolver != null) {
-      ContentValues contentValues = generateContentValuesWithEncryptedPassword(context, authCredentials);
+    if (authCreds != null && contentResolver != null) {
+      ContentValues contentValues = genContentValues(context, authCreds);
       if (contentValues == null) return null;
 
       return contentResolver.insert(getBaseContentUri(), contentValues);
@@ -238,20 +224,20 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return The {@link AccountDao};
    */
   public AccountDao getActiveAccountInformation(Context context) {
-    Cursor cursor = context.getContentResolver().query(
-        getBaseContentUri(), null, AccountDaoSource.COL_IS_ACTIVE + " = ?", new String[]{"1"}, null);
+    String selection = AccountDaoSource.COL_IS_ACTIVE + " = ?";
+    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, new String[]{"1"}, null);
 
-    AccountDao accountDao = null;
+    AccountDao account = null;
 
     if (cursor != null && cursor.moveToFirst()) {
-      accountDao = getCurrentAccountDao(context, cursor);
+      account = getCurrentAccountDao(context, cursor);
     }
 
     if (cursor != null) {
       cursor.close();
     }
 
-    return accountDao;
+    return account;
   }
 
   /**
@@ -262,12 +248,10 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return The {@link AccountDao};
    */
   public AccountDao getAccountInformation(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
-
-    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, AccountDaoSource.COL_EMAIL + " " +
-        "= ?", new String[]{email}, null);
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
+    String selection = AccountDaoSource.COL_EMAIL + " = ?";
+    String[] selectionArgs = new String[]{emailInLowerCase};
+    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
     if (cursor != null && cursor.moveToFirst()) {
       return getCurrentAccountDao(context, cursor);
@@ -283,15 +267,14 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Update information about some {@link AccountDao}.
    *
-   * @param context             Interface to global information about an application environment.
-   * @param googleSignInAccount Reflecting the user's sign in information.
+   * @param context    Interface to global information about an application environment.
+   * @param googleSign Reflecting the user's sign in information.
    * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
    * updated or -1 otherwise.
    */
-  public int updateAccountInformation(Context context, GoogleSignInAccount googleSignInAccount) {
-    if (googleSignInAccount != null) {
-      return updateAccountInformation(context, googleSignInAccount.getAccount(),
-          generateContentValues(googleSignInAccount));
+  public int updateAccountInformation(Context context, GoogleSignInAccount googleSign) {
+    if (googleSign != null) {
+      return updateAccountInformation(context, googleSign.getAccount(), genContentValues(googleSign));
     } else return -1;
   }
 
@@ -322,10 +305,8 @@ public class AccountDaoSource extends BaseDaoSource {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.update(getBaseContentUri(),
-            contentValues,
-            COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
-            new String[]{email, type});
+        String selection = COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?";
+        return contentResolver.update(getBaseContentUri(), contentValues, selection, new String[]{email, type});
       } else return -1;
     } else return -1;
   }
@@ -333,22 +314,22 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Delete information about some {@link AccountDao}.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param accountDao The object which contains information about an email account.
+   * @param context Interface to global information about an application environment.
+   * @param account The object which contains information about an email account.
    * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
    * deleted or -1 otherwise.
    */
-  public int deleteAccountInformation(Context context, AccountDao accountDao) {
-    if (accountDao != null) {
+  public int deleteAccountInformation(Context context, AccountDao account) {
+    if (account != null) {
 
-      String email = accountDao.getEmail();
+      String email = account.getEmail();
       if (email == null) {
         return -1;
       } else {
         email = email.toLowerCase();
       }
 
-      String type = accountDao.getAccountType();
+      String type = account.getAccountType();
       if (type == null) {
         return -1;
       } else {
@@ -357,8 +338,8 @@ public class AccountDaoSource extends BaseDaoSource {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(), COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?",
-            new String[]{email, type});
+        String selection = COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?";
+        return contentResolver.delete(getBaseContentUri(), selection, new String[]{email, type});
       } else return -1;
     } else return -1;
   }
@@ -371,12 +352,11 @@ public class AccountDaoSource extends BaseDaoSource {
    * @return The list of all added account without the active account
    */
   public List<AccountDao> getAccountsWithoutActive(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
-    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-        AccountDaoSource.COL_EMAIL + " != ?", new String[]{email}, null);
+    String selection = AccountDaoSource.COL_EMAIL + " != ?";
+    String[] selectionArgs = new String[]{emailInLowerCase};
+    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
     List<AccountDao> accountDaoList = new ArrayList<>();
     if (cursor != null) {
@@ -399,25 +379,24 @@ public class AccountDaoSource extends BaseDaoSource {
    * @param email   An email of the active account.
    * @return true if need to show only encrypted messages
    */
-  public boolean isShowOnlyEncryptedMessages(Context context, String email) {
-    if (email != null) {
-      email = email.toLowerCase();
-    }
+  public boolean isEncryptedModeEnabled(Context context, String email) {
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
-    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null,
-        AccountDaoSource.COL_EMAIL + " = ?", new String[]{email}, null);
+    String selection = AccountDaoSource.COL_EMAIL + " = ?";
+    String[] selectionArgs = new String[]{emailInLowerCase};
+    Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
-    boolean isShowOnlyEncryptedMessages = false;
+    boolean isEncryptedModeEnabled = false;
 
     if (cursor != null && cursor.moveToFirst()) {
-      isShowOnlyEncryptedMessages = cursor.getInt(cursor.getColumnIndex(COL_IS_SHOW_ONLY_ENCRYPTED)) == 1;
+      isEncryptedModeEnabled = cursor.getInt(cursor.getColumnIndex(COL_IS_SHOW_ONLY_ENCRYPTED)) == 1;
     }
 
     if (cursor != null) {
       cursor.close();
     }
 
-    return isShowOnlyEncryptedMessages;
+    return isEncryptedModeEnabled;
   }
 
   /**
@@ -427,19 +406,19 @@ public class AccountDaoSource extends BaseDaoSource {
    * @param email   The account which will be set as active.
    * @return The count of updated rows.
    */
-  public int setIsShowOnlyEncryptedMessages(Context context, String email, boolean isShowOnlyEncryptedMessages) {
+  public int setShowOnlyEncryptedMsgs(Context context, String email, boolean onlyEncryptedMsgs) {
     if (email == null) {
       return -1;
-    } else {
-      email = email.toLowerCase();
     }
+
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
       ContentValues contentValues = new ContentValues();
-      contentValues.put(COL_IS_SHOW_ONLY_ENCRYPTED, isShowOnlyEncryptedMessages);
-      return contentResolver.update(getBaseContentUri(), contentValues,
-          COL_EMAIL + " = ? ", new String[]{email});
+      contentValues.put(COL_IS_SHOW_ONLY_ENCRYPTED, onlyEncryptedMsgs);
+      String where = COL_EMAIL + " = ? ";
+      return contentResolver.update(getBaseContentUri(), contentValues, where, new String[]{emailInLowerCase});
     } else return -1;
   }
 
@@ -453,21 +432,20 @@ public class AccountDaoSource extends BaseDaoSource {
   public int setActiveAccount(Context context, String email) {
     if (email == null) {
       return -1;
-    } else {
-      email = email.toLowerCase();
     }
 
+    String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
     ContentResolver contentResolver = context.getContentResolver();
     if (contentResolver != null) {
       ContentValues contentValuesDeactivateAllAccount = new ContentValues();
       contentValuesDeactivateAllAccount.put(COL_IS_ACTIVE, 0);
-      int updateRowCount = contentResolver.update(getBaseContentUri(), contentValuesDeactivateAllAccount,
-          null, null);
+      int updateRowCount = contentResolver.update(getBaseContentUri(), contentValuesDeactivateAllAccount, null, null);
 
-      ContentValues contentValuesActivateAccount = new ContentValues();
-      contentValuesActivateAccount.put(COL_IS_ACTIVE, 1);
-      updateRowCount += contentResolver.update(getBaseContentUri(), contentValuesActivateAccount,
-          COL_EMAIL + " = ? ", new String[]{email});
+      ContentValues valuesActive = new ContentValues();
+      valuesActive.put(COL_IS_ACTIVE, 1);
+      String selection = COL_EMAIL + " = ? ";
+      String[] selectionArgs = new String[]{emailInLowerCase};
+      updateRowCount += contentResolver.update(getBaseContentUri(), valuesActive, selection, selectionArgs);
 
       return updateRowCount;
 
@@ -477,24 +455,24 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Generate a {@link ContentValues} using {@link GoogleSignInAccount}.
    *
-   * @param googleSignInAccount The {@link GoogleSignInAccount} object;
+   * @param googleSign The {@link GoogleSignInAccount} object;
    * @return The generated {@link ContentValues}.
    */
   @Nullable
-  private ContentValues generateContentValues(GoogleSignInAccount googleSignInAccount) {
+  private ContentValues genContentValues(GoogleSignInAccount googleSign) {
     ContentValues contentValues = new ContentValues();
-    if (googleSignInAccount.getEmail() != null) {
-      contentValues.put(COL_EMAIL, googleSignInAccount.getEmail().toLowerCase());
+    if (googleSign.getEmail() != null) {
+      contentValues.put(COL_EMAIL, googleSign.getEmail().toLowerCase());
     } else return null;
 
-    Account account = googleSignInAccount.getAccount();
+    Account account = googleSign.getAccount();
 
     if (account != null && account.type != null) {
       contentValues.put(COL_ACCOUNT_TYPE, account.type.toLowerCase());
     }
 
-    contentValues.put(COL_DISPLAY_NAME, googleSignInAccount.getDisplayName());
-    contentValues.put(COL_USERNAME, googleSignInAccount.getEmail());
+    contentValues.put(COL_DISPLAY_NAME, googleSign.getDisplayName());
+    contentValues.put(COL_USERNAME, googleSign.getEmail());
     contentValues.put(COL_PASSWORD, "");
     contentValues.put(COL_IMAP_SERVER, GmailConstants.GMAIL_IMAP_SERVER);
     contentValues.put(COL_IMAP_PORT, GmailConstants.GMAIL_IMAP_PORT);
@@ -504,11 +482,11 @@ public class AccountDaoSource extends BaseDaoSource {
     contentValues.put(COL_SMTP_AUTH_MECHANISMS, JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2);
     contentValues.put(COL_IMAP_IS_USE_SSL_TLS, 1);
     contentValues.put(COL_SMTP_IS_USE_SSL_TLS, 1);
-    contentValues.put(COL_GIVEN_NAME, googleSignInAccount.getGivenName());
-    contentValues.put(COL_FAMILY_NAME, googleSignInAccount.getFamilyName());
+    contentValues.put(COL_GIVEN_NAME, googleSign.getGivenName());
+    contentValues.put(COL_FAMILY_NAME, googleSign.getFamilyName());
     contentValues.put(COL_IS_ACTIVE, true);
-    if (googleSignInAccount.getPhotoUrl() != null) {
-      contentValues.put(COL_PHOTO_URL, googleSignInAccount.getPhotoUrl().toString());
+    if (googleSign.getPhotoUrl() != null) {
+      contentValues.put(COL_PHOTO_URL, googleSign.getPhotoUrl().toString());
     }
     return contentValues;
   }
@@ -517,13 +495,12 @@ public class AccountDaoSource extends BaseDaoSource {
    * Generate a {@link ContentValues} using {@link AuthCredentials}.
    *
    * @param context         Interface to global information about an application environment;
-   * @param authCredentials The {@link AuthCredentials} object;
+   * @param authCreds The {@link AuthCredentials} object;
    * @return The generated {@link ContentValues}.
    */
-  private ContentValues generateContentValuesWithEncryptedPassword(Context context,
-                                                                   AuthCredentials authCredentials) throws Exception {
+  private ContentValues genContentValues(Context context, AuthCredentials authCreds) throws Exception {
     ContentValues contentValues = new ContentValues();
-    String email = authCredentials.getEmail();
+    String email = authCreds.getEmail();
     if (!TextUtils.isEmpty(email)) {
       contentValues.put(COL_EMAIL, email.toLowerCase());
     } else return null;
@@ -531,24 +508,19 @@ public class AccountDaoSource extends BaseDaoSource {
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
 
     contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1, email.length()));
-    contentValues.put(COL_USERNAME, authCredentials.getUsername());
-    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials.getPassword()));
-    contentValues.put(COL_IMAP_SERVER, authCredentials.getImapServer());
-    contentValues.put(COL_IMAP_PORT, authCredentials.getImapPort());
-    contentValues.put(COL_IMAP_IS_USE_SSL_TLS,
-        authCredentials.getImapSecurityTypeOption() == SecurityType.Option.SSL_TLS);
-    contentValues.put(COL_IMAP_IS_USE_STARTTLS,
-        authCredentials.getImapSecurityTypeOption() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_SERVER, authCredentials.getSmtpServer());
-    contentValues.put(COL_SMTP_PORT, authCredentials.getSmtpPort());
-    contentValues.put(COL_SMTP_IS_USE_SSL_TLS,
-        authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.SSL_TLS);
-    contentValues.put(COL_SMTP_IS_USE_STARTTLS,
-        authCredentials.getSmtpSecurityTypeOption() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCredentials.isUseCustomSignInForSmtp());
-    contentValues.put(COL_SMTP_USERNAME, authCredentials.getSmtpSigInUsername());
-    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCredentials
-        .getSmtpSignInPassword()));
+    contentValues.put(COL_USERNAME, authCreds.getUsername());
+    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getPassword()));
+    contentValues.put(COL_IMAP_SERVER, authCreds.getImapServer());
+    contentValues.put(COL_IMAP_PORT, authCreds.getImapPort());
+    contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCreds.getImapOpt() == SecurityType.Option.SSL_TLS);
+    contentValues.put(COL_IMAP_IS_USE_STARTTLS, authCreds.getImapOpt() == SecurityType.Option.STARTLS);
+    contentValues.put(COL_SMTP_SERVER, authCreds.getSmtpServer());
+    contentValues.put(COL_SMTP_PORT, authCreds.getSmtpPort());
+    contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCreds.getSmtpOpt() == SecurityType.Option.SSL_TLS);
+    contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.getSmtpOpt() == SecurityType.Option.STARTLS);
+    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp());
+    contentValues.put(COL_SMTP_USERNAME, authCreds.getSmtpSigInUsername());
+    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getSmtpSignInPassword()));
 
     contentValues.put(COL_IS_ACTIVE, true);
 

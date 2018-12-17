@@ -58,7 +58,7 @@ public class NonLockingScrollView extends ScrollView {
    * Whether or not the contents of this view is being dragged by one of the children in
    * {@link #childrenNeedingAllTouches}.
    */
-  private boolean inCustomDrag = false;
+  private boolean inCustomDrag;
   private boolean skipWebViewScroll = true;
 
   public NonLockingScrollView(Context context) {
@@ -115,9 +115,7 @@ public class NonLockingScrollView extends ScrollView {
      * assuming it already is at least partially in view.
      *
      */
-    if (skipWebViewScroll &&
-        focused instanceof EmailWebView &&
-        focused.getGlobalVisibleRect(new Rect())) {
+    if (skipWebViewScroll && focused instanceof EmailWebView && focused.getGlobalVisibleRect(new Rect())) {
       skipWebViewScroll = false;
       super.requestChildFocus(child, child);
       ViewParent parent = getParent();

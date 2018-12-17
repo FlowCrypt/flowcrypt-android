@@ -81,52 +81,52 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   protected View buttonLoadFromFile;
 
   protected boolean isCheckingPrivateKeyNow;
-  protected boolean isThrowErrorIfDuplicateFound;
-  protected boolean isCheckClipboardFromServiceEnable = true;
-  protected boolean isCheckClipboardServiceBound;
+  protected boolean throwErrorIfDuplicateFound;
+  protected boolean isCheckingClipboardEnabled = true;
+  protected boolean isClipboardServiceBound;
 
   private String title;
 
-  private ServiceConnection checkClipboardServiceConnection = new ServiceConnection() {
+  private ServiceConnection clipboardConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-      CheckClipboardToFindKeyService.LocalBinder binder =
-          (CheckClipboardToFindKeyService.LocalBinder) service;
+      CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
       checkClipboardToFindKeyService = binder.getService();
-      checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
-      isCheckClipboardServiceBound = true;
+      checkClipboardToFindKeyService.setPrivateKeyMode(isPrivateKeyMode());
+      isClipboardServiceBound = true;
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      isCheckClipboardServiceBound = false;
+      isClipboardServiceBound = false;
     }
   };
 
   public abstract void onKeyValidated(KeyDetails.Type type);
 
-  public abstract boolean isPrivateKeyChecking();
+  public abstract boolean isPrivateKeyMode();
 
   public static Intent newIntent(Context context, String title, Class<?> cls) {
     return newIntent(context, title, false, cls);
   }
 
-  public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
-    return newIntent(context, title, null, isThrowErrorIfDuplicateFound, cls);
+  public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFoundEnabled,
+                                 Class<?> cls) {
+    return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
-  public static Intent newIntent(Context context, String title, KeyImportModel keyImportModel,
-                                 boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
-    return newIntent(context, true, title, keyImportModel, isThrowErrorIfDuplicateFound, cls);
+  public static Intent newIntent(Context context, String title, KeyImportModel model,
+                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
+    return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls);
   }
 
-  public static Intent newIntent(Context context, boolean isSyncEnable, String title, KeyImportModel keyImportModel,
-                                 boolean isThrowErrorIfDuplicateFound, Class<?> cls) {
+  public static Intent newIntent(Context context, boolean isSyncEnabled, String title, KeyImportModel model,
+                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
     Intent intent = new Intent(context, cls);
-    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnable);
+    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled);
     intent.putExtra(KEY_EXTRA_TITLE, title);
-    intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, keyImportModel);
-    intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFound);
+    intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model);
+    intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled);
     return intent;
   }
 
@@ -136,7 +136,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return getIntent() == null || getIntent().getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true);
   }
 
@@ -144,12 +144,10 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    bindService(new Intent(this, CheckClipboardToFindKeyService.class),
-        checkClipboardServiceConnection, Context.BIND_AUTO_CREATE);
+    bindService(new Intent(this, CheckClipboardToFindKeyService.class), clipboardConn, Context.BIND_AUTO_CREATE);
 
     if (getIntent() != null) {
-      this.isThrowErrorIfDuplicateFound =
-          getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
+      this.throwErrorIfDuplicateFound = getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
       this.keyImportModel = getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD);
       this.title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
     }
@@ -167,7 +165,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   @Override
   public void onResume() {
     super.onResume();
-    if (isCheckClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckClipboardFromServiceEnable) {
+    if (isClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckingClipboardEnabled) {
       keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
       if (keyImportModel != null) {
         LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
@@ -178,15 +176,15 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   @Override
   public void onPause() {
     super.onPause();
-    isCheckClipboardFromServiceEnable = true;
+    isCheckingClipboardEnabled = true;
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (isCheckClipboardServiceBound) {
-      unbindService(checkClipboardServiceConnection);
-      isCheckClipboardServiceBound = false;
+    if (isClipboardServiceBound) {
+      unbindService(clipboardConn);
+      isClipboardServiceBound = false;
     }
   }
 
@@ -194,7 +192,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM:
-        isCheckClipboardFromServiceEnable = false;
+        isCheckingClipboardEnabled = false;
 
         switch (resultCode) {
           case Activity.RESULT_OK:
@@ -212,23 +210,14 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   }
 
   @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                         @NonNull int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
     switch (requestCode) {
       case REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE:
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          runSelectFileIntent();
+          selectFile();
         } else {
-          UIUtil.showSnackbar(getRootView(),
-              getString(R.string.access_to_read_the_sdcard_id_denied),
-              getString(R.string.change), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                  GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
-                }
-              });
+          showAccessDeniedWarning();
         }
         break;
     }
@@ -253,16 +242,16 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         dismissSnackBar();
         keyDetailsList.clear();
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-            == PackageManager.PERMISSION_GRANTED) {
-          runSelectFileIntent();
+        boolean isPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            == PackageManager.PERMISSION_GRANTED;
+
+        if (isPermissionGranted) {
+          selectFile();
         } else {
-          if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-              Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            showAnExplanationForReadSdCard();
+          if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            showReadSdCardExplanation();
           } else {
-            ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
           }
         }
@@ -273,15 +262,18 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         keyDetailsList.clear();
 
         if (clipboardManager.hasPrimaryClip()) {
-          ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
-          CharSequence privateKeyFromClipboard = item.getText();
-          if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-            keyImportModel = new KeyImportModel(null, privateKeyFromClipboard.toString(),
-                isPrivateKeyChecking(), KeyDetails.Type.CLIPBOARD);
+          ClipData clipData = clipboardManager.getPrimaryClip();
+          if (clipData != null) {
+            ClipData.Item item = clipData.getItemAt(0);
+            CharSequence privateKeyFromClipboard = item.getText();
+            if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
+              keyImportModel = new KeyImportModel(null, privateKeyFromClipboard.toString(),
+                  isPrivateKeyMode(), KeyDetails.Type.CLIPBOARD);
 
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
-          } else {
-            showClipboardIsEmptyInfoDialog();
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+            } else {
+              showClipboardIsEmptyInfoDialog();
+            }
           }
         } else {
           showClipboardIsEmptyInfoDialog();
@@ -326,7 +318,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_validate_key_from_file:
         isCheckingPrivateKeyNow = false;
@@ -337,7 +329,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
           onKeyValidated(KeyDetails.Type.FILE);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.file_has_wrong_pgp_structure,
-              isPrivateKeyChecking() ? getString(R.string.private_) : getString(R.string.public_)));
+              isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
         }
         break;
 
@@ -349,17 +341,17 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
           onKeyValidated(KeyDetails.Type.CLIPBOARD);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.clipboard_has_wrong_structure,
-              isPrivateKeyChecking() ? getString(R.string.private_) : getString(R.string.public_)));
+              isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
         }
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_validate_key_from_file:
       case R.id.loader_id_validate_key_from_clipboard:
@@ -369,17 +361,17 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
     }
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
 
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
 
   }
 
@@ -389,7 +381,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
    * @param uri A {@link Uri} of the selected file.
    */
   protected void handleSelectedFile(Uri uri) {
-    keyImportModel = new KeyImportModel(uri, null, isPrivateKeyChecking(), KeyDetails.Type.FILE);
+    keyImportModel = new KeyImportModel(uri, null, isPrivateKeyMode(), KeyDetails.Type.FILE);
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this);
   }
 
@@ -408,13 +400,22 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
   }
 
+  private void showAccessDeniedWarning() {
+    UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
+        getString(R.string.change), new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
+          }
+        });
+  }
+
   /**
    * Show an explanation to the user for read the sdcard.
    * After the user sees the explanation, we try again to request the permission.
    */
-  private void showAnExplanationForReadSdCard() {
-    UIUtil.showSnackbar(getRootView(),
-        getString(R.string.read_sdcard_permission_explanation_text),
+  private void showReadSdCardExplanation() {
+    UIUtil.showSnackbar(getRootView(), getString(R.string.read_sdcard_permission_explanation_text),
         getString(R.string.do_request), new View.OnClickListener() {
           @Override
           public void onClick(View v) {
@@ -425,11 +426,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         });
   }
 
-  /**
-   * Show an explanation to the user for read the sdcard.
-   * After the user sees the explanation, we try again to request the permission.
-   */
-  private void runSelectFileIntent() {
+  private void selectFile() {
     Intent intent = new Intent();
     intent.setAction(Intent.ACTION_GET_CONTENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -439,11 +436,9 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   }
 
   private void showClipboardIsEmptyInfoDialog() {
-    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint),
-        getString(R.string.hint_clipboard_is_empty, isPrivateKeyChecking() ?
-            getString(R.string.private_) : getString(R.string.public_), getString(R.string.app_name)));
-    infoDialogFragment.show(getSupportFragmentManager(),
-        InfoDialogFragment.class.getSimpleName());
+    String dialogMsg = getString(R.string.hint_clipboard_is_empty, isPrivateKeyMode() ?
+        getString(R.string.private_) : getString(R.string.public_), getString(R.string.app_name));
+    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint), dialogMsg);
+    infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
   }
-
 }

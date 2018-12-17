@@ -10,9 +10,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -38,14 +38,12 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
    */
   private static final int MAX_SIZE_IN_BYTES = 256 * 1024;
   private KeyImportModel keyImportModel;
-  private boolean isCheckSizeEnable;
+  private boolean isCheckSizeEnabled;
 
-  public ParseKeysFromResourceAsyncTaskLoader(Context context,
-                                              KeyImportModel keyImportModel,
-                                              boolean isCheckSizeEnable) {
+  public ParseKeysFromResourceAsyncTaskLoader(Context context, KeyImportModel model, boolean isCheckSizeEnabled) {
     super(context);
-    this.keyImportModel = keyImportModel;
-    this.isCheckSizeEnable = isCheckSizeEnable;
+    this.keyImportModel = model;
+    this.isCheckSizeEnabled = isCheckSizeEnabled;
     onContentChanged();
   }
 
@@ -58,13 +56,13 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
 
   @Override
   public LoaderResult loadInBackground() {
-    ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
     try {
       if (keyImportModel != null) {
         String armoredKey = null;
         switch (keyImportModel.getType()) {
           case FILE:
-            if (isCheckSizeEnable && isKeyTooBig(keyImportModel.getFileUri())) {
+            if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.getFileUri())) {
               return new LoaderResult(null, new IllegalArgumentException("The file is too big"));
             }
 
@@ -83,30 +81,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
           MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(armoredKey);
 
           for (MessageBlock messageBlock : messageBlocks) {
-            if (keyImportModel.isPrivateKey()) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
-                String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-                PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                if (js.is_valid_key(normalizedKey, true) && EmailUtil.isKeyNotExistsInList(
-                    privateKeyDetailsList, normalizedKey)) {
-                  KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
-                  keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-                  privateKeyDetailsList.add(keyDetails);
-                }
-              }
-            } else {
-              if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
-                String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-                PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-                if (js.is_valid_key(normalizedKey, false) && EmailUtil.isKeyNotExistsInList(
-                    privateKeyDetailsList, normalizedKey)) {
-                  KeyDetails keyDetails = new KeyDetails(null, normalizedKey,
-                      keyImportModel.getType(), false);
-                  keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-                  privateKeyDetailsList.add(keyDetails);
-                }
-              }
-            }
+            keyDetailsList.addAll(parseKeys(js, messageBlock));
           }
         }
       }
@@ -116,12 +91,42 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
       return new LoaderResult(null, e);
     }
 
-    return new LoaderResult(privateKeyDetailsList, null);
+    return new LoaderResult(keyDetailsList, null);
   }
 
   @Override
   public void onStopLoading() {
     cancelLoad();
+  }
+
+  private ArrayList<KeyDetails> parseKeys(Js js, MessageBlock messageBlock) {
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+
+    if (keyImportModel.isPrivateKey()) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
+        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
+        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
+        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
+        if (js.is_valid_key(normalizedKey, true) && !isExist) {
+          KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
+          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
+          keyDetailsList.add(keyDetails);
+        }
+      }
+    } else {
+      if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
+        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
+        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
+        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
+        if (js.is_valid_key(normalizedKey, false) && !isExist) {
+          KeyDetails keyDetails = new KeyDetails(null, normalizedKey, keyImportModel.getType(), false);
+          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
+          keyDetailsList.add(keyDetails);
+        }
+      }
+    }
+
+    return keyDetailsList;
   }
 
   /**

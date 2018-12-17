@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.js.tasks;
 
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.core.Js;
 
 /**
  * This class contains types of {@link Js} errors.

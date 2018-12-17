@@ -44,15 +44,15 @@ public class AccountDao implements Parcelable {
   private String givenName;
   private String familyName;
   private String photoUrl;
-  private boolean isContactsLoaded;
-  private AuthCredentials authCredentials;
+  private boolean areContactsLoaded;
+  private AuthCredentials authCreds;
 
   public AccountDao(String email, String accountType) {
     this(email, accountType, null, null, null, null, null, false);
   }
 
   public AccountDao(String email, String accountType, String displayName, String givenName,
-                    String familyName, String photoUrl, AuthCredentials authCredentials, boolean isContactsLoaded) {
+                    String familyName, String photoUrl, AuthCredentials authCreds, boolean areContactsLoaded) {
     this.email = email;
     if (TextUtils.isEmpty(accountType)) {
       if (!TextUtils.isEmpty(email)) {
@@ -65,8 +65,8 @@ public class AccountDao implements Parcelable {
     this.givenName = givenName;
     this.familyName = familyName;
     this.photoUrl = photoUrl;
-    this.authCredentials = authCredentials;
-    this.isContactsLoaded = isContactsLoaded;
+    this.authCreds = authCreds;
+    this.areContactsLoaded = areContactsLoaded;
   }
 
   public AccountDao(GoogleSignInAccount googleSignInAccount) {
@@ -92,8 +92,8 @@ public class AccountDao implements Parcelable {
     this.givenName = in.readString();
     this.familyName = in.readString();
     this.photoUrl = in.readString();
-    this.isContactsLoaded = in.readByte() != 0;
-    this.authCredentials = in.readParcelable(AuthCredentials.class.getClassLoader());
+    this.areContactsLoaded = in.readByte() != 0;
+    this.authCreds = in.readParcelable(AuthCredentials.class.getClassLoader());
   }
 
   @Override
@@ -109,8 +109,8 @@ public class AccountDao implements Parcelable {
     dest.writeString(this.givenName);
     dest.writeString(this.familyName);
     dest.writeString(this.photoUrl);
-    dest.writeByte(this.isContactsLoaded ? (byte) 1 : (byte) 0);
-    dest.writeParcelable(this.authCredentials, flags);
+    dest.writeByte(this.areContactsLoaded ? (byte) 1 : (byte) 0);
+    dest.writeParcelable(this.authCreds, flags);
   }
 
   @Nullable
@@ -142,11 +142,11 @@ public class AccountDao implements Parcelable {
     return photoUrl;
   }
 
-  public AuthCredentials getAuthCredentials() {
-    return authCredentials;
+  public AuthCredentials getAuthCreds() {
+    return authCreds;
   }
 
-  public boolean isContactsLoaded() {
-    return isContactsLoaded;
+  public boolean areContactsLoaded() {
+    return areContactsLoaded;
   }
 }

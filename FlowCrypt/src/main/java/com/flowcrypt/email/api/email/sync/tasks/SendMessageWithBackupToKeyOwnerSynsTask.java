@@ -10,7 +10,7 @@ import android.os.Messenger;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import javax.mail.Message;
@@ -39,24 +39,21 @@ public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
   }
 
   @Override
-  public boolean isUseSMTP() {
+  public boolean isSMTPRequired() {
     return true;
   }
 
   @Override
-  public void runSMTPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-      Exception {
-    super.runSMTPAction(accountDao, session, store, syncListener);
+  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    super.runSMTPAction(account, session, store, listener);
 
-    if (syncListener != null && accountDao != null) {
-      Transport transport = prepareTransportForSmtp(syncListener.getContext(), session, accountDao);
-
-      Message message = EmailUtil.generateMessageWithAllPrivateKeysBackups(syncListener.getContext(),
-          accountDao, session, new Js(syncListener.getContext(),
-              new SecurityStorageConnector(syncListener.getContext())));
+    if (listener != null && account != null) {
+      Transport transport = prepareSmtpTransport(listener.getContext(), session, account);
+      Js js = new Js(listener.getContext(), new SecurityStorageConnector(listener.getContext()));
+      Message message = EmailUtil.genMsgWithAllPrivateKeys(listener.getContext(), account, session, js);
       transport.sendMessage(message, message.getAllRecipients());
 
-      syncListener.onMessageWithBackupToKeyOwnerSent(accountDao, ownerKey, requestCode, true);
+      listener.onMsgWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
     }
   }
 }

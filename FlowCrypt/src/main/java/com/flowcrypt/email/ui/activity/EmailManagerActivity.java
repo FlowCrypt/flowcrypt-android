@@ -29,10 +29,10 @@ import android.widget.Toast;
 import com.bumptech.glide.request.RequestOptions;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.database.DataBaseUtil;
+import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.database.DatabaseUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
@@ -53,6 +53,7 @@ import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -93,10 +94,10 @@ public class EmailManagerActivity extends BaseEmailListActivity
   private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;
   private static final int REQUEST_CODE_SIGN_IN = 101;
 
-  private GoogleApiClient googleApiClient;
-  private AccountDao accountDao;
+  private GoogleApiClient apiClient;
+  private AccountDao account;
   private FoldersManager foldersManager;
-  private Folder folder;
+  private LocalFolder localFolder;
   private CountingIdlingResource countingIdlingResourceForLabel;
   private MenuItem menuItemSearch;
 
@@ -117,25 +118,26 @@ public class EmailManagerActivity extends BaseEmailListActivity
    * @param context Interface to global information about an application environment.
    */
   public static void runEmailManagerActivity(Context context) {
-    Intent intentRunEmailManagerActivity = new Intent(context, EmailManagerActivity.class);
+    Intent intent = new Intent(context, EmailManagerActivity.class);
     context.stopService(new Intent(context, CheckClipboardToFindKeyService.class));
-    context.startActivity(intentRunEmailManagerActivity);
+    context.startActivity(intent);
   }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    accountDao = new AccountDaoSource().getActiveAccountInformation(this);
+    account = new AccountDaoSource().getActiveAccountInformation(this);
 
-    if (accountDao != null) {
-      googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this,
-          GoogleApiClientHelper.generateGoogleSignInOptions());
+    if (account != null) {
+      GoogleSignInOptions options = GoogleApiClientHelper.generateGoogleSignInOptions();
 
-      new ActionManager(this).checkAndAddActionsToQueue(accountDao);
+      apiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, options);
+
+      new ActionManager(this).checkAndAddActionsToQueue(account);
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this);
 
       countingIdlingResourceForLabel = new CountingIdlingResource(
-          GeneralUtil.generateNameForIdlingResources(EmailManagerActivity.class), GeneralUtil.isDebug());
+          GeneralUtil.genIdlingResourcesName(EmailManagerActivity.class), GeneralUtil.isDebugBuild());
       countingIdlingResourceForLabel.increment();
 
       initViews();
@@ -147,7 +149,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   @Override
   public void onResume() {
     super.onResume();
-    new MessagesNotificationManager(this).cancelAll(this, accountDao);
+    new MessagesNotificationManager(this).cancelAll(this, account);
   }
 
   @Override
@@ -177,19 +179,18 @@ public class EmailManagerActivity extends BaseEmailListActivity
     switchView = item.getActionView().findViewById(R.id.switchShowOnlyEncryptedMessages);
 
     if (switchView != null) {
-      switchView.setChecked(new AccountDaoSource().isShowOnlyEncryptedMessages(this, accountDao.getEmail()));
+      switchView.setChecked(new AccountDaoSource().isEncryptedModeEnabled(this, account.getEmail()));
 
       switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-          if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this.getApplicationContext())) {
+          if (GeneralUtil.isConnected(EmailManagerActivity.this.getApplicationContext())) {
             buttonView.setEnabled(false);
           }
 
           cancelAllSyncTasks(0);
-          new AccountDaoSource().setIsShowOnlyEncryptedMessages(EmailManagerActivity.this,
-              accountDao.getEmail(), isChecked);
-          onShowOnlyEncryptedMessages(isChecked);
+          new AccountDaoSource().setShowOnlyEncryptedMsgs(EmailManagerActivity.this, account.getEmail(), isChecked);
+          onShowOnlyEncryptedMsgs(isChecked);
 
           Toast.makeText(EmailManagerActivity.this, isChecked ? R.string.showing_only_encrypted_messages
               : R.string.showing_all_messages, Toast.LENGTH_SHORT).show();
@@ -205,10 +206,10 @@ public class EmailManagerActivity extends BaseEmailListActivity
     MenuItem itemSwitch = menu.findItem(R.id.menuSwitch);
     MenuItem itemSearch = menu.findItem(R.id.menuSearch);
 
-    if (folder != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+    if (localFolder != null) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName())) {
         itemSwitch.setVisible(false);
-        itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType()));
+        itemSearch.setVisible(AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()));
       } else {
         itemSwitch.setVisible(true);
         itemSearch.setVisible(true);
@@ -237,31 +238,23 @@ public class EmailManagerActivity extends BaseEmailListActivity
       case REQUEST_CODE_SIGN_IN:
         switch (resultCode) {
           case RESULT_OK:
-            GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if (googleSignInResult.isSuccess()) {
-              EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+            GoogleSignInResult signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (signInResult.isSuccess()) {
+              EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
                   .findFragmentById(R.id.emailListFragment);
 
-              if (emailListFragment != null) {
-                emailListFragment.reloadMessages();
+              if (fragment != null) {
+                fragment.reloadMsgs();
               }
             } else {
-              if (!TextUtils.isEmpty(googleSignInResult.getStatus().getStatusMessage())) {
-                UIUtil.showInfoSnackbar(getRootView(), googleSignInResult.getStatus()
-                    .getStatusMessage());
+              if (!TextUtils.isEmpty(signInResult.getStatus().getStatusMessage())) {
+                UIUtil.showInfoSnackbar(getRootView(), signInResult.getStatus().getStatusMessage());
               }
             }
             break;
 
           case RESULT_CANCELED:
-            showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string
-                    .sign_in),
-                Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                  @Override
-                  public void onClick(View v) {
-                    onRetryGoogleAuth();
-                  }
-                });
+            showGmailSignIn();
             break;
         }
         break;
@@ -272,52 +265,51 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null,
-            EmailManagerActivity.this);
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null, this);
         if (!countingIdlingResourceForLabel.isIdleNow()) {
           countingIdlingResourceForLabel.decrement();
         }
         break;
 
       case R.id.syns_request_code_force_load_new_messages:
-        onForceLoadNewMessagesCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
         break;
 
       case R.id.syns_request_code_load_next_messages:
         switchView.setEnabled(true);
-        super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+        super.onReplyReceived(requestCode, resultCode, obj);
         break;
 
       default:
-        super.onReplyFromServiceReceived(requestCode, resultCode, obj);
+        super.onReplyReceived(requestCode, resultCode, obj);
     }
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return true;
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
-        if (!countingIdlingResourceForMessages.isIdleNow()) {
-          countingIdlingResourceForMessages.decrement();
+        if (!msgsCountingIdlingResource.isIdleNow()) {
+          msgsCountingIdlingResource.decrement();
         }
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         break;
 
       case R.id.syns_request_code_update_label_passive:
       case R.id.syns_request_code_update_label_active:
-        notifyEmailListFragmentAboutError(requestCode, errorType, e);
+        onErrorOccurred(requestCode, errorType, e);
         if (!countingIdlingResourceForLabel.isIdleNow()) {
           countingIdlingResourceForLabel.decrement();
         }
@@ -325,11 +317,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.syns_request_code_load_next_messages:
         switchView.setEnabled(true);
-        super.onErrorFromServiceReceived(requestCode, errorType, e);
+        super.onErrorHappened(requestCode, errorType, e);
         break;
 
       default:
-        super.onErrorFromServiceReceived(requestCode, errorType, e);
+        super.onErrorHappened(requestCode, errorType, e);
     }
   }
 
@@ -384,12 +376,11 @@ public class EmailManagerActivity extends BaseEmailListActivity
         break;
 
       case Menu.NONE:
-        Folder newFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
-        if (newFolder != null) {
-          if (folder == null || !folder.getServerFullFolderName()
-              .equals(newFolder.getServerFullFolderName())) {
-            this.folder = newFolder;
-            updateEmailsListFragmentAfterFolderChange();
+        LocalFolder newLocalFolder = foldersManager.getFolderByAlias(item.getTitle().toString());
+        if (newLocalFolder != null) {
+          if (localFolder == null || !localFolder.getFullName().equals(newLocalFolder.getFullName())) {
+            this.localFolder = newLocalFolder;
+            onFolderChanged();
             invalidateOptionsMenu();
           }
         }
@@ -405,8 +396,9 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_load_gmail_labels:
-        return new CursorLoader(this, new ImapLabelsDaoSource().getBaseContentUri(), null,
-            ImapLabelsDaoSource.COL_EMAIL + " = ?", new String[]{accountDao.getEmail()}, null);
+        Uri uri = new ImapLabelsDaoSource().getBaseContentUri();
+        String selection = ImapLabelsDaoSource.COL_EMAIL + " = ?";
+        return new CursorLoader(this, uri, null, selection, new String[]{account.getEmail()}, null);
       default:
         return new Loader<>(this.getApplicationContext());
     }
@@ -434,43 +426,45 @@ public class EmailManagerActivity extends BaseEmailListActivity
             for (String label : getSortedServerFolders()) {
               mailLabels.getSubMenu().add(label);
               if (JavaEmailConstants.FOLDER_OUTBOX.equals(label)) {
-                MenuItem menuItem = mailLabels.getSubMenu()
-                    .getItem(mailLabels.getSubMenu().size() - 1);
-
-                if (foldersManager.getFolderByAlias(label).getMessageCount() > 0) {
-                  View navigationItemWithAmount = LayoutInflater.from(this).inflate(R.layout
-                      .navigation_view_item_with_amount, navigationView, false);
-                  TextView textViewMessagesCount = navigationItemWithAmount.findViewById(R.id
-                      .textViewMessageCount);
-                  textViewMessagesCount.setText(String.valueOf(foldersManager.getFolderByAlias(label)
-                      .getMessageCount()));
-                  menuItem.setActionView(navigationItemWithAmount);
-                } else {
-                  menuItem.setActionView(null);
-                }
+                addOutboxLabel(mailLabels, label);
               }
             }
 
-            for (Folder s : foldersManager.getCustomLabels()) {
+            for (LocalFolder s : foldersManager.getCustomLabels()) {
               mailLabels.getSubMenu().add(s.getFolderAlias());
             }
           }
 
-          if (folder == null) {
-            folder = foldersManager.getFolderInbox();
-            if (folder == null) {
-              folder = foldersManager.findInboxFolder();
+          if (localFolder == null) {
+            localFolder = foldersManager.getFolderInbox();
+            if (localFolder == null) {
+              localFolder = foldersManager.findInboxFolder();
             }
 
-            updateEmailsListFragmentAfterFolderChange();
+            onFolderChanged();
           } else {
-            Folder newestFolderInfo = foldersManager.getFolderByAlias(folder.getFolderAlias());
-            if (newestFolderInfo != null) {
-              folder = newestFolderInfo;
+            LocalFolder newestLocalFolderInfo = foldersManager.getFolderByAlias(localFolder.getFolderAlias());
+            if (newestLocalFolderInfo != null) {
+              localFolder = newestLocalFolderInfo;
             }
           }
         }
         break;
+    }
+  }
+
+  private void addOutboxLabel(MenuItem mailLabels, String label) {
+    MenuItem menuItem = mailLabels.getSubMenu().getItem(mailLabels.getSubMenu().size() - 1);
+
+    if (foldersManager.getFolderByAlias(label).getMsgCount() > 0) {
+      View view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
+          navigationView, false);
+      TextView textViewMsgsCount = view.findViewById(R.id.textViewMessageCount);
+      LocalFolder folder = foldersManager.getFolderByAlias(label);
+      textViewMsgsCount.setText(String.valueOf(folder.getMsgCount()));
+      menuItem.setActionView(view);
+    } else {
+      menuItem.setActionView(null);
     }
   }
 
@@ -483,8 +477,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.floatActionButtonCompose:
-        startActivity(CreateMessageActivity.generateIntent(this, null,
-            MessageEncryptionType.ENCRYPTED));
+        startActivity(CreateMessageActivity.generateIntent(this, null, MessageEncryptionType.ENCRYPTED));
         break;
 
       case R.id.viewIdAddNewAccount:
@@ -495,18 +488,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   @Override
   public AccountDao getCurrentAccountDao() {
-    return accountDao;
+    return account;
   }
 
   @Override
-  public Folder getCurrentFolder() {
-    return folder;
+  public LocalFolder getCurrentFolder() {
+    return localFolder;
   }
 
   @Override
   public void onRetryGoogleAuth() {
-    GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-        REQUEST_CODE_SIGN_IN);
+    GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, apiClient, getRootView(), REQUEST_CODE_SIGN_IN);
   }
 
   @Override
@@ -520,29 +512,28 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    UIUtil.showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+  public void onConnectionFailed(@NonNull ConnectionResult connResult) {
+    UIUtil.showInfoSnackbar(getRootView(), connResult.getErrorMessage());
   }
 
   @Override
   public boolean onQueryTextSubmit(String query) {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())
-        && !SearchSequence.isAscii(query)) {
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()) && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
       return true;
     }
 
     menuItemSearch.collapseActionView();
-    DataBaseUtil.cleanFolderCache(this, accountDao.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(accountDao.getAccountType())) {
-      Folder allMail = foldersManager.getFolderAll();
+    DatabaseUtil.cleanFolderCache(this, account.getEmail(), SearchMessagesActivity.SEARCH_FOLDER_NAME);
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
+      LocalFolder allMail = foldersManager.getFolderAll();
       if (allMail != null) {
         startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager.getFolderAll()));
       } else {
-        startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+        startActivity(SearchMessagesActivity.newIntent(this, query, localFolder));
       }
     } else {
-      startActivity(SearchMessagesActivity.newIntent(this, query, folder));
+      startActivity(SearchMessagesActivity.newIntent(this, query, localFolder));
     }
     UIUtil.hideSoftInput(this, getRootView());
     return false;
@@ -554,10 +545,10 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void refreshFoldersInfoFromCache() {
-    foldersManager = FoldersManager.fromDatabase(this, accountDao.getEmail());
-    if (folder != null && !TextUtils.isEmpty(folder.getFolderAlias())) {
-      folder = foldersManager.getFolderByAlias(folder.getFolderAlias());
+  public void refreshFoldersFromCache() {
+    foldersManager = FoldersManager.fromDatabase(this, account.getEmail());
+    if (localFolder != null && !TextUtils.isEmpty(localFolder.getFolderAlias())) {
+      localFolder = foldersManager.getFolderByAlias(localFolder.getFolderAlias());
     }
   }
 
@@ -566,43 +557,51 @@ public class EmailManagerActivity extends BaseEmailListActivity
     return countingIdlingResourceForLabel;
   }
 
+  private void showGmailSignIn() {
+    showSnackbar(getRootView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+        Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            onRetryGoogleAuth();
+          }
+        });
+  }
+
   /**
    * Sort the server folders for a better user experience.
    *
    * @return The sorted labels list.
    */
   private String[] getSortedServerFolders() {
-    List<Folder> folders = foldersManager.getServerFolders();
-    String[] serverFolders = new String[folders.size()];
+    List<LocalFolder> localFolders = foldersManager.getServerFolders();
+    String[] serverFolders = new String[localFolders.size()];
 
-    Folder inbox, spam, trash, outbox;
-    inbox = foldersManager.getFolderInbox();
-    spam = foldersManager.getFolderSpam();
-    trash = foldersManager.getFolderTrash();
-    outbox = foldersManager.getFolderOutbox();
-
+    LocalFolder inbox = foldersManager.getFolderInbox();
     if (inbox != null) {
-      folders.remove(inbox);
+      localFolders.remove(inbox);
       serverFolders[0] = inbox.getFolderAlias();
     }
 
+    LocalFolder trash = foldersManager.getFolderTrash();
     if (trash != null) {
-      folders.remove(trash);
-      serverFolders[folders.size() + 1] = trash.getFolderAlias();
+      localFolders.remove(trash);
+      serverFolders[localFolders.size() + 1] = trash.getFolderAlias();
     }
 
+    LocalFolder spam = foldersManager.getFolderSpam();
     if (spam != null) {
-      folders.remove(spam);
-      serverFolders[folders.size() + 1] = spam.getFolderAlias();
+      localFolders.remove(spam);
+      serverFolders[localFolders.size() + 1] = spam.getFolderAlias();
     }
 
+    LocalFolder outbox = foldersManager.getFolderOutbox();
     if (outbox != null) {
-      folders.remove(outbox);
-      serverFolders[folders.size() + 1] = outbox.getFolderAlias();
+      localFolders.remove(outbox);
+      serverFolders[localFolders.size() + 1] = outbox.getFolderAlias();
     }
 
-    for (int i = 0; i < folders.size(); i++) {
-      Folder s = folders.get(i);
+    for (int i = 0; i < localFolders.size(); i++) {
+      LocalFolder s = localFolders.get(i);
       if (inbox == null) {
         serverFolders[i] = s.getFolderAlias();
       } else {
@@ -615,21 +614,21 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
   private void logout() {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, accountDao.getEmail());
+    List<AccountDao> accountDaoList = accountDaoSource.getAccountsWithoutActive(this, account.getEmail());
 
-    switch (accountDao.getAccountType()) {
+    switch (account.getAccountType()) {
       case AccountDao.ACCOUNT_TYPE_GOOGLE:
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-          GoogleApiClientHelper.signOutFromGoogleAccount(this, googleApiClient);
+        if (apiClient != null && apiClient.isConnected()) {
+          GoogleApiClientHelper.signOutFromGoogleAccount(this, apiClient);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.google_api_is_not_available));
         }
         break;
     }
 
-    if (accountDao != null) {
-      getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/"
-          + FlowcryptContract.CLEAN_DATABASE), null, new String[]{accountDao.getEmail()});
+    if (account != null) {
+      Uri uri = Uri.parse(FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.CLEAN_DATABASE);
+      getContentResolver().delete(uri, null, new String[]{account.getEmail()});
     }
 
     if (accountDaoList != null && !accountDaoList.isEmpty()) {
@@ -650,28 +649,28 @@ public class EmailManagerActivity extends BaseEmailListActivity
   /**
    * Handle a result from the load new messages action.
    *
-   * @param needToRefreshList true if we must reload the emails list.
+   * @param refreshListNeeded true if we must reload the emails list.
    */
-  private void onForceLoadNewMessagesCompleted(boolean needToRefreshList) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+  private void onForceLoadNewMsgsCompleted(boolean refreshListNeeded) {
+    EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
-    if (emailListFragment != null) {
-      emailListFragment.onForceLoadNewMessagesCompleted(needToRefreshList);
+    if (fragment != null) {
+      fragment.onForceLoadNewMsgsCompleted(refreshListNeeded);
     }
   }
 
   /**
    * Change messages displaying.
    *
-   * @param isShowOnlyEncryptedMessages true if we want ot show only encrypted messages, false if we want to show
-   *                                    all messages.
+   * @param onlyEncrypted true if we want ot show only encrypted messages, false if we want to show
+   *                      all messages.
    */
-  private void onShowOnlyEncryptedMessages(boolean isShowOnlyEncryptedMessages) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+  private void onShowOnlyEncryptedMsgs(boolean onlyEncrypted) {
+    EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
-    if (isShowOnlyEncryptedMessages) {
+    if (onlyEncrypted) {
       String currentNotificationLevel = SharedPreferencesHelper.getString(PreferenceManager
           .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
 
@@ -682,8 +681,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
       }
     }
 
-    if (emailListFragment != null) {
-      emailListFragment.onFilterMessages(isShowOnlyEncryptedMessages);
+    if (fragment != null) {
+      fragment.onFilterMsgs(onlyEncrypted);
     }
   }
 
@@ -693,29 +692,28 @@ public class EmailManagerActivity extends BaseEmailListActivity
    * @param isOpen true if the drawer is open, otherwise false.
    */
   private void notifyFragmentAboutDrawerChange(boolean isOpen) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
+    EmailListFragment fragment = (EmailListFragment) getSupportFragmentManager()
         .findFragmentById(R.id.emailListFragment);
 
-    if (emailListFragment != null) {
-      emailListFragment.onDrawerStateChange(isOpen);
+    if (fragment != null) {
+      fragment.onDrawerStateChanged(isOpen);
     }
   }
 
   private void initViews() {
     drawerLayout = findViewById(R.id.drawer_layout);
     actionBarDrawerToggle = new CustomDrawerToggle(this, drawerLayout, getToolbar(),
-        R.string.navigation_drawer_open,
-        R.string.navigation_drawer_close);
+        R.string.navigation_drawer_open, R.string.navigation_drawer_close);
     drawerLayout.addDrawerListener(actionBarDrawerToggle);
     actionBarDrawerToggle.syncState();
 
     navigationView = findViewById(R.id.navigationView);
     navigationView.setNavigationItemSelectedListener(this);
-    navigationView.addHeaderView(generateAccountManagementLayout());
+    navigationView.addHeaderView(genAccountManagementLayout());
 
-    MenuItem navigationMenuDevSettings = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
-    if (navigationMenuDevSettings != null) {
-      navigationMenuDevSettings.setVisible(GeneralUtil.isDebug());
+    MenuItem item = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
+    if (item != null) {
+      item.setVisible(GeneralUtil.isDebugBuild());
     }
 
     if (findViewById(R.id.floatActionButtonCompose) != null) {
@@ -735,17 +733,17 @@ public class EmailManagerActivity extends BaseEmailListActivity
     TextView textViewUserDisplayName = view.findViewById(R.id.textViewActiveUserDisplayName);
     TextView textViewUserEmail = view.findViewById(R.id.textViewActiveUserEmail);
 
-    if (accountDao != null) {
-      if (TextUtils.isEmpty(accountDao.getDisplayName())) {
+    if (account != null) {
+      if (TextUtils.isEmpty(account.getDisplayName())) {
         textViewUserDisplayName.setVisibility(View.GONE);
       } else {
-        textViewUserDisplayName.setText(accountDao.getDisplayName());
+        textViewUserDisplayName.setText(account.getDisplayName());
       }
-      textViewUserEmail.setText(accountDao.getEmail());
+      textViewUserEmail.setText(account.getEmail());
 
-      if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+      if (!TextUtils.isEmpty(account.getPhotoUrl())) {
         GlideApp.with(this)
-            .load(accountDao.getPhotoUrl())
+            .load(account.getPhotoUrl())
             .apply(new RequestOptions()
                 .centerCrop()
                 .transform(new CircleTransformation())
@@ -755,14 +753,14 @@ public class EmailManagerActivity extends BaseEmailListActivity
     }
 
     currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails);
-    final ImageView imageViewExpandAccountManagement = view.findViewById(R.id.imageViewExpandAccountManagement);
+    final ImageView imageView = view.findViewById(R.id.imageViewExpandAccountManagement);
     if (currentAccountDetailsItem != null) {
-      handleClickOnAccountManagementButton(currentAccountDetailsItem, imageViewExpandAccountManagement);
+      accountManagementButtonClicked(currentAccountDetailsItem, imageView);
     }
   }
 
-  private void handleClickOnAccountManagementButton(View currentAccountDetailsItem, final ImageView imageView) {
-    currentAccountDetailsItem.setOnClickListener(new View.OnClickListener() {
+  private void accountManagementButtonClicked(View view, final ImageView imageView) {
+    view.setOnClickListener(new View.OnClickListener() {
       private boolean isExpanded;
 
       @Override
@@ -787,46 +785,44 @@ public class EmailManagerActivity extends BaseEmailListActivity
    *
    * @return The generated view.
    */
-  private ViewGroup generateAccountManagementLayout() {
+  private ViewGroup genAccountManagementLayout() {
     accountManagementLayout = new LinearLayout(this);
     accountManagementLayout.setOrientation(LinearLayout.VERTICAL);
     accountManagementLayout.setLayoutParams(new ViewGroup.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     accountManagementLayout.setVisibility(View.GONE);
 
-    List<AccountDao> accountDaoList = new AccountDaoSource().getAccountsWithoutActive(this, accountDao.getEmail());
-    for (final AccountDao accountDao : accountDaoList) {
-      accountManagementLayout.addView(generateAccountItemView(accountDao));
+    List<AccountDao> accountDaoList = new AccountDaoSource().getAccountsWithoutActive(this, account.getEmail());
+    for (final AccountDao account : accountDaoList) {
+      accountManagementLayout.addView(generateAccountItemView(account));
     }
 
-    View addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account,
-        accountManagementLayout, false);
+    View addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false);
     addNewAccountView.setOnClickListener(this);
     accountManagementLayout.addView(addNewAccountView);
 
     return accountManagementLayout;
   }
 
-  private View generateAccountItemView(final AccountDao accountDao) {
-    View accountItemView = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item,
-        accountManagementLayout, false);
-    accountItemView.setTag(accountDao);
+  private View generateAccountItemView(final AccountDao account) {
+    View view = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item, accountManagementLayout, false);
+    view.setTag(account);
 
-    ImageView imageViewActiveUserPhoto = accountItemView.findViewById(R.id.imageViewActiveUserPhoto);
-    TextView textViewActiveUserDisplayName = accountItemView.findViewById(R.id.textViewUserDisplayName);
-    TextView textViewActiveUserEmail = accountItemView.findViewById(R.id.textViewUserEmail);
+    ImageView imageViewActiveUserPhoto = view.findViewById(R.id.imageViewActiveUserPhoto);
+    TextView textViewName = view.findViewById(R.id.textViewUserDisplayName);
+    TextView textViewEmail = view.findViewById(R.id.textViewUserEmail);
 
-    if (accountDao != null) {
-      if (TextUtils.isEmpty(accountDao.getDisplayName())) {
-        textViewActiveUserDisplayName.setVisibility(View.GONE);
+    if (account != null) {
+      if (TextUtils.isEmpty(account.getDisplayName())) {
+        textViewName.setVisibility(View.GONE);
       } else {
-        textViewActiveUserDisplayName.setText(accountDao.getDisplayName());
+        textViewName.setText(account.getDisplayName());
       }
-      textViewActiveUserEmail.setText(accountDao.getEmail());
+      textViewEmail.setText(account.getEmail());
 
-      if (!TextUtils.isEmpty(accountDao.getPhotoUrl())) {
+      if (!TextUtils.isEmpty(account.getPhotoUrl())) {
         GlideApp.with(this)
-            .load(accountDao.getPhotoUrl())
+            .load(account.getPhotoUrl())
             .apply(new RequestOptions()
                 .centerCrop()
                 .transform(new CircleTransformation())
@@ -835,19 +831,19 @@ public class EmailManagerActivity extends BaseEmailListActivity
       }
     }
 
-    accountItemView.setOnClickListener(new View.OnClickListener() {
+    view.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         finish();
-        if (accountDao != null) {
-          new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, accountDao.getEmail());
+        if (account != null) {
+          new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, account.getEmail());
           EmailSyncService.switchAccount(EmailManagerActivity.this);
           runEmailManagerActivity(EmailManagerActivity.this);
         }
       }
     });
 
-    return accountItemView;
+    return view;
   }
 
   /**
@@ -879,7 +875,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
     public void onDrawerOpened(View drawerView) {
       super.onDrawerOpened(drawerView);
 
-      if (GeneralUtil.isInternetConnectionAvailable(EmailManagerActivity.this)) {
+      if (GeneralUtil.isConnected(EmailManagerActivity.this)) {
         countingIdlingResourceForLabel.increment();
         updateLabels(R.id.syns_request_code_update_label_passive, true);
       }

@@ -10,10 +10,10 @@ import android.os.Parcel;
 import android.util.Pair;
 
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import java.util.ArrayList;
@@ -29,8 +29,8 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 public class FillUserIdEmailsKeysTableAction extends Action {
-  public static final Creator<FillUserIdEmailsKeysTableAction> CREATOR = new
-      Creator<FillUserIdEmailsKeysTableAction>() {
+  public static final Creator<FillUserIdEmailsKeysTableAction> CREATOR =
+      new Creator<FillUserIdEmailsKeysTableAction>() {
         @Override
         public FillUserIdEmailsKeysTableAction createFromParcel(Parcel source) {
           return new FillUserIdEmailsKeysTableAction(source);
@@ -53,11 +53,11 @@ public class FillUserIdEmailsKeysTableAction extends Action {
 
   @Override
   public void run(Context context) throws Exception {
-    SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
-    Js js = new Js(context, securityStorageConnector);
+    SecurityStorageConnector connector = new SecurityStorageConnector(context);
+    Js js = new Js(context, connector);
     List<Pair<String, String>> pairs = new ArrayList<>();
 
-    PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
+    PgpKeyInfo[] pgpKeyInfoArray = connector.getAllPgpPrivateKeys();
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
       PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
       if (pgpKey != null) {

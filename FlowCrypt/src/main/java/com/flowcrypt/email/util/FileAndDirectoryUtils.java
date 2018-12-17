@@ -24,12 +24,12 @@ public class FileAndDirectoryUtils {
   /**
    * Cleans an input directory.
    *
-   * @param directory The directory which will be cleaned.
+   * @param dir The directory which will be cleaned.
    * @throws IOException An error can occur while cleaning the directory.
    */
-  public static void deleteDirectory(final File directory) throws IOException {
-    cleanDirectory(directory);
-    deleteFile(directory);
+  public static void deleteDir(final File dir) throws IOException {
+    cleanDir(dir);
+    deleteFile(dir);
   }
 
   /**
@@ -38,12 +38,12 @@ public class FileAndDirectoryUtils {
    * @param directory The directory which will be cleaned.
    * @throws IOException An error can occur while cleaning the directory.
    */
-  public static void cleanDirectory(final File directory) throws IOException {
+  public static void cleanDir(final File directory) throws IOException {
     if (directory == null || !directory.exists() || !directory.isDirectory()) {
       return;
     }
 
-    final File[] files = getFilesInDirectory(directory);
+    final File[] files = getFilesInDir(directory);
 
     for (File file : files) {
       deleteFile(file);
@@ -65,10 +65,8 @@ public class FileAndDirectoryUtils {
             if (childFile != null && childFile.exists()) {
               if (childFile.isDirectory()) {
                 deleteFile(childFile);
-              } else {
-                if (!childFile.delete()) {
-                  throw new IOException("An error occurred while delete " + childFile);
-                }
+              } else if (!childFile.delete()) {
+                throw new IOException("An error occurred while delete " + childFile);
               }
             }
           }
@@ -88,7 +86,7 @@ public class FileAndDirectoryUtils {
    * @return The the directory files or an empty array.
    */
   @NonNull
-  private static File[] getFilesInDirectory(final File directory) {
+  private static File[] getFilesInDir(final File directory) {
     if (directory.exists() && directory.isDirectory()) {
       File[] files = directory.listFiles();
       if (files == null) {

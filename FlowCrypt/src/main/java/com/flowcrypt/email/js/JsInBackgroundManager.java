@@ -7,12 +7,12 @@ package com.flowcrypt.email.js;
 
 import android.util.Log;
 
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.js.tasks.DecryptRawMimeMessageJsTask;
 import com.flowcrypt.email.js.tasks.JsTask;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
-import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,10 +42,10 @@ public class JsInBackgroundManager {
    * This fields created as volatile because will be used in different threads.
    */
   private volatile JsListener jsListener;
-  private volatile BlockingQueue<JsTask> blockingQueue;
+  private volatile BlockingQueue<JsTask> queue;
 
   public JsInBackgroundManager() {
-    this.blockingQueue = new LinkedBlockingQueue<>();
+    this.queue = new LinkedBlockingQueue<>();
     this.executorService = Executors.newFixedThreadPool(JS_THREADS_COUNT);
   }
 
@@ -54,15 +54,15 @@ public class JsInBackgroundManager {
    */
   public void init() {
     Log.d(TAG, "init");
-    if (!isThreadAlreadyWork(futureFirst)) {
+    if (!isThreadAlreadyWorking(futureFirst)) {
       futureFirst = executorService.submit(new JsRunnable("FirstJsWorker"));
     }
 
-    if (!isThreadAlreadyWork(futureSecond)) {
+    if (!isThreadAlreadyWorking(futureSecond)) {
       futureSecond = executorService.submit(new JsRunnable("SecondJsWorker"));
     }
 
-    if (!isThreadAlreadyWork(futureThird)) {
+    if (!isThreadAlreadyWorking(futureThird)) {
       futureThird = executorService.submit(new JsRunnable("ThirdJsWorker"));
     }
   }
@@ -84,8 +84,8 @@ public class JsInBackgroundManager {
    */
   public void cancelAllTasks() {
     Log.d(TAG, "cancelAllTasks");
-    if (blockingQueue != null) {
-      blockingQueue.clear();
+    if (queue != null) {
+      queue.clear();
     }
   }
 
@@ -103,11 +103,11 @@ public class JsInBackgroundManager {
    *
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for identify the current action.
-   * @param rawMessage  The incoming raw message.
+   * @param rawMsg  The incoming raw message.
    */
-  public void decryptMessage(String ownerKey, int requestCode, String rawMessage) {
+  public void decryptMsg(String ownerKey, int requestCode, String rawMsg) {
     try {
-      blockingQueue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMessage));
+      queue.put(new DecryptRawMimeMessageJsTask(ownerKey, requestCode, rawMsg));
     } catch (InterruptedException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -128,7 +128,7 @@ public class JsInBackgroundManager {
    *
    * @return true if already work, otherwise false.
    */
-  private boolean isThreadAlreadyWork(Future<?> future) {
+  private boolean isThreadAlreadyWorking(Future<?> future) {
     return future != null && !future.isCancelled() && !future.isDone();
   }
 
@@ -153,36 +153,21 @@ public class JsInBackgroundManager {
   }
 
   /**
-   * Remove old tasks from the queue.
-   *
-   * @param cls           The task type.
-   * @param blockingQueue The queue of the tasks.
-   */
-  private void removeOldTasksFromBlockingQueue(Class<?> cls, BlockingQueue<JsTask> blockingQueue) {
-    Iterator<?> iterator = blockingQueue.iterator();
-    while (iterator.hasNext()) {
-      if (cls.isInstance(iterator.next())) {
-        iterator.remove();
-      }
-    }
-  }
-
-  /**
    * An implementation of the worker thread.
    */
   private class JsRunnable implements Runnable {
-    private String TAG = JsRunnable.class.getSimpleName();
+    private String tag;
     private Js js;
     private String workerName;
 
-    public JsRunnable(String workerName) {
+    JsRunnable(String workerName) {
       this.workerName = workerName;
-      this.TAG += "|" + workerName;
+      this.tag = JsRunnable.class.getSimpleName() + "|" + workerName;
     }
 
     @Override
     public void run() {
-      Log.d(TAG, " run!");
+      Log.d(tag, " run!");
       Thread.currentThread().setName(workerName);
 
       try {
@@ -196,8 +181,8 @@ public class JsInBackgroundManager {
         boolean isInterrupted = false;
         while (!isInterrupted) {
           try {
-            Log.d(TAG, "blockingQueue size = " + blockingQueue.size());
-            JsTask jsTask = blockingQueue.take();
+            Log.d(tag, "queue size = " + queue.size());
+            JsTask jsTask = queue.take();
 
             if (jsTask != null) {
               runJsTask(jsTask);
@@ -205,13 +190,13 @@ public class JsInBackgroundManager {
           } catch (InterruptedException e) {
             e.printStackTrace();
             isInterrupted = true;
-            Log.d(TAG, "A task was interrupted!");
+            Log.d(tag, "A task was interrupted!");
           }
         }
       } catch (Exception e) {
         e.printStackTrace();
       }
-      Log.d(TAG, " stopped!");
+      Log.d(tag, " stopped!");
     }
 
     /**
@@ -221,9 +206,9 @@ public class JsInBackgroundManager {
      */
     void runJsTask(JsTask jsTask) {
       try {
-        Log.d(TAG, "Start a new task = " + jsTask.getClass().getSimpleName());
+        Log.d(tag, "Start a new task = " + jsTask.getClass().getSimpleName());
         jsTask.runAction(js, jsListener);
-        Log.d(TAG, "The task = " + jsTask.getClass().getSimpleName() + " completed");
+        Log.d(tag, "The task = " + jsTask.getClass().getSimpleName() + " completed");
       } catch (Exception e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);

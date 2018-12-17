@@ -74,12 +74,11 @@ public final class LoggingInFileInterceptor implements Interceptor {
 
     Connection connection = chain.connection();
     Protocol protocol = connection != null ? connection.protocol() : Protocol.HTTP_1_1;
-    String requestStartMessage = "--> " + request.method() + ' ' + request.url() + ' ' +
-        protocol;
+    String requestStartMsg = "--> " + request.method() + ' ' + request.url() + ' ' + protocol;
     if (!logHeaders && hasRequestBody) {
-      requestStartMessage += " (" + requestBody.contentLength() + "-byte body)";
+      requestStartMsg += " (" + requestBody.contentLength() + "-byte body)";
     }
-    logger.log(requestStartMessage);
+    logger.log(requestStartMsg);
 
     if (logHeaders) {
       if (hasRequestBody) {
@@ -106,7 +105,7 @@ public final class LoggingInFileInterceptor implements Interceptor {
 
       if (!logBody || !hasRequestBody) {
         logger.log("--> END " + request.method());
-      } else if (bodyEncoded(request.headers())) {
+      } else if (isBodyEncoded(request.headers())) {
         logger.log("--> END " + request.method() + " (encoded body omitted)");
       } else {
         Buffer buffer = new Buffer();
@@ -119,7 +118,7 @@ public final class LoggingInFileInterceptor implements Interceptor {
         }
 
         logger.log("");
-        if (isPlaintext(buffer)) {
+        if (isPlainText(buffer)) {
           logger.log(buffer.readString(charset));
           logger.log("--> END " + request.method()
               + " (" + requestBody.contentLength() + "-byte body)");
@@ -138,14 +137,14 @@ public final class LoggingInFileInterceptor implements Interceptor {
       logger.log("<-- HTTP FAILED: " + e);
       throw e;
     }
+
     long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
 
     ResponseBody responseBody = response.body();
-    long contentLength = responseBody.contentLength();
+    long contentLength = responseBody != null ? responseBody.contentLength() : 0;
     String bodySize = contentLength != -1 ? contentLength + "-byte" : "unknown-length";
-    logger.log("<-- " + response.code() + ' ' + response.message() + ' '
-        + response.request().url() + " (" + tookMs + "ms" + (!logHeaders ? ", "
-        + bodySize + " body" : "") + ')');
+    logger.log("<-- " + response.code() + ' ' + response.message() + ' ' + response.request().url() + " (" + tookMs +
+        "ms" + (!logHeaders ? ", " + bodySize + " body" : "") + ')');
 
     if (logHeaders) {
       Headers headers = response.headers();
@@ -155,7 +154,7 @@ public final class LoggingInFileInterceptor implements Interceptor {
 
       if (!logBody || !HttpHeaders.hasBody(response)) {
         logger.log("<-- END HTTP");
-      } else if (bodyEncoded(response.headers())) {
+      } else if (isBodyEncoded(response.headers())) {
         logger.log("<-- END HTTP (encoded body omitted)");
       } else {
         BufferedSource source = responseBody.source();
@@ -177,7 +176,7 @@ public final class LoggingInFileInterceptor implements Interceptor {
           }
         }
 
-        if (!isPlaintext(buffer)) {
+        if (!isPlainText(buffer)) {
           logger.log("");
           logger.log("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
           return response;
@@ -209,11 +208,10 @@ public final class LoggingInFileInterceptor implements Interceptor {
   }
 
   /**
-   * Returns true if the body in question probably contains human readable text. Uses a small
-   * sample
+   * Returns true if the body in question probably contains human readable text. Uses a small sample
    * of code points to detect unicode control characters commonly used in binary file signatures.
    */
-  private static boolean isPlaintext(Buffer buffer) {
+  private static boolean isPlainText(Buffer buffer) {
     try {
       Buffer prefix = new Buffer();
       long byteCount = buffer.size() < 64 ? buffer.size() : 64;
@@ -233,9 +231,9 @@ public final class LoggingInFileInterceptor implements Interceptor {
     }
   }
 
-  private boolean bodyEncoded(Headers headers) {
+  private boolean isBodyEncoded(Headers headers) {
     String contentEncoding = headers.get("Content-Encoding");
-    return contentEncoding != null && !contentEncoding.equalsIgnoreCase("identity");
+    return contentEncoding != null && !"identity".equalsIgnoreCase(contentEncoding);
   }
 
   public enum Level {

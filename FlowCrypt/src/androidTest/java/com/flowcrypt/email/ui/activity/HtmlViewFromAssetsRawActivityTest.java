@@ -40,8 +40,7 @@ import static org.hamcrest.Matchers.allOf;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class HtmlViewFromAssetsRawActivityTest extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>
-      (HtmlViewFromAssetsRawActivity.class, false, false);
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(HtmlViewFromAssetsRawActivity.class, false, false);
 
   @Rule
   public TestRule ruleChain = RuleChain

@@ -101,7 +101,7 @@ public class CreatePrivateKeyActivityTest {
   }
 
   @Test
-  public void testShowMessageMismatchOfPassPhrase() {
+  public void testShowMsgMismatchOfPassPhrase() {
     testShowRepeatingPassPhraseScreen();
 
     onView(withId(R.id.editTextKeyPasswordSecond)).check(matches(isDisplayed()))

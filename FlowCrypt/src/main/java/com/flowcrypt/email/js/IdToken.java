@@ -6,15 +6,16 @@
 package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 public class IdToken extends MeaningfulV8ObjectContainer {
 
   IdToken(V8Object o) {
     super(o);
-        /* keys: [
-            "azp", "aud", "sub", "email", "email_verified", "iss", "iat", "exp", "name", "picture",
-            "given_name", "family_name", "locale"
-        ] */
+    /*keys: [
+    "azp", "aud", "sub", "email", "email_verified", "iss", "iat", "exp", "name", "picture",
+        "given_name", "family_name", "locale"
+    ]*/
   }
 
   public String getEmail() {

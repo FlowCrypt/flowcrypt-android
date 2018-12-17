@@ -1,6 +1,5 @@
 /*
- * Business Source License 1.0 © 2017 FlowCrypt Limited (human@flowcrypt.com).
- * Use limitations apply. See https://github.com/FlowCrypt/flowcrypt-android/blob/master/LICENSE
+ * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -12,9 +11,9 @@ import android.os.Environment;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.gson.Gson;
@@ -75,7 +74,7 @@ public class TestGeneralUtil {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
+        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
             .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());

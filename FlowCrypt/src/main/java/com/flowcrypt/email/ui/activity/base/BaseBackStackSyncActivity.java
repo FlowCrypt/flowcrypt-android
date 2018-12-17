@@ -23,7 +23,7 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
   }
 
   @Override
-  public boolean isSyncEnable() {
+  public boolean isSyncEnabled() {
     return true;
   }
 
@@ -39,7 +39,7 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
   }
 
   @Override
-  public void onProgressReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
 
   }
 

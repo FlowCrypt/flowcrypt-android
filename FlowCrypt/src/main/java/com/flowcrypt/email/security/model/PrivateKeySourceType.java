@@ -22,7 +22,7 @@ public enum PrivateKeySourceType {
   /**
    * @param text
    */
-  private PrivateKeySourceType(final String text) {
+  PrivateKeySourceType(final String text) {
     this.text = text;
   }
 

@@ -8,7 +8,7 @@ package com.flowcrypt.email.rules;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -50,14 +50,13 @@ public class ClearAppSettingsRule implements TestRule {
    */
   private void clearApp() throws Throwable {
     SharedPreferencesHelper.clear(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    FileAndDirectoryUtils.cleanDirectory(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
+    FileAndDirectoryUtils.cleanDir(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
     InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver().delete(Uri.parse
-        (FlowcryptContract
-        .AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+        (FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        JsForUiManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
+        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
             .getJs()
             .getStorageConnector()
             .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());

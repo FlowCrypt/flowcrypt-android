@@ -36,18 +36,18 @@ public class ImapProtocolUtil {
    * The MIME part specifier refers to the [MIME-IMB] header for this part.
    * See details here https://tools.ietf.org/html/rfc3501#section-6.4.5.
    *
-   * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
-   * @param messageNumber This number will be used for fetching {@link MimePart} details;
-   * @param sectionId     The {@link Part} section id.
+   * @param folder    The {@link IMAPFolder} which contains the parent message;
+   * @param msgNumber This number will be used for fetching {@link MimePart} details;
+   * @param sectionId The {@link Part} section id.
    * @return A {@link MimePart} header {@link InputStream}
    * @throws MessagingException
    */
-  public static InputStream getHeaderStream(IMAPFolder imapFolder, final int messageNumber,
+  public static InputStream getHeaderStream(IMAPFolder folder, final int msgNumber,
                                             final int sectionId) throws MessagingException {
 
-    return (InputStream) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+    return (InputStream) folder.doCommand(new IMAPFolder.ProtocolCommand() {
       public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
-        BODY body = imapProtocol.peekBody(messageNumber, sectionId + ".MIME");
+        BODY body = imapProtocol.peekBody(msgNumber, sectionId + ".MIME");
         if (body != null) {
           return body.getByteArrayInputStream();
         } else {
@@ -60,15 +60,15 @@ public class ImapProtocolUtil {
   /**
    * Get {@link Part} which has an attachment with such attachment id.
    *
-   * @param imapFolder    The {@link IMAPFolder} which contains the parent message;
-   * @param messageNumber This number will be used for fetching {@link Part} details;
-   * @param part          The parent part.
+   * @param folder    The {@link IMAPFolder} which contains the parent message;
+   * @param msgNumber This number will be used for fetching {@link Part} details;
+   * @param part      The parent part.
    * @return {@link Part} which has attachment or null if message doesn't have such attachment.
    * @throws MessagingException
    * @throws IOException
    */
-  public static BodyPart getAttachmentPartById(IMAPFolder imapFolder, int messageNumber, Part part,
-                                               String attachmentId) throws MessagingException, IOException {
+  public static BodyPart getAttPartById(IMAPFolder folder, int msgNumber, Part part, String attId)
+      throws MessagingException, IOException {
     if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
       Multipart multiPart = (Multipart) part.getContent();
       int numberOfParts = multiPart.getCount();
@@ -76,12 +76,12 @@ public class ImapProtocolUtil {
       for (int partCount = 0; partCount < numberOfParts; partCount++) {
         BodyPart bodyPart = multiPart.getBodyPart(partCount);
         if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          BodyPart innerPart = getAttachmentPartById(imapFolder, messageNumber, bodyPart, attachmentId);
+          BodyPart innerPart = getAttPartById(folder, msgNumber, bodyPart, attId);
           if (innerPart != null) {
             return innerPart;
           }
         } else if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-          InputStream inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, messageNumber,
+          InputStream inputStream = ImapProtocolUtil.getHeaderStream(folder, msgNumber,
               partCount + 1);
 
           if (inputStream == null) {
@@ -96,7 +96,7 @@ public class ImapProtocolUtil {
             headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID);
           }
 
-          if (headers != null && attachmentId.equals(headers[0])) {
+          if (headers != null && attId.equals(headers[0])) {
             return bodyPart;
           }
         }

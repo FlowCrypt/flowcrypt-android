@@ -45,7 +45,7 @@ public class ExtraActionInfo implements Parcelable {
       return new ExtraActionInfo[size];
     }
   };
-  private List<AttachmentInfo> attachmentInfoList;
+  private List<AttachmentInfo> attsList;
   private ArrayList<String> toAddresses;
   private ArrayList<String> ccAddresses;
   private ArrayList<String> bccAddresses;
@@ -55,9 +55,9 @@ public class ExtraActionInfo implements Parcelable {
   public ExtraActionInfo() {
   }
 
-  public ExtraActionInfo(List<AttachmentInfo> attachmentInfoList, ArrayList<String> toAddresses, ArrayList<String>
-      ccAddresses, ArrayList<String> bccAddresses, String subject, String body) {
-    this.attachmentInfoList = attachmentInfoList;
+  public ExtraActionInfo(List<AttachmentInfo> attsList, ArrayList<String> toAddresses, ArrayList<String> ccAddresses,
+                         ArrayList<String> bccAddresses, String subject, String body) {
+    this.attsList = attsList;
     this.toAddresses = toAddresses;
     this.ccAddresses = ccAddresses;
     this.bccAddresses = bccAddresses;
@@ -66,7 +66,7 @@ public class ExtraActionInfo implements Parcelable {
   }
 
   protected ExtraActionInfo(Parcel in) {
-    this.attachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
+    this.attsList = in.createTypedArrayList(AttachmentInfo.CREATOR);
     this.toAddresses = in.createStringArrayList();
     this.ccAddresses = in.createStringArrayList();
     this.bccAddresses = in.createStringArrayList();
@@ -86,20 +86,20 @@ public class ExtraActionInfo implements Parcelable {
    * @param intent An incoming intent.
    */
   public static ExtraActionInfo parseExtraActionInfo(Context context, Intent intent) {
-    ExtraActionInfo extraActionInfo = null;
+    ExtraActionInfo info = null;
 
     //parse mailto: URI
     if (Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_SENDTO.equals(intent.getAction())) {
       if (intent.getData() != null) {
         Uri uri = intent.getData();
         if (RFC6068Parser.isMailTo(uri)) {
-          extraActionInfo = RFC6068Parser.parse(uri);
+          info = RFC6068Parser.parse(uri);
         }
       }
     }
 
-    if (extraActionInfo == null) {
-      extraActionInfo = new ExtraActionInfo();
+    if (info == null) {
+      info = new ExtraActionInfo();
     }
 
     switch (intent.getAction()) {
@@ -110,42 +110,42 @@ public class ExtraActionInfo implements Parcelable {
 
         CharSequence extraText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
         // Only use EXTRA_TEXT if the body hasn't already been set by the mailto: URI
-        if (extraText != null && TextUtils.isEmpty(extraActionInfo.getBody())) {
-          extraActionInfo.setBody(extraText.toString());
+        if (extraText != null && TextUtils.isEmpty(info.getBody())) {
+          info.setBody(extraText.toString());
         }
 
-        String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+        String subj = intent.getStringExtra(Intent.EXTRA_SUBJECT);
         // Only use EXTRA_SUBJECT if the subject hasn't already been set by the mailto: URI
-        if (subject != null && TextUtils.isEmpty(extraActionInfo.getSubject())) {
-          extraActionInfo.setSubject(subject);
+        if (subj != null && TextUtils.isEmpty(info.getSubject())) {
+          info.setSubject(subj);
         }
 
-        List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+        List<AttachmentInfo> attsList = new ArrayList<>();
 
         if (Intent.ACTION_SEND.equals(intent.getAction())) {
           Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
           if (stream != null) {
-            AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, stream);
-            attachmentInfoList.add(attachmentInfo);
+            AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream);
+            attsList.add(attachmentInfo);
           }
         } else {
-          List<Parcelable> parcelableArrayList = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-          if (parcelableArrayList != null) {
-            for (Parcelable parcelable : parcelableArrayList) {
+          List<Parcelable> uriList = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+          if (uriList != null) {
+            for (Parcelable parcelable : uriList) {
               Uri uri = (Uri) parcelable;
               if (uri != null) {
-                AttachmentInfo attachmentInfo = EmailUtil.getAttachmentInfoFromUri(context, uri);
-                attachmentInfoList.add(attachmentInfo);
+                AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri);
+                attsList.add(attachmentInfo);
               }
             }
           }
         }
 
-        extraActionInfo.setAttachmentInfoList(attachmentInfoList);
+        info.setAtts(attsList);
         break;
     }
 
-    return extraActionInfo;
+    return info;
   }
 
   @Override
@@ -155,7 +155,7 @@ public class ExtraActionInfo implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeTypedList(this.attachmentInfoList);
+    dest.writeTypedList(this.attsList);
     dest.writeStringList(this.toAddresses);
     dest.writeStringList(this.ccAddresses);
     dest.writeStringList(this.bccAddresses);
@@ -163,12 +163,12 @@ public class ExtraActionInfo implements Parcelable {
     dest.writeString(this.body);
   }
 
-  public List<AttachmentInfo> getAttachmentInfoList() {
-    return attachmentInfoList;
+  public List<AttachmentInfo> getAtts() {
+    return attsList;
   }
 
-  public void setAttachmentInfoList(List<AttachmentInfo> attachmentInfoList) {
-    this.attachmentInfoList = attachmentInfoList;
+  public void setAtts(List<AttachmentInfo> attsList) {
+    this.attsList = attsList;
   }
 
   public ArrayList<String> getToAddresses() {
@@ -221,7 +221,7 @@ public class ExtraActionInfo implements Parcelable {
     private String body;
     private Parcel in;
 
-    public Builder setAttachmentInfoList(List<AttachmentInfo> attachmentInfoList) {
+    public Builder setAttInfoList(List<AttachmentInfo> attachmentInfoList) {
       this.attachmentInfoList = attachmentInfoList;
       return this;
     }

@@ -10,7 +10,7 @@ import android.content.Intent;
 import android.widget.EditText;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
@@ -68,7 +68,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
     @Override
     protected Intent getActivityIntent() {
       return SearchMessagesActivity.newIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(), QUERY,
-          new Folder(FOLDER_NAME, FOLDER_NAME, 0, null, false));
+          new LocalFolder(FOLDER_NAME, FOLDER_NAME, 0, null, false));
     }
   };
 
@@ -82,7 +82,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((SearchMessagesActivity) intentsTestRule.getActivity())
-        .getCountingIdlingResourceForMessages());
+        .getMsgsCountingIdlingResource());
   }
 
   @After
@@ -106,9 +106,9 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   }
 
   @Test
-  public void testOpenSomeMessage() {
+  public void testOpenSomeMsg() {
     testShowNotEmptyList();
-    testRunMessageDetailsActivity(0);
+    testRunMsgDetailsActivity(0);
   }
 
   @Test

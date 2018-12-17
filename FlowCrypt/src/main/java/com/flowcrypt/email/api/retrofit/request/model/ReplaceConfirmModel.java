@@ -35,21 +35,21 @@ public class ReplaceConfirmModel extends BaseRequestModel {
 
   @SerializedName("signed_message")
   @Expose
-  private String signedMessage;
+  private String signedMsg;
 
-  public ReplaceConfirmModel(String signedMessage) {
-    this.signedMessage = signedMessage;
+  public ReplaceConfirmModel(String signedMsg) {
+    this.signedMsg = signedMsg;
   }
 
 
   protected ReplaceConfirmModel(Parcel in) {
-    this.signedMessage = in.readString();
+    this.signedMsg = in.readString();
   }
 
   @Override
   public String toString() {
     return "ReplaceConfirmModel{" +
-        "signedMessage='" + signedMessage + '\'' +
+        "signedMsg='" + signedMsg + '\'' +
         "} " + super.toString();
   }
 
@@ -60,6 +60,6 @@ public class ReplaceConfirmModel extends BaseRequestModel {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.signedMessage);
+    dest.writeString(this.signedMsg);
   }
 }

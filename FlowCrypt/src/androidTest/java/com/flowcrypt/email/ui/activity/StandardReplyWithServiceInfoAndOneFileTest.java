@@ -16,7 +16,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
@@ -68,17 +68,16 @@ import static org.hamcrest.Matchers.not;
 public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   private static final String STRING = "Some short string";
   private ServiceInfo serviceInfo;
-  private IncomingMessageInfo incomingMessageInfo;
+  private IncomingMessageInfo incomingMsgInfo;
 
   private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
     @Override
     protected Intent getActivityIntent() {
       try {
-        incomingMessageInfo =
-            MessageUtil.getIncomingMessageInfoWithOutBody(
-                new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
-                TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-                    "messages/mime_message.txt"));
+        incomingMsgInfo = MessageUtil.getIncomingMsgInfoWithoutBody(
+            new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
+            TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+                "messages/mime_message.txt"));
 
         AttachmentInfo attachmentInfo = new AttachmentInfo();
         attachmentInfo.setName("test.txt");
@@ -86,24 +85,24 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
         attachmentInfo.setRawData(STRING);
         attachmentInfo.setType("text/plain");
         attachmentInfo.setId(EmailUtil.generateContentId());
-        attachmentInfo.setCanBeDeleted(false);
+        attachmentInfo.setProtected(true);
 
         List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
         attachmentInfoList.add(attachmentInfo);
 
         serviceInfo = new ServiceInfo.Builder()
-            .setIsFromFieldEditEnable(false)
-            .setIsToFieldEditEnable(false)
-            .setIsSubjectEditEnable(false)
-            .setIsMessageTypeCanBeSwitched(false)
-            .setIsAddNewAttachmentsEnable(false)
-            .setSystemMessage(InstrumentationRegistry.getInstrumentation().getTargetContext()
+            .setIsFromFieldEditable(false)
+            .setIsToFieldEditable(false)
+            .setIsSubjectEditable(false)
+            .setIsMsgTypeSwitchable(false)
+            .setHasAbilityToAddNewAtt(false)
+            .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAttachmentInfoList(attachmentInfoList)
-            .createServiceInfo();
+            .setAtts(attachmentInfoList)
+            .build();
 
         return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-            incomingMessageInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
+            incomingMsgInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
       } catch (IOException e) {
         e.printStackTrace();
         throw new IllegalStateException(e);
@@ -121,7 +120,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   @Test
   public void testFrom() {
     onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
-        isDisplayed(), serviceInfo.isFromFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+        isDisplayed(), serviceInfo.isFromFieldEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
@@ -130,45 +129,45 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
     String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
     CharSequence textWithSeparator = autoCorrectSeparator
         + chipSeparator
-        + incomingMessageInfo.getFrom().get(0)
+        + incomingMsgInfo.getFrom().get(0)
         + chipSeparator
         + autoCorrectSeparator;
 
     onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
         isDisplayed(), withText(textWithSeparator.toString()),
-        serviceInfo.isToFieldEditEnable() ? isFocusable() : not(isFocusable()))));
+        serviceInfo.isToFieldEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
   public void testSubject() {
     onView(withId(R.id.editTextEmailSubject)).check(matches(allOf(
         isDisplayed(),
-        serviceInfo.isSubjectEditEnable() ? isFocusable() : not(isFocusable()))));
+        serviceInfo.isSubjectEditable() ? isFocusable() : not(isFocusable()))));
   }
 
   @Test
-  public void testEmailMessage() {
+  public void testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage)).check(matches(
-        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMessage())
+        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMsg())
                 ? withText(isEmptyString())
-                : withText(serviceInfo.getSystemMessage()),
-            serviceInfo.isMessageEditEnable() ? isFocusable() : not(isFocusable()))));
+                : withText(serviceInfo.getSystemMsg()),
+            serviceInfo.isMsgEditable() ? isFocusable() : not(isFocusable()))));
 
-    if (serviceInfo.isMessageEditEnable()) {
+    if (serviceInfo.isMsgEditable()) {
       onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
     }
   }
 
   @Test
-  public void testAvailabilityAddingAttachments() {
-    if (!serviceInfo.isAddNewAttachmentsEnable()) {
+  public void testAvailabilityAddingAtts() {
+    if (!serviceInfo.hasAbilityToAddNewAtt()) {
       onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
     }
   }
 
   @Test
   public void testDisabledSwitchingBetweenEncryptionTypes() {
-    if (!serviceInfo.isMessageTypeCanBeSwitched()) {
+    if (!serviceInfo.isMsgTypeSwitchable()) {
       onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
       onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
     }

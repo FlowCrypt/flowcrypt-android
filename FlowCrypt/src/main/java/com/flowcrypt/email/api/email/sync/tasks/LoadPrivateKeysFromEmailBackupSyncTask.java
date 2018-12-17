@@ -14,8 +14,8 @@ import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
@@ -52,25 +52,23 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-      throws Exception {
-    super.runIMAPAction(accountDao, session, store, syncListener);
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    super.runIMAPAction(account, session, store, listener);
 
-    if (syncListener != null) {
+    if (listener != null) {
+      Context context = listener.getContext();
       ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
       List<String> keys = new ArrayList<>();
 
-      Js js = new Js(syncListener.getContext(), null);
+      Js js = new Js(context, null);
 
-      switch (accountDao.getAccountType()) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsUsingGmailAPI(syncListener.getContext(),
-              accountDao, session, js));
+          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session, js));
           break;
 
         default:
-          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(syncListener.getContext(),
-              accountDao, session, js));
+          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(context, account, session, js));
           break;
       }
 
@@ -78,7 +76,7 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
         keys.add(keyDetails.getValue());
       }
 
-      syncListener.onPrivateKeyFound(accountDao, keys, ownerKey, requestCode);
+      listener.onPrivateKeysFound(account, keys, ownerKey, requestCode);
     }
   }
 
@@ -93,41 +91,29 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
    * @throws GoogleAuthException
    */
   private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Context context,
-                                                                                AccountDao accountDao,
+                                                                                AccountDao account,
                                                                                 Session session, Js js)
       throws MessagingException, IOException, GoogleAuthException {
-    ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
+      store = OpenStoreHelper.openStore(context, account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
-        if (!EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+        if (!EmailUtil.containsNoSelectAttr((IMAPFolder) folder)) {
           folder.open(Folder.READ_ONLY);
 
-          Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
-
-          for (Message message : foundMessages) {
-            String backup = EmailUtil.getKeyFromMessageIfItExists(message);
+          Message[] foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.getEmail()));
+          for (Message message : foundMsgs) {
+            String backup = EmailUtil.getKeyFromMimeMsg(message);
 
             if (TextUtils.isEmpty(backup)) {
               continue;
             }
 
-            MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
-
-            for (MessageBlock messageBlock : messageBlocks) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-                if (!TextUtils.isEmpty(messageBlock.getContent())
-                    && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock
-                    .getContent())) {
-                  privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
-                      KeyDetails.Type.EMAIL));
-                }
-              }
-            }
+            MessageBlock[] msgBlocks = js.crypto_armor_detect_blocks(backup);
+            keyDetailsList = getDetails(msgBlocks);
           }
 
           folder.close(false);
@@ -142,6 +128,21 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
       }
       throw e;
     }
-    return privateKeyDetailsList;
+    return keyDetailsList;
+  }
+
+  private ArrayList<KeyDetails> getDetails(MessageBlock[] msgBlocks) {
+    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+    for (MessageBlock messageBlock : msgBlocks) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+        String content = messageBlock.getContent();
+        boolean isContentEmpty = TextUtils.isEmpty(content);
+        if (!isContentEmpty && !EmailUtil.containsKey(keyDetailsList, content)) {
+          keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
+        }
+      }
+    }
+
+    return keyDetailsList;
   }
 }

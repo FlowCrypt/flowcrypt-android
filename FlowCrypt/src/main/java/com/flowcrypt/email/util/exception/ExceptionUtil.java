@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import javax.crypto.BadPaddingException;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.FolderClosedException;
 import javax.mail.MessagingException;
@@ -45,7 +46,7 @@ public class ExceptionUtil {
    * @param e A happened error
    * @return true if need to handle such exception with {@link ACRA} and send logs to the backend, false - otherwise.
    */
-  public static boolean isErrorHandleWithACRA(Exception e) {
+  public static boolean isHandlingNeeded(Exception e) {
     if ((e instanceof MailConnectException)
         || (e instanceof SMTPSendFailedException)
         || (e instanceof UnknownHostException)
@@ -71,9 +72,9 @@ public class ExceptionUtil {
       }
     }
 
-    if ((e instanceof SSLHandshakeException
+    if (e instanceof SSLHandshakeException
         || e instanceof SSLProtocolException
-        || e instanceof MessagingException)) {
+        || e instanceof MessagingException) {
       if (!TextUtils.isEmpty(e.getMessage())) {
         if (e.getMessage().contains("Connection closed by peer")
             || e.getMessage().contains("I/O error during system call")
@@ -103,6 +104,19 @@ public class ExceptionUtil {
       }
     }
 
+    if (e instanceof RuntimeException) {
+      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equalsIgnoreCase(e.getMessage())) {
+        return false;
+      }
+    }
+
+    if (e instanceof BadPaddingException) {
+      String errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+      if (errorMsg.equalsIgnoreCase(e.getMessage())) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -112,7 +126,7 @@ public class ExceptionUtil {
    * @param e An input {@link Exception}
    */
   public static void handleError(Exception e) {
-    if (ExceptionUtil.isErrorHandleWithACRA(e)) {
+    if (ExceptionUtil.isHandlingNeeded(e)) {
       if (ACRA.isInitialised()) {
         ACRA.getErrorReporter().handleException(new ManualHandledException(e));
       }

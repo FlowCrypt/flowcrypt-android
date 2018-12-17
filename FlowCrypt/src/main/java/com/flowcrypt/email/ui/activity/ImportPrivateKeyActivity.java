@@ -13,9 +13,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
@@ -48,7 +48,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   private List<String> privateKeys;
   private Js js;
 
-  private View progressBarLoadingBackups;
+  private View progressBar;
   private View layoutContent;
   private View layoutSyncStatus;
   private Button buttonImportBackup;
@@ -58,15 +58,15 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.js = JsForUiManager.getInstance(this).getJs();
+    this.js = UiJsManager.getInstance(this).getJs();
 
-    if (isSyncEnable() && GeneralUtil.isInternetConnectionAvailable(this)) {
-      UIUtil.exchangeViewVisibility(this, true, progressBarLoadingBackups, layoutContent);
-      countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-          (ImportPrivateKeyActivity.class), GeneralUtil.isDebug());
+    if (isSyncEnabled() && GeneralUtil.isConnected(this)) {
+      UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
+      countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
+          (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
     } else {
       hideImportButton();
-      UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
+      UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
     }
   }
 
@@ -74,7 +74,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   protected void initViews() {
     super.initViews();
 
-    this.progressBarLoadingBackups = findViewById(R.id.progressBarLoadingBackups);
+    this.progressBar = findViewById(R.id.progressBarLoadingBackups);
     this.layoutContent = findViewById(R.id.layoutContent);
     this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus);
     this.buttonImportBackup = findViewById(R.id.buttonImportBackup);
@@ -100,7 +100,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         if (privateKeys == null) {
@@ -109,21 +109,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             if (!keys.isEmpty()) {
               this.privateKeys = keys;
 
-              SecurityStorageConnector securityStorageConnector =
-                  (SecurityStorageConnector) js.getStorageConnector();
-
-              Iterator<String> iterator = privateKeys.iterator();
-              Set<String> uniqueKeysLongIds = new HashSet<>();
-
-              while (iterator.hasNext()) {
-                String privateKey = iterator.next();
-                PgpKey pgpKey = js.crypto_key_read(privateKey);
-                uniqueKeysLongIds.add(pgpKey.getLongid());
-                if (securityStorageConnector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
-                  iterator.remove();
-                  uniqueKeysLongIds.remove(pgpKey.getLongid());
-                }
-              }
+              Set<String> uniqueKeysLongIds = filterKeys();
 
               if (this.privateKeys.isEmpty()) {
                 hideImportButton();
@@ -139,7 +125,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
           } else {
             hideImportButton();
           }
-          UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutContent);
+          UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
         }
         if (!countingIdlingResource.isIdleNow()) {
           countingIdlingResource.decrement();
@@ -149,20 +135,18 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         hideImportButton();
-        UIUtil.exchangeViewVisibility(this, false, progressBarLoadingBackups, layoutSyncStatus);
-        UIUtil.showSnackbar(getRootView(),
-            getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(android.R.string.ok),
-            new View.OnClickListener() {
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
+        UIUtil.showSnackbar(getRootView(), getString(R.string.error_occurred_while_receiving_private_keys),
+            getString(android.R.string.ok), new View.OnClickListener() {
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
                 UIUtil.exchangeViewVisibility(ImportPrivateKeyActivity.this,
-                    false, progressBarLoadingBackups, layoutContent);
+                    false, progressBar, layoutContent);
               }
             });
         if (!countingIdlingResource.isIdleNow()) {
@@ -183,12 +167,8 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
             keyDetails.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
           }
 
-          startActivityForResult(CheckKeysActivity.newIntent(this,
-              keyDetails,
-              null,
-              getString(R.string.continue_),
-              getString(R.string.choose_another_key)),
-              REQUEST_CODE_CHECK_PRIVATE_KEYS);
+          startActivityForResult(CheckKeysActivity.newIntent(this, keyDetails, null, getString(R.string.continue_),
+              getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS);
         }
         break;
 
@@ -201,7 +181,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     switch (requestCode) {
       case REQUEST_CODE_CHECK_PRIVATE_KEYS:
-        isCheckClipboardFromServiceEnable = false;
+        isCheckingClipboardEnabled = false;
 
         switch (resultCode) {
           case Activity.RESULT_OK:
@@ -219,29 +199,28 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   public void onKeyValidated(KeyDetails.Type type) {
     switch (type) {
       case FILE:
-        startActivityForResult(CheckKeysActivity.newIntent(this, keyDetailsList,
-            getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-                keyDetailsList.size(), GeneralUtil.getFileNameFromUri(this,
-                    keyImportModel.getFileUri()), keyDetailsList.size()),
-            getString(R.string.continue_), null,
-            getString(R.string.choose_another_key), true),
-            REQUEST_CODE_CHECK_PRIVATE_KEYS);
+        String fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel.getFileUri());
+        String bottomTitle = getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
+            keyDetailsList.size(), fileName, keyDetailsList.size());
+        String posBtnTitle = getString(R.string.continue_);
+        Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, posBtnTitle, null,
+            getString(R.string.choose_another_key), true);
+        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
 
       case CLIPBOARD:
-        startActivityForResult(CheckKeysActivity.newIntent(this,
-            keyDetailsList,
-            getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
-                keyDetailsList.size(), keyDetailsList.size()),
-            getString(R.string.continue_), null,
-            getString(R.string.choose_another_key), true),
+        String title = getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
+            keyDetailsList.size(), keyDetailsList.size());
+        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, title,
+            getString(R.string.continue_), null, getString(R.string.choose_another_key), true);
+        startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
     }
   }
 
   @Override
-  public boolean isPrivateKeyChecking() {
+  public boolean isPrivateKeyMode() {
     return true;
   }
 
@@ -252,10 +231,28 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   public void hideImportButton() {
     buttonImportBackup.setVisibility(View.GONE);
-    ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams)
-        buttonLoadFromFile.getLayoutParams();
+    ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) buttonLoadFromFile
+        .getLayoutParams();
     marginLayoutParams.topMargin = getResources().getDimensionPixelSize(R.dimen
         .margin_top_first_button);
     buttonLoadFromFile.requestLayout();
+  }
+
+  private Set<String> filterKeys() {
+    SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
+
+    Iterator<String> iterator = privateKeys.iterator();
+    Set<String> uniqueKeysLongIds = new HashSet<>();
+
+    while (iterator.hasNext()) {
+      String privateKey = iterator.next();
+      PgpKey pgpKey = js.crypto_key_read(privateKey);
+      uniqueKeysLongIds.add(pgpKey.getLongid());
+      if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
+        iterator.remove();
+        uniqueKeysLongIds.remove(pgpKey.getLongid());
+      }
+    }
+    return uniqueKeysLongIds;
   }
 }

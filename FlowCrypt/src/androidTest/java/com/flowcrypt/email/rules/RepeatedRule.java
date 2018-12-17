@@ -33,7 +33,7 @@ public class RepeatedRule implements TestRule {
     private final Statement statement;
     private final int repeat;
 
-    public RepeatStatement(Statement statement, int repeat) {
+    RepeatStatement(Statement statement, int repeat) {
       this.statement = statement;
       this.repeat = repeat;
     }

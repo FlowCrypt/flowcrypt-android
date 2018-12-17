@@ -39,32 +39,31 @@ public class TwoWayDialogFragment extends DialogFragment {
       ("KEY_IS_CANCELABLE", TwoWayDialogFragment.class);
 
   private String dialogTitle;
-  private String dialogMessage;
-  private String positiveButtonTitle;
-  private String negativeButtonTitle;
-  private OnTwoWayDialogListener onTwoWayDialogListener;
+  private String dialogMsg;
+  private String positiveBtnTitle;
+  private String negativeBtnTitle;
+  private OnTwoWayDialogListener listener;
 
   public TwoWayDialogFragment() {
   }
 
-  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMessage) {
-    return newInstance(dialogTitle, dialogMessage, false);
+  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMsg) {
+    return newInstance(dialogTitle, dialogMsg, false);
   }
 
-  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMessage, boolean isCancelable) {
-    return newInstance(dialogTitle, dialogMessage, null, null, isCancelable);
+  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMsg, boolean isCancelable) {
+    return newInstance(dialogTitle, dialogMsg, null, null, isCancelable);
   }
 
-  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMessage, String positiveButtonTitle,
+  public static TwoWayDialogFragment newInstance(String dialogTitle, String dialogMsg, String positiveButtonTitle,
                                                  String negativeButtonTitle, boolean isCancelable) {
-    TwoWayDialogFragment infoDialogFragment = new TwoWayDialogFragment();
-
     Bundle args = new Bundle();
     args.putString(KEY_DIALOG_TITLE, dialogTitle);
-    args.putString(KEY_DIALOG_MESSAGE, dialogMessage);
+    args.putString(KEY_DIALOG_MESSAGE, dialogMsg);
     args.putString(KEY_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
     args.putString(KEY_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
     args.putBoolean(KEY_IS_CANCELABLE, isCancelable);
+    TwoWayDialogFragment infoDialogFragment = new TwoWayDialogFragment();
     infoDialogFragment.setArguments(args);
 
     return infoDialogFragment;
@@ -75,7 +74,7 @@ public class TwoWayDialogFragment extends DialogFragment {
     super.onAttach(context);
 
     if (context instanceof OnTwoWayDialogListener) {
-      this.onTwoWayDialogListener = (OnTwoWayDialogListener) context;
+      this.listener = (OnTwoWayDialogListener) context;
     }
   }
 
@@ -86,9 +85,9 @@ public class TwoWayDialogFragment extends DialogFragment {
 
     if (args != null) {
       dialogTitle = args.getString(KEY_DIALOG_TITLE);
-      dialogMessage = args.getString(KEY_DIALOG_MESSAGE);
-      positiveButtonTitle = args.getString(KEY_POSITIVE_BUTTON_TITLE, getString(R.string.yes));
-      negativeButtonTitle = args.getString(KEY_NEGATIVE_BUTTON_TITLE, getString(R.string.no));
+      dialogMsg = args.getString(KEY_DIALOG_MESSAGE);
+      positiveBtnTitle = args.getString(KEY_POSITIVE_BUTTON_TITLE, getString(R.string.yes));
+      negativeBtnTitle = args.getString(KEY_NEGATIVE_BUTTON_TITLE, getString(R.string.no));
       setCancelable(args.getBoolean(KEY_IS_CANCELABLE, false));
     }
   }
@@ -103,27 +102,25 @@ public class TwoWayDialogFragment extends DialogFragment {
     } else {
       dialog.setTitle(R.string.info);
     }
-    dialog.setMessage(dialogMessage);
+    dialog.setMessage(dialogMsg);
 
-    dialog.setPositiveButton(positiveButtonTitle,
-        new DialogInterface.OnClickListener() {
+    dialog.setPositiveButton(positiveBtnTitle, new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int whichButton) {
             sendResult(Activity.RESULT_OK);
 
-            if (onTwoWayDialogListener != null) {
-              onTwoWayDialogListener.onTwoWayDialogButtonClick(Activity.RESULT_OK);
+            if (listener != null) {
+              listener.onClick(Activity.RESULT_OK);
             }
           }
         }
     );
 
-    dialog.setNegativeButton(negativeButtonTitle,
-        new DialogInterface.OnClickListener() {
+    dialog.setNegativeButton(negativeBtnTitle, new DialogInterface.OnClickListener() {
           public void onClick(DialogInterface dialog, int whichButton) {
             sendResult(Activity.RESULT_CANCELED);
 
-            if (onTwoWayDialogListener != null) {
-              onTwoWayDialogListener.onTwoWayDialogButtonClick(Activity.RESULT_CANCELED);
+            if (listener != null) {
+              listener.onClick(Activity.RESULT_CANCELED);
             }
           }
         }
@@ -147,6 +144,6 @@ public class TwoWayDialogFragment extends DialogFragment {
      * @param result Can be {@link Activity#RESULT_OK} if the user clicks the positive button, or
      *               {@link Activity#RESULT_CANCELED} if the user clicks the negative button.
      */
-    void onTwoWayDialogButtonClick(int result);
+    void onClick(int result);
   }
 }

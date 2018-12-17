@@ -36,8 +36,7 @@ public class CircleTransformation extends BitmapTransformation {
   }
 
   @Override
-  protected Bitmap transform(@NonNull BitmapPool bitmapPool, @NonNull Bitmap bitmap,
-                             int i, int i1) {
+  protected Bitmap transform(@NonNull BitmapPool bitmapPool, @NonNull Bitmap bitmap, int i, int i1) {
     return circleCrop(bitmapPool, bitmap);
   }
 
@@ -46,7 +45,9 @@ public class CircleTransformation extends BitmapTransformation {
   }
 
   private static Bitmap circleCrop(BitmapPool pool, Bitmap source) {
-    if (source == null) return null;
+    if (source == null) {
+      return null;
+    }
 
     int size = Math.min(source.getWidth(), source.getHeight());
     int x = (source.getWidth() - size) / 2;
@@ -57,8 +58,7 @@ public class CircleTransformation extends BitmapTransformation {
 
     Canvas canvas = new Canvas(result);
     Paint paint = new Paint();
-    paint.setShader(new BitmapShader(squared, BitmapShader.TileMode.CLAMP, BitmapShader
-        .TileMode.CLAMP));
+    paint.setShader(new BitmapShader(squared, BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP));
     paint.setAntiAlias(true);
     float r = size / 2f;
     canvas.drawCircle(r, r, r, paint);

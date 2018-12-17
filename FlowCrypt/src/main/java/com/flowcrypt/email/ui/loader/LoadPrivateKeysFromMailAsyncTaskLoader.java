@@ -12,8 +12,8 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.MessageBlock;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -47,14 +47,14 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
   /**
    * An user account.
    */
-  private AccountDao accountDao;
+  private AccountDao account;
   private LoaderResult data;
   private boolean isActionStarted;
   private boolean isLoaderReset;
 
-  public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao accountDao) {
+  public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao account) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
   }
 
   @Override
@@ -76,12 +76,11 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
 
-      Session session = OpenStoreHelper.getSessionForAccountDao(getContext(), accountDao);
+      Session session = OpenStoreHelper.getAccountSess(getContext(), account);
 
-      switch (accountDao.getAccountType()) {
+      switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          privateKeyDetailsList.addAll(
-              EmailUtil.getPrivateKeyBackupsUsingGmailAPI(getContext(), accountDao, session, js));
+          privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getContext(), account, session, js));
           break;
 
         default:
@@ -120,39 +119,28 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
    */
   private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Session session, Js js)
       throws MessagingException, IOException, GoogleAuthException {
-    ArrayList<KeyDetails> privateKeyDetailsList = new ArrayList<>();
+    ArrayList<KeyDetails> details = new ArrayList<>();
     Store store = null;
     try {
-      store = OpenStoreHelper.openAndConnectToStore(getContext(), accountDao, session);
+      store = OpenStoreHelper.openStore(getContext(), account, session);
       Folder[] folders = store.getDefaultFolder().list("*");
 
       for (Folder folder : folders) {
-        if (!isLoadInBackgroundCanceled() && !isLoaderReset
-            && !EmailUtil.isFolderHasNoSelectAttribute((IMAPFolder) folder)) {
+        boolean containsNoSelectAttr = EmailUtil.containsNoSelectAttr((IMAPFolder) folder);
+        if (!isLoadInBackgroundCanceled() && !isLoaderReset && !containsNoSelectAttr) {
           folder.open(Folder.READ_ONLY);
 
-          Message[] foundMessages = folder.search(
-              SearchBackupsUtil.generateSearchTerms(accountDao.getEmail()));
+          Message[] foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.getEmail()));
 
-          for (Message message : foundMessages) {
-            String backup = EmailUtil.getKeyFromMessageIfItExists(message);
+          for (Message message : foundMsgs) {
+            String backup = EmailUtil.getKeyFromMimeMsg(message);
 
             if (TextUtils.isEmpty(backup)) {
               continue;
             }
 
             MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(backup);
-
-            for (MessageBlock messageBlock : messageBlocks) {
-              if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-                if (!TextUtils.isEmpty(messageBlock.getContent())
-                    && EmailUtil.isKeyNotExistsInList(privateKeyDetailsList, messageBlock
-                    .getContent())) {
-                  privateKeyDetailsList.add(new KeyDetails(messageBlock.getContent(),
-                      KeyDetails.Type.EMAIL));
-                }
-              }
-            }
+            details.addAll(getKeyDetailsList(messageBlocks));
           }
 
           folder.close(false);
@@ -167,6 +155,20 @@ public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<Load
       }
       throw e;
     }
-    return privateKeyDetailsList;
+    return details;
+  }
+
+  private ArrayList<KeyDetails> getKeyDetailsList(MessageBlock[] messageBlocks) {
+    ArrayList<KeyDetails> details = new ArrayList<>();
+    for (MessageBlock messageBlock : messageBlocks) {
+      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
+        boolean isExist = EmailUtil.containsKey(details, messageBlock.getContent());
+        if (!TextUtils.isEmpty(messageBlock.getContent()) && !isExist) {
+          details.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
+        }
+      }
+    }
+
+    return details;
   }
 }

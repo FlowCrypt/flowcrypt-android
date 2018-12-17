@@ -27,13 +27,13 @@ import androidx.preference.Preference;
  * E-mail: DenBond7@gmail.com
  */
 public class SecuritySettingsFragment extends BasePreferenceFragment implements Preference.OnPreferenceClickListener {
-  private AccountDao accountDao;
+  private AccountDao account;
 
   @Override
   public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
     addPreferencesFromResource(R.xml.preferences_security_settings);
 
-    accountDao = new AccountDaoSource().getActiveAccountInformation(getContext());
+    account = new AccountDaoSource().getActiveAccountInformation(getContext());
 
     Preference preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE);
     if (preferenceChangePassPhrase != null) {
@@ -45,11 +45,11 @@ public class SecuritySettingsFragment extends BasePreferenceFragment implements 
   public boolean onPreferenceClick(Preference preference) {
     switch (preference.getKey()) {
       case Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE:
-        if (new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), accountDao.getEmail()).isEmpty()) {
+        if (new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail()).isEmpty()) {
           UIUtil.showInfoSnackbar(getView(), getString(R.string.account_has_no_associated_keys, getString
               (R.string.support_email)));
         } else {
-          startActivity(ChangePassPhraseActivity.newIntent(getContext(), accountDao));
+          startActivity(ChangePassPhraseActivity.newIntent(getContext(), account));
         }
         return true;
 

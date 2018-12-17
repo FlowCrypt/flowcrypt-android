@@ -72,7 +72,7 @@ public class KeysSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testIsKeyExists() {
+  public void testKeyExists() {
     onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
   }

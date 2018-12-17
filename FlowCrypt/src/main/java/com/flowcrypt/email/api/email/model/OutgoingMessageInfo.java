@@ -38,10 +38,10 @@ public class OutgoingMessageInfo extends MessageInfo {
   private PgpContact[] ccPgpContacts;
   private PgpContact[] bccPgpContacts;
   private PgpContact fromPgpContact;
-  private String rawReplyMessage;
-  private ArrayList<AttachmentInfo> attachmentInfoArrayList;
-  private ArrayList<AttachmentInfo> forwardedAttachmentInfoList;
-  private MessageEncryptionType messageEncryptionType;
+  private String rawReplyMsg;
+  private ArrayList<AttachmentInfo> atts;
+  private ArrayList<AttachmentInfo> fwdAtts;
+  private MessageEncryptionType encryptionType;
   private boolean isForwarded;
   private long uid;
 
@@ -54,12 +54,11 @@ public class OutgoingMessageInfo extends MessageInfo {
     this.ccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
     this.bccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
     this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
-    this.rawReplyMessage = in.readString();
-    this.attachmentInfoArrayList = in.createTypedArrayList(AttachmentInfo.CREATOR);
-    this.forwardedAttachmentInfoList = in.createTypedArrayList(AttachmentInfo.CREATOR);
-    int tmpMessageEncryptionType = in.readInt();
-    this.messageEncryptionType = tmpMessageEncryptionType == -1 ? null : MessageEncryptionType.values()
-        [tmpMessageEncryptionType];
+    this.rawReplyMsg = in.readString();
+    this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
+    this.fwdAtts = in.createTypedArrayList(AttachmentInfo.CREATOR);
+    int tmpEncryptionType = in.readInt();
+    this.encryptionType = tmpEncryptionType == -1 ? null : MessageEncryptionType.values()[tmpEncryptionType];
     this.isForwarded = in.readByte() != 0;
     this.uid = in.readLong();
   }
@@ -76,10 +75,10 @@ public class OutgoingMessageInfo extends MessageInfo {
     dest.writeTypedArray(this.ccPgpContacts, flags);
     dest.writeTypedArray(this.bccPgpContacts, flags);
     dest.writeParcelable(this.fromPgpContact, flags);
-    dest.writeString(this.rawReplyMessage);
-    dest.writeTypedList(this.attachmentInfoArrayList);
-    dest.writeTypedList(this.forwardedAttachmentInfoList);
-    dest.writeInt(this.messageEncryptionType == null ? -1 : this.messageEncryptionType.ordinal());
+    dest.writeString(this.rawReplyMsg);
+    dest.writeTypedList(this.atts);
+    dest.writeTypedList(this.fwdAtts);
+    dest.writeInt(this.encryptionType == null ? -1 : this.encryptionType.ordinal());
     dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
     dest.writeLong(this.uid);
   }
@@ -116,28 +115,28 @@ public class OutgoingMessageInfo extends MessageInfo {
     this.fromPgpContact = fromPgpContact;
   }
 
-  public String getRawReplyMessage() {
-    return rawReplyMessage;
+  public String getRawReplyMsg() {
+    return rawReplyMsg;
   }
 
-  public void setRawReplyMessage(String rawReplyMessage) {
-    this.rawReplyMessage = rawReplyMessage;
+  public void setRawReplyMsg(String rawReplyMsg) {
+    this.rawReplyMsg = rawReplyMsg;
   }
 
-  public ArrayList<AttachmentInfo> getAttachmentInfoArrayList() {
-    return attachmentInfoArrayList;
+  public ArrayList<AttachmentInfo> getAtts() {
+    return atts;
   }
 
-  public void setAttachmentInfoArrayList(ArrayList<AttachmentInfo> attachmentInfoArrayList) {
-    this.attachmentInfoArrayList = attachmentInfoArrayList;
+  public void setAtts(ArrayList<AttachmentInfo> atts) {
+    this.atts = atts;
   }
 
-  public MessageEncryptionType getMessageEncryptionType() {
-    return messageEncryptionType;
+  public MessageEncryptionType getEncryptionType() {
+    return encryptionType;
   }
 
-  public void setMessageEncryptionType(MessageEncryptionType messageEncryptionType) {
-    this.messageEncryptionType = messageEncryptionType;
+  public void setEncryptionType(MessageEncryptionType encryptionType) {
+    this.encryptionType = encryptionType;
   }
 
   public boolean isForwarded() {
@@ -148,12 +147,12 @@ public class OutgoingMessageInfo extends MessageInfo {
     isForwarded = forwarded;
   }
 
-  public ArrayList<AttachmentInfo> getForwardedAttachmentInfoList() {
-    return forwardedAttachmentInfoList;
+  public ArrayList<AttachmentInfo> getForwardedAtts() {
+    return fwdAtts;
   }
 
-  public void setForwardedAttachmentInfoList(ArrayList<AttachmentInfo> forwardedAttachmentInfoList) {
-    this.forwardedAttachmentInfoList = forwardedAttachmentInfoList;
+  public void setForwardedAtts(ArrayList<AttachmentInfo> fwdAtts) {
+    this.fwdAtts = fwdAtts;
   }
 
   public long getUid() {

@@ -15,13 +15,14 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity;
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -40,11 +41,10 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
       GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity.class);
 
   private String createdPrivateKeyLongId;
-  private boolean isBackEnable = true;
 
-  public static Intent newIntent(Context context, AccountDao accountDao) {
+  public static Intent newIntent(Context context, AccountDao account) {
     Intent intent = new Intent(context, CreatePrivateKeyActivity.class);
-    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, accountDao);
+    intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account);
     return intent;
   }
 
@@ -78,7 +78,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
   @Override
   public void onBackPressed() {
-    if (isBackEnable) {
+    if (isBackEnabled) {
       if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
         super.onBackPressed();
       } else {
@@ -110,69 +110,69 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
   }
 
   @Override
+  @NonNull
   public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
     switch (id) {
       case R.id.loader_id_create_private_key:
         if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
-          isBackEnable = false;
+          isBackEnabled = false;
           UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView);
-          return new CreatePrivateKeyAsyncTaskLoader(this, accountDao,
-              editTextKeyPassword.getText().toString());
+          return new CreatePrivateKeyAsyncTaskLoader(this, account, editTextKeyPassword.getText().toString());
         } else {
-          return null;
+          return new Loader<>(this);
         }
 
       default:
-        return null;
+        return new Loader<>(this);
     }
   }
 
   @Override
-  public void onLoadFinished(Loader<LoaderResult> loader, LoaderResult loaderResult) {
+  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
     handleLoaderResult(loader, loaderResult);
   }
 
   @Override
-  public void onLoaderReset(Loader<LoaderResult> loader) {
+  public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
     switch (loader.getId()) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         break;
     }
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         createdPrivateKeyLongId = (String) result;
         layoutSecondPasswordCheck.setVisibility(View.GONE);
         layoutSuccess.setVisibility(View.VISIBLE);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
-        JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
         restartJsService();
         break;
 
       default:
-        super.handleSuccessLoaderResult(loaderId, result);
+        super.onSuccess(loaderId, result);
         break;
     }
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_create_private_key:
-        isBackEnable = true;
+        isBackEnabled = true;
         editTextKeyPasswordSecond.setText(null);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
         showInfoSnackbar(getRootView(), e.getMessage());
         break;
 
       default:
-        super.handleFailureLoaderResult(loaderId, e);
+        super.onError(loaderId, e);
         break;
     }
   }
@@ -186,7 +186,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
 
     textViewSuccessTitle.setText(R.string.you_are_all_set);
     textViewSuccessSubTitle.setText(R.string.you_can_send_and_receive_encrypted_emails);
-    buttonSuccess.setText(R.string.continue_);
+    btnSuccess.setText(R.string.continue_);
 
     if (!TextUtils.isEmpty(this.createdPrivateKeyLongId)) {
       layoutProgress.setVisibility(View.GONE);

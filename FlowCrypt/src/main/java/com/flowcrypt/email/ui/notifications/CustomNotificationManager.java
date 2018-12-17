@@ -9,6 +9,7 @@ import android.app.Notification.InboxStyle;
 import android.content.Context;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 
 import androidx.core.content.ContextCompat;
@@ -35,8 +36,10 @@ public class CustomNotificationManager {
    */
   protected Spannable formatInboxStyleLine(Context context, String username, String subject) {
     Spannable spannable = new SpannableString(username + "   " + subject);
-    int color = ContextCompat.getColor(context, android.R.color.black);
-    spannable.setSpan(new ForegroundColorSpan(color), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    if (!TextUtils.isEmpty(username)) {
+      int color = ContextCompat.getColor(context, android.R.color.black);
+      spannable.setSpan(new ForegroundColorSpan(color), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
     return spannable;
   }
 
@@ -49,7 +52,9 @@ public class CustomNotificationManager {
    */
   protected Spannable formatText(String text, int color) {
     Spannable spannable = new SpannableString(text);
-    spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    if (!TextUtils.isEmpty(text)) {
+      spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
     return spannable;
   }
 }

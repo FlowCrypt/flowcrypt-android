@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.request.model;
 import android.os.Parcel;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * This is a POJO object which used to make a request
@@ -36,25 +37,26 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   @Expose
   private String email;
 
+  @SerializedName("pubkey")
   @Expose
-  private String pubkey;
+  private String pubKey;
 
   /*todo-denbond7 Make sure to choose attest: false for now.
    https://github.com/FlowCrypt/flowcrypt-android/issues/71*/
   @Expose
-  private boolean attest = false;
+  private boolean attest;
 
   public InitialLegacySubmitModel() {
   }
 
-  public InitialLegacySubmitModel(String email, String pubkey) {
+  public InitialLegacySubmitModel(String email, String pubKey) {
     this.email = email;
-    this.pubkey = pubkey;
+    this.pubKey = pubKey;
   }
 
   protected InitialLegacySubmitModel(Parcel in) {
     this.email = in.readString();
-    this.pubkey = in.readString();
+    this.pubKey = in.readString();
     this.attest = in.readByte() != 0;
   }
 
@@ -66,7 +68,7 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.email);
-    dest.writeString(this.pubkey);
+    dest.writeString(this.pubKey);
     dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
   }
 
@@ -78,12 +80,12 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
     this.email = email;
   }
 
-  public String getPubkey() {
-    return pubkey;
+  public String getPubKey() {
+    return pubKey;
   }
 
-  public void setPubkey(String pubkey) {
-    this.pubkey = pubkey;
+  public void setPubKey(String pubKey) {
+    this.pubKey = pubKey;
   }
 
   public boolean isAttest() {

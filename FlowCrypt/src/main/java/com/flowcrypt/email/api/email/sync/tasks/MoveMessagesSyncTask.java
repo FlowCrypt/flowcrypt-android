@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks;
 
 import android.os.Messenger;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -29,8 +30,8 @@ import javax.mail.Store;
  */
 
 public class MoveMessagesSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder sourceFolderName;
-  private com.flowcrypt.email.api.email.Folder destinationFolderName;
+  private LocalFolder sourceLocalFolderName;
+  private LocalFolder destinationLocalFolderName;
   private long[] uids;
 
   /**
@@ -38,67 +39,57 @@ public class MoveMessagesSyncTask extends BaseSyncTask {
    *
    * @param ownerKey          The name of the reply to {@link Messenger}.
    * @param requestCode       The unique request code for the reply to {@link Messenger}.
-   * @param sourceFolder      A local implementation of the remote folder which is the source.
-   * @param destinationFolder A local implementation of the remote folder which is the destination.
+   * @param sourceLocalFolder      A local implementation of the remote folder which is the source.
+   * @param destinationLocalFolder A local implementation of the remote folder which is the destination.
    * @param uids              The {@link com.sun.mail.imap.protocol.UID} of the moving
    */
-  public MoveMessagesSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder sourceFolder,
-                              com.flowcrypt.email.api.email.Folder destinationFolder, long[] uids) {
+  public MoveMessagesSyncTask(String ownerKey, int requestCode, LocalFolder sourceLocalFolder,
+                              LocalFolder destinationLocalFolder, long[] uids) {
     super(ownerKey, requestCode);
-    this.sourceFolderName = sourceFolder;
-    this.destinationFolderName = destinationFolder;
+    this.sourceLocalFolderName = sourceLocalFolder;
+    this.destinationLocalFolderName = destinationLocalFolder;
     this.uids = uids;
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-      Exception {
-    IMAPFolder sourceImapFolder =
-        (IMAPFolder) store.getFolder(sourceFolderName.getServerFullFolderName());
-    IMAPFolder destinationImapFolder =
-        (IMAPFolder) store.getFolder(destinationFolderName.getServerFullFolderName());
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    IMAPFolder srcFolder = (IMAPFolder) store.getFolder(sourceLocalFolderName.getFullName());
+    IMAPFolder destFolder = (IMAPFolder) store.getFolder(destinationLocalFolderName.getFullName());
 
-    if (sourceImapFolder == null || !sourceImapFolder.exists()) {
-      throw new IllegalArgumentException("The invalid source " +
-          "folder: " + "\"" + sourceFolderName + "\"");
+    if (srcFolder == null || !srcFolder.exists()) {
+      throw new IllegalArgumentException("The invalid source folder: " + "\"" + sourceLocalFolderName + "\"");
     }
 
-    sourceImapFolder.open(Folder.READ_WRITE);
+    srcFolder.open(Folder.READ_WRITE);
 
     boolean isSingleMoving = uids.length == 1;
 
-    Message[] messages = sourceImapFolder.getMessagesByUID(uids);
+    Message[] msgs = srcFolder.getMessagesByUID(uids);
+    msgs = trimNulls(msgs);
 
-    messages = trimNulls(messages);
-
-    if (messages != null && messages.length > 0) {
-      if (destinationImapFolder == null || !destinationImapFolder.exists()) {
-        throw new IllegalArgumentException("The invalid " +
-            "destination folder: " + "\"" + destinationImapFolder + "\"");
+    if (msgs != null && msgs.length > 0) {
+      if (destFolder == null || !destFolder.exists()) {
+        throw new IllegalArgumentException("The invalid destination folder: " + "\"" + destFolder + "\"");
       }
 
-      destinationImapFolder.open(Folder.READ_WRITE);
-      sourceImapFolder.moveMessages(messages, destinationImapFolder);
+      destFolder.open(Folder.READ_WRITE);
+      srcFolder.moveMessages(msgs, destFolder);
       if (isSingleMoving) {
-        syncListener.onMessageMoved(accountDao, sourceImapFolder, destinationImapFolder, messages[0],
-            ownerKey, requestCode);
+        listener.onMsgMoved(account, srcFolder, destFolder, msgs[0], ownerKey, requestCode);
       } else {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, messages,
-            ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, msgs, ownerKey, requestCode);
       }
 
-      destinationImapFolder.close(false);
+      destFolder.close(false);
     } else {
       if (isSingleMoving) {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, null,
-            ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, null, ownerKey, requestCode);
       } else {
-        syncListener.onMessagesMoved(accountDao, sourceImapFolder, destinationImapFolder, new Message[]{},
-            ownerKey, requestCode);
+        listener.onMsgsMoved(account, srcFolder, destFolder, new Message[]{}, ownerKey, requestCode);
       }
     }
 
-    sourceImapFolder.close(false);
+    srcFolder.close(false);
   }
 
   /**

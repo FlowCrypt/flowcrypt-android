@@ -15,9 +15,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -30,6 +28,8 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -54,23 +54,31 @@ public class GeneralUtil {
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
-  @SuppressWarnings("deprecation")
-  public static boolean isInternetConnectionAvailable(Context context) {
-    ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+  public static boolean isConnected(Context context) {
+    final ConnectivityManager connectivityManager = (ConnectivityManager) context.
+        getSystemService(Context.CONNECTIVITY_SERVICE);
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-      return networkInfo != null && networkInfo.isConnectedOrConnecting();
-    } else {
-      Network network = connManager.getActiveNetwork();
-      if (network != null) {
-        NetworkCapabilities networkCapabilities = connManager.getNetworkCapabilities(network);
-        return (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-            || networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
-      }
+    if (connectivityManager == null) {
+      return false;
     }
 
-    return false;
+    Network network = connectivityManager.getActiveNetwork();
+
+    if (network == null) {
+      return false;
+    }
+
+    NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+
+    if (capabilities == null) {
+      return false;
+    } else {
+      //Indicates that this network should be able to reach the internet.
+      boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+      //Indicates that Internet connectivity on this network was successfully detected.
+      boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+      return hasInternet && isValidated;
+    }
   }
 
   /**
@@ -94,8 +102,8 @@ public class GeneralUtil {
    * @throws IOException will thrown for example if the file not found
    */
   public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
-    return IOUtils.toString(context.getContentResolver().openInputStream(uri),
-        StandardCharsets.UTF_8);
+    InputStream inputStream = context.getContentResolver().openInputStream(uri);
+    return inputStream != null ? IOUtils.toString(inputStream, StandardCharsets.UTF_8) : null;
   }
 
   /**
@@ -104,7 +112,7 @@ public class GeneralUtil {
    * @param text The given string.
    * @return <tt>{@link String}</tt> which doesn't contain HTML comments.
    */
-  public static String removeAllCommentsInHTML(String text) {
+  public static String removeAllComments(String text) {
     return TextUtils.isEmpty(text) ? text : text.replaceAll("<!--[\\s\\S]*?-->", "");
   }
 
@@ -181,11 +189,10 @@ public class GeneralUtil {
    * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
    * @throws IOException if an I/O error occurs
    */
-  public static int writeFileFromStringToUri(Context context, Uri uri, String data)
-      throws IOException {
-    return IOUtils.copy(
-        IOUtils.toInputStream(data, StandardCharsets.UTF_8),
-        context.getContentResolver().openOutputStream(uri));
+  public static int writeFileFromStringToUri(Context context, Uri uri, String data) throws IOException {
+    InputStream inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8);
+    OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
+    return IOUtils.copy(inputStream, outputStream);
   }
 
   /**
@@ -209,10 +216,7 @@ public class GeneralUtil {
    */
   public static String doSectionsInText(String template, String originalString, int groupSize) {
 
-    if (template == null
-        || originalString == null
-        || groupSize <= 0
-        || originalString.length() <= groupSize) {
+    if (template == null || originalString == null || groupSize <= 0 || originalString.length() <= groupSize) {
       return originalString;
     }
 
@@ -257,7 +261,7 @@ public class GeneralUtil {
    * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
    * @return A generated name.
    */
-  public static String generateNameForIdlingResources(Class<?> aClass) {
+  public static String genIdlingResourcesName(Class<?> aClass) {
     return aClass.getClass() + "-" + UUID.randomUUID();
   }
 
@@ -281,7 +285,7 @@ public class GeneralUtil {
   public static boolean isAppForegrounded() {
     ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
     ActivityManager.getMyMemoryState(appProcessInfo);
-    return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE);
+    return appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE;
   }
 
   /**
@@ -291,13 +295,13 @@ public class GeneralUtil {
    * @return The generated order number.
    */
   public static int genAttOrderId(Context context) {
-    int lastId = SharedPreferencesHelper.getInt(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
+    int lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
 
     lastId++;
 
-    SharedPreferencesHelper.setInt(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
+    SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
+        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
 
     return lastId;
   }
@@ -307,7 +311,7 @@ public class GeneralUtil {
    *
    * @return true - if the current build is a debug build.
    */
-  public static boolean isDebug() {
+  public static boolean isDebugBuild() {
     return "debug".equals(BuildConfig.BUILD_TYPE);
   }
 }

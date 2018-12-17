@@ -35,11 +35,11 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
   /**
    * An user account.
    */
-  private AccountDao accountDao;
+  private AccountDao account;
 
-  public LoadGmailAliasesLoader(Context context, AccountDao accountDao) {
+  public LoadGmailAliasesLoader(Context context, AccountDao account) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     onContentChanged();
   }
 
@@ -53,24 +53,23 @@ public class LoadGmailAliasesLoader extends AsyncTaskLoader<LoaderResult> {
   @Override
   public LoaderResult loadInBackground() {
     try {
-      Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), accountDao);
-      ListSendAsResponse aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID)
-          .execute();
-      List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
+      Gmail mService = GmailApiHelper.generateGmailApiService(getContext(), account);
+      ListSendAsResponse aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute();
+      List<AccountAliasesDao> accountAliases = new ArrayList<>();
       for (SendAs alias : aliases.getSendAs()) {
         if (alias.getVerificationStatus() != null) {
           AccountAliasesDao accountAliasesDao = new AccountAliasesDao();
-          accountAliasesDao.setEmail(accountDao.getEmail());
-          accountAliasesDao.setAccountType(accountDao.getAccountType());
+          accountAliasesDao.setEmail(account.getEmail());
+          accountAliasesDao.setAccountType(account.getAccountType());
           accountAliasesDao.setSendAsEmail(alias.getSendAsEmail());
           accountAliasesDao.setDisplayName(alias.getDisplayName());
           accountAliasesDao.setDefault(alias.getIsDefault() != null && alias.getIsDefault());
           accountAliasesDao.setVerificationStatus(alias.getVerificationStatus());
-          accountAliasesDaoList.add(accountAliasesDao);
+          accountAliases.add(accountAliasesDao);
         }
       }
 
-      return new LoaderResult(accountAliasesDaoList, null);
+      return new LoaderResult(accountAliases, null);
     } catch (IOException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);

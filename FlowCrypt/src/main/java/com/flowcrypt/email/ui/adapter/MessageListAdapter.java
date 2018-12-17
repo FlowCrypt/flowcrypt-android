@@ -24,8 +24,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.Folder;
 import com.flowcrypt.email.api.email.FoldersManager;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -51,47 +51,45 @@ import androidx.core.content.ContextCompat;
  */
 
 public class MessageListAdapter extends CursorAdapter {
-  private MessageDaoSource messageDaoSource;
-  private Folder folder;
+  private MessageDaoSource msgDaoSource;
+  private LocalFolder localFolder;
   private FoldersManager.FolderType folderType;
-  private Pattern patternSenderName;
-  private LongSparseArray<Boolean> selectionStates = new LongSparseArray<>();
-  private Drawable defaultItemBackground;
+  private Pattern senderNamePattern;
+  private LongSparseArray<Boolean> states = new LongSparseArray<>();
+  private Drawable defItemBg;
 
   public MessageListAdapter(Context context, Cursor c) {
     super(context, c, false);
-    this.messageDaoSource = new MessageDaoSource();
-    this.patternSenderName = prepareSenderNamePattern();
+    this.msgDaoSource = new MessageDaoSource();
+    this.senderNamePattern = prepareSenderNamePattern();
   }
 
   @Override
   public View newView(Context context, Cursor cursor, ViewGroup parent) {
     View view = LayoutInflater.from(context).inflate(R.layout.messages_list_item, parent, false);
-    if (defaultItemBackground == null) {
-      defaultItemBackground = view.getBackground();
+    if (defItemBg == null) {
+      defItemBg = view.getBackground();
     }
     return view;
   }
 
   @Override
   public void bindView(View view, Context context, Cursor cursor) {
-    GeneralMessageDetails generalMessageDetails = messageDaoSource.getMessageInfo(cursor);
-
     ViewHolder viewHolder = new ViewHolder();
     viewHolder.textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
     viewHolder.textViewDate = view.findViewById(R.id.textViewDate);
     viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject);
-    viewHolder.imageViewAttachments = view.findViewById(R.id.imageViewAttachments);
+    viewHolder.imageViewAtts = view.findViewById(R.id.imageViewAtts);
     viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted);
 
-    updateItem(context, generalMessageDetails, viewHolder);
+    updateItem(context, msgDaoSource.getMsgInfo(cursor), viewHolder);
 
     long itemId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
 
-    if (selectionStates.get(itemId) != null && selectionStates.get(itemId)) {
+    if (states.get(itemId) != null && states.get(itemId)) {
       view.setBackgroundColor(UIUtil.getColor(context, R.color.silver));
     } else {
-      view.setBackground(defaultItemBackground);
+      view.setBackground(defItemBg);
     }
   }
 
@@ -100,28 +98,28 @@ public class MessageListAdapter extends CursorAdapter {
     Cursor cursor = (Cursor) super.getItem(position);
 
     if (cursor != null) {
-      return messageDaoSource.getMessageInfo(cursor);
+      return msgDaoSource.getMsgInfo(cursor);
     } else return null;
   }
 
   public void updateItemState(int position, boolean isCheck) {
-    selectionStates.put(getItemId(position), isCheck);
+    states.put(getItemId(position), isCheck);
     notifyDataSetChanged();
   }
 
   public void clearSelection() {
-    selectionStates.clear();
+    states.clear();
     notifyDataSetChanged();
   }
 
-  public Folder getFolder() {
-    return folder;
+  public LocalFolder getLocalFolder() {
+    return localFolder;
   }
 
-  public void setFolder(Folder folder) {
-    this.folder = folder;
-    if (folder != null) {
-      this.folderType = FoldersManager.getFolderTypeForImapFolder(folder);
+  public void setLocalFolder(LocalFolder localFolder) {
+    this.localFolder = localFolder;
+    if (localFolder != null) {
+      this.folderType = FoldersManager.getFolderType(localFolder);
     } else {
       folderType = null;
     }
@@ -130,45 +128,44 @@ public class MessageListAdapter extends CursorAdapter {
   /**
    * Update information of some item.
    *
-   * @param generalMessageDetails A model which consist information about the
-   *                              generalMessageDetails.
-   * @param viewHolder            A View holder object which consist links to views.
+   * @param details    A model which consist information about the
+   *                   generalMessageDetails.
+   * @param viewHolder A View holder object which consist links to views.
    */
-  private void updateItem(Context context, GeneralMessageDetails generalMessageDetails,
+  private void updateItem(Context context, GeneralMessageDetails details,
                           @NonNull ViewHolder viewHolder) {
-    if (generalMessageDetails != null) {
-      String subject = TextUtils.isEmpty(generalMessageDetails.getSubject()) ?
-          context.getString(R.string.no_subject) : generalMessageDetails.getSubject();
+    if (details != null) {
+      String subject = TextUtils.isEmpty(details.getSubject()) ?
+          context.getString(R.string.no_subject) : details.getSubject();
 
       if (folderType != null) {
         switch (folderType) {
           case SENT:
-            viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getTo()));
+            viewHolder.textViewSenderAddress.setText(generateAddresses(details.getTo()));
             break;
 
           case OUTBOX:
-            viewHolder.textViewSenderAddress.setText(generateOutboxStatus(viewHolder.textViewSenderAddress
-                .getContext(), generalMessageDetails.getMessageState()));
+            CharSequence status = generateOutboxStatus(viewHolder.textViewSenderAddress.getContext(),
+                details.getMsgState());
+            viewHolder.textViewSenderAddress.setText(status);
             break;
 
           default:
-            viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
+            viewHolder.textViewSenderAddress.setText(generateAddresses(details.getFrom()));
             break;
         }
       } else {
-        viewHolder.textViewSenderAddress.setText(generateAddresses(generalMessageDetails.getFrom()));
+        viewHolder.textViewSenderAddress.setText(generateAddresses(details.getFrom()));
       }
 
       viewHolder.textViewSubject.setText(subject);
       if (folderType == FoldersManager.FolderType.OUTBOX) {
-        viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
-            generalMessageDetails.getSentDateInMillisecond()));
+        viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context, details.getSentDate()));
       } else {
-        viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context,
-            generalMessageDetails.getReceivedDateInMillisecond()));
+        viewHolder.textViewDate.setText(DateTimeUtil.formatSameDayTime(context, details.getReceivedDate()));
       }
 
-      if (generalMessageDetails.isSeen()) {
+      if (details.isSeen()) {
         changeViewsTypeface(viewHolder, Typeface.NORMAL);
         viewHolder.textViewSenderAddress.setTextColor(UIUtil.getColor(context, R.color.dark));
         viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, R.color.gray));
@@ -178,9 +175,8 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
       }
 
-      viewHolder.imageViewAttachments.setVisibility(generalMessageDetails.isMessageHasAttachment()
-          ? View.VISIBLE : View.GONE);
-      viewHolder.viewIsEncrypted.setVisibility(generalMessageDetails.isEncrypted() ? View.VISIBLE : View.GONE);
+      viewHolder.imageViewAtts.setVisibility(details.hasAtts() ? View.VISIBLE : View.GONE);
+      viewHolder.viewIsEncrypted.setVisibility(details.isEncrypted() ? View.VISIBLE : View.GONE);
     } else {
       clearItem(viewHolder);
     }
@@ -228,7 +224,7 @@ public class MessageListAdapter extends CursorAdapter {
    * @return A generated sender name.
    */
   private String prepareSenderName(String name) {
-    return patternSenderName.matcher(name).replaceFirst("");
+    return senderNamePattern.matcher(name).replaceFirst("");
   }
 
   /**
@@ -240,7 +236,7 @@ public class MessageListAdapter extends CursorAdapter {
     viewHolder.textViewSenderAddress.setText(null);
     viewHolder.textViewSubject.setText(null);
     viewHolder.textViewDate.setText(null);
-    viewHolder.imageViewAttachments.setVisibility(View.GONE);
+    viewHolder.imageViewAtts.setVisibility(View.GONE);
     viewHolder.viewIsEncrypted.setVisibility(View.GONE);
 
     changeViewsTypeface(viewHolder, Typeface.NORMAL);
@@ -258,9 +254,8 @@ public class MessageListAdapter extends CursorAdapter {
 
     StringBuilder b = new StringBuilder();
     for (int i = 0; ; i++) {
-      InternetAddress internetAddress = internetAddresses[i];
-      String displayName = TextUtils.isEmpty(internetAddress.getPersonal()) ? internetAddress.getAddress() :
-          internetAddress.getPersonal();
+      InternetAddress address = internetAddresses[i];
+      String displayName = TextUtils.isEmpty(address.getPersonal()) ? address.getAddress() : address.getPersonal();
       b.append(displayName);
       if (i == iMax) {
         return prepareSenderName(b.toString());
@@ -334,13 +329,11 @@ public class MessageListAdapter extends CursorAdapter {
     SpannableString spannableStringMe = new SpannableString(me);
     spannableStringMe.setSpan(new AbsoluteSizeSpan(meTextSize), 0, me.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-    SpannableString spannableStringStatus = new SpannableString(state);
-    spannableStringStatus.setSpan(new AbsoluteSizeSpan(statusTextSize), 0, state.length(), Spanned
-        .SPAN_INCLUSIVE_INCLUSIVE);
-    spannableStringStatus.setSpan(new ForegroundColorSpan(stateTextColor), 0, state.length(), Spanned
-        .SPAN_INCLUSIVE_INCLUSIVE);
+    SpannableString status = new SpannableString(state);
+    status.setSpan(new AbsoluteSizeSpan(statusTextSize), 0, state.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+    status.setSpan(new ForegroundColorSpan(stateTextColor), 0, state.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-    return TextUtils.concat(spannableStringMe, " ", spannableStringStatus);
+    return TextUtils.concat(spannableStringMe, " ", status);
   }
 
   /**
@@ -350,7 +343,7 @@ public class MessageListAdapter extends CursorAdapter {
     TextView textViewSenderAddress;
     TextView textViewDate;
     TextView textViewSubject;
-    ImageView imageViewAttachments;
+    ImageView imageViewAtts;
     View viewIsEncrypted;
   }
 }

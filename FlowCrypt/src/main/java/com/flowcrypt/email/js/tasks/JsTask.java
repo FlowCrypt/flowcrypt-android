@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.js.tasks;
 
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsInBackgroundManager;
 import com.flowcrypt.email.js.JsListener;
+import com.flowcrypt.email.js.core.Js;
 
 /**
  * The task which will be run by {@link JsInBackgroundManager}

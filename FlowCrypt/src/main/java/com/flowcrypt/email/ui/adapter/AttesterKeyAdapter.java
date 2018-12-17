@@ -31,14 +31,14 @@ import java.util.List;
  */
 
 public class AttesterKeyAdapter extends BaseAdapter {
-  private List<LookUpEmailResponse> lookUpEmailResponses;
+  private List<LookUpEmailResponse> responses;
   private List<String> keysLongIds;
 
-  public AttesterKeyAdapter(Context context, List<LookUpEmailResponse> lookUpEmailResponses) {
-    this.lookUpEmailResponses = lookUpEmailResponses;
+  public AttesterKeyAdapter(Context context, List<LookUpEmailResponse> responses) {
+    this.responses = responses;
 
-    if (this.lookUpEmailResponses == null) {
-      this.lookUpEmailResponses = new ArrayList<>();
+    if (this.responses == null) {
+      this.responses = new ArrayList<>();
     }
 
     this.keysLongIds = new KeysDaoSource().getAllKeysLongIds(context);
@@ -46,12 +46,12 @@ public class AttesterKeyAdapter extends BaseAdapter {
 
   @Override
   public int getCount() {
-    return lookUpEmailResponses.size();
+    return responses.size();
   }
 
   @Override
   public LookUpEmailResponse getItem(int position) {
-    return lookUpEmailResponses.get(position);
+    return responses.get(position);
   }
 
   @Override
@@ -75,20 +75,24 @@ public class AttesterKeyAdapter extends BaseAdapter {
       viewHolder = (AttesterKeyAdapter.ViewHolder) convertView.getTag();
     }
 
+    updateView(lookUpEmailResponse, context, viewHolder);
+
+    return convertView;
+  }
+
+  private void updateView(LookUpEmailResponse lookUpEmailResponse, Context context, ViewHolder viewHolder) {
     viewHolder.textViewKeyOwner.setText(lookUpEmailResponse.getEmail());
 
-    if (TextUtils.isEmpty(lookUpEmailResponse.getPubkey())) {
+    if (TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange));
-    } else if (isMatchedPublicKey(lookUpEmailResponse)) {
+    } else if (isPublicKeyMatched(lookUpEmailResponse)) {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary));
     } else {
       viewHolder.textViewKeyAttesterStatus.setText(R.string.wrong_public_key_recorded);
       viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.red));
     }
-
-    return convertView;
   }
 
   /**
@@ -98,7 +102,7 @@ public class AttesterKeyAdapter extends BaseAdapter {
    *                            the Attester API.
    * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
    */
-  private boolean isMatchedPublicKey(LookUpEmailResponse lookUpEmailResponse) {
+  private boolean isPublicKeyMatched(LookUpEmailResponse lookUpEmailResponse) {
 
     for (String longId : keysLongIds) {
       if (longId.equals(lookUpEmailResponse.getLongId())) {

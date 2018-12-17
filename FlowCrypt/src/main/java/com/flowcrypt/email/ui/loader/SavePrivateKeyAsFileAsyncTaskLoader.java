@@ -9,7 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
@@ -31,11 +31,11 @@ import androidx.loader.content.AsyncTaskLoader;
 
 public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
   private Uri destinationUri;
-  private AccountDao accountDao;
+  private AccountDao account;
 
-  public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao accountDao, Uri destinationUri) {
+  public SavePrivateKeyAsFileAsyncTaskLoader(Context context, AccountDao account, Uri destinationUri) {
     super(context);
-    this.accountDao = accountDao;
+    this.account = account;
     this.destinationUri = destinationUri;
     onContentChanged();
   }
@@ -44,8 +44,9 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
   public LoaderResult loadInBackground() {
     try {
       Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-      return new LoaderResult(GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri,
-          SecurityUtils.generatePrivateKeysBackup(getContext(), js, accountDao, false)) > 0, null);
+      String backup = SecurityUtils.genPrivateKeysBackup(getContext(), js, account, false);
+      boolean result = GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri, backup) > 0;
+      return new LoaderResult(result, null);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);

@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.rules;
 
-import com.flowcrypt.email.api.email.Folder;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -34,31 +34,31 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 public class AddMessageToDatabaseRule implements TestRule {
-  private AccountDao accountDao;
-  private Folder folder;
+  private AccountDao account;
+  private LocalFolder localFolder;
   private long uid;
   private Message message;
 
-  public AddMessageToDatabaseRule(AccountDao accountDao, Folder folder, long uid, Message message) {
-    this.accountDao = accountDao;
-    this.folder = folder;
+  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder, long uid, Message message) {
+    this.account = account;
+    this.localFolder = localFolder;
     this.uid = uid;
     this.message = message;
   }
 
-  public AddMessageToDatabaseRule(AccountDao accountDao, Folder folder) {
-    this.accountDao = accountDao;
-    this.folder = folder;
+  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder) {
+    this.account = account;
+    this.localFolder = localFolder;
 
     try {
-      Session session = OpenStoreHelper.getSessionForAccountDao(InstrumentationRegistry.getInstrumentation()
+      Session session = OpenStoreHelper.getAccountSess(InstrumentationRegistry.getInstrumentation()
               .getTargetContext(),
-          accountDao);
-      Store store = OpenStoreHelper.openAndConnectToStore(InstrumentationRegistry.getInstrumentation()
-              .getTargetContext(), accountDao,
+          account);
+      Store store = OpenStoreHelper.openStore(InstrumentationRegistry.getInstrumentation()
+              .getTargetContext(), account,
           session);
 
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
       imapFolder.open(javax.mail.Folder.READ_ONLY);
 
       Message[] messages;
@@ -84,17 +84,17 @@ public class AddMessageToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        saveMessageToDatabase();
+        saveMsgToDatabase();
         base.evaluate();
       }
     };
   }
 
-  private void saveMessageToDatabase() throws MessagingException {
+  private void saveMsgToDatabase() throws MessagingException {
     MessageDaoSource messageDaoSource = new MessageDaoSource();
     messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        accountDao.getEmail(),
-        folder.getFolderAlias(),
+        account.getEmail(),
+        localFolder.getFolderAlias(),
         uid,
         message, false);
   }

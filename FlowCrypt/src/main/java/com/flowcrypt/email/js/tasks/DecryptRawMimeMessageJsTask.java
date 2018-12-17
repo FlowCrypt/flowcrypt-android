@@ -11,7 +11,6 @@ import android.text.TextUtils;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.JsListener;
 import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.MimeAddress;
@@ -20,6 +19,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.ProcessedMime;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
@@ -45,18 +45,18 @@ import androidx.annotation.NonNull;
  */
 
 public class DecryptRawMimeMessageJsTask extends BaseJsTask {
-  private String rawMimeMessage;
+  private String rawMimeMsg;
 
-  public DecryptRawMimeMessageJsTask(String ownerKey, int requestCode, String rawMimeMessage) {
+  public DecryptRawMimeMessageJsTask(String ownerKey, int requestCode, String rawMimeMsg) {
     super(ownerKey, requestCode);
-    this.rawMimeMessage = rawMimeMessage;
+    this.rawMimeMsg = rawMimeMsg;
   }
 
   @Override
   public void runAction(Js js, JsListener jsListener) {
-    IncomingMessageInfo incomingMessageInfo = new IncomingMessageInfo();
-    if (!TextUtils.isEmpty(rawMimeMessage)) {
-      ProcessedMime processedMime = js.mime_process(rawMimeMessage);
+    IncomingMessageInfo incomingMsgInfo = new IncomingMessageInfo();
+    if (!TextUtils.isEmpty(rawMimeMsg)) {
+      ProcessedMime processedMime = js.mime_process(rawMimeMsg);
       ArrayList<String> addressesFrom = new ArrayList<>();
       ArrayList<String> addressesTo = new ArrayList<>();
       ArrayList<String> addressesCc = new ArrayList<>();
@@ -73,51 +73,50 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
         addressesCc.add(mimeAddress.getAddress());
       }
 
-      incomingMessageInfo.setFrom(addressesFrom);
-      incomingMessageInfo.setTo(addressesTo);
-      incomingMessageInfo.setCc(addressesCc);
-      incomingMessageInfo.setSubject(processedMime.getStringHeader("subject"));
-      incomingMessageInfo.setOriginalRawMessageWithoutAttachments(rawMimeMessage);
-      incomingMessageInfo.setMessageParts(getMessagePartsFromProcessedMime(jsListener.getContext(), js,
-          processedMime));
+      incomingMsgInfo.setFrom(addressesFrom);
+      incomingMsgInfo.setTo(addressesTo);
+      incomingMsgInfo.setCc(addressesCc);
+      incomingMsgInfo.setSubject(processedMime.getStringHeader("subject"));
+      incomingMsgInfo.setOrigRawMsgWithoutAtts(rawMimeMsg);
+      incomingMsgInfo.setMsgParts(getMsgParts(jsListener.getContext(), js, processedMime));
 
       long timestamp = processedMime.getTimeHeader("date");
       if (timestamp != -1) {
-        incomingMessageInfo.setReceiveDate(new Date(timestamp));
+        incomingMsgInfo.setReceiveDate(new Date(timestamp));
       }
 
-      MimeMessage mimeMessage = js.mime_decode(rawMimeMessage);
+      MimeMessage mimeMsg = js.mime_decode(rawMimeMsg);
 
-      if (mimeMessage != null) {
-        if (!isMessageContainsPGPBlocks(incomingMessageInfo)) {
-          incomingMessageInfo.setHtmlMessage(mimeMessage.getHtml());
+      if (mimeMsg != null) {
+        if (!hasPGPBlocks(incomingMsgInfo)) {
+          incomingMsgInfo.setHtmlMsg(mimeMsg.getHtml());
         }
-        incomingMessageInfo.setPlainTextExists(!TextUtils.isEmpty(mimeMessage.getText()));
+        incomingMsgInfo.setHasPlainText(!TextUtils.isEmpty(mimeMsg.getText()));
       }
 
-      jsListener.onMessageDecrypted(ownerKey, requestCode, incomingMessageInfo);
+      jsListener.onMsgDecrypted(ownerKey, requestCode, incomingMsgInfo);
     } else {
-      jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR,
-          new NullPointerException("The raw MIME message is null or empty!"), ownerKey, requestCode);
+      Exception npe = new NullPointerException("The raw MIME message is null or empty!");
+      jsListener.onError(JsErrorTypes.TASK_RUNNING_ERROR, npe, ownerKey, requestCode);
     }
   }
 
   /**
    * Check that {@link IncomingMessageInfo} contains PGP blocks.
    *
-   * @param incomingMessageInfo The incoming message.
+   * @param incomingMsgInfo The incoming message.
    * @return true if {@link IncomingMessageInfo} contains PGP blocks
    * ({@link MessagePartType#PGP_MESSAGE}, {@link MessagePartType#PGP_PUBLIC_KEY},
    * {@link MessagePartType#PGP_PASSWORD_MESSAGE},  {@link MessagePartType#PGP_SIGNED_MESSAGE}), otherwise - false
    */
-  private boolean isMessageContainsPGPBlocks(IncomingMessageInfo incomingMessageInfo) {
-    if (incomingMessageInfo != null) {
-      List<MessagePart> messageParts = incomingMessageInfo.getMessageParts();
+  private boolean hasPGPBlocks(IncomingMessageInfo incomingMsgInfo) {
+    if (incomingMsgInfo != null) {
+      List<MessagePart> messageParts = incomingMsgInfo.getMsgParts();
 
       if (messageParts != null) {
         for (MessagePart messagePart : messageParts) {
-          if (messagePart.getMessagePartType() != null) {
-            switch (messagePart.getMessagePartType()) {
+          if (messagePart.getMsgPartType() != null) {
+            switch (messagePart.getMsgPartType()) {
               case PGP_MESSAGE:
               case PGP_PUBLIC_KEY:
               case PGP_PASSWORD_MESSAGE:
@@ -141,136 +140,130 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
    *                      encrypted message.
    * @return The list of {@link MessagePart}.
    */
-  private List<MessagePart> getMessagePartsFromProcessedMime(Context context, Js js, ProcessedMime processedMime) {
+  private List<MessagePart> getMsgParts(Context context, Js js, ProcessedMime processedMime) {
     MessageBlock[] blocks = processedMime.getBlocks();
 
-    LinkedList<MessagePart> messageParts = new LinkedList<>();
+    LinkedList<MessagePart> msgParts = new LinkedList<>();
 
     for (MessageBlock messageBlock : blocks) {
       if (messageBlock != null && messageBlock.getType() != null) {
         switch (messageBlock.getType()) {
           case MessageBlock.TYPE_TEXT:
-            messageParts.add(new MessagePartText(messageBlock.getContent()));
+            msgParts.add(new MessagePartText(messageBlock.getContent()));
             break;
 
           case MessageBlock.TYPE_PGP_MESSAGE:
-            messageParts.add(generateMessagePartPgpMessage(context, js, messageBlock));
+            msgParts.add(genPgpMsgPart(context, js, messageBlock));
             break;
 
           case MessageBlock.TYPE_PGP_PUBLIC_KEY:
             String publicKey = messageBlock.getContent();
-            String fingerprint =
-                js.crypto_key_fingerprint(js.crypto_key_read(publicKey));
+            String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(publicKey));
             String longId = js.crypto_key_longid(fingerprint);
             String keywords = js.mnemonic(longId);
             PgpKey pgpKey = js.crypto_key_read(publicKey);
             String keyOwner = pgpKey.getPrimaryUserId().getEmail();
 
-            PgpContact pgpContact =
-                new ContactsDaoSource().getPgpContact(context, keyOwner);
+            PgpContact pgpContact = new ContactsDaoSource().getPgpContact(context, keyOwner);
 
-            MessagePartPgpPublicKey messagePartPgpPublicKey
-                = new MessagePartPgpPublicKey(publicKey, longId, keywords,
+            MessagePartPgpPublicKey msgPartPgpPublicKey = new MessagePartPgpPublicKey(publicKey, longId, keywords,
                 fingerprint, keyOwner, pgpContact);
 
-            messageParts.add(messagePartPgpPublicKey);
+            msgParts.add(msgPartPgpPublicKey);
             break;
 
           case MessageBlock.TYPE_PGP_SIGNED_MESSAGE:
-            messageParts.add(new MessagePartSignedMessage(messageBlock.getContent()));
+            msgParts.add(new MessagePartSignedMessage(messageBlock.getContent()));
             break;
 
           case MessageBlock.TYPE_VERIFICATION:
-            messageParts.add(new MessagePart(MessagePartType.VERIFICATION,
-                messageBlock.getContent()));
+            msgParts.add(new MessagePart(MessagePartType.VERIFICATION, messageBlock.getContent()));
             break;
 
           case MessageBlock.TYPE_ATTEST_PACKET:
-            messageParts.add(new MessagePart(MessagePartType.ATTEST_PACKET,
-                messageBlock.getContent()));
+            msgParts.add(new MessagePart(MessagePartType.ATTEST_PACKET, messageBlock.getContent()));
             break;
 
           case MessageBlock.TYPE_PGP_PASSWORD_MESSAGE:
-            messageParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE,
-                messageBlock.getContent()));
+            msgParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE, messageBlock.getContent()));
             break;
         }
       }
     }
-    return messageParts;
+    return msgParts;
   }
 
   /**
    * Generate {@link MessagePartPgpMessage} from encrypted {@link MessageBlock}.
    *
-   * @param context      Interface to global information about an application environment;
-   * @param js           The {@link Js} util;
-   * @param messageBlock The encrypted {@link MessageBlock}.
+   * @param context  Interface to global information about an application environment;
+   * @param js       The {@link Js} util;
+   * @param msgBlock The encrypted {@link MessageBlock}.
    * @return Generated {@link MessagePartPgpMessage}.
    */
   @NonNull
-  private MessagePartPgpMessage generateMessagePartPgpMessage(Context context, Js js, MessageBlock messageBlock) {
-    String encryptedContent = messageBlock.getContent();
+  private MessagePartPgpMessage genPgpMsgPart(Context context, Js js, MessageBlock msgBlock) {
+    String encryptedContent = msgBlock.getContent();
     String value = encryptedContent;
-    String errorMessage = null;
-    MessagePartPgpMessage.PgpMessageDecryptError pgpMessageDecryptError = null;
+    String errorMsg = null;
+    MessagePartPgpMessage.PgpMessageDecryptError pgpDecryptError = null;
 
     if (TextUtils.isEmpty(encryptedContent)) {
       return new MessagePartPgpMessage("", null, null);
     }
 
-    PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(encryptedContent);
+    PgpDecrypted pgpDecrypt = js.crypto_message_decrypt(encryptedContent);
 
-    if (pgpDecrypted != null) {
-      if (pgpDecrypted.isSuccess()) {
-        value = pgpDecrypted.getString();
-      } else if (!TextUtils.isEmpty(pgpDecrypted.getFormatError())) {
-        errorMessage = context.getString(R.string.decrypt_error_message_badly_formatted,
-            context.getString(R.string.app_name)) + "\n\n" + pgpDecrypted.getFormatError();
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.FORMAT_ERROR;
-      } else if (pgpDecrypted.getMissingPassphraseLongids() != null
-          && pgpDecrypted.getMissingPassphraseLongids().length > 0) {
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
-      } else if (Objects.equals(pgpDecrypted.countPotentiallyMatchingKeys(), pgpDecrypted.countAttempts())
-          && Objects.equals(pgpDecrypted.countKeyMismatchErrors(), pgpDecrypted.countAttempts())) {
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
-        if (pgpDecrypted.getEncryptedForLongids().length > 1) {
-          errorMessage = context.getString(R.string.decrypt_error_current_key_cannot_message);
+    if (pgpDecrypt != null) {
+      if (pgpDecrypt.isSuccess()) {
+        value = pgpDecrypt.getString();
+      } else if (!TextUtils.isEmpty(pgpDecrypt.getFormatError())) {
+        errorMsg = context.getString(R.string.decrypt_error_message_badly_formatted,
+            context.getString(R.string.app_name)) + "\n\n" + pgpDecrypt.getFormatError();
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.FORMAT_ERROR;
+      } else if (pgpDecrypt.getMissingPassphraseLongids() != null
+          && pgpDecrypt.getMissingPassphraseLongids().length > 0) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
+      } else if (Objects.equals(pgpDecrypt.countPotentiallyMatchingKeys(), pgpDecrypt.countAttempts())
+          && Objects.equals(pgpDecrypt.countKeyMismatchErrors(), pgpDecrypt.countAttempts())) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
+        if (pgpDecrypt.getEncryptedForLongids().length > 1) {
+          errorMsg = context.getString(R.string.decrypt_error_current_key_cannot_message);
         } else {
-          errorMessage = context.getString(R.string.decrypt_error_could_not_open_message,
+          errorMsg = context.getString(R.string.decrypt_error_could_not_open_message,
               context.getString(R.string.app_name)) + "\n\n" +
               context.getString(R.string.decrypt_error_single_sender);
         }
-      } else if (pgpDecrypted.countUnsecureMdcErrors() > 0) {
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNSECURED_MDC_ERROR;
-      } else if (pgpDecrypted.getOtherErrors() != null && pgpDecrypted.getOtherErrors().length > 0) {
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.OTHER_ERRORS;
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(context.getString(R.string.decrypt_error_could_not_open_message,
+      } else if (pgpDecrypt.countUnsecureMdcErrors() > 0) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNSECURED_MDC_ERROR;
+      } else if (pgpDecrypt.getOtherErrors() != null && pgpDecrypt.getOtherErrors().length > 0) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.OTHER_ERRORS;
+        StringBuilder builder = new StringBuilder();
+        builder.append(context.getString(R.string.decrypt_error_could_not_open_message,
             context.getString(R.string.app_name)));
-        stringBuilder.append("\n\n");
-        stringBuilder.append(context.getString(R.string.decrypt_error_please_write_me, context
+        builder.append("\n\n");
+        builder.append(context.getString(R.string.decrypt_error_please_write_me, context
             .getString(R.string.support_email)));
-        stringBuilder.append("\n\n");
+        builder.append("\n\n");
 
-        for (String s : pgpDecrypted.getOtherErrors()) {
-          stringBuilder.append(s);
-          stringBuilder.append("\n");
+        for (String s : pgpDecrypt.getOtherErrors()) {
+          builder.append(s);
+          builder.append("\n");
         }
 
-        errorMessage = stringBuilder.toString();
+        errorMsg = builder.toString();
       } else {
-        pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNKNOWN_ERROR;
-        errorMessage = context.getString(R.string.decrypt_error_could_not_open_message,
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.UNKNOWN_ERROR;
+        errorMsg = context.getString(R.string.decrypt_error_could_not_open_message,
             context.getString(R.string.app_name)) +
             "\n\n" + context.getString(R.string.decrypt_error_please_write_me);
       }
     } else {
-      pgpMessageDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.JS_TOOL_ERROR;
-      errorMessage = context.getString(R.string.decrypt_error_js_tool_error) + "\n\n" +
+      pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.JS_TOOL_ERROR;
+      errorMsg = context.getString(R.string.decrypt_error_js_tool_error) + "\n\n" +
           context.getString(R.string.decrypt_error_please_write_me);
     }
 
-    return new MessagePartPgpMessage(value, errorMessage, pgpMessageDecryptError);
+    return new MessagePartPgpMessage(value, errorMsg, pgpDecryptError);
   }
 }

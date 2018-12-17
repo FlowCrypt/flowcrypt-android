@@ -16,10 +16,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -29,6 +29,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import org.apache.commons.io.IOUtils;
 
@@ -72,47 +73,44 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   public static final String KEY_EXTRA_NEUTRAL_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
       "KEY_EXTRA_NEUTRAL_BUTTON_TITLE", CheckKeysActivity.class);
   public static final String KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
-      GeneralUtil.generateUniqueExtraKey(
-          "KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
+      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity.class);
   public static final String KEY_EXTRA_IS_EXTRA_IMPORT_OPTION = GeneralUtil.generateUniqueExtraKey(
       "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity.class);
 
-  private ArrayList<KeyDetails> privateKeyDetailsList;
-  private Map<KeyDetails, String> mapOfKeyDetailsAndLongIds;
+  private ArrayList<KeyDetails> keyDetailsList;
+  private Map<KeyDetails, String> keyDetailsAndLongIdsMap;
 
   private EditText editTextKeyPassword;
   private TextView textViewSubTitle;
   private View progressBar;
 
   private String subTitle;
-  private String positiveButtonTitle;
-  private String neutralButtonTitle;
-  private String negativeButtonTitle;
-  private int countOfUniqueKeys;
+  private String positiveBtnTitle;
+  private String neutralBtnTitle;
+  private String negativeBtnTitle;
+  private int uniqueKeysCount;
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
-                                 String bottomTitle, String positiveButtonTitle,
-                                 String negativeButtonTitle) {
-    return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, null, negativeButtonTitle, false);
+  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String bottomTitle,
+                                 String positiveBtnTitle, String negativeBtnTitle) {
+    return newIntent(context, privateKeys, bottomTitle, positiveBtnTitle, null, negativeBtnTitle, false);
   }
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
-                                 String bottomTitle, String positiveButtonTitle, String neutralButtonTitle,
-                                 String negativeButtonTitle) {
-    return newIntent(context, privateKeys, bottomTitle, positiveButtonTitle, neutralButtonTitle,
-        negativeButtonTitle, false);
+  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String bottomTitle,
+                                 String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle) {
+    return newIntent(context, privateKeys, bottomTitle, positiveBtnTitle, neutralBtnTitle,
+        negativeBtnTitle, false);
   }
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys,
-                                 String subTitle, String positiveButtonTitle,
-                                 String neutralButtonTitle, String negativeButtonTitle, boolean isExtraImportOption) {
+  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String subTitle,
+                                 String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle,
+                                 boolean isExtraImportOpt) {
     Intent intent = new Intent(context, CheckKeysActivity.class);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
     intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
-    intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveButtonTitle);
-    intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralButtonTitle);
-    intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeButtonTitle);
-    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOption);
+    intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle);
+    intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle);
+    intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle);
+    intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt);
     return intent;
   }
 
@@ -140,36 +138,30 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (getIntent() != null) {
-      this.privateKeyDetailsList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
-      this.subTitle = getIntent().getStringExtra(KEY_EXTRA_SUB_TITLE);
-      this.positiveButtonTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
-      this.neutralButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);
-      this.negativeButtonTitle = getIntent().getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE);
+      getExtras();
 
-      if (privateKeyDetailsList != null) {
-        this.mapOfKeyDetailsAndLongIds = prepareMapFromKeyDetailsList(privateKeyDetailsList);
-        this.countOfUniqueKeys = getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds);
+      if (keyDetailsList != null) {
+        this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(keyDetailsList);
+        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap);
 
         if (!getIntent().getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
-          removeAlreadyImportedKeysFromGivenList();
+          removeAlreadyImportedKeys();
 
-          if (privateKeyDetailsList.size() != mapOfKeyDetailsAndLongIds.size()) {
-            this.privateKeyDetailsList = new ArrayList<>(mapOfKeyDetailsAndLongIds.keySet());
-            if (privateKeyDetailsList.isEmpty()) {
+          if (keyDetailsList.size() != keyDetailsAndLongIdsMap.size()) {
+            this.keyDetailsList = new ArrayList<>(keyDetailsAndLongIdsMap.keySet());
+            if (keyDetailsList.isEmpty()) {
               setResult(Activity.RESULT_OK);
               finish();
             } else {
-              Map<KeyDetails, String> mapOfRemainingBackups
-                  = prepareMapFromKeyDetailsList(privateKeyDetailsList);
-              int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
+              Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(keyDetailsList);
+              int remainingKeyCount = getUniqueKeysLongIdsCount(map);
 
-              this.subTitle = getResources().getQuantityString(
-                  R.plurals.not_recovered_all_keys, remainingKeyCount,
-                  countOfUniqueKeys - remainingKeyCount, countOfUniqueKeys, remainingKeyCount);
+              this.subTitle = getResources().getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
+                  uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount);
             }
           } else {
             this.subTitle = getResources().getQuantityString(
-                R.plurals.found_backup_of_your_account_key, countOfUniqueKeys, countOfUniqueKeys);
+                R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount);
           }
         }
       } else {
@@ -188,7 +180,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     switch (v.getId()) {
       case R.id.buttonPositiveAction:
         UIUtil.hideSoftInput(this, editTextKeyPassword);
-        if (privateKeyDetailsList != null && !privateKeyDetailsList.isEmpty()) {
+        if (!CollectionUtils.isEmpty(keyDetailsList)) {
           if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
             showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty));
           } else {
@@ -196,8 +188,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               getSnackBar().dismiss();
             }
 
-            LoaderManager.getInstance(this).restartLoader(R.id
-                .loader_id_encrypt_and_save_private_keys_infos, null, this);
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_encrypt_and_save_private_keys_infos, null,
+                this);
           }
         }
         break;
@@ -221,10 +213,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
       case R.id.imageButtonPasswordHint:
         try {
           WebViewInfoDialogFragment webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
-              IOUtils.toString(getAssets().open("html/forgotten_pass_phrase_hint.htm"),
-                  StandardCharsets.UTF_8));
-          webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class
-              .getSimpleName());
+              IOUtils.toString(getAssets().open("html/forgotten_pass_phrase_hint.htm"), StandardCharsets.UTF_8));
+          webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class.getSimpleName());
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -238,8 +228,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     switch (id) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.VISIBLE);
-        return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, privateKeyDetailsList,
-            editTextKeyPassword.getText().toString());
+        String passphrase = editTextKeyPassword.getText().toString();
+        return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, keyDetailsList, passphrase);
 
       default:
         return new Loader<>(this);
@@ -257,45 +247,42 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   }
 
   @Override
-  public void handleFailureLoaderResult(int loaderId, Exception e) {
+  public void onError(int loaderId, Exception e) {
     switch (loaderId) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.GONE);
-        showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage())
-            ? getString(R.string.can_not_read_this_private_key) : e.getMessage());
+        showInfoSnackbar(getRootView(), TextUtils.isEmpty(e.getMessage()) ?
+            getString(R.string.can_not_read_this_private_key) : e.getMessage());
         break;
     }
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleSuccessLoaderResult(int loaderId, Object result) {
+  public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.GONE);
         ArrayList<KeyDetails> savedKeyDetailsList = (ArrayList<KeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          JsForUiManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+          UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
           restartJsService();
 
-          Map<KeyDetails, String> mapOfSavedKeyDetailsBackups
-              = prepareMapFromKeyDetailsList(savedKeyDetailsList);
-
-          privateKeyDetailsList.removeAll(generateMatchedKeyDetailsList(mapOfSavedKeyDetailsBackups));
-          if (privateKeyDetailsList.isEmpty()) {
+          Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
+          keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
+          if (keyDetailsList.isEmpty()) {
             setResult(Activity.RESULT_OK);
             finish();
           } else {
             initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups));
             editTextKeyPassword.setText(null);
-            Map<KeyDetails, String> mapOfRemainingBackups
-                = prepareMapFromKeyDetailsList(privateKeyDetailsList);
+            Map<KeyDetails, String> mapOfRemainingBackups = prepareMapFromKeyDetailsList(keyDetailsList);
             int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
 
             textViewSubTitle.setText(getResources().getQuantityString(
                 R.plurals.not_recovered_all_keys, remainingKeyCount,
-                countOfUniqueKeys - remainingKeyCount,
-                countOfUniqueKeys, remainingKeyCount));
+                uniqueKeysCount - remainingKeyCount,
+                uniqueKeysCount, remainingKeyCount));
           }
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.password_is_incorrect));
@@ -304,23 +291,31 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     }
   }
 
+  private void getExtras() {
+    this.keyDetailsList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+    this.subTitle = getIntent().getStringExtra(KEY_EXTRA_SUB_TITLE);
+    this.positiveBtnTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
+    this.neutralBtnTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);
+    this.negativeBtnTitle = getIntent().getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE);
+  }
+
   private void initViews() {
     if (findViewById(R.id.buttonPositiveAction) != null) {
-      initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveButtonTitle);
+      initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle);
     }
 
-    if (!TextUtils.isEmpty(neutralButtonTitle) && findViewById(R.id.buttonNeutralAction) != null) {
-      initButton(R.id.buttonNeutralAction, View.VISIBLE, neutralButtonTitle);
+    if (!TextUtils.isEmpty(neutralBtnTitle) && findViewById(R.id.buttonNeutralAction) != null) {
+      initButton(R.id.buttonNeutralAction, View.VISIBLE, neutralBtnTitle);
     }
 
     if (findViewById(R.id.buttonNegativeAction) != null) {
-      initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeButtonTitle);
+      initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle);
     }
 
     if (findViewById(R.id.imageButtonHint) != null) {
       View imageButtonHint = findViewById(R.id.imageButtonHint);
-      if (privateKeyDetailsList != null && !privateKeyDetailsList.isEmpty()
-          && privateKeyDetailsList.get(0).getBornType() == KeyDetails.Type.EMAIL) {
+      KeyDetails.Type type = keyDetailsList.get(0).getBornType();
+      if (keyDetailsList != null && !keyDetailsList.isEmpty() && type == KeyDetails.Type.EMAIL) {
         imageButtonHint.setVisibility(View.VISIBLE);
         imageButtonHint.setOnClickListener(this);
       } else {
@@ -356,15 +351,14 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   /**
    * Remove the already imported keys from the list of found backups.
    */
-  private void removeAlreadyImportedKeysFromGivenList() {
-    Set<String> longIds = getUniqueKeysLongIds(mapOfKeyDetailsAndLongIds);
-    StorageConnectorInterface storageConnectorInterface
-        = JsForUiManager.getInstance(this).getJs().getStorageConnector();
+  private void removeAlreadyImportedKeys() {
+    Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
+    StorageConnectorInterface connector = UiJsManager.getInstance(this).getJs().getStorageConnector();
 
     for (String longId : longIds) {
-      if (storageConnectorInterface.getPgpPrivateKey(longId) != null) {
-        for (Iterator<Map.Entry<KeyDetails, String>> iterator = mapOfKeyDetailsAndLongIds.entrySet()
-            .iterator(); iterator.hasNext(); ) {
+      if (connector.getPgpPrivateKey(longId) != null) {
+        for (Iterator<Map.Entry<KeyDetails, String>> iterator = keyDetailsAndLongIdsMap.entrySet().iterator();
+             iterator.hasNext(); ) {
           Map.Entry<KeyDetails, String> entry = iterator.next();
           if (longId.equals(entry.getValue())) {
             iterator.remove();
@@ -381,9 +375,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @return A count of unique longIds.
    */
   private int getUniqueKeysLongIdsCount(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
-    Set<String> strings = new HashSet<>();
-    strings.addAll(mapOfKeyDetailsAndLongIds.values());
-    return strings.size();
+    return new HashSet<>(mapOfKeyDetailsAndLongIds.values()).size();
   }
 
   /**
@@ -393,9 +385,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @return A list of unique longIds.
    */
   private Set<String> getUniqueKeysLongIds(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
-    Set<String> strings = new HashSet<>();
-    strings.addAll(mapOfKeyDetailsAndLongIds.values());
-    return strings;
+    return new HashSet<>(mapOfKeyDetailsAndLongIds.values());
   }
 
   /**
@@ -405,7 +395,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @return A generated map.
    */
   private Map<KeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<KeyDetails> privateKeyDetailsList) {
-    Js js = JsForUiManager.getInstance(this).getJs();
+    Js js = UiJsManager.getInstance(this).getJs();
     Map<KeyDetails, String> keyDetailsStringMap = new HashMap<>();
 
     for (KeyDetails keyDetails : privateKeyDetailsList) {
@@ -422,11 +412,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @param mapOfSavedKeyDetailsAndLongIds An incoming map of {@link KeyDetails} objects.
    * @return A matched list.
    */
-  private ArrayList<KeyDetails> generateMatchedKeyDetailsList(Map<KeyDetails, String>
-                                                                  mapOfSavedKeyDetailsAndLongIds) {
+  private ArrayList<KeyDetails> generateMatchedKeyDetailsList(Map<KeyDetails, String> mapOfSavedKeyDetailsAndLongIds) {
     ArrayList<KeyDetails> matchedKeyDetails = new ArrayList<>();
     for (Map.Entry<KeyDetails, String> entry : mapOfSavedKeyDetailsAndLongIds.entrySet()) {
-      for (Map.Entry<KeyDetails, String> innerEntry : mapOfKeyDetailsAndLongIds.entrySet()) {
+      for (Map.Entry<KeyDetails, String> innerEntry : keyDetailsAndLongIdsMap.entrySet()) {
         if (innerEntry.getValue().equals(entry.getValue())) {
           matchedKeyDetails.add(innerEntry.getKey());
         }

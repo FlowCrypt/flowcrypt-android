@@ -7,13 +7,15 @@ package com.flowcrypt.email.js;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 
 public class ProcessedMime extends MeaningfulV8ObjectContainer {
 
   private Js js;
 
-  ProcessedMime(V8Object o, Js js) {
+  public ProcessedMime(V8Object o, Js js) {
     super(o);
     this.js = js;
   }
@@ -22,16 +24,16 @@ public class ProcessedMime extends MeaningfulV8ObjectContainer {
     return this.v8object.getObject("headers");
   }
 
-  public String getStringHeader(String header_name) {
-    return getAttributeAsString(getHeaders(), header_name);
+  public String getStringHeader(String headerName) {
+    return getAttributeAsString(getHeaders(), headerName);
   }
 
   public long getTimeHeader(String name) {
     return js.time_to_utc_timestamp(getStringHeader(name));
   }
 
-  public MimeAddress[] getAddressHeader(String header_name) {
-    V8Array addresses = getAttributeAsArray(getHeaders(), header_name);
+  public MimeAddress[] getAddressHeader(String headerName) {
+    V8Array addresses = getAttributeAsArray(getHeaders(), headerName);
     if (addresses == null) {
       return new MimeAddress[0];
     }

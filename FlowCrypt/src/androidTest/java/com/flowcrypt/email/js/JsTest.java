@@ -8,6 +8,7 @@ package com.flowcrypt.email.js;
 import android.content.Context;
 import android.util.Log;
 
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 
@@ -63,23 +64,23 @@ public class JsTest {
   private static PgpKey pgpKeyPublicDen;
   private static File encryptedImage1Mb;
   private static File image1Mb;
-  private static File parentDirectory;
+  private static File parentDir;
 
   @AfterClass
-  public static void cleanCacheDirectory() throws Exception {
-    if (parentDirectory != null && parentDirectory.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDirectory);
+  public static void cleanCacheDir() throws Exception {
+    if (parentDir != null && parentDir.exists()) {
+      FileAndDirectoryUtils.cleanDir(parentDir);
     }
   }
 
   @BeforeClass
-  public static void initCacheDirectory() throws Exception {
-    parentDirectory = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
+  public static void initCacheDir() throws Exception {
+    parentDir = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir(),
         TESTS_DIRECTORY);
-    if (parentDirectory.exists()) {
-      FileAndDirectoryUtils.cleanDirectory(parentDirectory);
-    } else if (!parentDirectory.mkdirs()) {
-      Log.d(TAG, "Create cache directory " + parentDirectory.getName() + " filed!");
+    if (parentDir.exists()) {
+      FileAndDirectoryUtils.cleanDir(parentDir);
+    } else if (!parentDir.mkdirs()) {
+      Log.d(TAG, "Create cache directory " + parentDir.getName() + " filed!");
     }
 
     storageConnectorInterface = prepareStoreConnectorInterface();
@@ -115,11 +116,11 @@ public class JsTest {
 
   @Test
   public void testDecryptText() throws Exception {
-    MimeMessage mimeMessage = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
+    MimeMessage mimeMsg = js.mime_decode(readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
             .getContext(),
         "pgp/ben_to_den_pgp_short_mime_message.acs"));
-    String decryptedText = js.crypto_message_decrypt(mimeMessage.getText()).getString();
-    Assert.assertTrue(decryptedText.equals("This is a very security encrypted text."));
+    String decryptedText = js.crypto_message_decrypt(mimeMsg.getText()).getString();
+    Assert.assertEquals("This is a very security encrypted text.", decryptedText);
   }
 
   @Test
@@ -171,30 +172,28 @@ public class JsTest {
 
   @Test
   public void testLoadFileFromAssets() throws Exception {
-    File original_image1Mb = createTempFile();
-    FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+    File originalImage1Mb = createTempFile();
+    FileUtils.copyInputStreamToFile(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
+        .open("pgp/1_mb_image.jpg"), originalImage1Mb);
   }
 
   @Test
   public void testDecryptFileWithCompareResults() throws Exception {
     File decryptedFile = decryptFile(encryptedImage1Mb);
-    File original_image1Mb = createTempFile();
-    FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), original_image1Mb);
+    File originalImage1Mb = createTempFile();
+    FileUtils.copyInputStreamToFile(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
+        .open("pgp/1_mb_image.jpg"), originalImage1Mb);
 
-    Assert.assertTrue(FileUtils.contentEquals(decryptedFile, original_image1Mb));
+    Assert.assertTrue(FileUtils.contentEquals(decryptedFile, originalImage1Mb));
   }
 
   @Test
   public void testEncryptFile() throws Exception {
     File encryptedTempFile = createTempFile();
     byte[] encryptedBytes = js.crypto_message_encrypt(
-        new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()},
-        IOUtils.toByteArray(InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")),
-        image1Mb.getName());
+        new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()}, IOUtils.toByteArray(InstrumentationRegistry
+            .getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")), image1Mb.getName());
     FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-    //Assert.assertTrue(FileUtils.contentEquals(encryptedImage1Mb, encryptedTempFile));
   }
 
   private static DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {
@@ -209,7 +208,8 @@ public class JsTest {
 
   @NonNull
   private static PgpKey generatePgpKey(Js js, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        privateKeyName);
     return js.crypto_key_read(privateKey);
   }
 
@@ -223,7 +223,8 @@ public class JsTest {
   }
 
   private static PgpContact generatePgpContact(Js js, String contactName, String privateKeyName) throws IOException {
-    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(), privateKeyName);
+    String privateKey = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        privateKeyName);
     PgpKey pgpKeyPrivate = js.crypto_key_read(privateKey);
     String fingerprint = js.crypto_key_fingerprint(pgpKeyPrivate);
     String longId = js.crypto_key_longid(fingerprint);
@@ -259,14 +260,15 @@ public class JsTest {
     encryptedImage1Mb = createTempFile();
     image1Mb = createTempFile();
     FileUtils.copyInputStreamToFile(
-        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"), encryptedImage1Mb);
+        InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg.pgp"),
+        encryptedImage1Mb);
     FileUtils.copyInputStreamToFile(
         InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg"), image1Mb);
   }
 
   @NonNull
   private static File createTempFile() throws IOException {
-    return File.createTempFile(TAG, null, parentDirectory);
+    return File.createTempFile(TAG, null, parentDir);
   }
 
   private static File decryptFile(File image1Mb) throws IOException {

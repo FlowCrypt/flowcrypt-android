@@ -11,7 +11,7 @@ import android.content.Context;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
-import com.flowcrypt.email.js.JsForUiManager;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -73,11 +73,11 @@ public class FlowCryptApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
-    JsForUiManager.init(this);
+    UiJsManager.init(this);
     NotificationChannelManager.registerNotificationChannels(this);
 
     intiLeakCanary();
-    FragmentManager.enableDebugLogging(GeneralUtil.isDebug());
+    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild());
 
     JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
     if (scheduler != null) {
@@ -91,7 +91,7 @@ public class FlowCryptApplication extends Application {
     super.attachBaseContext(base);
     MultiDex.install(this);
 
-    if (!GeneralUtil.isDebug()) {
+    if (!GeneralUtil.isDebugBuild()) {
       ACRA.init(this);
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_ACRA_ENABLE, BuildConfig.IS_ACRA_ENABLE)) {
@@ -103,8 +103,7 @@ public class FlowCryptApplication extends Application {
    * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
    */
   private void intiLeakCanary() {
-    if (SharedPreferencesHelper.getBoolean(
-        PreferenceManager.getDefaultSharedPreferences(this),
+    if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE, false)) {
       if (LeakCanary.isInAnalyzerProcess(this)) {
         // This process is dedicated to LeakCanary for heap analysis.
@@ -114,6 +113,4 @@ public class FlowCryptApplication extends Application {
       LeakCanary.install(this);
     }
   }
-
-
 }

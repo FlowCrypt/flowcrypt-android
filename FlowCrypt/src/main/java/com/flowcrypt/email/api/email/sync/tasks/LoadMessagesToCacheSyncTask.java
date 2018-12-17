@@ -5,11 +5,12 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
-import android.util.Log;
+import android.content.Context;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -34,69 +35,58 @@ import javax.mail.UIDFolder;
 
 public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
   private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
-  private com.flowcrypt.email.api.email.Folder localFolder;
-  private int countOfAlreadyLoadedMessages;
+  private LocalFolder localFolder;
+  private int countOfAlreadyLoadedMsgs;
 
-  public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode, com.flowcrypt.email.api.email.Folder
-      localFolder, int countOfAlreadyLoadedMessages) {
+  public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode,
+                                     LocalFolder localFolder, int countOfAlreadyLoadedMsgs) {
     super(ownerKey, requestCode);
     this.localFolder = localFolder;
-    this.countOfAlreadyLoadedMessages = countOfAlreadyLoadedMessages;
+    this.countOfAlreadyLoadedMsgs = countOfAlreadyLoadedMsgs;
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener)
-      throws Exception {
-    if (syncListener != null) {
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getServerFullFolderName());
-      syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_opening_store);
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    if (listener != null) {
+      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
+      listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store);
       imapFolder.open(Folder.READ_ONLY);
 
-      if (countOfAlreadyLoadedMessages < 0) {
-        countOfAlreadyLoadedMessages = 0;
+      if (countOfAlreadyLoadedMsgs < 0) {
+        countOfAlreadyLoadedMsgs = 0;
       }
 
-      Message[] foundMessages = new Message[0];
-      int messagesCount;
+      Context context = listener.getContext();
+      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
+      Message[] foundMsgs = new Message[0];
+      int msgsCount;
 
-      boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(
-          syncListener.getContext(), accountDao.getEmail());
-
-      if (isShowOnlyEncryptedMessages) {
-        foundMessages = imapFolder.search(EmailUtil.generateSearchTermForEncryptedMessages(accountDao));
-        messagesCount = foundMessages.length;
+      if (isEncryptedModeEnabled) {
+        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account));
+        msgsCount = foundMsgs.length;
       } else {
-        messagesCount = imapFolder.getMessageCount();
+        msgsCount = imapFolder.getMessageCount();
       }
 
-      int end = messagesCount - countOfAlreadyLoadedMessages;
+      int end = msgsCount - countOfAlreadyLoadedMsgs;
       int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
+      String folderName = imapFolder.getFullName();
+      new ImapLabelsDaoSource().updateLabelMsgsCount(context, account.getEmail(), folderName, msgsCount);
 
-      Log.d(TAG, "Run LoadMessagesToCacheSyncTask with parameters:"
-          + " localFolder = " + localFolder
-          + " | countOfAlreadyLoadedMessages = " + countOfAlreadyLoadedMessages
-          + " | messagesCount = " + messagesCount
-          + " | start = " + start
-          + " | end = " + end);
-
-      new ImapLabelsDaoSource().updateLabelMessageCount(syncListener.getContext(), accountDao.getEmail(),
-          imapFolder.getFullName(), messagesCount);
-
-      syncListener.onActionProgress(accountDao, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
+      listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
       if (end < 1) {
-        syncListener.onMessagesReceived(accountDao, localFolder, imapFolder, new Message[]{},
-            ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         if (start < 1) {
           start = 1;
         }
 
-        Message[] messages;
-        if (isShowOnlyEncryptedMessages) {
-          messages = new Message[end - start + 1];
-          System.arraycopy(foundMessages, start - 1, messages, 0, end - start + 1);
+        Message[] msgs;
+        if (isEncryptedModeEnabled) {
+          msgs = new Message[end - start + 1];
+          System.arraycopy(foundMsgs, start - 1, msgs, 0, end - start + 1);
         } else {
-          messages = imapFolder.getMessages(start, end);
+          msgs = imapFolder.getMessages(start, end);
         }
 
         FetchProfile fetchProfile = new FetchProfile();
@@ -104,9 +94,9 @@ public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
         fetchProfile.add(FetchProfile.Item.FLAGS);
         fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
         fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-        imapFolder.fetch(messages, fetchProfile);
+        imapFolder.fetch(msgs, fetchProfile);
 
-        syncListener.onMessagesReceived(accountDao, localFolder, imapFolder, messages, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, msgs, ownerKey, requestCode);
       }
       imapFolder.close(false);
     }

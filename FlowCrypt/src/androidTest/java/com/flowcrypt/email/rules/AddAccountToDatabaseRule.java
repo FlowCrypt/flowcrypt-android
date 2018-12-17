@@ -22,14 +22,14 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 public class AddAccountToDatabaseRule implements TestRule {
-  protected AccountDao accountDao;
+  protected AccountDao account;
 
   public AddAccountToDatabaseRule() {
-    accountDao = AccountDaoManager.getDefaultAccountDao();
+    account = AccountDaoManager.getDefaultAccountDao();
   }
 
-  public AddAccountToDatabaseRule(AccountDao accountDao) {
-    this.accountDao = accountDao;
+  public AddAccountToDatabaseRule(AccountDao account) {
+    this.account = account;
   }
 
   @Override
@@ -45,9 +45,8 @@ public class AddAccountToDatabaseRule implements TestRule {
 
   private void saveAccountToDatabase() throws Exception {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao
-        .getAuthCredentials());
-    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().getTargetContext(), accountDao
+    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getAuthCreds());
+    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().getTargetContext(), account
         .getEmail());
   }
 }

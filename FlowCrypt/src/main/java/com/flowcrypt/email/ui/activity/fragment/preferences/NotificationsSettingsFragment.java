@@ -36,34 +36,33 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
   public static final String NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY = "encrypted_messages_only";
   public static final String NOTIFICATION_LEVEL_NEVER = "never";
 
-  private CharSequence[] notificationLevels;
-  private CharSequence[] notificationEntries;
+  private CharSequence[] levels;
+  private CharSequence[] entries;
 
   @Override
   public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
     addPreferencesFromResource(R.xml.preferences_notifications_settings);
 
     AccountDaoSource accountDaoSource = new AccountDaoSource();
-    AccountDao accountDao = accountDaoSource.getActiveAccountInformation(getContext());
+    AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
 
-    boolean isShowOnlyEncryptedMessages = new AccountDaoSource().isShowOnlyEncryptedMessages(getContext(),
-        accountDao.getEmail());
+    boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(getContext(), account.getEmail());
 
-    if (isShowOnlyEncryptedMessages) {
-      notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+    if (isEncryptedModeEnabled) {
+      levels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
           NOTIFICATION_LEVEL_NEVER
       };
-      notificationEntries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
+      entries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
     } else {
-      notificationLevels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
+      levels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
           NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
           NOTIFICATION_LEVEL_NEVER
       };
 
-      notificationEntries = getResources().getStringArray(R.array.notification_level_entries);
+      entries = getResources().getStringArray(R.array.notification_level_entries);
     }
 
-    initPreferences(isShowOnlyEncryptedMessages);
+    initPreferences(isEncryptedModeEnabled);
   }
 
   @Override
@@ -75,7 +74,6 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
           intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
           intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID);
           startActivity(intent);
-
         }
 
         return true;
@@ -89,9 +87,8 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
   public boolean onPreferenceChange(Preference preference, Object newValue) {
     switch (preference.getKey()) {
       case Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER:
-        ListPreference listPreference = (ListPreference) preference;
-        preference.setSummary(generateSummaryListPreferences(newValue.toString(), listPreference
-            .getEntryValues(), listPreference.getEntries()));
+        ListPreference pref = (ListPreference) preference;
+        preference.setSummary(generateSummary(newValue.toString(), pref.getEntryValues(), pref.getEntries()));
         return true;
 
       default:
@@ -99,7 +96,7 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     }
   }
 
-  protected void initPreferences(boolean isShowOnlyEncryptedMessages) {
+  protected void initPreferences(boolean isEncryptedModeEnabled) {
     Preference preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       preferenceSettingsSecurity.setOnPreferenceClickListener(this);
@@ -107,22 +104,19 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
       preferenceSettingsSecurity.setVisible(false);
     }
 
-    ListPreference listPreferenceNotificationsFilter = (ListPreference) findPreference(Constants
-        .PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER);
-    listPreferenceNotificationsFilter.setEntryValues(notificationLevels);
-    listPreferenceNotificationsFilter.setEntries(notificationEntries);
-    listPreferenceNotificationsFilter.setOnPreferenceChangeListener(this);
+    ListPreference filter = (ListPreference) findPreference(Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER);
+    filter.setEntryValues(levels);
+    filter.setEntries(entries);
+    filter.setOnPreferenceChangeListener(this);
 
     String currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
         getContext()), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
 
-    if (isShowOnlyEncryptedMessages && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
-      listPreferenceNotificationsFilter.setValue(NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
+    if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
+      filter.setValue(NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
       currentValue = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY;
     }
 
-    listPreferenceNotificationsFilter.setSummary(generateSummaryListPreferences(currentValue,
-        listPreferenceNotificationsFilter.getEntryValues(),
-        listPreferenceNotificationsFilter.getEntries()));
+    filter.setSummary(generateSummary(currentValue, filter.getEntryValues(), filter.getEntries()));
   }
 }

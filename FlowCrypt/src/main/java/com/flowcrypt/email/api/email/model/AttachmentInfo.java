@@ -44,14 +44,14 @@ public class AttachmentInfo implements Parcelable {
   private String email;
   private String folder;
   private int uid;
-  private String forwardedFolder;
-  private int forwardedUid;
+  private String fwdFolder;
+  private int fwdUid;
   private String name;
   private long encodedSize;
   private String type;
   private String id;
   private Uri uri;
-  private boolean isCanBeDeleted = true;
+  private boolean isProtected;
   private boolean isForwarded;
   private int orderNumber;
 
@@ -69,14 +69,14 @@ public class AttachmentInfo implements Parcelable {
       this.rawData = attachmentInfo.getRawData();
       this.email = attachmentInfo.getEmail();
       this.folder = newFolder;
-      this.forwardedFolder = attachmentInfo.getFolder();
-      this.forwardedUid = attachmentInfo.getUid();
+      this.fwdFolder = attachmentInfo.getFolder();
+      this.fwdUid = attachmentInfo.getUid();
       this.name = attachmentInfo.getName();
       this.encodedSize = attachmentInfo.getEncodedSize();
       this.type = attachmentInfo.getType();
       this.id = attachmentInfo.getId();
       this.uri = attachmentInfo.getUri();
-      this.isCanBeDeleted = attachmentInfo.isCanBeDeleted();
+      this.isProtected = attachmentInfo.isProtected();
       this.isForwarded = attachmentInfo.isForwarded();
     }
   }
@@ -86,14 +86,14 @@ public class AttachmentInfo implements Parcelable {
     this.email = in.readString();
     this.folder = in.readString();
     this.uid = in.readInt();
-    this.forwardedFolder = in.readString();
-    this.forwardedUid = in.readInt();
+    this.fwdFolder = in.readString();
+    this.fwdUid = in.readInt();
     this.name = in.readString();
     this.encodedSize = in.readLong();
     this.type = in.readString();
     this.id = in.readString();
     this.uri = in.readParcelable(Uri.class.getClassLoader());
-    this.isCanBeDeleted = in.readByte() != 0;
+    this.isProtected = in.readByte() != 0;
     this.isForwarded = in.readByte() != 0;
     this.orderNumber = in.readInt();
   }
@@ -105,14 +105,14 @@ public class AttachmentInfo implements Parcelable {
         ", email='" + email + '\'' +
         ", folder='" + folder + '\'' +
         ", uid=" + uid +
-        ", forwardedFolder='" + forwardedFolder + '\'' +
-        ", forwardedUid=" + forwardedUid +
+        ", fwdFolder='" + fwdFolder + '\'' +
+        ", fwdUid=" + fwdUid +
         ", name='" + name + '\'' +
         ", encodedSize=" + encodedSize +
         ", type='" + type + '\'' +
         ", id='" + id + '\'' +
         ", uri=" + uri +
-        ", isCanBeDeleted=" + isCanBeDeleted +
+        ", isProtected=" + isProtected +
         ", isForwarded=" + isForwarded +
         ", orderNumber=" + orderNumber +
         '}';
@@ -129,14 +129,14 @@ public class AttachmentInfo implements Parcelable {
     dest.writeString(this.email);
     dest.writeString(this.folder);
     dest.writeInt(this.uid);
-    dest.writeString(this.forwardedFolder);
-    dest.writeInt(this.forwardedUid);
+    dest.writeString(this.fwdFolder);
+    dest.writeInt(this.fwdUid);
     dest.writeString(this.name);
     dest.writeLong(this.encodedSize);
     dest.writeString(this.type);
     dest.writeString(this.id);
     dest.writeParcelable(this.uri, flags);
-    dest.writeByte(this.isCanBeDeleted ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.isProtected ? (byte) 1 : (byte) 0);
     dest.writeByte(this.isForwarded ? (byte) 1 : (byte) 0);
     dest.writeInt(this.orderNumber);
   }
@@ -213,12 +213,12 @@ public class AttachmentInfo implements Parcelable {
     this.uri = uri;
   }
 
-  public boolean isCanBeDeleted() {
-    return isCanBeDeleted;
+  public boolean isProtected() {
+    return isProtected;
   }
 
-  public void setCanBeDeleted(boolean isCanBeDeleted) {
-    this.isCanBeDeleted = isCanBeDeleted;
+  public void setProtected(boolean isProtected) {
+    this.isProtected = isProtected;
   }
 
   @Nullable
@@ -234,20 +234,20 @@ public class AttachmentInfo implements Parcelable {
     isForwarded = forwarded;
   }
 
-  public String getForwardedFolder() {
-    return forwardedFolder;
+  public String getFwdFolder() {
+    return fwdFolder;
   }
 
-  public void setForwardedFolder(String forwardedFolder) {
-    this.forwardedFolder = forwardedFolder;
+  public void setFwdFolder(String fwdFolder) {
+    this.fwdFolder = fwdFolder;
   }
 
-  public int getForwardedUid() {
-    return forwardedUid;
+  public int getFwdUid() {
+    return fwdUid;
   }
 
-  public void setForwardedUid(int forwardedUid) {
-    this.forwardedUid = forwardedUid;
+  public void setFwdUid(int fwdUid) {
+    this.fwdUid = fwdUid;
   }
 
   public int getOrderNumber() {

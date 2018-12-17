@@ -28,7 +28,8 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.js.Js;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
@@ -42,6 +43,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -49,6 +51,7 @@ import java.util.UUID;
 
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -88,9 +91,9 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       if (result == JobScheduler.RESULT_SUCCESS) {
         Log.d(TAG, "A job has scheduled successfully");
       } else {
-        String errorMessage = "Error. Can't schedule a job";
-        Log.e(TAG, errorMessage);
-        ExceptionUtil.handleError(new IllegalStateException(errorMessage));
+        String errorMsg = "Error. Can't schedule a job";
+        Log.e(TAG, errorMsg);
+        ExceptionUtil.handleError(new IllegalStateException(errorMsg));
       }
     }
   }
@@ -124,61 +127,56 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
   /**
    * This is an implementation of {@link AsyncTask} which downloads the forwarded attachments.
    */
-  private static class DownloadForwardedAttachmentsAsyncTask extends AsyncTask<JobParameters,
-      Boolean, JobParameters> {
-    private final WeakReference<ForwardedAttachmentsDownloaderJobService> jobServiceWeakReference;
+  private static class DownloadForwardedAttachmentsAsyncTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
+    private final WeakReference<ForwardedAttachmentsDownloaderJobService> weakRef;
 
-    private Session session;
+    private Session sess;
     private Store store;
     private boolean isFailed;
-    private File attachmentCacheDir;
-    private File forwardedAttachmentCacheDir;
+    private File attCacheDir;
+    private File fwdAttsCacheDir;
     private Js js;
 
-    DownloadForwardedAttachmentsAsyncTask(ForwardedAttachmentsDownloaderJobService
-                                              forwardedAttachmentsDownloaderJobService) {
-      this.jobServiceWeakReference = new WeakReference<>(forwardedAttachmentsDownloaderJobService);
+    DownloadForwardedAttachmentsAsyncTask(ForwardedAttachmentsDownloaderJobService jobService) {
+      this.weakRef = new WeakReference<>(jobService);
     }
 
     @Override
     protected JobParameters doInBackground(JobParameters... params) {
       Log.d(TAG, "doInBackground");
       try {
-        if (jobServiceWeakReference.get() != null) {
-          Context context = jobServiceWeakReference.get().getApplicationContext();
+        if (weakRef.get() != null) {
+          Context context = weakRef.get().getApplicationContext();
 
-          attachmentCacheDir = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
+          attCacheDir = new File(context.getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
 
-          if (!attachmentCacheDir.exists()) {
-            if (!attachmentCacheDir.mkdirs()) {
-              throw new IllegalStateException("Create cache directory " + attachmentCacheDir.getName() +
-                  " filed!");
+          if (!attCacheDir.exists()) {
+            if (!attCacheDir.mkdirs()) {
+              throw new IllegalStateException("Create cache directory " + attCacheDir.getName() + " filed!");
             }
           }
 
-          forwardedAttachmentCacheDir = new File(attachmentCacheDir, Constants
-              .FORWARDED_ATTACHMENTS_CACHE_DIR);
+          fwdAttsCacheDir = new File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR);
 
-          if (!forwardedAttachmentCacheDir.exists()) {
-            if (!forwardedAttachmentCacheDir.mkdirs()) {
-              throw new IllegalStateException("Create cache directory " + forwardedAttachmentCacheDir
-                  .getName() + " filed!");
+          if (!fwdAttsCacheDir.exists()) {
+            if (!fwdAttsCacheDir.mkdirs()) {
+              throw new IllegalStateException("Create cache directory " + fwdAttsCacheDir.getName() + " filed!");
             }
           }
 
           js = new Js(context, new SecurityStorageConnector(context));
 
-          AccountDao accountDao = new AccountDaoSource().getActiveAccountInformation(context);
-          MessageDaoSource messageDaoSource = new MessageDaoSource();
+          AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
+          MessageDaoSource msgDaoSource = new MessageDaoSource();
 
-          if (accountDao != null) {
-            List<GeneralMessageDetails> listOfNewMessages = messageDaoSource.getOutboxMessages
-                (context, accountDao.getEmail(), MessageState.NEW_FORWARDED);
+          if (account != null) {
+            List<GeneralMessageDetails> newMsgs = msgDaoSource.getOutboxMsgs(context, account.getEmail(),
+                MessageState.NEW_FORWARDED);
 
-            if (!CollectionUtils.isEmpty(listOfNewMessages)) {
-              session = OpenStoreHelper.getSessionForAccountDao(context, accountDao);
-              store = OpenStoreHelper.openAndConnectToStore(context, accountDao, session);
-              downloadForwardedAttachments(context, js, accountDao, messageDaoSource);
+            if (!CollectionUtils.isEmpty(newMsgs)) {
+              sess = OpenStoreHelper.getAccountSess(context, account);
+              store = OpenStoreHelper.openStore(context, account, sess);
+              downloadForwardedAtts(context, js, account, msgDaoSource);
             }
 
             if (store != null && store.isConnected()) {
@@ -201,8 +199,8 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     protected void onPostExecute(JobParameters jobParameters) {
       Log.d(TAG, "onPostExecute");
       try {
-        if (jobServiceWeakReference.get() != null) {
-          jobServiceWeakReference.get().jobFinished(jobParameters, isFailed);
+        if (weakRef.get() != null) {
+          weakRef.get().jobFinished(jobParameters, isFailed);
         }
       } catch (NullPointerException e) {
         e.printStackTrace();
@@ -215,119 +213,132 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       isFailed = values[0];
     }
 
-    private void downloadForwardedAttachments(Context context, Js js, AccountDao accountDao,
-                                              MessageDaoSource messageDaoSource) {
-      List<GeneralMessageDetails> generalMessageDetailsList;
-      AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
+    private void downloadForwardedAtts(Context context, Js js, AccountDao account, MessageDaoSource daoSource) {
+      AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
-      while (!CollectionUtils.isEmpty(generalMessageDetailsList = messageDaoSource
-          .getOutboxMessages(context, accountDao.getEmail(), MessageState.NEW_FORWARDED))) {
-        GeneralMessageDetails generalMessageDetails = generalMessageDetailsList.get(0);
-        File messageAttachmentsDir =
-            new File(attachmentCacheDir, generalMessageDetails.getAttachmentsDirectory());
+      while (true) {
+        List<GeneralMessageDetails> detailsList = daoSource.getOutboxMsgs(context, account.getEmail(),
+            MessageState.NEW_FORWARDED);
+
+        if (CollectionUtils.isEmpty(detailsList)) {
+          break;
+        }
+
+        GeneralMessageDetails details = detailsList.get(0);
+        String detEmail = details.getEmail();
+        String detLabel = details.getLabel();
+        File msgAttsDir = new File(attCacheDir, details.getAttsDir());
         try {
-          String[] pubKeys = generalMessageDetails.isEncrypted() ? SecurityUtils.getRecipientsPubKeys(context,
-              js, EmailUtil.getAllRecipients(context, generalMessageDetails), accountDao,
-              EmailUtil.getFirstAddressString(generalMessageDetails.getFrom())) : null;
+          String[] pubKeys = null;
+          if (details.isEncrypted()) {
+            PgpContact[] pgpContacts = EmailUtil.getAllRecipients(context, details);
+            String senderEmail = EmailUtil.getFirstAddressString(details.getFrom());
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, js, pgpContacts, account, senderEmail);
+          }
 
-          List<AttachmentInfo> attachmentInfoList =
-              attachmentDaoSource.getAttachmentInfoList(context, accountDao.getEmail(),
-                  JavaEmailConstants.FOLDER_OUTBOX, generalMessageDetails.getUid());
+          List<AttachmentInfo> atts = attDaoSource.getAttInfoList(context, account.getEmail(),
+              JavaEmailConstants.FOLDER_OUTBOX, details.getUid());
 
-          if (CollectionUtils.isEmpty(attachmentInfoList)) {
-            messageDaoSource.updateMessageState(context,
-                generalMessageDetails.getEmail(), generalMessageDetails.getLabel(),
-                generalMessageDetails.getUid(), MessageState.QUEUED);
+          if (CollectionUtils.isEmpty(atts)) {
+            daoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), MessageState.QUEUED);
             continue;
           }
 
-          IMAPFolder folderOfForwardedMessage = null;
-          Message forwardedMessage = null;
+          MessageState msgState = getNewMsgState(context, attDaoSource, details, msgAttsDir, pubKeys, atts);
 
-          MessageState messageState = MessageState.QUEUED;
-
-          for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-            if (attachmentInfo.isForwarded() && attachmentInfo.getUri() == null) {
-              FileAndDirectoryUtils.cleanDirectory(forwardedAttachmentCacheDir);
-
-              if (folderOfForwardedMessage == null) {
-                folderOfForwardedMessage = (IMAPFolder) store.getFolder(new ImapLabelsDaoSource()
-                    .getFolderByAlias(context, attachmentInfo.getEmail(),
-                        attachmentInfo.getForwardedFolder()).getServerFullFolderName());
-                folderOfForwardedMessage.open(Folder.READ_ONLY);
-              }
-
-              if (forwardedMessage == null) {
-                forwardedMessage = folderOfForwardedMessage
-                    .getMessageByUID(attachmentInfo.getForwardedUid());
-              }
-
-              if (forwardedMessage == null) {
-                messageState = MessageState.ERROR_ORIGINAL_MESSAGE_MISSING;
-                break;
-              }
-
-              Part partWithForwardedAttachment = ImapProtocolUtil.getAttachmentPartById
-                  (folderOfForwardedMessage, forwardedMessage.getMessageNumber(), forwardedMessage,
-                      attachmentInfo.getId());
-
-              File tempFile = new File(forwardedAttachmentCacheDir, UUID.randomUUID().toString());
-              File attachmentFile = new File(messageAttachmentsDir, attachmentInfo.getName());
-
-              if (partWithForwardedAttachment != null) {
-                InputStream inputStream = partWithForwardedAttachment.getInputStream();
-                if (inputStream != null) {
-                  if (generalMessageDetails.isEncrypted()) {
-                    byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, IOUtils
-                        .toByteArray(inputStream), FilenameUtils.removeExtension(attachmentInfo
-                        .getName()));
-                    FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
-                  } else {
-                    FileUtils.copyInputStreamToFile(inputStream, tempFile);
-                  }
-
-                  if (messageAttachmentsDir.exists()) {
-                    FileUtils.moveFile(tempFile, attachmentFile);
-                    attachmentInfo.setUri(FileProvider.getUriForFile(context,
-                        Constants.FILE_PROVIDER_AUTHORITY, attachmentFile));
-                  } else {
-                    FileAndDirectoryUtils.cleanDirectory(forwardedAttachmentCacheDir);
-                    //It means the user has already deleted the current message. We don't need
-                    // to download other attachments.
-                    break;
-                  }
-                } else {
-                  messageState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
-                  break;
-                }
-              } else {
-                messageState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
-                break;
-              }
-            }
-
-            if (attachmentInfo.getUri() != null) {
-              ContentValues contentValues = new ContentValues();
-              contentValues.put(AttachmentDaoSource.COL_FILE_URI, attachmentInfo.getUri().toString());
-
-              attachmentDaoSource.update(context, attachmentInfo.getEmail(), attachmentInfo.getFolder(),
-                  attachmentInfo.getUid(), attachmentInfo.getId(), contentValues);
-            }
-          }
-
-          if (messageDaoSource.updateMessageState(context, generalMessageDetails.getEmail(),
-              generalMessageDetails.getLabel(), generalMessageDetails.getUid(), messageState) > 0) {
+          int updateResult = daoSource.updateMsgState(context, detEmail, detLabel, details.getUid(), msgState);
+          if (updateResult > 0) {
             MessagesSenderJobService.schedule(context);
           }
         } catch (Exception e) {
           e.printStackTrace();
           ExceptionUtil.handleError(e);
 
-          if (!GeneralUtil.isInternetConnectionAvailable(context)) {
+          if (!GeneralUtil.isConnected(context)) {
             publishProgress(true);
             break;
           }
         }
+      }
+    }
+
+    private MessageState getNewMsgState(Context context, AttachmentDaoSource attDaoSource,
+                                        GeneralMessageDetails details, File msgAttsDir, String[] pubKeys,
+                                        List<AttachmentInfo> atts) throws IOException, MessagingException {
+      IMAPFolder folder = null;
+      Message fwdMsg = null;
+
+      MessageState msgState = MessageState.QUEUED;
+
+      for (AttachmentInfo att : atts) {
+        if (att.isForwarded() && att.getUri() == null) {
+          FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
+
+          if (folder == null) {
+            String folderName = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(),
+                att.getFwdFolder()).getFullName();
+            folder = (IMAPFolder) store.getFolder(folderName);
+            folder.open(Folder.READ_ONLY);
+          }
+
+          if (fwdMsg == null) {
+            fwdMsg = folder.getMessageByUID(att.getFwdUid());
+          }
+
+          if (fwdMsg == null) {
+            msgState = MessageState.ERROR_ORIGINAL_MESSAGE_MISSING;
+            break;
+          }
+
+          int msgNumber = fwdMsg.getMessageNumber();
+          Part part = ImapProtocolUtil.getAttPartById(folder, msgNumber, fwdMsg, att.getId());
+
+          File tempFile = new File(fwdAttsCacheDir, UUID.randomUUID().toString());
+          File attFile = new File(msgAttsDir, att.getName());
+
+          if (part != null) {
+            InputStream inputStream = part.getInputStream();
+            if (inputStream != null) {
+              downloadFile(details, pubKeys, att, tempFile, inputStream);
+
+              if (msgAttsDir.exists()) {
+                FileUtils.moveFile(tempFile, attFile);
+                att.setUri(FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile));
+              } else {
+                FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
+                //It means the user has already deleted the current message. We don't need
+                // to download other attachments.
+                break;
+              }
+            } else {
+              msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
+              break;
+            }
+          } else {
+            msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND;
+            break;
+          }
+        }
+
+        if (att.getUri() != null) {
+          ContentValues contentValues = new ContentValues();
+          contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.getUri().toString());
+
+          attDaoSource.update(context, att.getEmail(), att.getFolder(), att.getUid(), att.getId(), contentValues);
+        }
+      }
+      return msgState;
+    }
+
+    private void downloadFile(GeneralMessageDetails details, String[] pubKeys, AttachmentInfo att,
+                              File tempFile, InputStream inputStream) throws IOException {
+      if (details.isEncrypted()) {
+        byte[] originalBytes = IOUtils.toByteArray(inputStream);
+        String fileName = FilenameUtils.removeExtension(att.getName());
+        byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, originalBytes, fileName);
+        FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
+      } else {
+        FileUtils.copyInputStreamToFile(inputStream, tempFile);
       }
     }
   }

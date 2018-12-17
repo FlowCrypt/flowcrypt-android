@@ -23,23 +23,22 @@ import java.nio.charset.StandardCharsets;
  */
 
 public class AuthCredentialsManager {
-  public static AuthCredentials getOutLookWithBackupAuthCredentials() {
-    return readAuthCredentialsFromResources("outlook.json");
+  public static AuthCredentials getOutLookWithBackupAuthCreds() {
+    return readAuthCredsFromResources("outlook.json");
   }
 
-  public static AuthCredentials getLocalWithOneBackupAuthCredentials() {
-    return readAuthCredentialsFromResources("user_with_one_backup.json");
+  public static AuthCredentials getLocalWithOneBackupAuthCreds() {
+    return readAuthCredsFromResources("user_with_one_backup.json");
   }
 
-  public static AuthCredentials getDefaultWithBackupAuthCredentials() {
-    return readAuthCredentialsFromResources("default.json");
+  public static AuthCredentials getDefaultWithBackupAuthCreds() {
+    return readAuthCredsFromResources("default.json");
   }
 
-  private static AuthCredentials readAuthCredentialsFromResources(String path) {
+  private static AuthCredentials readAuthCredsFromResources(String path) {
     try {
-      return new Gson().fromJson(
-          IOUtils.toString(AuthCredentialsManager.class.getClassLoader().getResourceAsStream(path),
-              StandardCharsets.UTF_8), AuthCredentials.class);
+      return new Gson().fromJson(IOUtils.toString(AuthCredentialsManager.class.getClassLoader().getResourceAsStream
+          (path), StandardCharsets.UTF_8), AuthCredentials.class);
 
     } catch (IOException e) {
       e.printStackTrace();

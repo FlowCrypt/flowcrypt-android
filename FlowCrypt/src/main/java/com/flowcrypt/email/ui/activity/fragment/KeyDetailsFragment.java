@@ -17,19 +17,21 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.Js;
-import com.flowcrypt.email.js.JsForUiManager;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -46,8 +48,7 @@ import androidx.fragment.app.Fragment;
  * E-mail: DenBond7@gmail.com
  */
 public class KeyDetailsFragment extends BaseFragment implements View.OnClickListener {
-  private static final String KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_LONG_ID",
-      KeyDetailsFragment.class);
+  private static final String KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_LONG_ID", KeyDetailsFragment.class);
   private static final int REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1;
 
   private String longId;
@@ -73,7 +74,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     }
 
     if (!TextUtils.isEmpty(longId)) {
-      js = JsForUiManager.getInstance(getContext()).getJs();
+      js = UiJsManager.getInstance(getContext()).getJs();
 
       PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
       if (keyInfo != null) {
@@ -114,22 +115,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null && data.getData() != null) {
-              try {
-                GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
-                String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
-
-                if (!TextUtils.isEmpty(fileName)) {
-                  fileName = FilenameUtils.removeExtension(fileName) + ".asc";
-                }
-
-                DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
-                Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
-              } catch (Exception e) {
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-                String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
-                UIUtil.showInfoSnackbar(getView(), error);
-              }
+              saveKey(data);
             }
             break;
         }
@@ -156,13 +142,51 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
         break;
 
       case R.id.btnSaveToFile:
-        chooseDestination();
+        chooseDest();
         break;
 
       case R.id.btnShowPrKey:
         Toast.makeText(getContext(), getString(R.string.see_backups_to_save_your_private_keys),
             Toast.LENGTH_SHORT).show();
         break;
+    }
+  }
+
+  private void saveKey(Intent data) {
+    try {
+      GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
+      String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
+
+      if (!TextUtils.isEmpty(fileName)) {
+        fileName = FilenameUtils.removeExtension(fileName) + ".asc";
+      }
+
+      DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
+      Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
+    } catch (Exception e) {
+      e.printStackTrace();
+      String error = TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage();
+
+      if (e instanceof IllegalStateException) {
+        if (e.getMessage() != null && e.getMessage().startsWith("Already exists")) {
+          error = getString(R.string.not_saved_file_already_exists);
+          showInfoSnackbar(getView(), error, Snackbar.LENGTH_LONG);
+
+          try {
+            DocumentsContract.deleteDocument(getContext().getContentResolver(), data.getData());
+          } catch (FileNotFoundException fileNotFound) {
+            fileNotFound.printStackTrace();
+          }
+
+          return;
+        } else {
+          ExceptionUtil.handleError(e);
+        }
+      } else {
+        ExceptionUtil.handleError(e);
+      }
+
+      showInfoSnackbar(getView(), error);
     }
   }
 
@@ -212,7 +236,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     }
   }
 
-  private void chooseDestination() {
+  private void chooseDest() {
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);

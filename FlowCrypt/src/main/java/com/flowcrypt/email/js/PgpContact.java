@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
 
 public class PgpContact implements Parcelable {
 
@@ -29,27 +30,27 @@ public class PgpContact implements Parcelable {
   private String email;
   private String name;
   private String pubkey;
-  private boolean has_pgp;
+  private boolean hasPgp;
   private String client;
   private boolean attested;
   private String fingerprint;
   private String longid;
   private String keywords;
-  private int last_use;
+  private int lastUse;
 
-  public PgpContact(String email, String name, String pubkey, Boolean has_pgp, String client,
+  public PgpContact(String email, String name, String pubkey, Boolean hasPgp, String client,
                     Boolean attested, String fingerprint, String longid, String keywords,
-                    Integer last_use) {
+                    Integer lastUse) {
     this.email = email;
     this.name = name;
     this.pubkey = pubkey;
-    this.has_pgp = has_pgp;
+    this.hasPgp = hasPgp;
     this.client = client;
     this.attested = attested;
     this.fingerprint = fingerprint;
     this.longid = longid;
     this.keywords = keywords;
-    this.last_use = last_use;
+    this.lastUse = lastUse;
   }
 
   public PgpContact(Js js, String email, String name, String pubkey, String client, boolean
@@ -57,39 +58,39 @@ public class PgpContact implements Parcelable {
     this.email = email;
     this.name = name;
     this.pubkey = pubkey;
-    this.has_pgp = (pubkey != null);
+    this.hasPgp = pubkey != null;
     this.client = client;
     this.attested = attested;
     this.fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(pubkey));
     this.longid = js.crypto_key_longid(this.fingerprint);
     this.keywords = js.mnemonic(this.longid);
-    this.last_use = 0;
+    this.lastUse = 0;
   }
 
   public PgpContact(String email, String name) {
     this.email = email;
     this.name = name;
     this.pubkey = null;
-    this.has_pgp = false;
+    this.hasPgp = false;
     this.client = null;
     this.attested = false;
     this.fingerprint = null;
     this.longid = null;
     this.keywords = null;
-    this.last_use = 0;
+    this.lastUse = 0;
   }
 
   protected PgpContact(Parcel in) {
     this.email = in.readString();
     this.name = in.readString();
     this.pubkey = in.readString();
-    this.has_pgp = in.readByte() != 0;
+    this.hasPgp = in.readByte() != 0;
     this.client = in.readString();
     this.attested = in.readByte() != 0;
     this.fingerprint = in.readString();
     this.longid = in.readString();
     this.keywords = in.readString();
-    this.last_use = in.readInt();
+    this.lastUse = in.readInt();
   }
 
   public static String arrayAsMime(PgpContact[] contacts) {
@@ -118,13 +119,13 @@ public class PgpContact implements Parcelable {
     dest.writeString(this.email);
     dest.writeString(this.name);
     dest.writeString(this.pubkey);
-    dest.writeByte(this.has_pgp ? (byte) 1 : (byte) 0);
+    dest.writeByte(this.hasPgp ? (byte) 1 : (byte) 0);
     dest.writeString(this.client);
     dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
     dest.writeString(this.fingerprint);
     dest.writeString(this.longid);
     dest.writeString(this.keywords);
-    dest.writeInt(this.last_use);
+    dest.writeInt(this.lastUse);
   }
 
   public String getEmail() {
@@ -142,12 +143,12 @@ public class PgpContact implements Parcelable {
   public void setPubkey(String pubkey) {
     this.pubkey = pubkey;
     if (pubkey != null) {
-      this.has_pgp = true;
+      this.hasPgp = true;
     }
   }
 
   public boolean getHasPgp() {
-    return has_pgp;
+    return hasPgp;
   }
 
   public String getClient() {
@@ -171,7 +172,7 @@ public class PgpContact implements Parcelable {
   }
 
   public int getLastUse() {
-    return last_use;
+    return lastUse;
   }
 
   public String getMime() {

@@ -31,7 +31,7 @@ import javax.mail.MessagingException;
  */
 
 public class FoldersManager {
-  private LinkedHashMap<String, Folder> folders;
+  private LinkedHashMap<String, LocalFolder> folders;
 
   public FoldersManager() {
     this.folders = new LinkedHashMap<>();
@@ -65,7 +65,7 @@ public class FoldersManager {
   }
 
   /**
-   * Generate a new {@link Folder}
+   * Generate a new {@link LocalFolder}
    *
    * @param imapFolder  The {@link IMAPFolder} object which contains information about a
    *                    remote folder.
@@ -73,10 +73,10 @@ public class FoldersManager {
    * @return
    * @throws MessagingException
    */
-  public static Folder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
+  public static LocalFolder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
       MessagingException {
-    return new Folder(imapFolder.getFullName(), folderAlias, 0, imapFolder.getAttributes(),
-        isCustomLabels(imapFolder));
+    return new LocalFolder(imapFolder.getFullName(), folderAlias, 0, imapFolder.getAttributes(),
+        isCustom(imapFolder));
   }
 
   /**
@@ -87,7 +87,7 @@ public class FoldersManager {
    * @return true if this label is a custom, false otherwise.
    * @throws MessagingException
    */
-  public static boolean isCustomLabels(IMAPFolder folder) throws MessagingException {
+  public static boolean isCustom(IMAPFolder folder) throws MessagingException {
     String[] attr = folder.getAttributes();
     FolderType[] folderTypes = FolderType.values();
 
@@ -105,14 +105,14 @@ public class FoldersManager {
   /**
    * Get a {@link FolderType} using folder attributes.
    *
-   * @param folder Some {@link javax.mail.Folder}.
+   * @param localFolder Some {@link javax.mail.Folder}.
    * @return {@link FolderType}.
    */
-  public static FolderType getFolderTypeForImapFolder(Folder folder) {
+  public static FolderType getFolderType(LocalFolder localFolder) {
     FolderType[] folderTypes = FolderType.values();
 
-    if (folder != null) {
-      String[] attributes = folder.getAttributes();
+    if (localFolder != null) {
+      String[] attributes = localFolder.getAttributes();
 
       if (attributes != null) {
         for (String attribute : attributes) {
@@ -124,14 +124,14 @@ public class FoldersManager {
         }
       }
 
-      if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
-        if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+      if (!TextUtils.isEmpty(localFolder.getFullName())) {
+        if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(localFolder.getFullName())) {
           return FolderType.INBOX;
         }
       }
 
-      if (!TextUtils.isEmpty(folder.getServerFullFolderName())) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder.getServerFullFolderName())) {
+      if (!TextUtils.isEmpty(localFolder.getFullName())) {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName())) {
           return FolderType.OUTBOX;
         }
       }
@@ -139,40 +139,40 @@ public class FoldersManager {
     return null;
   }
 
-  public Folder getFolderInbox() {
+  public LocalFolder getFolderInbox() {
     return folders.get(FolderType.INBOX.getValue());
   }
 
-  public Folder getFolderArchive() {
+  public LocalFolder getFolderArchive() {
     return folders.get(FolderType.All.getValue());
   }
 
-  public Folder getFolderDrafts() {
+  public LocalFolder getFolderDrafts() {
     return folders.get(FolderType.DRAFTS.getValue());
   }
 
-  public Folder getFolderStarred() {
+  public LocalFolder getFolderStarred() {
     return folders.get(FolderType.STARRED.getValue());
   }
 
-  public Folder getFolderSpam() {
-    Folder spam = folders.get(FolderType.JUNK.getValue());
+  public LocalFolder getFolderSpam() {
+    LocalFolder spam = folders.get(FolderType.JUNK.getValue());
     return spam != null ? spam : folders.get(FolderType.SPAM.getValue());
   }
 
-  public Folder getFolderSent() {
+  public LocalFolder getFolderSent() {
     return folders.get(FolderType.SENT.getValue());
   }
 
-  public Folder getFolderTrash() {
+  public LocalFolder getFolderTrash() {
     return folders.get(FolderType.TRASH.getValue());
   }
 
-  public Folder getFolderAll() {
+  public LocalFolder getFolderAll() {
     return folders.get(FolderType.All.getValue());
   }
 
-  public Folder getFolderImportant() {
+  public LocalFolder getFolderImportant() {
     return folders.get(FolderType.IMPORTANT.getValue());
   }
 
@@ -195,7 +195,7 @@ public class FoldersManager {
    */
   public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
     if (imapFolder != null
-        && !EmailUtil.isFolderHasNoSelectAttribute(imapFolder)
+        && !EmailUtil.containsNoSelectAttr(imapFolder)
         && !TextUtils.isEmpty(imapFolder.getFullName())
         && !folders.containsKey(imapFolder.getFullName())) {
       this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
@@ -205,24 +205,24 @@ public class FoldersManager {
   /**
    * Add a new folder to {@link FoldersManager} to manage it.
    *
-   * @param folder The {@link Folder} object which contains information about a
+   * @param localFolder The {@link LocalFolder} object which contains information about a
    *               remote folder.
    */
-  public void addFolder(Folder folder) {
-    if (folder != null && !TextUtils.isEmpty(folder.getServerFullFolderName())
-        && !folders.containsKey(folder.getServerFullFolderName())) {
-      this.folders.put(prepareFolderKey(folder), folder);
+  public void addFolder(LocalFolder localFolder) {
+    if (localFolder != null && !TextUtils.isEmpty(localFolder.getFullName())
+        && !folders.containsKey(localFolder.getFullName())) {
+      this.folders.put(prepareFolderKey(localFolder), localFolder);
     }
   }
 
   /**
-   * Get {@link Folder} by the alias name.
+   * Get {@link LocalFolder} by the alias name.
    *
    * @param folderAlias The folder alias name.
-   * @return {@link Folder}.
+   * @return {@link LocalFolder}.
    */
-  public Folder getFolderByAlias(String folderAlias) {
-    for (Map.Entry<String, Folder> entry : folders.entrySet()) {
+  public LocalFolder getFolderByAlias(String folderAlias) {
+    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
       if (entry.getValue() != null && entry.getValue().getFolderAlias().equals(folderAlias)) {
         return entry.getValue();
       }
@@ -231,60 +231,60 @@ public class FoldersManager {
     return null;
   }
 
-  public Collection<Folder> getAllFolders() {
+  public Collection<LocalFolder> getAllFolders() {
     return folders.values();
   }
 
   /**
    * Get a list of all available custom labels.
    *
-   * @return List of custom labels({@link Folder}).
+   * @return List of custom labels({@link LocalFolder}).
    */
-  public List<Folder> getCustomLabels() {
-    List<Folder> customFolders = new LinkedList<>();
+  public List<LocalFolder> getCustomLabels() {
+    List<LocalFolder> customLocalFolders = new LinkedList<>();
 
-    for (Map.Entry<String, Folder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().isCustomLabel()) {
-        customFolders.add(entry.getValue());
+    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
+      if (entry.getValue() != null && entry.getValue().isCustom()) {
+        customLocalFolders.add(entry.getValue());
       }
     }
 
-    return customFolders;
+    return customLocalFolders;
   }
 
   /**
-   * Get a list of original server {@link Folder} objects.
+   * Get a list of original server {@link LocalFolder} objects.
    *
-   * @return a list of original server {@link Folder} objects.
+   * @return a list of original server {@link LocalFolder} objects.
    */
-  public List<Folder> getServerFolders() {
-    List<Folder> serverFolders = new LinkedList<>();
+  public List<LocalFolder> getServerFolders() {
+    List<LocalFolder> serverLocalFolders = new LinkedList<>();
 
-    for (Map.Entry<String, Folder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && !entry.getValue().isCustomLabel()) {
-        serverFolders.add(entry.getValue());
+    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
+      if (entry.getValue() != null && !entry.getValue().isCustom()) {
+        serverLocalFolders.add(entry.getValue());
       }
     }
 
-    return serverFolders;
+    return serverLocalFolders;
   }
 
-  public Folder findInboxFolder() {
-    for (Folder folder : getAllFolders()) {
-      if (folder.getServerFullFolderName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
-        return folder;
+  public LocalFolder findInboxFolder() {
+    for (LocalFolder localFolder : getAllFolders()) {
+      if (localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
+        return localFolder;
       }
     }
 
     return null;
   }
 
-  public Folder getFolderOutbox() {
+  public LocalFolder getFolderOutbox() {
     return folders.get(FolderType.OUTBOX.getValue());
   }
 
   private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
-    FolderType folderType = getFolderTypeForImapFolder(generateFolder(imapFolder, null));
+    FolderType folderType = getFolderType(generateFolder(imapFolder, null));
     if (folderType == null) {
       return imapFolder.getFullName();
     } else {
@@ -292,10 +292,10 @@ public class FoldersManager {
     }
   }
 
-  private String prepareFolderKey(Folder folder) {
-    FolderType folderType = getFolderTypeForImapFolder(folder);
+  private String prepareFolderKey(LocalFolder localFolder) {
+    FolderType folderType = getFolderType(localFolder);
     if (folderType == null) {
-      return folder.getServerFullFolderName();
+      return localFolder.getFullName();
     } else {
       return folderType.value;
     }

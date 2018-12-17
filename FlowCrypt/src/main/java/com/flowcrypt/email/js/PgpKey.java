@@ -9,6 +9,8 @@ import android.text.TextUtils;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
+import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.core.MeaningfulV8ObjectContainer;
 
 import java.util.ArrayList;
 
@@ -42,8 +44,7 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
   }
 
   public PgpKey toPublic() {
-    return new PgpKey(this.v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())),
-        this.js);
+    return new PgpKey(v8object.executeObjectFunction("toPublic", new V8Array(this.v8object.getRuntime())), this.js);
   }
 
   /**
@@ -53,8 +54,8 @@ public class PgpKey extends MeaningfulV8ObjectContainer {
    */
   public long getCreated() {
     V8Object created = getAttributeAsObject("primaryKey").getObject("created");
-    return this.js.time_to_utc_timestamp(created.executeStringFunction("toString", new V8Array(this.v8object
-        .getRuntime())));
+    return this.js.time_to_utc_timestamp(created.executeStringFunction("toString",
+        new V8Array(this.v8object.getRuntime())));
   }
 
   /**

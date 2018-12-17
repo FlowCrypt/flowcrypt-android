@@ -32,78 +32,73 @@ import androidx.annotation.NonNull;
 
 public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan> {
   private int backgroundColorPgpExists;
-  private int backgroundColorPgpNoExists;
+  private int backgroundColorPgpNotExists;
   private int textColorPgpExists;
   private int textColorNoPgpNoExists;
 
   public CustomChipSpanChipCreator(Context context) {
     backgroundColorPgpExists = UIUtil.getColor(context, R.color.colorPrimary);
     textColorPgpExists = UIUtil.getColor(context, android.R.color.white);
-    backgroundColorPgpNoExists = UIUtil.getColor(context, R.color.aluminum);
+    backgroundColorPgpNotExists = UIUtil.getColor(context, R.color.aluminum);
     textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark);
   }
 
   @Override
-  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull CharSequence text,
-                                       Object data) {
+  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull CharSequence text, Object data) {
     return new PGPContactChipSpan(context, text, null, data);
   }
 
   @Override
-  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull PGPContactChipSpan
-      PGPContactChipSpan) {
-    return new PGPContactChipSpan(context, PGPContactChipSpan);
+  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull PGPContactChipSpan pgpContactChipSpan) {
+    return new PGPContactChipSpan(context, pgpContactChipSpan);
   }
 
   @Override
-  public void configureChip(@NonNull PGPContactChipSpan pgpContactChipSpan,
-                            @NonNull ChipConfiguration chipConfiguration) {
+  public void configureChip(@NonNull PGPContactChipSpan span, @NonNull ChipConfiguration chipConfiguration) {
     int chipSpacing = chipConfiguration.getChipSpacing();
-    int chipTextColor = chipConfiguration.getChipTextColor();
-    int chipTextSize = chipConfiguration.getChipTextSize();
-    int chipHeight = chipConfiguration.getChipHeight();
-    int chipVerticalSpacing = chipConfiguration.getChipVerticalSpacing();
-    int maxAvailableWidth = chipConfiguration.getMaxAvailableWidth();
-
     if (chipSpacing != -1) {
-      pgpContactChipSpan.setLeftMargin(chipSpacing / 2);
-      pgpContactChipSpan.setRightMargin(chipSpacing / 2);
+      span.setLeftMargin(chipSpacing / 2);
+      span.setRightMargin(chipSpacing / 2);
     }
 
+    int chipTextColor = chipConfiguration.getChipTextColor();
     if (chipTextColor != -1) {
-      pgpContactChipSpan.setTextColor(chipTextColor);
+      span.setTextColor(chipTextColor);
     }
 
+    int chipTextSize = chipConfiguration.getChipTextSize();
     if (chipTextSize != -1) {
-      pgpContactChipSpan.setTextSize(chipTextSize);
+      span.setTextSize(chipTextSize);
     }
 
+    int chipHeight = chipConfiguration.getChipHeight();
     if (chipHeight != -1) {
-      pgpContactChipSpan.setChipHeight(chipHeight);
+      span.setChipHeight(chipHeight);
     }
 
+    int chipVerticalSpacing = chipConfiguration.getChipVerticalSpacing();
     if (chipVerticalSpacing != -1) {
-      pgpContactChipSpan.setChipVerticalSpacing(chipVerticalSpacing);
+      span.setChipVerticalSpacing(chipVerticalSpacing);
     }
 
+    int maxAvailableWidth = chipConfiguration.getMaxAvailableWidth();
     if (maxAvailableWidth != -1) {
-      pgpContactChipSpan.setMaxAvailableWidth(maxAvailableWidth);
+      span.setMaxAvailableWidth(maxAvailableWidth);
     }
 
-    if (pgpContactChipSpan.isHasPgp() != null) {
-      updateChipSpanBackground(pgpContactChipSpan, pgpContactChipSpan.isHasPgp());
-    } else if (pgpContactChipSpan.getData() != null
-        && pgpContactChipSpan.getData() instanceof Cursor) {
-      Cursor cursor = (Cursor) pgpContactChipSpan.getData();
+    if (span.hasPgp() != null) {
+      updateChipSpanBackground(span, span.hasPgp());
+    } else if (span.getData() != null && span.getData() instanceof Cursor) {
+      Cursor cursor = (Cursor) span.getData();
       if (cursor != null && !cursor.isClosed()) {
         PgpContact pgpContact = new ContactsDaoSource().getCurrentPgpContact(cursor);
-        pgpContactChipSpan.setHasPgp(pgpContact.getHasPgp());
-        updateChipSpanBackground(pgpContactChipSpan, pgpContact.getHasPgp());
+        span.setHasPgp(pgpContact.getHasPgp());
+        updateChipSpanBackground(span, pgpContact.getHasPgp());
       }
     } else {
       ColorStateList chipBackground = chipConfiguration.getChipBackground();
       if (chipBackground != null) {
-        pgpContactChipSpan.setBackgroundColor(chipBackground);
+        span.setBackgroundColor(chipBackground);
       }
     }
   }
@@ -111,18 +106,16 @@ public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan
   /**
    * Update the {@link ChipSpan} background.
    *
-   * @param pgpContactChipSpan The {@link ChipSpan} object.
-   * @param isHasPgp           true if the contact has pgp key, otherwise false.
+   * @param span   The {@link ChipSpan} object.
+   * @param hasPgp true if the contact has pgp key, otherwise false.
    */
-  private void updateChipSpanBackground(@NonNull PGPContactChipSpan pgpContactChipSpan, boolean
-      isHasPgp) {
-    if (isHasPgp) {
-      pgpContactChipSpan.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists));
-      pgpContactChipSpan.setTextColor(textColorPgpExists);
+  private void updateChipSpanBackground(@NonNull PGPContactChipSpan span, boolean hasPgp) {
+    if (hasPgp) {
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists));
+      span.setTextColor(textColorPgpExists);
     } else {
-      pgpContactChipSpan.setBackgroundColor(ColorStateList.valueOf
-          (backgroundColorPgpNoExists));
-      pgpContactChipSpan.setTextColor(textColorNoPgpNoExists);
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists));
+      span.setTextColor(textColorNoPgpNoExists);
     }
   }
 }

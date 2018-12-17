@@ -39,23 +39,23 @@ public class SecurityType implements Parcelable {
     }
   };
   private String name;
-  private int defaultImapPort;
-  private int defaultSmtpPort;
+  private int defImapPort;
+  private int defSmtpPort;
   private Option option;
 
-  public SecurityType(String name, Option option, int defaultImapPort, int smtpPort) {
+  public SecurityType(String name, Option option, int defImapPort, int smtpPort) {
     this.name = name;
     this.option = option;
-    this.defaultImapPort = defaultImapPort;
-    this.defaultSmtpPort = smtpPort;
+    this.defImapPort = defImapPort;
+    this.defSmtpPort = smtpPort;
   }
 
   public SecurityType(Parcel in) {
     this.name = in.readString();
-    this.defaultImapPort = in.readInt();
-    this.defaultSmtpPort = in.readInt();
-    int tmpOption = in.readInt();
-    this.option = tmpOption == -1 ? null : Option.values()[tmpOption];
+    this.defImapPort = in.readInt();
+    this.defSmtpPort = in.readInt();
+    int tmpOpt = in.readInt();
+    this.option = tmpOpt == -1 ? null : Option.values()[tmpOpt];
   }
 
   /**
@@ -64,7 +64,7 @@ public class SecurityType implements Parcelable {
    * @return The list of all available {@link SecurityType}.
    */
   @NonNull
-  public static ArrayList<SecurityType> generateAvailableSecurityTypes(Context context) {
+  public static ArrayList<SecurityType> generateSecurityTypes(Context context) {
     ArrayList<SecurityType> securityTypes = new ArrayList<>();
     securityTypes.add(new SecurityType(context.getString(R.string.none), SecurityType.Option.NONE,
         JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT));
@@ -88,8 +88,8 @@ public class SecurityType implements Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.name);
-    dest.writeInt(this.defaultImapPort);
-    dest.writeInt(this.defaultSmtpPort);
+    dest.writeInt(this.defImapPort);
+    dest.writeInt(this.defSmtpPort);
     dest.writeInt(this.option == null ? -1 : this.option.ordinal());
   }
 
@@ -97,15 +97,15 @@ public class SecurityType implements Parcelable {
     return name;
   }
 
-  public int getDefaultImapPort() {
-    return defaultImapPort;
+  public int getDefImapPort() {
+    return defImapPort;
   }
 
   public int getDefaultSmtpPort() {
-    return defaultSmtpPort;
+    return defSmtpPort;
   }
 
-  public Option getOption() {
+  public Option getOpt() {
     return option;
   }
 

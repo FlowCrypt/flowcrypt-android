@@ -13,8 +13,8 @@ import com.flowcrypt.email.api.retrofit.ApiService;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -37,9 +37,7 @@ import retrofit2.Response;
  * <li>c) if there is a record but `has_pgp==false`, do `attester.flowcrypt.com/lookup/email` API call
  * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
  * <li>e) no record in the db found:<ol>
- * <li>save an empty record eg `new PgpContact(email, null);` - this means we don't know if
- * they
- * have PGP yet
+ * <li>save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
  * <li>look up the email on `attester.flowcrypt.com/lookup/email`
  * <li>if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
  * client, attested);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
@@ -66,61 +64,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
   @Override
   public LoaderResult loadInBackground() {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-    boolean isAllInfoReceived = true;
-    List<PgpContact> pgpContacts = new ArrayList<>();
-    try {
-      Js js = new Js(getContext(), null);
-      for (String email : emails) {
-        if (js.str_is_email_valid(email)) {
-          if (email != null) {
-            email = email.toLowerCase();
-          }
-
-          PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
-          if (localPgpContact != null) {
-            if (!localPgpContact.getHasPgp()) {
-              try {
-                PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
-                if (remotePgpContact != null) {
-                  pgpContacts.add(remotePgpContact);
-                  contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
-                }
-              } catch (IOException e) {
-                isAllInfoReceived = false;
-                pgpContacts.add(localPgpContact);
-                e.printStackTrace();
-                ExceptionUtil.handleError(e);
-              }
-            } else {
-              pgpContacts.add(localPgpContact);
-            }
-          } else {
-            PgpContact newPgpContact = new PgpContact(email, null);
-            contactsDaoSource.addRow(getContext(), newPgpContact);
-            try {
-              PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
-              if (remotePgpContact != null) {
-                contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
-                pgpContacts.add(remotePgpContact);
-              } else {
-                pgpContacts.add(newPgpContact);
-              }
-            } catch (IOException e) {
-              isAllInfoReceived = false;
-              pgpContacts.add(newPgpContact);
-              e.printStackTrace();
-              ExceptionUtil.handleError(e);
-            }
-          }
-        }
-      }
-      return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails,
-          isAllInfoReceived, pgpContacts), null);
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
-    }
+    return getLoaderResult(contactsDaoSource);
   }
 
   @Override
@@ -135,6 +79,49 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
     }
   }
 
+  private LoaderResult getLoaderResult(ContactsDaoSource contactsDaoSource) {
+    boolean isAllInfoReceived = true;
+    List<PgpContact> pgpContacts = new ArrayList<>();
+    try {
+      Js js = new Js(getContext(), null);
+      for (String email : emails) {
+        if (js.str_is_email_valid(email)) {
+          if (email != null) {
+            email = email.toLowerCase();
+          }
+
+          PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
+
+          if (localPgpContact == null) {
+            localPgpContact = new PgpContact(email, null);
+            contactsDaoSource.addRow(getContext(), localPgpContact);
+          }
+
+          try {
+            if (!localPgpContact.getHasPgp()) {
+              PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
+              if (remotePgpContact != null) {
+                contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
+                localPgpContact = remotePgpContact;
+              }
+            }
+          } catch (Exception e) {
+            isAllInfoReceived = false;
+            e.printStackTrace();
+            ExceptionUtil.handleError(e);
+          }
+
+          pgpContacts.add(localPgpContact);
+        }
+      }
+      return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails, isAllInfoReceived, pgpContacts), null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
+      return new LoaderResult(null, e);
+    }
+  }
+
   /**
    * Get information about {@link PgpContact} from the remote server.
    *
@@ -145,18 +132,19 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
    * @throws IOException
    */
   @Nullable
-  private PgpContact getPgpContactInfoFromServer(String email, Js js) throws
-      IOException {
-    LookUpEmailResponse lookUpEmailResponse = getLookUpEmailResponse(email);
+  private PgpContact getPgpContactInfoFromServer(String email, Js js) throws IOException {
+    LookUpEmailResponse response = getLookUpEmailResponse(email);
 
-    if (lookUpEmailResponse != null) {
-      if (!TextUtils.isEmpty(lookUpEmailResponse.getPubkey())) {
-        String client = lookUpEmailResponse.getPubkey() == null ? null : lookUpEmailResponse
-            .isHasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource
-            .CLIENT_PGP;
+    if (response != null) {
+      if (!TextUtils.isEmpty(response.getPubKey())) {
+        String client;
+        if (response.getPubKey() == null) {
+          client = null;
+        } else {
+          client = response.hasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource.CLIENT_PGP;
+        }
 
-        return new PgpContact(js, email, null,
-            lookUpEmailResponse.getPubkey(), client, lookUpEmailResponse.isAttested());
+        return new PgpContact(js, email, null, response.getPubKey(), client, response.isAttested());
       } else {
         return new PgpContact(js, email, null, null, null, false);
       }
@@ -172,10 +160,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
    * @throws IOException
    */
   private LookUpEmailResponse getLookUpEmailResponse(String email) throws IOException {
-    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create
-        (ApiService.class);
-    Response<LookUpEmailResponse> response = apiService.postLookUpEmail(
-        new PostLookUpEmailModel(email)).execute();
+    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
+    Response<LookUpEmailResponse> response = apiService.postLookUpEmail(new PostLookUpEmailModel(email)).execute();
     return response.body();
   }
 }

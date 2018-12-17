@@ -23,6 +23,6 @@ public class MessagePartText extends MessagePart {
 
   public MessagePartText(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.TEXT;
+    this.msgPartType = MessagePartType.TEXT;
   }
 }

@@ -10,8 +10,8 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.Js;
 import com.flowcrypt.email.js.PgpKey;
+import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
 
@@ -41,7 +41,6 @@ public class PrivateKeysManager {
         ("pgp/temp-sec.asc"), "UTF-8");
     Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Js js = new Js(appContext, null);
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
     String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
     PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
@@ -59,6 +58,8 @@ public class PrivateKeysManager {
       randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
           (pgpKey.getLongid());
     }
+
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
 
     String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);

@@ -50,21 +50,21 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
 
   private List<String> privateKeys;
 
-  private boolean isLoadPrivateKeysRequestSent;
+  private boolean isRequestSent;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     initViews();
 
-    if (GeneralUtil.isInternetConnectionAvailable(this)) {
+    if (GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
     } else {
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show();
       finish();
     }
-    countingIdlingResource = new CountingIdlingResource(GeneralUtil.generateNameForIdlingResources
-        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebug());
+    countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
+        (SearchBackupsInEmailActivity.class), GeneralUtil.isDebugBuild());
     countingIdlingResource.increment();
   }
 
@@ -86,7 +86,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
 
   @SuppressWarnings("unchecked")
   @Override
-  public void onReplyFromServiceReceived(int requestCode, int resultCode, Object obj) {
+  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         if (privateKeys == null) {
@@ -111,22 +111,19 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
   }
 
   @Override
-  public void onErrorFromServiceReceived(int requestCode, int errorType, Exception e) {
+  public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
         if (!countingIdlingResource.isIdleNow()) {
           countingIdlingResource.decrement();
         }
-        UIUtil.showSnackbar(getRootView(),
-            getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(R.string.retry),
-            new View.OnClickListener() {
+        UIUtil.showSnackbar(getRootView(), getString(R.string.error_occurred_while_receiving_private_keys),
+            getString(R.string.retry), new View.OnClickListener() {
               @Override
               public void onClick(View v) {
                 layoutSyncStatus.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true,
-                    progressBar, layoutContent);
+                UIUtil.exchangeViewVisibility(SearchBackupsInEmailActivity.this, true, progressBar, layoutContent);
                 loadPrivateKeys(R.id.syns_load_private_keys);
               }
             });
@@ -137,8 +134,8 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
   @Override
   public void onSyncServiceConnected() {
     super.onSyncServiceConnected();
-    if (!isLoadPrivateKeysRequestSent) {
-      isLoadPrivateKeysRequestSent = true;
+    if (!isRequestSent) {
+      isRequestSent = true;
       loadPrivateKeys(R.id.syns_load_private_keys);
     }
   }

@@ -28,20 +28,19 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
  */
 
 public class ContactsListCursorAdapter extends CursorAdapter {
-  private OnDeleteContactButtonClickListener onDeleteContactButtonClickListener;
-  private boolean isDeleteEnable;
+  private OnDeleteContactListener listener;
+  private boolean isDeleteEnabled;
 
   public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                   OnDeleteContactButtonClickListener onDeleteContactButtonClickListener) {
-    this(context, c, autoRequery, onDeleteContactButtonClickListener, true);
+                                   OnDeleteContactListener listener) {
+    this(context, c, autoRequery, listener, true);
   }
 
   public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                   OnDeleteContactButtonClickListener onDeleteContactButtonClickListener,
-                                   boolean isDeleteEnable) {
+                                   OnDeleteContactListener listener, boolean isDeleteEnabled) {
     super(context, c, autoRequery);
-    this.onDeleteContactButtonClickListener = onDeleteContactButtonClickListener;
-    this.isDeleteEnable = isDeleteEnable;
+    this.listener = listener;
+    this.isDeleteEnabled = isDeleteEnabled;
   }
 
   @Override
@@ -77,13 +76,13 @@ public class ContactsListCursorAdapter extends CursorAdapter {
       textViewOnlyEmail.setText(null);
     }
 
-    if (isDeleteEnable) {
+    if (isDeleteEnabled) {
       imageButtonDeleteContact.setVisibility(View.VISIBLE);
       imageButtonDeleteContact.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          if (onDeleteContactButtonClickListener != null) {
-            onDeleteContactButtonClickListener.onDeleteContactButtonClick(email);
+          if (listener != null) {
+            listener.onClick(email);
           }
         }
       });
@@ -95,7 +94,7 @@ public class ContactsListCursorAdapter extends CursorAdapter {
   /**
    * This listener can be used to determinate when a contact was deleted.
    */
-  public interface OnDeleteContactButtonClickListener {
-    void onDeleteContactButtonClick(String email);
+  public interface OnDeleteContactListener {
+    void onClick(String email);
   }
 }

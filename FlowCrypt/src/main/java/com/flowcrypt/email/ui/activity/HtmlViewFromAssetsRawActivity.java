@@ -55,13 +55,11 @@ public class HtmlViewFromAssetsRawActivity extends BaseBackStackActivity {
     super.onCreate(savedInstanceState);
 
     if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_HTML_RESOURCES_ID)) {
-      WebView webView = (WebView) findViewById(R.id.webView);
-      webView.loadUrl("file:///android_asset/"
-          + getIntent().getStringExtra(EXTRA_KEY_HTML_RESOURCES_ID));
+      WebView webView = findViewById(R.id.webView);
+      webView.loadUrl("file:///android_asset/" + getIntent().getStringExtra(EXTRA_KEY_HTML_RESOURCES_ID));
 
       if (getSupportActionBar() != null) {
-        getSupportActionBar().setTitle(getIntent().getStringExtra
-            (EXTRA_KEY_ACTIVITY_TITLE));
+        getSupportActionBar().setTitle(getIntent().getStringExtra(EXTRA_KEY_ACTIVITY_TITLE));
       }
     }
   }

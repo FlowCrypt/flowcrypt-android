@@ -27,40 +27,37 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackActivity implements
-    ServiceConnection {
-  protected boolean isServiceBound;
-  protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
+public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackActivity implements ServiceConnection {
+  protected boolean isBound;
+  protected CheckClipboardToFindKeyService service;
 
   public abstract boolean isPrivateKeyChecking();
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    bindService(new Intent(this, CheckClipboardToFindKeyService.class),
-        this, Context.BIND_AUTO_CREATE);
+    bindService(new Intent(this, CheckClipboardToFindKeyService.class), this, Context.BIND_AUTO_CREATE);
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (isServiceBound) {
+    if (isBound) {
       unbindService(this);
-      isServiceBound = false;
+      isBound = false;
     }
   }
 
   @Override
   public void onServiceConnected(ComponentName name, IBinder service) {
-    CheckClipboardToFindKeyService.LocalBinder binder =
-        (CheckClipboardToFindKeyService.LocalBinder) service;
-    checkClipboardToFindKeyService = binder.getService();
-    checkClipboardToFindKeyService.setMustBePrivateKey(isPrivateKeyChecking());
-    isServiceBound = true;
+    CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
+    this.service = binder.getService();
+    this.service.setPrivateKeyMode(isPrivateKeyChecking());
+    isBound = true;
   }
 
   @Override
   public void onServiceDisconnected(ComponentName name) {
-    isServiceBound = false;
+    isBound = false;
   }
 }

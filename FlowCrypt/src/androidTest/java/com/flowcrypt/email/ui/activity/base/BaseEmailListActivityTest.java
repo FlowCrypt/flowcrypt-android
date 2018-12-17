@@ -30,13 +30,13 @@ import static org.hamcrest.Matchers.not;
  */
 public class BaseEmailListActivityTest extends BaseTest {
 
-  protected void testDownloadAllMessages(int messageCount) {
+  protected void testDownloadAllMsgs(int messageCount) {
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
     // size of list = number of the letters in the mail + 1 footer.
     onView(withId(R.id.listViewMessages)).check(matches(matchListSize(messageCount))).check(matches(isDisplayed()));
   }
 
-  protected void testRunMessageDetailsActivity(int position) {
+  protected void testRunMsgDetailsActivity(int position) {
     onData(anything())
         .inAdapterView(withId(R.id.listViewMessages))
         .atPosition(position)

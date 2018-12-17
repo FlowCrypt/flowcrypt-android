@@ -26,19 +26,26 @@ allprojects {
 
     plugins.apply('checkstyle')
 
-    task('checkstyle', type: Checkstyle) {
+    checkstyle {
         configFile rootProject.file('checkstyle.xml')
-        source 'src/main/java'
-        ignoreFailures false
+        toolVersion '8.14'
         showViolations true
-        include '**/*.java'
+        ignoreFailures false
+    }
 
+    task('checkstyle', type: Checkstyle) {
+        configProperties.checkStyleConfigDir = rootProject.rootDir
+        source 'src/androidTest/java'
+        source 'src/debug/java'
+        source 'src/main/java'
+        source 'src/test/java'
+        include '**/*.java'
         classpath = files()
     }
 
     afterEvaluate {
-        Task task = tasks.findByName('check');
-        if(task != null){
+        Task task = tasks.findByName('check')
+        if (task != null) {
             task.dependsOn('checkstyle')
         }
     }

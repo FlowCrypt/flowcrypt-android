@@ -38,30 +38,29 @@ public class WebViewInfoDialogFragment extends DialogFragment implements View.On
       ("KEY_INFO_IS_CANCELABLE", WebViewInfoDialogFragment.class);
 
   protected String dialogTitle;
-  protected String dialogMessage;
+  protected String dialogMsg;
 
   public WebViewInfoDialogFragment() {
   }
 
-  public static WebViewInfoDialogFragment newInstance(String dialogTitle, String dialogMessage) {
-    return newInstance(dialogTitle, dialogMessage, true);
+  public static WebViewInfoDialogFragment newInstance(String dialogTitle, String dialogMsg) {
+    return newInstance(dialogTitle, dialogMsg, true);
   }
 
-  public static WebViewInfoDialogFragment newInstance(String dialogTitle, String dialogMessage,
-                                                      boolean isCancelable) {
+  public static WebViewInfoDialogFragment newInstance(String dialogTitle, String dialogMsg, boolean isCancelable) {
     WebViewInfoDialogFragment infoDialogFragment = new WebViewInfoDialogFragment();
 
-    Bundle args = prepareArgs(dialogTitle, dialogMessage, isCancelable);
+    Bundle args = prepareArgs(dialogTitle, dialogMsg, isCancelable);
     infoDialogFragment.setArguments(args);
 
     return infoDialogFragment;
   }
 
   @NonNull
-  public static Bundle prepareArgs(String dialogTitle, String dialogMessage, boolean isCancelable) {
+  public static Bundle prepareArgs(String dialogTitle, String dialogMsg, boolean isCancelable) {
     Bundle args = new Bundle();
     args.putString(KEY_INFO_DIALOG_TITLE, dialogTitle);
-    args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMessage);
+    args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMsg);
     args.putBoolean(KEY_INFO_IS_CANCELABLE, isCancelable);
     return args;
   }
@@ -73,7 +72,7 @@ public class WebViewInfoDialogFragment extends DialogFragment implements View.On
 
     if (args != null) {
       dialogTitle = args.getString(KEY_INFO_DIALOG_TITLE, getString(R.string.info));
-      dialogMessage = args.getString(KEY_INFO_DIALOG_MESSAGE);
+      dialogMsg = args.getString(KEY_INFO_DIALOG_MESSAGE);
       setCancelable(args.getBoolean(KEY_INFO_IS_CANCELABLE, true));
     }
   }
@@ -88,7 +87,7 @@ public class WebViewInfoDialogFragment extends DialogFragment implements View.On
     rootView.findViewById(R.id.buttonOk).setOnClickListener(this);
 
     WebView webView = rootView.findViewById(R.id.webView);
-    webView.loadDataWithBaseURL(null, dialogMessage, "text/html", StandardCharsets.UTF_8.displayName(), null);
+    webView.loadDataWithBaseURL(null, dialogMsg, "text/html", StandardCharsets.UTF_8.displayName(), null);
     dialog.setView(rootView);
     return dialog.create();
   }

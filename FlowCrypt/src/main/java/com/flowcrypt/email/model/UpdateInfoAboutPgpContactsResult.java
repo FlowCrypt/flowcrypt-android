@@ -24,8 +24,8 @@ import java.util.List;
  */
 
 public class UpdateInfoAboutPgpContactsResult implements Parcelable {
-  public static final Creator<UpdateInfoAboutPgpContactsResult> CREATOR = new
-      Creator<UpdateInfoAboutPgpContactsResult>() {
+  public static final Creator<UpdateInfoAboutPgpContactsResult> CREATOR =
+      new Creator<UpdateInfoAboutPgpContactsResult>() {
         @Override
         public UpdateInfoAboutPgpContactsResult createFromParcel(Parcel source) {
           return new UpdateInfoAboutPgpContactsResult(source);

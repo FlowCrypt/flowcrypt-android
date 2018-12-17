@@ -31,12 +31,13 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
-  private Map<String, Boolean> infoAboutKeysAvailable = new HashMap<>();
+  private Map<String, Boolean> keysAvailability;
   private int originalColor;
   private boolean useKeysInfo;
 
   public FromAddressesAdapter(@NonNull Context context, int resource, int textViewResId, @NonNull List<T> objects) {
     super(context, resource, textViewResId, objects);
+    keysAvailability = new HashMap<>();
   }
 
   @Override
@@ -54,10 +55,17 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
 
   @Override
   public boolean isEnabled(int position) {
+    if (position < 0 || position >= getCount()) {
+      return super.isEnabled(position);
+    }
+
     if (useKeysInfo && getItem(position) instanceof String) {
       String email = (String) getItem(position);
-      return infoAboutKeysAvailable.get(email);
-    } else return super.isEnabled(position);
+      Boolean result = keysAvailability.get(email);
+      return result == null ? super.isEnabled(position) : result;
+    } else {
+      return super.isEnabled(position);
+    }
   }
 
   @Override
@@ -83,9 +91,9 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
    * @param emailAddress The given email address
    * @param hasPgp       true if we have a private key for the given email address, otherwise false
    */
-  public void updateKeyAvailable(String emailAddress, boolean hasPgp) {
-    if (infoAboutKeysAvailable != null) {
-      infoAboutKeysAvailable.put(emailAddress, hasPgp);
+  public void updateKeyAvailability(String emailAddress, boolean hasPgp) {
+    if (keysAvailability != null) {
+      keysAvailability.put(emailAddress, hasPgp);
     }
   }
 
@@ -96,6 +104,7 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
    * @return true if the given email address has a private key, otherwise false.
    */
   public boolean hasPrvKey(String emailAddress) {
-    return infoAboutKeysAvailable.containsKey(emailAddress) && infoAboutKeysAvailable.get(emailAddress);
+    Boolean result = keysAvailability.get(emailAddress);
+    return keysAvailability.containsKey(emailAddress) && result != null && result;
   }
 }

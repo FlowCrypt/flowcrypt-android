@@ -56,18 +56,18 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
       GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
           CreateOrImportKeyActivity.class);
 
-  private IntentsTestRule activityTestRule = new IntentsTestRule<CreateOrImportKeyActivity>
-      (CreateOrImportKeyActivity.class) {
-    @Override
-    protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      AccountDao accountDao = AccountDaoManager.getDefaultAccountDao();
-      Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
-      result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, accountDao);
-      result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-      return result;
-    }
-  };
+  private IntentsTestRule activityTestRule =
+      new IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.class) {
+        @Override
+        protected Intent getActivityIntent() {
+          Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+          AccountDao account = AccountDaoManager.getDefaultAccountDao();
+          Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
+          result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, account);
+          result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
+          return result;
+        }
+      };
 
   @Rule
   public TestRule ruleChain = RuleChain

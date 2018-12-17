@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -86,19 +85,14 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     switch (key) {
       case Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE:
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-          if (sharedPreferences.getBoolean(key, false)) {
-            if (ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-              showApplicationDetailsSettingsActivity();
-            } else {
-              requestPermissions(new String[]{Manifest.permission
-                      .WRITE_EXTERNAL_STORAGE},
-                  REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS);
-            }
-          } else {
+        if (sharedPreferences.getBoolean(key, false)) {
+          boolean isPermissionGranted = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission
+              .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+          if (isPermissionGranted) {
             showApplicationDetailsSettingsActivity();
+          } else {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS);
           }
         } else {
           showApplicationDetailsSettingsActivity();
@@ -118,12 +112,10 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
                                          @NonNull int[] grantResults) {
     switch (requestCode) {
       case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS:
-        if (grantResults.length == 1 && grantResults[0] == PackageManager
-            .PERMISSION_GRANTED) {
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
           showApplicationDetailsSettingsActivity();
         } else {
-          Toast.makeText(getActivity(), "Access not granted to write logs!!!", Toast
-              .LENGTH_SHORT).show();
+          Toast.makeText(getActivity(), "Access not granted to write logs!!!", Toast.LENGTH_SHORT).show();
         }
         break;
 
@@ -133,8 +125,7 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
   }
 
   private void showApplicationDetailsSettingsActivity() {
-    Toast.makeText(getActivity(), R.string.toast_message_press_force_stop_to_apply_changes,
-        Toast.LENGTH_SHORT).show();
+    Toast.makeText(getActivity(), R.string.toast_message_press_force_stop_to_apply_changes, Toast.LENGTH_SHORT).show();
     Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
     Uri uri = Uri.fromParts("package", getActivity().getPackageName(), null);
     intent.setData(uri);

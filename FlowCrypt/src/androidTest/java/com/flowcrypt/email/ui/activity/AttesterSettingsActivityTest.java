@@ -43,7 +43,7 @@ public class AttesterSettingsActivityTest extends BaseTest {
       .around(new ActivityTestRule<>(AttesterSettingsActivity.class));
 
   @Test
-  public void testIsKeysExistsOnAttester() {
+  public void testKeysExistOnAttester() {
     onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
   }

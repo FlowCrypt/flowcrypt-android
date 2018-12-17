@@ -38,6 +38,5 @@ public abstract class BaseSettingsActivity extends BaseBackStackActivity {
       default:
         return super.onOptionsItemSelected(item);
     }
-
   }
 }

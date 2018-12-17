@@ -21,6 +21,6 @@ public class MessagePartVerification extends MessagePart {
 
   public MessagePartVerification(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.VERIFICATION;
+    this.msgPartType = MessagePartType.VERIFICATION;
   }
 }

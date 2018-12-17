@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.sync.tasks;
 
+import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
@@ -26,29 +27,28 @@ import javax.mail.UIDFolder;
  */
 
 public class LoadMessagesSyncTask extends BaseSyncTask {
-  private com.flowcrypt.email.api.email.Folder folder;
+  private LocalFolder localFolder;
   private int start;
   private int end;
 
   public LoadMessagesSyncTask(String ownerKey, int requestCode,
-                              com.flowcrypt.email.api.email.Folder folder, int start, int end) {
+                              LocalFolder localFolder, int start, int end) {
     super(ownerKey, requestCode);
-    this.folder = folder;
+    this.localFolder = localFolder;
     this.start = start;
     this.end = end;
   }
 
   @Override
-  public void runIMAPAction(AccountDao accountDao, Session session, Store store, SyncListener syncListener) throws
-      Exception {
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(folder.getServerFullFolderName());
+  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
     imapFolder.open(Folder.READ_ONLY);
 
-    int messagesCount = imapFolder.getMessageCount();
+    int msgsCount = imapFolder.getMessageCount();
 
-    if (syncListener != null) {
-      if (this.end < 1 || this.end > messagesCount || this.start < 1) {
-        syncListener.onMessagesReceived(accountDao, folder, imapFolder, new Message[]{}, ownerKey, requestCode);
+    if (listener != null) {
+      if (this.end < 1 || this.end > msgsCount || this.start < 1) {
+        listener.onMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
       } else {
         Message[] messages;
 
@@ -66,7 +66,7 @@ public class LoadMessagesSyncTask extends BaseSyncTask {
 
         imapFolder.fetch(messages, fetchProfile);
 
-        syncListener.onMessagesReceived(accountDao, folder, imapFolder, messages, ownerKey, requestCode);
+        listener.onMsgsReceived(account, localFolder, imapFolder, messages, ownerKey, requestCode);
       }
     }
 

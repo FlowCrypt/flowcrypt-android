@@ -6,21 +6,20 @@
 package com.flowcrypt.email.security;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.preference.PreferenceManager;
-import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
-import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -33,7 +32,6 @@ import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
-import java.util.Calendar;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -44,9 +42,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.x500.X500Principal;
-
-import androidx.annotation.RequiresApi;
 
 /**
  * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a
@@ -73,7 +68,7 @@ import androidx.annotation.RequiresApi;
 public class KeyStoreCryptoManager {
   public static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
   public static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
-  private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding = "RSA/ECB/PKCS1Padding";
+  private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding";
   private static final String TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding";
   private static final String ALGORITHM_RSA = "RSA";
   private static final String ALGORITHM_SHA1PRNG = "SHA1PRNG";
@@ -85,7 +80,7 @@ public class KeyStoreCryptoManager {
   private Context context;
   private PrivateKey privateKey;
   private PublicKey publicKey;
-  private SecretKeySpec secretKeySpec;
+  private SecretKeySpec secKeySpec;
 
   /**
    * This constructor do initialization of symmetric (AES) and asymmetric keys (RSA).
@@ -157,7 +152,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(plainData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
 
       return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
@@ -192,7 +187,7 @@ public class KeyStoreCryptoManager {
 
     if (!TextUtils.isEmpty(encryptedData)) {
       Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+      cipher.init(Cipher.DECRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
       byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
       return new String(decodedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;
@@ -202,7 +197,7 @@ public class KeyStoreCryptoManager {
    * This method does encrypt of the input text and returns an encrypted data.
    * <p>
    * For encrypt will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding} and initialized as
+   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING} and initialized as
    * {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData which will be as input will be convert to
    * byte[] and encryptWithRSA via cipher.doFinal. After this we will return a base64 encoded encrypted result.
    *
@@ -213,12 +208,11 @@ public class KeyStoreCryptoManager {
    * @throws InvalidKeyException
    * @throws BadPaddingException
    * @throws IllegalBlockSizeException
-   * @throws IOException
    */
   public String encryptWithRSA(String plainData) throws NoSuchPaddingException, NoSuchAlgorithmException,
-      InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException {
+      InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
     if (!TextUtils.isEmpty(plainData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
+      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
       cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
       byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
@@ -232,28 +226,41 @@ public class KeyStoreCryptoManager {
    * This method does decrypt of the input encrypted text and return a decrypted data.
    * <p>
    * For decrypt will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding} and initialized as
+   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING} and initialized as
    * {@link Cipher#DECRYPT_MODE} with a private key. Then the encryptedData which will be as input will be decode
    * to byte[] and decrypt via cipher.doFinal. After this we will return a decrypted result.
    *
    * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
    *                      base64.
    * @return <tt>String</tt> Return a decrypted data.
-   * @throws InvalidKeyException
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
-   * @throws IOException
+   * @throws GeneralSecurityException
    */
-  public String decryptWithRSA(String encryptedData) throws InvalidKeyException, NoSuchPaddingException,
-      NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException {
+  public String decryptWithRSA(String encryptedData) throws GeneralSecurityException {
     if (!TextUtils.isEmpty(encryptedData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1Padding);
+      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
       cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
       byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-      byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+      byte[] decryptedBytes;
+      try {
+        decryptedBytes = cipher.doFinal(encryptedBytes);
+      } catch (BadPaddingException | RuntimeException e) {
+        e.printStackTrace();
+
+        String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
+        if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
+          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+          throw new RuntimeException("Storage was corrupted", e);
+        }
+
+        String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+        if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
+          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+          throw new GeneralSecurityException("Storage was corrupted", e);
+        }
+
+        throw e;
+      }
 
       return new String(decryptedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;
@@ -273,7 +280,7 @@ public class KeyStoreCryptoManager {
 
     String decryptedSecretKey = decryptWithRSA(encryptedSecretKey);
 
-    secretKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
+    secKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
   }
 
   /**
@@ -310,29 +317,24 @@ public class KeyStoreCryptoManager {
    */
   private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, ManualHandledException {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      try {
-        generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow();
-      } catch (NullPointerException e) {
-        //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
-        e.printStackTrace();
-        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
-      }
-    } else {
-      generateKeyIfAndroidVersionLessThenMarshmallow();
+    try {
+      genKeyPair();
+    } catch (NullPointerException e) {
+      //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
+      e.printStackTrace();
+      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
     }
   }
 
   /**
-   * Generate a KeyPair for Android version equal or higher then {@link Build.VERSION_CODES#M}.
+   * Generate {@link KeyPair} using AndroidKeyStore.
    *
    * @return <tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
    * @throws NoSuchAlgorithmException
    * @throws NoSuchProviderException
    * @throws InvalidAlgorithmParameterException
    */
-  @RequiresApi(api = Build.VERSION_CODES.M)
-  private KeyPair generateKeyIfAndroidVersionEqualOrHigherThenMarshmallow() throws NoSuchAlgorithmException,
+  private KeyPair genKeyPair() throws NoSuchAlgorithmException,
       NoSuchProviderException, InvalidAlgorithmParameterException, ManualHandledException {
 
     KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -351,38 +353,6 @@ public class KeyStoreCryptoManager {
       e.printStackTrace();
       throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
     }
-  }
-
-  /**
-   * Generate a KeyPair for Android version less then {@link Build.VERSION_CODES#M}.
-   *
-   * @return tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchProviderException
-   * @throws InvalidAlgorithmParameterException
-   */
-  @SuppressWarnings("deprecation")
-  private KeyPair generateKeyIfAndroidVersionLessThenMarshmallow() throws
-      NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-
-    Calendar startDate = Calendar.getInstance();
-    Calendar endDate = Calendar.getInstance();
-    endDate.add(Calendar.YEAR, 25);
-
-    KeyPairGeneratorSpec keyPairGeneratorSpec =
-        new KeyPairGeneratorSpec.Builder(context)
-            .setAlias(ANDROID_KEY_STORE_RSA_ALIAS)
-            .setSubject(new X500Principal("CN=FlowCrypt, OU=flowcrypt.com, O=Android Authority, C=US"))
-            .setStartDate(startDate.getTime())
-            .setEndDate(endDate.getTime())
-            .setSerialNumber(BigInteger.valueOf(startDate.getTimeInMillis()))
-            .build();
-
-    KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA,
-        PROVIDER_ANDROID_KEY_STORE);
-    keyPairGenerator.initialize(keyPairGeneratorSpec);
-
-    return keyPairGenerator.generateKeyPair();
   }
 
   /**
@@ -412,18 +382,14 @@ public class KeyStoreCryptoManager {
    * Generate an encrypted secret key for the AES symmetric algorithm.
    *
    * @return <tt>{@link String}</tt> An encrypted secret key with the RSA asymmetric algorithm.
-   * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
-   * @throws InvalidAlgorithmParameterException
    * @throws IllegalBlockSizeException
    * @throws InvalidKeyException
    * @throws BadPaddingException
    * @throws NoSuchPaddingException
-   * @throws IOException
    */
-  private String generateEncodedSecretKey() throws NoSuchProviderException, NoSuchAlgorithmException,
-      InvalidAlgorithmParameterException, IllegalBlockSizeException, InvalidKeyException,
-      BadPaddingException, NoSuchPaddingException, IOException {
+  private String generateEncodedSecretKey() throws NoSuchAlgorithmException, IllegalBlockSizeException,
+      InvalidKeyException, BadPaddingException, NoSuchPaddingException {
     KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
     SecureRandom secureRandom = SecureRandom.getInstance(ALGORITHM_SHA1PRNG);
     keyGenerator.init(KEY_SIZE_128, secureRandom);

@@ -88,7 +88,7 @@ public class SelectContactsActivityTest extends BaseTest {
 
   @Test
   public void testShowListContacts() {
-    onView(withId(R.id.listViewContacts)).check(matches((isDisplayed()))).check(matches(not(matchEmptyList())));
+    onView(withId(R.id.listViewContacts)).check(matches(isDisplayed())).check(matches(not(matchEmptyList())));
     for (int i = 0; i < EMAILS.length; i++) {
       if (i % 2 == 0) {
         checkIsDataItemDisplayed(i, R.id.textViewName, getUserName(EMAILS[i]));

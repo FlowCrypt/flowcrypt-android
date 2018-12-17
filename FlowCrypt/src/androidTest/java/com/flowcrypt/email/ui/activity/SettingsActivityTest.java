@@ -66,7 +66,8 @@ public class SettingsActivityTest extends BaseTest {
 
   @Test
   public void testShowContactsScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.contacts));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext()
+        .getString(R.string.contacts));
   }
 
   @Test
@@ -76,7 +77,8 @@ public class SettingsActivityTest extends BaseTest {
 
   @Test
   public void testShowAttesterScreen() {
-    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.attester));
+    checkIsScreenDisplaying(InstrumentationRegistry.getInstrumentation().getTargetContext()
+        .getString(R.string.attester));
   }
 
   @Test

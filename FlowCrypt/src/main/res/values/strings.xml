@@ -417,4 +417,8 @@ icelanders prefer real sauna</font>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
     <string name="no_key_available">No key available for your email account</string>
+    <string name="not_saved_file_already_exists">Not saved because the file already exists</string>
+    <string name="store_space_was_corrupted">App storage space was corrupted. This can happen on certain rooted or unofficial systems, due to user intervention, etc. Write us at %1$s if you need help.</string>
+    <string name="wipe_app_settings">Wipe %1$s App storage and set it up again to continue using %1$s on this device.</string>
+    <string name="reset_app_storage">Reset app storage</string>
 </resources>

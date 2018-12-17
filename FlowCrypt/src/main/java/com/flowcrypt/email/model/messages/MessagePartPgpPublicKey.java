@@ -38,11 +38,7 @@ public class MessagePartPgpPublicKey extends MessagePart {
   private String longId;
   private PgpContact pgpContact;
 
-  public MessagePartPgpPublicKey(String pubkey,
-                                 String longId,
-                                 String keyWords,
-                                 String fingerprint,
-                                 String keyOwner,
+  public MessagePartPgpPublicKey(String pubkey, String longId, String keyWords, String fingerprint, String keyOwner,
                                  PgpContact pgpContact) {
     super(MessagePartType.PGP_PUBLIC_KEY, pubkey);
     this.longId = longId;
@@ -54,7 +50,7 @@ public class MessagePartPgpPublicKey extends MessagePart {
 
   protected MessagePartPgpPublicKey(Parcel in) {
     super(in);
-    this.messagePartType = MessagePartType.PGP_PUBLIC_KEY;
+    this.msgPartType = MessagePartType.PGP_PUBLIC_KEY;
     this.keyWords = in.readString();
     this.fingerprint = in.readString();
     this.keyOwner = in.readString();
@@ -108,11 +104,11 @@ public class MessagePartPgpPublicKey extends MessagePart {
     this.pgpContact = pgpContact;
   }
 
-  public boolean isPgpContactExists() {
+  public boolean hasPgpContact() {
     return pgpContact != null;
   }
 
-  public boolean isPgpContactCanBeUpdated() {
+  public boolean isPgpContactUpdateEnabled() {
     return pgpContact != null && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
   }
 

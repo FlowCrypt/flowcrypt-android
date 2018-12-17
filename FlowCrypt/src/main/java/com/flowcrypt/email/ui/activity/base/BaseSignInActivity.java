@@ -14,6 +14,7 @@ import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -39,17 +40,17 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   /**
    * The main entry point for Google Play services integration.
    */
-  protected GoogleApiClient googleApiClient;
+  protected GoogleApiClient client;
   protected boolean isRunSignInWithGmailNeeded;
 
-  protected GoogleSignInAccount currentGoogleSignInAccount;
+  protected GoogleSignInAccount sign;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     if (savedInstanceState != null) {
-      this.currentGoogleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+      this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
     }
 
     initGoogleApiClient();
@@ -59,7 +60,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, currentGoogleSignInAccount);
+    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, sign);
   }
 
   @Override
@@ -82,14 +83,12 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonSignInWithGmail:
-        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-            REQUEST_CODE_SIGN_IN);
+        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
         break;
 
       case R.id.buttonOtherEmailProvider:
-        if (GeneralUtil.isInternetConnectionAvailable(this)) {
-          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class),
-              REQUEST_CODE_ADD_OTHER_ACCOUNT);
+        if (GeneralUtil.isConnected(this)) {
+          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class), REQUEST_CODE_ADD_OTHER_ACCOUNT);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
         }
@@ -101,8 +100,7 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   public void onConnected(@Nullable Bundle bundle) {
     if (this.isRunSignInWithGmailNeeded) {
       this.isRunSignInWithGmailNeeded = false;
-      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, googleApiClient, getRootView(),
-          REQUEST_CODE_SIGN_IN);
+      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
     }
   }
 
@@ -112,8 +110,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   }
 
   @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    showInfoSnackbar(getRootView(), connectionResult.getErrorMessage());
+  public void onConnectionFailed(@NonNull ConnectionResult connResult) {
+    showInfoSnackbar(getRootView(), connResult.getErrorMessage());
   }
 
   @Override
@@ -122,8 +120,8 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   }
 
   protected void initGoogleApiClient() {
-    googleApiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, GoogleApiClientHelper
-        .generateGoogleSignInOptions());
+    GoogleSignInOptions googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions();
+    client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions);
   }
 
   private void initViews() {

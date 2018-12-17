@@ -69,16 +69,16 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new ActivityTestRule<>(AddNewAccountManuallyActivity.class));
 
-  private AuthCredentials authCredentials;
+  private AuthCredentials authCreds;
 
   @Before
   public void setUp() throws Exception {
-    this.authCredentials = AuthCredentialsManager.getDefaultWithBackupAuthCredentials();
+    this.authCreds = AuthCredentialsManager.getDefaultWithBackupAuthCreds();
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
   }
 
   @Test
-  public void testAllCredentialsCorrect() throws Exception {
+  public void testAllCredsCorrect() throws Exception {
     fillAllFields();
     onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
     onView(withId(R.id.textViewTitle)).check(matches(isDisplayed()));
@@ -93,12 +93,12 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     checkIsFieldEmptyWork(R.id.editTextImapServer, R.string.imap_server);
     checkIsFieldEmptyWork(R.id.editTextImapPort, R.string.imap_port);
     onView(withId(R.id.editTextImapPort)).perform(scrollTo(),
-        typeText(String.valueOf(authCredentials.getImapPort())));
+        typeText(String.valueOf(authCreds.getImapPort())));
 
     checkIsFieldEmptyWork(R.id.editTextSmtpServer, R.string.smtp_server);
     checkIsFieldEmptyWork(R.id.editTextSmtpPort, R.string.smtp_port);
     onView(withId(R.id.editTextSmtpPort)).perform(scrollTo(),
-        typeText(String.valueOf(authCredentials.getSmtpPort())));
+        typeText(String.valueOf(authCreds.getSmtpPort())));
 
     onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(scrollTo(), click());
     checkIsFieldEmptyWork(R.id.editTextSmtpUsername, R.string.smtp_username);
@@ -114,33 +114,33 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
 
   @Test
   public void testChangingImapPortWhenSelectSpinnerItem() throws Exception {
-    checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+    checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.DEFAULT_IMAP_PORT));
-    checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+    checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.SSL_TLS, String.valueOf(JavaEmailConstants.SSL_IMAP_PORT));
-    checkSecurityTypeOption(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
+    checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.NONE, String.valueOf(JavaEmailConstants.DEFAULT_IMAP_PORT));
   }
 
   @Test
   public void testChangingSmtpPortWhenSelectSpinnerItem() throws Exception {
-    checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+    checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.STARTTLS_SMTP_PORT));
-    checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+    checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.SSL_TLS, String.valueOf(JavaEmailConstants.SSL_SMTP_PORT));
-    checkSecurityTypeOption(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
+    checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.NONE, String.valueOf(JavaEmailConstants.DEFAULT_SMTP_PORT));
   }
 
   @Test
   public void testChangeFieldValuesWhenEmailChanged() {
-    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCredentials.getEmail()),
+    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCreds.getEmail()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCredentials.getUsername()),
+    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCreds.getUsername()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCredentials.getImapServer()),
+    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCreds.getImapServer()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCredentials.getSmtpServer()),
+    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCreds.getSmtpServer()),
         closeSoftKeyboard());
 
     String newUserName = "test";
@@ -148,13 +148,13 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
 
     onView(withId(R.id.editTextEmail)).perform(scrollTo(), clearText(), typeText(newUserName
         + TestConstants.COMMERCIAL_AT_SYMBOL + newHost), closeSoftKeyboard());
-    onView(withId(R.id.editTextUserName)).perform(scrollTo()).check(matches(not(withText(authCredentials
+    onView(withId(R.id.editTextUserName)).perform(scrollTo()).check(matches(not(withText(authCreds
         .getUsername()))));
     onView(withId(R.id.editTextUserName)).check(matches(withText(newUserName)));
-    onView(withId(R.id.editTextImapServer)).perform(scrollTo()).check(matches(not(withText(authCredentials
+    onView(withId(R.id.editTextImapServer)).perform(scrollTo()).check(matches(not(withText(authCreds
         .getImapServer()))));
     onView(withId(R.id.editTextImapServer)).check(matches(withText(IMAP_SERVER_PREFIX + newHost)));
-    onView(withId(R.id.editTextSmtpServer)).perform(scrollTo()).check(matches(not(withText(authCredentials
+    onView(withId(R.id.editTextSmtpServer)).perform(scrollTo()).check(matches(not(withText(authCreds
         .getSmtpServer()))));
     onView(withId(R.id.editTextSmtpServer)).check(matches(withText(SMTP_SERVER_PREFIX + newHost)));
     onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(scrollTo(), click());
@@ -175,10 +175,10 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
 
   @Test
   public void testFieldsAutoFilling() {
-    String userName = authCredentials.getEmail().substring(0,
-        authCredentials.getEmail().indexOf(TestConstants.COMMERCIAL_AT_SYMBOL));
-    String host = authCredentials.getEmail().substring(authCredentials.getEmail().indexOf(TestConstants
-        .COMMERCIAL_AT_SYMBOL) + 1, authCredentials.getEmail().length());
+    String userName = authCreds.getEmail().substring(0,
+        authCreds.getEmail().indexOf(TestConstants.COMMERCIAL_AT_SYMBOL));
+    String host = authCreds.getEmail().substring(authCreds.getEmail().indexOf(TestConstants
+        .COMMERCIAL_AT_SYMBOL) + 1, authCreds.getEmail().length());
 
     String[] incorrectEmailAddresses = {"default",
         "default@",
@@ -236,13 +236,13 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         R.id.editTextSmtpServer, R.id.editTextSmtpPort,
         R.id.editTextSmtpUsername, R.id.editTextSmtpPassword};
 
-    String[] correctData = {authCredentials.getEmail(),
-        authCredentials.getUsername(), authCredentials.getPassword(),
-        authCredentials.getImapServer(), String.valueOf(authCredentials.getImapPort()),
-        authCredentials.getSmtpServer(), String.valueOf(authCredentials.getSmtpPort()),
-        authCredentials.getSmtpSigInUsername(), authCredentials.getSmtpSignInPassword()};
+    String[] correctData = {authCreds.getEmail(),
+        authCreds.getUsername(), authCreds.getPassword(),
+        authCreds.getImapServer(), String.valueOf(authCreds.getImapPort()),
+        authCreds.getSmtpServer(), String.valueOf(authCreds.getSmtpPort()),
+        authCreds.getSmtpSigInUsername(), authCreds.getSmtpSignInPassword()};
 
-    int numberOfChecks = authCredentials.isUseCustomSignInForSmtp() ?
+    int numberOfChecks = authCreds.hasCustomSignInForSmtp() ?
         fieldIdentifiersWithIncorrectData.length : fieldIdentifiersWithIncorrectData.length - 2;
 
     for (int i = 0; i < numberOfChecks; i++) {
@@ -260,19 +260,19 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     }
   }
 
-  private void checkSecurityTypeOption(int portViewId, int spinnerViewId, SecurityType.Option option,
-                                       String portValue) {
+  private void checkSecurityTypeOpt(int portViewId, int spinnerViewId, SecurityType.Option option,
+                                    String portValue) {
     String someValue = "111";
     onView(withId(portViewId)).perform(scrollTo(), clearText(), typeText(someValue), closeSoftKeyboard());
     onView(withId(spinnerViewId)).perform(scrollTo(), click());
-    onData(allOf(is(instanceOf(SecurityType.class)), matchOption(option))).perform(click());
+    onData(allOf(is(instanceOf(SecurityType.class)), matchOpt(option))).perform(click());
     onView(withId(portViewId)).check(matches(withText(portValue)));
   }
 
   private void checkIsFieldEmptyWork(int viewId, int stringIdForError) {
-    onView(withId(R.id.editTextEmail)).perform(scrollTo(), clearText(), typeText(authCredentials.getEmail()),
+    onView(withId(R.id.editTextEmail)).perform(scrollTo(), clearText(), typeText(authCreds.getEmail()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCredentials.getPassword()),
+    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCreds.getPassword()),
         closeSoftKeyboard());
 
     onView(withId(viewId)).perform(scrollTo(), clearText());
@@ -286,35 +286,35 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
   }
 
   private void fillAllFields() {
-    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCredentials.getEmail()),
+    onView(withId(R.id.editTextEmail)).perform(clearText(), typeText(authCreds.getEmail()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCredentials.getUsername()),
+    onView(withId(R.id.editTextUserName)).perform(clearText(), typeText(authCreds.getUsername()),
         closeSoftKeyboard());
-    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCredentials.getPassword()),
+    onView(withId(R.id.editTextPassword)).perform(clearText(), typeText(authCreds.getPassword()),
         closeSoftKeyboard());
 
-    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCredentials.getImapServer()),
+    onView(withId(R.id.editTextImapServer)).perform(clearText(), typeText(authCreds.getImapServer()),
         closeSoftKeyboard());
     onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getImapSecurityTypeOption()))).perform(click());
+        matchOpt(authCreds.getImapOpt()))).perform(click());
     onView(withId(R.id.editTextImapPort)).perform(clearText(),
-        typeText(String.valueOf(authCredentials.getImapPort())), closeSoftKeyboard());
+        typeText(String.valueOf(authCreds.getImapPort())), closeSoftKeyboard());
 
-    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCredentials.getSmtpServer()),
+    onView(withId(R.id.editTextSmtpServer)).perform(clearText(), typeText(authCreds.getSmtpServer()),
         closeSoftKeyboard());
     onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOption(authCredentials.getSmtpSecurityTypeOption()))).perform(click());
+        matchOpt(authCreds.getSmtpOpt()))).perform(click());
     onView(withId(R.id.editTextSmtpPort)).perform(clearText(),
-        typeText(String.valueOf(authCredentials.getSmtpPort())), closeSoftKeyboard());
+        typeText(String.valueOf(authCreds.getSmtpPort())), closeSoftKeyboard());
 
-    if (authCredentials.isUseCustomSignInForSmtp()) {
+    if (authCreds.hasCustomSignInForSmtp()) {
       onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(click());
       onView(withId(R.id.editTextSmtpUsername)).perform(clearText(),
-          typeText(authCredentials.getSmtpSigInUsername()), closeSoftKeyboard());
+          typeText(authCreds.getSmtpSigInUsername()), closeSoftKeyboard());
       onView(withId(R.id.editTextSmtpPassword)).perform(clearText(),
-          typeText(authCredentials.getSmtpSignInPassword()), closeSoftKeyboard());
+          typeText(authCreds.getSmtpSignInPassword()), closeSoftKeyboard());
     }
   }
 }
