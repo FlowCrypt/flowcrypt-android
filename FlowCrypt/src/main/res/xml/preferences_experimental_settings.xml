@@ -13,4 +13,13 @@
             android:targetClass="com.flowcrypt.email"
             android:targetPackage="@string/application_id" />
     </androidx.preference.Preference>
+
+    <androidx.preference.Preference
+        android:layout="@layout/preference_item"
+        android:title="Node backend test"
+        app:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.yourorg.sample.ui.activity.SplashActivity"
+            android:targetPackage="@string/application_id" />
+    </androidx.preference.Preference>
 </androidx.preference.PreferenceScreen>

@@ -212,6 +212,15 @@
             android:name=".ui.activity.CorruptedStorageActivity"
             android:launchMode="singleTop" />
 
+        <activity
+            android:name="com.yourorg.sample.ui.activity.MainActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.yourorg.sample.ui.activity.SplashActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Launcher"></activity>
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
