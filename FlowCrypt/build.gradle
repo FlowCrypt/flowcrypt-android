@@ -144,7 +144,7 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enable', 'true'
             versionNameSuffix "_dev"
             dimension "standard"
-            minSdkVersion 21
+            minSdkVersion MIN_SDK_VERSION as int
             resConfigs "en", "xhdpi"
         }
 
