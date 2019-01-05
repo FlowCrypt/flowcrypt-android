@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
  * Time: 14:14
  * E-mail: DenBond7@gmail.com
  */
-
+@SuppressWarnings("unchecked")
 public class SingleCharacterSpanChipTokenizer extends SpanChipTokenizer {
   public static final char CHIP_SEPARATOR_WHITESPACE = ' ';
   private final char symbol;

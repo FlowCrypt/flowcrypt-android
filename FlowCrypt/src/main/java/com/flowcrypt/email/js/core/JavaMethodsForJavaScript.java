@@ -95,6 +95,7 @@ public class JavaMethodsForJavaScript {
     return mod_pow(new BigInteger(b), new BigInteger(e), new BigInteger(m)).toString();
   }
 
+  @SuppressWarnings("deprecation")
   public String html_to_text(String html) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString();

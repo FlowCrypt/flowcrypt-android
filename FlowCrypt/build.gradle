@@ -99,10 +99,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
             shrinkResources true
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
@@ -114,6 +113,7 @@ android {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
+            signingConfig signingConfigs.debug
         }
     }
 
@@ -137,7 +137,7 @@ android {
     productFlavors {
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
-        development {
+        dev {
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
             resValue 'string', 'gradle_is_acra_enable', 'false'
@@ -146,10 +146,12 @@ android {
             dimension "standard"
             minSdkVersion MIN_SDK_VERSION as int
             resConfigs "en", "xhdpi"
+            signingConfig signingConfigs.debug
         }
 
         //This is a production flavor
-        production {
+        prod {
+            signingConfig signingConfigs.release
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'true'
@@ -165,6 +167,7 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enable', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
+            signingConfig signingConfigs.debug
         }
     }
 

@@ -1,6 +1,5 @@
 package com.yourorg.sample.node.results;
 
-import org.apache.commons.io.Charsets;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -9,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
@@ -79,7 +79,7 @@ public class RawNodeResult {
 
   private String markAndInterpretUtfBytesFromInputStream(ByteArrayOutputStream bytes, InputStream inputStream) {
     inputStream.mark(0); // do not re-read the same bytes next time
-    return new String(bytes.toByteArray(), Charsets.UTF_8);
+    return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
   }
 
   protected String readOneUtfLineFromInputStream() {

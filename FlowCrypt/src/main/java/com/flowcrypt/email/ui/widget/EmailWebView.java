@@ -97,6 +97,7 @@ public class EmailWebView extends WebView {
       this.context = context;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       if (url.startsWith(SCHEME_MAILTO)) {

@@ -147,7 +147,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     context.startService(startEmailServiceIntent);
   }
 
-
+  @SuppressWarnings("deprecation")
   @Override
   public void onCreate() {
     super.onCreate();
@@ -581,6 +581,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
   }
 
+  @SuppressWarnings("deprecation")
   protected void handleConnectivityAction(Context context, Intent intent) {
     if (ConnectivityManager.CONNECTIVITY_ACTION.equalsIgnoreCase(intent.getAction())) {
       ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context
