@@ -87,12 +87,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 39);
+/******/ 	return __webpack_require__(__webpack_require__.s = 40);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 39:
+/***/ 40:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -195,19 +195,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 37);
+/******/ 	return __webpack_require__(__webpack_require__.s = 38);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 26:
+/***/ 27:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 37:
+/***/ 38:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -265,7 +265,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(26).Buffer;
+    Buffer = __webpack_require__(27).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3661,11 +3661,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(38)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(39)(module)))
 
 /***/ }),
 
-/***/ 38:
+/***/ 39:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3783,40 +3783,40 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
-/******/ (Array(18).concat([
-/* 18 */
+/******/ (Array(19).concat([
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var asn1 = exports;
-asn1.bignum = __webpack_require__(19);
-asn1.define = __webpack_require__(20).define;
-asn1.base = __webpack_require__(23);
-asn1.constants = __webpack_require__(29);
-asn1.decoders = __webpack_require__(31);
-asn1.encoders = __webpack_require__(34);
+asn1.bignum = __webpack_require__(20);
+asn1.define = __webpack_require__(21).define;
+asn1.base = __webpack_require__(24);
+asn1.constants = __webpack_require__(30);
+asn1.decoders = __webpack_require__(32);
+asn1.encoders = __webpack_require__(35);
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_bn;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(18);
+var asn1 = __webpack_require__(19);
 
-var inherits = __webpack_require__(21);
+var inherits = __webpack_require__(22);
 
 var api = exports;
 
@@ -3837,7 +3837,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(22).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(23).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3878,29 +3878,16 @@ reporter) {
 };
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var base = exports;
-base.Reporter = __webpack_require__(24).Reporter;
-base.DecoderBuffer = __webpack_require__(25).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(25).EncoderBuffer;
-base.Node = __webpack_require__(27);
 
 /***/ }),
 /* 24 */
@@ -3909,7 +3896,20 @@ base.Node = __webpack_require__(27);
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var base = exports;
+base.Reporter = __webpack_require__(25).Reporter;
+base.DecoderBuffer = __webpack_require__(26).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(26).EncoderBuffer;
+base.Node = __webpack_require__(28);
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(22);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4025,17 +4025,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var inherits = __webpack_require__(22);
 
-var Reporter = __webpack_require__(23).Reporter;
+var Reporter = __webpack_require__(24).Reporter;
 
-var Buffer = __webpack_require__(26).Buffer;
+var Buffer = __webpack_require__(27).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4137,25 +4137,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(23).Reporter;
+var Reporter = __webpack_require__(24).Reporter;
 
-var EncoderBuffer = __webpack_require__(23).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(24).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(23).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(24).DecoderBuffer;
 
-var assert = __webpack_require__(28); // Supported tags
+var assert = __webpack_require__(29); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4626,13 +4626,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4651,16 +4651,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(30);
+constants.der = __webpack_require__(31);
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(29);
+var constants = __webpack_require__(30);
 
 exports.tagClass = {
   0: 'universal',
@@ -4703,26 +4703,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var decoders = exports;
-decoders.der = __webpack_require__(32);
-decoders.pem = __webpack_require__(33);
-
-/***/ }),
 /* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var decoders = exports;
+decoders.der = __webpack_require__(33);
+decoders.pem = __webpack_require__(34);
 
-var asn1 = __webpack_require__(18);
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(22);
+
+var asn1 = __webpack_require__(19);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -4994,17 +4994,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var inherits = __webpack_require__(22);
 
-var Buffer = __webpack_require__(26).Buffer;
+var Buffer = __webpack_require__(27).Buffer;
 
-var DERDecoder = __webpack_require__(32);
+var DERDecoder = __webpack_require__(33);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5046,28 +5046,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var encoders = exports;
-encoders.der = __webpack_require__(35);
-encoders.pem = __webpack_require__(36);
-
-/***/ }),
 /* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var encoders = exports;
+encoders.der = __webpack_require__(36);
+encoders.pem = __webpack_require__(37);
 
-var Buffer = __webpack_require__(26).Buffer;
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var asn1 = __webpack_require__(18);
+"use strict";
+
+
+var inherits = __webpack_require__(22);
+
+var Buffer = __webpack_require__(27).Buffer;
+
+var asn1 = __webpack_require__(19);
 
 var base = asn1.base; // Import DER constants
 
@@ -5306,15 +5306,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(21);
+var inherits = __webpack_require__(22);
 
-var DEREncoder = __webpack_require__(35);
+var DEREncoder = __webpack_require__(36);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -46666,7 +46666,7 @@ const fmt_1 = __webpack_require__(3);
 
 const endpoints_1 = __webpack_require__(4);
 
-const native_1 = __webpack_require__(16);
+const native_1 = __webpack_require__(17);
 
 const util_1 = __webpack_require__(8);
 
@@ -46891,9 +46891,11 @@ Object.defineProperty(exports, "__esModule", {
 
 const pgp_1 = __webpack_require__(5);
 
-const validate_1 = __webpack_require__(15);
+const validate_1 = __webpack_require__(16);
 
 const fmt_1 = __webpack_require__(3);
+
+const buf_1 = __webpack_require__(12);
 
 class Debug {}
 
@@ -46934,14 +46936,14 @@ class Endpoints {
       const decrypted = await pgp_1.PgpMsg.decrypt({
         keys,
         passphrases
-      }, Buffer.concat(data), msgPwd, false);
+      }, Buffer.concat(data), msgPwd);
 
       if (!decrypted.success) {
         decrypted.message = undefined;
         return fmt_1.fmtRes(decrypted);
       }
 
-      const blocks = await pgp_1.PgpMsg.fmtDecrypted(decrypted.content.text);
+      const blocks = await pgp_1.PgpMsg.fmtDecrypted(decrypted.content.uint8);
       const blockMetas = blocks.map(b => ({
         type: b.type,
         length: b.content.length
@@ -46963,7 +46965,7 @@ class Endpoints {
       const decryptedMeta = await pgp_1.PgpMsg.decrypt({
         keys,
         passphrases
-      }, Buffer.concat(data), msgPwd, true);
+      }, Buffer.concat(data), msgPwd);
 
       if (!decryptedMeta.success) {
         decryptedMeta.message = undefined;
@@ -46971,7 +46973,7 @@ class Endpoints {
       }
 
       const decryptedData = Buffer.from(decryptedMeta.content.uint8);
-      decryptedMeta.content.uint8 = undefined; // Debug.printChunk("decryptFile.decryptedData", decryptedData);
+      decryptedMeta.content.uint8 = new buf_1.Buf(0); // Debug.printChunk("decryptFile.decryptedData", decryptedData);
 
       return fmt_1.fmtRes({
         success: true,
@@ -47002,13 +47004,15 @@ const common_js_1 = __webpack_require__(7);
 
 const mime_js_1 = __webpack_require__(10);
 
-const catch_js_1 = __webpack_require__(12);
+const catch_js_1 = __webpack_require__(13);
 
-const mnemonic_js_1 = __webpack_require__(14);
+const mnemonic_js_1 = __webpack_require__(15);
 
-const require_js_1 = __webpack_require__(13);
+const require_js_1 = __webpack_require__(14);
 
 const util_js_1 = __webpack_require__(8);
+
+const buf_js_1 = __webpack_require__(12);
 
 const openpgp = require_js_1.requireOpenpgp();
 
@@ -47217,10 +47221,18 @@ Pgp.armor = {
   }
 };
 Pgp.hash = {
-  sha1: string => common_js_1.Str.toHex(common_js_1.Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, string))),
-  doubleSha1Upper: string => Pgp.hash.sha1(Pgp.hash.sha1(string)).toUpperCase(),
-  sha256: string => common_js_1.Str.toHex(common_js_1.Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, string))),
-  challengeAnswer: answer => Pgp.internal.cryptoHashSha256Loop(answer)
+  sha1UtfStr: async string => {
+    return openpgp.util.Uint8Array_to_hex((await openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, buf_js_1.Buf.fromUtfStr(string))));
+  },
+  sha256UtfStr: async string => {
+    return openpgp.util.Uint8Array_to_hex((await openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, buf_js_1.Buf.fromUtfStr(string))));
+  },
+  doubleSha1Upper: async string => {
+    return (await Pgp.hash.sha1UtfStr((await Pgp.hash.sha1UtfStr(string)))).toUpperCase();
+  },
+  challengeAnswer: async answer => {
+    return await Pgp.internal.cryptoHashSha256Loop(answer);
+  }
 };
 Pgp.key = {
   create: async (userIds, numBits, passphrase) => {
@@ -47319,7 +47331,7 @@ Pgp.key = {
     if (!keyOrFingerprintOrBytes || typeof keyOrFingerprintOrBytes === 'undefined') {
       return undefined;
     } else if (typeof keyOrFingerprintOrBytes === 'string' && keyOrFingerprintOrBytes.length === 8) {
-      return common_js_1.Str.toHex(keyOrFingerprintOrBytes).toUpperCase();
+      return openpgp.util.str_to_hex(keyOrFingerprintOrBytes).toUpperCase();
     } else if (typeof keyOrFingerprintOrBytes === 'string' && keyOrFingerprintOrBytes.length === 40) {
       return keyOrFingerprintOrBytes.substr(-16);
     } else if (typeof keyOrFingerprintOrBytes === 'string' && keyOrFingerprintOrBytes.length === 49) {
@@ -47447,7 +47459,7 @@ Pgp.password = {
   },
   weakWords: () => ['crypt', 'up', 'cryptup', 'flow', 'flowcrypt', 'encryption', 'pgp', 'email', 'set', 'backup', 'passphrase', 'best', 'pass', 'phrases', 'are', 'long', 'and', 'have', 'several', 'words', 'in', 'them', 'Best pass phrases are long', 'have several words', 'in them', 'bestpassphrasesarelong', 'haveseveralwords', 'inthem', 'Loss of this pass phrase', 'cannot be recovered', 'Note it down', 'on a paper', 'lossofthispassphrase', 'cannotberecovered', 'noteitdown', 'onapaper', 'setpassword', 'set password', 'set pass word', 'setpassphrase', 'set pass phrase', 'set passphrase'],
   random: () => {
-    return util_js_1.base64encode(common_js_1.Str.fromUint8(util_js_1.secureRandomBytes(128))).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
+    return util_js_1.base64encode(openpgp.util.Uint8Array_to_str(util_js_1.secureRandomBytes(128))).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
   }
 };
 Pgp.internal = {
@@ -47550,42 +47562,58 @@ Pgp.internal = {
 
     return result;
   },
-  cryptoHashSha256Loop: (string, times = 100000) => {
+  cryptoHashSha256Loop: async (string, times = 100000) => {
     for (let i = 0; i < times; i++) {
-      string = Pgp.hash.sha256(string);
+      string = await Pgp.hash.sha256UtfStr(string);
     }
 
     return string;
   },
-  cryptoMsgPrepareForDecrypt: async data => {
-    if (!data.length) {
+  cryptoMsgPrepareForDecrypt: async encrypted => {
+    if (!encrypted.length) {
       throw new Error('Encrypted message could not be parsed because no data was provided');
     }
 
-    const first100bytes = common_js_1.Str.fromUint8(data.slice(0, 100));
-    const isArmoredEncrypted = common_js_1.Value.is(Pgp.armor.headers('message').begin).in(first100bytes);
-    const isArmoredSignedOnly = common_js_1.Value.is(Pgp.armor.headers('signedMsg').begin).in(first100bytes);
+    const utfChunk = new buf_js_1.Buf(encrypted.slice(0, 100)).toUtfStr('ignore'); // ignore errors - this may not be utf string, just testing
+
+    const isArmoredEncrypted = common_js_1.Value.is(Pgp.armor.headers('message').begin).in(utfChunk);
+    const isArmoredSignedOnly = common_js_1.Value.is(Pgp.armor.headers('signedMsg').begin).in(utfChunk);
     const isArmored = isArmoredEncrypted || isArmoredSignedOnly;
 
     if (isArmoredEncrypted) {
       return {
         isArmored,
         isCleartext: false,
-        message: await openpgp.message.readArmored(common_js_1.Str.fromUint8(data))
+        message: await openpgp.message.readArmored(new buf_js_1.Buf(encrypted).toUtfStr())
       };
     } else if (isArmoredSignedOnly) {
       return {
         isArmored,
         isCleartext: true,
-        message: await openpgp.cleartext.readArmored(common_js_1.Str.fromUint8(data))
+        message: await openpgp.cleartext.readArmored(new buf_js_1.Buf(encrypted).toUtfStr())
       };
-    } else {
+    } else if (encrypted instanceof Uint8Array) {
       return {
         isArmored,
         isCleartext: false,
-        message: await openpgp.message.read(common_js_1.Str.toUint8(data))
+        message: await openpgp.message.read(encrypted)
       };
     }
+
+    throw new Error('Message does not have armor headers');
+  },
+  longids: async keyIds => {
+    const longids = [];
+
+    for (const id of keyIds) {
+      const longid = await Pgp.key.longid(id.bytes);
+
+      if (longid) {
+        longids.push(longid);
+      }
+    }
+
+    return longids;
   },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
     const keys = {
@@ -47598,16 +47626,10 @@ Pgp.internal = {
       prvForDecryptDecrypted: [],
       prvForDecryptWithoutPassphrases: []
     };
-    const encryptedForKeyId = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
-    keys.encryptedFor = (await Promise.all(encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
-    keys.signedBy = (await Promise.all((msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
+    keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
+    keys.signedBy = await Pgp.internal.longids(msg.getSigningKeyIds ? msg.getSigningKeyIds() : []);
     keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
-
-    if (keys.prvMatching.length) {
-      keys.prvForDecrypt = keys.prvMatching;
-    } else {
-      keys.prvForDecrypt = kiWithPp.keys;
-    }
+    keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
 
     for (const prvForDecrypt of keys.prvForDecrypt) {
       const {
@@ -47732,14 +47754,7 @@ PgpMsg.type = async data => {
     return undefined;
   }
 
-  let d = data.slice(0, 50); // only interested in first 50 bytes
-  // noinspection SuspiciousInstanceOfGuard
-
-  if (d instanceof Uint8Array) {
-    d = common_js_1.Str.fromUint8(d);
-  }
-
-  const firstByte = d[0].charCodeAt(0); // attempt to understand this as a binary PGP packet: https://tools.ietf.org/html/rfc4880#section-4.2
+  const firstByte = data[0]; // attempt to understand this as a binary PGP packet: https://tools.ietf.org/html/rfc4880#section-4.2
 
   if ((firstByte & 0b10000000) === 0b10000000) {
     // 1XXX XXXX - potential pgp packet tag
@@ -47768,7 +47783,7 @@ PgpMsg.type = async data => {
 
   const {
     blocks
-  } = Pgp.armor.detectBlocks(d.trim());
+  } = Pgp.armor.detectBlocks(new buf_js_1.Buf(data.slice(0, 50)).toUtfStr().trim()); // only interested in first 50 bytes
 
   if (blocks.length === 1 && blocks[0].complete === false && common_js_1.Value.is(blocks[0].type).in(['message', 'privateKey', 'publicKey', 'signedMsg'])) {
     return {
@@ -47781,19 +47796,20 @@ PgpMsg.type = async data => {
 };
 
 PgpMsg.sign = async (signingPrv, data) => {
+  const message = openpgp.cleartext.fromText(data);
   const signRes = await openpgp.sign({
-    data,
+    message,
     armor: true,
     privateKeys: [signingPrv]
   });
-  return signRes.data;
+  return await openpgp.stream.readToEnd(signRes.data);
 };
 
 PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
   const sig = {
     contact: optionalContact,
     match: null
-  };
+  }; // tslint:disable-line:no-null-keyword
 
   try {
     const verifyResults = await message.verify(keysForVerification);
@@ -47811,7 +47827,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
       }
     }
   } catch (verifyErr) {
-    sig.match = null;
+    sig.match = null; // tslint:disable-line:no-null-keyword
 
     if (verifyErr instanceof Error && verifyErr.message === 'Can only verify message with one literal data packet.') {
       sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
@@ -47825,7 +47841,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
 };
 
 PgpMsg.verifyDetached = async (plaintext, sigText) => {
-  const message = typeof plaintext === 'string' ? openpgp.message.fromText(plaintext) : openpgp.message.fromBinary(plaintext);
+  const message = openpgp.message.fromText(buf_js_1.Buf.fromUint8(plaintext).toUtfStr());
   message.appendSignature(sigText);
   const keys = await Pgp.internal.cryptoMsgGetSortedKeys({
     keys: [],
@@ -47834,7 +47850,7 @@ PgpMsg.verifyDetached = async (plaintext, sigText) => {
   return await PgpMsg.verify(message, keys.forVerification, keys.verificationContacts[0]);
 };
 
-PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
+PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd) => {
   let prepared;
   const longids = {
     message: [],
@@ -47869,7 +47885,7 @@ PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
     return {
       success: true,
       content: {
-        text
+        uint8: buf_js_1.Buf.fromUtfStr(text)
       },
       isEncrypted,
       signature
@@ -47908,27 +47924,15 @@ PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
     const privateKeys = keys.prvForDecryptDecrypted.map(ki => ki.decrypted);
     const decrypted = await prepared.message.decrypt(privateKeys, passwords, undefined, false); // const signature = keys.signed_by.length ? Pgp.message.verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
 
-    if (getUint8) {
-      const uint8 = await openpgp.stream.readToEnd(decrypted.getLiteralData());
-      return {
-        success: true,
-        content: {
-          uint8,
-          filename: decrypted.getFilename() || undefined
-        },
-        isEncrypted
-      };
-    } else {
-      const text = await openpgp.stream.readToEnd(decrypted.getText());
-      return {
-        success: true,
-        content: {
-          text,
-          filename: decrypted.getFilename() || undefined
-        },
-        isEncrypted
-      };
-    }
+    const uint8 = new buf_js_1.Buf((await openpgp.stream.readToEnd(decrypted.getLiteralData())));
+    return {
+      success: true,
+      content: {
+        uint8,
+        filename: decrypted.getFilename() || undefined
+      },
+      isEncrypted
+    };
   } catch (e) {
     return {
       success: false,
@@ -47941,7 +47945,7 @@ PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
 };
 
 PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) => {
-  const message = openpgp.message.fromBinary(common_js_1.Str.toUint8(data), filename, date);
+  const message = openpgp.message.fromBinary(data instanceof Uint8Array ? data : buf_js_1.Buf.fromUtfStr(data), filename, date);
   const options = {
     armor,
     message
@@ -47960,7 +47964,7 @@ PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) =
   }
 
   if (pwd && pwd.answer) {
-    options.passwords = [Pgp.hash.challengeAnswer(pwd.answer)];
+    options.passwords = [await Pgp.hash.challengeAnswer(pwd.answer)];
     usedChallenge = true;
   }
 
@@ -47976,14 +47980,7 @@ PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) =
 };
 
 PgpMsg.diagnosePubkeys = async (privateKis, m) => {
-  let message;
-
-  if (typeof m === 'string' || m instanceof Uint8Array) {
-    message = await openpgp.message.readArmored(common_js_1.Str.fromUint8(m));
-  } else {
-    message = m;
-  }
-
+  const message = await openpgp.message.readArmored(buf_js_1.Buf.fromUint8(m).toUtfStr());
   const msgKeyIds = message.getEncryptionKeyIds ? message.getEncryptionKeyIds() : [];
   const localKeyIds = [];
 
@@ -48012,11 +48009,12 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
   const blocks = [];
 
   if (!mime_js_1.Mime.resemblesMsg(decryptedContent)) {
-    decryptedContent = PgpMsg.extractFcAtts(decryptedContent, blocks);
-    decryptedContent = PgpMsg.stripFcTeplyToken(decryptedContent);
+    let utf = buf_js_1.Buf.fromUint8(decryptedContent).toUtfStr();
+    utf = PgpMsg.extractFcAtts(utf, blocks);
+    utf = PgpMsg.stripFcTeplyToken(utf);
     const armoredPubKeys = [];
-    decryptedContent = PgpMsg.stripPublicKeys(decryptedContent, armoredPubKeys);
-    blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
+    utf = PgpMsg.stripPublicKeys(utf, armoredPubKeys);
+    blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(utf)));
     await PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
   } else {
     const decoded = await mime_js_1.Mime.decode(decryptedContent);
@@ -48026,16 +48024,17 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
     } else if (typeof decoded.text !== 'undefined') {
       blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decoded.text)));
     } else {
-      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
+      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(buf_js_1.Buf.fromUint8(decryptedContent).toUtfStr())));
     }
 
     for (const att of decoded.atts) {
-      if (att.treatAs() !== 'publicKey') {
-        blocks.push(Pgp.internal.msgBlockAttObj('attachment', att.asText(), {
-          name: att.name
-        }));
+      if (att.treatAs() === 'publicKey') {
+        await PgpMsg.pushArmoredPubkeysToBlocks([att.getData().toUtfStr()], blocks);
       } else {
-        await PgpMsg.pushArmoredPubkeysToBlocks([att.asText()], blocks);
+        blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', {
+          name: att.name,
+          data: att.getData()
+        }));
       }
     }
   }
@@ -48184,10 +48183,15 @@ Str.numberFormat = number => {
   }
 
   return x1 + x2;
-}; // tslint:disable-next-line:max-line-length
+};
 
+Str.isEmailValid = email => {
+  if (email.indexOf(' ') !== -1) {
+    return false;
+  }
 
-Str.isEmailValid = email => /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
+  return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
+};
 
 Str.monthName = monthIndex => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][monthIndex];
 
@@ -48216,168 +48220,6 @@ Str.htmlAttrDecode = encoded => {
   } catch (e) {
     return undefined;
   }
-};
-/**
- * used for 3rd party API calls - do not change w/o testing Gmail api attachments
- */
-
-
-Str.base64urlEncode = str => typeof str === 'undefined' ? str : util_js_1.base64encode(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-/**
- * // used for 3rd party API calls - do not change w/o testing Gmail api attachments
- */
-
-
-Str.base64urlDecode = str => typeof str === 'undefined' ? str : util_js_1.base64decode(str.replace(/-/g, '+').replace(/_/g, '/'));
-
-Str.fromUint8 = u8a => {
-  if (typeof u8a === 'string') {
-    return u8a;
-  }
-
-  const chunkSize = 0x8000;
-  const c = [];
-
-  for (let i = 0; i < u8a.length; i += chunkSize) {
-    c.push(String.fromCharCode.apply(undefined, u8a.subarray(i, i + chunkSize)));
-  }
-
-  return c.join('');
-};
-/**
- * this looks broken for any utf8 charcodes - result will have fewer bytes than expected
- */
-
-
-Str.toUint8 = raw => {
-  if (raw instanceof Uint8Array) {
-    return raw;
-  }
-
-  const rawLength = raw.length;
-  const uint8 = new Uint8Array(new ArrayBuffer(rawLength));
-
-  for (let i = 0; i < rawLength; i++) {
-    uint8[i] = raw.charCodeAt(i);
-  }
-
-  return uint8;
-};
-
-Str.fromEqualSignNotationAsUtf = str => {
-  return str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
-    return Str.uint8AsUtf(equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16)));
-  });
-};
-
-Str.uint8AsUtf = a => {
-  const length = a.length;
-  let bytesLeftInChar = 0;
-  let utf8string = '';
-  let binaryChar = '';
-
-  for (let i = 0; i < length; i++) {
-    if (a[i] < 128) {
-      if (bytesLeftInChar) {
-        // utf-8 continuation byte missing, assuming the last character was an 8-bit ASCII character
-        utf8string += String.fromCharCode(a[i - 1]);
-      }
-
-      bytesLeftInChar = 0;
-      binaryChar = '';
-      utf8string += String.fromCharCode(a[i]);
-    } else {
-      if (!bytesLeftInChar) {
-        // beginning of new multi-byte character
-        if (a[i] >= 128 && a[i] < 192) {
-          // 10xx xxxx
-          utf8string += String.fromCharCode(a[i]); // extended 8-bit ASCII compatibility, european ASCII characters
-        } else if (a[i] >= 192 && a[i] < 224) {
-          // 110x xxxx
-          bytesLeftInChar = 1;
-          binaryChar = a[i].toString(2).substr(3);
-        } else if (a[i] >= 224 && a[i] < 240) {
-          // 1110 xxxx
-          bytesLeftInChar = 2;
-          binaryChar = a[i].toString(2).substr(4);
-        } else if (a[i] >= 240 && a[i] < 248) {
-          // 1111 0xxx
-          bytesLeftInChar = 3;
-          binaryChar = a[i].toString(2).substr(5);
-        } else if (a[i] >= 248 && a[i] < 252) {
-          // 1111 10xx
-          bytesLeftInChar = 4;
-          binaryChar = a[i].toString(2).substr(6);
-        } else if (a[i] >= 252 && a[i] < 254) {
-          // 1111 110x
-          bytesLeftInChar = 5;
-          binaryChar = a[i].toString(2).substr(7);
-        } else {
-          console.log('Str.uint8_as_utf: invalid utf-8 character beginning byte: ' + a[i]);
-        }
-      } else {
-        // continuation of a multi-byte character
-        binaryChar += a[i].toString(2).substr(2);
-        bytesLeftInChar--;
-      }
-
-      if (binaryChar && !bytesLeftInChar) {
-        utf8string += String.fromCharCode(parseInt(binaryChar, 2));
-        binaryChar = '';
-      }
-    }
-  }
-
-  return utf8string;
-};
-
-Str.toHex = str => {
-  let r = '';
-
-  for (let i = 0; i < str.length; i++) {
-    const n = str.charCodeAt(i).toString(16);
-    r += n.length < 2 ? `0${n}` : n;
-  }
-
-  return r;
-};
-
-Str.fromHex = hex => {
-  let str = '';
-
-  for (let i = 0; i < hex.length; i += 2) {
-    const v = parseInt(hex.substr(i, 2), 16);
-
-    if (v) {
-      str += String.fromCharCode(v);
-    }
-  }
-
-  return str;
-};
-
-Str.intToHex = intAsStr => {
-  let dec = intAsStr.toString().split(''),
-      sum = [],
-      hex = [],
-      i,
-      s; // tslint:disable-line:prefer-const
-
-  while (dec.length) {
-    s = Number(dec.shift());
-
-    for (i = 0; s || i < sum.length; i++) {
-      s += (sum[i] || 0) * 10;
-      sum[i] = s % 16;
-      s = (s - sum[i]) / 16;
-    }
-  }
-
-  while (sum.length) {
-    hex.push(sum.pop().toString(16));
-  }
-
-  return hex.join('');
 };
 
 Str.capitalize = string => string.trim().split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
@@ -48521,9 +48363,11 @@ const pgp_js_1 = __webpack_require__(5);
 
 const att_js_1 = __webpack_require__(11);
 
-const catch_js_1 = __webpack_require__(12);
+const catch_js_1 = __webpack_require__(13);
 
-const require_js_1 = __webpack_require__(13);
+const require_js_1 = __webpack_require__(14);
+
+const buf_js_1 = __webpack_require__(12);
 
 const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
 
@@ -48546,15 +48390,15 @@ Mime.process = async mimeMsg => {
     const treatAs = file.treatAs();
 
     if (treatAs === 'message') {
-      const armored = pgp_js_1.Pgp.armor.clip(file.asText());
+      const armored = pgp_js_1.Pgp.armor.clip(file.getData().toUtfStr());
 
       if (armored) {
         blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('message', armored));
       }
     } else if (treatAs === 'signature') {
-      decoded.signature = decoded.signature || file.asText();
+      decoded.signature = decoded.signature || file.getData().toUtfStr();
     } else if (treatAs === 'publicKey') {
-      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.asText()).blocks);
+      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
     }
   }
 
@@ -48607,24 +48451,18 @@ Mime.replyHeaders = parsedMimeMsg => {
 };
 
 Mime.resemblesMsg = msg => {
-  let m = msg.slice(0, 1000); // noinspection SuspiciousInstanceOfGuard
-
-  if (m instanceof Uint8Array) {
-    m = common_js_1.Str.fromUint8(m);
-  }
-
-  m = m.toLowerCase();
-  const contentType = m.match(/content-type: +[0-9a-z\-\/]+/);
+  const utf8 = new buf_js_1.Buf(msg.slice(0, 1000)).toUtfStr().toLowerCase();
+  const contentType = utf8.match(/content-type: +[0-9a-z\-\/]+/);
 
   if (!contentType) {
     return false;
   }
 
-  if (m.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || m.match(/content-disposition: +[0-9a-z\-\/]+/) || m.match(/; boundary=/) || m.match(/; charset=/)) {
+  if (utf8.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || utf8.match(/content-disposition: +[0-9a-z\-\/]+/) || utf8.match(/; boundary=/) || utf8.match(/; charset=/)) {
     return true;
   }
 
-  return Boolean(contentType.index === 0 && m.match(/boundary=/));
+  return Boolean(contentType.index === 0 && utf8.match(/boundary=/));
 };
 
 Mime.decode = mimeMsg => {
@@ -48668,9 +48506,9 @@ Mime.decode = mimeMsg => {
           } else if (Mime.getNodeType(node) === 'text/html' && !Mime.getNodeFilename(node)) {
             // html content may be broken up into smaller pieces by attachments in between
             // AppleMail does this with inline attachments
-            mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsText(node);
+            mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsUtfStr(node);
           } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
-            mimeContent.text = Mime.getNodeContentAsText(node);
+            mimeContent.text = Mime.getNodeContentAsUtfStr(node);
           } else {
             mimeContent.atts.push(new att_js_1.Att({
               name: Mime.getNodeFilename(node),
@@ -48736,13 +48574,13 @@ Mime.encode = async (body, headers, atts = []) => {
     };
     rootNode.appendChild(new MimeBuilder(type, {
       filename: att.name
-    }).setHeader(header).setContent(att.data())); // tslint:disable-line:no-unsafe-any
+    }).setHeader(header).setContent(att.getData())); // tslint:disable-line:no-unsafe-any
   }
 
   return rootNode.build(); // tslint:disable-line:no-unsafe-any
 };
 
-Mime.signed = mimeMsg => {
+Mime.signed = mimeMsgBytes => {
   /*
     Trying to grab the full signed content that may look like this in its entirety (it's a signed mime message. May also be signed plain text)
     Unfortunately, emailjs-mime-parser was not able to do this, or I wasn't able to use it properly
@@ -48758,6 +48596,7 @@ Mime.signed = mimeMsg => {
      content
      --XKKJ27hlkua53SDqH7d1IqvElFHJROQA1--
     */
+  let mimeMsg = mimeMsgBytes.toUtfStr();
   const signedHeaderIndex = mimeMsg.substr(0, 100000).toLowerCase().indexOf('content-type: multipart/signed');
 
   if (signedHeaderIndex !== -1) {
@@ -48851,13 +48690,20 @@ Mime.getNodeFilename = node => {
   return;
 };
 
-Mime.getNodeContentAsText = node => {
+Mime.fromEqualSignNotationAsUtf = str => {
+  return str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
+    const bytes = equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16));
+    return new buf_js_1.Buf(bytes).toUtfStr();
+  });
+};
+
+Mime.getNodeContentAsUtfStr = node => {
   if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'base64') {
-    return common_js_1.Str.uint8AsUtf(node.content);
+    return buf_js_1.Buf.fromUint8(node.content).toUtfStr();
   }
 
   if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'quoted-printable') {
-    return common_js_1.Str.fromEqualSignNotationAsUtf(node.rawContent);
+    return Mime.fromEqualSignNotationAsUtf(node.rawContent);
   }
 
   if (node.charset === 'iso-8859-2') {
@@ -48865,7 +48711,7 @@ Mime.getNodeContentAsText = node => {
     return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
   }
 
-  return node.rawContent;
+  return buf_js_1.Buf.fromRawBytesStr(node.rawContent).toUtfStr();
 }; // tslint:disable-next-line:variable-name
 
 
@@ -48896,6 +48742,8 @@ Object.defineProperty(exports, "__esModule", {
 
 const common_js_1 = __webpack_require__(7);
 
+const buf_js_1 = __webpack_require__(12);
+
 class Att {
   constructor({
     data,
@@ -48909,63 +48757,25 @@ class Att {
     treatAs,
     cid
   }) {
-    this.text = undefined;
-    this.bytes = undefined;
-    this.treatAsValue = undefined;
+    this.length = NaN;
 
-    this.setData = data => {
+    this.hasData = () => this.bytes instanceof Uint8Array;
+
+    this.setData = bytes => {
       if (this.hasData()) {
-        throw new Error('Att: data already set');
+        throw new Error('Att bytes already set');
       }
 
-      if (data instanceof Uint8Array) {
-        this.bytes = data;
-      } else if (typeof data === 'string') {
-        this.text = data;
-      }
-
-      this.length = data.length;
+      this.bytes = bytes;
     };
 
-    this.hasData = () => {
-      if (typeof this.bytes === 'undefined' && typeof this.text === 'undefined') {
-        return false;
-      }
-
-      return true;
-    };
-
-    this.data = () => {
-      if (typeof this.bytes !== 'undefined') {
+    this.getData = () => {
+      if (this.bytes instanceof buf_js_1.Buf) {
         return this.bytes;
       }
 
-      if (typeof this.text !== 'undefined') {
-        return this.text;
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.asText = () => {
-      if (typeof this.text === 'undefined' && typeof this.bytes !== 'undefined') {
-        this.text = common_js_1.Str.fromUint8(this.bytes);
-      }
-
-      if (typeof this.text !== 'undefined') {
-        return this.text;
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.asBytes = () => {
-      if (typeof this.bytes === 'undefined' && typeof this.text !== 'undefined') {
-        this.bytes = common_js_1.Str.toUint8(this.text);
-      }
-
-      if (typeof this.bytes !== 'undefined') {
-        return this.bytes;
+      if (this.bytes instanceof Uint8Array) {
+        return new buf_js_1.Buf(this.bytes);
       }
 
       throw new Error('Att has no data set');
@@ -49011,13 +48821,15 @@ class Att {
       throw new Error('Att: if id is set, msgId must be set too');
     }
 
-    if (typeof data !== null && typeof data !== 'undefined') {
-      this.setData(data);
+    if (data) {
+      this.bytes = data;
+      this.length = data.length;
+    } else {
+      this.length = Number(length);
     }
 
     this.name = name || '';
     this.type = type || 'application/octet-stream';
-    this.length = data ? data.length : length || NaN;
     this.url = url || undefined;
     this.inline = inline !== true;
     this.id = id || undefined;
@@ -49031,7 +48843,7 @@ class Att {
 Att.pgpNamePatterns = () => ['*.pgp', '*.gpg', '*.asc', 'noname', 'message', 'PGPMIME version identification', ''];
 
 Att.keyinfoAsPubkeyAtt = ki => new Att({
-  data: ki.public,
+  data: buf_js_1.Buf.fromUtfStr(ki.public),
   type: 'application/pgp-keys',
   name: `0x${ki.longid}.asc`
 });
@@ -49040,6 +48852,202 @@ exports.Att = Att;
 
 /***/ }),
 /* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const util_js_1 = __webpack_require__(8);
+
+class Buf extends Uint8Array {
+  constructor() {
+    super(...arguments);
+
+    this.toUtfStr = (mode = 'inform') => {
+      const length = this.length;
+      let bytesLeftInChar = 0;
+      let utf8string = '';
+      let binaryChar = '';
+
+      for (let i = 0; i < length; i++) {
+        if (this[i] < 128) {
+          if (bytesLeftInChar) {
+            // utf-8 continuation byte missing, assuming the last character was an 8-bit ASCII character
+            utf8string += String.fromCharCode(this[i - 1]);
+          }
+
+          bytesLeftInChar = 0;
+          binaryChar = '';
+          utf8string += String.fromCharCode(this[i]);
+        } else {
+          if (!bytesLeftInChar) {
+            // beginning of new multi-byte character
+            if (this[i] >= 128 && this[i] < 192) {
+              // 10xx xxxx
+              utf8string += String.fromCharCode(this[i]); // extended 8-bit ASCII compatibility, european ASCII characters
+            } else if (this[i] >= 192 && this[i] < 224) {
+              // 110x xxxx
+              bytesLeftInChar = 1;
+              binaryChar = this[i].toString(2).substr(3);
+            } else if (this[i] >= 224 && this[i] < 240) {
+              // 1110 xxxx
+              bytesLeftInChar = 2;
+              binaryChar = this[i].toString(2).substr(4);
+            } else if (this[i] >= 240 && this[i] < 248) {
+              // 1111 0xxx
+              bytesLeftInChar = 3;
+              binaryChar = this[i].toString(2).substr(5);
+            } else if (this[i] >= 248 && this[i] < 252) {
+              // 1111 10xx
+              bytesLeftInChar = 4;
+              binaryChar = this[i].toString(2).substr(6);
+            } else if (this[i] >= 252 && this[i] < 254) {
+              // 1111 110x
+              bytesLeftInChar = 5;
+              binaryChar = this[i].toString(2).substr(7);
+            } else {
+              if (mode === 'strict' || mode === 'inform') {
+                const e = new Error('Buf.toUtfStr: invalid utf-8 character beginning byte: ' + this[i]);
+
+                if (mode === 'strict') {
+                  throw e;
+                }
+
+                console.log(e);
+              }
+            }
+          } else {
+            // continuation of a multi-byte character
+            binaryChar += this[i].toString(2).substr(2);
+            bytesLeftInChar--;
+          }
+
+          if (binaryChar && !bytesLeftInChar) {
+            utf8string += String.fromCharCode(parseInt(binaryChar, 2));
+            binaryChar = '';
+          }
+        }
+      }
+
+      return utf8string;
+    };
+
+    this.toRawBytesStr = () => {
+      const chunkSize = 0x8000;
+      const length = this.length;
+      const chars = [];
+
+      for (let i = 0; i < length; i += chunkSize) {
+        chars.push(String.fromCharCode.apply(undefined, this.subarray(i, i + chunkSize)));
+      }
+
+      return chars.join('');
+    };
+
+    this.toBase64Str = () => {
+      return util_js_1.base64encode(this.toRawBytesStr());
+    };
+
+    this.toBase64UrlStr = () => {
+      return this.toBase64Str().replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+
+    this.toString = this.toUtfStr; // mimic Node api
+  }
+
+}
+
+Buf.fromUint8 = u8a => {
+  return new Buf(u8a);
+};
+
+Buf.fromRawBytesStr = rawStr => {
+  const length = rawStr.length;
+  const buf = new Buf(length);
+
+  for (let i = 0; i < length; i++) {
+    buf[i] = rawStr.charCodeAt(i);
+  }
+
+  return buf;
+};
+
+Buf.fromUtfStr = utfStr => {
+  // adapted from https://github.com/feross/buffer/blob/master/index.js see https://github.com/feross/buffer/blob/master/LICENSE (MIT as of Jan 2018)
+  let codePoint;
+  const length = utfStr.length;
+  let leadSurrogate;
+  const bytes = [];
+
+  for (let i = 0; i < length; ++i) {
+    codePoint = utfStr.charCodeAt(i);
+
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // is surrogate component
+      if (!leadSurrogate) {
+        // last char was a lead
+        if (codePoint > 0xDBFF) {
+          // no lead yet
+          bytes.push(0xEF, 0xBF, 0xBD); // unexpected trail
+
+          continue;
+        } else if (i + 1 === length) {
+          bytes.push(0xEF, 0xBF, 0xBD);
+          continue;
+        }
+
+        leadSurrogate = codePoint; // valid lead
+
+        continue;
+      }
+
+      if (codePoint < 0xDC00) {
+        // 2 leads in a row
+        bytes.push(0xEF, 0xBF, 0xBD);
+        leadSurrogate = codePoint;
+        continue;
+      }
+
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000; // valid surrogate pair
+    } else if (leadSurrogate) {
+      bytes.push(0xEF, 0xBF, 0xBD);
+    }
+
+    leadSurrogate = undefined; // encode utf8
+
+    if (codePoint < 0x80) {
+      bytes.push(codePoint);
+    } else if (codePoint < 0x800) {
+      bytes.push(codePoint >> 0x6 | 0xC0, codePoint & 0x3F | 0x80);
+    } else if (codePoint < 0x10000) {
+      bytes.push(codePoint >> 0xC | 0xE0, codePoint >> 0x6 & 0x3F | 0x80, codePoint & 0x3F | 0x80);
+    } else if (codePoint < 0x110000) {
+      bytes.push(codePoint >> 0x12 | 0xF0, codePoint >> 0xC & 0x3F | 0x80, codePoint >> 0x6 & 0x3F | 0x80, codePoint & 0x3F | 0x80);
+    } else {
+      throw new Error('Invalid code point');
+    }
+  }
+
+  return new Buf(bytes);
+};
+
+Buf.fromBase64Str = b64str => {
+  return Buf.fromRawBytesStr(util_js_1.base64decode(b64str));
+};
+
+Buf.fromBase64UrlStr = b64UrlStr => {
+  return Buf.fromBase64Str(b64UrlStr.replace(/-/g, '+').replace(/_/g, '/'));
+};
+
+exports.Buf = Buf;
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49068,7 +49076,7 @@ Catch.version = () => {
 exports.Catch = Catch;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49102,7 +49110,7 @@ exports.requireIso88592 = () => {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49143,7 +49151,7 @@ exports.mnemonic = hex => {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49225,7 +49233,7 @@ const hasProp = (v, name, type) => {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49236,7 +49244,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const EventEmitter = __webpack_require__(17);
+const EventEmitter = __webpack_require__(18);
 
 let send = msg => {
   console.error(`-------------------- native bridge not present for message --------------------\n${msg}\n--------------------`);
@@ -49272,7 +49280,7 @@ try {
 exports.sendNativeMessageToJava = send;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
