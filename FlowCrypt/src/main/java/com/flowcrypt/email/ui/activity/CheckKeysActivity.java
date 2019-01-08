@@ -172,7 +172,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
       finish();
     }
 
-    initViews();
+    if (!keyDetailsList.isEmpty()) {
+      initViews();
+    }
   }
 
   @Override
