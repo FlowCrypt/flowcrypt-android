@@ -39,12 +39,22 @@ import androidx.core.app.NotificationCompat;
 
 public class AttachmentNotificationManager extends CustomNotificationManager {
   public static final String GROUP_NAME_ATTACHMENTS = BuildConfig.APPLICATION_ID + ".ATTACHMENTS";
+  public static final int NOTIFICATIONS_GROUP_ATTACHMENTS = -2;
   private static final int MAX_CONTENT_TITLE_LENGTH = 30;
   private static final int MAX_FILE_SIZE_IN_PERCENTAGE = 100;
-  private NotificationManager notificationManager;
 
   public AttachmentNotificationManager(Context context) {
-    this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    super(context);
+  }
+
+  @Override
+  public String getGroupName() {
+    return GROUP_NAME_ATTACHMENTS;
+  }
+
+  @Override
+  public int getGroupId() {
+    return NOTIFICATIONS_GROUP_ATTACHMENTS;
   }
 
   /**
@@ -66,7 +76,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
       builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
     }
 
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+    notificationManagerCompat.notify(attInfo.getId(), attInfo.getUid(), builder.build());
   }
 
   /**
@@ -94,7 +104,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
       builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
     }
 
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+    notificationManagerCompat.notify(attInfo.getId(), attInfo.getUid(), builder.build());
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       prepareAndShowNotificationsGroup(context, attInfo, true);
@@ -132,7 +142,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
       builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
     }
 
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+    notificationManagerCompat.notify(attInfo.getId(), attInfo.getUid(), builder.build());
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       prepareAndShowNotificationsGroup(context, attInfo, false);
@@ -168,7 +178,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
       builder.setWhen(attInfo.getOrderNumber()).setShowWhen(false);
     }
 
-    notificationManager.notify(attInfo.getId(), attInfo.getUid(), builder.build());
+    notificationManagerCompat.notify(attInfo.getId(), attInfo.getUid(), builder.build());
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       prepareAndShowNotificationsGroup(context, attInfo, false);
@@ -181,7 +191,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
    * @param attInfo The {@link AttachmentInfo} object.
    */
   public void loadingCanceledByUser(AttachmentInfo attInfo) {
-    notificationManager.cancel(attInfo.getId(), attInfo.getUid());
+    cancel(attInfo.getId(), attInfo.getUid());
   }
 
   /**
@@ -261,7 +271,9 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
     int groupResourceId = isProgressEnabled ? android.R.drawable.stat_sys_download
         : android.R.drawable.stat_sys_download_done;
 
-    for (StatusBarNotification stBarNotification : notificationManager.getActiveNotifications()) {
+    NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+    for (StatusBarNotification stBarNotification : manager.getActiveNotifications()) {
       if (!TextUtils.isEmpty(stBarNotification.getTag()) && !stBarNotification.getTag().equals(attInfo.getId())
           && stBarNotification.getId() != attInfo.getUid()) {
         Notification notification = stBarNotification.getNotification();
@@ -283,6 +295,6 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
         .setDefaults(Notification.DEFAULT_ALL)
         .setGroupSummary(true);
-    notificationManager.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build());
+    notificationManagerCompat.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build());
   }
 }

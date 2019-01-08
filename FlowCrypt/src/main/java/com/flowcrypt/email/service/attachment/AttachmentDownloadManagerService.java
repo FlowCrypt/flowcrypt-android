@@ -487,7 +487,6 @@ public class AttachmentDownloadManagerService extends Service {
       }
 
       File attFile = prepareAttFile();
-      AccountDao account = new AccountDaoSource().getAccountInformation(context, att.getEmail());
 
       try {
         checkFileSize();
@@ -510,13 +509,34 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
 
+        AccountDaoSource source = new AccountDaoSource();
+        AccountDao account = source.getAccountInformation(context, att.getEmail());
+
+        if (account == null) {
+          if (listener != null) {
+            listener.onCanceled(this.att);
+            return;
+          }
+        }
+
         Session session = OpenStoreHelper.getAttsSess(context, account);
         Store store = OpenStoreHelper.openStore(context, account, session);
 
         LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());
 
         if (localFolder == null) {
-          throw new IllegalArgumentException("LocalFolder " + att.getFolder() + " doesn't found in the local cache");
+          if (source.getAccountInformation(context, att.getEmail()) == null) {
+            if (listener != null) {
+              listener.onCanceled(this.att);
+
+              if (store != null) {
+                store.close();
+              }
+            }
+            return;
+          } else {
+            throw new IllegalArgumentException("Folder \"" + att.getFolder() + "\" not found in the local cache");
+          }
         }
 
         IMAPFolder remoteFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());

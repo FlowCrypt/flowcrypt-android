@@ -6,12 +6,17 @@
 package com.flowcrypt.email.ui.notifications;
 
 import android.app.Notification.InboxStyle;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
+import android.service.notification.StatusBarNotification;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 /**
@@ -22,9 +27,18 @@ import androidx.core.content.ContextCompat;
  * Time: 12:09
  * E-mail: DenBond7@gmail.com
  */
-public class CustomNotificationManager {
-  public static final int NOTIFICATIONS_GROUP_MESSAGES = -1;
-  public static final int NOTIFICATIONS_GROUP_ATTACHMENTS = -2;
+public abstract class CustomNotificationManager {
+  protected Context context;
+  protected NotificationManagerCompat notificationManagerCompat;
+
+  public CustomNotificationManager(Context context) {
+    this.context = context;
+    this.notificationManagerCompat = NotificationManagerCompat.from(context);
+  }
+
+  public abstract String getGroupName();
+
+  public abstract int getGroupId();
 
   /**
    * Prepare formatted line for {@link InboxStyle}
@@ -56,5 +70,41 @@ public class CustomNotificationManager {
       spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
     return spannable;
+  }
+
+  /**
+   * Cancel a previously shown notification.
+   *
+   * @param notificationId the ID of the notification
+   */
+  public void cancel(int notificationId) {
+    cancel(null, notificationId);
+  }
+
+  /**
+   * Cancel a notification with the given id.
+   *
+   * @param tag            the string identifier of the notification.
+   * @param notificationId The notification id.
+   */
+  public void cancel(@Nullable String tag, int notificationId) {
+    notificationManagerCompat.cancel(tag, notificationId);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      NotificationManager notificationManager =
+          (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+      if (notificationManager != null) {
+        int messageCount = 0;
+        for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
+          if (getGroupName().equals(statusBarNotification.getNotification().getGroup())) {
+            messageCount++;
+          }
+        }
+
+        if (messageCount == 1) {
+          notificationManager.cancel(getGroupId());
+        }
+      }
+    }
   }
 }

@@ -193,7 +193,7 @@ public class SyncJobService extends JobService implements SyncListener {
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           for (GeneralMessageDetails details : detailsDeleteCandidates) {
-            messagesNotificationManager.cancel(this, details.getUid());
+            messagesNotificationManager.cancel(details.getUid());
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {

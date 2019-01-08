@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 /**
@@ -53,10 +52,20 @@ import androidx.core.content.ContextCompat;
  */
 public class MessagesNotificationManager extends CustomNotificationManager {
   public static final String GROUP_NAME_FLOWCRYPT_MESSAGES = BuildConfig.APPLICATION_ID + ".MESSAGES";
-  private NotificationManagerCompat notificationManagerCompat;
+  public static final int NOTIFICATIONS_GROUP_MESSAGES = -1;
 
   public MessagesNotificationManager(Context context) {
-    this.notificationManagerCompat = NotificationManagerCompat.from(context);
+    super(context);
+  }
+
+  @Override
+  public String getGroupName() {
+    return GROUP_NAME_FLOWCRYPT_MESSAGES;
+  }
+
+  @Override
+  public int getGroupId() {
+    return NOTIFICATIONS_GROUP_MESSAGES;
   }
 
   /**
@@ -89,27 +98,6 @@ public class MessagesNotificationManager extends CustomNotificationManager {
       notifyWithGroupSupport(context, account, localFolder, generalMsgDetailsList);
     } else {
       notifyWithSingleNotification(context, account, localFolder, generalMsgDetailsList, uidListOfUnseenMsgs, isSilent);
-    }
-  }
-
-  public void cancel(Context context, int messageUID) {
-    notificationManagerCompat.cancel(messageUID);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      NotificationManager notificationManager =
-          (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-      if (notificationManager != null) {
-        int messageCount = 0;
-        for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
-          if (GROUP_NAME_FLOWCRYPT_MESSAGES.equals(statusBarNotification.getNotification().getGroup())) {
-            messageCount++;
-          }
-        }
-
-        if (messageCount == 1) {
-          notificationManager.cancel(NOTIFICATIONS_GROUP_MESSAGES);
-        }
-      }
     }
   }
 
