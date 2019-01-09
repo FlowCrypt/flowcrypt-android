@@ -42,6 +42,7 @@ import com.google.android.gms.common.util.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +82,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   /**
    * Enqueue a new task for {@link PrepareOutgoingMessagesJobIntentService}.
    *
-   * @param context             Interface to global information about an application environment.
+   * @param context         Interface to global information about an application environment.
    * @param outgoingMsgInfo {@link OutgoingMessageInfo} which contains information about an outgoing message.
    */
   public static void enqueueWork(Context context, OutgoingMessageInfo outgoingMsgInfo) {
@@ -234,48 +235,44 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     List<AttachmentInfo> cachedAtts = new ArrayList<>();
 
     if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
-      if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        for (AttachmentInfo att : msgInfo.getAtts()) {
-          try {
-            Uri origFileUri = att.getUri();
-            InputStream inputStream = getContentResolver().openInputStream(origFileUri);
-            if (inputStream != null) {
-              File encryptedTempFile = new File(attsCacheDir, att.getName() + Constants.PGP_FILE_EXT);
-              byte[] originalBytes = IOUtils.toByteArray(inputStream);
-              byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, originalBytes, att.getName());
-              FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-              Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile);
-              att.setUri(uri);
-              att.setName(encryptedTempFile.getName());
-              cachedAtts.add(att);
-
-              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
-                getContentResolver().delete(origFileUri, null, null);
-              }
-            }
-          } catch (IOException e) {
-            e.printStackTrace();
+      for (AttachmentInfo att : msgInfo.getAtts()) {
+        try {
+          Uri origFileUri = att.getUri();
+          InputStream inputStream = null;
+          if (origFileUri != null) {
+            inputStream = getContentResolver().openInputStream(origFileUri);
+          } else if (!TextUtils.isEmpty(att.getRawData())) {
+            inputStream = new ByteArrayInputStream(att.getRawData().getBytes());
           }
-        }
-      } else {
-        for (AttachmentInfo att : msgInfo.getAtts()) {
-          try {
-            Uri origFileUri = att.getUri();
-            InputStream inputStream = getContentResolver().openInputStream(origFileUri);
-            if (inputStream != null) {
-              File cachedAtt = new File(attsCacheDir, att.getName());
-              FileUtils.copyInputStreamToFile(inputStream, cachedAtt);
-              att.setUri(FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt));
-              cachedAtts.add(att);
 
-              if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
-                getContentResolver().delete(origFileUri, null, null);
-              }
-            }
-          } catch (IOException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
+          if (inputStream == null) {
+            continue;
           }
+
+          if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
+            File encryptedTempFile = new File(attsCacheDir, att.getName() + Constants.PGP_FILE_EXT);
+            byte[] originalBytes = IOUtils.toByteArray(inputStream);
+            byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, originalBytes, att.getName());
+            FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+            Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile);
+            att.setUri(uri);
+            att.setName(encryptedTempFile.getName());
+          } else {
+            File cachedAtt = new File(attsCacheDir, att.getName());
+            FileUtils.copyInputStreamToFile(inputStream, cachedAtt);
+            Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt);
+            att.setUri(uri);
+          }
+
+          cachedAtts.add(att);
+          if (origFileUri != null) {
+            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
+              getContentResolver().delete(origFileUri, null, null);
+            }
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+          ExceptionUtil.handleError(e);
         }
       }
     }
