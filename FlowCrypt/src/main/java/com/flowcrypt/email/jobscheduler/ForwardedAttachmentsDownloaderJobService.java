@@ -271,7 +271,16 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       MessageState msgState = MessageState.QUEUED;
 
       for (AttachmentInfo att : atts) {
-        if (att.isForwarded() && att.getUri() == null) {
+        if (!att.isForwarded()) {
+          continue;
+        }
+
+        File attFile = new File(msgAttsDir, att.getName());
+        boolean exists = attFile.exists();
+
+        if (exists) {
+          att.setUri(FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile));
+        } else if (att.getUri() == null) {
           FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
 
           if (folder == null) {
@@ -294,7 +303,6 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           Part part = ImapProtocolUtil.getAttPartById(folder, msgNumber, fwdMsg, att.getId());
 
           File tempFile = new File(fwdAttsCacheDir, UUID.randomUUID().toString());
-          File attFile = new File(msgAttsDir, att.getName());
 
           if (part != null) {
             InputStream inputStream = part.getInputStream();
