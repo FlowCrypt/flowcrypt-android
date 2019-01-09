@@ -424,4 +424,5 @@ icelanders prefer real sauna</font>
     <string name="no_message_with_this_attachment">No message with this attachment</string>
     <string name="attachment_not_found">The attachment not found</string>
     <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
+    <string name="file_not_found">File not found</string>
 </resources>

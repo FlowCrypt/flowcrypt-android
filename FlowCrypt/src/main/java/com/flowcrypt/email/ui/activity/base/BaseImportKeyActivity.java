@@ -32,6 +32,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -363,7 +364,14 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
       case R.id.loader_id_validate_key_from_clipboard:
         isCheckingPrivateKeyNow = false;
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        showInfoSnackbar(getRootView(), e.getMessage());
+
+        String errorMsg = e.getMessage();
+
+        if (e instanceof FileNotFoundException) {
+          errorMsg = getString(R.string.file_not_found);
+        }
+
+        showInfoSnackbar(getRootView(), errorMsg);
         break;
 
       default:
