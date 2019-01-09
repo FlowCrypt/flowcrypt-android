@@ -543,6 +543,11 @@ public class AttachmentDownloadManagerService extends Service {
         remoteFolder.open(Folder.READ_ONLY);
 
         javax.mail.Message msg = remoteFolder.getMessageByUID(att.getUid());
+
+        if (msg != null) {
+          throw new NullPointerException(context.getString(R.string.no_message_with_this_attachment));
+        }
+
         Part att = ImapProtocolUtil.getAttPartById(remoteFolder, msg.getMessageNumber(), msg, this.att.getId());
 
         if (att != null) {
@@ -561,7 +566,7 @@ public class AttachmentDownloadManagerService extends Service {
               listener.onAttDownloaded(this.att, uri);
             }
           }
-        } else throw new IOException("The attachment does not exist on an IMAP server.");
+        } else throw new IOException(context.getString(R.string.attachment_not_found));
 
         remoteFolder.close(false);
         store.close();
