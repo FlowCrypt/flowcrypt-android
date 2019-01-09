@@ -423,4 +423,5 @@ icelanders prefer real sauna</font>
     <string name="reset_app_storage">Reset app storage</string>
     <string name="no_message_with_this_attachment">No message with this attachment</string>
     <string name="attachment_not_found">The attachment not found</string>
+    <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
 </resources>

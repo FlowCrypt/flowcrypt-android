@@ -30,6 +30,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 
@@ -197,7 +198,12 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null) {
-              handleSelectedFile(data.getData());
+              if (data.getData() != null) {
+                handleSelectedFile(data.getData());
+              } else {
+                showInfoSnackbar(getRootView(), getString(R.string.please_use_another_app_to_choose_file),
+                    Snackbar.LENGTH_LONG);
+              }
             }
             break;
         }
@@ -380,7 +386,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
    *
    * @param uri A {@link Uri} of the selected file.
    */
-  protected void handleSelectedFile(Uri uri) {
+  protected void handleSelectedFile(@NonNull Uri uri) {
     keyImportModel = new KeyImportModel(uri, null, isPrivateKeyMode(), KeyDetails.Type.FILE);
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this);
   }

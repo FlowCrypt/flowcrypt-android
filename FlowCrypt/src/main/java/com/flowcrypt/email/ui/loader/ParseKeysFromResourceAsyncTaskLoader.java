@@ -66,6 +66,10 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
               return new LoaderResult(null, new IllegalArgumentException("The file is too big"));
             }
 
+            if (keyImportModel.getFileUri() == null) {
+              throw new NullPointerException("Uri is null!");
+            }
+
             armoredKey = GeneralUtil.readFileFromUriToString(getContext(), keyImportModel.getFileUri());
             break;
 
