@@ -1,5 +1,11 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+
+import java.io.IOException;
+
+import retrofit2.Response;
+
 /**
  * This {@linkplain BaseNodeRequest request} can be used to receive information about a version.
  *
@@ -18,5 +24,12 @@ public final class VersionRequest implements BaseNodeRequest {
   @Override
   public byte[] getData() {
     return null;
+  }
+
+  @Override
+  public Response getResponse(NodeService nodeService) throws IOException {
+    if (nodeService != null) {
+      return nodeService.getVersion(this).execute();
+    } else return null;
   }
 }

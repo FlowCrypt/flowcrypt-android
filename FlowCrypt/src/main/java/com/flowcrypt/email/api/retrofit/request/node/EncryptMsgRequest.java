@@ -1,8 +1,12 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.google.gson.annotations.Expose;
 
+import java.io.IOException;
 import java.util.List;
+
+import retrofit2.Response;
 
 /**
  * Using this class we can create a request to encrypt an input message using the given public keys.
@@ -32,5 +36,12 @@ public final class EncryptMsgRequest implements BaseNodeRequest {
   @Override
   public byte[] getData() {
     return msg != null ? msg.getBytes() : new byte[]{};
+  }
+
+  @Override
+  public Response getResponse(NodeService nodeService) throws IOException {
+    if (nodeService != null) {
+      return nodeService.encryptMsg(this).execute();
+    } else return null;
   }
 }

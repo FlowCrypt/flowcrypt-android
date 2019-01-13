@@ -10,4 +10,6 @@ package com.flowcrypt.email.api.retrofit.response.node;
  */
 public interface BaseNodeResponse {
   void setData(byte[] data);
+
+  void setTime(long time);
 }

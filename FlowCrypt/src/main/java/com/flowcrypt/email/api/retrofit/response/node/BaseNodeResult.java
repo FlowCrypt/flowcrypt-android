@@ -25,6 +25,8 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   };
   protected byte[] data;
 
+  private long time;
+
   BaseNodeResult() {
   }
 
@@ -49,5 +51,14 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeByteArray(this.data);
+  }
+
+  public long getTime() {
+    return time;
+  }
+
+  @Override
+  public void setTime(long time) {
+    this.time = time;
   }
 }

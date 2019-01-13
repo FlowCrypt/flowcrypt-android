@@ -1,13 +1,17 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.yourorg.sample.api.retrofit.request.model.PrivateKeyInfo;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import retrofit2.Response;
 
 /**
  * This class will be used for the message decryption.
@@ -48,5 +52,12 @@ public final class DecryptMsgRequest implements BaseNodeRequest {
   @Override
   public byte[] getData() {
     return encryptedMsg.getBytes();
+  }
+
+  @Override
+  public Response getResponse(NodeService nodeService) throws IOException {
+    if (nodeService != null) {
+      return nodeService.decryptMsg(this).execute();
+    } else return null;
   }
 }
