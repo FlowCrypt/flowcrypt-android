@@ -15,8 +15,8 @@ const char *ADBTAG = "NODEJS-MOBILE";
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_yourorg_sample_node_NativeNode_sendNativeMessageToNode(JNIEnv *env, jobject /* this */,
-                                                                jstring msg) {
+Java_com_flowcrypt_email_node_NativeNode_sendNativeMessageToNode(JNIEnv *env, jobject /* this */,
+                                                                 jstring msg) {
     const char *nativeMessage = env->GetStringUTFChars(msg, 0);
     rn_bridge_notify(nativeMessage);
     env->ReleaseStringUTFChars(msg, nativeMessage);
@@ -33,7 +33,7 @@ extern "C" int callintoNode(int argc, char *argv[]) {
 void rcv_message(char *msg) {
     JNIEnv *env = cacheEnvPointer;
     if (!env) return;
-    jclass cls2 = env->FindClass("com/yourorg/sample/node/NativeNode");  // try to find the class
+    jclass cls2 = env->FindClass("com/flowcrypt/email/node/NativeNode");  // try to find the class
     if (cls2 != nullptr) {
         jmethodID m_sendMessage = env->GetStaticMethodID(cls2, "receiveNativeMessageFromNode",
                                                          "(Ljava/lang/String;)V");  // find method
@@ -100,15 +100,15 @@ int start_redirecting_stdout_stderr() {
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_yourorg_sample_node_NativeNode_stringFromJNI(JNIEnv *env, jobject /* this */) {
+Java_com_flowcrypt_email_node_NativeNode_stringFromJNI(JNIEnv *env, jobject /* this */) {
     std::string hello = "Hello from C++";
     return env->NewStringUTF(hello.c_str());
 }
 
 //node's libUV requires all arguments being on contiguous memory.
 extern "C" jint JNICALL
-Java_com_yourorg_sample_node_NativeNode_startNodeWithArguments(JNIEnv *env, jobject /* this */,
-                                                               jobjectArray arguments) {
+Java_com_flowcrypt_email_node_NativeNode_startNodeWithArguments(JNIEnv *env, jobject /* this */,
+                                                                jobjectArray arguments) {
 
     //argc
     jsize argument_count = env->GetArrayLength(arguments);

@@ -1,9 +1,9 @@
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.yourorg.sample.node.NodeSecret;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;

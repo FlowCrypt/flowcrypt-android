@@ -19,7 +19,7 @@
         android:title="Node backend test"
         app:iconSpaceReserved="false">
         <intent
-            android:targetClass="com.yourorg.sample.ui.activity.SplashActivity"
+            android:targetClass="com.flowcrypt.email.ui.activity.NodeSplashActivity"
             android:targetPackage="@string/application_id" />
     </androidx.preference.Preference>
 </androidx.preference.PreferenceScreen>

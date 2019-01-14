@@ -1,10 +1,10 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
+import com.flowcrypt.email.node.results.PgpKeyInfo;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.yourorg.sample.api.retrofit.request.model.PrivateKeyInfo;
-import com.yourorg.sample.node.results.PgpKeyInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;

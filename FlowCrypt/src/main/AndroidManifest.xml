@@ -213,11 +213,11 @@
             android:launchMode="singleTop" />
 
         <activity
-            android:name="com.yourorg.sample.ui.activity.MainActivity"
+            android:name=".ui.activity.NodeTestActivity"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name="com.yourorg.sample.ui.activity.SplashActivity"
+            android:name=".ui.activity.NodeSplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Launcher"></activity>
 
