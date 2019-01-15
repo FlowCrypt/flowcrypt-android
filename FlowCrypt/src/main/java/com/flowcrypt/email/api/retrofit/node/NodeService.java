@@ -1,9 +1,13 @@
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult;
 
@@ -14,6 +18,8 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 /**
+ * This class describes all available calls to the Node.js server.
+ *
  * @author Denis Bondarenko
  * Date: 1/13/19
  * Time: 3:25 PM
@@ -31,4 +37,10 @@ public interface NodeService {
 
   @POST("/")
   Call<DecryptedMsgResult> decryptMsg(@Body DecryptMsgRequest decryptMsgRequest);
+
+  @POST("/")
+  Call<EncryptedFileResult> encryptFile(@Body EncryptFileRequest encryptFileRequest);
+
+  @POST("/")
+  Call<DecryptedFileResult> decryptFile(@Body DecryptFileRequest decryptFileRequest);
 }

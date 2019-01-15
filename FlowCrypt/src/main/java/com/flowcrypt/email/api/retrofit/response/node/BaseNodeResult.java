@@ -7,6 +7,11 @@ import com.flowcrypt.email.api.retrofit.response.model.node.ServerError;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+
 /**
  * It's a base realization which contains a common logic for all results.
  *
@@ -29,7 +34,9 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   };
 
   protected byte[] data;
+
   private long time;
+
   @SerializedName("error")
   @Expose
   private ServerError serverError;
@@ -60,6 +67,17 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeLong(this.time);
     dest.writeParcelable(this.serverError, flags);
+  }
+
+  /**
+   * By default we'll parse raw data as a byte array.
+   *
+   * @param bufferedInputStream The input stream from the server
+   * @throws IOException An error can occur during parsing.
+   */
+  @Override
+  public void handleRawData(BufferedInputStream bufferedInputStream) throws IOException {
+    data = IOUtils.toByteArray(bufferedInputStream);
   }
 
   public long getTime() {

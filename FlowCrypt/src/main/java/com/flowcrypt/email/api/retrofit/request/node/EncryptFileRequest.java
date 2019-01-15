@@ -1,7 +1,7 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
@@ -10,44 +10,48 @@ import java.util.List;
 import retrofit2.Response;
 
 /**
- * Using this class we can create a request to encrypt an input message using the given public keys.
+ * Using this class we can create a request to encrypt an input data using the given public keys.
  *
  * @author Denis Bondarenko
- * Date: 1/11/19
- * Time: 12:48 PM
+ * Date: 1/15/19
+ * Time: 9:07 AM
  * E-mail: DenBond7@gmail.com
  */
-public final class EncryptMsgRequest implements BaseNodeRequest {
+public class EncryptFileRequest implements BaseNodeRequest {
+
+  private byte[] data;
+
+  @Expose
+  private String name;
 
   @Expose
   private List<String> pubKeys;
 
-  private String msg;
-
-  public EncryptMsgRequest(String msg, List<String> pubKeys) {
-    this.msg = msg;
+  public EncryptFileRequest(byte[] data, String name, List<String> pubKeys) {
+    this.data = data;
+    this.name = name;
     this.pubKeys = pubKeys;
   }
 
   @Override
   public String getEndpoint() {
-    return "encryptMsg";
+    return "encryptFile";
   }
 
   @Override
   public byte[] getData() {
-    return msg != null ? msg.getBytes() : new byte[]{};
+    return data;
   }
 
   @Override
   public Response getResponse(NodeService nodeService) throws IOException {
     if (nodeService != null) {
-      return nodeService.encryptMsg(this).execute();
+      return nodeService.encryptFile(this).execute();
     } else return null;
   }
 
   @Override
   public Class getResponseClass() {
-    return EncryptedMsgResult.class;
+    return EncryptedFileResult.class;
   }
 }

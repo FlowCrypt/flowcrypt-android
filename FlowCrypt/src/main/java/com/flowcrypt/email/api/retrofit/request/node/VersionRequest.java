@@ -1,6 +1,7 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.response.node.VersionResult;
 
 import java.io.IOException;
 
@@ -31,5 +32,10 @@ public final class VersionRequest implements BaseNodeRequest {
     if (nodeService != null) {
       return nodeService.getVersion(this).execute();
     } else return null;
+  }
+
+  @Override
+  public Class getResponseClass() {
+    return VersionResult.class;
   }
 }

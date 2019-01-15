@@ -7,8 +7,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -58,7 +56,7 @@ public final class NodeResponseBodyConverter<T> implements Converter<ResponseBod
 
         if (result instanceof BaseNodeResponse) {
           BaseNodeResponse baseNodeResponse = (BaseNodeResponse) result;
-          baseNodeResponse.setData(IOUtils.toByteArray(bufferedInputStream));
+          baseNodeResponse.handleRawData(bufferedInputStream);
         }
 
         return result;

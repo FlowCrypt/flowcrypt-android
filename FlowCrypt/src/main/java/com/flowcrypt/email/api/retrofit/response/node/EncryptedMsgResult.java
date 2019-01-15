@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
  */
 public class EncryptedMsgResult extends BaseNodeResult {
 
-  //todo-denbond7 only for testing.
   public final String getEncryptedMsg() {
     byte[] bytes = getData();
 
@@ -27,7 +26,6 @@ public class EncryptedMsgResult extends BaseNodeResult {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
     return "";
   }
 }

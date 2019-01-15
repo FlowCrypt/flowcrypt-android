@@ -2,7 +2,7 @@ package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.node.results.PgpKeyInfo;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -15,14 +15,14 @@ import java.util.List;
 import retrofit2.Response;
 
 /**
- * This class will be used for the message decryption.
+ * Using this class we can create a request to decrypt an encrypted file using the given private keys.
  *
  * @author Denis Bondarenko
- * Date: 1/11/19
- * Time: 03:29 PM
+ * Date: 1/15/19
+ * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class DecryptMsgRequest implements BaseNodeRequest {
+public class DecryptFileRequest implements BaseNodeRequest {
 
   @SerializedName("keys")
   @Expose
@@ -32,10 +32,10 @@ public final class DecryptMsgRequest implements BaseNodeRequest {
   @Expose
   private List<String> passphrases;
 
-  private String encryptedMsg;
+  private byte[] data;
 
-  public DecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases) {
-    this.encryptedMsg = encryptedMsg;
+  public DecryptFileRequest(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases) {
+    this.data = data;
     this.privateKeyInfoList = new ArrayList<>();
 
     for (PgpKeyInfo pgpKeyInfo : prvKeys) {
@@ -47,23 +47,23 @@ public final class DecryptMsgRequest implements BaseNodeRequest {
 
   @Override
   public String getEndpoint() {
-    return "decryptMsg";
+    return "decryptFile";
   }
 
   @Override
   public byte[] getData() {
-    return encryptedMsg.getBytes();
+    return data;
   }
 
   @Override
   public Response getResponse(NodeService nodeService) throws IOException {
     if (nodeService != null) {
-      return nodeService.decryptMsg(this).execute();
+      return nodeService.decryptFile(this).execute();
     } else return null;
   }
 
   @Override
   public Class getResponseClass() {
-    return DecryptedMsgResult.class;
+    return DecryptedFileResult.class;
   }
 }

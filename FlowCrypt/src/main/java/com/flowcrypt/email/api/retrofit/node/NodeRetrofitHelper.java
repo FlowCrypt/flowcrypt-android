@@ -3,7 +3,6 @@ package com.flowcrypt.email.api.retrofit.node;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -36,9 +35,7 @@ public final class NodeRetrofitHelper {
 
   private NodeRetrofitHelper(final NodeSecret nodeSecret) {
     okHttpClient = getOkHttpClientBuilder(nodeSecret).build();
-    gson = new GsonBuilder()
-        .excludeFieldsWithoutExposeAnnotation()
-        .create();
+    gson = NodeGson.getInstance().getGson();
 
     Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
         .baseUrl("https://localhost:" + nodeSecret.port + "/")

@@ -20,4 +20,6 @@ public interface BaseNodeRequest {
   byte[] getData();
 
   Response getResponse(NodeService nodeService) throws IOException;
+
+  Class getResponseClass();
 }

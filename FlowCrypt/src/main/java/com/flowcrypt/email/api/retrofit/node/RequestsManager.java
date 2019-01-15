@@ -3,12 +3,21 @@ package com.flowcrypt.email.api.retrofit.node;
 import android.os.AsyncTask;
 
 import com.flowcrypt.email.api.retrofit.request.node.BaseNodeRequest;
+import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
+import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent;
 import com.flowcrypt.email.node.NodeSecret;
+import com.flowcrypt.email.node.TestData;
+import com.flowcrypt.email.node.results.PgpKeyInfo;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.Arrays;
 
 import androidx.lifecycle.LiveData;
 import retrofit2.Response;
@@ -18,11 +27,11 @@ import retrofit2.Response;
  */
 public class RequestsManager {
   private SingleLiveEvent<NodeResponseWrapper> data;
-  private NodeService nodeService;
+  private NodeRetrofitHelper retrofitHelper;
 
   public RequestsManager(NodeSecret nodeSecret) {
     this.data = new SingleLiveEvent<>();
-    this.nodeService = NodeRetrofitHelper.getInstance(nodeSecret).getRetrofit().create(NodeService.class);
+    this.retrofitHelper = NodeRetrofitHelper.getInstance(nodeSecret);
   }
 
   public LiveData<NodeResponseWrapper> getData() {
@@ -33,69 +42,72 @@ public class RequestsManager {
     load(requestCode, new VersionRequest());
   }
 
-  /*public void encryptMsg(int requestCode, String msg) {
-    load(requestCode, new NodeRequestBody<>("encryptMsg", new Pubkeys(TestData.getMixedPubKeys()), msg.getBytes()));
+  public void encryptMsg(int requestCode, String msg) {
+    load(requestCode, new EncryptMsgRequest(msg, Arrays.asList(TestData.getMixedPubKeys())));
   }
 
-  public void decryptMsg(int requestCode, PgpKeyInfo[] prvKeys, String msg) {
-    load(requestCode, new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, TestData.passphrases(), null),
-        msg.getBytes()));
+  public void decryptMsg(int requestCode, String msg, PgpKeyInfo[] prvKeys) {
+    load(requestCode, new DecryptMsgRequest(msg, prvKeys, TestData.passphrases()));
   }
 
   public void encryptFile(int requestCode, byte[] data) {
-    load(requestCode, new NodeRequestBody<>("encryptFile", new FileModel(TestData.getMixedPubKeys(), "file.txt"),
-        data));
+    load(requestCode, new EncryptFileRequest(data, "file.txt", Arrays.asList(TestData.getMixedPubKeys())));
   }
 
-  public void encryptFile(int requestCode, Context context, Uri fileUri) {
+  /*public void encryptFile(int requestCode, Context context, Uri fileUri) {
     load(requestCode, new NodeRequestBody<>(context, "encryptFile", new FileModel(TestData.getMixedPubKeys(), "file" +
         ".txt"), fileUri));
-  }
-
-  public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, TestData.passphrases(), null),
-        encryptedData));
   }*/
 
+  public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
+    load(requestCode, new DecryptFileRequest(encryptedData, prvKeys, TestData.passphrases()));
+  }
+
   private void load(final int requestCode, BaseNodeRequest baseNodeRequest) {
-    new Worker(data, nodeService).execute(new NodeRequestWrapper<>(requestCode, baseNodeRequest));
+    new Worker(data, retrofitHelper).execute(new NodeRequestWrapper<>(requestCode, baseNodeRequest));
   }
 
   private static class Worker extends AsyncTask<NodeRequestWrapper, Void, NodeResponseWrapper> {
     private SingleLiveEvent<NodeResponseWrapper> data;
-    private NodeService nodeService;
+    private NodeRetrofitHelper retrofitHelper;
 
-    public Worker(SingleLiveEvent<NodeResponseWrapper> data, NodeService nodeService) {
+    public Worker(SingleLiveEvent<NodeResponseWrapper> data, NodeRetrofitHelper retrofitHelper) {
       this.data = data;
-      this.nodeService = nodeService;
+      this.retrofitHelper = retrofitHelper;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected NodeResponseWrapper doInBackground(NodeRequestWrapper... nodeRequestWrappers) {
       NodeRequestWrapper nodeRequestWrapper = nodeRequestWrappers[0];
       BaseNodeResult baseNodeResult;
 
+      NodeService nodeService = retrofitHelper.getRetrofit().create(NodeService.class);
+
       try {
         Response response = nodeRequestWrapper.getRequest().getResponse(nodeService);
         if (response != null) {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
-          if (response.body() != null) {
+          if (response.errorBody() != null) {
+            baseNodeResult = retrofitHelper.getGson().fromJson(response.errorBody().charStream(),
+                TypeToken.get(nodeRequestWrapper.getRequest().getResponseClass()).getType());
+          } else if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
             baseNodeResult.setTime(time);
           } else {
             throw new NullPointerException("The response body is null!");
           }
+
+          baseNodeResult.setTime(time);
         } else {
           throw new NullPointerException("The response is null!");
         }
 
       } catch (Exception e) {
         e.printStackTrace();
-        return new NodeResponseWrapper(nodeRequestWrapper.getRequestCode(), e, null);
+        return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), e, (BaseNodeResult) null);
       }
 
-      return new NodeResponseWrapper(nodeRequestWrapper.getRequestCode(), null, baseNodeResult);
+      return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), null, baseNodeResult);
     }
 
     @Override
