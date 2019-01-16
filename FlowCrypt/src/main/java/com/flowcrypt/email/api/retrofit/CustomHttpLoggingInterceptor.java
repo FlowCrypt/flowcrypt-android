@@ -15,6 +15,8 @@
  */
 package com.flowcrypt.email.api.retrofit;
 
+import android.util.Base64;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -151,7 +153,7 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
 
         logger.log("");
         if (isPlaintext(buffer)) {
-          logger.log(buffer.readString(charset));
+          logger.log(Base64.encodeToString(buffer.readByteArray(), Base64.DEFAULT));
           logger.log("--> END " + request.method()
               + " (" + requestBody.contentLength() + "-byte body)");
         } else {
@@ -224,7 +226,7 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
 
         if (contentLength != 0) {
           logger.log("");
-          logger.log(buffer.clone().readString(charset));
+          logger.log(Base64.encodeToString(buffer.clone().readByteArray(), Base64.DEFAULT));
         }
 
         if (gzippedLength != null) {
