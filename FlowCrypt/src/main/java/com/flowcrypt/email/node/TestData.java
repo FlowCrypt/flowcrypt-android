@@ -312,8 +312,12 @@ public class TestData {
   TestData() {
   }
 
-  public static byte[] payload(int mb) {
-    byte[] data = new byte[mb == 0 ? 100 : mb * 1024 * 1024]; // min 100 bytes
+  public static byte[] payload(int kib) {
+    return payloadBytes(kib == 0 ? 100 : kib * 1000);
+  }
+
+  public static byte[] payloadBytes(int length) {
+    byte[] data = new byte[length]; // min 100 bytes
     Arrays.fill(data, (byte) 'X');
     return data;
   }
