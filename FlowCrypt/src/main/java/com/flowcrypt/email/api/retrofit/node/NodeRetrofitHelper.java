@@ -1,5 +1,6 @@
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.CustomHttpLoggingInterceptor;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.gson.Gson;
@@ -15,7 +16,6 @@ import androidx.annotation.NonNull;
 import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 
 /**
@@ -85,8 +85,8 @@ public final class NodeRetrofitHelper {
   }
 
   @NonNull
-  private HttpLoggingInterceptor getHttpLoggingInterceptor() {
-    return new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+  private CustomHttpLoggingInterceptor getHttpLoggingInterceptor() {
+    return new CustomHttpLoggingInterceptor().setLevel(CustomHttpLoggingInterceptor.Level.BODY);
   }
 
   private Interceptor headersInterceptor(final NodeSecret nodeSecret) {
