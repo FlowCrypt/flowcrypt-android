@@ -211,7 +211,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   private void addResultLine(String actionName, long ms, String result, boolean isFinal) {
-    if (!result.equals("ok") && !result.equals("success")) {
+    if (result == null || !result.equals("ok") && !result.equals("success")) {
       hasTestFailure = true;
       result = "***FAIL*** " + result;
     }
