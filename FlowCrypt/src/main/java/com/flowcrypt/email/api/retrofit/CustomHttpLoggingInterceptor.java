@@ -152,14 +152,9 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
         }
 
         logger.log("");
-        if (isPlaintext(buffer)) {
-          logger.log(Base64.encodeToString(buffer.readByteArray(), Base64.DEFAULT));
-          logger.log("--> END " + request.method()
-              + " (" + requestBody.contentLength() + "-byte body)");
-        } else {
-          logger.log("--> END " + request.method() + " (binary "
-              + requestBody.contentLength() + "-byte body omitted)");
-        }
+        logger.log(Base64.encodeToString(buffer.readByteArray(), Base64.DEFAULT));
+        logger.log("--> END " + request.method()
+            + " (" + requestBody.contentLength() + "-byte body)");
       }
     }
 
@@ -216,12 +211,6 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
         MediaType contentType = responseBody.contentType();
         if (contentType != null) {
           charset = contentType.charset(UTF8);
-        }
-
-        if (!isPlaintext(buffer)) {
-          logger.log("");
-          logger.log("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
-          return response;
         }
 
         if (contentLength != 0) {
