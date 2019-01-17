@@ -1,11 +1,9 @@
 package com.flowcrypt.email.api.retrofit.node;
 
-import android.content.Context;
-import android.net.Uri;
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -35,29 +33,11 @@ import okio.Source;
  */
 public final class NodeRequestBody extends RequestBody {
   private ByteString json;
-  private Context context;
-  private String endpoint;
-  private byte[] data;
-  private Uri uri;
-  private File file;
+  private NodeRequest nodeRequest;
 
-  NodeRequestBody(String endpoint, ByteString json, byte[] data) {
-    this.endpoint = endpoint;
+  NodeRequestBody(@NonNull NodeRequest nodeRequest, ByteString json) {
+    this.nodeRequest = nodeRequest;
     this.json = json;
-    this.data = data;
-  }
-
-  public NodeRequestBody(String endpoint, ByteString json, File file) {
-    this.endpoint = endpoint;
-    this.json = json;
-    this.file = file;
-  }
-
-  public NodeRequestBody(Context context, String endpoint, ByteString json, Uri uri) {
-    this.context = context;
-    this.endpoint = endpoint;
-    this.json = json;
-    this.uri = uri;
   }
 
   @Override
@@ -67,38 +47,28 @@ public final class NodeRequestBody extends RequestBody {
 
   @Override
   public void writeTo(@NonNull BufferedSink sink) throws IOException {
-    sink.writeUtf8(endpoint);
+    sink.writeUtf8(nodeRequest.getEndpoint());
     sink.writeByte('\n');
     sink.write(json);
     sink.writeByte('\n');
-    if (data != null) {
+    if (nodeRequest.getData() != null) {
       Source source = null;
       try {
-        source = Okio.source(new ByteArrayInputStream(data));
+        source = Okio.source(new ByteArrayInputStream(nodeRequest.getData()));
         sink.writeAll(source);
       } finally {
         Util.closeQuietly(source);
       }
     }
 
-    if (uri != null) {
+    if (nodeRequest.getUri() != null) {
       Source source = null;
       try {
-        InputStream inputStream = context.getContentResolver().openInputStream(uri);
+        InputStream inputStream = nodeRequest.getContext().getContentResolver().openInputStream(nodeRequest.getUri());
         if (inputStream != null) {
-          source = Okio.source(inputStream);
+          source = Okio.source(new BufferedInputStream(inputStream));
           sink.writeAll(source);
         }
-      } finally {
-        Util.closeQuietly(source);
-      }
-    }
-
-    if (file != null) {
-      Source source = null;
-      try {
-        source = Okio.source(new FileInputStream(file));
-        sink.writeAll(source);
       } finally {
         Util.closeQuietly(source);
       }

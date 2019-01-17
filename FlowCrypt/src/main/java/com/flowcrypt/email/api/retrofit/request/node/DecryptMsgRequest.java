@@ -22,7 +22,7 @@ import retrofit2.Response;
  * Time: 03:29 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class DecryptMsgRequest implements BaseNodeRequest {
+public final class DecryptMsgRequest extends BaseNodeRequest {
 
   @SerializedName("keys")
   @Expose

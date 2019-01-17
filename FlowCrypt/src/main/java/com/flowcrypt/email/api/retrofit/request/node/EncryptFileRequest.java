@@ -1,5 +1,8 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import android.content.Context;
+import android.net.Uri;
+
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.google.gson.annotations.Expose;
@@ -17,7 +20,7 @@ import retrofit2.Response;
  * Time: 9:07 AM
  * E-mail: DenBond7@gmail.com
  */
-public class EncryptFileRequest implements BaseNodeRequest {
+public class EncryptFileRequest extends BaseNodeRequest {
 
   private byte[] data;
 
@@ -29,6 +32,12 @@ public class EncryptFileRequest implements BaseNodeRequest {
 
   public EncryptFileRequest(byte[] data, String name, List<String> pubKeys) {
     this.data = data;
+    this.name = name;
+    this.pubKeys = pubKeys;
+  }
+
+  public EncryptFileRequest(Context context, Uri uri, String name, List<String> pubKeys) {
+    super(context, uri);
     this.name = name;
     this.pubKeys = pubKeys;
   }

@@ -1,12 +1,14 @@
 package com.flowcrypt.email.api.retrofit.node;
 
+import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 
-import com.flowcrypt.email.api.retrofit.request.node.BaseNodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
@@ -54,17 +56,16 @@ public class RequestsManager {
     load(requestCode, new EncryptFileRequest(data, "file.txt", Arrays.asList(TestData.getMixedPubKeys())));
   }
 
-  /*public void encryptFile(int requestCode, Context context, Uri fileUri) {
-    load(requestCode, new NodeRequestBody<>(context, "encryptFile", new FileModel(TestData.getMixedPubKeys(), "file" +
-        ".txt"), fileUri));
-  }*/
+  public void encryptFile(int requestCode, Context context, Uri fileUri) {
+    load(requestCode, new EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(TestData.getMixedPubKeys())));
+  }
 
   public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
     load(requestCode, new DecryptFileRequest(encryptedData, prvKeys, TestData.passphrases()));
   }
 
-  private void load(final int requestCode, BaseNodeRequest baseNodeRequest) {
-    new Worker(data, retrofitHelper).execute(new NodeRequestWrapper<>(requestCode, baseNodeRequest));
+  private void load(final int requestCode, NodeRequest nodeRequest) {
+    new Worker(data, retrofitHelper).execute(new NodeRequestWrapper<>(requestCode, nodeRequest));
   }
 
   private static class Worker extends AsyncTask<NodeRequestWrapper, Void, NodeResponseWrapper> {

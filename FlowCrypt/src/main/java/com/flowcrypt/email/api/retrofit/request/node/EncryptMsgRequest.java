@@ -17,7 +17,7 @@ import retrofit2.Response;
  * Time: 12:48 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class EncryptMsgRequest implements BaseNodeRequest {
+public final class EncryptMsgRequest extends BaseNodeRequest {
 
   @Expose
   private List<String> pubKeys;

@@ -1,6 +1,6 @@
 package com.flowcrypt.email.api.retrofit.node;
 
-import com.flowcrypt.email.api.retrofit.request.node.BaseNodeRequest;
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
@@ -35,11 +35,9 @@ public final class NodeRequestBodyConverter<F> implements Converter<F, RequestBo
 
   @Override
   public RequestBody convert(@NonNull F value) throws IOException {
-    if (!(value instanceof BaseNodeRequest)) {
-      throw new IllegalArgumentException("Support only classes that extend " + BaseNodeRequest.class.getSimpleName());
+    if (!(value instanceof NodeRequest)) {
+      throw new IllegalArgumentException("Support only classes that extend " + NodeRequest.class.getSimpleName());
     }
-
-    BaseNodeRequest baseNodeRequest = (BaseNodeRequest) value;
 
     Buffer buffer = new Buffer();
     Writer writer = new OutputStreamWriter(buffer.outputStream(), StandardCharsets.UTF_8);
@@ -48,6 +46,6 @@ public final class NodeRequestBodyConverter<F> implements Converter<F, RequestBo
     jsonWriter.close();
     ByteString json = buffer.readByteString();
 
-    return new NodeRequestBody(baseNodeRequest.getEndpoint(), json, baseNodeRequest.getData());
+    return new NodeRequestBody((NodeRequest) value, json);
   }
 }

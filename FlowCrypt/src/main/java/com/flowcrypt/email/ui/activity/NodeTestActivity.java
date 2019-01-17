@@ -60,7 +60,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null) {
-              //requestsManager.encryptFile(R.id.req_id_encrypt_file_from_uri, getApplicationContext(), data.getData());
+              requestsManager.encryptFile(R.id.req_id_encrypt_file_from_uri, getApplicationContext(), data.getData());
             }
             break;
         }
@@ -91,100 +91,100 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   @Override
-  public void onChanged(@Nullable NodeResponseWrapper nodeResponseWrapper) {
-    if (nodeResponseWrapper != null) {
-      switch (nodeResponseWrapper.getRequestCode()) {
+  public void onChanged(@Nullable NodeResponseWrapper responseWrapper) {
+    if (responseWrapper != null) {
+      switch (responseWrapper.getRequestCode()) {
         case R.id.req_id_get_version:
-          VersionResult testNodeResult = (VersionResult) nodeResponseWrapper.getResult();
+          VersionResult testNodeResult = (VersionResult) responseWrapper.getResult();
           resultText = testNodeResult + "\n\n";
-          addResultLine("version", nodeResponseWrapper);
+          addResultLine("version", responseWrapper);
           break;
 
         case R.id.req_id_encrypt_msg:
-          EncryptedMsgResult encryptMsgResult = (EncryptedMsgResult) nodeResponseWrapper.getResult();
-          addResultLine("encrypt-msg", nodeResponseWrapper);
+          EncryptedMsgResult encryptMsgResult = (EncryptedMsgResult) responseWrapper.getResult();
+          addResultLine("encrypt-msg", responseWrapper);
           encryptedMsg = encryptMsgResult.getEncryptedMsg();
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_ecc, encryptedMsg, TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_ecc:
-          DecryptedMsgResult eccDecryptMsgResult = (DecryptedMsgResult) nodeResponseWrapper.getResult();
+          DecryptedMsgResult eccDecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult);
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg, TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_2048:
-          DecryptedMsgResult rsa2048DecryptMsgResult = (DecryptedMsgResult) nodeResponseWrapper.getResult();
+          DecryptedMsgResult rsa2048DecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult);
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg, TestData.rsa4096PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_4096:
-          DecryptedMsgResult rsa4096DecryptMsgResult = (DecryptedMsgResult) nodeResponseWrapper.getResult();
+          DecryptedMsgResult rsa4096DecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-rsa4096", rsa4096DecryptMsgResult);
           requestsManager.encryptFile(R.id.req_id_encrypt_file, TEST_MSG.getBytes());
           break;
 
         case R.id.req_id_encrypt_file:
-          EncryptedFileResult encryptFileResult = (EncryptedFileResult) nodeResponseWrapper.getResult();
+          EncryptedFileResult encryptFileResult = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file", encryptFileResult);
           encryptedBytes = encryptFileResult.getEncryptedBytes();
           requestsManager.decryptFile(R.id.req_id_decrypt_file_ecc, encryptedBytes, TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_ecc:
-          DecryptedFileResult eccDecryptedFileResult = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult eccDecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-ecc", TEST_MSG.getBytes(), eccDecryptedFileResult);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptedBytes, TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048:
-          DecryptedFileResult rsa2048DecryptedFileResult = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult rsa2048DecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.getBytes(), rsa2048DecryptedFileResult);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptedBytes, TestData.rsa4096PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_4096:
-          DecryptedFileResult rsa4096DecryptedFileResult = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult rsa4096DecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-rsa4096", TEST_MSG.getBytes(), rsa4096DecryptedFileResult);
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_1mb, payloads[0]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_1mb:
-          EncryptedFileResult encryptedFileResult1Mb = (EncryptedFileResult) nodeResponseWrapper.getResult();
+          EncryptedFileResult encryptedFileResult1Mb = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file-" + 1 + "m" + "-rsa2048", encryptedFileResult1Mb);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_1mb, encryptedFileResult1Mb.getEncryptedBytes(),
               TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_1mb:
-          DecryptedFileResult rsa2048DecryptedFileResult1Mb = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult rsa2048DecryptedFileResult1Mb = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-" + 1 + "m" + "-rsa2048", payloads[0], rsa2048DecryptedFileResult1Mb);
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_3mb, payloads[1]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_3mb:
-          EncryptedFileResult encryptedFileResult3Mb = (EncryptedFileResult) nodeResponseWrapper.getResult();
+          EncryptedFileResult encryptedFileResult3Mb = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file-" + 3 + "m" + "-rsa2048", encryptedFileResult3Mb);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_3mb, encryptedFileResult3Mb
               .getEncryptedBytes(), TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_3mb:
-          DecryptedFileResult rsa2048DecryptedFileResult3Mb = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult rsa2048DecryptedFileResult3Mb = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-" + 3 + "m" + "-rsa2048", payloads[1], rsa2048DecryptedFileResult3Mb);
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_5mb, payloads[2]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_5mb:
-          EncryptedFileResult encryptedFileResult5Mb = (EncryptedFileResult) nodeResponseWrapper.getResult();
+          EncryptedFileResult encryptedFileResult5Mb = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file-" + 5 + "m" + "-rsa2048", encryptedFileResult5Mb);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_5mb, encryptedFileResult5Mb
               .getEncryptedBytes(), TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_5mb:
-          DecryptedFileResult rsa2048DecryptFileResult5Mb = (DecryptedFileResult) nodeResponseWrapper.getResult();
+          DecryptedFileResult rsa2048DecryptFileResult5Mb = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-" + 5 + "m" + "-rsa2048", payloads[2], rsa2048DecryptFileResult5Mb);
 
           if (!hasTestFailure) {
@@ -194,18 +194,17 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
           }
           break;
 
-        /*case R.id.req_id_encrypt_file_from_uri:
-          EncryptedFileResult encryptFileFromUriResult = (EncryptedFileResult) nodeResponseWrapper.getResult();
+        case R.id.req_id_encrypt_file_from_uri:
+          EncryptedFileResult encryptFileFromUriResult = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file", encryptFileFromUriResult);
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_from_uri, encryptFileFromUriResult
-          .getEncryptedDataBytes(), TestData.rsa2048PrvKeyInfo());
+              .getEncryptedBytes(), TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_from_uri:
-          DecryptedFileResult rsa2048DecryptFileFromUriResult3Mb = (DecryptedFileResult) nodeResponseWrapper
-          .getResult();
+          DecryptedFileResult rsa2048DecryptFileFromUriResult3Mb = (DecryptedFileResult) responseWrapper.getResult();
           printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb);
-          break;*/
+          break;
       }
     }
   }
