@@ -16,6 +16,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
+import retrofit2.http.Streaming;
 
 /**
  * This class describes all available calls to the Node.js server.
@@ -39,8 +40,10 @@ public interface NodeService {
   Call<DecryptedMsgResult> decryptMsg(@Body DecryptMsgRequest decryptMsgRequest);
 
   @POST("/")
+  @Streaming
   Call<EncryptedFileResult> encryptFile(@Body EncryptFileRequest encryptFileRequest);
 
   @POST("/")
+  @Streaming
   Call<DecryptedFileResult> decryptFile(@Body DecryptFileRequest decryptFileRequest);
 }

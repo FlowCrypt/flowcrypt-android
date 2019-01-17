@@ -3,7 +3,6 @@ package com.flowcrypt.email.api.retrofit.node;
 import android.content.Context;
 import android.net.Uri;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,7 +74,7 @@ public final class NodeRequestBody extends RequestBody {
     if (data != null) {
       Source source = null;
       try {
-        source = Okio.source(new BufferedInputStream(new ByteArrayInputStream(data)));
+        source = Okio.source(new ByteArrayInputStream(data));
         sink.writeAll(source);
       } finally {
         Util.closeQuietly(source);

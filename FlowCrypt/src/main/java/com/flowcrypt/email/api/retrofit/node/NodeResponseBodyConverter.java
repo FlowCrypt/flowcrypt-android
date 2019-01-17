@@ -8,7 +8,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -42,11 +45,22 @@ public final class NodeResponseBodyConverter<T> implements Converter<ResponseBod
 
   @Override
   public T convert(@NonNull ResponseBody value) throws IOException {
-    try (BufferedInputStream bufferedInputStream = new BufferedInputStream(value.source().inputStream())) {
-      forceFirstData(bufferedInputStream);
+    try (BufferedInputStream bufferedInputStream = new BufferedInputStream(value.source().inputStream());
+         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
+      int c;
 
-      NodeJsonReader nodeJsonReader = new NodeJsonReader(bufferedInputStream, value.source(), getCharset(value));
-      JsonReader jsonReader = gson.newJsonReader(nodeJsonReader);
+      //find UTF8-encoded request JSON metadata
+      while ((c = bufferedInputStream.read()) != -1) {
+        if (c == '\n') {
+          break;
+        }
+        bufferedOutputStream.write((byte) c);
+      }
+
+      bufferedOutputStream.flush();
+
+      JsonReader jsonReader = gson.newJsonReader(new StringReader(outputStream.toString(getCharset(value).name())));
 
       try {
         T result = adapter.read(jsonReader);
