@@ -6,10 +6,15 @@ import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.BlockMetas;
 import com.flowcrypt.email.api.retrofit.response.model.node.Longids;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import com.google.gson.stream.JsonReader;
 
 import java.io.BufferedInputStream;
-import java.io.InputStreamReader;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,13 +68,35 @@ public class DecryptedMsgResult extends BaseNodeResult {
   }
 
   @Override
-  public void handleRawData(BufferedInputStream bufferedInputStream) {
-    //todo-denbond7 Currently we peek only the first block. Need to fix that
-    MsgBlock block = NodeGson.getInstance().getGson().fromJson(new InputStreamReader(bufferedInputStream),
-        MsgBlock.class);
+  public void handleRawData(BufferedInputStream bufferedInputStream) throws IOException {
+    boolean isEnabled = true;
+    Gson gson = NodeGson.getInstance().getGson();
 
-    if (block != null) {
-      msgBlocks.add(block);
+    while (isEnabled) {
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+           BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream)) {
+        int c;
+
+        //find the end of the next part of data
+        while ((c = bufferedInputStream.read()) != -1) {
+          if (c == '\n') {
+            break;
+          }
+          bufferedOutputStream.write((byte) c);
+        }
+
+        bufferedOutputStream.flush();
+        JsonReader jsonReader = gson.newJsonReader(new StringReader(outputStream.toString()));
+        MsgBlock block = NodeGson.getInstance().getGson().fromJson(jsonReader, MsgBlock.class);
+
+        if (block != null) {
+          msgBlocks.add(block);
+        }
+
+        if (c == -1) {
+          isEnabled = false;
+        }
+      }
     }
   }
 
