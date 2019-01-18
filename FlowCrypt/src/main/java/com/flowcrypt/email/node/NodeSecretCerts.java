@@ -1,13 +1,21 @@
 package com.flowcrypt.email.node;
 
-public class NodeSecretCerts implements java.io.Serializable {
+import com.google.gson.annotations.Expose;
 
+/**
+ * It's a simple POJO which contains information about generated secret certs.
+ */
+class NodeSecretCerts implements java.io.Serializable {
+  @Expose
   private String ca;
+
+  @Expose
   private String key;
+
+  @Expose
   private String crt;
 
   private NodeSecretCerts() {
-
   }
 
   static NodeSecretCerts fromNodeSecret(NodeSecret nodeSecret) {

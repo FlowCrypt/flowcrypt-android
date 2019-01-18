@@ -1,11 +1,14 @@
 package com.flowcrypt.email.node;
 
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+
 /**
- * This class describes a logic of running Node.js using the native code.
- * Here we run Node.js server with given parameters.
+ * This class describes a logic of running Node.js using the native code. Here we run Node.js server with given
+ * parameters. This is a singleton. Because we need to be sure we have only one instance of Node.js which is run.
  */
 class NativeNode {
 
+  private static NativeNode ourInstance;
   private static volatile boolean isReady = false;
 
   static {
@@ -17,8 +20,15 @@ class NativeNode {
   private boolean isRunning;
   private NodeSecret nodeSecret;
 
-  NativeNode(NodeSecret nodeSecret) {
+  private NativeNode(NodeSecret nodeSecret) {
     this.nodeSecret = nodeSecret;
+  }
+
+  public static NativeNode getInstance(NodeSecret nodeSecret) {
+    if (ourInstance == null) {
+      ourInstance = new NativeNode(nodeSecret);
+    }
+    return ourInstance;
   }
 
   /**
@@ -54,7 +64,7 @@ class NativeNode {
       new Thread(new Runnable() {
         @Override
         public void run() {
-          Thread.currentThread().setName("NativeNode");
+          Thread.currentThread().setName(NativeNode.class.getSimpleName());
           startSynchronously(jsCode);
           isRunning = false; // if it ever stops running, set isRunning back to false
           isReady = false;
@@ -63,7 +73,7 @@ class NativeNode {
     }
   }
 
-  Boolean isReady() {
+  boolean isReady() {
     return isReady;
   }
 
@@ -75,7 +85,8 @@ class NativeNode {
       // about 3500ms with scripts
       startNodeWithArguments(new String[]{"node", "-e", getJsSrc(jsCode)});
     } catch (Exception e) {
-      e.printStackTrace(); // todo - add acra
+      e.printStackTrace();
+      ExceptionUtil.handleError(e);
     }
   }
 

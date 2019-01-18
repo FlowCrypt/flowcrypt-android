@@ -4,8 +4,11 @@ import android.app.Application;
 import android.content.Context;
 import android.content.res.AssetManager;
 
+import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.node.RequestsManager;
 import com.flowcrypt.email.node.exception.NodeNotReady;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
 
@@ -13,8 +16,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import androidx.annotation.NonNull;
@@ -100,30 +101,39 @@ public class Node {
     }
   }
 
-  /**
-   * this is just an example. Production app should use encrypted store
-   */
   private void saveNodeSecretCertsToCache(Context context, NodeSecretCerts nodeSecretCerts) {
-    try {
-      FileOutputStream fos = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE);
-      ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(nodeSecretCerts);
-      oos.close();
-      fos.close();
+    Gson gson = NodeGson.getInstance().getGson();
+    String data = gson.toJson(nodeSecretCerts);
+    try (FileOutputStream outputStream = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)) {
+      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+      String spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString();
+      String encryptedData = keyStoreCryptoManager.encrypt(data, spec);
+      outputStream.write(spec.getBytes());
+      outputStream.write('\n');
+      outputStream.write(encryptedData.getBytes());
     } catch (Exception e) {
       throw new RuntimeException("Could not save certs cache", e);
     }
   }
 
-  /**
-   * this is just an example. Production app should use encrypted store
-   */
   private NodeSecretCerts getCachedNodeSecretCerts(Context context) {
-    try {
-      FileInputStream fis = context.openFileInput(NODE_SECRETS_CACHE_FILENAME);
-      ObjectInputStream ois = new ObjectInputStream(fis);
-      return (NodeSecretCerts) ois.readObject();
+    try (FileInputStream inputStream = context.openFileInput(NODE_SECRETS_CACHE_FILENAME)) {
+      Gson gson = NodeGson.getInstance().getGson();
+      String rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+
+      int splitPosition = rawData.indexOf('\n');
+
+      if (splitPosition == -1) {
+        throw new IllegalArgumentException("wrong rawData");
+      }
+
+      String spec = rawData.substring(0, splitPosition);
+
+      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition), spec);
+      return gson.fromJson(decryptedData, NodeSecretCerts.class);
     } catch (FileNotFoundException e) {
+      e.printStackTrace();
       return null;
     } catch (Exception e) {
       throw new RuntimeException("Could not load certs cache", e);
@@ -132,7 +142,7 @@ public class Node {
 
   private void start(AssetManager am, NodeSecret nodeSecret) throws IOException {
     if (nativeNode == null) {
-      nativeNode = new NativeNode(nodeSecret); // takes about 100ms due to static native loads
+      nativeNode = NativeNode.getInstance(nodeSecret); // takes about 100ms due to static native loads
     }
     nativeNode.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8));
   }
