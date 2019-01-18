@@ -1,4 +1,4 @@
-package com.flowcrypt.email.node.results;
+package com.flowcrypt.email.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
