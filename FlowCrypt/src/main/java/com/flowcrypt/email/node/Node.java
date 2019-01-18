@@ -130,7 +130,7 @@ public class Node {
       String spec = rawData.substring(0, splitPosition);
 
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
-      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition), spec);
+      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec);
       return gson.fromJson(decryptedData, NodeSecretCerts.class);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
