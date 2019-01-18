@@ -15,8 +15,7 @@ const char *ADBTAG = "NODEJS-MOBILE";
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_flowcrypt_email_node_NativeNode_sendNativeMessageToNode(JNIEnv *env, jobject /* this */,
-                                                                 jstring msg) {
+Java_com_flowcrypt_email_node_NativeNode_sendNativeMessageToNode(JNIEnv *env, jobject /* this */, jstring msg) {
     const char *nativeMessage = env->GetStringUTFChars(msg, 0);
     rn_bridge_notify(nativeMessage);
     env->ReleaseStringUTFChars(msg, nativeMessage);
@@ -116,8 +115,7 @@ Java_com_flowcrypt_email_node_NativeNode_startNodeWithArguments(JNIEnv *env, job
     //Compute byte size need for all arguments in contiguous memory.
     int c_arguments_size = 0;
     for (int i = 0; i < argument_count; i++) {
-        c_arguments_size += strlen(
-                env->GetStringUTFChars((jstring) env->GetObjectArrayElement(arguments, i), 0));
+        c_arguments_size += strlen(env->GetStringUTFChars((jstring) env->GetObjectArrayElement(arguments, i), 0));
         c_arguments_size++; // for '\0'
     }
 
@@ -132,8 +130,7 @@ Java_com_flowcrypt_email_node_NativeNode_startNodeWithArguments(JNIEnv *env, job
 
     //Populate the args_buffer and argv.
     for (int i = 0; i < argument_count; i++) {
-        const char *current_argument = env->GetStringUTFChars(
-                (jstring) env->GetObjectArrayElement(arguments, i), 0);
+        const char *current_argument = env->GetStringUTFChars((jstring) env->GetObjectArrayElement(arguments, i), 0);
 
         //Copy current argument to its expected position in args_buffer
         strncpy(current_args_position, current_argument, strlen(current_argument));
@@ -147,8 +144,7 @@ Java_com_flowcrypt_email_node_NativeNode_startNodeWithArguments(JNIEnv *env, job
 
     //Start threads to show stdout and stderr in logcat.
     if (start_redirecting_stdout_stderr() == -1) {
-        __android_log_write(ANDROID_LOG_ERROR, ADBTAG,
-                            "Couldn't start redirecting stdout and stderr to logcat.");
+        __android_log_write(ANDROID_LOG_ERROR, ADBTAG, "Couldn't start redirecting stdout and stderr to logcat.");
     }
 
     rn_register_bridge_cb(&rcv_message);
