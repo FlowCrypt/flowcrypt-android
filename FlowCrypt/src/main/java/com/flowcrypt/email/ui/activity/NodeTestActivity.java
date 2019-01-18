@@ -93,6 +93,22 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   @Override
   public void onChanged(@Nullable NodeResponseWrapper responseWrapper) {
     if (responseWrapper != null) {
+      if (responseWrapper.getException() != null) {
+        addResultLine("FAIL", 0, "exception: " + responseWrapper.getException().getMessage(), true);
+        return;
+      }
+
+      if (responseWrapper.getResult() == null) {
+        addResultLine("FAIL", 0, "result == null ", true);
+        return;
+      }
+
+      if (responseWrapper.getResult().getError() != null) {
+        addResultLine("ERROR", responseWrapper.getResult().getTime(),
+            "error: " + responseWrapper.getResult().getError(), true);
+        return;
+      }
+
       switch (responseWrapper.getRequestCode()) {
         case R.id.req_id_get_version:
           VersionResult testNodeResult = (VersionResult) responseWrapper.getResult();
