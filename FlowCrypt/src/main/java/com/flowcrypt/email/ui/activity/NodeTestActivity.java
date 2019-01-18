@@ -236,8 +236,8 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
 
   private void addResultLine(String actionName, BaseNodeResult result) {
     if (result != null) {
-      if (result.getServerError() != null) {
-        addResultLine(actionName, result.getTime(), result.getServerError().getMsg(), false);
+      if (result.getError() != null) {
+        addResultLine(actionName, result.getTime(), result.getError().getMsg(), false);
       } else {
         addResultLine(actionName, result.getTime(), "ok", false);
       }
@@ -245,7 +245,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   private void printDecryptMsgResult(String actionName, DecryptedMsgResult r) {
-    if (r.getServerError() != null) {
+    if (r.getError() != null) {
       addResultLine(actionName, r);
     } /*else if (r.getDecryptErr() != null) {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
@@ -273,7 +273,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   private void printDecryptFileResult(String actionName, byte[] originalData, DecryptedFileResult r) {
-    if (r.getServerError() != null) {
+    if (r.getError() != null) {
       addResultLine(actionName, r);
     }/* else if (r.getDecryptErr() != null) {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);

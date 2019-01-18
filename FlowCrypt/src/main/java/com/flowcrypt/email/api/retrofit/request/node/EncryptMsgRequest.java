@@ -1,7 +1,6 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
@@ -44,10 +43,5 @@ public final class EncryptMsgRequest extends BaseNodeRequest {
     if (nodeService != null) {
       return nodeService.encryptMsg(this).execute();
     } else return null;
-  }
-
-  @Override
-  public Class getResponseClass() {
-    return EncryptedMsgResult.class;
   }
 }

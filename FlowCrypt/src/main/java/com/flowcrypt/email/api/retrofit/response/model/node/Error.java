@@ -15,17 +15,17 @@ import com.google.gson.annotations.SerializedName;
  * @author DenBond7
  */
 
-public class ServerError implements Parcelable {
+public class Error implements Parcelable {
 
-  public static final Creator<ServerError> CREATOR = new Creator<ServerError>() {
+  public static final Creator<Error> CREATOR = new Creator<Error>() {
     @Override
-    public ServerError createFromParcel(Parcel source) {
-      return new ServerError(source);
+    public Error createFromParcel(Parcel source) {
+      return new Error(source);
     }
 
     @Override
-    public ServerError[] newArray(int size) {
-      return new ServerError[size];
+    public Error[] newArray(int size) {
+      return new Error[size];
     }
   };
 
@@ -36,12 +36,25 @@ public class ServerError implements Parcelable {
   @Expose
   private String stack;
 
-  public ServerError() {
+  @Expose
+  private String type;
+
+  public Error() {
   }
 
-  protected ServerError(Parcel in) {
+  protected Error(Parcel in) {
     this.msg = in.readString();
     this.stack = in.readString();
+    this.type = in.readString();
+  }
+
+  @Override
+  public String toString() {
+    return "Error{" +
+        "msg='" + msg + '\'' +
+        ", stack='" + stack + '\'' +
+        ", type='" + type + '\'' +
+        '}';
   }
 
   @Override
@@ -53,6 +66,7 @@ public class ServerError implements Parcelable {
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.msg);
     dest.writeString(this.stack);
+    dest.writeString(this.type);
   }
 
   public String getMsg() {
@@ -63,11 +77,7 @@ public class ServerError implements Parcelable {
     return stack;
   }
 
-  @Override
-  public String toString() {
-    return "ServerError{" +
-        "msg='" + msg + '\'' +
-        ", stack='" + stack + '\'' +
-        '}';
+  public String getType() {
+    return type;
   }
 }

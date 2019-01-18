@@ -3,7 +3,7 @@ package com.flowcrypt.email.api.retrofit.response.node;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.api.retrofit.response.model.node.ServerError;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -39,14 +39,14 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
 
   @SerializedName("error")
   @Expose
-  private ServerError serverError;
+  private Error error;
 
   BaseNodeResult() {
   }
 
   protected BaseNodeResult(Parcel in) {
     this.time = in.readLong();
-    this.serverError = in.readParcelable(ServerError.class.getClassLoader());
+    this.error = in.readParcelable(Error.class.getClassLoader());
   }
 
   final byte[] getData() {
@@ -66,7 +66,7 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeLong(this.time);
-    dest.writeParcelable(this.serverError, flags);
+    dest.writeParcelable(this.error, flags);
   }
 
   /**
@@ -89,7 +89,7 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
     this.time = time;
   }
 
-  public ServerError getServerError() {
-    return serverError;
+  public Error getError() {
+    return error;
   }
 }

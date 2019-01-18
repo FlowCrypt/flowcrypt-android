@@ -25,6 +25,4 @@ public interface NodeRequest {
   Context getContext();
 
   Response getResponse(NodeService nodeService) throws IOException;
-
-  Class getResponseClass();
 }

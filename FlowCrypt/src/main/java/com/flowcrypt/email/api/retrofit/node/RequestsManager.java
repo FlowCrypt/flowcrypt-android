@@ -17,7 +17,6 @@ import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.node.TestData;
-import com.google.gson.reflect.TypeToken;
 
 import java.util.Arrays;
 
@@ -88,10 +87,7 @@ public class RequestsManager {
         Response response = nodeRequestWrapper.getRequest().getResponse(nodeService);
         if (response != null) {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
-          if (response.errorBody() != null) {
-            baseNodeResult = retrofitHelper.getGson().fromJson(response.errorBody().charStream(),
-                TypeToken.get(nodeRequestWrapper.getRequest().getResponseClass()).getType());
-          } else if (response.body() != null) {
+          if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
             baseNodeResult.setTime(time);
           } else {

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
@@ -57,10 +56,5 @@ public class EncryptFileRequest extends BaseNodeRequest {
     if (nodeService != null) {
       return nodeService.encryptFile(this).execute();
     } else return null;
-  }
-
-  @Override
-  public Class getResponseClass() {
-    return EncryptedFileResult.class;
   }
 }

@@ -54,9 +54,4 @@ public class BaseNodeRequest implements NodeRequest {
   public Response getResponse(NodeService nodeService) throws IOException {
     throw new UnsupportedOperationException("not defined");
   }
-
-  @Override
-  public Class getResponseClass() {
-    throw new UnsupportedOperationException("not defined");
-  }
 }

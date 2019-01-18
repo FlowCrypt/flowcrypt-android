@@ -1,5 +1,8 @@
 package com.flowcrypt.email.api.retrofit.response.model.node;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 
 /**
@@ -8,7 +11,19 @@ import com.google.gson.annotations.Expose;
  * Time: 4:08 PM
  * E-mail: DenBond7@gmail.com
  */
-public class BlockMetas {
+public class BlockMetas implements Parcelable {
+  public static final Creator<BlockMetas> CREATOR = new Creator<BlockMetas>() {
+    @Override
+    public BlockMetas createFromParcel(Parcel source) {
+      return new BlockMetas(source);
+    }
+
+    @Override
+    public BlockMetas[] newArray(int size) {
+      return new BlockMetas[size];
+    }
+  };
+
   @Expose
   private String type;
 
@@ -18,6 +33,22 @@ public class BlockMetas {
   public BlockMetas(String type, int length) {
     this.type = type;
     this.length = length;
+  }
+
+  protected BlockMetas(Parcel in) {
+    this.type = in.readString();
+    this.length = in.readInt();
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.type);
+    dest.writeInt(this.length);
   }
 
   public String getType() {

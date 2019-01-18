@@ -2,7 +2,6 @@ package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -60,10 +59,5 @@ public final class DecryptMsgRequest extends BaseNodeRequest {
     if (nodeService != null) {
       return nodeService.decryptMsg(this).execute();
     } else return null;
-  }
-
-  @Override
-  public Class getResponseClass() {
-    return DecryptedMsgResult.class;
   }
 }
