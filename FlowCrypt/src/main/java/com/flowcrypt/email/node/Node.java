@@ -25,10 +25,10 @@ import androidx.lifecycle.MutableLiveData;
 /**
  * This is node.js manager.
  */
-public class Node {
+public final class Node {
   private static final String NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache";
 
-  private static final Node ourInstance = new Node();
+  private static final Node INSTANCE = new Node();
   private volatile NativeNode nativeNode;
   private NodeSecret nodeSecret;
   private MutableLiveData<Boolean> liveData;
@@ -39,7 +39,7 @@ public class Node {
   }
 
   public static Node getInstance() {
-    return ourInstance;
+    return INSTANCE;
   }
 
   public static void init(@NonNull Application app) {
@@ -86,6 +86,13 @@ public class Node {
         }
       }
     }).start();
+  }
+
+  private void start(AssetManager am, NodeSecret nodeSecret) throws IOException {
+    if (nativeNode == null) {
+      nativeNode = NativeNode.getInstance(nodeSecret); // takes about 100ms due to static native loads
+    }
+    nativeNode.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8));
   }
 
   private void waitUntilReady() throws NodeNotReady {
@@ -138,12 +145,5 @@ public class Node {
     } catch (Exception e) {
       throw new RuntimeException("Could not load certs cache", e);
     }
-  }
-
-  private void start(AssetManager am, NodeSecret nodeSecret) throws IOException {
-    if (nativeNode == null) {
-      nativeNode = NativeNode.getInstance(nodeSecret); // takes about 100ms due to static native loads
-    }
-    nativeNode.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8));
   }
 }

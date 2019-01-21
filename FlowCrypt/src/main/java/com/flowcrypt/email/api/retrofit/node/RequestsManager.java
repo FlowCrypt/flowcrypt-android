@@ -71,7 +71,7 @@ public class RequestsManager {
     private SingleLiveEvent<NodeResponseWrapper> data;
     private NodeRetrofitHelper retrofitHelper;
 
-    public Worker(SingleLiveEvent<NodeResponseWrapper> data, NodeRetrofitHelper retrofitHelper) {
+    Worker(SingleLiveEvent<NodeResponseWrapper> data, NodeRetrofitHelper retrofitHelper) {
       this.data = data;
       this.retrofitHelper = retrofitHelper;
     }

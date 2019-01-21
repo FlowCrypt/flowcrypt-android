@@ -82,7 +82,7 @@ public final class NodeJsonReader extends Reader {
           }
         }
 
-        Arrays.fill(cbuf, '\u0000');
+        Arrays.fill(cbuf, Character.MIN_VALUE);
         count = delegate.read(cbuf, off, position);
         return count;
       } else {

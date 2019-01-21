@@ -11,8 +11,8 @@ import com.google.gson.GsonBuilder;
  * Time: 2:08 PM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeGson {
-  private static final NodeGson ourInstance = new NodeGson();
+public final class NodeGson {
+  private static final NodeGson INSTANCE = new NodeGson();
   private Gson gson;
 
   private NodeGson() {
@@ -22,7 +22,7 @@ public class NodeGson {
   }
 
   public static NodeGson getInstance() {
-    return ourInstance;
+    return INSTANCE;
   }
 
   public Gson getGson() {

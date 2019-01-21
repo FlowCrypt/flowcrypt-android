@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 /**
  * It's a simple POJO which contains information about generated secret certs.
  */
-class NodeSecretCerts implements java.io.Serializable {
+final class NodeSecretCerts implements java.io.Serializable {
   @Expose
   private String ca;
 

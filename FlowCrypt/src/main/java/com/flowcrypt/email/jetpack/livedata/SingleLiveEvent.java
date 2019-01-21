@@ -38,7 +38,8 @@ import androidx.lifecycle.Observer;
  * Note that only one observer is going to be notified of changes.
  * <p>
  * <p>
- * See https://github.com/googlesamples/android-architecture/blob/dev-todo-mvvm-live/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/SingleLiveEvent.java
+ * See https://github.com/googlesamples/android-architecture/blob/dev-todo-mvvm-live/todoapp/app/src/main/java/com
+ * /example/android/architecture/blueprints/todoapp/SingleLiveEvent.java
  */
 public class SingleLiveEvent<T> extends MutableLiveData<T> {
 

@@ -52,7 +52,7 @@ public class NodeSecret {
   private static final String HEADER_CRT_END = "\n-----END CERTIFICATE-----\n";
   private static final String HEADER_PRV_BEGIN = "-----BEGIN RSA PRIVATE KEY-----\n";
   private static final String HEADER_PRV_END = "\n-----END RSA PRIVATE KEY-----\n";
-  private static boolean wasBouncyCastleProviderInitialized = false;
+  private static boolean wasBouncyCastleProviderInitialized;
 
   public int port;
   public String ca;
@@ -102,6 +102,21 @@ public class NodeSecret {
     return NodeSecretCerts.fromNodeSecret(this);
   }
 
+  public SSLSocketFactory getSslSocketFactory() {
+    createSslAttributesIfNeeded();
+    return sslSocketFactory;
+  }
+
+  public X509TrustManager getSslTrustManager() {
+    createSslAttributesIfNeeded();
+    return sslTrustManager;
+  }
+
+  public BigInteger getSslCrtSerialNumber() {
+    createSslAttributesIfNeeded();
+    return sslCrtSerialNumber;
+  }
+
   private void createSslAttributesIfNeeded() {
     if (sslSocketFactory == null || sslTrustManager == null) {
       try {
@@ -127,30 +142,15 @@ public class NodeSecret {
     }
   }
 
-  public SSLSocketFactory getSslSocketFactory() {
-    createSslAttributesIfNeeded();
-    return sslSocketFactory;
-  }
-
-  public X509TrustManager getSslTrustManager() {
-    createSslAttributesIfNeeded();
-    return sslTrustManager;
-  }
-
-  public BigInteger getSslCrtSerialNumber() {
-    createSslAttributesIfNeeded();
-    return sslCrtSerialNumber;
-  }
-
   private X509Certificate parseCert(String certString) throws CertificateException {
     return (X509Certificate) CertificateFactory.getInstance("X.509")
         .generateCertificate(new ByteArrayInputStream(certString.getBytes()));
   }
 
   private PrivateKey parseKey(String keyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    keyString = keyString.replace(HEADER_PRV_BEGIN, "").replace(HEADER_PRV_END, "").replaceAll("\\n", "");
+    String keyStringMod = keyString.replace(HEADER_PRV_BEGIN, "").replace(HEADER_PRV_END, "").replaceAll("\\n", "");
     KeyFactory kf = KeyFactory.getInstance("RSA");
-    return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(keyString, Base64.DEFAULT)));
+    return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(keyStringMod, Base64.DEFAULT)));
   }
 
   private void genCerts() throws Exception {
@@ -167,7 +167,8 @@ public class NodeSecret {
 
     // new ca-signed srv crt and key (also used for client)
     KeyPair srvKeypair = keyGen.generateKeyPair();
-    int srvKu = KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
+    int srvKu =
+        KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
     srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name(CRT_SUBJECT), srvKu);
     srvKey = srvKeypair.getPrivate();
   }
@@ -187,7 +188,8 @@ public class NodeSecret {
     return keyStore;
   }
 
-  private X509Certificate newSignedCrt(KeyPair issuerKeypair, KeyPair subjectKeyPair, X500Name subject, int keyUsage) throws Exception {
+  private X509Certificate newSignedCrt(KeyPair issuerKeypair, KeyPair subjectKeyPair, X500Name subject, int keyUsage)
+      throws Exception {
     BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
     Date from = new Date(System.currentTimeMillis());
     Date to = new Date(System.currentTimeMillis() + Long.valueOf("788400000000")); // 25 years
@@ -208,7 +210,8 @@ public class NodeSecret {
   private String crtToString(X509Certificate cert) throws CertificateEncodingException {
     StringWriter sw = new StringWriter();
     sw.write(HEADER_CRT_BEGIN);
-    sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1\n")); // todo - get rid of DatatypeConverter
+    // todo - get rid of DatatypeConverter
+    sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1\n"));
     sw.write(HEADER_CRT_END);
     return sw.toString();
   }
@@ -216,13 +219,14 @@ public class NodeSecret {
   private String keyToString(PrivateKey prv) {
     StringWriter sw = new StringWriter();
     sw.write(HEADER_PRV_BEGIN);
-    sw.write(DatatypeConverter.printBase64Binary(prv.getEncoded()).replaceAll("(.{64})", "$1\n")); // todo - get rid of DatatypeConverter
+    // todo - get rid of DatatypeConverter
+    sw.write(DatatypeConverter.printBase64Binary(prv.getEncoded()).replaceAll("(.{64})", "$1\n"));
     sw.write(HEADER_PRV_END);
     return sw.toString();
   }
 
   private String genPwd() {
-    byte bytes[] = new byte[32];
+    byte[] bytes = new byte[32];
     secureRandom.nextBytes(bytes);
     return new String(Base64.encode(bytes, Base64.NO_WRAP));
   }

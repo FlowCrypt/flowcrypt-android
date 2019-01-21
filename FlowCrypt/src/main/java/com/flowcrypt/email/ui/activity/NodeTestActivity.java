@@ -226,11 +226,12 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   private void addResultLine(String actionName, long ms, String result, boolean isFinal) {
-    if (result == null || !result.equals("ok") && !result.equals("success")) {
+    if (result == null || !"ok".equals(result) && !"success".equals(result)) {
       hasTestFailure = true;
-      result = "***FAIL*** " + result;
     }
-    String line = (isFinal ? "-----------------\n" : "") + actionName + " [" + ms + "ms] " + result + "\n";
+
+    String line = (isFinal ? "-----------------\n" : "") + actionName + " [" + ms + "ms] " +
+        (hasTestFailure ? "***FAIL*** " + result : result) + "\n";
     System.out.print(line);
     resultText += line;
     tvResult.setText(resultText);
@@ -263,9 +264,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private void printDecryptMsgResult(String actionName, DecryptedMsgResult r) {
     if (r.getError() != null) {
       addResultLine(actionName, r);
-    } /*else if (r.getDecryptErr() != null) {
-      addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
-    } */ else if (r.getBlockMetas().size() != 1) {
+    } else if (r.getBlockMetas().size() != 1) {
       addResultLine(actionName, r.getTime(), "wrong amount of block metas: " + r.getBlockMetas().size(), false);
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
       addResultLine(actionName, r.getTime(),
@@ -291,9 +290,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private void printDecryptFileResult(String actionName, byte[] originalData, DecryptedFileResult r) {
     if (r.getError() != null) {
       addResultLine(actionName, r);
-    }/* else if (r.getDecryptErr() != null) {
-      addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
-    }*/ else if (!"file.txt".equals(r.getName())) {
+    } else if (!"file.txt".equals(r.getName())) {
       addResultLine(actionName, r.getTime(), "wrong filename", false);
     } else if (originalData != null && !Arrays.equals(r.getDecryptedBytes(), originalData)) {
       addResultLine(actionName, r.getTime(), "decrypted file content mismatch", false);

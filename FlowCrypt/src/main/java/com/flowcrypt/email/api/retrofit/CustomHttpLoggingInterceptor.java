@@ -246,8 +246,8 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
   private boolean bodyHasUnknownEncoding(Headers headers) {
     String contentEncoding = headers.get("Content-Encoding");
     return contentEncoding != null
-        && !contentEncoding.equalsIgnoreCase("identity")
-        && !contentEncoding.equalsIgnoreCase("gzip");
+        && !"identity".equalsIgnoreCase(contentEncoding)
+        && !"gzip".equalsIgnoreCase(contentEncoding);
   }
 
   public enum Level {

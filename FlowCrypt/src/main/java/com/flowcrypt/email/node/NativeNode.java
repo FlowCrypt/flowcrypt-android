@@ -6,10 +6,10 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
  * This class describes a logic of running Node.js using the native code. Here we run Node.js server with given
  * parameters. This is a singleton. Because we need to be sure we have only one instance of Node.js which is run.
  */
-class NativeNode {
+final class NativeNode {
 
   private static NativeNode ourInstance;
-  private static volatile boolean isReady = false;
+  private static volatile boolean isReady;
 
   static {
     // Used to load the 'native-lib' library on application startup
