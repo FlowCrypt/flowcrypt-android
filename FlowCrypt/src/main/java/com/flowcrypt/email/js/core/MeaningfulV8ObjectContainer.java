@@ -1,3 +1,8 @@
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.js.core;
 
 import com.eclipsesource.v8.V8Array;

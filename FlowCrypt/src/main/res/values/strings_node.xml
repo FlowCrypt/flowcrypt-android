@@ -1,3 +1,8 @@
+<!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
 <resources>
     <string name="run_all_tests">run all tests</string>
     <string name="versions">VERSION</string>

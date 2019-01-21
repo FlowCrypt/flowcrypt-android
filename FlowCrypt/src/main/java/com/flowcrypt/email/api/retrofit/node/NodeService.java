@@ -1,3 +1,8 @@
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
