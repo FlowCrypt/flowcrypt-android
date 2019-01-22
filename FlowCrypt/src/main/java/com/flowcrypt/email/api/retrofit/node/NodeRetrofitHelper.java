@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.node.NodeSecret;
@@ -43,7 +48,7 @@ public final class NodeRetrofitHelper {
     gson = NodeGson.getInstance().getGson();
 
     Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-        .baseUrl("https://localhost:" + nodeSecret.port + "/")
+        .baseUrl("https://localhost:" + nodeSecret.getPort() + "/")
         .addConverterFactory(NodeConverterFactory.create(gson))
         .client(okHttpClient);
 
@@ -102,7 +107,7 @@ public final class NodeRetrofitHelper {
         Headers headers = request
             .headers()
             .newBuilder()
-            .add("Authorization", nodeSecret.authHeader)
+            .add("Authorization", nodeSecret.getAuthHeader())
             .add("Connection", "Keep-Alive")
             .build();
         request = request.newBuilder().headers(headers).build();

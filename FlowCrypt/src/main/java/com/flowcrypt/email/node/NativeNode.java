@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.node;
 
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -97,12 +102,12 @@ final class NativeNode {
 
   private String getJsSrc(String jsCode) {
     String src = "";
-    src += genConst("NODE_UNIX_SOCKET", String.valueOf(nodeSecret.unixSocketFilePath)); // not used yet
-    src += genConst("NODE_PORT", String.valueOf(nodeSecret.port));
-    src += genConst("NODE_SSL_CA", nodeSecret.ca);
-    src += genConst("NODE_SSL_CRT", nodeSecret.crt);
-    src += genConst("NODE_SSL_KEY", nodeSecret.key);
-    src += genConst("NODE_AUTH_HEADER", nodeSecret.authHeader);
+    src += genConst("NODE_UNIX_SOCKET", String.valueOf(nodeSecret.getUnixSocketFilePath())); // not used yet
+    src += genConst("NODE_PORT", String.valueOf(nodeSecret.getPort()));
+    src += genConst("NODE_SSL_CA", nodeSecret.getCa());
+    src += genConst("NODE_SSL_CRT", nodeSecret.getCrt());
+    src += genConst("NODE_SSL_KEY", nodeSecret.getKey());
+    src += genConst("NODE_AUTH_HEADER", nodeSecret.getAuthHeader());
     src += jsCode;
     return src;
   }

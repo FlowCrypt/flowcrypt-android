@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.node;
 
 import com.google.gson.annotations.Expose;
@@ -25,9 +30,9 @@ final class NodeSecretCerts implements java.io.Serializable {
 
   static NodeSecretCerts fromNodeSecret(NodeSecret nodeSecret) {
     NodeSecretCerts nodeSecretCerts = new NodeSecretCerts();
-    nodeSecretCerts.ca = nodeSecret.ca;
-    nodeSecretCerts.crt = nodeSecret.crt;
-    nodeSecretCerts.key = nodeSecret.key;
+    nodeSecretCerts.ca = nodeSecret.getCa();
+    nodeSecretCerts.crt = nodeSecret.getCrt();
+    nodeSecretCerts.key = nodeSecret.getKey();
     return nodeSecretCerts;
   }
 
