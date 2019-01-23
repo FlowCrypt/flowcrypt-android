@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.Manifest;
@@ -77,6 +82,7 @@ import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -755,6 +761,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     for (AttachmentInfo attachmentInfo : extraActionInfo.getAtts()) {
       if (hasAbilityToAddAtt(attachmentInfo)) {
+
+        if (TextUtils.isEmpty(attachmentInfo.getName())) {
+          ExceptionUtil.handleError(new NullPointerException("attachmentInfo.getName() == null, uri = " + attachmentInfo.getUri()));
+          continue;
+        }
+
         File draftAtt = new File(draftCacheDir, attachmentInfo.getName());
 
         try {
@@ -768,6 +780,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           }
         } catch (IOException e) {
           e.printStackTrace();
+          ExceptionUtil.handleError(e);
 
           if (!draftAtt.delete()) {
             Log.e(TAG, "Delete " + draftAtt.getName() + " filed!");
