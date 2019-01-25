@@ -3,6 +3,21 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.api.email;
 
 import android.accounts.Account;
@@ -23,6 +38,10 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.MessageBlock;
@@ -34,6 +53,7 @@ import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NodeEncryptException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -136,7 +156,7 @@ public class EmailUtil {
     if (TextUtils.isEmpty(email)) {
       return "";
     } else if (email.contains("@")) {
-      return email.substring(email.indexOf('@') + 1, email.length());
+      return email.substring(email.indexOf('@') + 1);
     } else {
       return "";
     }
@@ -718,7 +738,7 @@ public class EmailUtil {
   }
 
   /**
-   * Generate a raw MIME message using {@link Js} tools.
+   * Generate a raw MIME message using {@link Js} tools. Don't call it in the main thread.
    *
    * @param info    The given {@link OutgoingMessageInfo} which contains information about an outgoing
    *                message.
@@ -726,12 +746,28 @@ public class EmailUtil {
    * @param pubKeys The public keys which will be used to generate an encrypted part.
    * @return The generated raw MIME message.
    */
-  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) {
+  @NonNull
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) throws IOException,
+      NodeEncryptException {
     String msgText = null;
 
     switch (info.getEncryptionType()) {
       case ENCRYPTED:
-        msgText = js.crypto_message_encrypt(pubKeys, info.getMsg());
+        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+        EncryptMsgRequest request = new EncryptMsgRequest(info.getMsg(), pubKeys);
+
+        retrofit2.Response<EncryptedMsgResult> response = nodeService.encryptMsg(request).execute();
+        EncryptedMsgResult result = response.body();
+
+        if (result == null) {
+          throw new NullPointerException("encryptedMsgResult == null");
+        }
+
+        if (result.getError() != null) {
+          throw new NodeEncryptException(result.getError().getMsg());
+        }
+
+        msgText = result.getEncryptedMsg();
         break;
 
       case STANDARD:
