@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
@@ -62,6 +67,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    setTheme(R.style.AppTheme_NoActionBar);
     super.onCreate(savedInstanceState);
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
 

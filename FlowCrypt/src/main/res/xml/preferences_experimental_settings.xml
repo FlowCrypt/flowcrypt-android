@@ -3,6 +3,11 @@
   ~ Contributors: DenBond7
   -->
 
+<!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.Preference
@@ -19,7 +24,7 @@
         android:title="Node backend test"
         app:iconSpaceReserved="false">
         <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.NodeSplashActivity"
+            android:targetClass="com.flowcrypt.email.ui.activity.NodeTestActivity"
             android:targetPackage="@string/application_id" />
     </androidx.preference.Preference>
 </androidx.preference.PreferenceScreen>

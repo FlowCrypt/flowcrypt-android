@@ -8,6 +8,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.node;
 
 import android.util.Base64;
@@ -98,6 +103,7 @@ public class NodeSecret {
     secureRandom = new SecureRandom();
     initCerts(nodeSecretCertsCache);
     genAuthPwdAndHeader();
+    createSslAttributes();
   }
 
   public NodeSecretCerts getCache() {
@@ -105,17 +111,14 @@ public class NodeSecret {
   }
 
   public SSLSocketFactory getSslSocketFactory() {
-    createSslAttributesIfNeeded();
     return sslSocketFactory;
   }
 
   public X509TrustManager getSslTrustManager() {
-    createSslAttributesIfNeeded();
     return sslTrustManager;
   }
 
   public BigInteger getSslCrtSerialNumber() {
-    createSslAttributesIfNeeded();
     return sslCrtSerialNumber;
   }
 
@@ -163,7 +166,7 @@ public class NodeSecret {
     }
   }
 
-  private void createSslAttributesIfNeeded() {
+  private void createSslAttributes() {
     if (sslSocketFactory == null || sslTrustManager == null) {
       try {
         // create trust manager that trusts ca to verify server crt

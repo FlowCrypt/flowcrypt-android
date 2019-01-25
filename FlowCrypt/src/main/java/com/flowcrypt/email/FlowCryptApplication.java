@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email;
 
 import android.app.Application;
@@ -12,6 +17,7 @@ import android.content.Context;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -84,6 +90,8 @@ public class FlowCryptApplication extends Application {
       scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
     }
     SyncJobService.schedule(this);
+
+    Node.init(this);
   }
 
   @Override

@@ -3,6 +3,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.node;
 
 import android.app.Application;
@@ -35,9 +40,9 @@ public final class Node {
 
   private static final Node INSTANCE = new Node();
   private volatile NativeNode nativeNode;
-  private NodeSecret nodeSecret;
+  private volatile NodeSecret nodeSecret;
+  private volatile RequestsManager requestsManager;
   private MutableLiveData<Boolean> liveData;
-  private RequestsManager requestsManager;
 
   private Node() {
     liveData = new MutableLiveData<>();

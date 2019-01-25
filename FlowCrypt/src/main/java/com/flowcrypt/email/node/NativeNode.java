@@ -8,6 +8,11 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.node;
 
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -15,6 +20,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 /**
  * This class describes a logic of running Node.js using the native code. Here we run Node.js server with given
  * parameters. This is a singleton. Because we need to be sure we have only one instance of Node.js which is run.
+ *
+ * @see <a href="https://code.janeasystems.com/nodejs-mobile/getting-started-android">Node.js for Mobile Apps</a>
  */
 final class NativeNode {
 
