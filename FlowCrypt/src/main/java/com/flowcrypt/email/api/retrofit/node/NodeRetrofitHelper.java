@@ -8,6 +8,16 @@
  * Contributors: DenBond7
  */
 
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
 package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.node.NodeSecret;
@@ -38,12 +48,19 @@ import retrofit2.Retrofit;
  */
 public final class NodeRetrofitHelper {
   private static final int TIMEOUT = 30;
-  private static NodeRetrofitHelper ourInstance;
+  private static NodeRetrofitHelper ourInstance = new NodeRetrofitHelper();
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
   private Gson gson;
 
-  private NodeRetrofitHelper(final NodeSecret nodeSecret) {
+  private NodeRetrofitHelper() {
+  }
+
+  public static NodeRetrofitHelper getInstance() {
+    return ourInstance;
+  }
+
+  public void init(NodeSecret nodeSecret) {
     okHttpClient = getOkHttpClientBuilder(nodeSecret).build();
     gson = NodeGson.getInstance().getGson();
 
@@ -53,14 +70,6 @@ public final class NodeRetrofitHelper {
         .client(okHttpClient);
 
     retrofit = retrofitBuilder.build();
-  }
-
-  public static NodeRetrofitHelper getInstance(NodeSecret nodeSecret) {
-    if (ourInstance == null) {
-      ourInstance = new NodeRetrofitHelper(nodeSecret);
-    }
-
-    return ourInstance;
   }
 
   public OkHttpClient getOkHttpClient() {
