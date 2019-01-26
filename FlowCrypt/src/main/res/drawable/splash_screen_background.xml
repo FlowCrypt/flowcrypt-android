@@ -4,11 +4,6 @@
   ~ Contributors: DenBond7
   -->
 
-<!--
-  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
-  -->
-
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android"
     android:opacity="opaque">
     <!-- The background color, preferably the same as your normal theme -->
