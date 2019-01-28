@@ -544,7 +544,7 @@ public class AttachmentDownloadManagerService extends Service {
 
         javax.mail.Message msg = remoteFolder.getMessageByUID(att.getUid());
 
-        if (msg != null) {
+        if (msg == null) {
           throw new NullPointerException(context.getString(R.string.no_message_with_this_attachment));
         }
 
