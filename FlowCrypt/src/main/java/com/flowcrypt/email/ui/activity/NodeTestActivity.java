@@ -150,7 +150,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
           EncryptedFileResult encryptFileResult = (EncryptedFileResult) responseWrapper.getResult();
           addResultLine("encrypt-file", encryptFileResult);
           encryptedBytes = encryptFileResult.getEncryptedBytes();
-          requestsManager.decryptFile(R.id.req_id_decrypt_file_ecc, encryptedBytes, TestData.eccPrvKeyInfo());
+          requestsManager.decryptFile(R.id.req_id_decrypt_file_ecc, encryptedBytes, TestData.getMixedPrvKeys());
           break;
 
         case R.id.req_id_decrypt_file_ecc:
