@@ -223,7 +223,7 @@ android {
     }
 
     tasks.whenTaskAdded { task ->
-        if (task.name == 'assembleProductionRelease') {
+        if (task.name == 'assembleProdRelease') {
             if (project.hasProperty('runtimeSetup')) {
                 task.dependsOn inputKeyPasswords
             }
