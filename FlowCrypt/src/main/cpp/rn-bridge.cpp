@@ -1,3 +1,5 @@
+// MIT adapted from https://github.com/janeasystems/nodejs-mobile-react-native/
+
 #include "node_api.h"
 #include "uv.h"
 #include "rn-bridge.h"
@@ -10,8 +12,6 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
-
-// MIT https://raw.githubusercontent.com/janeasystems/nodejs-mobile-react-native/1a5cf5e3c8d11a92eb88726dbb301a15dc30efa4/android/src/main/cpp/rn-bridge.cpp
 
 //Some helper macros from node/test/addons-napi/common.h
 

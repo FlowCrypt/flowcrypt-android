@@ -1,3 +1,5 @@
+// from https://github.com/janeasystems/nodejs-mobile
+
 #include <jni.h>
 #include <string>
 #include <cstdlib>
