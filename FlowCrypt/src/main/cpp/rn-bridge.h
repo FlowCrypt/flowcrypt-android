@@ -1,3 +1,5 @@
+// MIT adapted from https://github.com/janeasystems/nodejs-mobile-react-native/
+
 #ifndef SRC_RN_BRIDGE_H_
 #define SRC_RN_BRIDGE_H_
 

@@ -29,6 +29,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+-optimizationpasses 1
+
 ############################################# Android ##############################################
 # Remove Logging statements
 -assumenosideeffects class android.util.Log {
