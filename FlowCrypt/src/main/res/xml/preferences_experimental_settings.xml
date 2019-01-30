@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -11,6 +11,15 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email"
+            android:targetPackage="@string/application_id" />
+    </androidx.preference.Preference>
+
+    <androidx.preference.Preference
+        android:layout="@layout/preference_item"
+        android:title="Node backend test"
+        app:iconSpaceReserved="false">
+        <intent
+            android:targetClass="com.flowcrypt.email.ui.activity.NodeSplashActivity"
             android:targetPackage="@string/application_id" />
     </androidx.preference.Preference>
 </androidx.preference.PreferenceScreen>

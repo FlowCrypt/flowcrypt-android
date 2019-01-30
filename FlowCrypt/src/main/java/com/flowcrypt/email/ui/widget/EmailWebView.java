@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -97,6 +97,7 @@ public class EmailWebView extends WebView {
       this.context = context;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       if (url.startsWith(SCHEME_MAILTO)) {

@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -281,15 +281,22 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       getSnackBar().dismiss();
     }
 
-    boolean isFullNameEmpty = TextUtils.isEmpty(listener.getCurrentFolder().getFullName());
-    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
-    if (listener.getCurrentFolder() == null || isFullNameEmpty || isOutbox) {
+    LocalFolder localFolder = listener.getCurrentFolder();
+
+    if (localFolder == null) {
+      swipeRefreshLayout.setRefreshing(false);
+      return;
+    }
+
+    boolean isEmpty = TextUtils.isEmpty(localFolder.getFullName());
+    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName());
+    if (isEmpty || isOutbox) {
       swipeRefreshLayout.setRefreshing(false);
     } else {
       emptyView.setVisibility(View.GONE);
 
       if (GeneralUtil.isConnected(getContext())) {
-        if (listener.getCurrentFolder() != null) {
+        if (localFolder != null) {
           if (adapter.getCount() > 0) {
             swipeRefreshLayout.setRefreshing(true);
             refreshMsgs();

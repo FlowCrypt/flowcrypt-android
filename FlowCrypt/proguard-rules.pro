@@ -29,6 +29,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+-optimizationpasses 1
+
 ############################################# Android ##############################################
 # Remove Logging statements
 -assumenosideeffects class android.util.Log {
@@ -37,6 +39,8 @@
     public static *** e(...);
     public static *** i(...);
 }
+
+-dontwarn android.test.**
 
 ####################################### Application config #########################################
 -dontobfuscate
@@ -149,3 +153,18 @@
   public *;
 }
 -dontwarn com.bumptech.glide.**
+
+########################################## JUNIT ###################################################
+-keep class org.junit.** { *; }
+-keep interface org.junit.** { *; }
+-dontwarn org.junit.**
+
+########################################## org.w3c.dom ###################################################
+-keep class org.w3c.dom.** { *; }
+-keep interface org.w3c.dom.** { *; }
+-dontwarn org.w3c.dom.**
+
+########################################## SPONGYCASTLE ###################################################
+-keep class org.spongycastle.** { *; }
+-keep interface org.spongycastle.** { *; }
+-dontwarn org.spongycastle.**

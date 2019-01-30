@@ -1,5 +1,5 @@
 <!--
-  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -421,4 +421,8 @@ icelanders prefer real sauna</font>
     <string name="store_space_was_corrupted">App storage space was corrupted. This can happen on certain rooted or unofficial systems, due to user intervention, etc. Write us at %1$s if you need help.</string>
     <string name="wipe_app_settings">Wipe %1$s App storage and set it up again to continue using %1$s on this device.</string>
     <string name="reset_app_storage">Reset app storage</string>
+    <string name="no_message_with_this_attachment">No message with this attachment</string>
+    <string name="attachment_not_found">The attachment not found</string>
+    <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
+    <string name="file_not_found">File not found</string>
 </resources>

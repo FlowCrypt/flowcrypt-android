@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -127,11 +127,9 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   }
 
   @Override
-  protected void handleSelectedFile(Uri uri) {
-    if (uri != null) {
-      UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-      startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
-    }
+  protected void handleSelectedFile(@NonNull Uri uri) {
+    UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
+    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
   }
 
   @Override

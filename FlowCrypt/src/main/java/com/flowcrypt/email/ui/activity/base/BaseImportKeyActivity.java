@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -30,7 +30,9 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.material.snackbar.Snackbar;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -197,7 +199,12 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
         switch (resultCode) {
           case Activity.RESULT_OK:
             if (data != null) {
-              handleSelectedFile(data.getData());
+              if (data.getData() != null) {
+                handleSelectedFile(data.getData());
+              } else {
+                showInfoSnackbar(getRootView(), getString(R.string.please_use_another_app_to_choose_file),
+                    Snackbar.LENGTH_LONG);
+              }
             }
             break;
         }
@@ -357,7 +364,14 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
       case R.id.loader_id_validate_key_from_clipboard:
         isCheckingPrivateKeyNow = false;
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        showInfoSnackbar(getRootView(), e.getMessage());
+
+        String errorMsg = e.getMessage();
+
+        if (e instanceof FileNotFoundException) {
+          errorMsg = getString(R.string.file_not_found);
+        }
+
+        showInfoSnackbar(getRootView(), errorMsg);
         break;
 
       default:
@@ -380,7 +394,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
    *
    * @param uri A {@link Uri} of the selected file.
    */
-  protected void handleSelectedFile(Uri uri) {
+  protected void handleSelectedFile(@NonNull Uri uri) {
     keyImportModel = new KeyImportModel(uri, null, isPrivateKeyMode(), KeyDetails.Type.FILE);
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this);
   }

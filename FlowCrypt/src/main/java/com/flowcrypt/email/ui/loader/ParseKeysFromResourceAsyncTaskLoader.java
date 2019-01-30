@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -64,6 +64,10 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
           case FILE:
             if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.getFileUri())) {
               return new LoaderResult(null, new IllegalArgumentException("The file is too big"));
+            }
+
+            if (keyImportModel.getFileUri() == null) {
+              throw new NullPointerException("Uri is null!");
             }
 
             armoredKey = GeneralUtil.readFileFromUriToString(getContext(), keyImportModel.getFileUri());

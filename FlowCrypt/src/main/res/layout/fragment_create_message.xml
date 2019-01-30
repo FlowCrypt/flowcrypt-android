@@ -1,5 +1,5 @@
 <!--
-  ~ © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -10,10 +10,10 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
+    android:paddingBottom="@dimen/activity_vertical_margin">
 
     <ProgressBar
         android:id="@id/viewIdProgressView"
@@ -61,8 +61,9 @@
                         android:focusableInTouchMode="false"
                         android:inputType="none"
                         android:longClickable="false"
-                        android:paddingEnd="@dimen/drop_down_size"
-                        android:paddingTop="@dimen/default_margin_medium" />
+                        android:autofillHints="tru"
+                        android:paddingTop="@dimen/default_margin_medium"
+                        android:paddingEnd="@dimen/drop_down_size" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -84,9 +85,9 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
-                    android:hint="@string/prompt_recipients_to"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:hint="@string/prompt_recipients_to">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipientTo"
@@ -94,8 +95,9 @@
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
                         android:completionThreshold="2"
-                        android:paddingEnd="@dimen/padding_recipients_to"
+                        android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
+                        android:paddingEnd="@dimen/padding_recipients_to"
                         android:shrinkColumns="0, true">
 
                         <requestFocus />
@@ -139,8 +141,8 @@
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
-                    android:hint="@string/prompt_recipients_cc"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:hint="@string/prompt_recipients_cc">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipientCc"
@@ -148,8 +150,9 @@
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
                         android:completionThreshold="2"
-                        android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
+                        android:paddingEnd="@dimen/size_of_small_progressbar"
                         android:shrinkColumns="0, true" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -173,8 +176,8 @@
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/AppWidget.TextInputLayout.GreyBottomLine"
                     android:layout_width="match_parent"
-                    android:hint="@string/prompt_recipients_bcc"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:hint="@string/prompt_recipients_bcc">
 
                     <com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
                         android:id="@+id/editTextRecipientBcc"
@@ -182,8 +185,9 @@
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
                         android:completionThreshold="2"
-                        android:paddingEnd="@dimen/size_of_small_progressbar"
+                        android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
+                        android:paddingEnd="@dimen/size_of_small_progressbar"
                         android:shrinkColumns="0, true" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -200,9 +204,9 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/AppWidget.TextInputLayout.GreyBottomLine"
-                android:hint="@string/prompt_subject"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:hint="@string/prompt_subject">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextEmailSubject"
@@ -219,8 +223,8 @@
                 android:id="@+id/textInputLayoutEmailMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/prompt_compose_security_email"
-                android:background="@drawable/bg_bottom_line_transparent">
+                android:background="@drawable/bg_bottom_line_transparent"
+                android:hint="@string/prompt_compose_security_email">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextEmailMessage"
@@ -238,8 +242,8 @@
                 android:layout_height="wrap_content"
                 android:animateLayoutChanges="true"
                 android:orientation="vertical"
-                android:paddingBottom="@dimen/default_margin_small"
-                android:paddingTop="@dimen/default_margin_small" />
+                android:paddingTop="@dimen/default_margin_small"
+                android:paddingBottom="@dimen/default_margin_small" />
 
         </LinearLayout>
     </ScrollView>

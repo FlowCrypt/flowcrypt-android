@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -193,7 +193,7 @@ public class SyncJobService extends JobService implements SyncListener {
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           for (GeneralMessageDetails details : detailsDeleteCandidates) {
-            messagesNotificationManager.cancel(this, details.getUid());
+            messagesNotificationManager.cancel(details.getUid());
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {

@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -147,7 +147,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     context.startService(startEmailServiceIntent);
   }
 
-
+  @SuppressWarnings("deprecation")
   @Override
   public void onCreate() {
     super.onCreate();
@@ -430,7 +430,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       if (!GeneralUtil.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           for (long uid : deleteCandidatesUIDs) {
-            notificationManager.cancel(this, (int) uid);
+            notificationManager.cancel((int) uid);
           }
         } else {
           List<GeneralMessageDetails> detailsList = msgsDaoSource.getNewMsgs(this, email, folderAlias);
@@ -550,7 +550,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         try {
           if (msg.getFlags().contains(Flags.Flag.SEEN)) {
-            notificationManager.cancel(this, (int) remoteFolder.getUID(msg));
+            notificationManager.cancel((int) remoteFolder.getUID(msg));
           }
         } catch (MessagingException e) {
           e.printStackTrace();
@@ -581,6 +581,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
     }
   }
 
+  @SuppressWarnings("deprecation")
   protected void handleConnectivityAction(Context context, Intent intent) {
     if (ConnectivityManager.CONNECTIVITY_ACTION.equalsIgnoreCase(intent.getAction())) {
       ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context

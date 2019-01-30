@@ -1,54 +1,18 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
-
-
-import groovy.swing.SwingBuilder
 
 import java.text.SimpleDateFormat
 
 apply plugin: 'com.android.application'
 
-SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm');
+SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm')
 
 def keystoreProperties = new Properties()
-File propertiesFile = project.file("keystore.properties");
+File propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(propertiesFile))
-}
-
-
-static def inputPassword(String dialogTitle, String dialogMsg) {
-    def console = System.console();
-    if (console != null) {
-        return new String(console.readPassword(dialogMsg)).trim()
-    }
-
-    while (true) {
-        def enteredPassword = null
-        new SwingBuilder().edt {
-            dialog(
-                    modal: true, //Otherwise the build will continue running
-                    title: dialogTitle,
-                    alwaysOnTop: true,
-                    resizable: false,
-                    locationRelativeTo: null, //Place dialog in center of the screen
-                    pack: true, //We need to pack the dialog (so it will take the size of its children
-                    show: true
-            ) {
-                vbox { //Put everything below each other
-                    label(text: dialogMsg)
-                    input = passwordField()
-                    button(defaultButton: true, text: 'OK', actionPerformed: {
-                        enteredPassword = new String(input.password).trim()
-                        dispose();
-                    })
-                }
-            }
-        }
-        return enteredPassword
-    }
 }
 
 android {
@@ -69,16 +33,46 @@ android {
         versionName APP_VERSION_NAME as String
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+        ndk {
+            abiFilters "armeabi-v7a", "x86", "x86_64"
+        }
     }
 
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] != null ?
-                    file(keystoreProperties['storeFile']) : file("change me...")
-            storePassword keystoreProperties['storePassword']
+            def keyStoreFile = keystoreProperties['storeFile']
+            def keyStorePass = keystoreProperties['storePassword']
+            def keySignAlias = keystoreProperties['keyAlias']
+            def keyPass = keystoreProperties['keyPassword']
+
+            if (project.hasProperty('runtimeSign')) {
+                if (project.hasProperty('storeFile')) {
+                    keyStoreFile = project.property("storeFile")
+                }
+
+                if (project.hasProperty('storePassword')) {
+                    keyStorePass = project.property("storePassword")
+                }
+
+                if (project.hasProperty('keyAlias')) {
+                    keySignAlias = project.property("keyAlias")
+                }
+
+                if (project.hasProperty('keyPassword')) {
+                    keyPass = project.property("keyPassword")
+                }
+            }
+
+            storeFile keyStoreFile != null ? file(keyStoreFile) : file("fix me...")
+            storePassword keyStorePass
+            keyAlias keySignAlias
+            keyPassword keyPass
         }
 
         debug {
@@ -91,10 +85,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
             shrinkResources true
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
@@ -106,6 +99,22 @@ android {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    // If you want Gradle to package prebuilt native libraries
+    // with your APK, modify the default source set configuration
+    // to include the directory of your prebuilt .so files as follows.
+    sourceSets {
+        main {
+            jniLibs.srcDirs 'libs/libnode/bin/'
         }
     }
 
@@ -114,19 +123,21 @@ android {
     productFlavors {
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
-        development {
+        dev {
+            signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
             resValue 'string', 'gradle_is_acra_enable', 'false'
             resValue 'string', 'gradle_is_mail_debug_enable', 'true'
             versionNameSuffix "_dev"
             dimension "standard"
-            minSdkVersion 21
+            minSdkVersion MIN_SDK_VERSION as int
             resConfigs "en", "xhdpi"
         }
 
         //This is a production flavor
-        production {
+        prod {
+            signingConfig signingConfigs.release
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'true'
@@ -136,6 +147,7 @@ android {
 
         //This flavor must be used only for a testing
         devTest {
+            signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'false'
@@ -152,47 +164,35 @@ android {
 
     packagingOptions {
         pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/eclipse.inf'
+        exclude 'plugin.properties'
     }
 
-    task renameReleaseBuild << {
-        applicationVariants.all { variant ->
-            if (variant.buildType.buildType == buildTypes.release) {
-                variant.outputs.each { output ->
-                    def file = output.outputFile
-                    def newName = file.name.replace(".apk", "_" +
-                            defaultConfig.versionCode +
-                            "_" + defaultConfig.versionName +
-                            "_" + simpleDateFormat.format(new Date()) + ".apk")
-                    output.outputFile.renameTo(new File(file.parent, newName))
+    tasks.register('renameReleaseBuild') {
+        doLast {
+            applicationVariants.all { variant ->
+                if (variant.buildType.buildType == buildTypes.release) {
+                    variant.outputs.each { output ->
+                        def file = output.outputFile
+                        def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
+                                "_" + defaultConfig.versionName + "_" + simpleDateFormat.format(new Date()) + ".apk")
+                        output.outputFile.renameTo(new File(file.parent, newName))
+                    }
                 }
             }
         }
     }
 
-    task('inputKeyPasswords') {
-        doLast {
-            def keyStorePassword = null
-            while (keyStorePassword == null || ((String) keyStorePassword).isEmpty()) {
-                keyStorePassword = inputPassword('KeyStore password', 'Please enter the password for the keystore:')
-            }
-
-            def keyPassword = null
-            while (keyPassword == null || ((String) keyPassword).isEmpty()) {
-                keyPassword = inputPassword('Key password', 'Please enter the password for the signing key:')
-            }
-            System.out.println()
-
-            android.signingConfigs.release.storePassword = keyStorePassword
-            android.signingConfigs.release.keyPassword = keyPassword
-        }
-    }
-
-    tasks.whenTaskAdded { task ->
-        if (task.name == 'assembleProductionRelease') {
-            if (project.hasProperty('runtimeSetup')) {
-                task.dependsOn inputKeyPasswords
-            }
-            task.finalizedBy 'renameReleaseBuild'
+    tasks.configureEach { task ->
+        if (task.name == 'packageProdRelease') {
+            task.finalizedBy renameReleaseBuild
         }
     }
 }
@@ -205,7 +205,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${ESPRESSO_VERSION}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
     androidTestImplementation "androidx.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
-    androidTestImplementation "androidx.test.ext:junit:1.0.0"
+    androidTestImplementation "androidx.test.ext:junit:1.1.0"
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
     testImplementation "junit:junit:${JUNIT_VERSION}"
@@ -213,16 +213,17 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation "androidx.legacy:legacy-support-v4:${ANDROIDX_BASE_VERSION}"
-    implementation 'androidx.appcompat:appcompat:1.0.1'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation "androidx.legacy:legacy-preference-v14:${ANDROIDX_BASE_VERSION}"
     implementation "androidx.cardview:cardview:${ANDROIDX_BASE_VERSION}"
     implementation "androidx.browser:browser:${ANDROIDX_BASE_VERSION}"
     implementation "androidx.recyclerview:recyclerview:${ANDROIDX_BASE_VERSION}"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.multidex:multidex:2.0.0'
-    implementation "androidx.test.espresso:espresso-idling-resource:${ESPRESSO_VERSION}"
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.test.espresso:espresso-idling-resource:3.1.1'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
 
-    implementation "com.google.android.gms:play-services-base:${PLAY_SERVICES_VERSION}"
+    implementation 'com.google.android.gms:play-services-base:16.1.0'
     implementation "com.google.android.gms:play-services-auth:${PLAY_SERVICES_VERSION}"
     implementation "com.google.android.material:material:${ANDROIDX_BASE_VERSION}"
 
@@ -258,4 +259,9 @@ dependencies {
     implementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
+
+    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
+    implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
+    implementation 'com.liferay:javax.xml.bind:2.3.0.LIFERAY-PATCHED-1'
+    implementation 'org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0'
 }

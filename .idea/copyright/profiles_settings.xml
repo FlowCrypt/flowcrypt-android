@@ -1,0 +1,7 @@
+<component name="CopyrightManager">
+  <settings default="flowcrypt">
+    <module2copyright>
+      <element module="All" copyright="flowcrypt" />
+    </module2copyright>
+  </settings>
+</component>

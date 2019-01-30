@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -487,7 +487,6 @@ public class AttachmentDownloadManagerService extends Service {
       }
 
       File attFile = prepareAttFile();
-      AccountDao account = new AccountDaoSource().getAccountInformation(context, att.getEmail());
 
       try {
         checkFileSize();
@@ -510,19 +509,45 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
 
+        AccountDaoSource source = new AccountDaoSource();
+        AccountDao account = source.getAccountInformation(context, att.getEmail());
+
+        if (account == null) {
+          if (listener != null) {
+            listener.onCanceled(this.att);
+            return;
+          }
+        }
+
         Session session = OpenStoreHelper.getAttsSess(context, account);
         Store store = OpenStoreHelper.openStore(context, account, session);
 
         LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());
 
         if (localFolder == null) {
-          throw new IllegalArgumentException("LocalFolder " + att.getFolder() + " doesn't found in the local cache");
+          if (source.getAccountInformation(context, att.getEmail()) == null) {
+            if (listener != null) {
+              listener.onCanceled(this.att);
+
+              if (store != null) {
+                store.close();
+              }
+            }
+            return;
+          } else {
+            throw new IllegalArgumentException("Folder \"" + att.getFolder() + "\" not found in the local cache");
+          }
         }
 
         IMAPFolder remoteFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
         remoteFolder.open(Folder.READ_ONLY);
 
         javax.mail.Message msg = remoteFolder.getMessageByUID(att.getUid());
+
+        if (msg == null) {
+          throw new NullPointerException(context.getString(R.string.no_message_with_this_attachment));
+        }
+
         Part att = ImapProtocolUtil.getAttPartById(remoteFolder, msg.getMessageNumber(), msg, this.att.getId());
 
         if (att != null) {
@@ -541,7 +566,7 @@ public class AttachmentDownloadManagerService extends Service {
               listener.onAttDownloaded(this.att, uri);
             }
           }
-        } else throw new IOException("The attachment does not exist on an IMAP server.");
+        } else throw new IOException(context.getString(R.string.attachment_not_found));
 
         remoteFolder.close(false);
         store.close();

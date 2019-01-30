@@ -1,5 +1,5 @@
 /*
- * © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -172,7 +172,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
       finish();
     }
 
-    initViews();
+    if (!keyDetailsList.isEmpty()) {
+      initViews();
+    }
   }
 
   @Override
