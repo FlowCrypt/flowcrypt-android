@@ -46800,7 +46800,7 @@ exports.parseReq = (r, debug) => new Promise((resolve, reject) => {
 
       if (nextNewlineIndex === -1) {
         // console.log(`pushing -1`);
-        initBuffers.push(chunk);
+        initBuffers.push(chunk.subarray(byteOffset));
         return;
       }
 
