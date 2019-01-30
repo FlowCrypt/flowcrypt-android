@@ -3,9 +3,6 @@
  * Contributors: DenBond7
  */
 
-
-import groovy.swing.SwingBuilder
-
 import java.text.SimpleDateFormat
 
 apply plugin: 'com.android.application'
@@ -16,39 +13,6 @@ def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(propertiesFile))
-}
-
-
-static def inputPassword(String dialogTitle, String dialogMsg) {
-    def console = System.console()
-    if (console != null) {
-        return new String(console.readPassword(dialogMsg)).trim()
-    }
-
-    while (true) {
-        def enteredPassword = null
-        new SwingBuilder().edt {
-            dialog(
-                    modal: true, //Otherwise the build will continue running
-                    title: dialogTitle,
-                    alwaysOnTop: true,
-                    resizable: false,
-                    locationRelativeTo: null, //Place dialog in center of the screen
-                    pack: true, //We need to pack the dialog (so it will take the size of its children
-                    show: true
-            ) {
-                vbox { //Put everything below each other
-                    label(text: dialogMsg)
-                    input = passwordField()
-                    button(defaultButton: true, text: 'OK', actionPerformed: {
-                        enteredPassword = new String(input.password).trim()
-                        dispose()
-                    })
-                }
-            }
-        }
-        return enteredPassword
-    }
 }
 
 android {
@@ -82,11 +46,33 @@ android {
 
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] != null ?
-                    file(keystoreProperties['storeFile']) : file("change me...")
-            storePassword keystoreProperties['storePassword']
+            def keyStoreFile = keystoreProperties['storeFile']
+            def keyStorePass = keystoreProperties['storePassword']
+            def keySignAlias = keystoreProperties['keyAlias']
+            def keyPass = keystoreProperties['keyPassword']
+
+            if (project.hasProperty('runtimeSign')) {
+                if (project.hasProperty('storeFile')) {
+                    keyStoreFile = project.property("storeFile")
+                }
+
+                if (project.hasProperty('storePassword')) {
+                    keyStorePass = project.property("storePassword")
+                }
+
+                if (project.hasProperty('keyAlias')) {
+                    keySignAlias = project.property("keyAlias")
+                }
+
+                if (project.hasProperty('keyPassword')) {
+                    keyPass = project.property("keyPassword")
+                }
+            }
+
+            storeFile keyStoreFile != null ? file(keyStoreFile) : file("fix me...")
+            storePassword keyStorePass
+            keyAlias keySignAlias
+            keyPassword keyPass
         }
 
         debug {
@@ -138,6 +124,7 @@ android {
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
         dev {
+            signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
             resValue 'string', 'gradle_is_acra_enable', 'false'
@@ -146,7 +133,6 @@ android {
             dimension "standard"
             minSdkVersion MIN_SDK_VERSION as int
             resConfigs "en", "xhdpi"
-            signingConfig signingConfigs.debug
         }
 
         //This is a production flavor
@@ -161,13 +147,13 @@ android {
 
         //This flavor must be used only for a testing
         devTest {
+            signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
             resValue 'string', 'gradle_is_acra_enable', 'false'
             resValue 'string', 'gradle_is_mail_debug_enable', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
-            signingConfig signingConfigs.debug
         }
     }
 
@@ -189,45 +175,24 @@ android {
         exclude 'plugin.properties'
     }
 
-    task renameReleaseBuild << {
-        applicationVariants.all { variant ->
-            if (variant.buildType.buildType == buildTypes.release) {
-                variant.outputs.each { output ->
-                    def file = output.outputFile
-                    def newName = file.name.replace(".apk", "_" +
-                            defaultConfig.versionCode +
-                            "_" + defaultConfig.versionName +
-                            "_" + simpleDateFormat.format(new Date()) + ".apk")
-                    output.outputFile.renameTo(new File(file.parent, newName))
+    tasks.register('renameReleaseBuild') {
+        doLast {
+            applicationVariants.all { variant ->
+                if (variant.buildType.buildType == buildTypes.release) {
+                    variant.outputs.each { output ->
+                        def file = output.outputFile
+                        def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
+                                "_" + defaultConfig.versionName + "_" + simpleDateFormat.format(new Date()) + ".apk")
+                        output.outputFile.renameTo(new File(file.parent, newName))
+                    }
                 }
             }
         }
     }
 
-    task('inputKeyPasswords') {
-        doLast {
-            def keyStorePassword = null
-            while (keyStorePassword == null || ((String) keyStorePassword).isEmpty()) {
-                keyStorePassword = inputPassword('KeyStore password', 'Please enter the password for the keystore:')
-            }
-
-            def keyPassword = null
-            while (keyPassword == null || ((String) keyPassword).isEmpty()) {
-                keyPassword = inputPassword('Key password', 'Please enter the password for the signing key:')
-            }
-            System.out.println()
-
-            android.signingConfigs.release.storePassword = keyStorePassword
-            android.signingConfigs.release.keyPassword = keyPassword
-        }
-    }
-
-    tasks.whenTaskAdded { task ->
-        if (task.name == 'assembleProdRelease') {
-            if (project.hasProperty('runtimeSetup')) {
-                task.dependsOn inputKeyPasswords
-            }
-            task.finalizedBy 'renameReleaseBuild'
+    tasks.configureEach { task ->
+        if (task.name == 'packageProdRelease') {
+            task.finalizedBy renameReleaseBuild
         }
     }
 }

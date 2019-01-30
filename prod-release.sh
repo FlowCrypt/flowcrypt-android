@@ -2,5 +2,5 @@
 
 set -euxo pipefail
 
-./gradlew clean assembleProdRelease -PruntimeSetup --no-daemon
-mv FlowCrypt/build/outputs/apk/production/release/FlowCrypt-production-release_*.apk release/
+./gradlew clean assembleProdRelease -PruntimeSign -PstorePassword="CHANGE_ME" -PkeyPassword="CHANGE_ME"
+mv FlowCrypt/build/outputs/apk/prod/release/FlowCrypt-production-release_*.apk release/
