@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
-./gradlew clean assembleProdRelease -PruntimeSign -PstorePassword="CHANGE_ME" -PkeyPassword="CHANGE_ME"
-mv FlowCrypt/build/outputs/apk/prod/release/FlowCrypt-production-release_*.apk release/
+read -s -p "Android Keystore Password: " STORE_PWD
+echo ""
+read -s -p "Android Signing Key Password: " KEY_PWD
+echo ""
+
+./gradlew clean assembleProdRelease -PruntimeSign -PstorePassword="$STORE_PWD" -PkeyPassword="$KEY_PWD"
+mv FlowCrypt/build/outputs/apk/prod/release/FlowCrypt-prod-release_*.apk release/
