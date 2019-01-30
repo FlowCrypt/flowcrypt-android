@@ -46671,7 +46671,7 @@ const native_1 = __webpack_require__(17);
 const util_1 = __webpack_require__(8);
 
 util_1.setGlobals();
-const doPrintDebug = NODE_DEBUG === 'true' || NODE_DEBUG === true;
+const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -46830,8 +46830,11 @@ exports.parseReq = (r, debug) => new Promise((resolve, reject) => {
 
     if (initBuffers.length && data.length) {
       const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
-      endpoints_1.Debug.printChunk('endpointLine', Buffer.from(endpointLine));
-      endpoints_1.Debug.printChunk('requestLine', Buffer.from(requestLine));
+
+      if (debug) {
+        endpoints_1.Debug.printChunk('endpointLine', Buffer.from(endpointLine));
+        endpoints_1.Debug.printChunk('requestLine', Buffer.from(requestLine));
+      }
 
       try {
         const request = JSON.parse(requestLine.trim());
