@@ -46671,6 +46671,7 @@ const native_1 = __webpack_require__(17);
 const util_1 = __webpack_require__(8);
 
 util_1.setGlobals();
+const doPrintDebug = NODE_DEBUG === 'true' || NODE_DEBUG === true;
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -46702,9 +46703,12 @@ const handleReq = async (req, res) => {
       endpoint,
       request,
       data
-    } = await parse_1.parseReq(req); // console.log(endpoint);
-    // console.log(request);
-    // console.log(`LEN: ${Buffer.concat(data).toString().length}`);
+    } = await parse_1.parseReq(req, doPrintDebug);
+
+    if (doPrintDebug) {
+      console.log(`parsed endpoint:`, endpoint);
+      console.log(`parsed request:`, request);
+    }
 
     return await delegateReqToEndpoint(endpoint, request, data);
   }
@@ -46772,54 +46776,79 @@ Object.defineProperty(exports, "__esModule", {
 
 const fmt_1 = __webpack_require__(3);
 
+const endpoints_1 = __webpack_require__(4);
+
 const NEWLINE = Buffer.from('\n');
 
-exports.parseReq = r => new Promise((resolve, reject) => {
+exports.parseReq = (r, debug) => new Promise((resolve, reject) => {
   const initBuffers = [];
   const data = [];
   let newlinesEncountered = 0;
   let totalLen = 0;
-
   r.on('data', chunk => {
-     totalLen += chunk.length;
-     console.log(`Received a chunk of data. Byte length: ${chunk.length}`);
-    // Debug.printChunk('beginning of chunk in bytes', chunk);
+    if (debug) {
+      totalLen += chunk.length;
+      endpoints_1.Debug.printChunk(`http chunk`, chunk);
+    }
+
     let byteOffset = 0;
 
     while (newlinesEncountered < 2) {
-      const nextNewlineIndex = chunk.indexOf(NEWLINE, byteOffset);
+      // console.log(`while newlinesEncountered: ${newlinesEncountered}`)
+      // console.log(`byteOffset: ${byteOffset}`);
+      const nextNewlineIndex = chunk.indexOf(NEWLINE, byteOffset); // console.log(`nextNewlineIndex: ${nextNewlineIndex}`)
 
       if (nextNewlineIndex === -1) {
+        // console.log(`pushing -1`);
         initBuffers.push(chunk);
         return;
       }
 
-      const endOfLine = nextNewlineIndex + NEWLINE.length;
-      initBuffers.push(chunk.slice(byteOffset, endOfLine));
-      byteOffset = endOfLine;
+      const beginNextLine = nextNewlineIndex + NEWLINE.length; // console.log(`beginNextLine: ${beginNextLine}`);
+
+      initBuffers.push(chunk.slice(byteOffset, beginNextLine));
+      byteOffset = beginNextLine;
       newlinesEncountered++;
     }
 
     data.push(chunk.slice(byteOffset));
   });
   r.on('end', () => {
-     const initLen = initBuffers.map(b => b.length).reduce((a, b) => a + b);
-     const dataLen = data.map(b => b.length).reduce((a, b) => a + b);
-     console.log(`Reached end of stream. Total stream length: ${totalLen} of which ${initLen} was first two lines and ${dataLen} was data`);
-    // Debug.printChunk('initBuffers in bytes', Buffer.concat(initBuffers));
-    // Debug.printChunk('dataBuffers in bytes', Buffer.concat(data));
-    // console.log('initBuffers', Buffer.concat(initBuffers).toString().split(''));
-    // console.log('data', Buffer.concat(data).toString().split(''))
+    if (debug) {
+      const initLen = initBuffers.map(b => b.length).reduce((a, b) => a + b);
+      const dataLen = data.map(b => b.length).reduce((a, b) => a + b);
+      console.log(`Reached end of stream. Total stream length: ${totalLen} of which ${initLen} was first two lines and ${dataLen} was data`);
+
+      for (let i = 0; i < initBuffers.length; i++) {
+        endpoints_1.Debug.printChunk(`initBuffer ${i}`, initBuffers[i]);
+      }
+
+      for (let i = 0; i < data.length; i++) {
+        endpoints_1.Debug.printChunk(`dataBuffer ${i}`, data[i]);
+      }
+    }
+
     if (initBuffers.length && data.length) {
+      const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
+      endpoints_1.Debug.printChunk('endpointLine', Buffer.from(endpointLine));
+      endpoints_1.Debug.printChunk('requestLine', Buffer.from(requestLine));
+
       try {
-        const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
+        const request = JSON.parse(requestLine.trim());
+        const endpoint = endpointLine.trim();
         resolve({
-          endpoint: endpointLine.trim(),
-          request: JSON.parse(requestLine.trim()),
+          endpoint,
+          request,
           data
         });
       } catch (e) {
-        reject(new fmt_1.HttpClientErr('cannot parse request part as json'));
+        if (debug) {
+          console.log('---- begin faulty input ----');
+          console.log(requestLine);
+          console.log('---- end faulty input ----');
+        }
+
+        reject(new fmt_1.HttpClientErr(`cannot parse request part as json: ${String(e)}`));
       }
     } else {
       reject(new fmt_1.HttpClientErr('missing endpoint or request part'));
@@ -46901,7 +46930,37 @@ const buf_1 = __webpack_require__(12);
 class Debug {}
 
 Debug.printChunk = (name, data) => {
-  console.log(`Debug.printChunk[${name}]: js[${Uint8Array.from(data).subarray(0, 20).join(', ')}]`);
+  const header1 = `Debug.printChunk[${name}, ${data.length}B]: `;
+  const header2 = ' '.repeat(header1.length);
+  const chunk = Array.from(data.subarray(0, 30));
+  const chunkIndices = chunk.map((v, i) => i);
+  console.log(`-\n${header1}-+-[${chunk.map(Debug.pad).join(' ')} ]\n${header2} |-[${chunk.map(Debug.char).map(Debug.pad).join(' ')} ]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
+};
+
+Debug.char = byte => {
+  let c = '';
+
+  if (byte === 10) {
+    c += '\\n';
+  } else if (byte === 13) {
+    c += '\\r';
+  } else if (byte === 140 || byte === 160) {
+    c += '???';
+  } else {
+    c += String.fromCharCode(byte);
+  }
+
+  return c;
+};
+
+Debug.pad = char => {
+  char = String(char);
+
+  while (char.length < 3) {
+    char = ' ' + char;
+  }
+
+  return char;
 };
 
 exports.Debug = Debug;

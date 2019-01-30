@@ -105,6 +105,7 @@ final class NativeNode {
     src += genConst("NODE_SSL_CRT", nodeSecret.getCrt());
     src += genConst("NODE_SSL_KEY", nodeSecret.getKey());
     src += genConst("NODE_AUTH_HEADER", nodeSecret.getAuthHeader());
+    src += genConst("NODE_DEBUG", "false");
     src += jsCode;
     return src;
   }
