@@ -11,7 +11,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:${ANDROID_GRADLE_VERSION}"
+        classpath 'com.android.tools.build:gradle:3.3.0'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -49,6 +49,36 @@ allprojects {
             task.dependsOn('checkstyle')
         }
     }
+}
+
+ext {
+    /*Global*/
+    appVersionCode = 71
+    appVersionName = '0.7.1'
+    buildToolsVersion = '28.0.3'
+    compileSdkVersion = 28
+    targetSdkVersion = 28
+    minSdkVersion = 23
+    javaSourceCompatibility = '1.7'
+    /*https://developer.android.com/jetpack/androidx/androidx-rn*/
+    androidxBaseVersion = '1.0.0'
+    /*https://developer.android.com/studio/releases/gradle-plugin.html*/
+    androidGradleVersion = '3.3.0'
+    /*https://developers.google.com/android/guides/releases*/
+    playServicesVersion = '16.0.1'
+    /*https://developer.android.com/topic/libraries/testing-support-library/release-notes.html*/
+    espressoVersion = '3.1.0'
+    /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
+    retrofitVersion = '2.4.0'
+    /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
+    okhttpVersion = '3.11.0'
+    /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
+    leakcanaryVersion = '1.6.2'
+    /*https://mvnrepository.com/artifact/com.sun.mail/android-mail*/
+    javaMailVersion = '1.6.2'
+    /*https://mvnrepository.com/artifact/com.github.bumptech.glide/glide*/
+    glideVersion = '4.8.0'
+    junitVersion = '4.12'
 }
 
 task clean(type: Delete) {

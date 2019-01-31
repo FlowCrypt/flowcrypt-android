@@ -296,8 +296,8 @@ public class EmailUtil {
   public static boolean hasEnabledDebug(Context context) {
     Context appContext = context.getApplicationContext();
     return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(PreferenceManager
-        .getDefaultSharedPreferences
-            (appContext), Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE, BuildConfig.IS_MAIL_DEBUG_ENABLE);
+            .getDefaultSharedPreferences(appContext), Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED,
+        BuildConfig.IS_MAIL_DEBUG_ENABLED);
   }
 
   /**
