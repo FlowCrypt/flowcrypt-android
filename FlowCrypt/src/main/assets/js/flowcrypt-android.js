@@ -48221,7 +48221,7 @@ exports.PgpMsg = PgpMsg;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.VERSION = '[BUILD_REPLACEABLE_VERSION]';
+exports.VERSION = APP_VERSION;
 
 /***/ }),
 /* 7 */
@@ -48234,20 +48234,13 @@ exports.VERSION = '[BUILD_REPLACEABLE_VERSION]';
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-const VERSION = '[BUILD_REPLACEABLE_VERSION]';
 
 class Catch {}
-
-Catch.RUNTIME_VERSION = VERSION;
 
 Catch.handleErr = e => {// core errors that were not re-thrown are not so interesting as of 2018
 };
 
 Catch.report = (name, details) => {// core reports are not so interesting as of 2018
-};
-
-Catch.version = () => {
-  return Catch.RUNTIME_VERSION;
 };
 
 exports.Catch = Catch;
