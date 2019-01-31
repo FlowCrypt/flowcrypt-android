@@ -46735,14 +46735,12 @@ const sendRes = (res, buffers) => {
 
 const server = https.createServer(serverOptins, (request, res) => {
   handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
+    res.statusCode = 200;
+
     if (e instanceof fmt_1.HttpAuthErr) {
-      res.statusCode = 401;
       res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
-    } else if (e instanceof fmt_1.HttpClientErr) {
-      res.statusCode = 400;
-    } else {
+    } else if (!(e instanceof fmt_1.HttpClientErr)) {
       console.error(e);
-      res.statusCode = 500;
     }
 
     res.end(fmt_1.fmtErr(e));
@@ -47749,27 +47747,27 @@ Pgp.internal = {
     if (common_js_1.Value.is(e).in(keyMismatchErrStrings) && !msgPwd) {
       return {
         type: DecryptErrTypes.keyMismatch,
-        error: e
+        message: e
       };
     } else if (msgPwd && common_js_1.Value.is(e).in(['Invalid enum value.', 'CFB decrypt: invalid key', 'Session key decryption failed.'])) {
       return {
         type: DecryptErrTypes.wrongPwd,
-        error: e
+        message: e
       };
     } else if (e === 'Decryption failed due to missing MDC in combination with modern cipher.') {
       return {
         type: DecryptErrTypes.noMdc,
-        error: e
+        message: e
       };
     } else if (e === 'Decryption error') {
       return {
         type: DecryptErrTypes.format,
-        error: e
+        message: e
       };
     } else {
       return {
         type: DecryptErrTypes.other,
-        error: e
+        message: e
       };
     }
   },
@@ -47958,7 +47956,7 @@ PgpMsg.decrypt = async ({
       success: false,
       error: {
         type: DecryptErrTypes.format,
-        error: String(formatErr)
+        message: String(formatErr)
       },
       longids
     };
@@ -47986,7 +47984,8 @@ PgpMsg.decrypt = async ({
     return {
       success: false,
       error: {
-        type: DecryptErrTypes.needPassphrase
+        type: DecryptErrTypes.needPassphrase,
+        message: 'Missing pass phrase'
       },
       message: prepared.message,
       longids,
@@ -48003,7 +48002,8 @@ PgpMsg.decrypt = async ({
       return {
         success: false,
         error: {
-          type: DecryptErrTypes.usePassword
+          type: DecryptErrTypes.usePassword,
+          message: 'Use message password'
         },
         longids,
         isEncrypted
