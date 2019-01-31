@@ -163,16 +163,7 @@ android {
     }
 
     packagingOptions {
-        pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
         exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/eclipse.inf'
-        exclude 'plugin.properties'
     }
 
     tasks.register('renameReleaseBuild') {
@@ -211,7 +202,7 @@ dependencies {
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation "androidx.legacy:legacy-support-v4:${rootProject.ext.androidxBaseVersion}"
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -229,26 +220,17 @@ dependencies {
     implementation "com.google.android.material:material:${rootProject.ext.androidxBaseVersion}"
 
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation('com.google.api-client:google-api-client-android:1.26.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude group: 'com.google.code.findbugs'
-    }
-    implementation('com.google.apis:google-api-services-gmail:v1-rev96-1.25.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude group: 'com.google.code.findbugs'
-    }
+    implementation 'com.google.api-client:google-api-client-android:1.26.0'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev96-1.25.0'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.okhttp3:logging-interceptor:${rootProject.ext.okhttpVersion}"
 
-    implementation("com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}") {
-        exclude group: 'javax.activation'
-    }
-
+    implementation "com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}"
     implementation("com.sun.mail:gimap:${rootProject.ext.javaMailVersion}") {
+        //exclude group: 'com.sun.mail' because it exists in 'com.sun.mail:android-mail'
         exclude group: 'com.sun.mail'
-        exclude group: 'javax.activation'
     }
 
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
@@ -260,9 +242,5 @@ dependencies {
     implementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
-
-    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
-    implementation 'com.liferay:javax.xml.bind:2.3.0.LIFERAY-PATCHED-1'
-    implementation 'org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0'
 }
