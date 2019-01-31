@@ -738,21 +738,25 @@ public class EmailUtil {
 
     switch (info.getEncryptionType()) {
       case ENCRYPTED:
-        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-        EncryptMsgRequest request = new EncryptMsgRequest(info.getMsg(), pubKeys);
+        if (GeneralUtil.isDebugBuild()) {
+          NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+          EncryptMsgRequest request = new EncryptMsgRequest(info.getMsg(), pubKeys);
 
-        retrofit2.Response<EncryptedMsgResult> response = nodeService.encryptMsg(request).execute();
-        EncryptedMsgResult result = response.body();
+          retrofit2.Response<EncryptedMsgResult> response = nodeService.encryptMsg(request).execute();
+          EncryptedMsgResult result = response.body();
 
-        if (result == null) {
-          throw new NullPointerException("encryptedMsgResult == null");
+          if (result == null) {
+            throw new NullPointerException("encryptedMsgResult == null");
+          }
+
+          if (result.getError() != null) {
+            throw new NodeEncryptException(result.getError().getMsg());
+          }
+
+          msgText = result.getEncryptedMsg();
+        } else {
+          msgText = js.crypto_message_encrypt(pubKeys, info.getMsg());
         }
-
-        if (result.getError() != null) {
-          throw new NodeEncryptException(result.getError().getMsg());
-        }
-
-        msgText = result.getEncryptedMsg();
         break;
 
       case STANDARD:
