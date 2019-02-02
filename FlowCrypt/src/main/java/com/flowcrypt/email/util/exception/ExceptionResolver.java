@@ -15,8 +15,6 @@ import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.smtp.SMTPSendFailedException;
 import com.sun.mail.util.MailConnectException;
 
-import org.acra.ACRA;
-
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -30,21 +28,20 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLProtocolException;
 
 /**
- * This class describes methods for a work with {@link Exception}
- *
+ * This class decides what an error can be handled by ACRA.
  * @author Denis Bondarenko
  * Date: 25.01.2018
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionUtil {
+public class ExceptionResolver {
 
   /**
-   * Check if need to handle a happened error with {@link ACRA}
+   * Check if need to handle a happened error with  ACRA
    *
    * @param e A happened error
-   * @return true if need to handle such exception with {@link ACRA} and send logs to the backend, false - otherwise.
+   * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
   public static boolean isHandlingNeeded(Exception e) {
     if ((e instanceof MailConnectException)
@@ -112,24 +109,9 @@ public class ExceptionUtil {
 
     if (e instanceof BadPaddingException) {
       String errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
-      if (errorMsg.equalsIgnoreCase(e.getMessage())) {
-        return false;
-      }
+      return !errorMsg.equalsIgnoreCase(e.getMessage());
     }
 
     return true;
-  }
-
-  /**
-   * Handle an input {@link Exception} by {@link ACRA}.
-   *
-   * @param e An input {@link Exception}
-   */
-  public static void handleError(Exception e) {
-    if (ExceptionUtil.isHandlingNeeded(e)) {
-      if (ACRA.isInitialised()) {
-        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
-      }
-    }
   }
 }

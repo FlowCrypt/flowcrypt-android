@@ -5,15 +5,6 @@
 
 package com.flowcrypt.email;
 
-import android.app.Application;
-import android.app.job.JobScheduler;
-import android.content.Context;
-
-import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.jobscheduler.SyncJobService;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.node.Node;
-import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.squareup.leakcanary.LeakCanary;
@@ -23,16 +14,14 @@ import org.acra.ReportField;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender;
 
-import androidx.fragment.app.FragmentManager;
-import androidx.multidex.MultiDex;
 import androidx.preference.PreferenceManager;
 
 /**
- * The application class for FlowCrypt. Base class for maintaining global application state.
+ * The application class for FlowCrypt. Base class for maintaining global application state. The production version.
  *
  * @author DenBond7
- * Date: 25.04.2017
- * Time: 11:34
+ * Date: 02/01/2019
+ * Time: 16:43
  * E-mail: DenBond7@gmail.com
  */
 @ReportsCrashes(
@@ -69,31 +58,10 @@ import androidx.preference.PreferenceManager;
     httpMethod = HttpSender.Method.POST,
     reportType = HttpSender.Type.JSON,
     buildConfigClass = BuildConfig.class)
-public class FlowCryptApplication extends Application {
+public class FlowCryptApplication extends BaseApplication {
 
   @Override
-  public void onCreate() {
-    super.onCreate();
-    UiJsManager.init(this);
-    NotificationChannelManager.registerNotificationChannels(this);
-
-    intiLeakCanary();
-    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild());
-
-    JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-    if (scheduler != null) {
-      scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
-    }
-    SyncJobService.schedule(this);
-
-    Node.init(this);
-  }
-
-  @Override
-  protected void attachBaseContext(Context base) {
-    super.attachBaseContext(base);
-    MultiDex.install(this);
-
+  public void initAcra() {
     if (!GeneralUtil.isDebugBuild()) {
       ACRA.init(this);
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
@@ -105,7 +73,8 @@ public class FlowCryptApplication extends Application {
   /**
    * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
    */
-  private void intiLeakCanary() {
+  @Override
+  public void initLeakCanary() {
     if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)) {
       if (LeakCanary.isInAnalyzerProcess(this)) {

@@ -7,8 +7,6 @@ import java.text.SimpleDateFormat
 
 apply plugin: 'com.android.application'
 
-SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm')
-
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
@@ -96,7 +94,7 @@ android {
         }
 
         debug {
-            versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
+            versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
             signingConfig signingConfigs.debug
@@ -132,7 +130,7 @@ android {
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion rootProject.ext.minSdkVersion
-            resConfigs "en", "xhdpi"
+            resConfigs "en", "xxhdpi"
         }
 
         //This is a production flavor
@@ -173,7 +171,8 @@ android {
                     variant.outputs.each { output ->
                         def file = output.outputFile
                         def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
-                                "_" + defaultConfig.versionName + "_" + simpleDateFormat.format(new Date()) + ".apk")
+                                "_" + defaultConfig.versionName + "_"
+                                + new SimpleDateFormat('yyyy_MM_dd_HH_mm').format(new Date()) + ".apk")
                         output.outputFile.renameTo(new File(file.parent, newName))
                     }
                 }
@@ -189,10 +188,14 @@ android {
     }
 }
 
-dependencies {
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+configurations {
+    prodDebugImplementation {}
+    prodReleaseImplementation {}
+}
 
-    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
+dependencies {
+    prodDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+    prodReleaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
@@ -239,7 +242,7 @@ dependencies {
 
     implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
     implementation 'commons-io:commons-io:2.6'
-    implementation 'ch.acra:acra:4.11'
+    prodImplementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
