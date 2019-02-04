@@ -17,7 +17,6 @@ import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 
 import androidx.fragment.app.FragmentManager;
-import androidx.multidex.MultiDex;
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state.
@@ -54,7 +53,6 @@ public abstract class BaseApplication extends Application {
   @Override
   protected void attachBaseContext(Context base) {
     super.attachBaseContext(base);
-    MultiDex.install(this);
     initAcra();
   }
 }
