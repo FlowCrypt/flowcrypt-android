@@ -164,7 +164,7 @@ android {
         exclude 'META-INF/DEPENDENCIES'
     }
 
-    tasks.register('renameReleaseBuild') {
+    tasks.register('renameReleaseBuilds') {
         doLast {
             applicationVariants.all { variant ->
                 if (variant.buildType.buildType == buildTypes.release) {
@@ -180,10 +180,24 @@ android {
         }
     }
 
+    task copyReleaseApks(type: Copy) {
+        applicationVariants.all { variant ->
+            if (variant.buildType.buildType == buildTypes.release) {
+                variant.outputs.each { output ->
+                    from("$output.outputFile.parent") {
+                        include '**/*release*.apk'
+                    }
+                }
+            }
+        }
+        includeEmptyDirs = false
+        into '../release'
+    }
+
     afterEvaluate {
         Task task = tasks.findByName('packageProdRelease')
         if (task != null) {
-            task.finalizedBy renameReleaseBuild
+            task.finalizedBy renameReleaseBuilds
         }
     }
 }
