@@ -22,6 +22,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -46,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,6 +62,7 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 import androidx.core.content.FileProvider;
+import retrofit2.Response;
 
 /**
  * This realization of {@link JobService} downloads the attachments for forwarding purposes.
@@ -343,7 +349,25 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       if (details.isEncrypted()) {
         byte[] originalBytes = IOUtils.toByteArray(inputStream);
         String fileName = FilenameUtils.removeExtension(att.getName());
-        byte[] encryptedBytes = this.js.crypto_message_encrypt(pubKeys, originalBytes, fileName);
+        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+        EncryptFileRequest request = new EncryptFileRequest(originalBytes, fileName, Arrays.asList(pubKeys));
+
+        Response<EncryptedFileResult> response = nodeService.encryptFile(request).execute();
+        EncryptedFileResult encryptedFileResult = response.body();
+
+        if (encryptedFileResult == null) {
+          ExceptionUtil.handleError(new NullPointerException("encryptedFileResult == null"));
+          FileUtils.writeByteArrayToFile(tempFile, new byte[]{});
+          return;
+        }
+
+        if (encryptedFileResult.getError() != null) {
+          ExceptionUtil.handleError(new Exception(encryptedFileResult.getError().getMsg()));
+          FileUtils.writeByteArrayToFile(tempFile, new byte[]{});
+          return;
+        }
+
+        byte[] encryptedBytes = encryptedFileResult.getEncryptedBytes();
         FileUtils.writeByteArrayToFile(tempFile, encryptedBytes);
       } else {
         FileUtils.copyInputStreamToFile(inputStream, tempFile);
