@@ -214,6 +214,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-intents:${rootProject.ext.espressoVersion}"
+    //https://mvnrepository.com/artifact/androidx.test.ext/junit
     androidTestImplementation "androidx.test.ext:junit:1.1.0"
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
@@ -231,13 +232,16 @@ dependencies {
     implementation 'androidx.test.espresso:espresso-idling-resource:3.1.1'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
 
+    //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:16.1.0'
-    implementation "com.google.android.gms:play-services-auth:${rootProject.ext.playServicesVersion}"
-    implementation "com.google.android.material:material:${rootProject.ext.androidxBaseVersion}"
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
-    implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'com.google.api-client:google-api-client-android:1.26.0'
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev96-1.25.0'
+    //https://mvnrepository.com/artifact/com.google.android.material/material
+    implementation 'com.google.android.material:material:1.0.0'
+
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.api-client:google-api-client-android:1.28.0'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev98-1.25.0'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
