@@ -294,6 +294,7 @@ public class AttachmentNotificationManager extends CustomNotificationManager {
         .setGroup(GROUP_NAME_ATTACHMENTS)
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
         .setDefaults(Notification.DEFAULT_ALL)
+        .setAutoCancel(true)
         .setGroupSummary(true);
     notificationManagerCompat.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build());
   }
