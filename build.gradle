@@ -53,8 +53,8 @@ allprojects {
 
 ext {
     /*Global*/
-    appVersionCode = 71
-    appVersionName = '0.7.1'
+    appVersionCode = 72
+    appVersionName = '0.7.2'
     buildToolsVersion = '28.0.3'
     compileSdkVersion = 28
     targetSdkVersion = 28
