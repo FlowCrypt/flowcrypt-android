@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/preferences_title_debugging">
+        <com.flowcrypt.email.ui.activity.fragment.preferences.BuildConfInfoPreference
+            android:key="@string/preferences_key_build_config_info"
+            android:title="@string/preferences_title_build_config_info" />
+        <CheckBoxPreference
+            android:key="@string/preferences_key_is_write_logs_to_file_enable"
+            android:title="@string/preferences_title_enable_write_api_logs_to_file" />
+        <CheckBoxPreference
+            android:defaultValue="@string/gradle_is_mail_debug_enabled"
+            android:key="@string/preferences_key_is_mail_debug_enable"
+            android:title="@string/preferences_title_enable_mail_debug" />
+        <Preference android:title="@string/crash_the_app">
+            <intent
+                android:targetClass="com.flowcrypt.email"
+                android:targetPackage="@string/application_id" />
+        </Preference>
+    </PreferenceCategory>
+</PreferenceScreen>

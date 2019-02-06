@@ -9,6 +9,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Response;
@@ -27,6 +29,10 @@ public final class EncryptMsgRequest extends BaseNodeRequest {
   private List<String> pubKeys;
 
   private String msg;
+
+  public EncryptMsgRequest(String msg, String[] pubKeys) {
+    this(msg, pubKeys != null ? Arrays.asList(pubKeys) : new ArrayList<String>());
+  }
 
   public EncryptMsgRequest(String msg, List<String> pubKeys) {
     this.msg = msg;

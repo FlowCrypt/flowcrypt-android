@@ -28,11 +28,14 @@ import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.flowcrypt.email.js.PgpDecrypted;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -49,7 +52,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -61,6 +66,7 @@ import javax.mail.Store;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
+import retrofit2.Response;
 
 /**
  * This service will be use to download email attachments. To start load an attachment just run service via the intent
@@ -580,6 +586,10 @@ public class AttachmentDownloadManagerService extends Service {
       }
     }
 
+    void setListener(OnDownloadAttachmentListener listener) {
+      this.listener = listener;
+    }
+
     private void downloadFile(File attFile, InputStream inputStream) throws IOException {
       try (OutputStream outputStream = FileUtils.openOutputStream(attFile)) {
         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -621,10 +631,6 @@ public class AttachmentDownloadManagerService extends Service {
       }
     }
 
-    void setListener(OnDownloadAttachmentListener listener) {
-      this.listener = listener;
-    }
-
     /**
      * Check is decrypted file has size not more than
      * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED}. If the file greater then
@@ -648,7 +654,7 @@ public class AttachmentDownloadManagerService extends Service {
      * @param file    The downloaded file which can be encrypted.
      * @return The decrypted or the original file.
      */
-    private File decryptFileIfNeeded(Context context, File file) throws IOException {
+    private File decryptFileIfNeeded(Context context, File file) throws Exception {
       if (file == null) {
         return null;
       }
@@ -658,9 +664,8 @@ public class AttachmentDownloadManagerService extends Service {
       }
 
       try (InputStream inputStream = new FileInputStream(file)) {
-        Js js = new Js(context, new SecurityStorageConnector(context));
-        PgpDecrypted pgpDecrypted = js.crypto_message_decrypt(IOUtils.toByteArray(inputStream));
-        byte[] decryptedBytes = pgpDecrypted.getBytes();
+        DecryptedFileResult result = getDecryptedFileResult(context, inputStream);
+        byte[] decryptedBytes = result.getDecryptedBytes();
 
         File decryptedFile = new File(file.getParent(), file.getName().substring(0, file.getName().lastIndexOf(".")));
 
@@ -684,6 +689,33 @@ public class AttachmentDownloadManagerService extends Service {
           }
         }
       }
+    }
+
+    private DecryptedFileResult getDecryptedFileResult(Context context, InputStream inputStream) throws Exception {
+      SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
+      PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
+      List<String> passphrases = new ArrayList<>();
+
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+        passphrases.add(securityStorageConnector.getPassphrase(pgpKeyInfo.getLongid()));
+      }
+
+      NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+      DecryptFileRequest request = new DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoArray,
+          passphrases.toArray(new String[0]));
+
+      Response<DecryptedFileResult> response = nodeService.decryptFile(request).execute();
+      DecryptedFileResult result = response.body();
+
+      if (result == null) {
+        throw new NullPointerException("Node.js returned an empty result");
+      }
+
+      if (result.getError() != null) {
+        throw new Exception(result.getError().getMsg());
+      }
+
+      return result;
     }
 
     /**

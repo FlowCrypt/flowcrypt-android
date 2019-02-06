@@ -12,6 +12,6 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/ic_splash" />
+            android:src="@mipmap/logo_flowcrypt" />
     </item>
 </layer-list>

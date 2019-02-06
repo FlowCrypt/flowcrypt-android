@@ -47,7 +47,7 @@ public final class ApiHelper {
 
     if (GeneralUtil.isDebugBuild()) {
       boolean isWriteLogsEnabled = SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences
-          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE, false);
+          (context), Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false);
 
       if (isWriteLogsEnabled) {
         LoggingInFileInterceptor loggingInFileInterceptor = new LoggingInFileInterceptor();

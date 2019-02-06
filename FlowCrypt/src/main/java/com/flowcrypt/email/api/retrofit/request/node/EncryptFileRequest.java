@@ -12,6 +12,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Response;
@@ -38,6 +40,10 @@ public class EncryptFileRequest extends BaseNodeRequest {
     this.data = data;
     this.name = name;
     this.pubKeys = pubKeys;
+  }
+
+  public EncryptFileRequest(Context context, Uri uri, String name, String[] pubKeys) {
+    this(context, uri, name, pubKeys != null ? Arrays.asList(pubKeys) : new ArrayList<String>());
   }
 
   public EncryptFileRequest(Context context, Uri uri, String name, List<String> pubKeys) {

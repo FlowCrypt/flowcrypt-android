@@ -3,11 +3,6 @@
  * Contributors: DenBond7
  */
 
-/*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
- */
-
 package com.flowcrypt.email.ui.activity.fragment.base;
 
 import android.Manifest;
@@ -763,7 +758,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
         if (TextUtils.isEmpty(attachmentInfo.getName())) {
-          ExceptionUtil.handleError(new NullPointerException("attachmentInfo.getName() == null, uri = " + attachmentInfo.getUri()));
+          String msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.getUri();
+          ExceptionUtil.handleError(new NullPointerException(msg));
           continue;
         }
 

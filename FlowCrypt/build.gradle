@@ -7,8 +7,6 @@ import java.text.SimpleDateFormat
 
 apply plugin: 'com.android.application'
 
-SimpleDateFormat simpleDateFormat = new SimpleDateFormat('yyyy_MM_dd_HH_mm')
-
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
@@ -22,15 +20,15 @@ android {
         aaptOptions.cruncherEnable = false
     }
 
-    compileSdkVersion COMPILE_SDK_VERSION as int
-    buildToolsVersion BUILD_TOOLS_VERSION as String
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "com.flowcrypt.email"
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
-        versionCode APP_VERSION_CODE as int
-        versionName APP_VERSION_NAME as String
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.appVersionCode
+        versionName rootProject.ext.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         externalNativeBuild {
@@ -88,15 +86,15 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             resValue 'string', 'application_id', android.defaultConfig.applicationId
-            resValue 'string', 'gradle_is_acra_enable', 'true'
-            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
+            resValue 'string', 'gradle_is_acra_enabled', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
         }
 
         debug {
-            versionNameSuffix '_' + defaultConfig.versionCode + '__' + simpleDateFormat.format(new Date())
+            versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
             resValue 'string', 'application_id', android.defaultConfig.applicationId + applicationIdSuffix
             signingConfig signingConfigs.debug
@@ -125,64 +123,56 @@ android {
         // It has settings for a fast building (some features are disabled or not included).
         dev {
             signingConfig signingConfigs.debug
-            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'true'
-            resValue 'string', 'gradle_is_acra_enable', 'false'
-            resValue 'string', 'gradle_is_mail_debug_enable', 'true'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             versionNameSuffix "_dev"
             dimension "standard"
-            minSdkVersion MIN_SDK_VERSION as int
-            resConfigs "en", "xhdpi"
+            minSdkVersion rootProject.ext.minSdkVersion
+            resConfigs "en", "xxhdpi"
         }
 
         //This is a production flavor
         prod {
             signingConfig signingConfigs.release
-            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'true'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
-            resValue 'string', 'gradle_is_acra_enable', 'true'
-            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            resValue 'string', 'gradle_is_acra_enabled', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             dimension "standard"
         }
 
         //This flavor must be used only for a testing
         devTest {
             signingConfig signingConfigs.debug
-            buildConfigField 'boolean', 'IS_ACRA_ENABLE', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLE', 'false'
-            resValue 'string', 'gradle_is_acra_enable', 'false'
-            resValue 'string', 'gradle_is_mail_debug_enable', 'false'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
+            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
         }
     }
 
     compileOptions {
-        sourceCompatibility "${JAVA_SOURCE_COMPATIBILITY}"
-        targetCompatibility "${JAVA_SOURCE_COMPATIBILITY}"
+        sourceCompatibility rootProject.ext.javaSourceCompatibility
+        targetCompatibility rootProject.ext.javaSourceCompatibility
     }
 
     packagingOptions {
-        pickFirst 'META-INF/LICENSE.txt' // picks the JavaMail license file
         exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/eclipse.inf'
-        exclude 'plugin.properties'
     }
 
-    tasks.register('renameReleaseBuild') {
+    tasks.register('renameReleaseBuilds') {
         doLast {
             applicationVariants.all { variant ->
                 if (variant.buildType.buildType == buildTypes.release) {
                     variant.outputs.each { output ->
                         def file = output.outputFile
                         def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
-                                "_" + defaultConfig.versionName + "_" + simpleDateFormat.format(new Date()) + ".apk")
+                                "_" + defaultConfig.versionName + "_"
+                                + new SimpleDateFormat('yyyy_MM_dd_HH_mm').format(new Date()) + ".apk")
                         output.outputFile.renameTo(new File(file.parent, newName))
                     }
                 }
@@ -190,78 +180,87 @@ android {
         }
     }
 
-    tasks.configureEach { task ->
-        if (task.name == 'packageProdRelease') {
-            task.finalizedBy renameReleaseBuild
+    task copyReleaseApks(type: Copy) {
+        applicationVariants.all { variant ->
+            if (variant.buildType.buildType == buildTypes.release) {
+                variant.outputs.each { output ->
+                    from("$output.outputFile.parent") {
+                        include '**/*release*.apk'
+                    }
+                }
+            }
+        }
+        includeEmptyDirs = false
+        into '../release'
+    }
+
+    afterEvaluate {
+        Task task = tasks.findByName('packageProdRelease')
+        if (task != null) {
+            task.finalizedBy renameReleaseBuilds
         }
     }
 }
 
+configurations {
+    prodDebugImplementation {}
+    prodReleaseImplementation {}
+}
+
 dependencies {
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:${LEAKCANARY_VERSION}"
+    prodDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
+    prodReleaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
 
-    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
-
-    androidTestImplementation "androidx.test.espresso:espresso-core:${ESPRESSO_VERSION}"
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:${ESPRESSO_VERSION}"
-    androidTestImplementation "androidx.test.espresso:espresso-intents:${ESPRESSO_VERSION}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:${rootProject.ext.espressoVersion}"
+    //https://mvnrepository.com/artifact/androidx.test.ext/junit
     androidTestImplementation "androidx.test.ext:junit:1.1.0"
 
-    testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${LEAKCANARY_VERSION}"
-    testImplementation "junit:junit:${JUNIT_VERSION}"
+    testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation "androidx.legacy:legacy-support-v4:${ANDROIDX_BASE_VERSION}"
+    implementation "androidx.legacy:legacy-support-v4:${rootProject.ext.androidxBaseVersion}"
     implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation "androidx.legacy:legacy-preference-v14:${ANDROIDX_BASE_VERSION}"
-    implementation "androidx.cardview:cardview:${ANDROIDX_BASE_VERSION}"
-    implementation "androidx.browser:browser:${ANDROIDX_BASE_VERSION}"
-    implementation "androidx.recyclerview:recyclerview:${ANDROIDX_BASE_VERSION}"
+    implementation "androidx.legacy:legacy-preference-v14:${rootProject.ext.androidxBaseVersion}"
+    implementation "androidx.cardview:cardview:${rootProject.ext.androidxBaseVersion}"
+    implementation "androidx.browser:browser:${rootProject.ext.androidxBaseVersion}"
+    implementation "androidx.recyclerview:recyclerview:${rootProject.ext.androidxBaseVersion}"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.test.espresso:espresso-idling-resource:3.1.1'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
 
+    //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:16.1.0'
-    implementation "com.google.android.gms:play-services-auth:${PLAY_SERVICES_VERSION}"
-    implementation "com.google.android.material:material:${ANDROIDX_BASE_VERSION}"
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
-    implementation 'com.google.code.gson:gson:2.8.2'
-    implementation('com.google.api-client:google-api-client-android:1.26.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude group: 'com.google.code.findbugs'
-    }
-    implementation('com.google.apis:google-api-services-gmail:v1-rev96-1.25.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude group: 'com.google.code.findbugs'
-    }
+    //https://mvnrepository.com/artifact/com.google.android.material/material
+    implementation 'com.google.android.material:material:1.0.0'
 
-    implementation "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
-    implementation "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
-    implementation "com.squareup.okhttp3:logging-interceptor:${OKHTTP_VERSION}"
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.api-client:google-api-client-android:1.28.0'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev98-1.25.0'
 
-    implementation("com.sun.mail:android-mail:${JAVA_MAIL_VERSION}") {
-        exclude group: 'javax.activation'
-    }
+    implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
+    implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
+    implementation "com.squareup.okhttp3:logging-interceptor:${rootProject.ext.okhttpVersion}"
 
-    implementation("com.sun.mail:gimap:${JAVA_MAIL_VERSION}") {
+    implementation "com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}"
+    implementation("com.sun.mail:gimap:${rootProject.ext.javaMailVersion}") {
+        //exclude group: 'com.sun.mail' because it exists in 'com.sun.mail:android-mail'
         exclude group: 'com.sun.mail'
-        exclude group: 'javax.activation'
     }
 
-    implementation "com.github.bumptech.glide:glide:${GLIDE_VERSION}"
-    annotationProcessor "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
-    annotationProcessor "androidx.annotation:annotation:${ANDROIDX_BASE_VERSION}"
+    implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
+    annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
+    annotationProcessor "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
 
     implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
     implementation 'commons-io:commons-io:2.6'
-    implementation 'ch.acra:acra:4.11'
+    prodImplementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
-
-    implementation 'com.madgag.spongycastle:prov:1.58.0.0'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
-    implementation 'com.liferay:javax.xml.bind:2.3.0.LIFERAY-PATCHED-1'
-    implementation 'org.eclipse.birt.runtime.3_7_1:org.apache.xerces:2.9.0'
 }

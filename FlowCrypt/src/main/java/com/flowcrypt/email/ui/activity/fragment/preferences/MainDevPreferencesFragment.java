@@ -84,7 +84,7 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
   @Override
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     switch (key) {
-      case Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLE:
+      case Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED:
         if (sharedPreferences.getBoolean(key, false)) {
           boolean isPermissionGranted = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission
               .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
@@ -99,9 +99,9 @@ public class MainDevPreferencesFragment extends BaseDevPreferencesFragment imple
         }
         break;
 
-      case Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLE:
-      case Constants.PREFERENCES_KEY_IS_ACRA_ENABLE:
-      case Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLE:
+      case Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED:
+      case Constants.PREFERENCES_KEY_IS_ACRA_ENABLED:
+      case Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED:
         showApplicationDetailsSettingsActivity();
         break;
     }

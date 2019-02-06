@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.node;
 
-import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.js.PgpKeyInfo;
 
 import java.util.Arrays;
 
@@ -341,5 +341,10 @@ public class TestData {
 
   public static String[] getMixedPubKeys() {
     return new String[]{ECC_PUB_KEY, RSA_2048_PUB_KEY, RSA_4096_PUB_KEY};
+  }
+
+  public static PgpKeyInfo[] getMixedPrvKeys() {
+    return new PgpKeyInfo[]{new PgpKeyInfo(ECC_PRV_KEY, "063635B3E33EB14C"), new PgpKeyInfo(RSA_2048_PRV_KEY,
+        "3A30F4CC0A9A8F10"), new PgpKeyInfo(RSA_4096_PRV_KEY, "7C307E6F2092962D")};
   }
 }

@@ -13,8 +13,7 @@ import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.StorageConnectorInterface;
-
-import org.acra.ACRA;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -83,17 +82,7 @@ public class JavaMethodsForJavaScript {
     if (details.length() > 0) {
       console_error(details);
     }
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_TITLE", title);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_STACK_TRACE", stack_trace);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_DETAILS", details);
-    if (isError) {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptError(title));
-    } else {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptReport(title));
-    }
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_TITLE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_STACK_TRACE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_DETAILS");
+    ExceptionUtil.handleError(isError, title, stack_trace, details);
   }
 
   public String mod_pow_strings(String b, String e, String m) {

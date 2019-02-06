@@ -10,9 +10,9 @@ import android.content.Context;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.gmail.Gmail;
@@ -48,7 +48,7 @@ public class GmailApiHelper {
 
     GoogleAccountCredential credential = generateGoogleAccountCredential(context, account.getAccount());
 
-    HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    HttpTransport transport = new NetHttpTransport();
     JsonFactory factory = JacksonFactory.getDefaultInstance();
     String appName = context.getString(R.string.app_name);
     return new Gmail.Builder(transport, factory, credential).setApplicationName(appName).build();

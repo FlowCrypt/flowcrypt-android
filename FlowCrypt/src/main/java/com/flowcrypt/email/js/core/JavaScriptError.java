@@ -12,7 +12,7 @@ package com.flowcrypt.email.js.core;
  * E-mail: DenBond7@gmail.com
  */
 public class JavaScriptError extends Exception {
-  JavaScriptError(String msg) {
+  public JavaScriptError(String msg) {
     super(msg);
   }
 }

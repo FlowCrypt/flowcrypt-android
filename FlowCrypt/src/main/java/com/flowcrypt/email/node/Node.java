@@ -35,9 +35,9 @@ public final class Node {
 
   private static final Node INSTANCE = new Node();
   private volatile NativeNode nativeNode;
-  private NodeSecret nodeSecret;
+  private volatile NodeSecret nodeSecret;
+  private volatile RequestsManager requestsManager;
   private MutableLiveData<Boolean> liveData;
-  private RequestsManager requestsManager;
 
   private Node() {
     liveData = new MutableLiveData<>();

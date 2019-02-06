@@ -19,6 +19,10 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
@@ -58,6 +62,7 @@ import javax.mail.internet.MimeMessage;
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
 import androidx.core.content.FileProvider;
+import retrofit2.Response;
 
 /**
  * This service creates a new outgoing message using the given {@link OutgoingMessageInfo}.
@@ -234,6 +239,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
     List<AttachmentInfo> cachedAtts = new ArrayList<>();
 
+    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
       for (AttachmentInfo att : msgInfo.getAtts()) {
         try {
@@ -251,8 +257,22 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
           if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
             File encryptedTempFile = new File(attsCacheDir, att.getName() + Constants.PGP_FILE_EXT);
-            byte[] originalBytes = IOUtils.toByteArray(inputStream);
-            byte[] encryptedBytes = js.crypto_message_encrypt(pubKeys, originalBytes, att.getName());
+            EncryptFileRequest request = new EncryptFileRequest(this, origFileUri, att.getName(), pubKeys);
+
+            Response<EncryptedFileResult> response = nodeService.encryptFile(request).execute();
+            EncryptedFileResult encryptedFileResult = response.body();
+
+            if (encryptedFileResult == null) {
+              ExceptionUtil.handleError(new NullPointerException("encryptedFileResult == null"));
+              continue;
+            }
+
+            if (encryptedFileResult.getError() != null) {
+              ExceptionUtil.handleError(new Exception(encryptedFileResult.getError().getMsg()));
+              continue;
+            }
+
+            byte[] encryptedBytes = encryptedFileResult.getEncryptedBytes();
             FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
             Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile);
             att.setUri(uri);

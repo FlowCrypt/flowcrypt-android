@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<?xml version="1.0" encoding="utf-8"?>
+<!--
   ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
@@ -31,7 +32,8 @@
 
         <activity
             android:name=".ui.activity.SplashActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -215,11 +217,6 @@
         <activity
             android:name=".ui.activity.NodeTestActivity"
             android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.activity.NodeSplashActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Launcher" />
 
         <!-- Providers -->
         <provider
