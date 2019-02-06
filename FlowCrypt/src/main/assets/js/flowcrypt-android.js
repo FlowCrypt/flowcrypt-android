@@ -47388,7 +47388,7 @@ Pgp.key = {
 
         return fp;
       } catch (e) {
-        console.log(e);
+        console.error(e);
         return undefined;
       }
     } else {
@@ -47399,7 +47399,7 @@ Pgp.key = {
           catch_js_1.Catch.handleErr(e);
         }
 
-        console.log(e);
+        console.error(e);
         return undefined;
       }
     }
@@ -48701,9 +48701,11 @@ Mime.encode = async (body, headers, atts = []) => {
 
   for (const att of atts) {
     const type = `${att.type}; name="${att.name}"`;
+    const id = `f_${common_js_1.Str.sloppyRandom(30)}@flowcrypt`;
     const header = {
       'Content-Disposition': 'attachment',
-      'X-Att-Id': `f_${common_js_1.Str.sloppyRandom(10)}`,
+      'X-Attachment-Id': id,
+      'Content-ID': `<${id}>`,
       'Content-Transfer-Encoding': 'base64'
     };
     rootNode.appendChild(new MimeBuilder(type, {
@@ -49052,7 +49054,7 @@ class Buf extends Uint8Array {
                   throw e;
                 }
 
-                console.log(e);
+                console.info(e);
               }
             }
           } else {
