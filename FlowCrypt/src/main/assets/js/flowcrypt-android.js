@@ -46928,6 +46928,10 @@ const fmt_1 = __webpack_require__(3);
 
 const const_1 = __webpack_require__(6);
 
+const require_1 = __webpack_require__(15);
+
+const openpgp = require_1.requireOpenpgp();
+
 class Debug {}
 
 Debug.printChunk = (name, data) => {
@@ -47058,10 +47062,10 @@ class Endpoints {
       }, decryptedMeta.content);
     };
 
-    this.dateStrParse = async (uncheckedReq, data) => {
+    this.parseDateStr = async (uncheckedReq, data) => {
       const {
         dateStr
-      } = validate_1.Validate.dateStrParse(uncheckedReq);
+      } = validate_1.Validate.parseDateStr(uncheckedReq);
       return fmt_1.fmtRes({
         timestamp: String(Date.parse(dateStr) || -1)
       });
@@ -47073,6 +47077,57 @@ class Endpoints {
       } = validate_1.Validate.gmailBackupSearch(uncheckedReq);
       return fmt_1.fmtRes({
         query: const_1.gmailBackupSearchQuery(acctEmail)
+      });
+    };
+
+    this.parseKeys = async (uncheckedReq, data) => {
+      const keyDetails = [];
+      const allData = Buffer.concat(data);
+      const pgpType = await pgp_1.PgpMsg.type({
+        data: allData
+      });
+
+      if (!pgpType) {
+        return fmt_1.fmtRes({
+          format: 'unknown',
+          keyDetails,
+          error: {
+            message: `Cannot parse key: could not determine pgpType`
+          }
+        });
+      }
+
+      if (pgpType.armored) {
+        // armored
+        const {
+          blocks
+        } = pgp_1.Pgp.armor.detectBlocks(allData.toString());
+
+        for (const block of blocks) {
+          const {
+            keys
+          } = await pgp_1.Pgp.key.parse(block.content);
+          keyDetails.push(...keys);
+        }
+
+        return fmt_1.fmtRes({
+          format: 'armored',
+          keyDetails
+        });
+      } // binary
+
+
+      const {
+        keys: openPgpKeys
+      } = await openpgp.key.read(allData);
+
+      for (const openPgpKey of openPgpKeys) {
+        keyDetails.push((await pgp_1.Pgp.key.serialize(openPgpKey)));
+      }
+
+      return fmt_1.fmtRes({
+        format: 'binary',
+        keyDetails
       });
     };
   }
@@ -49337,7 +49392,7 @@ Validate.decryptMsg = v => {
   throw new Error('Wrong request structure for NodeRequest.decryptFile');
 };
 
-Validate.dateStrParse = v => {
+Validate.parseDateStr = v => {
   if (isObj(v) && hasProp(v, 'dateStr', 'string')) {
     return v;
   }
