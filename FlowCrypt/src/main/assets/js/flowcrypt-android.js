@@ -46930,6 +46930,8 @@ const const_1 = __webpack_require__(6);
 
 const require_1 = __webpack_require__(15);
 
+const common_1 = __webpack_require__(9);
+
 const openpgp = require_1.requireOpenpgp();
 
 class Debug {}
@@ -47128,6 +47130,15 @@ class Endpoints {
       return fmt_1.fmtRes({
         format: 'binary',
         keyDetails
+      });
+    };
+
+    this.isEmailValid = async (uncheckedReq, data) => {
+      const {
+        email
+      } = validate_1.Validate.isEmailValid(uncheckedReq);
+      return fmt_1.fmtRes({
+        valid: common_1.Str.isEmailValid(email)
       });
     };
   }
@@ -49406,6 +49417,14 @@ Validate.gmailBackupSearch = v => {
   }
 
   throw new Error('Wrong request structure for NodeRequest.gmailBackupSearchQuery');
+};
+
+Validate.isEmailValid = v => {
+  if (isObj(v) && hasProp(v, 'email', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.isEmailValid');
 };
 
 exports.Validate = Validate;
