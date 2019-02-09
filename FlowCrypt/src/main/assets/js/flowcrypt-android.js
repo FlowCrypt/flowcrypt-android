@@ -46926,6 +46926,8 @@ const validate_1 = __webpack_require__(17);
 
 const fmt_1 = __webpack_require__(3);
 
+const const_1 = __webpack_require__(6);
+
 class Debug {}
 
 Debug.printChunk = (name, data) => {
@@ -47054,6 +47056,24 @@ class Endpoints {
         success: true,
         name: decryptedMeta.filename || ''
       }, decryptedMeta.content);
+    };
+
+    this.dateStrParse = async (uncheckedReq, data) => {
+      const {
+        dateStr
+      } = validate_1.Validate.dateStrParse(uncheckedReq);
+      return fmt_1.fmtRes({
+        timestamp: String(Date.parse(dateStr) || -1)
+      });
+    };
+
+    this.gmailBackupSearch = async (uncheckedReq, data) => {
+      const {
+        acctEmail
+      } = validate_1.Validate.gmailBackupSearch(uncheckedReq);
+      return fmt_1.fmtRes({
+        query: const_1.gmailBackupSearchQuery(acctEmail)
+      });
     };
   }
 
@@ -48222,6 +48242,20 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.VERSION = APP_VERSION;
+/**
+ * Only put constants below if:
+ *   - they are useful across web/extension/Nodejs environments, AND
+ *   - the only other reasonable place to put them would be OUTSIDE of the /core folder
+ *   - example: A Google query below would normally go in Google class, but that's outside of /core and we also need it on Android
+ *
+ * For any constants that are not expected to be reused that widely, just put them as private or public static props in relevant class.
+ */
+
+exports.GMAIL_RECOVERY_EMAIL_SUBJECTS = ['Your FlowCrypt Backup', 'Your CryptUp Backup', 'All you need to know about CryptUP (contains a backup)', 'CryptUP Account Backup'];
+
+exports.gmailBackupSearchQuery = acctEmail => {
+  return ['from:' + acctEmail, 'to:' + acctEmail, '(subject:"' + exports.GMAIL_RECOVERY_EMAIL_SUBJECTS.join('" OR subject: "') + '")', '-is:spam'].join(' ');
+};
 
 /***/ }),
 /* 7 */
@@ -49301,6 +49335,22 @@ Validate.decryptMsg = v => {
   }
 
   throw new Error('Wrong request structure for NodeRequest.decryptFile');
+};
+
+Validate.dateStrParse = v => {
+  if (isObj(v) && hasProp(v, 'dateStr', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.dateStrParse');
+};
+
+Validate.gmailBackupSearch = v => {
+  if (isObj(v) && hasProp(v, 'acctEmail', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.gmailBackupSearchQuery');
 };
 
 exports.Validate = Validate;
