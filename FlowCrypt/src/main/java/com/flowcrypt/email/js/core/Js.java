@@ -69,10 +69,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return storage;
   }
 
-  public Boolean str_is_email_valid(String email) {
-    return (Boolean) this.call(Boolean.class, p("str", "is_email_valid"), new V8Array(v8).push(email));
-  }
-
   public PgpContact str_parse_email(String email) {
     V8Object e = (V8Object) this.call(Object.class, p("str", "parse_email"), new V8Array(v8).push(email));
     return new PgpContact(e.getString("email"), e.getString("name"));
@@ -237,11 +233,6 @@ public class Js { // Create one object per thread and use them separately. Not t
         && !TextUtils.isEmpty(pgpKey.getFingerprint())
         && pgpKey.getPrimaryUserId() != null
         && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
-  }
-
-  public Attachment file_attachment(byte[] content, String name, String type) {
-    return new Attachment((V8Object) this.call(V8Object.class, p("file", "attachment"), new V8Array(v8)
-        .push(name).push(type).push(uint8(content))));
   }
 
   private static String read(InputStream inputStream) throws IOException {

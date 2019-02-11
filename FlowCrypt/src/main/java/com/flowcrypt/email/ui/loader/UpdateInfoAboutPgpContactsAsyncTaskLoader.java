@@ -17,6 +17,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.io.IOException;
@@ -85,7 +86,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
     try {
       Js js = new Js(getContext(), null);
       for (String email : emails) {
-        if (js.str_is_email_valid(email)) {
+        if (GeneralUtil.isEmailValid(email)) {
           if (email != null) {
             email = email.toLowerCase();
           }

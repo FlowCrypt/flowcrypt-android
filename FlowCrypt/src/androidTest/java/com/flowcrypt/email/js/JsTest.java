@@ -124,11 +124,6 @@ public class JsTest {
   }
 
   @Test
-  public void testIsEmailValid() {
-    Assert.assertTrue(js.str_is_email_valid(DEN_EMAIL));
-  }
-
-  @Test
   public void testArmor() {
     pgpKeyPrivateBen.armor();
   }

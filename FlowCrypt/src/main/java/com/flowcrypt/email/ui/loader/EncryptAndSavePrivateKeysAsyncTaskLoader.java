@@ -21,6 +21,7 @@ import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
 
@@ -122,7 +123,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
         PgpKey publicKey = pgpKey.toPublic();
         pgpContact.setPubkey(publicKey.armor());
         PgpContact temp = daoSource.getPgpContact(getContext(), pgpContact.getEmail());
-        if (js.str_is_email_valid(pgpContact.getEmail()) && temp == null) {
+        if (GeneralUtil.isEmailValid(pgpContact.getEmail()) && temp == null) {
           new ContactsDaoSource().addRow(getContext(), pgpContact);
           //todo-DenBond7 Need to resolve a situation with different public keys.
           //For example we can have a situation when we have to different public
