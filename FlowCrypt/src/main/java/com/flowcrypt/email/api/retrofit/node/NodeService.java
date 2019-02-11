@@ -10,12 +10,14 @@ import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult;
 
 import okhttp3.RequestBody;
@@ -48,6 +50,9 @@ public interface NodeService {
 
   @POST("/")
   Call<GmailBackupSearchResult> gmailBackupSearch(@Body GmailBackupSearchRequest request);
+
+  @POST("/")
+  Call<ParseKeysResult> parseKeys(@Body ParseKeysRequest request);
 
   @POST("/")
   @Streaming
