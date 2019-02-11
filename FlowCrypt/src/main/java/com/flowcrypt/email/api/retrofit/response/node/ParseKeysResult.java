@@ -7,8 +7,9 @@ package com.flowcrypt.email.api.retrofit.response.node;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.response.model.node.KeyDetails;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -35,7 +36,8 @@ public class ParseKeysResult extends BaseNodeResult {
   private String format;
 
   @Expose
-  private List<KeyDetails> keyDetails;
+  @SerializedName("keyDetails")
+  private List<NodeKeyDetails> nodeKeyDetails;
 
   public ParseKeysResult() {
   }
@@ -43,7 +45,7 @@ public class ParseKeysResult extends BaseNodeResult {
   protected ParseKeysResult(Parcel in) {
     super(in);
     this.format = in.readString();
-    this.keyDetails = in.createTypedArrayList(KeyDetails.CREATOR);
+    this.nodeKeyDetails = in.createTypedArrayList(NodeKeyDetails.CREATOR);
   }
 
   @Override
@@ -55,14 +57,14 @@ public class ParseKeysResult extends BaseNodeResult {
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
     dest.writeString(this.format);
-    dest.writeTypedList(this.keyDetails);
+    dest.writeTypedList(this.nodeKeyDetails);
   }
 
   public String getFormat() {
     return format;
   }
 
-  public List<KeyDetails> getKeyDetails() {
-    return keyDetails;
+  public List<NodeKeyDetails> getNodeKeyDetails() {
+    return nodeKeyDetails;
   }
 }

@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
-import com.flowcrypt.email.api.retrofit.response.model.node.KeyDetails;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.util.exception.NodeException;
@@ -25,15 +25,16 @@ import java.util.List;
  */
 public class NodeCallsExecutor {
   /**
-   * Parse a list of {@link KeyDetails} from the given string. It can take one key or many keys, it can be private or
+   * Parse a list of {@link NodeKeyDetails} from the given string. It can take one key or many keys, it can be
+   * private or
    * public keys, it can be armored or binary... doesn't matter.
    *
    * @param key The given key.
-   * @return A list of {@link KeyDetails}
+   * @return A list of {@link NodeKeyDetails}
    * @throws IOException   Such exceptions can occur during network calls.
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
-  public static List<KeyDetails> parseKeys(String key) throws IOException, NodeException {
+  public static List<NodeKeyDetails> parseKeys(String key) throws IOException, NodeException {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     ParseKeysRequest request = new ParseKeysRequest(key);
 
@@ -48,7 +49,7 @@ public class NodeCallsExecutor {
       throw new NodeException(result.getError().getMsg());
     }
 
-    return result.getKeyDetails();
+    return result.getNodeKeyDetails();
   }
 
   /**

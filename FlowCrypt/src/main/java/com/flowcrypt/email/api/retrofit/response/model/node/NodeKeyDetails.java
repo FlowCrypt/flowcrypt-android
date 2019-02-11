@@ -19,17 +19,17 @@ import java.util.List;
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-public class KeyDetails implements Parcelable {
+public class NodeKeyDetails implements Parcelable {
 
-  public static final Creator<KeyDetails> CREATOR = new Creator<KeyDetails>() {
+  public static final Creator<NodeKeyDetails> CREATOR = new Creator<NodeKeyDetails>() {
     @Override
-    public KeyDetails createFromParcel(Parcel source) {
-      return new KeyDetails(source);
+    public NodeKeyDetails createFromParcel(Parcel source) {
+      return new NodeKeyDetails(source);
     }
 
     @Override
-    public KeyDetails[] newArray(int size) {
-      return new KeyDetails[size];
+    public NodeKeyDetails[] newArray(int size) {
+      return new NodeKeyDetails[size];
     }
   };
 
@@ -53,10 +53,10 @@ public class KeyDetails implements Parcelable {
   @Expose
   private Algo algo;
 
-  public KeyDetails() {
+  public NodeKeyDetails() {
   }
 
-  protected KeyDetails(Parcel in) {
+  protected NodeKeyDetails(Parcel in) {
     this.privateKey = in.readString();
     this.publicKey = in.readString();
     this.users = in.createStringArrayList();
