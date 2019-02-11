@@ -93,7 +93,7 @@ public class JsTest {
   }
 
   @Test
-  public void initSecurityStorageConnector() throws Exception {
+  public void initSecurityStorageConnector() {
     new SecurityStorageConnector(InstrumentationRegistry.getInstrumentation().getTargetContext());
   }
 
@@ -124,37 +124,37 @@ public class JsTest {
   }
 
   @Test
-  public void testIsEmailValid() throws Exception {
+  public void testIsEmailValid() {
     Assert.assertTrue(js.str_is_email_valid(DEN_EMAIL));
   }
 
   @Test
-  public void testArmor() throws Exception {
+  public void testArmor() {
     pgpKeyPrivateBen.armor();
   }
 
   @Test
-  public void testToPublic() throws Exception {
+  public void testToPublic() {
     pgpKeyPrivateBen.toPublic();
   }
 
   @Test
-  public void testCryptoKeyFingerprint() throws Exception {
+  public void testCryptoKeyFingerprint() {
     Assert.assertTrue(BEN_FINGERPRINT.equals(js.crypto_key_fingerprint(pgpKeyPrivateBen)));
   }
 
   @Test
-  public void testCryptoKeyLongidFromPgpKey() throws Exception {
+  public void testCryptoKeyLongidFromPgpKey() {
     Assert.assertTrue(BEN_LONG_ID.equals(js.crypto_key_longid(pgpKeyPrivateBen)));
   }
 
   @Test
-  public void testCryptoKeyLongidFromFingerprint() throws Exception {
+  public void testCryptoKeyLongidFromFingerprint() {
     Assert.assertTrue(BEN_LONG_ID.equals(js.crypto_key_longid(BEN_FINGERPRINT)));
   }
 
   @Test
-  public void testMnemonic() throws Exception {
+  public void testMnemonic() {
     Assert.assertTrue(BEN_KEYWORDS.equals(js.mnemonic(BEN_LONG_ID)));
   }
 
@@ -165,7 +165,7 @@ public class JsTest {
   }
 
   @Test
-  public void testGetPrimaryUserId() throws Exception {
+  public void testGetPrimaryUserId() {
     PgpContact primaryUserId = pgpKeyPrivateBen.getPrimaryUserId();
     Assert.assertTrue(primaryUserId.getEmail().equalsIgnoreCase(BEN_EMAIL));
   }
@@ -188,12 +188,12 @@ public class JsTest {
   }
 
   @Test
-  public void testEncryptFile() throws Exception {
-    File encryptedTempFile = createTempFile();
+  public void testEncryptFile() {
+    /*File encryptedTempFile = createTempFile();
     byte[] encryptedBytes = js.crypto_message_encrypt(
         new String[]{pgpKeyPublicBen.armor(), pgpKeyPublicDen.armor()}, IOUtils.toByteArray(InstrumentationRegistry
             .getInstrumentation().getContext().getAssets().open("pgp/1_mb_image.jpg")), image1Mb.getName());
-    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
+    FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);*/
   }
 
   private static DynamicStorageConnector prepareStoreConnectorInterface() throws IOException {

@@ -6,15 +6,15 @@
 package com.flowcrypt.email.util.exception;
 
 /**
- * This exception can occur during the encryption process.
+ * It's a base Node exception.
  *
  * @author Denis Bondarenko
- * Date: 1/25/19
- * Time: 6:34 PM
+ * Date: 2/11/19
+ * Time: 10:08 AM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeEncryptException extends NodeException {
-  public NodeEncryptException(String message) {
+public class NodeException extends FlowCryptException {
+  public NodeException(String message) {
     super(message);
   }
 }

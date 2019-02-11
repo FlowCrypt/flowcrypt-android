@@ -26,7 +26,9 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.MessageBlock;
@@ -39,6 +41,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NodeEncryptException;
+import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -313,9 +316,24 @@ public class EmailUtil {
    */
   public static Collection<KeyDetails> getPrivateKeyBackupsViaGmailAPI(Context context, AccountDao account,
                                                                        Session session, Js js)
-      throws IOException, MessagingException {
+      throws IOException, MessagingException, NodeException {
     ArrayList<KeyDetails> list = new ArrayList<>();
-    String searchQuery = js.api_gmail_query_backups(account.getEmail());
+
+    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    GmailBackupSearchRequest request = new GmailBackupSearchRequest(account.getEmail());
+
+    retrofit2.Response<GmailBackupSearchResult> resp = nodeService.gmailBackupSearch(request).execute();
+    GmailBackupSearchResult result = resp.body();
+
+    if (result == null) {
+      throw new NullPointerException("gmailBackupSearch == null");
+    }
+
+    if (result.getError() != null) {
+      throw new NodeException(result.getError().getMsg());
+    }
+
+    String searchQuery = result.getQuery();
     Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, account);
 
     ListMessagesResponse response = gmailApiService

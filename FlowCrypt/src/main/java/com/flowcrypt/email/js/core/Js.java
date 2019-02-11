@@ -178,22 +178,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return (String) this.call(str, v8, p("mnemonic"), new V8Array(v8).push(longid));
   }
 
-  public String crypto_message_encrypt(String pubkeys[], String text) {
-    V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL)
-        .push(true).push(cb_catch);
-    this.call(void.class, p("crypto", "message", "encrypt"), params);
-    return ((V8Object) cb_last_value[0]).get("data").toString();
-  }
-
-  public byte[] crypto_message_encrypt(String pubkeys[], byte[] content, String filename) {
-    V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
-        .push(filename).push(false).push(cb_catch);
-    this.call(void.class, p("crypto", "message", "encrypt"), params);
-    V8Object packets = (V8Object) ((V8Object) ((V8Object) cb_last_value[0]).get("message")).get("packets");
-    V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
-    return data.getBytes(0, data.length());
-  }
-
   public PgpDecrypted crypto_message_decrypt(String data, String password) {
     // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
     V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push(cb_catch).push(NULL);
@@ -224,10 +208,6 @@ public class Js { // Create one object per thread and use them separately. Not t
   public PasswordStrength crypto_password_estimate_strength(double zxcvbn_guesses) {
     return new PasswordStrength((V8Object) this.call(Object.class, p("crypto", "password", "estimate_strength"),
         new V8Array(v8).push(zxcvbn_guesses)));
-  }
-
-  public String api_gmail_query_backups(String email) {
-    return (String) this.call(str, p("api", "gmail", "query", "backups"), new V8Array(v8).push(email));
   }
 
   /**
