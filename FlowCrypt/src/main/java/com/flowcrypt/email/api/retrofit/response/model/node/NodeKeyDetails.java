@@ -8,10 +8,14 @@ package com.flowcrypt.email.api.retrofit.response.model.node;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.flowcrypt.email.js.PgpContact;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 /**
  * @author Denis Bondarenko
@@ -19,17 +23,17 @@ import java.util.List;
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-public class KeyDetails implements Parcelable {
+public class NodeKeyDetails implements Parcelable {
 
-  public static final Creator<KeyDetails> CREATOR = new Creator<KeyDetails>() {
+  public static final Creator<NodeKeyDetails> CREATOR = new Creator<NodeKeyDetails>() {
     @Override
-    public KeyDetails createFromParcel(Parcel source) {
-      return new KeyDetails(source);
+    public NodeKeyDetails createFromParcel(Parcel source) {
+      return new NodeKeyDetails(source);
     }
 
     @Override
-    public KeyDetails[] newArray(int size) {
-      return new KeyDetails[size];
+    public NodeKeyDetails[] newArray(int size) {
+      return new NodeKeyDetails[size];
     }
   };
 
@@ -53,10 +57,10 @@ public class KeyDetails implements Parcelable {
   @Expose
   private Algo algo;
 
-  public KeyDetails() {
+  public NodeKeyDetails() {
   }
 
-  protected KeyDetails(Parcel in) {
+  protected NodeKeyDetails(Parcel in) {
     this.privateKey = in.readString();
     this.publicKey = in.readString();
     this.users = in.createStringArrayList();
@@ -102,5 +106,21 @@ public class KeyDetails implements Parcelable {
 
   public Algo getAlgo() {
     return algo;
+  }
+
+  public PgpContact getPgpContact() {
+    KeyId keyId = ids.get(0);
+    String email = null;
+    String name = null;
+    try {
+      InternetAddress[] internetAddresses = InternetAddress.parse(users.get(0));
+      email = internetAddresses[0].getAddress();
+      name = internetAddresses[0].getPersonal();
+    } catch (AddressException e) {
+      e.printStackTrace();
+    }
+
+    return new PgpContact(email, name, publicKey, true, null, false,
+        keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
   }
 }

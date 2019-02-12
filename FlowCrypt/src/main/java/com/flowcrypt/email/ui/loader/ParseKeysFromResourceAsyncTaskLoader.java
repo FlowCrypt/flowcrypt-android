@@ -9,11 +9,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.js.MessageBlock;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
-import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -56,7 +53,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
 
   @Override
   public LoaderResult loadInBackground() {
-    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+    ArrayList<NodeKeyDetails> list = new ArrayList<>();
     try {
       if (keyImportModel != null) {
         String armoredKey = null;
@@ -80,13 +77,7 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
         }
 
         if (!TextUtils.isEmpty(armoredKey)) {
-          Js js = new Js(getContext(), null);
-
-          MessageBlock[] messageBlocks = js.crypto_armor_detect_blocks(armoredKey);
-
-          for (MessageBlock messageBlock : messageBlocks) {
-            keyDetailsList.addAll(parseKeys(js, messageBlock));
-          }
+          list.addAll(NodeCallsExecutor.parseKeys(armoredKey));
         }
       }
     } catch (Exception e) {
@@ -95,42 +86,12 @@ public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<Loader
       return new LoaderResult(null, e);
     }
 
-    return new LoaderResult(keyDetailsList, null);
+    return new LoaderResult(list, null);
   }
 
   @Override
   public void onStopLoading() {
     cancelLoad();
-  }
-
-  private ArrayList<KeyDetails> parseKeys(Js js, MessageBlock messageBlock) {
-    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
-
-    if (keyImportModel.isPrivateKey()) {
-      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equals(messageBlock.getType())) {
-        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
-        if (js.is_valid_key(normalizedKey, true) && !isExist) {
-          KeyDetails keyDetails = new KeyDetails(normalizedKey, keyImportModel.getType());
-          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-          keyDetailsList.add(keyDetails);
-        }
-      }
-    } else {
-      if (MessageBlock.TYPE_PGP_PUBLIC_KEY.equals(messageBlock.getType())) {
-        String normalizedKey = js.crypto_key_normalize(messageBlock.getContent());
-        PgpKey pgpKey = js.crypto_key_read(normalizedKey);
-        boolean isExist = EmailUtil.containsKey(keyDetailsList, normalizedKey);
-        if (js.is_valid_key(normalizedKey, false) && !isExist) {
-          KeyDetails keyDetails = new KeyDetails(null, normalizedKey, keyImportModel.getType(), false);
-          keyDetails.setPgpContact(pgpKey.getPrimaryUserId());
-          keyDetailsList.add(keyDetails);
-        }
-      }
-    }
-
-    return keyDetailsList;
   }
 
   /**

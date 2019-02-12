@@ -11,11 +11,14 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+
+import java.util.ArrayList;
 
 import androidx.annotation.Nullable;
 
@@ -56,10 +59,10 @@ public class ImportPublicKeyActivity extends BaseImportKeyActivity {
   }
 
   @Override
-  public void onKeyValidated(KeyDetails.Type type) {
+  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
     if (!keyDetailsList.isEmpty()) {
       if (keyDetailsList.size() == 1) {
-        updateInformationAboutPgpContact();
+        updateInformationAboutPgpContact(keyDetailsList.get(0));
         setResult(Activity.RESULT_OK);
         finish();
       } else {
@@ -75,19 +78,16 @@ public class ImportPublicKeyActivity extends BaseImportKeyActivity {
     return false;
   }
 
-  protected void updateInformationAboutPgpContact() {
+  protected void updateInformationAboutPgpContact(NodeKeyDetails keyDetails) {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-    KeyDetails keyDetails = keyDetailsList.get(0);
 
-    if (pgpContact.getEmail().equalsIgnoreCase(keyDetails.getPgpContact().getEmail())) {
-      pgpContact.setPubkey(keyDetails.getValue());
-      contactsDaoSource.updatePgpContact(this, pgpContact);
-    } else {
-      pgpContact.setPubkey(keyDetails.getValue());
-      contactsDaoSource.updatePgpContact(this, pgpContact);
+    PgpContact pgpContactFromKey = keyDetails.getPgpContact();
 
-      keyDetails.getPgpContact().setPubkey(keyDetails.getValue());
-      contactsDaoSource.addRow(this, keyDetails.getPgpContact());
+    pgpContact.setPubkey(pgpContactFromKey.getPubkey());
+    contactsDaoSource.updatePgpContact(this, pgpContact);
+
+    if (!pgpContact.getEmail().equalsIgnoreCase(pgpContactFromKey.getEmail())) {
+      contactsDaoSource.addRow(this, pgpContactFromKey);
     }
   }
 }
