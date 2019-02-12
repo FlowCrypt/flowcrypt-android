@@ -8,10 +8,14 @@ package com.flowcrypt.email.api.retrofit.response.model.node;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.flowcrypt.email.js.PgpContact;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 /**
  * @author Denis Bondarenko
@@ -102,5 +106,21 @@ public class NodeKeyDetails implements Parcelable {
 
   public Algo getAlgo() {
     return algo;
+  }
+
+  public PgpContact getPgpContact() {
+    KeyId keyId = ids.get(0);
+    String email = null;
+    String name = null;
+    try {
+      InternetAddress[] internetAddresses = InternetAddress.parse(users.get(0));
+      email = internetAddresses[0].getAddress();
+      name = internetAddresses[0].getPersonal();
+    } catch (AddressException e) {
+      e.printStackTrace();
+    }
+
+    return new PgpContact(email, name, publicKey, true, null, false,
+        keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
   }
 }

@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.retrofit.BaseResponse;
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
 import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
@@ -111,7 +112,7 @@ public class ImportPgpContactActivity extends BaseImportKeyActivity implements T
   }
 
   @Override
-  public void onKeyValidated(KeyDetails.Type type) {
+  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
     switch (type) {
       case CLIPBOARD:
         if (!keyDetailsList.isEmpty()) {

@@ -8,11 +8,13 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.js.core.Js;
@@ -196,14 +198,22 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   @Override
-  public void onKeyValidated(KeyDetails.Type type) {
+  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
+    ArrayList<KeyDetails> keyDetails = new ArrayList<>();
+
+    for (NodeKeyDetails nodeKeyDetails : keyDetailsList) {
+      boolean isPrivate = !TextUtils.isEmpty(nodeKeyDetails.getPrivateKey());
+      keyDetails.add(new KeyDetails(null, isPrivate ? nodeKeyDetails.getPrivateKey() : nodeKeyDetails.getPublicKey(),
+          keyImportModel.getType(), isPrivate, nodeKeyDetails.getPgpContact()));
+    }
+
     switch (type) {
       case FILE:
         String fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel.getFileUri());
         String bottomTitle = getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size(), fileName, keyDetailsList.size());
         String posBtnTitle = getString(R.string.continue_);
-        Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, posBtnTitle, null,
+        Intent intent = CheckKeysActivity.newIntent(this, keyDetails, bottomTitle, posBtnTitle, null,
             getString(R.string.choose_another_key), true);
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
@@ -211,7 +221,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
       case CLIPBOARD:
         String title = getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size(), keyDetailsList.size());
-        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, title,
+        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetails, title,
             getString(R.string.continue_), null, getString(R.string.choose_another_key), true);
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS);
