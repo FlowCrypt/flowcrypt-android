@@ -20465,12 +20465,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 42);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 41:
+/***/ 42:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20573,19 +20573,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 39);
+/******/ 	return __webpack_require__(__webpack_require__.s = 40);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 28:
+/***/ 29:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 39:
+/***/ 40:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20643,7 +20643,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(28).Buffer;
+    Buffer = __webpack_require__(29).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -24039,11 +24039,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(40)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(41)(module)))
 
 /***/ }),
 
-/***/ 40:
+/***/ 41:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24161,40 +24161,40 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 21);
 /******/ })
 /************************************************************************/
-/******/ (Array(20).concat([
-/* 20 */
+/******/ (Array(21).concat([
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var asn1 = exports;
-asn1.bignum = __webpack_require__(21);
-asn1.define = __webpack_require__(22).define;
-asn1.base = __webpack_require__(25);
-asn1.constants = __webpack_require__(31);
-asn1.decoders = __webpack_require__(33);
-asn1.encoders = __webpack_require__(36);
+asn1.bignum = __webpack_require__(22);
+asn1.define = __webpack_require__(23).define;
+asn1.base = __webpack_require__(26);
+asn1.constants = __webpack_require__(32);
+asn1.decoders = __webpack_require__(34);
+asn1.encoders = __webpack_require__(37);
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_bn;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(20);
+var asn1 = __webpack_require__(21);
 
-var inherits = __webpack_require__(23);
+var inherits = __webpack_require__(24);
 
 var api = exports;
 
@@ -24215,7 +24215,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(24).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(25).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -24256,29 +24256,16 @@ reporter) {
 };
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var base = exports;
-base.Reporter = __webpack_require__(26).Reporter;
-base.DecoderBuffer = __webpack_require__(27).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(27).EncoderBuffer;
-base.Node = __webpack_require__(29);
 
 /***/ }),
 /* 26 */
@@ -24287,7 +24274,20 @@ base.Node = __webpack_require__(29);
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var base = exports;
+base.Reporter = __webpack_require__(27).Reporter;
+base.DecoderBuffer = __webpack_require__(28).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(28).EncoderBuffer;
+base.Node = __webpack_require__(30);
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(24);
 
 function Reporter(options) {
   this._reporterState = {
@@ -24403,17 +24403,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var inherits = __webpack_require__(24);
 
-var Reporter = __webpack_require__(25).Reporter;
+var Reporter = __webpack_require__(26).Reporter;
 
-var Buffer = __webpack_require__(28).Buffer;
+var Buffer = __webpack_require__(29).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -24515,25 +24515,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(25).Reporter;
+var Reporter = __webpack_require__(26).Reporter;
 
-var EncoderBuffer = __webpack_require__(25).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(26).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(25).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(26).DecoderBuffer;
 
-var assert = __webpack_require__(30); // Supported tags
+var assert = __webpack_require__(31); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -25004,13 +25004,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25029,16 +25029,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(32);
+constants.der = __webpack_require__(33);
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(31);
+var constants = __webpack_require__(32);
 
 exports.tagClass = {
   0: 'universal',
@@ -25081,26 +25081,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var decoders = exports;
-decoders.der = __webpack_require__(34);
-decoders.pem = __webpack_require__(35);
-
-/***/ }),
 /* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var decoders = exports;
+decoders.der = __webpack_require__(35);
+decoders.pem = __webpack_require__(36);
 
-var asn1 = __webpack_require__(20);
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(24);
+
+var asn1 = __webpack_require__(21);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -25372,17 +25372,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var inherits = __webpack_require__(24);
 
-var Buffer = __webpack_require__(28).Buffer;
+var Buffer = __webpack_require__(29).Buffer;
 
-var DERDecoder = __webpack_require__(34);
+var DERDecoder = __webpack_require__(35);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -25424,28 +25424,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var encoders = exports;
-encoders.der = __webpack_require__(37);
-encoders.pem = __webpack_require__(38);
-
-/***/ }),
 /* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var encoders = exports;
+encoders.der = __webpack_require__(38);
+encoders.pem = __webpack_require__(39);
 
-var Buffer = __webpack_require__(28).Buffer;
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var asn1 = __webpack_require__(20);
+"use strict";
+
+
+var inherits = __webpack_require__(24);
+
+var Buffer = __webpack_require__(29).Buffer;
+
+var asn1 = __webpack_require__(21);
 
 var base = asn1.base; // Import DER constants
 
@@ -25684,15 +25684,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(23);
+var inherits = __webpack_require__(24);
 
-var DEREncoder = __webpack_require__(37);
+var DEREncoder = __webpack_require__(38);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -67044,7 +67044,7 @@ const fmt_1 = __webpack_require__(3);
 
 const endpoints_1 = __webpack_require__(4);
 
-const native_1 = __webpack_require__(18);
+const native_1 = __webpack_require__(19);
 
 const util_1 = __webpack_require__(10);
 
@@ -67298,7 +67298,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const pgp_1 = __webpack_require__(5);
 
-const validate_1 = __webpack_require__(17);
+const validate_1 = __webpack_require__(18);
 
 const fmt_1 = __webpack_require__(3);
 
@@ -67498,11 +67498,64 @@ class Endpoints {
         valid: common_1.Str.isEmailValid(email)
       });
     };
+
+    this.decryptKey = async (uncheckedReq, data) => {
+      const {
+        armored,
+        passphrases
+      } = validate_1.Validate.decryptKey(uncheckedReq);
+      const key = await readArmoredKeyOrThrow(armored);
+
+      if (await pgp_1.Pgp.key.decrypt(key, passphrases)) {
+        return fmt_1.fmtRes({
+          decryptedKey: key.armor()
+        });
+      }
+
+      return fmt_1.fmtRes({
+        decryptedKey: null
+      });
+    };
+
+    this.encryptKey = async (uncheckedReq, data) => {
+      const {
+        armored,
+        passphrase
+      } = validate_1.Validate.encryptKey(uncheckedReq);
+      const key = await readArmoredKeyOrThrow(armored);
+
+      if (!passphrase || passphrase.length < 10) {
+        // last resort check, this should never happen
+        throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
+      }
+
+      await key.encrypt(passphrase);
+      return fmt_1.fmtRes({
+        encryptedKey: key.armor()
+      });
+    };
   }
 
 }
 
 exports.Endpoints = Endpoints;
+
+const readArmoredKeyOrThrow = async armored => {
+  const {
+    keys: [key],
+    err
+  } = await openpgp.key.readArmored(armored);
+
+  if (err && err.length && err[0] instanceof Error) {
+    throw err[0];
+  }
+
+  if (!key) {
+    throw new Error('No key found');
+  }
+
+  return key;
+};
 
 class Debug {}
 
@@ -67564,7 +67617,7 @@ const common_js_1 = __webpack_require__(9);
 
 const mime_js_1 = __webpack_require__(12);
 
-const mnemonic_js_1 = __webpack_require__(16);
+const mnemonic_js_1 = __webpack_require__(17);
 
 const require_js_1 = __webpack_require__(15);
 
@@ -67993,6 +68046,7 @@ Pgp.key = {
 
     return {
       private: k.isPrivate() ? k.armor() : undefined,
+      isDecrypted: k.isDecrypted(),
       public: k.toPublic().armor(),
       users: k.getUserIds(),
       ids,
@@ -69695,7 +69749,12 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.requireOpenpgp = () => {
   // @ts-ignore;
-  return openpgp;
+  if (typeof openpgp !== 'undefined') {
+    // @ts-ignore;
+    return openpgp; // self-contained node-mobile
+  }
+
+  return __webpack_require__(16); // normal desktop node, eg when running tests
 };
 
 exports.requireMimeParser = () => {
@@ -69717,6 +69776,12 @@ exports.requireIso88592 = () => {
 
 /***/ }),
 /* 16 */
+/***/ (function(module, exports) {
+
+module.exports = require("openpgp");
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69757,7 +69822,7 @@ exports.mnemonic = hex => {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69826,6 +69891,22 @@ Validate.isEmailValid = v => {
   throw new Error('Wrong request structure for NodeRequest.isEmailValid');
 };
 
+Validate.decryptKey = v => {
+  if (isObj(v) && hasProp(v, 'armored', 'string') && hasProp(v, 'passphrases', 'string[]')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.decryptKey');
+};
+
+Validate.encryptKey = v => {
+  if (isObj(v) && hasProp(v, 'armored', 'string') && hasProp(v, 'passphrase', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.encryptKey');
+};
+
 exports.Validate = Validate;
 
 const isObj = v => {
@@ -69867,7 +69948,7 @@ const hasProp = (v, name, type) => {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69878,7 +69959,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const EventEmitter = __webpack_require__(19);
+const EventEmitter = __webpack_require__(20);
 
 let send = msg => {
   if (APP_ENV === 'prod') {
@@ -69918,7 +69999,7 @@ try {
 exports.sendNativeMessageToJava = send;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
