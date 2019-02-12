@@ -5,14 +5,17 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.util.exception.NodeException;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -78,5 +81,43 @@ public class NodeCallsExecutor {
     return result.getQuery();
   }
 
+  /**
+   * Decrypt the given private key using an input passphrase.
+   *
+   * @param key        The given private key.
+   * @param passphrase The given passphrase candidate.
+   * @return
+   * @throws IOException   Such exceptions can occur during network calls.
+   * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
+   */
+  public static DecryptKeyResult decryptKey(String key, String passphrase) throws IOException, NodeException {
+    return decryptKey(key, Collections.singletonList(passphrase));
+  }
 
+  /**
+   * Decrypt the given private key using input passphrases.
+   *
+   * @param key         The given private key.
+   * @param passphrases A list of passphrase candidates.
+   * @return
+   * @throws IOException   Such exceptions can occur during network calls.
+   * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
+   */
+  public static DecryptKeyResult decryptKey(String key, List<String> passphrases) throws IOException, NodeException {
+    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    DecryptKeyRequest request = new DecryptKeyRequest(key, passphrases);
+
+    retrofit2.Response<DecryptKeyResult> response = service.decryptKey(request).execute();
+    DecryptKeyResult result = response.body();
+
+    if (result == null) {
+      throw new NullPointerException("ParseKeysResult == null");
+    }
+
+    if (result.getError() != null) {
+      throw new NodeException(result.getError().getMsg());
+    }
+
+    return result;
+  }
 }

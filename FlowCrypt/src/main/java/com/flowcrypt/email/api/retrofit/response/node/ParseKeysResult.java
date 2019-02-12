@@ -14,6 +14,8 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /**
+ * It's a result for "parseKeys" requests.
+ *
  * @author Denis Bondarenko
  * Date: 2/11/19
  * Time: 12:01 PM
