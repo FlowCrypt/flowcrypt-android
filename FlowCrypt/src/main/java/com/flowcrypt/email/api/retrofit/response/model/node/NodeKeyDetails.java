@@ -39,6 +39,9 @@ public class NodeKeyDetails implements Parcelable {
   };
 
   @Expose
+  private Boolean isDecrypted;
+
+  @Expose
   @SerializedName("private")
   private String privateKey;
 
@@ -62,6 +65,7 @@ public class NodeKeyDetails implements Parcelable {
   }
 
   protected NodeKeyDetails(Parcel in) {
+    this.isDecrypted = (Boolean) in.readValue(Boolean.class.getClassLoader());
     this.privateKey = in.readString();
     this.publicKey = in.readString();
     this.users = in.createStringArrayList();
@@ -77,6 +81,7 @@ public class NodeKeyDetails implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
+    dest.writeValue(this.isDecrypted);
     dest.writeString(this.privateKey);
     dest.writeString(this.publicKey);
     dest.writeStringList(this.users);
@@ -139,5 +144,9 @@ public class NodeKeyDetails implements Parcelable {
 
   public boolean isPrivate() {
     return !TextUtils.isEmpty(privateKey);
+  }
+
+  public Boolean getDecrypted() {
+    return isDecrypted;
   }
 }
