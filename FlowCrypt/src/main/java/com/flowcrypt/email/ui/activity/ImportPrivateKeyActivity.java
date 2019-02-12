@@ -8,26 +8,23 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.Nullable;
@@ -47,8 +44,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 100;
   private CountingIdlingResource countingIdlingResource;
-  private List<String> privateKeys;
-  private Js js;
+  private ArrayList<NodeKeyDetails> privateKeys;
 
   private View progressBar;
   private View layoutContent;
@@ -60,8 +56,6 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    this.js = UiJsManager.getInstance(this).getJs();
-
     if (isSyncEnabled() && GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
       countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
@@ -106,7 +100,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
     switch (requestCode) {
       case R.id.syns_load_private_keys:
         if (privateKeys == null) {
-          List<String> keys = (List<String>) obj;
+          ArrayList<NodeKeyDetails> keys = (ArrayList<NodeKeyDetails>) obj;
           if (keys != null) {
             if (!keys.isEmpty()) {
               this.privateKeys = keys;
@@ -162,15 +156,9 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.buttonImportBackup:
-        if (privateKeys != null && !privateKeys.isEmpty()) {
-          ArrayList<KeyDetails> keyDetails = new ArrayList<>();
-
-          for (String key : privateKeys) {
-            keyDetails.add(new KeyDetails(key, KeyDetails.Type.EMAIL));
-          }
-
-          startActivityForResult(CheckKeysActivity.newIntent(this, keyDetails, null, getString(R.string.continue_),
-              getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS);
+        if (!CollectionUtils.isEmpty(privateKeys)) {
+          startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys, KeyDetails.Type.EMAIL, null,
+              getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS);
         }
         break;
 
@@ -199,29 +187,21 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
 
   @Override
   public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
-    ArrayList<KeyDetails> keyDetails = new ArrayList<>();
-
-    for (NodeKeyDetails nodeKeyDetails : keyDetailsList) {
-      boolean isPrivate = !TextUtils.isEmpty(nodeKeyDetails.getPrivateKey());
-      keyDetails.add(new KeyDetails(null, isPrivate ? nodeKeyDetails.getPrivateKey() : nodeKeyDetails.getPublicKey(),
-          keyImportModel.getType(), isPrivate, nodeKeyDetails.getPgpContact()));
-    }
-
     switch (type) {
       case FILE:
         String fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel.getFileUri());
         String bottomTitle = getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size(), fileName, keyDetailsList.size());
         String posBtnTitle = getString(R.string.continue_);
-        Intent intent = CheckKeysActivity.newIntent(this, keyDetails, bottomTitle, posBtnTitle, null,
-            getString(R.string.choose_another_key), true);
+        Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.FILE,
+            bottomTitle, posBtnTitle, null, getString(R.string.choose_another_key), true);
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS);
         break;
 
       case CLIPBOARD:
         String title = getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size(), keyDetailsList.size());
-        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetails, title,
+        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.CLIPBOARD, title,
             getString(R.string.continue_), null, getString(R.string.choose_another_key), true);
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS);
@@ -249,18 +229,17 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   private Set<String> filterKeys() {
-    SecurityStorageConnector connector = (SecurityStorageConnector) js.getStorageConnector();
+    SecurityStorageConnector connector = UiJsManager.getInstance(this).getSecurityStorageConnector();
 
-    Iterator<String> iterator = privateKeys.iterator();
+    Iterator<NodeKeyDetails> iterator = privateKeys.iterator();
     Set<String> uniqueKeysLongIds = new HashSet<>();
 
     while (iterator.hasNext()) {
-      String privateKey = iterator.next();
-      PgpKey pgpKey = js.crypto_key_read(privateKey);
-      uniqueKeysLongIds.add(pgpKey.getLongid());
-      if (connector.getPgpPrivateKey(pgpKey.getLongid()) != null) {
+      NodeKeyDetails privateKey = iterator.next();
+      uniqueKeysLongIds.add(privateKey.getLongId());
+      if (connector.getPgpPrivateKey(privateKey.getLongId()) != null) {
         iterator.remove();
-        uniqueKeysLongIds.remove(pgpKey.getLongid());
+        uniqueKeysLongIds.remove(privateKey.getLongId());
       }
     }
     return uniqueKeysLongIds;

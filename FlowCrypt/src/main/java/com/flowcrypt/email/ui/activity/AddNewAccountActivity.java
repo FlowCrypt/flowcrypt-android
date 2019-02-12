@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
@@ -27,6 +28,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -191,8 +193,8 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_load_private_key_backups_from_email:
-        ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
-        if (keyDetailsList.isEmpty()) {
+        ArrayList<NodeKeyDetails> keyDetailsList = (ArrayList<NodeKeyDetails>) result;
+        if (CollectionUtils.isEmpty(keyDetailsList)) {
           AccountDao account = new AccountDao(sign.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL);
@@ -201,7 +203,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
           String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList.size(), keyDetailsList.size());
           String neutralBtnTitle = SecurityUtils.hasBackup(this) ? getString(R.string.use_existing_keys) : null;
-          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle,
+          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
               getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
         }

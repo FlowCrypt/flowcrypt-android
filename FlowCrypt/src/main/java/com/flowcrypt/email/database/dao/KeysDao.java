@@ -74,15 +74,15 @@ public class KeysDao extends BaseDao {
    *
    * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
    *                              information about a key;
-   * @param keyDetails            The private key details
+   * @param type                  The private key born type
    * @param pgpKey                A normalized key;
    * @param passphrase            A passphrase which user provided;
    */
-  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails keyDetails,
+  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails.Type type,
                                         PgpKey pgpKey, String passphrase) throws Exception {
     KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, pgpKey, passphrase);
 
-    switch (keyDetails.getBornType()) {
+    switch (type) {
       case EMAIL:
         keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
         break;

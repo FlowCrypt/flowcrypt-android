@@ -11,6 +11,7 @@ import android.util.Pair;
 
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -45,14 +46,17 @@ import androidx.loader.content.AsyncTaskLoader;
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
   private static final String KEY_SUCCESS = "success";
 
-  private List<KeyDetails> details;
+  private List<NodeKeyDetails> details;
+  private KeyDetails.Type type;
   private String passphrase;
 
   private KeysDaoSource keysDaoSource;
 
-  public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<KeyDetails> details, String passphrase) {
+  public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<NodeKeyDetails> details,
+                                                  KeyDetails.Type type, String passphrase) {
     super(context);
     this.details = details;
+    this.type = type;
     this.passphrase = passphrase;
     this.keysDaoSource = new KeysDaoSource();
     onContentChanged();
@@ -60,12 +64,12 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
 
   @Override
   public LoaderResult loadInBackground() {
-    List<KeyDetails> acceptedKeysList = new ArrayList<>();
+    List<NodeKeyDetails> acceptedKeysList = new ArrayList<>();
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
       Js js = new Js(getContext(), null);
-      for (KeyDetails keyDetails : details) {
-        String armoredPrivateKey = keyDetails.getValue();
+      for (NodeKeyDetails keyDetails : details) {
+        String armoredPrivateKey = keyDetails.getPrivateKey();
         String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
 
         PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
@@ -74,14 +78,14 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
         if (pgpKey.isPrivate()) {
           if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
             if (!keysDaoSource.hasKey(getContext(), pgpKey.getLongid())) {
-              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase);
+              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, pgpKey, passphrase);
               Uri uri = keysDaoSource.addRow(getContext(), keysDao);
 
               PgpContact[] contacts = pgpKey.getUserIds();
               List<Pair<String, String>> pairs = new ArrayList<>();
               if (contacts != null) {
                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                pairs = genPairs(js, pgpKey, contacts, contactsDaoSource);
+                pairs = genPairs(pgpKey, contacts, contactsDaoSource);
               }
 
               if (uri != null) {
@@ -115,8 +119,19 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     return new LoaderResult(acceptedKeysList, null);
   }
 
-  private List<Pair<String, String>> genPairs(Js js, PgpKey pgpKey, PgpContact[] contacts,
-                                              ContactsDaoSource daoSource) {
+  @Override
+  public void onStartLoading() {
+    if (takeContentChanged()) {
+      forceLoad();
+    }
+  }
+
+  @Override
+  public void onStopLoading() {
+    cancelLoad();
+  }
+
+  private List<Pair<String, String>> genPairs(PgpKey pgpKey, PgpContact[] contacts, ContactsDaoSource daoSource) {
     List<Pair<String, String>> pairs = new ArrayList<>();
     for (PgpContact pgpContact : contacts) {
       if (pgpContact != null) {
@@ -134,17 +149,5 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
       }
     }
     return pairs;
-  }
-
-  @Override
-  public void onStartLoading() {
-    if (takeContentChanged()) {
-      forceLoad();
-    }
-  }
-
-  @Override
-  public void onStopLoading() {
-    cancelLoad();
   }
 }

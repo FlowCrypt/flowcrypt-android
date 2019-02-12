@@ -65,11 +65,10 @@ public class TestGeneralUtil {
 
     PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
     keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase));
+        KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), pgpKey, passphrase));
 
     new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpKey
-            .getLongid(),
-        pgpKey.getPrimaryUserId().getEmail());
+        .getLongid(), pgpKey.getPrimaryUserId().getEmail());
 
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override

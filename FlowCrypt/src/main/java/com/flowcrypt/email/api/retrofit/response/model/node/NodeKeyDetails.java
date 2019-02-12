@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.js.PgpContact;
 import com.google.gson.annotations.Expose;
@@ -122,5 +123,21 @@ public class NodeKeyDetails implements Parcelable {
 
     return new PgpContact(email, name, publicKey, true, null, false,
         keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
+  }
+
+  public String getLongId() {
+    return ids.get(0).getLongId();
+  }
+
+  public String getFingerprint() {
+    return ids.get(0).getFingerprint();
+  }
+
+  public String getKeywords() {
+    return ids.get(0).getKeywords();
+  }
+
+  public boolean isPrivate() {
+    return !TextUtils.isEmpty(privateKey);
   }
 }

@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -121,7 +122,7 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onPrivateKeysFound(AccountDao account, List<String> keys, String ownerKey, int requestCode) {
+  public void onPrivateKeysFound(AccountDao account, List<NodeKeyDetails> keys, String ownerKey, int requestCode) {
 
   }
 

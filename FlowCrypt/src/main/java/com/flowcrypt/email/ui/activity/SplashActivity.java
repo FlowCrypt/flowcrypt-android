@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
@@ -33,6 +34,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 
@@ -219,8 +221,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     switch (loader.getId()) {
       case R.id.loader_id_load_private_key_backups_from_email:
         if (loaderResult.getResult() != null) {
-          ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) loaderResult.getResult();
-          if (keyDetailsList.isEmpty()) {
+          ArrayList<NodeKeyDetails> keyDetailsList = (ArrayList<NodeKeyDetails>) loaderResult.getResult();
+          if (CollectionUtils.isEmpty(keyDetailsList)) {
             if (sign != null) {
               Intent intent = CreateOrImportKeyActivity.newIntent(this, new AccountDao(sign), true);
               startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY);
@@ -232,8 +234,8 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
             String neutralBtnTitle = SecurityUtils.hasBackup(this) ?
                 getString(R.string.use_existing_keys) : null;
             String negativeBtnTitle = getString(R.string.use_another_account);
-            Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle, positiveBtnTitle,
-                neutralBtnTitle, negativeBtnTitle);
+            Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
+                positiveBtnTitle, neutralBtnTitle, negativeBtnTitle);
             startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
           }
         } else if (loaderResult.getException() != null) {

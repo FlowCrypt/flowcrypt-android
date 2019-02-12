@@ -13,12 +13,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.ui.activity.BackupKeysActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -48,7 +50,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
   private View layoutBackupNotFound;
   private TextView textViewBackupFound;
 
-  private List<String> privateKeys;
+  private ArrayList<NodeKeyDetails> privateKeys;
 
   private boolean isRequestSent;
 
@@ -91,16 +93,12 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
       case R.id.syns_load_private_keys:
         if (privateKeys == null) {
           UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-          List<String> keys = (List<String>) obj;
-          if (keys != null) {
-            if (keys.isEmpty()) {
-              showNoBackupFoundView();
-            } else {
-              this.privateKeys = keys;
-              showBackupFoundView();
-            }
-          } else {
+          ArrayList<NodeKeyDetails> keys = (ArrayList<NodeKeyDetails>) obj;
+          if (CollectionUtils.isEmpty(keys)) {
             showNoBackupFoundView();
+          } else {
+            this.privateKeys = keys;
+            showBackupFoundView();
           }
         }
         if (!countingIdlingResource.isIdleNow()) {
@@ -189,8 +187,7 @@ public class SearchBackupsInEmailActivity extends BaseSettingsBackStackSyncActiv
   private void showBackupFoundView() {
     layoutBackupFound.setVisibility(View.VISIBLE);
     if (textViewBackupFound != null && privateKeys != null) {
-      textViewBackupFound.setText(getString(R.string.backups_found_message,
-          privateKeys.size()));
+      textViewBackupFound.setText(getString(R.string.backups_found_message, privateKeys.size()));
     }
   }
 }

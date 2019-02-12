@@ -23,19 +23,17 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
-import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
-import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.core.Js;
-import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -304,36 +302,21 @@ public class EmailUtil {
   }
 
   /**
-   * Get a list of {@link KeyDetails} using the <b>Gmail API</b>
+   * Get a list of {@link NodeKeyDetails} using the <b>Gmail API</b>
    *
    * @param context context Interface to global information about an application environment;
    * @param account An {@link AccountDao} object.
    * @param session A {@link Session} object.
-   * @param js      An instance of {@link Js}
-   * @return A list of {@link KeyDetails}
+   * @return A list of {@link NodeKeyDetails}
    * @throws MessagingException
    * @throws IOException
    */
-  public static Collection<KeyDetails> getPrivateKeyBackupsViaGmailAPI(Context context, AccountDao account,
-                                                                       Session session, Js js)
+  public static Collection<NodeKeyDetails> getPrivateKeyBackupsViaGmailAPI(Context context, AccountDao account,
+                                                                           Session session)
       throws IOException, MessagingException, NodeException {
-    ArrayList<KeyDetails> list = new ArrayList<>();
+    ArrayList<NodeKeyDetails> list = new ArrayList<>();
 
-    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-    GmailBackupSearchRequest request = new GmailBackupSearchRequest(account.getEmail());
-
-    retrofit2.Response<GmailBackupSearchResult> resp = nodeService.gmailBackupSearch(request).execute();
-    GmailBackupSearchResult result = resp.body();
-
-    if (result == null) {
-      throw new NullPointerException("gmailBackupSearch == null");
-    }
-
-    if (result.getError() != null) {
-      throw new NodeException(result.getError().getMsg());
-    }
-
-    String searchQuery = result.getQuery();
+    String searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.getEmail());
     Gmail gmailApiService = GmailApiHelper.generateGmailApiService(context, account);
 
     ListMessagesResponse response = gmailApiService
@@ -378,14 +361,11 @@ public class EmailUtil {
         continue;
       }
 
-      MessageBlock[] blocks = js.crypto_armor_detect_blocks(backup);
-
-      for (MessageBlock block : blocks) {
-        if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(block.getType())) {
-          if (!TextUtils.isEmpty(block.getContent()) && !EmailUtil.containsKey(list, block.getContent())) {
-            list.add(new KeyDetails(block.getContent(), KeyDetails.Type.EMAIL));
-          }
-        }
+      try {
+        list.addAll(NodeCallsExecutor.parseKeys(backup));
+      } catch (NodeException e) {
+        e.printStackTrace();
+        ExceptionUtil.handleError(e);
       }
     }
 
@@ -416,22 +396,6 @@ public class EmailUtil {
     }
 
     return null;
-  }
-
-  /**
-   * This method checks is the list contains a key.
-   *
-   * @param list The list of {@link KeyDetails} objects.
-   * @param key  The private key armored string.
-   * @return true if the key not exists in the list, otherwise false.
-   */
-  public static boolean containsKey(ArrayList<KeyDetails> list, String key) {
-    for (KeyDetails keyDetails : list) {
-      if (key.equals(keyDetails.getValue())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

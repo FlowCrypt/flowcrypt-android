@@ -28,10 +28,12 @@ public final class UiJsManager {
   private static UiJsManager ourInstance;
 
   private Js js;
+  private SecurityStorageConnector securityStorageConnector;
 
   private UiJsManager(Context context) {
     try {
-      this.js = new Js(context, new SecurityStorageConnector(context));
+      this.securityStorageConnector = new SecurityStorageConnector(context);
+      this.js = new Js(context, securityStorageConnector);
     } catch (IOException e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -58,6 +60,10 @@ public final class UiJsManager {
 
   public Js getJs() {
     return js;
+  }
+
+  public SecurityStorageConnector getSecurityStorageConnector() {
+    return securityStorageConnector;
   }
 
   /**

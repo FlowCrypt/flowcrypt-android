@@ -100,7 +100,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       KeyDetails keyDetails = new KeyDetails(null, pgpKey.armor(), KeyDetails.Type.NEW, true,
           pgpKey.getPrimaryUserId());
 
-      KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase);
+      KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), pgpKey, passphrase);
 
       Uri uri = new KeysDaoSource().addRow(getContext(), keysDao);
 

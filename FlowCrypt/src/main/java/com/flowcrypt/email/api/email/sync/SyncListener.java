@@ -10,6 +10,7 @@ import android.util.LongSparseArray;
 
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -56,7 +57,7 @@ public interface SyncListener {
    * @param requestCode The unique request code for the reply to
    *                    {@link android.os.Messenger}.
    */
-  void onPrivateKeysFound(AccountDao account, List<String> keys, String ownerKey, int requestCode);
+  void onPrivateKeysFound(AccountDao account, List<NodeKeyDetails> keys, String ownerKey, int requestCode);
 
   /**
    * This method called when a message was sent.

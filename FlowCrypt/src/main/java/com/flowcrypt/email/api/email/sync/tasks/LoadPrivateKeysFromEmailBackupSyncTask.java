@@ -13,17 +13,17 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.SearchBackupsUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.MessageBlock;
-import com.flowcrypt.email.js.core.Js;
-import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -57,44 +57,35 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
 
     if (listener != null) {
       Context context = listener.getContext();
-      ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
-      List<String> keys = new ArrayList<>();
-
-      Js js = new Js(context, null);
+      ArrayList<NodeKeyDetails> keyDetailsList = new ArrayList<>();
 
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session, js));
+          keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session));
           break;
 
         default:
-          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(context, account, session, js));
+          keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(context, account, session));
           break;
       }
 
-      for (KeyDetails keyDetails : keyDetailsList) {
-        keys.add(keyDetails.getValue());
-      }
-
-      listener.onPrivateKeysFound(account, keys, ownerKey, requestCode);
+      listener.onPrivateKeysFound(account, keyDetailsList, ownerKey, requestCode);
     }
   }
 
   /**
-   * Get a list of {@link KeyDetails} using the standard <b>JavaMail API</b>
+   * Get a list of {@link NodeKeyDetails} using the standard <b>JavaMail API</b>
    *
    * @param session A {@link Session} object.
-   * @param js      An instance of {@link Js}
-   * @return A list of {@link KeyDetails}
+   * @return A list of {@link NodeKeyDetails}
    * @throws MessagingException
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private Collection<? extends KeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Context context,
-                                                                                AccountDao account,
-                                                                                Session session, Js js)
+  private Collection<? extends NodeKeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Context context, AccountDao account,
+                                                                                    Session session)
       throws MessagingException, IOException, GoogleAuthException {
-    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
+    ArrayList<NodeKeyDetails> keyDetailsList = new ArrayList<>();
     Store store = null;
     try {
       store = OpenStoreHelper.openStore(context, account, session);
@@ -112,8 +103,12 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
               continue;
             }
 
-            MessageBlock[] msgBlocks = js.crypto_armor_detect_blocks(backup);
-            keyDetailsList = getDetails(msgBlocks);
+            try {
+              keyDetailsList.addAll(NodeCallsExecutor.parseKeys(backup));
+            } catch (NodeException e) {
+              e.printStackTrace();
+              ExceptionUtil.handleError(e);
+            }
           }
 
           folder.close(false);
@@ -128,21 +123,6 @@ public class LoadPrivateKeysFromEmailBackupSyncTask extends BaseSyncTask {
       }
       throw e;
     }
-    return keyDetailsList;
-  }
-
-  private ArrayList<KeyDetails> getDetails(MessageBlock[] msgBlocks) {
-    ArrayList<KeyDetails> keyDetailsList = new ArrayList<>();
-    for (MessageBlock messageBlock : msgBlocks) {
-      if (MessageBlock.TYPE_PGP_PRIVATE_KEY.equalsIgnoreCase(messageBlock.getType())) {
-        String content = messageBlock.getContent();
-        boolean isContentEmpty = TextUtils.isEmpty(content);
-        if (!isContentEmpty && !EmailUtil.containsKey(keyDetailsList, content)) {
-          keyDetailsList.add(new KeyDetails(messageBlock.getContent(), KeyDetails.Type.EMAIL));
-        }
-      }
-    }
-
     return keyDetailsList;
   }
 }
