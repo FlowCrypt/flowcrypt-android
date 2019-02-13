@@ -41,6 +41,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -753,13 +754,13 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Generate the public key part. There we can see the public key details and save/update the
    * key owner information to the local database.
    *
-   * @param messagePartPgpPublicKey The {@link MessagePartPgpPublicKey} object which contains
-   *                                information about a public key and his owner.
-   * @param inflater                The {@link LayoutInflater} instance.
+   * @param part     The {@link MessagePartPgpPublicKey} object which contains
+   *                 information about a public key and his owner.
+   * @param inflater The {@link LayoutInflater} instance.
    * @return The generated view.
    */
   @NonNull
-  private View generatePublicKeyPart(final MessagePartPgpPublicKey messagePartPgpPublicKey, LayoutInflater inflater) {
+  private View generatePublicKeyPart(final MessagePartPgpPublicKey part, LayoutInflater inflater) {
 
     final ViewGroup pubKeyView = (ViewGroup) inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false);
     final TextView textViewPgpPublicKey = pubKeyView.findViewById(R.id.textViewPgpPublicKey);
@@ -775,29 +776,30 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    if (!TextUtils.isEmpty(messagePartPgpPublicKey.getKeyOwner())) {
-      TextView textViewKeyOwnerTemplate = pubKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
-      textViewKeyOwnerTemplate.setText(getString(R.string.template_message_part_public_key_owner,
-          messagePartPgpPublicKey.getKeyOwner()));
+    NodeKeyDetails details = part.getNodeKeyDetails();
+    PgpContact pgpContact = details.getPrimaryPgpContact();
+
+    if (!TextUtils.isEmpty(pgpContact.getEmail())) {
+      TextView keyOwner = pubKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
+      keyOwner.setText(getString(R.string.template_message_part_public_key_owner, pgpContact.getEmail()));
     }
 
-    TextView textViewKeyWordsTemplate = pubKeyView.findViewById(R.id.textViewKeyWordsTemplate);
+    TextView keyWords = pubKeyView.findViewById(R.id.textViewKeyWordsTemplate);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
-        messagePartPgpPublicKey.getKeyWords()), textViewKeyWordsTemplate);
+        details.getKeywords()), keyWords);
 
-    TextView textViewFingerprintTemplate = pubKeyView.findViewById(R.id.textViewFingerprintTemplate);
+    TextView fingerprint = pubKeyView.findViewById(R.id.textViewFingerprintTemplate);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", messagePartPgpPublicKey.getFingerprint(), 4)),
-        textViewFingerprintTemplate);
+        GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4)), fingerprint);
 
-    textViewPgpPublicKey.setText(messagePartPgpPublicKey.getValue());
+    textViewPgpPublicKey.setText(part.getValue());
 
-    if (messagePartPgpPublicKey.hasPgpContact()) {
-      if (messagePartPgpPublicKey.isPgpContactUpdateEnabled()) {
-        initUpdateContactButton(messagePartPgpPublicKey, pubKeyView);
+    if (part.getExistingPgpContact() != null) {
+      if (part.isPgpContactUpdateEnabled()) {
+        initUpdateContactButton(part, pubKeyView);
       }
     } else {
-      initSaveContactButton(messagePartPgpPublicKey, pubKeyView);
+      initSaveContactButton(part, pubKeyView);
     }
 
     return pubKeyView;
@@ -807,19 +809,18 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param msgPart                  The {@link MessagePartPgpPublicKey} object which contains
-   *                                 information about a public key and his owner.
-   * @param messagePartPublicKeyView The public key view container.
+   * @param part The {@link MessagePartPgpPublicKey} object which contains
+   *             information about a public key and his owner.
+   * @param view The public key view container.
    */
-  private void initSaveContactButton(final MessagePartPgpPublicKey msgPart, View messagePartPublicKeyView) {
-    Button buttonSaveContact = messagePartPublicKeyView.findViewById(R.id.buttonSaveContact);
+  private void initSaveContactButton(final MessagePartPgpPublicKey part, View view) {
+    Button buttonSaveContact = view.findViewById(R.id.buttonSaveContact);
     if (buttonSaveContact != null) {
       buttonSaveContact.setVisibility(View.VISIBLE);
       buttonSaveContact.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          PgpContact pgpContact = new PgpContact(msgPart.getKeyOwner(), null, msgPart.getValue(), false, null, false,
-              msgPart.getFingerprint(), msgPart.getLongId(), msgPart.getKeyWords(), 0);
+          PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
           Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
           if (uri != null) {
             Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
@@ -836,20 +837,18 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param messagePartPgpPublicKey The {@link MessagePartPgpPublicKey} object which contains
-   *                                information about a public key and his owner.
-   * @param view                    The public key view container.
+   * @param part The {@link MessagePartPgpPublicKey} object which contains
+   *             information about a public key and his owner.
+   * @param view The public key view container.
    */
-  private void initUpdateContactButton(final MessagePartPgpPublicKey messagePartPgpPublicKey, View view) {
+  private void initUpdateContactButton(final MessagePartPgpPublicKey part, View view) {
     Button buttonUpdateContact = view.findViewById(R.id.buttonUpdateContact);
     if (buttonUpdateContact != null) {
       buttonUpdateContact.setVisibility(View.VISIBLE);
       buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          PgpContact pgpContact = new PgpContact(messagePartPgpPublicKey.getKeyOwner(), null,
-              messagePartPgpPublicKey.getValue(), false, null, false, messagePartPgpPublicKey.getFingerprint(),
-              messagePartPgpPublicKey.getLongId(), messagePartPgpPublicKey.getKeyWords(), 0);
+          PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
           boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
           if (isUpdated) {
             Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();

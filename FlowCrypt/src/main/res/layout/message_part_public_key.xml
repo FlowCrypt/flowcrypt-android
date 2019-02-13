@@ -3,81 +3,117 @@
   ~ Contributors: DenBond7
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/AppWidget.TextInputLayout.PgpBlock.Other"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/default_margin_medium"
-    android:orientation="vertical">
+    android:layout_marginBottom="@dimen/default_margin_medium">
 
     <TextView
         android:id="@+id/textViewKeyOwnerTemplate"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
+        app:layout_constraintBottom_toTopOf="@+id/textViewKeyWordsTemplate"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/textViewKeyWordsTemplate"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="spread_inside"
         tools:text="Public Key for ..........................." />
 
     <TextView
         android:id="@+id/textViewKeyWordsTemplate"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content"
         android:textIsSelectable="true"
+        app:layout_constraintBottom_toTopOf="@+id/textViewFingerprintTemplate"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewKeyOwnerTemplate"
         tools:text="KeyWords: TESTING TESTING TESTING TESTING TESTING TESTING" />
 
     <TextView
         android:id="@+id/textViewFingerprintTemplate"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textIsSelectable="true"
+        app:layout_constraintBottom_toTopOf="@+id/switchShowPublicKey"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="@+id/textViewKeyWordsTemplate"
+        app:layout_constraintTop_toBottomOf="@+id/textViewKeyWordsTemplate"
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
     <Switch
         android:id="@+id/switchShowPublicKey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:checked="false"
         android:switchPadding="@dimen/default_margin_small"
-        android:text="@string/show_the_public_key" />
+        android:text="@string/show_the_public_key"
+        app:layout_constraintBottom_toTopOf="@+id/textViewPgpPublicKey"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprintTemplate" />
 
     <TextView
         android:id="@+id/textViewPgpPublicKey"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:textColor="#088447"
         android:textIsSelectable="true"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSaveContact"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchShowPublicKey"
         tools:text="-----BEGIN PGP PUBLIC KEY-----\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\nxxxxx\n-----END PGP PUBLIC KEY-----"
         tools:visibility="visible" />
 
     <Button
         android:id="@+id/buttonSaveContact"
         style="@style/AppWidget.Button"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/save_contact"
         android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/buttonUpdateContact"
+        app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
+        app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPgpPublicKey"
         tools:visibility="visible" />
 
     <Button
         android:id="@+id/buttonUpdateContact"
         style="@style/AppWidget.Button"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@string/update_contact"
         android:theme="@style/AppWidget.Button.Green"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
+        app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPgpPublicKey"
         tools:visibility="visible" />
 
-</LinearLayout>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
