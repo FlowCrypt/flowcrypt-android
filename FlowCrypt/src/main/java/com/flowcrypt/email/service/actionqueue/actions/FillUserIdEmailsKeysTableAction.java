@@ -9,12 +9,13 @@ import android.content.Context;
 import android.os.Parcel;
 import android.util.Pair;
 
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,18 +55,21 @@ public class FillUserIdEmailsKeysTableAction extends Action {
   @Override
   public void run(Context context) throws Exception {
     SecurityStorageConnector connector = new SecurityStorageConnector(context);
-    Js js = new Js(context, connector);
+
     List<Pair<String, String>> pairs = new ArrayList<>();
 
     PgpKeyInfo[] pgpKeyInfoArray = connector.getAllPgpPrivateKeys();
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-      PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-      if (pgpKey != null) {
-        PgpContact[] pgpContacts = pgpKey.getUserIds();
-        if (pgpContacts != null) {
-          for (PgpContact pgpContact : pgpContacts) {
-            if (pgpContact != null) {
-              pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
+      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
+
+      if (!CollectionUtils.isEmpty(nodeKeyDetailsList)) {
+        for (NodeKeyDetails nodeKeyDetails : nodeKeyDetailsList) {
+          List<PgpContact> pgpContacts = nodeKeyDetails.getPgpContacts();
+          if (!CollectionUtils.isEmpty(pgpContacts)) {
+            for (PgpContact pgpContact : pgpContacts) {
+              if (pgpContact != null) {
+                pairs.add(Pair.create(nodeKeyDetails.getLongId(), pgpContact.getEmail()));
+              }
             }
           }
         }

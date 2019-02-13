@@ -16,6 +16,7 @@ import android.util.Log;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 
@@ -96,6 +97,7 @@ public class ActionQueueIntentService extends JobIntentService {
               Log.d(TAG, action.getClass().getSimpleName() + ": success");
             } catch (Exception e) {
               e.printStackTrace();
+              ExceptionUtil.handleError(e);
               Bundle errorBundle = ActionResultReceiver.generateErrorBundle(action, e);
               resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle);
               Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
