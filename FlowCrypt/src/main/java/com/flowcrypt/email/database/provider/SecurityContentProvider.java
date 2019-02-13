@@ -185,6 +185,10 @@ public class SecurityContentProvider extends ContentProvider {
           throw new UnsupportedOperationException("Unknown uri: " + uri);
       }
 
+      if (id == -1) {
+        return null;
+      }
+
       if (getContext() != null && result != null) {
         getContext().getContentResolver().notifyChange(uri, null, false);
       }
