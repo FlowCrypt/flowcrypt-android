@@ -7,18 +7,18 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Pair;
 
-import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -44,8 +44,6 @@ import androidx.loader.content.AsyncTaskLoader;
  */
 
 public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private static final String KEY_SUCCESS = "success";
-
   private List<NodeKeyDetails> details;
   private KeyDetails.Type type;
   private String passphrase;
@@ -67,25 +65,27 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     List<NodeKeyDetails> acceptedKeysList = new ArrayList<>();
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
-      Js js = new Js(getContext(), null);
       for (NodeKeyDetails keyDetails : details) {
-        String armoredPrivateKey = keyDetails.getPrivateKey();
-        String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
+        if (keyDetails.isPrivate()) {
+          String decryptedKey;
+          if (keyDetails.isDecrypted()) {
+            decryptedKey = keyDetails.getPrivateKey();
+          } else {
+            DecryptKeyResult decryptKeyResult = NodeCallsExecutor.decryptKey(keyDetails.getPrivateKey(), passphrase);
+            decryptedKey = decryptKeyResult.getDecryptedKey();
+          }
 
-        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-        V8Object v8Object = js.crypto_key_decrypt(pgpKey, passphrase);
-
-        if (pgpKey.isPrivate()) {
-          if (v8Object != null && v8Object.getBoolean(KEY_SUCCESS)) {
-            if (!keysDaoSource.hasKey(getContext(), pgpKey.getLongid())) {
-              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, pgpKey, passphrase);
+          if (!TextUtils.isEmpty(decryptedKey)) {
+            keyDetails.setDecryptedPrivateKey(decryptedKey);
+            if (!keysDaoSource.hasKey(getContext(), keyDetails.getLongId())) {
+              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase);
               Uri uri = keysDaoSource.addRow(getContext(), keysDao);
 
-              PgpContact[] contacts = pgpKey.getUserIds();
+              List<PgpContact> contacts = keyDetails.getPgpContacts();
               List<Pair<String, String>> pairs = new ArrayList<>();
               if (contacts != null) {
                 ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                pairs = genPairs(pgpKey, contacts, contactsDaoSource);
+                pairs = genPairs(keyDetails, contacts, contactsDaoSource);
               }
 
               if (uri != null) {
@@ -131,12 +131,12 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     cancelLoad();
   }
 
-  private List<Pair<String, String>> genPairs(PgpKey pgpKey, PgpContact[] contacts, ContactsDaoSource daoSource) {
+  private List<Pair<String, String>> genPairs(NodeKeyDetails keyDetails, List<PgpContact> contacts,
+                                              ContactsDaoSource daoSource) {
     List<Pair<String, String>> pairs = new ArrayList<>();
     for (PgpContact pgpContact : contacts) {
       if (pgpContact != null) {
-        PgpKey publicKey = pgpKey.toPublic();
-        pgpContact.setPubkey(publicKey.armor());
+        pgpContact.setPubkey(keyDetails.getPublicKey());
         PgpContact temp = daoSource.getPgpContact(getContext(), pgpContact.getEmail());
         if (GeneralUtil.isEmailValid(pgpContact.getEmail()) && temp == null) {
           new ContactsDaoSource().addRow(getContext(), pgpContact);
@@ -145,7 +145,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
           // keys with the same email
         }
 
-        pairs.add(Pair.create(pgpKey.getLongid(), pgpContact.getEmail()));
+        pairs.add(Pair.create(keyDetails.getLongId(), pgpContact.getEmail()));
       }
     }
     return pairs;

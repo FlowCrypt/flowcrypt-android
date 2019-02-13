@@ -13,6 +13,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.mail.internet.AddressException;
@@ -61,6 +62,8 @@ public class NodeKeyDetails implements Parcelable {
   @Expose
   private Algo algo;
 
+  private String decryptedPrivateKey;
+
   public NodeKeyDetails() {
   }
 
@@ -72,6 +75,7 @@ public class NodeKeyDetails implements Parcelable {
     this.ids = in.createTypedArrayList(KeyId.CREATOR);
     this.created = in.readLong();
     this.algo = in.readParcelable(Algo.class.getClassLoader());
+    this.decryptedPrivateKey = in.readString();
   }
 
   @Override
@@ -88,6 +92,7 @@ public class NodeKeyDetails implements Parcelable {
     dest.writeTypedList(this.ids);
     dest.writeLong(this.created);
     dest.writeParcelable(this.algo, flags);
+    dest.writeString(this.decryptedPrivateKey);
   }
 
   public String getPrivateKey() {
@@ -114,7 +119,7 @@ public class NodeKeyDetails implements Parcelable {
     return algo;
   }
 
-  public PgpContact getPgpContact() {
+  public PgpContact getPrimaryPgpContact() {
     KeyId keyId = ids.get(0);
     String email = null;
     String name = null;
@@ -128,6 +133,27 @@ public class NodeKeyDetails implements Parcelable {
 
     return new PgpContact(email, name, publicKey, true, null, false,
         keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
+  }
+
+  public ArrayList<PgpContact> getPgpContacts() {
+    ArrayList<PgpContact> pgpContacts = new ArrayList<>();
+
+    for (String user : users) {
+      try {
+        InternetAddress[] internetAddresses = InternetAddress.parse(user);
+
+        for (InternetAddress internetAddress : internetAddresses) {
+          String email = internetAddress.getAddress();
+          String name = internetAddress.getPersonal();
+
+          pgpContacts.add(new PgpContact(email, name));
+        }
+      } catch (AddressException e) {
+        e.printStackTrace();
+      }
+    }
+
+    return pgpContacts;
   }
 
   public String getLongId() {
@@ -146,7 +172,15 @@ public class NodeKeyDetails implements Parcelable {
     return !TextUtils.isEmpty(privateKey);
   }
 
-  public Boolean getDecrypted() {
+  public Boolean isDecrypted() {
     return isDecrypted;
+  }
+
+  public String getDecryptedPrivateKey() {
+    return decryptedPrivateKey;
+  }
+
+  public void setDecryptedPrivateKey(String decryptedPrivateKey) {
+    this.decryptedPrivateKey = decryptedPrivateKey;
   }
 }

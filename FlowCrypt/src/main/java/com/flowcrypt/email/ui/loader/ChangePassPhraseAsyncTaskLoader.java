@@ -8,18 +8,20 @@ package com.flowcrypt.email.ui.loader;
 import android.content.ContentProviderResult;
 import android.content.Context;
 
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,11 +65,10 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
   public LoaderResult loadInBackground() {
     isActionStarted = true;
     try {
-      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-
       List<String> longIds = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail());
 
-      PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
+      SecurityStorageConnector storageConnector = UiJsManager.getInstance(getContext()).getSecurityStorageConnector();
+      PgpKeyInfo[] pgpKeyInfoArray = storageConnector.getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
 
       if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
         throw new NoPrivateKeysAvailableException(getContext(), account.getEmail());
@@ -77,8 +78,11 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       List<KeysDao> keysDaoList = new ArrayList<>();
 
       for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-        PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, pgpKey, newPassphrase));
+        List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
+        if (CollectionUtils.isEmpty(nodeKeyDetails) || nodeKeyDetails.size() != 1) {
+          throw new IllegalStateException("Parse keys error");
+        }
+        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, nodeKeyDetails.get(0), newPassphrase));
       }
 
       ContentProviderResult[] contentProviderResults = new KeysDaoSource().updateKeys(getContext(), keysDaoList);

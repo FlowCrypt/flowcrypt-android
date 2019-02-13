@@ -81,7 +81,7 @@ public class ImportPublicKeyActivity extends BaseImportKeyActivity {
   protected void updateInformationAboutPgpContact(NodeKeyDetails keyDetails) {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-    PgpContact pgpContactFromKey = keyDetails.getPgpContact();
+    PgpContact pgpContactFromKey = keyDetails.getPrimaryPgpContact();
 
     pgpContact.setPubkey(pgpContactFromKey.getPubkey());
     contactsDaoSource.updatePgpContact(this, pgpContact);

@@ -8,13 +8,12 @@ package com.flowcrypt.email.database.dao;
 import android.os.Parcel;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
-
-import java.util.UUID;
 
 /**
  * This class describe a key information object.
@@ -75,12 +74,12 @@ public class KeysDao extends BaseDao {
    * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
    *                              information about a key;
    * @param type                  The private key born type
-   * @param pgpKey                A normalized key;
+   * @param nodeKeyDetails        Key details;
    * @param passphrase            A passphrase which user provided;
    */
   public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails.Type type,
-                                        PgpKey pgpKey, String passphrase) throws Exception {
-    KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, pgpKey, passphrase);
+                                        NodeKeyDetails nodeKeyDetails, String passphrase) throws Exception {
+    KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, nodeKeyDetails, passphrase);
 
     switch (type) {
       case EMAIL:
@@ -107,26 +106,25 @@ public class KeysDao extends BaseDao {
    *
    * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
    *                              information about a key;
-   * @param pgpKey                A normalized key;
+   * @param nodeKeyDetails        Key details;
    * @param passphrase            A passphrase which user provided;
    */
-  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, PgpKey pgpKey, String passphrase)
-      throws Exception {
+  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, NodeKeyDetails nodeKeyDetails,
+                                        String passphrase) throws Exception {
     KeysDao keysDao = new KeysDao();
-    keysDao.setLongId(pgpKey.getLongid());
+    keysDao.setLongId(nodeKeyDetails.getLongId());
 
     String randomVector;
 
-    if (TextUtils.isEmpty(pgpKey.getLongid())) {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-          UUID.randomUUID().toString().substring(0, KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
+    if (TextUtils.isEmpty(nodeKeyDetails.getLongId())) {
+      throw new IllegalArgumentException("longid == null");
     } else {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(pgpKey.getLongid());
+      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
     }
 
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getDecryptedPrivateKey(), randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);
-    keysDao.setPublicKey(pgpKey.toPublic().armor());
+    keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
 
     String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
     keysDao.setPassphrase(encryptedPassphrase);
