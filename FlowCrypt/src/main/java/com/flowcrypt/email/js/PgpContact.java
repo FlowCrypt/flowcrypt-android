@@ -11,7 +11,6 @@ import android.os.Parcelable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
-import com.flowcrypt.email.js.core.Js;
 
 public class PgpContact implements Parcelable {
 
@@ -51,20 +50,6 @@ public class PgpContact implements Parcelable {
     this.longid = longid;
     this.keywords = keywords;
     this.lastUse = lastUse;
-  }
-
-  public PgpContact(Js js, String email, String name, String pubkey, String client, boolean
-      attested) {
-    this.email = email;
-    this.name = name;
-    this.pubkey = pubkey;
-    this.hasPgp = pubkey != null;
-    this.client = client;
-    this.attested = attested;
-    this.fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(pubkey));
-    this.longid = js.crypto_key_longid(this.fingerprint);
-    this.keywords = js.mnemonic(this.longid);
-    this.lastUse = 0;
   }
 
   public PgpContact(String email, String name) {
@@ -155,8 +140,16 @@ public class PgpContact implements Parcelable {
     return client;
   }
 
+  public void setClient(String client) {
+    this.client = client;
+  }
+
   public boolean getAttested() {
     return attested;
+  }
+
+  public void setAttested(boolean attested) {
+    this.attested = attested;
   }
 
   public String getKeywords() {
