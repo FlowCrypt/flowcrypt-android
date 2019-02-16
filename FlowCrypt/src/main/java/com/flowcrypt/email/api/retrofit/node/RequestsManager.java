@@ -114,10 +114,10 @@ public class RequestsManager {
 
       } catch (Exception e) {
         e.printStackTrace();
-        return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), e, (BaseNodeResult) null);
+        return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(), e);
       }
 
-      return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), null, baseNodeResult);
+      return NodeResponseWrapper.success(nodeRequestWrapper.getRequestCode(), baseNodeResult);
     }
 
     @Override

@@ -7,29 +7,35 @@ package com.flowcrypt.email.ui.activity.fragment;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.api.retrofit.node.NodeRepository;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
-import com.flowcrypt.email.ui.adapter.PrivateKeysListCursorAdapter;
 import com.flowcrypt.email.util.UIUtil;
+import com.google.android.gms.common.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * This {@link Fragment} shows information about available private keys in the database.
@@ -39,54 +45,28 @@ import androidx.loader.content.Loader;
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-public class KeysListFragment extends BaseFragment implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class KeysListFragment extends BaseFragment implements View.OnClickListener,
+    PrivateKeysRecyclerViewAdapter.OnKeySelectedListener, Observer<NodeResponseWrapper> {
 
   private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0;
 
   private View progressBar;
   private View emptyView;
-  private View layoutContent;
-  private PrivateKeysListCursorAdapter adapter;
+  private View content;
 
-  private LoaderManager.LoaderCallbacks<Cursor> callbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-      switch (id) {
-        case R.id.loader_id_load_contacts_with_has_pgp_true:
-          return new CursorLoader(getContext(), new KeysDaoSource().getBaseContentUri(), null, null, null, null);
-
-        default:
-          return null;
-      }
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-      switch (loader.getId()) {
-        case R.id.loader_id_load_contacts_with_has_pgp_true:
-          UIUtil.exchangeViewVisibility(getContext(), false, progressBar, layoutContent);
-
-          if (data != null && data.getCount() > 0) {
-            adapter.swapCursor(data);
-          } else {
-            UIUtil.exchangeViewVisibility(getContext(), true, emptyView, layoutContent);
-          }
-          break;
-      }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-      switch (loader.getId()) {
-        case R.id.loader_id_load_contacts_with_has_pgp_true:
-          adapter.swapCursor(null);
-          break;
-      }
-    }
-  };
+  private PrivateKeysRecyclerViewAdapter recyclerViewAdapter;
 
   public static KeysListFragment newInstance() {
     return new KeysListFragment();
+  }
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
+    recyclerViewAdapter = new PrivateKeysRecyclerViewAdapter(getContext(), new ArrayList<NodeKeyDetails>(), this);
   }
 
   @Nullable
@@ -118,8 +98,6 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
         switch (resultCode) {
           case Activity.RESULT_OK:
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null,
-                callbacks);
             break;
         }
         break;
@@ -139,16 +117,45 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
   }
 
   @Override
-  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-    Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-    String keyLongId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+  public void onKeySelected(int position, NodeKeyDetails nodeKeyDetails) {
+    getFragmentManager()
+        .beginTransaction()
+        .replace(R.id.layoutContent, KeyDetailsFragment.newInstance(nodeKeyDetails))
+        .addToBackStack(null)
+        .commit();
+  }
 
-    if (!TextUtils.isEmpty(keyLongId)) {
-      getFragmentManager()
-          .beginTransaction()
-          .replace(R.id.layoutContent, KeyDetailsFragment.newInstance(keyLongId))
-          .addToBackStack(null)
-          .commit();
+  @Override
+  public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
+    switch (nodeResponseWrapper.getRequestCode()) {
+      case R.id.live_data_id_fetch_keys:
+        switch (nodeResponseWrapper.getStatus()) {
+          case LOADING:
+            emptyView.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(getContext(), true, progressBar, content);
+            break;
+
+          case SUCCESS:
+            ParseKeysResult parseKeysResult = (ParseKeysResult) nodeResponseWrapper.getResult();
+            List<NodeKeyDetails> nodeKeyDetailsList = parseKeysResult.getNodeKeyDetails();
+            if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
+              recyclerViewAdapter.swap(Collections.<NodeKeyDetails>emptyList());
+              UIUtil.exchangeViewVisibility(getContext(), true, emptyView, content);
+            } else {
+              recyclerViewAdapter.swap(nodeKeyDetailsList);
+              UIUtil.exchangeViewVisibility(getContext(), false, progressBar, content);
+            }
+            break;
+
+          case ERROR:
+            Toast.makeText(getContext(), nodeResponseWrapper.getResult().getError().toString(), Toast.LENGTH_SHORT).show();
+            break;
+
+          case EXCEPTION:
+            Toast.makeText(getContext(), nodeResponseWrapper.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            break;
+        }
+        break;
     }
   }
 
@@ -159,18 +166,24 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
 
   private void initViews(View root) {
     this.progressBar = root.findViewById(R.id.progressBar);
-    this.layoutContent = root.findViewById(R.id.groupContent);
+    this.content = root.findViewById(R.id.groupContent);
     this.emptyView = root.findViewById(R.id.emptyView);
-    this.adapter = new PrivateKeysListCursorAdapter(getContext(), null);
 
-    ListView listViewKeys = root.findViewById(R.id.listViewKeys);
-    listViewKeys.setAdapter(adapter);
-    listViewKeys.setOnItemClickListener(this);
+    RecyclerView recyclerView = root.findViewById(R.id.recyclerViewKeys);
+    recyclerView.setHasFixedSize(true);
+    LinearLayoutManager manager = new LinearLayoutManager(getContext());
+    DividerItemDecoration decoration = new DividerItemDecoration(recyclerView.getContext(), manager.getOrientation());
+    decoration.setDrawable(getResources().getDrawable(R.drawable.divider_1dp_grey, getContext().getTheme()));
+    recyclerView.addItemDecoration(decoration);
+    recyclerView.setLayoutManager(manager);
+    recyclerView.setAdapter(recyclerViewAdapter);
+
+    if (recyclerViewAdapter.getItemCount() > 0) {
+      progressBar.setVisibility(View.GONE);
+    }
 
     if (root.findViewById(R.id.floatActionButtonAddKey) != null) {
       root.findViewById(R.id.floatActionButtonAddKey).setOnClickListener(this);
     }
-
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, callbacks);
   }
 }

@@ -15,6 +15,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -112,7 +113,7 @@ public class NodeKeyDetails implements Parcelable {
   }
 
   public long getCreated() {
-    return created;
+    return TimeUnit.MILLISECONDS.convert(created, TimeUnit.SECONDS);
   }
 
   public Algo getAlgo() {

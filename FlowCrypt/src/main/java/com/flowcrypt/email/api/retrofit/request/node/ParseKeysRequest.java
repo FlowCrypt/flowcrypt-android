@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import android.text.TextUtils;
+
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 
 import java.io.IOException;
@@ -34,7 +36,7 @@ public class ParseKeysRequest extends BaseNodeRequest {
 
   @Override
   public byte[] getData() {
-    return rawKey.getBytes();
+    return TextUtils.isEmpty(rawKey) ? new byte[]{} : rawKey.getBytes();
   }
 
   @Override

@@ -15,6 +15,8 @@ import java.io.IOException;
 import retrofit2.Response;
 
 /**
+ * This interface describes common things for all requests to Node.js
+ *
  * @author Denis Bondarenko
  * Date: 1/17/19
  * Time: 5:40 PM
