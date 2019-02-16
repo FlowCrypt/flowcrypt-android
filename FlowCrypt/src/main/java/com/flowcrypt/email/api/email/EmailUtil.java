@@ -209,6 +209,36 @@ public class EmailUtil {
   }
 
   /**
+   * Generate {@link AttachmentInfo} using the given key details.
+   *
+   * @param nodeKeyDetails The key details
+   * @return A generated {@link AttachmentInfo}.
+   */
+  @Nullable
+  public static AttachmentInfo genAttInfoFromPubKey(NodeKeyDetails nodeKeyDetails) {
+    if (nodeKeyDetails != null) {
+      String fileName = "0x" + nodeKeyDetails.getLongId().toUpperCase() + ".asc";
+
+      if (!TextUtils.isEmpty(nodeKeyDetails.getPublicKey())) {
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+
+        attachmentInfo.setName(fileName);
+        attachmentInfo.setEncodedSize(nodeKeyDetails.getPublicKey().length());
+        attachmentInfo.setRawData(nodeKeyDetails.getPublicKey());
+        attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
+        attachmentInfo.setEmail(nodeKeyDetails.getPrimaryPgpContact().getEmail());
+        attachmentInfo.setId(EmailUtil.generateContentId());
+
+        return attachmentInfo;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  /**
    * Generate a {@link BodyPart} with a private key as an attachment.
    *
    * @param account      The given account;

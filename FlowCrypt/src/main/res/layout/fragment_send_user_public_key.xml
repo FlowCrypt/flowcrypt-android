@@ -13,24 +13,35 @@
         android:id="@+id/textViewMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/default_margin_content"
         android:layout_marginStart="@dimen/default_margin_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content"
         android:gravity="center"
         android:paddingLeft="@dimen/default_margin_content_small"
         android:paddingRight="@dimen/default_margin_content_small"
-        android:text="@string/tell_sender_to_update_their_settings"
+        android:text="@string/loading"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMessage" />
 
     <ListView
         android:id="@+id/listViewKeys"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/default_margin_content_small"
         android:layout_marginStart="@dimen/default_margin_content_small"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
         android:divider="@color/aluminum"
         android:dividerHeight="@dimen/default_single_dip"
         app:layout_constraintEnd_toEndOf="parent"
@@ -43,13 +54,19 @@
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:layout_marginEnd="@dimen/default_margin_content_small"
         android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_content_small"
+        android:layout_marginBottom="@dimen/default_margin_content_small"
         android:text="@android:string/ok"
         android:theme="@style/AppWidget.Button.Green"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/listViewKeys" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="listViewKeys,buttonOk" />
 </androidx.constraintlayout.widget.ConstraintLayout>
