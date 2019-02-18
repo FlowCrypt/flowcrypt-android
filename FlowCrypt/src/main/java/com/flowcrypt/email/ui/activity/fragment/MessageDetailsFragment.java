@@ -44,10 +44,6 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.messages.MessagePart;
@@ -60,7 +56,7 @@ import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareSendUserPublicKeyDialogFragment;
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment;
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -173,7 +169,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           case Activity.RESULT_OK:
             List<AttachmentInfo> atts;
             if (data != null) {
-              atts = data.getParcelableArrayListExtra(PrepareSendUserPublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
+              atts = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
 
               if (!CollectionUtils.isEmpty(atts)) {
                 makeAttsProtected(atts);
@@ -409,35 +405,12 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   /**
-   * Get the matched {@link PgpKey}. If the sender email matched to the email from {@link PgpContact} which got
-   * from the private key than we return a relevant public key.
-   *
-   * @return A matched {@link PgpKey} or null.
-   */
-  private PgpKey getMatchedPublicPgpKey() {
-    Js js = UiJsManager.getInstance(getContext()).getJs();
-    PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
-    PgpKey matchedPgpKey = null;
-    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-      PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-      if (pgpKey != null) {
-        PgpContact primaryUserId = pgpKey.getPrimaryUserId();
-        if (details.getEmail().equalsIgnoreCase(primaryUserId.getEmail())) {
-          matchedPgpKey = pgpKey;
-        }
-      }
-    }
-
-    return matchedPgpKey != null ? matchedPgpKey.toPublic() : null;
-  }
-
-  /**
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private void showSendersPublicKeyDialog() {
-    PrepareSendUserPublicKeyDialogFragment fragment = new PrepareSendUserPublicKeyDialogFragment();
+    ChoosePublicKeyDialogFragment fragment = ChoosePublicKeyDialogFragment.newInstance(details.getEmail());
     fragment.setTargetFragment(MessageDetailsFragment.this, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
-    fragment.show(getFragmentManager(), PrepareSendUserPublicKeyDialogFragment.class.getSimpleName());
+    fragment.show(getFragmentManager(), ChoosePublicKeyDialogFragment.class.getSimpleName());
   }
 
   /**
@@ -932,12 +905,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     buttonSendOwnPublicKey.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        PgpKey publicKey = getMatchedPublicPgpKey();
-        if (publicKey == null) {
-          showSendersPublicKeyDialog();
-        } else {
-          sendTemplateMsgWithPublicKey(EmailUtil.genAttInfoFromPubKey(publicKey));
-        }
+        showSendersPublicKeyDialog();
       }
     });
 
