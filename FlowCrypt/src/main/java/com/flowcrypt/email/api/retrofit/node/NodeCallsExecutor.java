@@ -6,10 +6,13 @@
 package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest;
+import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.util.exception.NodeException;
@@ -44,13 +47,7 @@ public class NodeCallsExecutor {
     retrofit2.Response<ParseKeysResult> response = service.parseKeys(request).execute();
     ParseKeysResult result = response.body();
 
-    if (result == null) {
-      throw new NullPointerException("ParseKeysResult == null");
-    }
-
-    if (result.getError() != null) {
-      throw new NodeException(result.getError().getMsg());
-    }
+    checkResult(result);
 
     return result.getNodeKeyDetails();
   }
@@ -70,13 +67,7 @@ public class NodeCallsExecutor {
     retrofit2.Response<GmailBackupSearchResult> response = service.gmailBackupSearch(request).execute();
     GmailBackupSearchResult result = response.body();
 
-    if (result == null) {
-      throw new NullPointerException("GmailBackupSearchResult == null");
-    }
-
-    if (result.getError() != null) {
-      throw new NodeException(result.getError().getMsg());
-    }
+    checkResult(result);
 
     return result.getQuery();
   }
@@ -86,7 +77,7 @@ public class NodeCallsExecutor {
    *
    * @param key        The given private key.
    * @param passphrase The given passphrase candidate.
-   * @return
+   * @return An instance of {@link DecryptKeyResult}
    * @throws IOException   Such exceptions can occur during network calls.
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
@@ -99,7 +90,7 @@ public class NodeCallsExecutor {
    *
    * @param key         The given private key.
    * @param passphrases A list of passphrase candidates.
-   * @return
+   * @return An instance of {@link DecryptKeyResult}
    * @throws IOException   Such exceptions can occur during network calls.
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
@@ -110,14 +101,39 @@ public class NodeCallsExecutor {
     retrofit2.Response<DecryptKeyResult> response = service.decryptKey(request).execute();
     DecryptKeyResult result = response.body();
 
+    checkResult(result);
+
+    return result;
+  }
+
+  /**
+   * Encrypt a private key using the given passphrase.
+   *
+   * @param key        A private key.
+   * @param passphrase The given passphrase.
+   * @return An instance of {@link EncryptKeyResult}
+   * @throws IOException   Such exceptions can occur during network calls.
+   * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
+   */
+  public static EncryptKeyResult encryptKey(String key, String passphrase) throws IOException, NodeException {
+    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    EncryptKeyRequest request = new EncryptKeyRequest(key, passphrase);
+
+    retrofit2.Response<EncryptKeyResult> response = service.encryptKey(request).execute();
+    EncryptKeyResult result = response.body();
+
+    checkResult(result);
+
+    return result;
+  }
+
+  private static void checkResult(BaseNodeResult result) throws NodeException {
     if (result == null) {
-      throw new NullPointerException("ParseKeysResult == null");
+      throw new NullPointerException("Result is null");
     }
 
     if (result.getError() != null) {
       throw new NodeException(result.getError().getMsg());
     }
-
-    return result;
   }
 }
