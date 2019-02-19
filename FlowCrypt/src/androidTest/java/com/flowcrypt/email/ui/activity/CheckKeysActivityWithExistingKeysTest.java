@@ -11,6 +11,7 @@ import android.content.Intent;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
@@ -56,26 +57,21 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     @Override
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      Intent result = new Intent(targetContext, CheckKeysActivity.class);
-      ArrayList<KeyDetails> privateKeys = new ArrayList<>();
       try {
-        KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getInstrumentation().getContext(), "pgp/default@denbond7.com_sec.asc"),
-            KeyDetails.Type.EMAIL, true, null);
-        privateKeys.add(keyDetails);
+        ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
+            new String[]{"node/default@denbond7.com_sec.json"});
+        return CheckKeysActivity.newIntent(targetContext,
+            privateKeys,
+            KeyDetails.Type.EMAIL,
+            targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+                privateKeys.size(), privateKeys.size()),
+            targetContext.getString(R.string.continue_),
+            targetContext.getString(R.string.use_existing_keys),
+            targetContext.getString(R.string.use_another_account));
       } catch (IOException e) {
         e.printStackTrace();
+        throw new IllegalStateException("Wrong initialization");
       }
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
-          targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE, targetContext.getString(R.string
-          .continue_));
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, targetContext.getString(R.string
-          .use_existing_keys));
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE, targetContext.getString(R.string
-          .use_another_account));
-      return result;
     }
   };
 

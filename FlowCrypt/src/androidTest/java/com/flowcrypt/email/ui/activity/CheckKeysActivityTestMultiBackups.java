@@ -10,15 +10,11 @@ import android.content.Intent;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.TestGeneralUtil;
-import com.google.gson.Gson;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,7 +23,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.test.espresso.IdlingRegistry;
@@ -343,25 +338,11 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     return CheckKeysActivity.newIntent(targetContext,
-        getKeyDetailsListFromAssets(keysPaths),
+        TestGeneralUtil.getKeyDetailsListFromAssets(keysPaths),
         KeyDetails.Type.EMAIL,
         targetContext.getResources().getQuantityString(
             R.plurals.found_backup_of_your_account_key, keysPaths.length, keysPaths.length),
         targetContext.getString(R.string.continue_),
         targetContext.getString(R.string.use_another_account));
-  }
-
-  @NonNull
-  private ArrayList<NodeKeyDetails> getKeyDetailsListFromAssets(String[] keysPaths) throws IOException {
-    ArrayList<NodeKeyDetails> privateKeys = new ArrayList<>();
-    Gson gson = NodeGson.getInstance().getGson();
-
-    for (String path : keysPaths) {
-      ParseKeysResult parseKeysResult = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
-          (InstrumentationRegistry.getInstrumentation().getContext(), path), ParseKeysResult.class);
-
-      privateKeys.add(parseKeysResult.getNodeKeyDetails().get(0));
-    }
-    return privateKeys;
   }
 }
