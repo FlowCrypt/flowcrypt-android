@@ -30,6 +30,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -74,6 +75,11 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testClickOnButtonCreateNewKey() {

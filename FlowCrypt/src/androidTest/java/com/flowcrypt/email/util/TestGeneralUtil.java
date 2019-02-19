@@ -8,12 +8,12 @@ package com.flowcrypt.email.util;
 import android.content.Context;
 import android.os.Environment;
 
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.gson.Gson;
@@ -58,17 +58,14 @@ public class TestGeneralUtil {
     KeyDetails keyDetails = new KeyDetails(privetKey, type);
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
         .getTargetContext());
-    String armoredPrivateKey = keyDetails.getValue();
 
-    Js js = new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null);
-    String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
-
-    PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(keyDetails.getValue());
+    NodeKeyDetails nodeKeyDetails = details.get(0);
     keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), pgpKey, passphrase));
+        KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), nodeKeyDetails, passphrase));
 
-    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpKey
-        .getLongid(), pgpKey.getPrimaryUserId().getEmail());
+    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        nodeKeyDetails.getLongId(), nodeKeyDetails.getPrimaryPgpContact().getEmail());
 
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override

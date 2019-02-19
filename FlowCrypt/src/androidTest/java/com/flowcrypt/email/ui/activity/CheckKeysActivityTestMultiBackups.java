@@ -7,14 +7,18 @@ package com.flowcrypt.email.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
+import com.flowcrypt.email.api.retrofit.node.NodeGson;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.TestGeneralUtil;
+import com.google.gson.Gson;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -58,14 +63,19 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
       .outerRule(new ClearAppSettingsRule())
       .around(activityTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   /**
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
   public void testTwoKeysFirstCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -78,9 +88,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testTwoKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -95,9 +105,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testTwoKeysWithSamePasswordThirdCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -110,9 +120,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseTwoKeysFourthCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(1);
     typePassword(TestConstants.DEFAULT_PASSWORD);
@@ -125,9 +135,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseTwoKeysFifthCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(1);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -140,10 +150,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeFirstCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -157,10 +167,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -174,10 +184,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysThirdCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -192,10 +202,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysFourthCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -210,10 +220,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysFifthCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -227,10 +237,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSixthCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -243,10 +253,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSeventhCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -262,11 +272,11 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseFourKeysFirstCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
@@ -281,17 +291,22 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseFourKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"pgp/default@denbond7.com_keyA_strong.key",
-        "pgp/default@denbond7.com_keyB_default.key",
-        "pgp/default@denbond7.com_keyC_default.key",
-        "pgp/default@denbond7.com_keyC_strong.key"};
-    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
+        "node/default@denbond7.com_keyB_default.json",
+        "node/default@denbond7.com_keyC_default.json",
+        "node/default@denbond7.com_keyC_strong.json"};
+    launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD);
     checkKeysTitle(2, 3, 1);
     typePassword(TestConstants.DEFAULT_PASSWORD);
     assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_OK));
+  }
+
+  private void launchActivity(String[] keysPaths) throws IOException {
+    activityTestRule.launchActivity(getStartCheckKeysActivityIntent(keysPaths));
+    IdlingRegistry.getInstance().register(((BaseActivity) activityTestRule.getActivity()).getNodeIdlingResource());
   }
 
   private void checkSkipRemainingBackupsButton() {
@@ -327,27 +342,25 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
   @NonNull
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    Intent startCheckKeysActivity = new Intent(targetContext, CheckKeysActivity.class);
-    startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, getKeyDetailsListFromAssets
-        (keysPaths));
-    startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
-        targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
-    startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE,
-        targetContext.getString(R.string.continue_));
-    startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, (Parcelable) null);
-    startCheckKeysActivity.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE,
+    return CheckKeysActivity.newIntent(targetContext,
+        getKeyDetailsListFromAssets(keysPaths),
+        KeyDetails.Type.EMAIL,
+        targetContext.getResources().getQuantityString(
+            R.plurals.found_backup_of_your_account_key, keysPaths.length, keysPaths.length),
+        targetContext.getString(R.string.continue_),
         targetContext.getString(R.string.use_another_account));
-    return startCheckKeysActivity;
   }
 
   @NonNull
-  private ArrayList<KeyDetails> getKeyDetailsListFromAssets(String[] keysPaths) throws IOException {
-    ArrayList<KeyDetails> privateKeys = new ArrayList<>();
+  private ArrayList<NodeKeyDetails> getKeyDetailsListFromAssets(String[] keysPaths) throws IOException {
+    ArrayList<NodeKeyDetails> privateKeys = new ArrayList<>();
+    Gson gson = NodeGson.getInstance().getGson();
+
     for (String path : keysPaths) {
-      KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-          (InstrumentationRegistry.getInstrumentation().getContext(), path), KeyDetails.Type.EMAIL,
-          true, null);
-      privateKeys.add(keyDetails);
+      ParseKeysResult parseKeysResult = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
+          (InstrumentationRegistry.getInstrumentation().getContext(), path), ParseKeysResult.class);
+
+      privateKeys.add(parseKeysResult.getNodeKeyDetails().get(0));
     }
     return privateKeys;
   }

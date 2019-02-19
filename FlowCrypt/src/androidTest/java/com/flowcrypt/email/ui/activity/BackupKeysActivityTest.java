@@ -30,6 +30,7 @@ import java.util.Collections;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -81,5 +82,10 @@ public class BackupKeysActivityTest extends BaseTest {
   @Test
   public void testSuccessEmailBackup() {
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+  }
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
   }
 }

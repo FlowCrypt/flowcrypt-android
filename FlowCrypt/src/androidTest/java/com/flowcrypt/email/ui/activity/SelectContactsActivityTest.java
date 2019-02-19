@@ -56,11 +56,18 @@ public class SelectContactsActivityTest extends BaseTest {
       "contact_2@denbond7.com",
       "contact_3@denbond7.com"};
 
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SelectContactsActivity.class);
+
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new ActivityTestRule<>(SelectContactsActivity.class));
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Before
   public void saveContactsToDatabase() {

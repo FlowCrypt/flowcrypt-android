@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -48,11 +49,17 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class SplashActivityTest extends BaseTest {
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(SplashActivity.class);
 
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
-      .around(new IntentsTestRule<>(SplashActivity.class));
+      .around(intentsTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
 
   @Before
   public void stubAllExternalIntents() {

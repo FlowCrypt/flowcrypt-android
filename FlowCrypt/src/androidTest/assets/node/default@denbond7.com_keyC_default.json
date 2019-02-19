@@ -1,0 +1,33 @@
+{
+  "format": "armored",
+  "keyDetails": [
+    {
+      "private": "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.2 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxcB+BFqZSq0BB/95WmstkZtb8Dr8OYKkuHNqJQCP8ZGs8Zl9nZf4e1bqUsq7\r\nMGtTp+WeTzlipd04qCHc/8ef9myMDXwM68rBQKw3w6+5o7sWa7OjRtmftooE\r\n7TZQsFsxun4LKR3PeII9ihF1sEwPm0lE1s/vi4AKDj4qTV5rnzRSxoheh4YC\r\nPVsTof7NxAw35p1ywM63HHW7sjMwqYz7dB06OX8V27GD2NScNMKtQOTy0qZc\r\nZZoXCLWYtmy6VZbS4zhxhH2IG1El1vPPWa73TIJ01c72BRgIt2kAMVc9EyrU\r\nac1qPZcWgPpPETYoyYXuq4473x2lWhNtpPgvfBXCEuH0pt5UQp+8yBGdABEB\r\nAAH+CQMIGW2aBpoZ4HVgPrEhgZegbLABsdaqfFvEbo1tfhkBKT7WqeP3MS4+\r\ne51SgsvpzStkZWZhdWx0QGRlbmJvbmQ3LmNvbSA8ZGVmYXVsdEBkZW5ib25k\r\nNy5jb20+wsB/BBABCAApBQJamUq3BgsJBwgDAgkQHLCWPTPkOEsEFQgKAgMW\r\nAgECGQECGwMCHgEACgkQHLCWPTPkOEu7pQf/c0z1fxSuX3RIVFCvAovjo5Vr\r\nSSBspADigqMw7KnD7gRNl+5benDdrdAxMaEhRjXifozwJCYnBEXYPkmGyOhu\r\nNynmFXo89KGwVD3VEDqFzXPiKmBWL7C0IIgxWHxHhBBgQmOZdAXOLGQcuErI\r\n4PiEaKmO5mp5hANaCZ2T3Efj/xfVsd7toKouU73QpzW1Xoyg5KiViO5oMyug\r\nFxgplFL6QirE3Q+RXVMK1JadQLqLrTBbBSUdscJN+SnnL5ymLdYbRtGHcYbU\r\nRQDbmYHn+RfgJUPHzpcU85VPqrzxJN4jH3YdexK4yzcyFb9QN3038TPUvUck\r\nXHnNv6Wr6HDy1ayrMsfAfgRamUq0AQgAmYn6ieg0c37aqZLaQ9B/tObBjrHo\r\nLmAZKzIHXc5jYfiS981qTdVo3u6uui+RYwn7IWA5pX8yidY72/C3nUh/YDj1\r\nIq5SC0XpXVLX0f2R2WwA3RqvZ5HrydwSvm2hS+kQ/L4KjyuGOdsQBeK8Pg29\r\nuR/UIVArsJumWTS4hHyy0SsPw4BqW/R1X0/NHS+RVN1WbR8nGMRNfTRxhSDR\r\nxxZgcLCB4eOYbQAgmqWre+X1xjOgJticGwTh0eSpftCKhOswp2PIpSDfOwav\r\nXTIIhlplDe2+2Try3QEh5f13p5O3/yIfs/5LJ0vLe81obpFi1rnPPa4luIGj\r\n7ESY9VTikVc4GwARAQAB/gkDCGEKUQcWOHjPYD8H95MFfV9Q7V6+lzkTrIme\r\nm0kUHCph+ioFQ3bBhF01xpfJhMLAaQQYAQgAEwUCWplKtwkQHLCWPTPkOEsC\r\nGwwACgkQHLCWPTPkOEvt8gf7B2ZIHX0mRXT2COl5vbZvZ3d6H5KgZE6yWbyw\r\nUx+6MviugArFCyesLbUdrw31fFhLFDYY2xmt2CODhdkwCdLO+rSJDOT2JPWp\r\nDHqZOtlIWQ8KYXOqugnZUjsGQ78uhJ0zxjeZ2mZKFwTeJIdVsIAQa6GiCEeO\r\nNRlw/W6Pmk8QOoRA1YIOZxi3gdsPVaPKBhGnB+qMbR8wzWNcO7Ub+MU4LxPD\r\naDxbCQgqcKKYjTxMfH5bMTRhewmFmwYIvht8YOy2p0wZdyExTOnY2PgIOMBw\r\n67mnbuZ7Je4inipfF+NonLXjfsLOydj0TKDXN+NrpL/Jkm87bBKrZdl56GCl\r\nI70U5g==\r\n=KcbL\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n",
+      "isDecrypted": false,
+      "public": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.2 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxsBNBFqZSq0BB/95WmstkZtb8Dr8OYKkuHNqJQCP8ZGs8Zl9nZf4e1bqUsq7\r\nMGtTp+WeTzlipd04qCHc/8ef9myMDXwM68rBQKw3w6+5o7sWa7OjRtmftooE\r\n7TZQsFsxun4LKR3PeII9ihF1sEwPm0lE1s/vi4AKDj4qTV5rnzRSxoheh4YC\r\nPVsTof7NxAw35p1ywM63HHW7sjMwqYz7dB06OX8V27GD2NScNMKtQOTy0qZc\r\nZZoXCLWYtmy6VZbS4zhxhH2IG1El1vPPWa73TIJ01c72BRgIt2kAMVc9EyrU\r\nac1qPZcWgPpPETYoyYXuq4473x2lWhNtpPgvfBXCEuH0pt5UQp+8yBGdABEB\r\nAAHNK2RlZmF1bHRAZGVuYm9uZDcuY29tIDxkZWZhdWx0QGRlbmJvbmQ3LmNv\r\nbT7CwH8EEAEIACkFAlqZSrcGCwkHCAMCCRAcsJY9M+Q4SwQVCAoCAxYCAQIZ\r\nAQIbAwIeAQAKCRAcsJY9M+Q4S7ulB/9zTPV/FK5fdEhUUK8Ci+OjlWtJIGyk\r\nAOKCozDsqcPuBE2X7lt6cN2t0DExoSFGNeJ+jPAkJicERdg+SYbI6G43KeYV\r\nejz0obBUPdUQOoXNc+IqYFYvsLQgiDFYfEeEEGBCY5l0Bc4sZBy4Ssjg+IRo\r\nqY7manmEA1oJnZPcR+P/F9Wx3u2gqi5TvdCnNbVejKDkqJWI7mgzK6AXGCmU\r\nUvpCKsTdD5FdUwrUlp1AuoutMFsFJR2xwk35KecvnKYt1htG0YdxhtRFANuZ\r\ngef5F+AlQ8fOlxTzlU+qvPEk3iMfdh17ErjLNzIVv1A3fTfxM9S9RyRcec2/\r\npavocPLVrKsyzsBNBFqZSrQBCACZifqJ6DRzftqpktpD0H+05sGOseguYBkr\r\nMgddzmNh+JL3zWpN1Wje7q66L5FjCfshYDmlfzKJ1jvb8LedSH9gOPUirlIL\r\nReldUtfR/ZHZbADdGq9nkevJ3BK+baFL6RD8vgqPK4Y52xAF4rw+Db25H9Qh\r\nUCuwm6ZZNLiEfLLRKw/DgGpb9HVfT80dL5FU3VZtHycYxE19NHGFINHHFmBw\r\nsIHh45htACCapat75fXGM6Am2JwbBOHR5Kl+0IqE6zCnY8ilIN87Bq9dMgiG\r\nWmUN7b7ZOvLdASHl/Xenk7f/Ih+z/ksnS8t7zWhukWLWuc89riW4gaPsRJj1\r\nVOKRVzgbABEBAAHCwGkEGAEIABMFAlqZSrcJEBywlj0z5DhLAhsMAAoJEByw\r\nlj0z5DhL7fIH+wdmSB19JkV09gjpeb22b2d3eh+SoGROslm8sFMfujL4roAK\r\nxQsnrC21Ha8N9XxYSxQ2GNsZrdgjg4XZMAnSzvq0iQzk9iT1qQx6mTrZSFkP\r\nCmFzqroJ2VI7BkO/LoSdM8Y3mdpmShcE3iSHVbCAEGuhoghHjjUZcP1uj5pP\r\nEDqEQNWCDmcYt4HbD1WjygYRpwfqjG0fMM1jXDu1G/jFOC8Tw2g8WwkIKnCi\r\nmI08THx+WzE0YXsJhZsGCL4bfGDstqdMGXchMUzp2Nj4CDjAcOu5p27meyXu\r\nIp4qXxfjaJy1437CzsnY9Eyg1zfja6S/yZJvO2wSq2XZeehgpSO9FOY=\r\n=oGxn\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+      "users": [
+        "default@denbond7.com <default@denbond7.com>"
+      ],
+      "ids": [
+        {
+          "fingerprint": "9B5E643F35C956244BEDC4A31CB0963D33E4384B",
+          "longid": "1CB0963D33E4384B",
+          "shortid": "33E4384B",
+          "keywords": "BRONZE LUCKY MONSTER GUITAR DRUM ANNUAL"
+        },
+        {
+          "fingerprint": "630AEC05F7E3A827797F5CD241770D96FEC786E7",
+          "longid": "41770D96FEC786E7",
+          "shortid": "FEC786E7",
+          "keywords": "DOOR REVEAL GRANT WORK JOURNEY BROTHER"
+        }
+      ],
+      "algo": {
+        "algorithm": "rsa_encrypt_sign",
+        "bits": 2048,
+        "algorithmId": 1
+      },
+      "created": 1519995565
+    }
+  ]
+}

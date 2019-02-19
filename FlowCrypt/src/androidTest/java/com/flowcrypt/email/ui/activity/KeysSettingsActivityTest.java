@@ -29,6 +29,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -57,11 +58,16 @@ public class KeysSettingsActivityTest extends BaseTest {
       .around(new AddPrivateKeyToDatabaseRule())
       .around(intentsTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
+
   @Test
   public void testAddNewKeys() throws Throwable {
     intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         ImportPrivateKeyActivity
-        .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+            .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
     TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
         .getInstrumentation()

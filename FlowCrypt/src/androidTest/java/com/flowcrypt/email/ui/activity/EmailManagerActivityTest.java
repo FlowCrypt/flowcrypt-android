@@ -42,6 +42,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -96,6 +97,11 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
       .around(new AddMessageToDatabaseRule(userWithMoreThan21LettersAccount,
           INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(intentsTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
 
   @Before
   public void registerIdlingResource() {

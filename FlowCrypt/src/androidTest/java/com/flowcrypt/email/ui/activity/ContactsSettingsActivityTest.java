@@ -20,8 +20,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -46,17 +44,19 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class ContactsSettingsActivityTest extends BaseTest {
-
   private static final String[] EMAILS = new String[]{
       "contact_0@denbond7.com",
       "contact_1@denbond7.com",
       "contact_2@denbond7.com",
       "contact_3@denbond7.com"};
+
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(ContactsSettingsActivity.class);
+
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new ActivityTestRule<>(ContactsSettingsActivity.class));
+      .around(activityTestRule);
 
   @AfterClass
   public static void clearContactsFromDatabase() {
@@ -64,6 +64,11 @@ public class ContactsSettingsActivityTest extends BaseTest {
     for (String email : EMAILS) {
       contactsDaoSource.deletePgpContact(InstrumentationRegistry.getInstrumentation().getTargetContext(), email);
     }
+  }
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
   }
 
   @Test
@@ -78,7 +83,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testDeleteContacts() throws IOException {
+  public void testDeleteContacts() {
     addContactsToDatabase();
     for (String ignored : EMAILS) {
       onData(anything())
@@ -91,7 +96,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
     clearContactsFromDatabase();
   }
 
-  private void addContactsToDatabase() throws IOException {
+  private void addContactsToDatabase() {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
     for (String email : EMAILS) {
       PgpContact pgpContact = new PgpContact(email, null, "", true, null,

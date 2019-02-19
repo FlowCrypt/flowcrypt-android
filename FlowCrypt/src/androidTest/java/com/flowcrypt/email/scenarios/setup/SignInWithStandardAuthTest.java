@@ -50,13 +50,19 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new ActivityTestRule<>(SplashActivity.class));
-
   protected AuthCredentials authCreds;
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SplashActivity.class);
 
   abstract AuthCredentials getAuthCreds();
 
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     this.authCreds = getAuthCreds();
   }
 

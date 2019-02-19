@@ -120,10 +120,10 @@ public final class Node {
     try (FileOutputStream outputStream = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)) {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
       String spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString();
-      String encryptedData = keyStoreCryptoManager.encrypt(data, spec);
+      //String encryptedData = keyStoreCryptoManager.encrypt(data, spec);
       outputStream.write(spec.getBytes());
       outputStream.write('\n');
-      outputStream.write(encryptedData.getBytes());
+      outputStream.write(data.getBytes());
     } catch (Exception e) {
       throw new RuntimeException("Could not save certs cache", e);
     }
@@ -142,9 +142,9 @@ public final class Node {
 
       String spec = rawData.substring(0, splitPosition);
 
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
-      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec);
-      return gson.fromJson(decryptedData, NodeSecretCerts.class);
+      /*KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec);*/
+      return gson.fromJson(rawData.substring(splitPosition + 1), NodeSecretCerts.class);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
       return null;

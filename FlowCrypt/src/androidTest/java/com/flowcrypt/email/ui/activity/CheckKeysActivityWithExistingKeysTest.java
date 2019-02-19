@@ -86,6 +86,11 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
           .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
       .around(activityTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Test
   public void testShowMsgEmptyPassPhrase() {
     Espresso.closeSoftKeyboard();
@@ -104,7 +109,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   }
 
   @Test
-  public void testUseCorrectPassPhrase() throws Exception {
+  public void testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
@@ -112,14 +117,14 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   }
 
   @Test
-  public void testCheckClickButtonNeutral() throws Exception {
+  public void testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonNeutralAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
     assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEUTRAL));
   }
 
   @Test
-  public void testCheckClickButtonNegative() throws Exception {
+  public void testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
     assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));

@@ -11,6 +11,10 @@ import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.clearText;
@@ -30,10 +34,11 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
  * Time: 13:05
  * E-mail: DenBond7@gmail.com
  */
-
+@LargeTest
+@RunWith(AndroidJUnit4.class)
 public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandardAuthTest {
   @Test
-  public void testAllConditionsTrue() throws Exception {
+  public void testAllConditionsTrue() {
     onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
     fillAllFields();
     onView(withId(R.id.buttonTryToConnect)).perform(click());
@@ -44,7 +49,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
   }
 
   @Test
-  public void testPasswordIncorrect() throws Exception {
+  public void testPasswordIncorrect() {
     onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
     fillAllFields();
     onView(withId(R.id.buttonTryToConnect)).perform(click());
@@ -55,7 +60,7 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
   }
 
   @Test
-  public void testUseAnotherAccount() throws Exception {
+  public void testUseAnotherAccount() {
     onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
     fillAllFields();
     onView(withId(R.id.buttonTryToConnect)).perform(click());

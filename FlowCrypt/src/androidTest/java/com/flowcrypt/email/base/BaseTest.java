@@ -16,15 +16,22 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.runner.RunWith;
 
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.matcher.BoundedMatcher;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -46,8 +53,11 @@ import static org.hamcrest.Matchers.not;
  * Time: 16:37
  * E-mail: DenBond7@gmail.com
  */
+@RunWith(AndroidJUnit4.class)
+public abstract class BaseTest {
 
-public class BaseTest {
+  public abstract ActivityTestRule getActivityTestRule();
+
   /**
    * Match the {@link SecurityType.Option}.
    *
@@ -149,6 +159,28 @@ public class BaseTest {
         description.appendText("The size of the list is not equal = " + listSize);
       }
     };
+  }
+
+  @Before
+  public void registerNodeIdling() {
+    ActivityTestRule activityTestRule = getActivityTestRule();
+    if (activityTestRule != null) {
+      Activity activity = activityTestRule.getActivity();
+      if (activity instanceof BaseActivity) {
+        IdlingRegistry.getInstance().register(((BaseActivity) activity).getNodeIdlingResource());
+      }
+    }
+  }
+
+  @After
+  public void unregisterNodeIdling() {
+    ActivityTestRule activityTestRule = getActivityTestRule();
+    if (activityTestRule != null) {
+      Activity activity = activityTestRule.getActivity();
+      if (activity instanceof BaseActivity) {
+        IdlingRegistry.getInstance().unregister(((BaseActivity) activity).getNodeIdlingResource());
+      }
+    }
   }
 
   /**

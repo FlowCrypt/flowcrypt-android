@@ -41,11 +41,17 @@ import static org.hamcrest.Matchers.allOf;
 @RunWith(AndroidJUnit4.class)
 public class SettingsActivityTest extends BaseTest {
 
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SettingsActivity.class);
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new ActivityTestRule<>(SettingsActivity.class));
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testShowHelpScreen() {

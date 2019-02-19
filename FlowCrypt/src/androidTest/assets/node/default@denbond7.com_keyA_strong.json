@@ -1,0 +1,33 @@
+{
+  "format": "armored",
+  "keyDetails": [
+    {
+      "private": "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.2 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\n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\r\n=py4P\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n",
+      "isDecrypted": false,
+      "public": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.2 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxsBNBFqZSaIBB/926oRBXJ6OS6aoQ7pQU6zftnJ4pCluf3JGfJ/clAHLD2yz\r\nuVhxTn74MWWJRsG77dTIK13D7OuqAfEhUcfrkpwUeRBfxWqtlpenwkLhx7gs\r\nmgsn8s7k2566lVkdFo2/OddK5GZZ3kzGwrafTCfznw+mbKGP3XctoR64lZBB\r\n6MuQj0v1SkVILOp+pk5N9Bptb5K/DPhIEv2SFcdvmDwWt9aotsOy6iexbPj1\r\nzTQhwYpTpv3pSqyqjSAroALkTD+xfUPHGcGYX6AohE1IONi+71IZLzhvGy0d\r\nHj9LtESbBla27GV4Pfhl91mLwbZcc+tbwJxz0skUY9hDEzkZEfdVyp5FABEB\r\nAAHNK2RlZmF1bHRAZGVuYm9uZDcuY29tIDxkZWZhdWx0QGRlbmJvbmQ3LmNv\r\nbT7CwH8EEAEIACkFAlqZSacGCwkHCAMCCRDMrwRgHud4vwQVCAoCAxYCAQIZ\r\nAQIbAwIeAQAKCRDMrwRgHud4v9o/B/9KIgfKa31XcWkLXX3Bz8DOD5Fu/Dkg\r\nL6blE8qGOYlUttdGSfyZr2kezaRt223A8CFtwrH40Brp2/522JAzvcAUrzOy\r\nEMBA798/oAynkoPs1E8XfhYvX8jVrrl4AQMVYgRe1YkLZ0p2/60BQLzEK2JA\r\n9BNkUiGr/g6oK82R7YqMc33stzpVX/oISjfQRfknv5Red2HLe8zieVZRtj38\r\nuoeKOX7xqINdmK8Ek5J1A6VYCxiZ9plhMulJBkhcCzP9WZG2h9YC/poQj/R6\r\nIOpSITLlJALQjMqOeTkOPyc3SD3xszctLI/aOFz9FbbH4c4EJRW5VyXzlfh8\r\npPdorIADGKcvzsBNBFqZSaMBCACDyF+Rbcl0jKIAL1j/fBiLwZhutoUG151h\r\nTIqktOQZ6YE7vwti8i/lky0HhbE6k4d38BItR1euIewUa9jBSr84827XujDl\r\nbDZmLGUNbUWpdMTQIXmSMIUuThRWdjhllX8aFMkok2z38rzQc2PX4UJ/QySf\r\nCCLbxk+cZ1JDImwK6slf36leCTQ2tKJ79bsPcUK/fD/mbz9g+p0I4My9TId7\r\nwxE6c5Q+lg73cyLsHI0hNRJ+KVMLg32sLYGAmlwv0KuN2iw+APHBF+cKdzo2\r\n9v0Oui1+Vq5W+uybmTfr/vvplj+vqJJoCx6P8BU6FkxHOZXE5VnHhVUanULn\r\nyXjVYnrdABEBAAHCwGkEGAEIABMFAlqZSagJEMyvBGAe53i/AhsMAAoJEMyv\r\nBGAe53i/EaEH/iJLf+9+jKqbqigCj0e6h5Qys1x09vMv8G4vJlrGrEdzyRr/\r\nu2ClyjLd5KD36niQLXS5nltXdRHrkgprbn8IZsMyfhvu+Hopy1E4GC58+cFn\r\n7l3HYTw9Epkaq6GDNxu7jZXjI+3EaVfv+5QiS8WKO3OM7m4mhV8iJC/umzH3\r\nsx4UQ7qPpSnZCMWBFCk7brHCzVLPJfDD4Jd5+hx3k07joL5Ey1L1WoA80pUm\r\nqFG+Ag+FWnJz4aqIehosgx2xjgWbt/FCvKNAhqyWKBEVkyww6T0yJNJTbtb6\r\nRcvRyJKpugcKUwdEyPfWsEO0ZkUfLwMXYUA36yKtiFU6Avh8RXI5YhA=\r\n=LkYm\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+      "users": [
+        "default@denbond7.com <default@denbond7.com>"
+      ],
+      "ids": [
+        {
+          "fingerprint": "65177EF2094FEE7E95661831CCAF04601EE778BF",
+          "longid": "CCAF04601EE778BF",
+          "shortid": "1EE778BF",
+          "keywords": "SMILE JOIN BLOSSOM DIFFER JEALOUS BLOOD"
+        },
+        {
+          "fingerprint": "51DD763C871E0AD2D339E039B0BC75CBF4CA6506",
+          "longid": "B0BC75CBF4CA6506",
+          "shortid": "F4CA6506",
+          "keywords": "RADAR TOGETHER INDICATE TRUMPET PLAY CAMP"
+        }
+      ],
+      "algo": {
+        "algorithm": "rsa_encrypt_sign",
+        "bits": 2048,
+        "algorithmId": 1
+      },
+      "created": 1519995298
+    }
+  ]
+}
