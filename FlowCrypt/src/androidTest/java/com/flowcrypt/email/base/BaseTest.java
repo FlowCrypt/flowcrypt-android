@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.matcher.BoundedMatcher;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -138,6 +139,28 @@ public abstract class BaseTest {
   }
 
   /**
+   * Match is {@link RecyclerView} empty.
+   */
+  public static <T> Matcher<T> matchEmptyRecyclerView() {
+    return new BaseMatcher<T>() {
+      @Override
+      public boolean matches(Object item) {
+        if (item instanceof RecyclerView) {
+          RecyclerView recyclerView = (RecyclerView) item;
+          return recyclerView.getAdapter() == null || recyclerView.getAdapter().getItemCount() == 0;
+        } else {
+          return false;
+        }
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("List is not empty");
+      }
+    };
+  }
+
+  /**
    * Match the list size.
    *
    * @param listSize An incoming list size.
@@ -149,6 +172,30 @@ public abstract class BaseTest {
         if (item instanceof ListView) {
           ListView listView = (ListView) item;
           return listView.getAdapter().getCount() == listSize;
+        } else {
+          return false;
+        }
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("The size of the list is not equal = " + listSize);
+      }
+    };
+  }
+
+  /**
+   * Match the list size.
+   *
+   * @param listSize An incoming list size.
+   */
+  public static <T> Matcher<T> matchRecyclerViewSize(final int listSize) {
+    return new BaseMatcher<T>() {
+      @Override
+      public boolean matches(Object item) {
+        if (item instanceof RecyclerView) {
+          RecyclerView recyclerView = (RecyclerView) item;
+          return recyclerView.getAdapter() == null || recyclerView.getAdapter().getItemCount() == listSize;
         } else {
           return false;
         }
