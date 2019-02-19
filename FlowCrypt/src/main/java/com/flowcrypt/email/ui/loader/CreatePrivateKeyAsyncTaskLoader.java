@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
@@ -100,12 +101,19 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
 
       KeyStoreCryptoManager manager = new KeyStoreCryptoManager(getContext());
 
-      List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(pgpKey.armor());
-      if (CollectionUtils.isEmpty(nodeKeyDetails) || nodeKeyDetails.size() != 1) {
+      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKey.armor());
+      if (CollectionUtils.isEmpty(nodeKeyDetailsList) || nodeKeyDetailsList.size() != 1) {
         throw new IllegalStateException("Parse keys error");
       }
 
-      KeysDao keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails.get(0), passphrase);
+      NodeKeyDetails nodeKeyDetails = nodeKeyDetailsList.get(0);
+
+      if (!nodeKeyDetails.isDecrypted()) {
+        DecryptKeyResult decryptKeyResult = NodeCallsExecutor.decryptKey(nodeKeyDetails.getPrivateKey(), passphrase);
+        nodeKeyDetails.setDecryptedPrivateKey(decryptKeyResult.getDecryptedKey());
+      }
+
+      KeysDao keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails, passphrase);
 
       Uri uri = new KeysDaoSource().addRow(getContext(), keysDao);
 
