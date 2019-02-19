@@ -22,10 +22,12 @@ import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.idling.NodeIdlingResource;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -33,8 +35,10 @@ import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
 import androidx.loader.content.Loader;
 
 /**
@@ -50,6 +54,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
   protected Messenger jsMessenger;
   protected Messenger jsReplyMessenger;
+  protected NodeIdlingResource nodeIdlingResource;
   /**
    * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
    */
@@ -121,6 +126,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    registerNodeIdlingResources();
     Log.d(tag, "onCreate");
     setContentView(getContentViewResourceId());
     initScreenViews();
@@ -173,6 +179,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
       default:
         return super.onOptionsItemSelected(item);
     }
+  }
+
+  @VisibleForTesting
+  public NodeIdlingResource getNodeIdlingResource() {
+    return nodeIdlingResource;
   }
 
   public Toolbar getToolbar() {
@@ -379,6 +390,16 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
       e.printStackTrace();
       ExceptionUtil.handleError(e);
     }
+  }
+
+  private void registerNodeIdlingResources() {
+    nodeIdlingResource = new NodeIdlingResource();
+    Node.getInstance().getLiveData().observe(this, new Observer<Boolean>() {
+      @Override
+      public void onChanged(Boolean aBoolean) {
+        nodeIdlingResource.setIdleState(aBoolean);
+      }
+    });
   }
 
   private void initScreenViews() {
