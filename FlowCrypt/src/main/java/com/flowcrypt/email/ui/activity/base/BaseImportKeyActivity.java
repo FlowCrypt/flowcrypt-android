@@ -69,7 +69,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
   public static final String KEY_EXTRA_TITLE
       = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity.class);
-
+  private static final String WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType";
   private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10;
   private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11;
 
@@ -365,6 +365,18 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
         if (e instanceof FileNotFoundException) {
           errorMsg = getString(R.string.file_not_found);
+        }
+
+        if (WRONG_STRUCTURE_ERROR.equals(errorMsg)) {
+          String mode = isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_);
+          switch (loaderId) {
+            case R.id.loader_id_validate_key_from_file:
+              errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode);
+              break;
+            case R.id.loader_id_validate_key_from_clipboard:
+              errorMsg = getString(R.string.clipboard_has_wrong_structure, mode);
+              break;
+          }
         }
 
         showInfoSnackbar(getRootView(), errorMsg);
