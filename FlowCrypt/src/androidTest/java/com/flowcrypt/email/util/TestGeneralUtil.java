@@ -11,6 +11,7 @@ import android.os.Environment;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -65,6 +66,12 @@ public class TestGeneralUtil {
 
     List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(keyDetails.getValue());
     NodeKeyDetails nodeKeyDetails = details.get(0);
+
+    if (!nodeKeyDetails.isDecrypted()) {
+      DecryptKeyResult decryptKeyResult = NodeCallsExecutor.decryptKey(nodeKeyDetails.getPrivateKey(), passphrase);
+      nodeKeyDetails.setDecryptedPrivateKey(decryptKeyResult.getDecryptedKey());
+    }
+
     keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), nodeKeyDetails, passphrase));
 

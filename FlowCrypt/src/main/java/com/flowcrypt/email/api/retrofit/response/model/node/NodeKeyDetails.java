@@ -182,6 +182,7 @@ public class NodeKeyDetails implements Parcelable {
   }
 
   public void setDecryptedPrivateKey(String decryptedPrivateKey) {
+    this.isDecrypted = true;
     this.decryptedPrivateKey = decryptedPrivateKey;
   }
 }
