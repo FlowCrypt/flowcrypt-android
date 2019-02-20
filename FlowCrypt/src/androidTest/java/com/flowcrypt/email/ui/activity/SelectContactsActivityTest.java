@@ -11,14 +11,17 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddContactsToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -55,23 +58,9 @@ public class SelectContactsActivityTest extends BaseTest {
       "contact_1@denbond7.com",
       "contact_2@denbond7.com",
       "contact_3@denbond7.com"};
+  private static final List<PgpContact> CONTACTS = new ArrayList<>();
 
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SelectContactsActivity.class);
-
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(activityTestRule);
-
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
-  }
-
-  @Before
-  public void saveContactsToDatabase() {
-    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+  static {
     for (int i = 0; i < EMAILS.length; i++) {
       String email = EMAILS[i];
       PgpContact pgpContact;
@@ -82,13 +71,30 @@ public class SelectContactsActivityTest extends BaseTest {
         pgpContact = new PgpContact(email, null, "publicKey", true, null,
             false, null, null, null, 0);
       }
-      contactsDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpContact);
+      CONTACTS.add(pgpContact);
     }
   }
 
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SelectContactsActivity.class);
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(new AddAccountToDatabaseRule())
+      .around(new AddContactsToDatabaseRule(CONTACTS))
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Test
-  public void testShowEmptyView() {
+  public void testShowEmptyView() throws Exception {
     clearContactsFromDatabase();
+
+    //Need to wait a little while data will be updated
+    Thread.sleep(2000);
+
     onView(withId(R.id.listViewContacts)).check(matches(matchEmptyList())).check(matches(not(isDisplayed())));
     onView(withId(R.id.emptyView)).check(matches(isDisplayed())).check(matches(withText(R.string.no_results)));
   }
@@ -96,6 +102,8 @@ public class SelectContactsActivityTest extends BaseTest {
   @Test
   public void testShowListContacts() {
     onView(withId(R.id.listViewContacts)).check(matches(isDisplayed())).check(matches(not(matchEmptyList())));
+    onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
+
     for (int i = 0; i < EMAILS.length; i++) {
       if (i % 2 == 0) {
         checkIsDataItemDisplayed(i, R.id.textViewName, getUserName(EMAILS[i]));
@@ -127,7 +135,7 @@ public class SelectContactsActivityTest extends BaseTest {
     onView(withId(R.id.emptyView)).check(matches(isDisplayed())).check(matches(withText(R.string.no_results)));
   }
 
-  private String getUserName(String email) {
+  private static String getUserName(String email) {
     return email.substring(0, email.indexOf(TestConstants.COMMERCIAL_AT_SYMBOL));
   }
 
