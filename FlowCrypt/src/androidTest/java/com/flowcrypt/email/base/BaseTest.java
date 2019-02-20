@@ -284,4 +284,8 @@ public abstract class BaseTest {
       }
     });
   }
+
+  protected String getResString(int resId) {
+    return InstrumentationRegistry.getInstrumentation().getTargetContext().getString(resId);
+  }
 }

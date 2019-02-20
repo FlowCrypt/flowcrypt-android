@@ -104,10 +104,10 @@ public class ImportPgpContactsRecyclerViewAdapter extends
 
     Uri uri = new ContactsDaoSource().addRow(context, pgpContact);
     if (uri != null) {
+      notifyItemChanged(position);
       Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
       v.setVisibility(View.GONE);
       publicKeyInfo.setPgpContact(pgpContact);
-      notifyItemChanged(position);
     } else {
       Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
     }
