@@ -12,6 +12,8 @@ import android.text.TextUtils;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.js.PgpKeyInfo;
@@ -65,7 +67,15 @@ public class BackupPrivateKeyToInboxAction extends Action {
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
       Session session = OpenStoreHelper.getAccountSess(context, account);
       Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
-      MimeBodyPart mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, pgpKeyInfo.getPrivate());
+
+      EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(),
+          securityStorageConnector.getPassphrase(privateKeyLongId));
+
+      if (TextUtils.isEmpty(encryptKeyResult.getEncryptedKey())) {
+        throw new IllegalStateException("An error occurred during encrypting some key");
+      }
+
+      MimeBodyPart mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, encryptKeyResult.getEncryptedKey());
       Message message = EmailUtil.genMsgWithPrivateKeys(context, account, session, mimeBodyPart);
       transport.sendMessage(message, message.getAllRecipients());
     }
