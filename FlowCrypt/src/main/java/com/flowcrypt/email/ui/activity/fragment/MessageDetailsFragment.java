@@ -825,6 +825,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
           if (isUpdated) {
             Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
+            v.setVisibility(View.GONE);
           } else {
             Toast.makeText(getContext(), R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
           }
