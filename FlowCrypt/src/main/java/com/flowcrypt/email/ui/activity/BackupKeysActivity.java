@@ -106,16 +106,16 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         }
 
         if (e instanceof PrivateKeyStrengthException) {
-          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showPassWeakHint();
         } else if (e instanceof DifferentPassPhrasesException) {
-          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showDifferentPassHint();
         } else if (e instanceof NoPrivateKeysAvailableException) {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showInfoSnackbar(getRootView(), e.getMessage(), Snackbar.LENGTH_LONG);
         } else {
-          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showBackupingErrorHint();
         }
 
@@ -162,10 +162,10 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
       case R.id.loader_id_save_private_key_as_file:
         isPrivateKeySavingNow = false;
         if (e instanceof PrivateKeyStrengthException) {
-          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showPassWeakHint();
         } else if (e instanceof DifferentPassPhrasesException) {
-          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutSyncStatus);
+          UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
           showDifferentPassHint();
         } else {
           UIUtil.exchangeViewVisibility(BackupKeysActivity.this, false, progressBar, layoutContent);
@@ -177,18 +177,6 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
       default:
         super.onError(loaderId, e);
     }
-  }
-
-  private void showBackupingErrorHint() {
-    showSnackbar(getRootView(), getString(R.string.backup_was_not_sent), getString(R.string.retry),
-        new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            layoutSyncStatus.setVisibility(View.GONE);
-            UIUtil.exchangeViewVisibility(BackupKeysActivity.this, true, progressBar, layoutContent);
-            sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
-          }
-        });
   }
 
   @Override
@@ -212,17 +200,6 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
   @Override
   public View getRootView() {
     return layoutContent;
-  }
-
-  private void showDifferentPassHint() {
-    showSnackbar(getRootView(), getString(R.string.different_pass_phrases), getString(R.string.fix),
-        new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
-                account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
-          }
-        });
   }
 
   @Override
@@ -322,9 +299,26 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
     }
   }
 
-  private void showPassWeakHint() {
-    showSnackbar(getRootView(), getString(R.string.pass_phrase_is_too_weak),
-        getString(R.string.change_pass_phrase), new View.OnClickListener() {
+  @VisibleForTesting
+  public CountingIdlingResource getCountingIdlingResource() {
+    return countingIdlingResource;
+  }
+
+  private void showBackupingErrorHint() {
+    showSnackbar(getRootView(), getString(R.string.backup_was_not_sent), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            layoutSyncStatus.setVisibility(View.GONE);
+            UIUtil.exchangeViewVisibility(BackupKeysActivity.this, true, progressBar, layoutContent);
+            sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner);
+          }
+        });
+  }
+
+  private void showDifferentPassHint() {
+    showSnackbar(getRootView(), getString(R.string.different_pass_phrases), getString(R.string.fix),
+        Snackbar.LENGTH_LONG, new View.OnClickListener() {
           @Override
           public void onClick(View v) {
             startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
@@ -333,9 +327,15 @@ public class BackupKeysActivity extends BaseSettingsBackStackSyncActivity implem
         });
   }
 
-  @VisibleForTesting
-  public CountingIdlingResource getCountingIdlingResource() {
-    return countingIdlingResource;
+  private void showPassWeakHint() {
+    showSnackbar(getRootView(), getString(R.string.pass_phrase_is_too_weak),
+        getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG, new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            startActivityForResult(ChangePassPhraseActivity.newIntent(BackupKeysActivity.this,
+                account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY);
+          }
+        });
   }
 
   private void initViews() {

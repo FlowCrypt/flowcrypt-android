@@ -268,7 +268,7 @@ public class EmailUtil {
   @NonNull
   public static Message genMsgWithAllPrivateKeys(Context context, AccountDao account,
                                                  Session session, Js js) throws Exception {
-    String keys = SecurityUtils.genPrivateKeysBackup(context, js, account, true);
+    String keys = SecurityUtils.genPrivateKeysBackup(context, js, account);
 
     Multipart multipart = new MimeMultipart();
     multipart.addBodyPart(getBodyPartWithBackupText(context));
