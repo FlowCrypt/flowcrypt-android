@@ -51,9 +51,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
   @Override
   public void onConfirmPassPhraseSuccess() {
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_change_pass_phrase, null, this);
-    editTextKeyPassword.setText(null);
-    editTextKeyPasswordSecond.setText(null);
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_change_pass_phrase, null, this);
   }
 
   @Override
@@ -160,7 +158,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
 
       case R.id.loader_id_load_private_key_backups_from_email:
         ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
-        if (keyDetailsList.isEmpty()) {//need to remove "!"
+        if (keyDetailsList.isEmpty()) {
           runBackupKeysActivity();
         } else {
           LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this);

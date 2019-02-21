@@ -122,7 +122,10 @@ public class KeysDao extends BaseDao {
       randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
     }
 
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getDecryptedPrivateKey(), randomVector);
+    String decryptedPrvKey = nodeKeyDetails.isDecrypted() ? nodeKeyDetails.getPrivateKey() :
+        nodeKeyDetails.getDecryptedPrivateKey();
+
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(decryptedPrvKey, randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);
     keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
 

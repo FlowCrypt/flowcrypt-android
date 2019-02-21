@@ -15,7 +15,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
@@ -67,7 +66,7 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       List<String> longIds = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail());
 
-      SecurityStorageConnector storageConnector = UiJsManager.getInstance(getContext()).getSecurityStorageConnector();
+      SecurityStorageConnector storageConnector = new SecurityStorageConnector(getContext());
       PgpKeyInfo[] pgpKeyInfoArray = storageConnector.getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
 
       if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
@@ -86,6 +85,10 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       }
 
       ContentProviderResult[] contentProviderResults = new KeysDaoSource().updateKeys(getContext(), keysDaoList);
+
+      if (contentProviderResults == null || contentProviderResults.length == 0) {
+        throw new IllegalArgumentException("An error occurred during changing passphrases");
+      }
 
       for (ContentProviderResult contentProviderResult : contentProviderResults) {
         if (contentProviderResult.count < 1) {
