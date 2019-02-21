@@ -16,6 +16,7 @@ import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.util.exception.NodeException;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -49,7 +50,9 @@ public class NodeCallsExecutor {
 
     checkResult(result);
 
-    return result.getNodeKeyDetails();
+    List<NodeKeyDetails> details = result.getNodeKeyDetails();
+
+    return CollectionUtils.isEmpty(details) ? Collections.<NodeKeyDetails>emptyList() : details;
   }
 
   /**
