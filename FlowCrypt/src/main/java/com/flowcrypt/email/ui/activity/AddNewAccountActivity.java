@@ -138,6 +138,7 @@ public class AddNewAccountActivity extends BaseSignInActivity implements View.On
           case Activity.RESULT_CANCELED:
           case CheckKeysActivity.RESULT_NEGATIVE:
             UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+            LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
             break;
         }
         break;
