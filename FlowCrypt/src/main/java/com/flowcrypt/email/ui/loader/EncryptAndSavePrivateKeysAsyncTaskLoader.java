@@ -66,9 +66,11 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
     try {
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
       for (NodeKeyDetails keyDetails : details) {
+        String tempPassphrase = passphrase;
         if (keyDetails.isPrivate()) {
           String decryptedKey;
           if (keyDetails.isDecrypted()) {
+            tempPassphrase = "";
             decryptedKey = keyDetails.getPrivateKey();
           } else {
             DecryptKeyResult decryptKeyResult = NodeCallsExecutor.decryptKey(keyDetails.getPrivateKey(), passphrase);
@@ -76,9 +78,8 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
           }
 
           if (!TextUtils.isEmpty(decryptedKey)) {
-            keyDetails.setDecryptedPrivateKey(decryptedKey);
             if (!keysDaoSource.hasKey(getContext(), keyDetails.getLongId())) {
-              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase);
+              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, tempPassphrase);
               Uri uri = keysDaoSource.addRow(getContext(), keysDao);
 
               List<PgpContact> contacts = keyDetails.getPgpContacts();

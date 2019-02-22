@@ -63,8 +63,6 @@ public class NodeKeyDetails implements Parcelable {
   @Expose
   private Algo algo;
 
-  private String decryptedPrivateKey;
-
   public NodeKeyDetails() {
   }
 
@@ -76,7 +74,6 @@ public class NodeKeyDetails implements Parcelable {
     this.ids = in.createTypedArrayList(KeyId.CREATOR);
     this.created = in.readLong();
     this.algo = in.readParcelable(Algo.class.getClassLoader());
-    this.decryptedPrivateKey = in.readString();
   }
 
   @Override
@@ -93,7 +90,6 @@ public class NodeKeyDetails implements Parcelable {
     dest.writeTypedList(this.ids);
     dest.writeLong(this.created);
     dest.writeParcelable(this.algo, flags);
-    dest.writeString(this.decryptedPrivateKey);
   }
 
   public String getPrivateKey() {
@@ -175,14 +171,5 @@ public class NodeKeyDetails implements Parcelable {
 
   public Boolean isDecrypted() {
     return isDecrypted;
-  }
-
-  public String getDecryptedPrivateKey() {
-    return decryptedPrivateKey;
-  }
-
-  public void setDecryptedPrivateKey(String decryptedPrivateKey) {
-    this.isDecrypted = true;
-    this.decryptedPrivateKey = decryptedPrivateKey;
   }
 }
