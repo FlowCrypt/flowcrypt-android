@@ -111,6 +111,10 @@ public class KeysDao extends BaseDao {
    */
   public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, NodeKeyDetails nodeKeyDetails,
                                         String passphrase) throws Exception {
+    if (nodeKeyDetails.isDecrypted()) {
+      throw new IllegalArgumentException("Error. The key is decrypted!");
+    }
+
     KeysDao keysDao = new KeysDao();
     keysDao.setLongId(nodeKeyDetails.getLongId());
 
@@ -122,10 +126,7 @@ public class KeysDao extends BaseDao {
       randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
     }
 
-    String decryptedPrvKey = nodeKeyDetails.isDecrypted() ? nodeKeyDetails.getPrivateKey() :
-        nodeKeyDetails.getDecryptedPrivateKey();
-
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(decryptedPrvKey, randomVector);
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getPrivateKey(), randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);
     keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
 
