@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
@@ -120,13 +119,13 @@ public class SecurityUtils {
    * @return A string which includes private keys
    */
   public static String genPrivateKeysBackup(Context context, Js js, AccountDao account)
-      throws PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException, IOException
-      , NodeException {
+      throws PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException {
     StringBuilder builder = new StringBuilder();
     Zxcvbn zxcvbn = new Zxcvbn();
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
+    js.getStorageConnector().refresh(context);
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longids);
 
     if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
@@ -161,13 +160,7 @@ public class SecurityUtils {
         }
       }
 
-      EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(), passPhrase);
-
-      if (TextUtils.isEmpty(encryptKeyResult.getEncryptedKey())) {
-        throw new IllegalStateException("An error occurred during encrypting some key");
-      }
-
-      builder.append(i > 0 ? "\n" + encryptKeyResult.getEncryptedKey() : encryptKeyResult.getEncryptedKey());
+      builder.append(i > 0 ? "\n" + pgpKeyInfo.getPrivate() : pgpKeyInfo.getPrivate());
     }
 
     return builder.toString();
