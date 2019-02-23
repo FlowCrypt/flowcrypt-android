@@ -7,9 +7,12 @@ package com.flowcrypt.email.ui.loader;
 
 import android.content.ContentProviderResult;
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
@@ -20,8 +23,10 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
+import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,11 +82,9 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       List<KeysDao> keysDaoList = new ArrayList<>();
 
       for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-        List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
-        if (CollectionUtils.isEmpty(nodeKeyDetails) || nodeKeyDetails.size() != 1) {
-          throw new IllegalStateException("Parse keys error");
-        }
-        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, nodeKeyDetails.get(0), newPassphrase));
+        String passphrase = storageConnector.getPassphrase(pgpKeyInfo.getLongid());
+        NodeKeyDetails modifiedNodeKeyDetails = getModifiedNodeKeyDetails(passphrase, pgpKeyInfo.getPrivate());
+        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase));
       }
 
       ContentProviderResult[] contentProviderResults = new KeysDaoSource().updateKeys(getContext(), keysDaoList);
@@ -108,5 +111,39 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
   public void deliverResult(@Nullable LoaderResult data) {
     this.data = data;
     super.deliverResult(data);
+  }
+
+  private NodeKeyDetails getModifiedNodeKeyDetails(String passphrase, String originalPrivateKey)
+      throws IOException, NodeException {
+    List<NodeKeyDetails> keyDetailsList = NodeCallsExecutor.parseKeys(originalPrivateKey);
+    if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size() != 1) {
+      throw new IllegalStateException("Parse keys error");
+    }
+
+    NodeKeyDetails nodeKeyDetails = keyDetailsList.get(0);
+    String longId = nodeKeyDetails.getLongId();
+
+    if (TextUtils.isEmpty(passphrase)) {
+      throw new IllegalStateException("Passphrase for key with longid " + longId + " not found");
+    }
+
+    DecryptKeyResult decryptResult = NodeCallsExecutor.decryptKey(nodeKeyDetails.getPrivateKey(), passphrase);
+
+    if (TextUtils.isEmpty(decryptResult.getDecryptedKey())) {
+      throw new IllegalStateException("Can't decrypt key with longid " + longId);
+    }
+
+    EncryptKeyResult encryptResult = NodeCallsExecutor.encryptKey(decryptResult.getDecryptedKey(), newPassphrase);
+
+    if (TextUtils.isEmpty(encryptResult.getEncryptedKey())) {
+      throw new IllegalStateException("Can't encrypt key with longid " + longId);
+    }
+
+    List<NodeKeyDetails> modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptResult.getEncryptedKey());
+    if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size() != 1) {
+      throw new IllegalStateException("Parse keys error");
+    }
+
+    return modifiedKeyDetailsList.get(0);
   }
 }
