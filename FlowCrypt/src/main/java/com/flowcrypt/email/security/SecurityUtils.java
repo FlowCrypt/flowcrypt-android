@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
@@ -113,13 +114,14 @@ public class SecurityUtils {
   /**
    * Generate a private keys backup for the given account.
    *
-   * @param context       Interface to global information about an application environment.
-   * @param js            An instance of {@link Js}
-   * @param account       The given account
+   * @param context Interface to global information about an application environment.
+   * @param js      An instance of {@link Js}
+   * @param account The given account
    * @return A string which includes private keys
    */
   public static String genPrivateKeysBackup(Context context, Js js, AccountDao account)
-      throws PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException {
+      throws PrivateKeyStrengthException, DifferentPassPhrasesException,
+      NoPrivateKeysAvailableException, IOException, NodeException {
     StringBuilder builder = new StringBuilder();
     Zxcvbn zxcvbn = new Zxcvbn();
     String email = account.getEmail();
@@ -160,7 +162,19 @@ public class SecurityUtils {
         }
       }
 
-      builder.append(i > 0 ? "\n" + pgpKeyInfo.getPrivate() : pgpKeyInfo.getPrivate());
+      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
+      NodeKeyDetails keyDetails = nodeKeyDetailsList.get(0);
+
+      String encryptedKey;
+
+      if (keyDetails.isDecrypted()) {
+        EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(), passPhrase);
+        encryptedKey = encryptKeyResult.getEncryptedKey();
+      } else {
+        encryptedKey = keyDetails.getPrivateKey();
+      }
+
+      builder.append(i > 0 ? "\n" + encryptedKey : encryptedKey);
     }
 
     return builder.toString();
