@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.js.JsInBackgroundManager;
 import com.flowcrypt.email.js.JsListener;
 import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.lang.ref.WeakReference;
@@ -36,6 +37,8 @@ import java.util.Map;
 
 public class JsBackgroundService extends BaseService implements JsListener {
   public static final int REPLY_RESULT_CODE_ACTION_OK = 0;
+  public static final String ACTION_REFRESH_STORAGE_CONNECTOR = GeneralUtil.generateUniqueExtraKey(
+      "ACTION_REFRESH_STORAGE_CONNECTOR", JsBackgroundService.class);
 
   public static final int MESSAGE_ADD_REPLY_MESSENGER = 1;
   public static final int MESSAGE_REMOVE_REPLY_MESSENGER = 2;
@@ -68,6 +71,12 @@ public class JsBackgroundService extends BaseService implements JsListener {
     context.startService(new Intent(context, JsBackgroundService.class));
   }
 
+  public static void restart(Context context) {
+    Intent intent = new Intent(context, JsBackgroundService.class);
+    intent.setAction(ACTION_REFRESH_STORAGE_CONNECTOR);
+    context.startService(intent);
+  }
+
   @Override
   public void onCreate() {
     super.onCreate();
@@ -84,10 +93,12 @@ public class JsBackgroundService extends BaseService implements JsListener {
     isServiceStarted = true;
 
     if (intent != null && intent.getAction() != null) {
-      switch (intent.getAction()) {
-        default:
-          jsInBackgroundManager.init();
-          break;
+      if (ACTION_REFRESH_STORAGE_CONNECTOR.equals(intent.getAction())) {
+        if (jsInBackgroundManager != null) {
+          jsInBackgroundManager.restart();
+        }
+      } else {
+        jsInBackgroundManager.init();
       }
     } else {
       jsInBackgroundManager.init();

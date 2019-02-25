@@ -286,6 +286,8 @@
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
 
         <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
+
+        <receiver android:name=".broadcastreceivers.UpdateStorageConnectorBroadcastReceiver" />
     </application>
 
 </manifest>

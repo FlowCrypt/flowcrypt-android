@@ -13,11 +13,14 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
+import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
@@ -27,8 +30,10 @@ import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.service.JsBackgroundService;
+import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
+import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -77,11 +82,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
     account = new AccountDaoSource().getActiveAccountInformation(this);
     if (account != null && isNodeReady()) {
-      if (SecurityUtils.hasBackup(this)) {
-        EmailSyncService.startEmailSyncService(this);
-        EmailManagerActivity.runEmailManagerActivity(this);
-        finish();
-      }
+      showEmailManagerActivity();
     }
   }
 
@@ -91,11 +92,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     progressView.setVisibility(View.GONE);
     if (account != null) {
       splashView.setVisibility(View.VISIBLE);
-      if (SecurityUtils.hasBackup(this)) {
-        EmailSyncService.startEmailSyncService(this);
-        EmailManagerActivity.runEmailManagerActivity(this);
-        finish();
-      }
+      showEmailManagerActivity();
     } else {
       signInView.setVisibility(View.VISIBLE);
     }
@@ -266,6 +263,23 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
   @Override
   public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
+  }
+
+  private void showEmailManagerActivity() {
+    if (SecurityUtils.hasBackup(this)) {
+      if (BuildConfig.VERSION_CODE <= 72) {
+        boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
+            .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
+
+        if (isCheckKeysNeeded) {
+          new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
+        }
+      }
+
+      EmailSyncService.startEmailSyncService(this);
+      EmailManagerActivity.runEmailManagerActivity(this);
+      finish();
+    }
   }
 
   private void addNewAccount(AuthCredentials authCreds) throws Exception {
