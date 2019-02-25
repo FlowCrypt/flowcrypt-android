@@ -58,6 +58,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
 
   private View signInView;
   private View splashView;
+  private View progressView;
 
   private AccountDao account;
   private boolean isStartCheckKeysActivityEnabled;
@@ -75,12 +76,28 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
     initViews();
 
     account = new AccountDaoSource().getActiveAccountInformation(this);
-    if (account != null) {
+    if (account != null && isNodeReady()) {
       if (SecurityUtils.hasBackup(this)) {
         EmailSyncService.startEmailSyncService(this);
         EmailManagerActivity.runEmailManagerActivity(this);
         finish();
       }
+    }
+  }
+
+  @Override
+  protected void onNodeStateChanged(boolean isReady) {
+    super.onNodeStateChanged(isReady);
+    progressView.setVisibility(View.GONE);
+    if (account != null) {
+      splashView.setVisibility(View.VISIBLE);
+      if (SecurityUtils.hasBackup(this)) {
+        EmailSyncService.startEmailSyncService(this);
+        EmailManagerActivity.runEmailManagerActivity(this);
+        finish();
+      }
+    } else {
+      signInView.setVisibility(View.VISIBLE);
     }
   }
 
@@ -331,6 +348,7 @@ public class SplashActivity extends BaseSignInActivity implements LoaderManager.
    * In this method we init all used views.
    */
   private void initViews() {
+    progressView = findViewById(R.id.progressView);
     signInView = findViewById(R.id.signInView);
     splashView = findViewById(R.id.splashView);
 

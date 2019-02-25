@@ -392,12 +392,26 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     }
   }
 
+  protected boolean isNodeReady() {
+    if (Node.getInstance() == null || Node.getInstance().getLiveData() == null
+        || Node.getInstance().getLiveData().getValue() == null) {
+      return false;
+    }
+
+    return Node.getInstance().getLiveData().getValue();
+  }
+
+  protected void onNodeStateChanged(boolean isReady) {
+
+  }
+
   private void registerNodeIdlingResources() {
     nodeIdlingResource = new NodeIdlingResource();
     Node.getInstance().getLiveData().observe(this, new Observer<Boolean>() {
       @Override
       public void onChanged(Boolean aBoolean) {
         nodeIdlingResource.setIdleState(aBoolean);
+        onNodeStateChanged(aBoolean);
       }
     });
   }
