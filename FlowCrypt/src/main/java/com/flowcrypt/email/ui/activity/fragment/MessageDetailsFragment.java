@@ -849,9 +849,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   @NonNull
   private View generatePgpMsgPart(MessagePartPgpMessage part, LayoutInflater layoutInflater) {
     if (part != null) {
-      if (TextUtils.isEmpty(part.getErrorMsg())) {
-        return generateMsgPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
-      } else {
+      if (part.getPgpMsgDecryptError() != null) {
         switch (part.getPgpMsgDecryptError()) {
           case FORMAT_ERROR:
             final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
@@ -869,11 +867,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_pgp_message_error, layoutMsgParts, false);
             TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-            textViewErrorMsg.setText(part.getErrorMsg());
+            String errorText = TextUtils.isEmpty(part.getErrorMsg()) ? part.getPgpMsgDecryptError().name() :
+                part.getErrorMsg();
+            textViewErrorMsg.setText(errorText);
             viewGroup.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, viewGroup));
 
             return viewGroup;
         }
+      } else {
+        return generateMsgPart(part, layoutInflater, R.layout.message_part_other, layoutMsgParts);
       }
     } else return new TextView(getContext());
   }
