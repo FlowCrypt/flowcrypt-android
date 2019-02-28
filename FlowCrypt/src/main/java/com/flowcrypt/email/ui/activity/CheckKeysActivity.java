@@ -416,7 +416,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    * @param mapOfSavedKeyDetailsAndLongIds An incoming map of {@link NodeKeyDetails} objects.
    * @return A matched list.
    */
-  private ArrayList<NodeKeyDetails> generateMatchedKeyDetailsList(Map<NodeKeyDetails, String> mapOfSavedKeyDetailsAndLongIds) {
+  private ArrayList<NodeKeyDetails> generateMatchedKeyDetailsList(Map<NodeKeyDetails,
+      String> mapOfSavedKeyDetailsAndLongIds) {
     ArrayList<NodeKeyDetails> matchedKeyDetails = new ArrayList<>();
     for (Map.Entry<NodeKeyDetails, String> entry : mapOfSavedKeyDetailsAndLongIds.entrySet()) {
       for (Map.Entry<NodeKeyDetails, String> innerEntry : keyDetailsAndLongIdsMap.entrySet()) {

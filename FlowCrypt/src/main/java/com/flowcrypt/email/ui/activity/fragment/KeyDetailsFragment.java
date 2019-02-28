@@ -180,12 +180,6 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
   }
 
   private void initViews(View view) {
-    TextView textViewKeyWords = view.findViewById(R.id.textViewKeyWords);
-    TextView textViewFingerprint = view.findViewById(R.id.textViewFingerprint);
-    TextView textViewLongId = view.findViewById(R.id.textViewLongId);
-    TextView textViewDate = view.findViewById(R.id.textViewDate);
-    TextView textViewUsers = view.findViewById(R.id.textViewUsers);
-
     List<PgpContact> pgpContacts = details.getPgpContacts();
     ArrayList<String> emails = new ArrayList<>();
 
@@ -193,12 +187,21 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
       emails.add(pgpContact.getEmail());
     }
 
+    TextView textViewKeyWords = view.findViewById(R.id.textViewKeyWords);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_key_words, details.getKeywords()), textViewKeyWords);
+
+    TextView textViewFingerprint = view.findViewById(R.id.textViewFingerprint);
     UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
         GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4)), textViewFingerprint);
+
+    TextView textViewLongId = view.findViewById(R.id.textViewLongId);
     textViewLongId.setText(getString(R.string.template_longid, details.getLongId()));
+
+    TextView textViewDate = view.findViewById(R.id.textViewDate);
     textViewDate.setText(getString(R.string.template_date,
         DateFormat.getMediumDateFormat(getContext()).format(new Date(details.getCreated()))));
+
+    TextView textViewUsers = view.findViewById(R.id.textViewUsers);
     textViewUsers.setText(getString(R.string.template_users, TextUtils.join(", ", emails)));
 
     initButtons(view);

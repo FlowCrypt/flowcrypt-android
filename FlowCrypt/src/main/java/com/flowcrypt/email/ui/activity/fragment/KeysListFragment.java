@@ -148,7 +148,8 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
             break;
 
           case ERROR:
-            Toast.makeText(getContext(), nodeResponseWrapper.getResult().getError().toString(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), nodeResponseWrapper.getResult().getError().toString(),
+                Toast.LENGTH_SHORT).show();
             break;
 
           case EXCEPTION:
