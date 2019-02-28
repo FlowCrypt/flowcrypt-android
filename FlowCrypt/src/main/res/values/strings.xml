@@ -418,4 +418,5 @@ icelanders prefer real sauna</font>
     <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
     <string name="file_not_found">File not found</string>
     <string name="no_pub_keys">There are no public keys</string>
+    <string name="could_not_decrypt_message_due_to_error">Could not decrypt this message due to error:\n\n %1$s </string>
 </resources>

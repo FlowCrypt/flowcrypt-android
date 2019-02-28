@@ -867,7 +867,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_pgp_message_error, layoutMsgParts, false);
             TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-            String errorText = TextUtils.isEmpty(part.getErrorMsg()) ? part.getPgpMsgDecryptError().name() :
+            String errorText = TextUtils.isEmpty(part.getErrorMsg()) ?
+                getString(R.string.could_not_decrypt_message_due_to_error, part.getPgpMsgDecryptError().name()) :
                 part.getErrorMsg();
             textViewErrorMsg.setText(errorText);
             viewGroup.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, viewGroup));
