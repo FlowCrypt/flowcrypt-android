@@ -102,8 +102,7 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
         continue;
       }
 
-      keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList.get(0),
-          pgpKeyInfo.getPrivate()));
+      keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList.get(0), passphrase));
     }
 
     if (keysDaoList.size() > 0) {
