@@ -875,7 +875,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             return viewGroup;
         }
       } else {
-        return generateMsgPart(part, layoutInflater, R.layout.message_part_other, layoutMsgParts);
+        return generateMsgPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
       }
     } else return new TextView(getContext());
   }
