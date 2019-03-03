@@ -60,6 +60,8 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFrag
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -870,9 +872,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             String errorText = TextUtils.isEmpty(part.getErrorMsg()) ?
                 getString(R.string.could_not_decrypt_message_due_to_error, part.getPgpMsgDecryptError().name()) :
                 part.getErrorMsg();
+            ExceptionUtil.handleError(new ManualHandledException(errorText));
             textViewErrorMsg.setText(errorText);
             viewGroup.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, viewGroup));
-
             return viewGroup;
         }
       } else {
