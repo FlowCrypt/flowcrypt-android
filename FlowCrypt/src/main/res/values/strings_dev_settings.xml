@@ -8,7 +8,6 @@
     <!-- Preference keys -->
     <string name="preferences_key_build_config_info">pref_key_build_config_info</string>
     <string name="preferences_key_is_write_logs_to_file_enable">preferences_key_is_write_logs_to_file_enable</string>
-    <string name="preferences_key_get_results_servers">preferences_key_get_results_servers</string>
     <string name="preferences_key_is_detect_memory_leak_enable">preferences_key_is_detect_memory_leak_enable</string>
     <string name="preferences_key_is_acra_enable">preferences_key_is_acra_enable</string>
     <string name="preferences_key_is_mail_debug_enable">preferences_key_is_mail_debug_enable</string>

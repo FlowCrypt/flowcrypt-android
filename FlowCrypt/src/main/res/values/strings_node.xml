@@ -7,6 +7,4 @@
     <string name="run_all_tests">run all tests</string>
     <string name="versions">VERSION</string>
     <string name="choose_file">Choose a file</string>
-    <string name="tests">Tests</string>
-    <string name="error_occurred_during_node_init">An error occurred during the Node initialization</string>
 </resources>
