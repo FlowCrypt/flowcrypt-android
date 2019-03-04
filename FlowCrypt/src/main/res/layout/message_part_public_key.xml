@@ -70,7 +70,7 @@
         android:textColor="#088447"
         android:textIsSelectable="true"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/buttonSaveContact"
+        app:layout_constraintBottom_toTopOf="@+id/buttonKeyAction"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/switchShowPublicKey"
@@ -78,35 +78,17 @@
         tools:visibility="visible" />
 
     <Button
-        android:id="@+id/buttonSaveContact"
+        android:id="@+id/buttonKeyAction"
         style="@style/AppWidget.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:text="@string/save_contact"
         android:theme="@style/AppWidget.Button.Green"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/buttonUpdateContact"
         app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
         app:layout_constraintTop_toBottomOf="@+id/textViewPgpPublicKey"
-        tools:visibility="visible" />
-
-    <Button
-        android:id="@+id/buttonUpdateContact"
-        style="@style/AppWidget.Button"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin_content_small"
-        android:layout_marginBottom="@dimen/default_margin_content_small"
-        android:text="@string/update_contact"
-        android:theme="@style/AppWidget.Button.Green"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/textViewFingerprintTemplate"
-        app:layout_constraintStart_toStartOf="@+id/textViewFingerprintTemplate"
-        app:layout_constraintTop_toBottomOf="@+id/textViewPgpPublicKey"
+        tools:text="@string/save_contact"
         tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.Guideline

@@ -769,12 +769,17 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
     textViewPgpPublicKey.setText(part.getValue());
 
-    if (part.getExistingPgpContact() != null) {
-      if (part.isPgpContactUpdateEnabled()) {
-        initUpdateContactButton(part, pubKeyView);
+    PgpContact existingPgpContact = part.getExistingPgpContact();
+    Button button = pubKeyView.findViewById(R.id.buttonKeyAction);
+    if (button != null) {
+      if (existingPgpContact == null) {
+        initSaveContactButton(part, button);
+      } else if (TextUtils.isEmpty(existingPgpContact.getLongid())
+          || details.getLongId().equalsIgnoreCase(existingPgpContact.getLongid())) {
+        initUpdateContactButton(part, button);
+      } else {
+        initReplaceContactButton(part, button);
       }
-    } else {
-      initSaveContactButton(part, pubKeyView);
     }
 
     return pubKeyView;
@@ -784,56 +789,75 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param part The {@link MessagePartPgpPublicKey} object which contains
-   *             information about a public key and his owner.
-   * @param view The public key view container.
+   * @param part   The {@link MessagePartPgpPublicKey} object which contains
+   *               information about a public key and his owner.
+   * @param button The key action button.
    */
-  private void initSaveContactButton(final MessagePartPgpPublicKey part, View view) {
-    Button buttonSaveContact = view.findViewById(R.id.buttonSaveContact);
-    if (buttonSaveContact != null) {
-      buttonSaveContact.setVisibility(View.VISIBLE);
-      buttonSaveContact.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
-          Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
-          if (uri != null) {
-            Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
-            v.setVisibility(View.GONE);
-          } else {
-            Toast.makeText(getContext(), R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
-          }
+  private void initSaveContactButton(final MessagePartPgpPublicKey part, Button button) {
+    button.setText(R.string.save_contact);
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
+        if (uri != null) {
+          Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
+          v.setVisibility(View.GONE);
+        } else {
+          Toast.makeText(getContext(), R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
         }
-      });
-    }
+      }
+    });
   }
 
   /**
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param part The {@link MessagePartPgpPublicKey} object which contains
-   *             information about a public key and his owner.
-   * @param view The public key view container.
+   * @param part   The {@link MessagePartPgpPublicKey} object which contains
+   *               information about a public key and his owner.
+   * @param button The key action button.
    */
-  private void initUpdateContactButton(final MessagePartPgpPublicKey part, View view) {
-    Button buttonUpdateContact = view.findViewById(R.id.buttonUpdateContact);
-    if (buttonUpdateContact != null) {
-      buttonUpdateContact.setVisibility(View.VISIBLE);
-      buttonUpdateContact.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
-          boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
-          if (isUpdated) {
-            Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
-            v.setVisibility(View.GONE);
-          } else {
-            Toast.makeText(getContext(), R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
-          }
+  private void initUpdateContactButton(final MessagePartPgpPublicKey part, Button button) {
+    button.setText(R.string.update_contact);
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
+        if (isUpdated) {
+          Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
+          v.setVisibility(View.GONE);
+        } else {
+          Toast.makeText(getContext(), R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
         }
-      });
-    }
+      }
+    });
+  }
+
+  /**
+   * Init the replace contact button. When we press this button the contact will be replaced in the
+   * local database.
+   *
+   * @param part   The {@link MessagePartPgpPublicKey} object which contains
+   *               information about a public key and his owner.
+   * @param button The key action button.
+   */
+  private void initReplaceContactButton(final MessagePartPgpPublicKey part, Button button) {
+    button.setText(R.string.replace_contact);
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
+        if (isUpdated) {
+          Toast.makeText(getContext(), R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show();
+          v.setVisibility(View.GONE);
+        } else {
+          Toast.makeText(getContext(), R.string.error_occurred_while_replacing_contact, Toast.LENGTH_SHORT).show();
+        }
+      }
+    });
   }
 
   @NonNull

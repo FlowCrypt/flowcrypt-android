@@ -77,9 +77,4 @@ public class MessagePartPgpPublicKey extends MessagePart {
   public NodeKeyDetails getNodeKeyDetails() {
     return nodeKeyDetails;
   }
-
-  public boolean isPgpContactUpdateEnabled() {
-    return existingPgpContact != null && existingPgpContact.getLongid() != null
-        && !existingPgpContact.getLongid().equals(nodeKeyDetails.getLongId());
-  }
 }

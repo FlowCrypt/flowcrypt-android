@@ -112,10 +112,13 @@
     <string name="hide_the_public_key">Hide the Public Key</string>
     <string name="save_contact">Save contact</string>
     <string name="update_contact">Update contact</string>
+    <string name="replace_contact">Replace Contact</string>
     <string name="contact_successfully_saved">Contact saved</string>
-    <string name="error_occurred_while_saving_contact">Error occurred while saving the contact</string>
     <string name="contact_successfully_updated">Contact updated</string>
+    <string name="contact_successfully_replaced">Contact replaced</string>
+    <string name="error_occurred_while_saving_contact">Error occurred while saving the contact</string>
     <string name="error_occurred_while_updating_contact">Error occurred while updating the contact</string>
+    <string name="error_occurred_while_replacing_contact">Error occurred while replacing the contact</string>
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
