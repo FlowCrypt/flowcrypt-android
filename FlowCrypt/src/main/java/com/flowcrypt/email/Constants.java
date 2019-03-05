@@ -45,6 +45,7 @@ public class Constants {
    * The MIME type of PGP keys.
    */
   public static final String MIME_TYPE_PGP_KEY = "application/pgp-keys";
+  public static final String MIME_TYPE_BINARY_DATA = "application/octet-stream";
   public static final String MIME_TYPE_RFC822 = "message/rfc822";
 
   /**
