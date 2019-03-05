@@ -26,10 +26,8 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
@@ -188,7 +186,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
             if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
               sendReply(msg);
             }
-          } catch (IOException | NodeException e) {
+          } catch (Exception e) {
             e.printStackTrace();
           }
           break;
